@@ -3,12 +3,14 @@ import type { Company } from '@/types/company'
 
 export async function getCompanyBySlug(slug: string): Promise<Company | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('companies')
     .select('*, website_config(*)')
     .eq('slug', slug)
     .eq('active', true)
     .single()
+  if (error) console.error('[getCompanyBySlug] error:', JSON.stringify(error))
+  if (!data) console.error('[getCompanyBySlug] no data for slug:', slug)
   return data as Company | null
 }
 

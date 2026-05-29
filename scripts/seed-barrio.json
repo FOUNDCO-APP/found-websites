@@ -1,0 +1,19 @@
+{
+  "company_id": "9fdc7cda-3151-412b-9cec-978a5ea93304",
+  "hero_title": "Tucson's Premier Roofing, Painting & Remodeling Experts",
+  "hero_subtitle": "We're not a national chain — we're your neighbors. Licensed, insured, Hablamos Español.",
+  "about_text": "Barrio means neighborhood — and that's how we work. Tucson locals, no subcontractors, no surprises. Licensed, insured, and accountable.",
+  "services": [
+    {"name":"Roofing","description":"Full replacements, repairs, inspections, and emergency patches."},
+    {"name":"Remodeling","description":"Kitchens, bathrooms, and whole-home renovations."},
+    {"name":"Renovations","description":"Room additions, garage conversions, and structural repairs."},
+    {"name":"Painting","description":"Interior and exterior painting with proper prep."},
+    {"name":"New Construction","description":"New homes, ADUs, and light commercial builds."}
+  ],
+  "testimonials": [
+    {"name":"Sarah M.","role":"Homeowner","quote":"Barrio Builders transformed our kitchen. Outstanding work."},
+    {"name":"Michael R.","role":"Business Owner","quote":"Professional and efficient. Results were fantastic."}
+  ],
+  "service_areas": ["Tucson","Marana","Oro Valley","Sahuarita","Green Valley","Vail"],
+  "published": true
+}
