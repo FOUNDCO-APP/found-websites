@@ -1,0 +1,57 @@
+import { notFound } from "next/navigation"
+import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
+import { createClient } from "@/lib/supabase/server"
+
+export default async function GalleryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const company = slug.startsWith("__domain__")
+    ? await getCompanyByDomain(slug.replace("__domain__", ""))
+    : await getCompanyBySlug(slug)
+  if (!company) notFound()
+
+  const supabase = await createClient()
+  const { data: photos } = await supabase
+    .from("media")
+    .select("id, url, thumbnail_url, type")
+    .eq("company_id", company.id)
+    .eq("website_flag", true)
+    .eq("type", "photo")
+    .order("created_at", { ascending: false })
+
+  const primary = company.primary_color
+
+  return (
+    <>
+      <section className="py-20 text-white" style={{ backgroundColor: "#111111" }}>
+        <div className="max-w-6xl mx-auto px-4">
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Our Work</p>
+          <h1 className="text-4xl md:text-5xl font-black mb-4">Gallery</h1>
+          <p className="text-gray-400 text-lg">Real work. Real results.</p>
+        </div>
+      </section>
+
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4">
+          {photos && photos.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {photos.map((photo) => (
+                <div key={photo.id} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                  <img
+                    src={photo.thumbnail_url || photo.url}
+                    alt="Project photo"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-gray-400">
+              <p className="text-lg font-medium mb-2">Photos coming soon.</p>
+              <p className="text-sm">Check back as we document our latest work.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  )
+}
