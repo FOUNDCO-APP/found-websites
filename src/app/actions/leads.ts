@@ -114,6 +114,9 @@ function buildLeadEmail({
               </td></tr>` : ""}
             </table>
 
+            <!-- Response nudge -->
+            <p style="margin:0 0 20px;font-size:13px;color:#888888;font-style:italic;">Responding within the hour increases your chance of winning this job by 3x.</p>
+
             <!-- CTA buttons -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
@@ -131,7 +134,8 @@ function buildLeadEmail({
         <!-- Footer -->
         <tr>
           <td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#aaaaaa;">Sent by <strong style="color:#888888;">Found</strong> — your website is working.</p>
+            <p style="margin:0 0 4px;font-size:13px;font-weight:800;color:#888888;">You've been Found.</p>
+            <p style="margin:0;font-size:11px;color:#bbbbbb;">Powered by <a href="https://foundco.app" style="color:#bbbbbb;text-decoration:underline;">Found</a></p>
           </td>
         </tr>
 
