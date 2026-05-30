@@ -42,7 +42,7 @@ export async function submitLead(_: unknown, formData: FormData) {
 
   if (company?.email) {
     await resend.emails.send({
-      from: "Found <leads@foundco.app>",
+      from: `${company.name} <leads@foundco.app>`,
       to: company.email,
       subject: `New lead: ${name}${service ? ` — ${service}` : ""}`,
       html: buildLeadEmail({ company, name, phone, email, service, message }),
