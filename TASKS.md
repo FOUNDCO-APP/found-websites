@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: May 29, 2026*
+*Last updated: May 31, 2026*
 
 ---
 
@@ -16,104 +16,99 @@
 
 ## CURRENT PHASE
 
-**Phase 2: Onboarding Flow — Answer Questions → Generate Site**
+**Phase 2: Onboarding Flow + Layout System**
 
-Goal:
+Goals:
+- Build the 3 remaining layout types (Editorial, Portrait, Cinematic)
 - Build the onboarding question flow that generates a complete website
 - Owner answers questions on their phone → site is live in under 10 minutes
-- No technical knowledge required — owner never sees the backend
 - Every generated site must look like Apple built it
 
 Exit criteria:
-1. Owner can complete onboarding on mobile in under 10 minutes
-2. A complete website is generated and live at `[slug].foundco.app`
-3. Typography logo renders correctly when no logo is uploaded
-4. Jony Ive approves the design of every generated output
-5. Shawn approves the full flow end-to-end
+1. All 4 layout types built and Jony-approved
+2. Owner can complete onboarding on mobile in under 10 minutes
+3. A complete website is generated and live at [slug].foundco.app
+4. Shawn approves the full flow end-to-end
 
 ---
 
 ## NOW (MAX 3)
 
-1. **Design the onboarding question set**
-   - Owner: Angela + Jony
-   - Status: ⏳ Not started
-   - Notes: Question set was designed in a prior undocumented session — needs to be rebuilt. Angela designs the questions and flow. Jony approves the UI. Questions feed directly into website_config in Supabase.
+1. **Build Editorial layout**
+   - Owner: Jony (design) + Marcus (build)
+   - Status: ⏳ Designed this session, not built
+   - Notes: Split hero (text left, image right), service list rows instead of grid, generous white space, Playfair + Lato, calm/editorial feel. For wellness, beauty, spa businesses.
 
-2. **Build the typography logo system**
-   - Owner: Jony + Marcus
-   - Status: ⏳ Not started
-   - Notes: When owner has no logo, their business name renders as a beautiful typography-based logo. Must look premium, not like a placeholder. System should support different business name lengths.
+2. **Build Portrait layout**
+   - Owner: Jony (design) + Marcus (build)
+   - Status: ⏳ Designed this session, not built
+   - Notes: Photography-forward, image fills top 60% of hero, text bottom-anchored. Masonry services, photo strip mid-page, split about section. For food, events, visual businesses, balloon artists.
 
-3. **Build the Jony Ive color palette system**
-   - Owner: Jony + Marcus
-   - Status: ⏳ Not started
-   - Notes: ~10-12 preset palettes, Apple/Jony Ive inspired. Each has a primary + accent. Plus a custom hex option for owners who already have brand colors. Palette selection happens during onboarding.
+3. **Build Cinematic layout**
+   - Owner: Jony (design) + Marcus (build)
+   - Status: ⏳ Designed this session, not built
+   - Notes: True 100vh fullscreen hero, centered headline, horizontal scroll services on mobile, full-bleed about section, large single pull-quote testimonials. For events, fitness, high-energy businesses.
 
 ---
 
 ## NEXT
 
-1. In-app camera system (capture photos without touching personal camera roll)
-2. Two-flag curation UI — heart ❤️ (website) and star ⭐ (social)
-3. Admin PWA dashboard (view leads, manage workers, website settings)
-4. Worker PWA (upload-only flow)
-5. Gallery auto-sync — hearted photo → appears on website automatically
-6. Social export pipeline — starred photo → sized for Instagram/Facebook
-7. Vercel wildcard subdomain setup for `*.foundco.app`
-8. Seed Barrio Builders data into Supabase and confirm site loads at barriobuilders.foundco.app
+1. Build onboarding question flow (Angela's full spec in ONBOARDING.md)
+2. Build site reveal moment (choreographed first-look experience)
+3. Build color palette preset UI (12 Jony-approved swatches for onboarding Q9)
+4. Build typography logo system (BrandMark refined for onboarding preview)
+5. Pexels photo selection during onboarding (show 3 stock options, owner picks or skips)
+6. Claude API content generation from onboarding answers (hero_title, hero_subtitle, about_text, service descriptions)
+
+---
+
+## COMPLETED THIS PHASE
+
+- ✅ Supabase schema + storage + RLS
+- ✅ Next.js scaffold + Supabase connected
+- ✅ Multi-tenant routing engine (proxy.ts)
+- ✅ All client website pages (home, about, services, gallery, contact, estimate)
+- ✅ Vercel deployment + wildcard subdomain (barriobuilders.foundco.app live)
+- ✅ Barrio Builders seed data confirmed in Supabase
+- ✅ Pexels API integration (5-photo pool, self-healing, all pages)
+- ✅ Impact layout built and Jony-approved (Barrio Builders)
+- ✅ Section rhythm rule locked (photo header + photo CTA only)
+- ✅ All pages have imagery
+- ✅ Permanent decision docs: DECISIONS.md, DESIGN_DECISIONS.md, ONBOARDING.md
 
 ---
 
 ## BLOCKED
 
-- Onboarding question set — needs Angela + Jony discussion before building
-- Vercel wildcard subdomain — needs DNS config on Namecheap + Vercel project settings
-- Barrio Builders custom domain — barriobuilders.com still on Namecheap host
+- Onboarding flow — Editorial/Portrait/Cinematic layouts must exist before onboarding ships (the site reveal moment needs to render correctly for every business type)
+- Site reveal moment — needs onboarding flow to exist first
 
 ---
 
 ## BACKLOG
 
-1. Stripe subscription billing for Found Co. clients (Phase 2)
-2. Upgrade feature: Shopping cart (Stripe product listings)
-3. Upgrade feature: Estimates & quotes (create + send to clients)
-4. Upgrade feature: Shared gallery link (shareable project progress link for clients)
-5. Upgrade feature: Additional pages (blog, FAQ, team, service areas)
-6. Upgrade feature: Human design session (one-time paid design review)
-7. Admin dashboard — view all leads, manage workers, edit website settings
-8. Worker account system + invite flow
-9. Apple Developer Program ($99) + Capacitor → App Store + Google Play
-10. foundco.app marketing site (Phil owns this)
-11. USPTO trademark search + LLC formation (Shawn's to-do)
-12. Spa Mambo as Instance #2
-13. Dog & Cat Groomer as Instance #3
-14. Blog/SEO pages for Barrio Builders
+1. Stripe subscription billing for Found Co. clients
+2. In-app camera system (capture without touching personal camera roll)
+3. Two-flag curation UI (❤️ heart + ⭐ star)
+4. Admin PWA dashboard (view leads, manage workers, edit website settings)
+5. Worker PWA (upload-only flow)
+6. Gallery auto-sync (hearted photo → appears on website automatically)
+7. Social export pipeline (starred photo → sized for Instagram/Facebook)
+8. "Built with Found" badge redesign (current is placeholder)
+9. Gallery masonry layout (editorial, full-bleed capability)
+10. Motion system (subtle arrival animations)
+11. Dark mode per business (full-light and full-dark vibe options)
+12. Apple Developer Program ($99) + Capacitor → App Store + Google Play
+13. foundco.app marketing site (Phil owns this)
+14. USPTO trademark search + LLC formation (Shawn's to-do)
+15. Spa Mambo as Instance #2
+16. Dog & Cat Groomer as Instance #3
 
 ---
 
 ## TEAM DISCUSSION ITEMS (PENDING)
 
-The following need a full team discussion before we can spec or build:
-
-- [ ] **Full onboarding question set** — Angela to design, Jony to approve UI, Steve to approve flow
-- [ ] **Upgrade pricing** — what are the monthly vs. one-time prices for cart, quotes, gallery link?
-- [ ] **What other upgrades are we missing?** — what would a contractor, groomer, or event company pay for?
-- [ ] **Template variety** — do we have 1 template (perfect, Apple quality) or 3 options?
-- [ ] **AI content fill** — Claude API prompt strategy for pre-filling services, about text, headlines
-
----
-
-## SESSION UPDATE TEMPLATE
-
-```md
-### Session Update (YYYY-MM-DD)
-- Done:
-  - ...
-- Moved to NEXT:
-  - ...
-- Added to BACKLOG:
-  - ...
-- Blockers:
-  - ...
-```
+- [ ] Full affirmations between onboarding questions — Angela to write exact wording for each
+- [ ] Upgrade pricing — monthly vs. one-time for cart, quotes, gallery link
+- [ ] Template variety — does each layout have sub-variants or is one per layout enough?
+- [ ] What other upgrade features are we missing?

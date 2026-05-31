@@ -4,6 +4,93 @@
 
 ---
 
+## Session: May 31, 2026 — Impact Layout Built + Full Site Polish
+**AI:** Claude Code (Sonnet 4.6) + Full Apple Team
+**Worked on:** Barrio Builders full site build, image system, Impact layout polish, section rhythm rule
+
+### ✅ Completed This Session
+
+**Documentation (permanent — never lose this again):**
+- `DECISIONS.md` — every approved product decision, locked
+- `DESIGN_DECISIONS.md` — every visual/UX decision Jony approved, including section rhythm rule
+- `ONBOARDING.md` — full question flow, exact wording, tone, branching logic
+- `BRIEF.md` updated — all 3 new docs added to required reading list
+
+**Barrio Builders seed data (confirmed in Supabase):**
+- Ran full onboarding questions for Michael / Barrio Builders
+- Correct colors: #1EAB46 (green), #5F5F5F (gray), #C0C0C0 (silver)
+- 6 services: Remodeling, Renovations, Painting, Drywall, Framing, Flooring
+- 3 testimonials (2 English, 1 Spanish — Hablamos Español)
+- 7 service areas: Tucson, Marana, Oro Valley, Sahuarita, Green Valley, Vail, Catalina Foothills
+- Slug fixed: `barriobuilders` (no hyphen — matches subdomain)
+
+**Infrastructure fixed:**
+- `proxy.ts` confirmed as correct Next.js 16 middleware file (no middleware.ts needed)
+- Build errors resolved
+- Vercel deployment working at barriobuilders.foundco.app
+
+**Pexels API integration:**
+- `src/lib/pexels.ts` — fetchStockPhotos() returns pool of 5 photos per industry+vibe
+- `src/lib/stockImages.ts` — shared getStockImages() utility: any page self-heals if pool is empty
+- PEXELS_API_KEY added to Vercel + .env.local
+- stock_images column added to website_config table in Supabase
+
+**Impact layout polished (Jony approved):**
+- Hero: 75vh/85vh desktop, 62% overlay, text-balance on headline
+- Homepage rhythm: Photo→Light→Photo→White→Photo (alternating, no competing sections)
+- Services teaser: capped at 3 on homepage, "View All →" inline link
+- About strip: two-column redesign (name left, paragraph right, readable)
+- Testimonials: white background, primary color top-border cards
+- Final CTA: photo background with overlay
+
+**All pages have imagery:**
+- Homepage: hero, about strip, final CTA — photo. Services, testimonials — clean.
+- About: header, final CTA — photo. Story, values, service areas, services preview — clean/solid.
+- Services: header, final CTA — photo. Grid, how-it-works — clean.
+- Contact: header — photo. Form — clean.
+- Gallery: header — photo. Grid — clean.
+- Estimate: header — photo. Form — clean.
+
+**Section rhythm rule locked permanently:**
+- Photos only in: page header + final CTA
+- Mid-page sections: solid white, light, or #111111 only — never photo
+- Rule is in DESIGN_DECISIONS.md and enforced by template design
+
+**Pages rebuilt:**
+- About page: full redesign (values strip, service areas as chips, services preview, strong CTA)
+- Services page: full rebuild (photo header, 2-col cards with icon, How It Works 01/02/03 strip, photo CTA)
+- Gallery: empty state redesigned (on-brand, phone CTA)
+
+**Layout system discussed and approved:**
+- 4 layout types defined: Impact, Editorial, Portrait, Cinematic
+- Impact = Barrio Builders (home_services + bold) — built and polished ✅
+- Editorial, Portrait, Cinematic — designed, not yet built
+
+### ⏳ Still Pending
+
+| Item | Status | Notes |
+|---|---|---|
+| Editorial layout | ❌ Not built | Designed this session — wellness, beauty, spa |
+| Portrait layout | ❌ Not built | Designed this session — food, events, balloon artists |
+| Cinematic layout | ❌ Not built | Designed this session — events, nightclubs, fitness |
+| Onboarding question flow | ❌ Not built | Full spec in ONBOARDING.md — Angela + Craig own this |
+| Color palette presets UI | ❌ Not built | 12 swatches approved by Jony, need onboarding screen |
+| Site reveal moment | ❌ Not built | Choreographed first-look experience |
+| "Built with Found" badge redesign | ❌ Not built | Current version is placeholder |
+| Vercel wildcard *.foundco.app | ✅ Working | Confirmed live this session |
+| Barrio Builders seed in Supabase | ✅ Done | Confirmed live this session |
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Build Editorial layout** — Jony has the spec. First inner page that differs from Impact.
+2. **Build Portrait layout** — balloon artists, food, visual businesses
+3. **Build Cinematic layout** — events, fitness, high-energy
+4. **Build onboarding question flow** — Angela's full spec is in ONBOARDING.md, ready to code
+5. **Build site reveal moment** — the choreographed first-look experience
+6. **Color palette preset UI** — 12 swatches for onboarding Q9
+
+---
+
 ## Session: May 31, 2026 — Vision Reconstructed + Decision Docs Created
 **AI:** Claude Code (Sonnet 4.6) + Full Apple Team
 **Worked on:** Reconstructed lost session work, captured full product vision from Shawn, created permanent decision documentation system
