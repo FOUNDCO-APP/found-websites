@@ -3,20 +3,19 @@ import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
 
 function BrandMark({ name, primary }: { name: string; primary: string }) {
-  const words = name.trim().split(" ")
-  const first = words[0].toUpperCase()
-  const rest = words.slice(1).join(" ").toUpperCase()
   return (
-    <div style={{ lineHeight: 1 }}>
-      <div className="font-black text-lg leading-none" style={{ color: primary, fontFamily: "var(--font-heading, inherit)" }}>
-        {first}
-      </div>
-      {rest && (
-        <div className="font-bold text-xs leading-none mt-0.5" style={{ color: primary, letterSpacing: "0.25em", opacity: 0.85 }}>
-          {rest}
-        </div>
-      )}
-    </div>
+    <span
+      className="font-black uppercase"
+      style={{
+        color: primary,
+        fontFamily: "var(--font-heading, inherit)",
+        fontSize: "0.95rem",
+        letterSpacing: "0.12em",
+        lineHeight: 1,
+      }}
+    >
+      {name}
+    </span>
   )
 }
 
@@ -50,8 +49,9 @@ export default function Footer({ company }: { company: Company }) {
   const activeSocials = Object.entries(socialLinks).filter(([, url]) => url)
 
   return (
-    <footer className="text-white" style={{ backgroundColor: "#111111", borderTop: `1px solid ${primary}` }}>
-      <div className="max-w-6xl mx-auto px-8 py-14">
+    <footer className="text-white" style={{ backgroundColor: "#111111" }}>
+      <div className="max-w-6xl mx-auto px-8 pt-10 pb-14">
+        <div className="mb-12" style={{ width: "3rem", height: "2px", backgroundColor: primary }} />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
 
           {/* Brand */}

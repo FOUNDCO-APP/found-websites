@@ -4,23 +4,20 @@ import Link from "next/link"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
 
-function BrandMark({ name, primary, inverted = false }: { name: string; primary: string; inverted?: boolean }) {
-  const words = name.trim().split(" ")
-  const first = words[0].toUpperCase()
-  const rest = words.slice(1).join(" ").toUpperCase()
-  const color = inverted ? primary : primary
-
+function BrandMark({ name, color }: { name: string; color: string }) {
   return (
-    <div style={{ lineHeight: 1 }}>
-      <div className="font-black text-xl leading-none" style={{ color, fontFamily: "var(--font-heading, inherit)", letterSpacing: "-0.01em" }}>
-        {first}
-      </div>
-      {rest && (
-        <div className="font-bold text-xs leading-none mt-0.5" style={{ color, letterSpacing: "0.25em", opacity: 0.85 }}>
-          {rest}
-        </div>
-      )}
-    </div>
+    <span
+      className="font-black uppercase tracking-widest"
+      style={{
+        color,
+        fontFamily: "var(--font-heading, inherit)",
+        fontSize: "0.95rem",
+        letterSpacing: "0.12em",
+        lineHeight: 1,
+      }}
+    >
+      {name}
+    </span>
   )
 }
 
@@ -50,7 +47,7 @@ export default function Navbar({ company }: { company: Company }) {
             {company.logo_url ? (
               <img src={company.logo_url} alt={company.name} className="h-9 w-auto" />
             ) : (
-              <BrandMark name={company.name} primary={primary} />
+              <BrandMark name={company.name} color={primary} />
             )}
           </Link>
 
@@ -106,7 +103,7 @@ export default function Navbar({ company }: { company: Company }) {
             {company.logo_url ? (
               <img src={company.logo_url} alt={company.name} className="h-8 w-auto brightness-0 invert" />
             ) : (
-              <BrandMark name={company.name} primary={primary} />
+              <BrandMark name={company.name} color="#ffffff" />
             )}
           </Link>
           <button onClick={() => setOpen(false)} aria-label="Close menu"
