@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
+import { getLayout } from "@/lib/layout"
+import { heroGradient } from "@/lib/color"
 import ServiceIcon from "@/components/ServiceIcon"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -15,6 +17,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
   const config = company.website_config
   const primary = company.primary_color
+  const layout = getLayout(company.industry_category, company.vibe)
+
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
@@ -26,42 +30,54 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
   const services = config?.services || []
   const testimonials = config?.testimonials || []
+  const heroImage = config?.hero_image_url ?? null
+  const heroVideo = config?.hero_video_url ?? null
+  const gradient = heroGradient(primary)
 
   return (
     <>
-      {/* HERO */}
-      <section className="relative min-h-[90vh] flex items-center" style={{ backgroundColor: "#111111" }}>
-        {config?.hero_video_url ? (
-          <video
-            src={config.hero_video_url}
-            autoPlay muted loop playsInline
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        ) : null}
-        <div className="absolute inset-0 bg-black/60" />
-        <div className="relative z-10 max-w-6xl mx-auto px-4 py-24 w-full">
-          <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: primary }}>
+      {/* ── HERO ── */}
+      <section className="relative min-h-[96vh] flex items-center overflow-hidden">
+
+        {/* Background — video > image > gradient */}
+        {heroVideo ? (
+          <video src={heroVideo} autoPlay muted loop playsInline
+            className="absolute inset-0 w-full h-full object-cover" />
+        ) : heroImage ? (
+          <img src={heroImage} alt={company.name}
+            className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0" style={{ background: gradient }} />
+        )}
+
+        {/* Dark overlay — always present for text legibility */}
+        <div className="absolute inset-0 bg-black/50" />
+
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 py-32 w-full">
+          <p className="text-xs font-black tracking-widest uppercase mb-6" style={{ color: primary }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
-          <h1 className="text-4xl md:text-6xl font-black text-white leading-tight max-w-2xl mb-6">
+
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-8 max-w-4xl"
+            style={{ fontFamily: "var(--font-heading, inherit)" }}>
             {config?.hero_title || company.name}
           </h1>
-          <p className="text-gray-300 text-lg max-w-xl mb-8 leading-relaxed">
+
+          <p className="text-lg md:text-xl max-w-xl mb-12 leading-relaxed" style={{ color: "#cccccc" }}>
             {config?.hero_subtitle || `Welcome to ${company.name}.`}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link
-              href={primaryHref}
-              className="inline-block text-center font-bold text-white px-8 py-4 rounded-full text-lg"
-              style={{ backgroundColor: primary }}
-            >
+
+          <div className="flex flex-wrap gap-4">
+            <Link href={primaryHref}
+              className="inline-block font-black text-white px-10 py-5 text-base tracking-wide uppercase"
+              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
               {primaryLabel}
             </Link>
             {secondaryLabel && secondaryHref && (
-              <Link
-                href={secondaryHref}
-                className="inline-block text-center font-bold border-2 border-white text-white px-8 py-4 rounded-full text-lg hover:bg-white hover:text-black transition-colors"
-              >
+              <Link href={secondaryHref}
+                className="inline-block font-black border-2 border-white text-white px-10 py-5 text-base tracking-wide uppercase hover:bg-white hover:text-black transition-colors"
+                style={{ borderRadius: "var(--button-radius, 6px)" }}>
                 {secondaryLabel}
               </Link>
             )}
@@ -69,28 +85,41 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
         </div>
       </section>
 
-      {/* SERVICES */}
+      {/* ── SERVICES ── */}
       {services.length > 0 && (
-        <section className="py-20" style={{ backgroundColor: "#f9f9f9" }}>
-          <div className="max-w-6xl mx-auto px-4">
-            <p className="text-xs font-bold tracking-widest uppercase text-center mb-2" style={{ color: primary }}>What We Do</p>
-            <h2 className="text-3xl md:text-4xl font-black text-center mb-12" style={{ color: "#111111" }}>Our Services</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="py-24" style={{ backgroundColor: "#f7f7f7" }}>
+          <div className="max-w-6xl mx-auto px-8">
+            <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
+              What We Do
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black mb-16" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+              Our Services
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {services.map((service) => (
-                <div key={service.name} className="bg-white p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 16px)", boxShadow: "var(--card-shadow)" }}>
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
-                    style={{ backgroundColor: `${primary}22` }}
-                  >
-                    <ServiceIcon industry={company.industry_category} color={primary} />
+                <div key={service.name}
+                  className="bg-white p-8 border-l-4"
+                  style={{
+                    borderColor: primary,
+                    borderRadius: `0 var(--card-radius, 10px) var(--card-radius, 10px) 0`,
+                    boxShadow: "var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08))",
+                  }}>
+                  <div className="mb-5">
+                    <ServiceIcon industry={company.industry_category} color={primary} size={24} />
                   </div>
-                  <h3 className="font-bold text-lg mb-2" style={{ color: "#111111" }}>{service.name}</h3>
-                  <p className="text-gray-500 text-sm leading-relaxed">{service.description}</p>
+                  <h3 className="font-black text-lg mb-3" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                    {service.name}
+                  </h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "#776F6F" }}>
+                    {service.description}
+                  </p>
                 </div>
               ))}
             </div>
-            <div className="text-center mt-10">
-              <Link href="/services" className="inline-block font-bold text-white px-8 py-4 rounded-full" style={{ backgroundColor: primary }}>
+            <div className="mt-12">
+              <Link href="/services"
+                className="inline-block font-black text-white px-10 py-4 text-sm tracking-wide uppercase"
+                style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
                 View All Services
               </Link>
             </div>
@@ -98,33 +127,48 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      {/* ABOUT STRIP */}
+      {/* ── ABOUT ── */}
       {config?.about_text && (
-        <section className="py-20 text-white" style={{ backgroundColor: "#1a1a1a" }}>
-          <div className="max-w-2xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-black mb-6">About {company.name}</h2>
-            <p className="text-gray-300 text-lg leading-relaxed">{config.about_text}</p>
-            <Link href="/about" className="inline-block mt-8 font-bold px-8 py-4 rounded-full text-white" style={{ backgroundColor: primary }}>
+        <section className="py-28" style={{ backgroundColor: "#111111" }}>
+          <div className="max-w-4xl mx-auto px-8 text-center">
+            <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight"
+              style={{ fontFamily: "var(--font-heading, inherit)" }}>
+              {config.about_text}
+            </h2>
+            <Link href="/about"
+              className="inline-block font-black text-white px-10 py-4 text-sm tracking-wide uppercase mt-4"
+              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
               Our Story
             </Link>
           </div>
         </section>
       )}
 
-      {/* TESTIMONIALS */}
+      {/* ── TESTIMONIALS ── */}
       {testimonials.length > 0 && (
-        <section className="py-20 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
-            <h2 className="text-3xl font-black text-center mb-12" style={{ color: "#111111" }}>What Clients Say</h2>
+        <section className="py-24 bg-white">
+          <div className="max-w-6xl mx-auto px-8">
+            <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
+              Client Stories
+            </p>
+            <h2 className="text-4xl md:text-5xl font-black mb-16" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+              What Clients Say
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {testimonials.map((t) => (
-                <div key={t.name} className="p-8 rounded-2xl" style={{ backgroundColor: "#f9f9f9" }}>
-                  <svg className="w-8 h-8 mb-4" fill={primary} viewBox="0 0 24 24">
-                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
-                  </svg>
-                  <p className="text-gray-600 leading-relaxed mb-6 italic">&ldquo;{t.quote}&rdquo;</p>
-                  <p className="font-bold" style={{ color: "#111111" }}>{t.name}</p>
-                  <p className="text-sm text-gray-400">{t.role}</p>
+                <div key={t.name} className="p-10 border-t-4" style={{
+                  borderColor: primary,
+                  backgroundColor: "#f7f7f7",
+                  borderRadius: `0 0 var(--card-radius, 10px) var(--card-radius, 10px)`,
+                }}>
+                  <p className="text-lg leading-relaxed mb-8 italic" style={{ color: "#333333" }}>
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+                  <div>
+                    <p className="font-black text-sm tracking-wide uppercase" style={{ color: "#111111" }}>{t.name}</p>
+                    <p className="text-xs mt-1" style={{ color: "#776F6F" }}>{t.role}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -132,17 +176,24 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
-      {/* FINAL CTA */}
-      <section className="py-20 text-center" style={{ backgroundColor: "#111111" }}>
-        <div className="max-w-2xl mx-auto px-4">
-          <h2 className="text-3xl font-black text-white mb-4">Ready to Get Started?</h2>
-          <p className="text-gray-400 mb-8">
+      {/* ── FINAL CTA ── */}
+      <section className="py-28 text-center" style={{ backgroundColor: "#111111" }}>
+        <div className="max-w-2xl mx-auto px-8">
+          <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6"
+            style={{ fontFamily: "var(--font-heading, inherit)" }}>
+            Ready to Get Started?
+          </h2>
+          <p className="mb-10 text-lg" style={{ color: "#888888" }}>
             {company.phone && (
-              <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`} className="font-bold text-white hover:underline">{company.phone}</a> or</>
-            )}{" "}
+              <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
+            )}
             send us a message and we&apos;ll be in touch.
           </p>
-          <Link href={primaryHref} className="inline-block font-bold text-white px-10 py-4 rounded-full text-lg" style={{ backgroundColor: primary }}>
+          <Link href={primaryHref}
+            className="inline-block font-black text-white px-12 py-5 text-base tracking-wide uppercase"
+            style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
             {primaryLabel}
           </Link>
         </div>
