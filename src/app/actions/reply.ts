@@ -35,7 +35,7 @@ export async function sendReply(_: unknown, formData: FormData) {
   }
 
   const { error } = await resend.emails.send({
-    from: `${company.name} via Found <hello@foundco.app>`,
+    from: `${company.name} <hello@foundco.app>`,
     to: lead.email,
     subject,
     html: buildCustomerReplyHtml({ company, message }),
