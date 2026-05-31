@@ -2,6 +2,16 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
 import { heroGradient } from "@/lib/color"
+import type { Metadata } from "next"
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const { getCompanyBySlug, getCompanyByDomain } = await import("@/lib/company")
+  const company = slug.startsWith("__domain__")
+    ? await getCompanyByDomain(slug.replace("__domain__", ""))
+    : await getCompanyBySlug(slug)
+  return { title: company ? `Our Work | ${company.name}` : "Gallery" }
+}
 
 export default async function GalleryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

@@ -3,6 +3,16 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel } from "@/types/company"
 import { heroGradient } from "@/lib/color"
+import type { Metadata } from "next"
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const { getCompanyBySlug, getCompanyByDomain } = await import("@/lib/company")
+  const company = slug.startsWith("__domain__")
+    ? await getCompanyByDomain(slug.replace("__domain__", ""))
+    : await getCompanyBySlug(slug)
+  return { title: company ? `Contact | ${company.name}` : "Contact" }
+}
 
 export default async function ContactPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

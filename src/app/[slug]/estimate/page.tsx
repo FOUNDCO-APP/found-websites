@@ -3,6 +3,16 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel } from "@/types/company"
 import EstimateForm from "./EstimateForm"
 import { heroGradient } from "@/lib/color"
+import type { Metadata } from "next"
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const { getCompanyBySlug, getCompanyByDomain } = await import("@/lib/company")
+  const company = slug.startsWith("__domain__")
+    ? await getCompanyByDomain(slug.replace("__domain__", ""))
+    : await getCompanyBySlug(slug)
+  return { title: company ? `Get a Free Estimate | ${company.name}` : "Get an Estimate" }
+}
 
 export default async function EstimatePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

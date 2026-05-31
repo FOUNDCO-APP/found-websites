@@ -18,15 +18,17 @@ export async function generateMetadata(
   if (!company) return {}
 
   const config = company.website_config
-  const title = company.name
+  const serviceList = config?.services?.map(s => s.name).join(", ") || ""
+  const locationStr = company.city ? `${company.city}${company.state ? `, ${company.state}` : ""}` : ""
+  const homeTitle = [company.name, locationStr, serviceList].filter(Boolean).join(" — ")
   const description = config?.hero_subtitle
-    || `${company.name} — ${company.city ? `serving ${company.city}` : "local business"}. Contact us today.`
+    || `${company.name}${locationStr ? ` — serving ${locationStr}` : ""}. Contact us today.`
   const url = `https://${company.slug}.foundco.app`
   const image = company.logo_url || undefined
 
   return {
     title: {
-      default: company.name,
+      default: homeTitle,
       template: `%s — ${company.name}`,
     },
     description,
@@ -34,19 +36,109 @@ export async function generateMetadata(
       type: "website",
       url,
       siteName: company.name,
-      title: company.name,
+      title: homeTitle,
       description,
       ...(image && { images: [{ url: image, alt: company.name }] }),
     },
     twitter: {
       card: "summary",
-      title: company.name,
+      title: homeTitle,
       description,
       ...(image && { images: [image] }),
     },
     metadataBase: new URL(url),
     alternates: { canonical: url },
   }
+}
+
+function buildJsonLd(company: Company) {
+  const config = company.website_config
+  const websiteUrl = `https://${company.slug}.foundco.app`
+  const services = config?.services || []
+  const serviceAreas = config?.service_areas || []
+
+  const localBusiness = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": websiteUrl,
+    name: company.name,
+    url: websiteUrl,
+    ...(company.phone && { telephone: company.phone }),
+    ...(company.email && { email: company.email }),
+    ...(company.logo_url && { image: company.logo_url }),
+    ...(company.city && company.state && {
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: company.city,
+        addressRegion: company.state,
+        addressCountry: "US",
+      },
+    }),
+    ...(company.phone && {
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: company.phone,
+        contactType: "customer service",
+        availableLanguage: "English",
+      },
+    }),
+    ...(serviceAreas.length > 0 && {
+      areaServed: serviceAreas.map(area => ({
+        "@type": "City",
+        name: area,
+      })),
+    }),
+    ...(services.length > 0 && {
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: "Services",
+        itemListElement: services.map((s, i) => ({
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: s.name,
+            description: s.description,
+          },
+          position: i + 1,
+        })),
+      },
+    }),
+  }
+
+  // Auto-generate FAQ from business data
+  const faqs = [
+    {
+      q: `Do you offer free estimates?`,
+      a: `Yes, ${company.name} offers free, no-obligation estimates. Contact us today to get started.`,
+    },
+    {
+      q: `Where is ${company.name} located?`,
+      a: `We are based in ${company.city || "your area"}${company.state ? `, ${company.state}` : ""} and serve the surrounding region.`,
+    },
+    {
+      q: `How do I contact ${company.name}?`,
+      a: `You can reach us by phone at ${company.phone || "the number on our website"} or by filling out our online estimate form.`,
+    },
+    ...(services.length > 0 ? [{
+      q: `What services does ${company.name} offer?`,
+      a: `We offer ${services.map(s => s.name).join(", ")}.`,
+    }] : []),
+  ]
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map(faq => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
+      },
+    })),
+  }
+
+  return [localBusiness, faqSchema]
 }
 
 export default async function CompanyLayout({
@@ -70,26 +162,8 @@ export default async function CompanyLayout({
   if (!company) notFound()
 
   const { primary_color, accent_color_1 } = company
-  const websiteUrl = `https://${company.slug}.foundco.app`
   const vibe = getVibe(company.vibe)
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    name: company.name,
-    url: websiteUrl,
-    ...(company.phone && { telephone: company.phone }),
-    ...(company.email && { email: company.email }),
-    ...(company.logo_url && { image: company.logo_url }),
-    ...(company.city && company.state && {
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: company.city,
-        addressRegion: company.state,
-        addressCountry: "US",
-      },
-    }),
-  }
+  const schemas = buildJsonLd(company)
 
   return (
     <div
@@ -104,10 +178,13 @@ export default async function CompanyLayout({
         fontFamily: vibe.fontBody,
       } as React.CSSProperties}
     >
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      {schemas.map((schema, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
       <Navbar company={company} />
       <main className="flex-1">{children}</main>
       <Footer company={company} />

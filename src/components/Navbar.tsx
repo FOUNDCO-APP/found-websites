@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
 
@@ -30,7 +31,14 @@ const navLinks = [
 
 export default function Navbar({ company }: { company: Company }) {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
   const primary = company.primary_color
+
+  // Extract current page from proxy-rewritten path (e.g. /barriobuilders/about → /about)
+  const segments = pathname.split("/")
+  const currentPage = "/" + (segments[2] || "")
+
+  const isActive = (href: string) => currentPage === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
@@ -54,7 +62,8 @@ export default function Navbar({ company }: { company: Company }) {
           <nav className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest uppercase">
             {navLinks.map((item) => (
               <Link key={item.label} href={item.href}
-                className="text-gray-400 hover:text-gray-900 transition-colors">
+                className="transition-colors"
+                style={{ color: isActive(item.href) ? primary : "#aaaaaa" }}>
                 {item.label}
               </Link>
             ))}
@@ -62,9 +71,15 @@ export default function Navbar({ company }: { company: Company }) {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-5">
+            {/* Divider */}
+            <div className="w-px h-5 bg-gray-200" />
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="text-sm font-semibold" style={{ color: "#776F6F" }}>
+                className="flex items-center gap-1.5 text-sm font-black transition-colors hover:opacity-80"
+                style={{ color: primary }}>
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
                 {company.phone}
               </a>
             )}
