@@ -19,17 +19,21 @@ export async function submitLead(_: unknown, formData: FormData) {
 
   const supabase = await createClient()
 
-  const { error } = await supabase.from("leads").insert({
-    company_id: companyId,
-    name,
-    phone,
-    email: email || null,
-    service: service || null,
-    message: message || null,
-  })
+  const { data: lead, error } = await supabase
+    .from("leads")
+    .insert({
+      company_id: companyId,
+      name,
+      phone,
+      email: email || null,
+      service: service || null,
+      message: message || null,
+    })
+    .select("reply_token")
+    .single()
 
-  if (error) {
-    console.error("Lead insert error:", error.message)
+  if (error || !lead) {
+    console.error("Lead insert error:", error?.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
@@ -41,11 +45,12 @@ export async function submitLead(_: unknown, formData: FormData) {
     .single()
 
   if (company?.email) {
+    const replyUrl = `https://foundco.app/reply/${lead.reply_token}`
     await resend.emails.send({
       from: `Found <hello@foundco.app>`,
       to: company.email,
       subject: `New lead: ${name}${service ? ` — ${service}` : ""}`,
-      html: buildLeadEmail({ company, name, phone, email, service, message }),
+      html: buildLeadEmail({ company, name, phone, email, service, message, replyUrl }),
     }).catch((err) => console.error("Resend error:", err))
   }
 
@@ -59,6 +64,7 @@ function buildLeadEmail({
   email,
   service,
   message,
+  replyUrl,
 }: {
   company: { name: string; email: string; phone: string | null }
   name: string
@@ -66,17 +72,15 @@ function buildLeadEmail({
   email: string
   service: string
   message: string
+  replyUrl: string
 }) {
   const cleanPhone = phone.replace(/\D/g, "")
   const firstName = name.split(" ")[0]
   const receivedAt = new Date().toLocaleString("en-US", {
     weekday: "short", month: "short", day: "numeric",
     hour: "numeric", minute: "2-digit", hour12: true,
-  })
-  const mailtoSubject = encodeURIComponent(`Re: Your estimate request — ${company.name}`)
-  const mailtoBody = encodeURIComponent(
-    `Hi ${firstName},\n\nThank you for reaching out to ${company.name}! I'd love to help${service ? ` with your ${service.toLowerCase()} project` : ""} and will be in touch soon.\n\n${company.name}${company.phone ? `\n${company.phone}` : ""}`
-  )
+    timeZone: "UTC",
+  }) + " UTC"
 
   return `<!DOCTYPE html>
 <html>
@@ -137,7 +141,7 @@ function buildLeadEmail({
                   <a href="tel:${cleanPhone}" style="display:block;text-align:center;background:#111111;color:#ffffff;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Call ${name.split(" ")[0]}</a>
                 </td>
                 ${email ? `<td style="padding-left:8px;">
-                  <a href="mailto:${email}?subject=${mailtoSubject}&body=${mailtoBody}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
+                  <a href="${replyUrl}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
                 </td>` : ""}
               </tr>
             </table>
