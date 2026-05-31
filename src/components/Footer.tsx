@@ -1,6 +1,7 @@
 import Link from "next/link"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
+import { logoColor } from "@/lib/color"
 
 function BrandMark({ name, primary }: { name: string; primary: string }) {
   return (
@@ -57,9 +58,9 @@ export default function Footer({ company }: { company: Company }) {
           <div>
             <div className="mb-5">
               {company.logo_url ? (
-                <img src={company.logo_url} alt={company.name} className="h-10 w-auto" />
+                <img src={company.logo_url} alt={company.name} className="h-10 w-auto brightness-0 invert" />
               ) : (
-                <BrandMark name={company.name} primary={primary} />
+                <BrandMark name={company.name} primary={logoColor("dark", primary)} />
               )}
             </div>
             <p className="text-sm leading-relaxed mb-5" style={{ color: "#888888" }}>

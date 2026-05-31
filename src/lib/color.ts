@@ -1,3 +1,8 @@
+// Returns white for dark backgrounds, brand color for light backgrounds
+export function logoColor(background: "dark" | "light", primary: string): string {
+  return background === "dark" ? "#ffffff" : primary
+}
+
 export function darkenHex(hex: string, amount = 0.82): string {
   const clean = hex.replace("#", "")
   const r = parseInt(clean.slice(0, 2), 16)
