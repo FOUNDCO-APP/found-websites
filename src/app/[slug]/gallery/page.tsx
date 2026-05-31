@@ -32,14 +32,24 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
   const primary = company.primary_color
   const gradient = heroGradient(primary)
+  const imgs = company.website_config?.stock_images || []
+  const img = (i: number): string | null => imgs[i % imgs.length] || null
 
   return (
     <>
-      <section className="py-24 text-white" style={{ background: gradient }}>
-        <div className="max-w-6xl mx-auto px-8">
+      <section className="relative min-h-[45vh] flex items-center overflow-hidden">
+        {img(0) ? (
+          <>
+            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/70" />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ background: gradient }} />
+        )}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>Our Work</p>
-          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: "var(--font-heading, inherit)" }}>Gallery</h1>
-          <p className="text-lg" style={{ color: "#888888" }}>Real work. Real results.</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>Gallery</h1>
+          <p className="text-lg" style={{ color: "#cccccc" }}>Real work. Real results.</p>
         </div>
       </section>
 

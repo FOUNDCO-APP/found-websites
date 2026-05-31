@@ -22,13 +22,16 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
     : await getCompanyBySlug(slug)
   if (!company) notFound()
 
-  const services = company.website_config?.services || []
+  const config = company.website_config
+  const services = config?.services || []
   const primary = company.primary_color
   const gradient = heroGradient(primary)
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
-  const heroImage = company.website_config?.hero_image_url ?? null
+  const imgs = config?.stock_images || []
+  const img = (i: number): string | null => imgs[i % imgs.length] || null
+  const heroImage = config?.hero_image_url || img(0)
 
   return (
     <>

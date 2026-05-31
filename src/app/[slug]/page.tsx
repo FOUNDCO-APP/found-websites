@@ -4,7 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
-import { fetchStockPhoto } from "@/lib/pexels"
+import { fetchStockPhotos } from "@/lib/pexels"
 import { createClient } from "@/lib/supabase/server"
 import ServiceIcon from "@/components/ServiceIcon"
 import { getServiceIcon } from "@/components/ServiceIcon"
@@ -36,19 +36,22 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const heroVideo = config?.hero_video_url ?? null
   const gradient = heroGradient(primary)
 
-  // If no hero image, fetch one from Pexels and save it for next time
-  let heroImage = config?.hero_image_url ?? null
-  if (!heroImage && !heroVideo && process.env.PEXELS_API_KEY) {
-    const stockUrl = await fetchStockPhoto(company.industry_category, company.vibe, company.city)
-    if (stockUrl) {
-      heroImage = stockUrl
+  // Fetch 5 stock photos on first visit and save them all — every page and section uses this pool
+  let imgs: string[] = config?.stock_images || []
+  if (imgs.length < 3 && !heroVideo && process.env.PEXELS_API_KEY) {
+    const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city)
+    if (fetched.length) {
+      imgs = fetched
       const supabase = await createClient()
       await supabase
         .from("website_config")
-        .update({ hero_image_url: stockUrl })
+        .update({ stock_images: fetched, hero_image_url: fetched[0] })
         .eq("company_id", company.id)
     }
   }
+
+  const img = (i: number): string | null => imgs[i % imgs.length] || null
+  const heroImage = config?.hero_image_url || img(0)
 
   return (
     <>
@@ -154,8 +157,16 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
       {/* ── ABOUT STRIP ── */}
       {config?.about_text && (
-        <section className="py-28" style={{ backgroundColor: "#111111" }}>
-          <div className="max-w-6xl mx-auto px-8">
+        <section className="relative py-28 overflow-hidden">
+          {img(1) ? (
+            <>
+              <img src={img(1)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/75" />
+            </>
+          ) : (
+            <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
+          )}
+          <div className="relative z-10 max-w-6xl mx-auto px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
               <div>
                 <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
@@ -168,7 +179,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
                 </h2>
               </div>
               <div>
-                <p className="text-lg leading-relaxed mb-8" style={{ color: "#aaaaaa" }}>
+                <p className="text-lg leading-relaxed mb-8" style={{ color: "#cccccc" }}>
                   {config.about_text}
                 </p>
                 <Link href="/about" className="btn text-white"
@@ -183,27 +194,37 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
       {/* ── TESTIMONIALS ── */}
       {testimonials.length > 0 && (
-        <section className="py-24 bg-white">
-          <div className="max-w-6xl mx-auto px-8">
+        <section className="relative py-24 overflow-hidden">
+          {img(2) ? (
+            <>
+              <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/80" />
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-white" />
+          )}
+          <div className="relative z-10 max-w-6xl mx-auto px-8">
             <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
               Client Stories
             </p>
-            <h2 className="text-4xl md:text-5xl font-black mb-16" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+            <h2 className="text-4xl md:text-5xl font-black mb-16 text-white"
+              style={{ fontFamily: "var(--font-heading, inherit)" }}>
               What Clients Say
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {testimonials.map((t) => (
                 <div key={t.name} className="p-10 border-t-4" style={{
                   borderColor: primary,
-                  backgroundColor: "#f7f7f7",
+                  backgroundColor: "rgba(255,255,255,0.07)",
                   borderRadius: `0 0 var(--card-radius, 10px) var(--card-radius, 10px)`,
+                  backdropFilter: "blur(4px)",
                 }}>
-                  <p className="text-lg leading-relaxed mb-8 italic" style={{ color: "#333333" }}>
+                  <p className="text-lg leading-relaxed mb-8 italic" style={{ color: "#dddddd" }}>
                     &ldquo;{t.quote}&rdquo;
                   </p>
                   <div>
-                    <p className="font-black text-sm tracking-wide uppercase" style={{ color: "#111111" }}>{t.name}</p>
-                    <p className="text-xs mt-1" style={{ color: "#776F6F" }}>{t.role}</p>
+                    <p className="font-black text-sm tracking-wide uppercase text-white">{t.name}</p>
+                    <p className="text-xs mt-1" style={{ color: "#aaaaaa" }}>{t.role}</p>
                   </div>
                 </div>
               ))}

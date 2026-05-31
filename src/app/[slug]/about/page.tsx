@@ -29,21 +29,31 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     : intentHref[company.primary_intent] || "/contact"
   const serviceAreas = config?.service_areas || []
   const services = config?.services || []
+  const imgs = config?.stock_images || []
+  const img = (i: number): string | null => imgs[i % imgs.length] || null
 
   return (
     <>
       {/* ── HEADER ── */}
-      <section className="py-28 text-white" style={{ background: gradient }}>
-        <div className="max-w-6xl mx-auto px-8">
+      <section className="relative min-h-[50vh] flex items-center overflow-hidden">
+        {img(0) ? (
+          <>
+            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/68" />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ background: gradient }} />
+        )}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 py-20 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
-          <h1 className="text-5xl md:text-7xl font-black leading-none mb-8 text-balance"
+          <h1 className="text-5xl md:text-7xl font-black leading-none mb-8 text-balance text-white"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             About {company.name}
           </h1>
           {company.city && (
-            <p className="text-lg" style={{ color: "#888888" }}>
+            <p className="text-lg" style={{ color: "#cccccc" }}>
               Locally owned and operated in {company.city}{company.state ? `, ${company.state}` : ""}.
             </p>
           )}

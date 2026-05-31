@@ -32,7 +32,7 @@ INSERT INTO companies (
 ) VALUES (
   '9fdc7cda-3151-412b-9cec-978a5ea93304',
   'Barrio Builders',
-  'barrio-builders',
+  'barriobuilders',
   'home_services',
   'bold',
   'quote',
@@ -100,7 +100,7 @@ INSERT INTO website_config (
     {"name":"Tom Richards","role":"Property Owner, Marana AZ","quote":"They replaced my entire roof after the monsoon season. Fair price, great work, and they kept me updated the whole time."},
     {"name":"Rosa & Daniel Peralta","role":"Homeowners, South Tucson AZ","quote":"Hablamos con el equipo de Barrio Builders y desde el principio nos sentimos en confianza. El trabajo quedó perfecto."}
   ]'::jsonb,
-  '["Tucson","Marana","Oro Valley","Sahuarita","Green Valley","Vail","Catalina Foothills"]'::jsonb,
+  ARRAY['Tucson','Marana','Oro Valley','Sahuarita','Green Valley','Vail','Catalina Foothills']::text[],
   '{}'::jsonb,
   null,
   true
