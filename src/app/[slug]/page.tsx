@@ -5,6 +5,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
 import ServiceIcon from "@/components/ServiceIcon"
+import { getServiceIcon } from "@/components/ServiceIcon"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -76,8 +77,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             </Link>
             {secondaryLabel && secondaryHref && (
               <Link href={secondaryHref}
-                className="inline-block font-black border-2 border-white text-white px-10 py-5 text-base tracking-wide uppercase hover:bg-white hover:text-black transition-colors"
-                style={{ borderRadius: "var(--button-radius, 6px)" }}>
+                className="inline-block font-black text-white px-10 py-5 text-base tracking-wide uppercase hover:bg-white/10 transition-colors"
+                style={{ borderRadius: "var(--button-radius, 6px)", border: "1px solid rgba(255,255,255,0.35)" }}>
                 {secondaryLabel}
               </Link>
             )}
@@ -105,7 +106,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
                     boxShadow: "var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08))",
                   }}>
                   <div className="mb-5">
-                    <ServiceIcon industry={company.industry_category} color={primary} size={24} />
+                    <ServiceIcon serviceName={service.name} color={primary} size={24} />
                   </div>
                   <h3 className="font-black text-lg mb-3" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                     {service.name}

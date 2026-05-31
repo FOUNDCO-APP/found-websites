@@ -7,6 +7,7 @@ export function darkenHex(hex: string, amount = 0.82): string {
 }
 
 export function heroGradient(primaryColor: string): string {
-  const dark = darkenHex(primaryColor, 0.82)
-  return `linear-gradient(160deg, ${dark} 0%, #111111 60%)`
+  const deepDark = darkenHex(primaryColor, 0.88)
+  const midDark  = darkenHex(primaryColor, 0.70)
+  return `linear-gradient(155deg, ${deepDark} 0%, ${midDark} 35%, #0f0f0f 70%)`
 }
