@@ -18,8 +18,9 @@ export async function submitLead(_: unknown, formData: FormData) {
   }
 
   const supabase = await createClient()
+  const replyToken = crypto.randomUUID()
 
-  const { data: lead, error } = await supabase
+  const { error } = await supabase
     .from("leads")
     .insert({
       company_id: companyId,
@@ -28,12 +29,11 @@ export async function submitLead(_: unknown, formData: FormData) {
       email: email || null,
       service: service || null,
       message: message || null,
+      reply_token: replyToken,
     })
-    .select("reply_token")
-    .single()
 
-  if (error || !lead) {
-    console.error("Lead insert error:", error?.message)
+  if (error) {
+    console.error("Lead insert error:", error.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
@@ -45,7 +45,7 @@ export async function submitLead(_: unknown, formData: FormData) {
     .single()
 
   if (company?.email) {
-    const replyUrl = `https://foundco.app/reply/${lead.reply_token}`
+    const replyUrl = `https://foundco.app/reply/${replyToken}`
     await resend.emails.send({
       from: `Found <hello@foundco.app>`,
       to: company.email,
