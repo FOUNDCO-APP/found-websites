@@ -73,14 +73,25 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
           <div className="flex flex-wrap gap-4">
             <Link href={primaryHref}
-              className="inline-block font-black text-white px-10 py-5 text-base tracking-wide uppercase"
-              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+              className="inline-flex items-center justify-center font-black text-white text-sm tracking-widest uppercase"
+              style={{
+                backgroundColor: primary,
+                borderRadius: "var(--button-radius, 6px)",
+                border: `2px solid ${primary}`,
+                padding: "16px 36px",
+                minWidth: "180px",
+              }}>
               {primaryLabel}
             </Link>
             {secondaryLabel && secondaryHref && (
               <Link href={secondaryHref}
-                className="inline-block font-black text-white px-10 py-5 text-base tracking-wide uppercase hover:bg-white/10 transition-colors"
-                style={{ borderRadius: "var(--button-radius, 6px)", border: "1px solid rgba(255,255,255,0.35)" }}>
+                className="inline-flex items-center justify-center font-black text-white text-sm tracking-widest uppercase hover:bg-white/10 transition-colors"
+                style={{
+                  borderRadius: "var(--button-radius, 6px)",
+                  border: "2px solid rgba(255,255,255,0.35)",
+                  padding: "16px 36px",
+                  minWidth: "180px",
+                }}>
                 {secondaryLabel}
               </Link>
             )}
