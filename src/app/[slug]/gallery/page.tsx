@@ -16,6 +16,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     .eq("company_id", company.id)
     .eq("website_flag", true)
     .eq("type", "photo")
+    .order("gallery_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
 
   const primary = company.primary_color

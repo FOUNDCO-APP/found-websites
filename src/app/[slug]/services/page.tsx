@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
+import ServiceIcon from "@/components/ServiceIcon"
 
 export default async function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -33,9 +34,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
               {services.map((service) => (
                 <div key={service.name} className="border border-gray-100 rounded-2xl p-8 shadow-sm">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${primary}22` }}>
-                    <svg className="w-6 h-6" fill="none" stroke={primary} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <ServiceIcon industry={company.industry_category} color={primary} size={22} />
                   </div>
                   <h2 className="text-xl font-black mb-3" style={{ color: "#111111" }}>{service.name}</h2>
                   <p className="text-gray-600 leading-relaxed mb-6">{service.description}</p>

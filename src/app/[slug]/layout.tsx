@@ -4,6 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import type { Company } from "@/types/company"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
+import { getVibe } from "@/lib/vibe"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -70,6 +71,7 @@ export default async function CompanyLayout({
 
   const { primary_color, accent_color_1 } = company
   const websiteUrl = `https://${company.slug}.foundco.app`
+  const vibe = getVibe(company.vibe)
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -94,6 +96,12 @@ export default async function CompanyLayout({
       style={{
         "--color-primary": primary_color,
         "--color-accent": accent_color_1,
+        "--font-heading": vibe.fontHeading,
+        "--font-body": vibe.fontBody,
+        "--card-radius": vibe.cardRadius,
+        "--card-shadow": vibe.cardShadow,
+        "--button-radius": vibe.buttonRadius,
+        fontFamily: vibe.fontBody,
       } as React.CSSProperties}
     >
       <script

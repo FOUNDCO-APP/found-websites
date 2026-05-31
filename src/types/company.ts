@@ -13,6 +13,7 @@ export type WebsiteConfig = {
   id: string
   hero_title: string | null
   hero_subtitle: string | null
+  hero_video_url: string | null
   about_text: string | null
   services: ServiceItem[]
   testimonials: Testimonial[]

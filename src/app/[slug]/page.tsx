@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
+import ServiceIcon from "@/components/ServiceIcon"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -30,6 +31,13 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     <>
       {/* HERO */}
       <section className="relative min-h-[90vh] flex items-center" style={{ backgroundColor: "#111111" }}>
+        {config?.hero_video_url ? (
+          <video
+            src={config.hero_video_url}
+            autoPlay muted loop playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : null}
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 max-w-6xl mx-auto px-4 py-24 w-full">
           <p className="text-xs font-bold tracking-widest uppercase mb-4" style={{ color: primary }}>
@@ -69,14 +77,12 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             <h2 className="text-3xl md:text-4xl font-black text-center mb-12" style={{ color: "#111111" }}>Our Services</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {services.map((service) => (
-                <div key={service.name} className="bg-white p-8 rounded-2xl shadow-sm">
+                <div key={service.name} className="bg-white p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 16px)", boxShadow: "var(--card-shadow)" }}>
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center mb-4"
                     style={{ backgroundColor: `${primary}22` }}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke={primary} viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <ServiceIcon industry={company.industry_category} color={primary} />
                   </div>
                   <h3 className="font-bold text-lg mb-2" style={{ color: "#111111" }}>{service.name}</h3>
                   <p className="text-gray-500 text-sm leading-relaxed">{service.description}</p>
