@@ -45,18 +45,25 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
                   <h2 className="text-xl font-black mb-3" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                     {service.name}
                   </h2>
-                  <p className="leading-relaxed mb-8 text-sm" style={{ color: "#776F6F" }}>{service.description}</p>
-                  <Link
-                    href={ctaHref}
-                    className="inline-block font-black text-white px-8 py-3 text-sm tracking-wide uppercase"
-                    style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
-                    {intentLabel[company.primary_intent] || "Get in Touch"}
-                  </Link>
+                  <p className="leading-relaxed text-sm" style={{ color: "#776F6F" }}>{service.description}</p>
                 </div>
               ))}
             </div>
           ) : (
             <p className="text-center" style={{ color: "#776F6F" }}>Services coming soon.</p>
+          )}
+          {services.length > 0 && (
+            <div className="mt-16 pt-12 border-t border-gray-200 text-center">
+              <p className="mb-6 text-lg font-black" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                Ready to get started?
+              </p>
+              <Link
+                href={ctaHref}
+                className="inline-block font-black text-white px-12 py-5 text-sm tracking-wide uppercase"
+                style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+                {intentLabel[company.primary_intent] || "Get in Touch"}
+              </Link>
+            </div>
           )}
         </div>
       </section>

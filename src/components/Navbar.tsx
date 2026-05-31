@@ -76,12 +76,16 @@ export default function Navbar({ company }: { company: Company }) {
         </div>
       </header>
 
-      {/* Full-screen overlay menu */}
-      {open && (
-        <div
-          className="fixed inset-0 z-[100] flex flex-col"
-          style={{ backgroundColor: "#111111" }}
-        >
+      {/* Full-screen overlay menu — always rendered, slides in/out */}
+      <div
+        className="fixed inset-0 z-[100] flex flex-col"
+        style={{
+          backgroundColor: "#111111",
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 320ms cubic-bezier(0.4, 0, 0.2, 1)",
+          visibility: open ? "visible" : "hidden",
+        }}
+      >
           {/* Top bar */}
           <div className="flex items-center justify-between px-6 py-5">
             <Link href="/" onClick={() => setOpen(false)}>
@@ -151,7 +155,6 @@ export default function Navbar({ company }: { company: Company }) {
           </div>
 
         </div>
-      )}
     </>
   )
 }

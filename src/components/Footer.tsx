@@ -14,20 +14,17 @@ export default function Footer({ company }: { company: Company }) {
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4">
               {company.logo_url ? (
                 <img src={company.logo_url} alt={company.name} className="h-10 w-auto" />
               ) : (
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center font-black text-white text-lg"
-                  style={{ backgroundColor: primary }}
+                <span
+                  className="font-black text-xl tracking-tight"
+                  style={{ color: primary, fontFamily: "var(--font-heading, inherit)" }}
                 >
-                  {company.name.charAt(0)}
-                </div>
+                  {company.name}
+                </span>
               )}
-              <span className="font-black text-sm tracking-widest uppercase" style={{ color: primary }}>
-                {company.name}
-              </span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               {company.city}{company.state ? `, ${company.state}` : ""}
@@ -70,8 +67,8 @@ export default function Footer({ company }: { company: Company }) {
               <li>
                 <Link
                   href={ctaHref}
-                  className="inline-block mt-2 font-bold text-white px-5 py-2 rounded-full text-sm"
-                  style={{ backgroundColor: primary }}
+                  className="inline-block mt-2 font-black text-white px-5 py-2 text-xs tracking-wide uppercase"
+                  style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}
                 >
                   {ctaLabel}
                 </Link>

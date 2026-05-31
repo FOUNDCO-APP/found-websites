@@ -26,7 +26,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
-            <div className="lg:col-span-2 border border-gray-100 rounded-2xl p-8 shadow-sm">
+            <div className="lg:col-span-2 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
               <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>Tell us about your project</h2>
               <EstimateForm companyId={company.id} services={services} primaryColor={primary} />
             </div>
@@ -40,7 +40,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
                   </a>
                 </div>
               )}
-              <div className="rounded-2xl p-6" style={{ backgroundColor: "#f9f9f9" }}>
+              <div className="p-6" style={{ backgroundColor: "#f9f9f9", borderRadius: "var(--card-radius, 10px)" }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: primary }}>What to expect</p>
                 <ul className="mt-3 space-y-2">
                   {["We respond within 1 business day", "No obligation, no pressure", "Free consultation"].map((item) => (

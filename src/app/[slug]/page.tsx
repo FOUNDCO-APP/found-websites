@@ -51,8 +51,10 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
 
-        {/* Dark overlay — always present for text legibility */}
-        <div className="absolute inset-0 bg-black/50" />
+        {/* Dark overlay — only when image/video is behind text */}
+        {(heroVideo || heroImage) && (
+          <div className="absolute inset-0 bg-black/50" />
+        )}
 
         {/* Content */}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-32 w-full">
