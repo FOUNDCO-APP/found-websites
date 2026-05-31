@@ -1,11 +1,10 @@
 -- ============================================================
 -- Blue Luna Events — Seed (Instance #2)
--- Generated: May 31, 2026 from onboarding session
--- Run in Supabase SQL Editor
--- Safe to run multiple times (upsert)
+-- Generated: May 31, 2026
+-- Uses fixed UUID. Safe to run multiple times.
 -- ============================================================
 
--- STEP 1: Insert company
+-- STEP 1: Insert or update company using fixed UUID
 INSERT INTO companies (
   id,
   name,
@@ -24,7 +23,7 @@ INSERT INTO companies (
   accent_color_2,
   active
 ) VALUES (
-  gen_random_uuid(),
+  'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   'Blue Luna Events',
   'blueluna',
   'events',
@@ -41,22 +40,23 @@ INSERT INTO companies (
   '#E0F2F1',
   true
 )
-ON CONFLICT (slug) DO UPDATE SET
-  name             = EXCLUDED.name,
+ON CONFLICT (id) DO UPDATE SET
+  name              = EXCLUDED.name,
+  slug              = EXCLUDED.slug,
   industry_category = EXCLUDED.industry_category,
-  vibe             = EXCLUDED.vibe,
-  primary_intent   = EXCLUDED.primary_intent,
-  secondary_intent = EXCLUDED.secondary_intent,
-  phone            = EXCLUDED.phone,
-  email            = EXCLUDED.email,
-  city             = EXCLUDED.city,
-  state            = EXCLUDED.state,
-  primary_color    = EXCLUDED.primary_color,
-  accent_color_1   = EXCLUDED.accent_color_1,
-  accent_color_2   = EXCLUDED.accent_color_2,
-  active           = EXCLUDED.active;
+  vibe              = EXCLUDED.vibe,
+  primary_intent    = EXCLUDED.primary_intent,
+  secondary_intent  = EXCLUDED.secondary_intent,
+  phone             = EXCLUDED.phone,
+  email             = EXCLUDED.email,
+  city              = EXCLUDED.city,
+  state             = EXCLUDED.state,
+  primary_color     = EXCLUDED.primary_color,
+  accent_color_1    = EXCLUDED.accent_color_1,
+  accent_color_2    = EXCLUDED.accent_color_2,
+  active            = EXCLUDED.active;
 
--- STEP 2: Insert website_config
+-- STEP 2: Insert or update website_config using same fixed UUID
 INSERT INTO website_config (
   company_id,
   hero_title,
@@ -70,9 +70,8 @@ INSERT INTO website_config (
   social_links,
   custom_domain,
   published
-)
-SELECT
-  id,
+) VALUES (
+  'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   'Your Event. Elevated.',
   'From balloons to backdrops, lighting to DJ — Blue Luna Events is Tucson''s one stop shop for unforgettable events. Serving all of Arizona.',
   null,
@@ -97,12 +96,20 @@ SELECT
   '{}'::jsonb,
   null,
   true
-FROM companies WHERE slug = 'blueluna';
+)
+ON CONFLICT (company_id) DO UPDATE SET
+  hero_title    = EXCLUDED.hero_title,
+  hero_subtitle = EXCLUDED.hero_subtitle,
+  about_text    = EXCLUDED.about_text,
+  services      = EXCLUDED.services,
+  testimonials  = EXCLUDED.testimonials,
+  service_areas = EXCLUDED.service_areas,
+  published     = EXCLUDED.published;
 
--- VERIFY
+-- VERIFY — should return one row with all data
 SELECT
-  c.name, c.slug, c.primary_color, c.vibe, c.city,
+  c.name, c.slug, c.primary_color, c.vibe, c.active,
   wc.hero_title, wc.published
 FROM companies c
 LEFT JOIN website_config wc ON wc.company_id = c.id
-WHERE c.slug = 'blueluna';
+WHERE c.id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
