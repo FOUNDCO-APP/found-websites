@@ -24,16 +24,25 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
 
   return (
     <>
-      {/* ── HERO — MAGAZINE COVER SPLIT ── */}
-      <section className="flex min-h-screen">
+      {/* ── HERO — MAGAZINE COVER ── */}
+      <section className="flex flex-col md:flex-row min-h-[90vh] md:min-h-screen">
+
+        {/* Mobile: full-width image on top */}
+        <div className="md:hidden w-full h-72 relative">
+          {heroImage ? (
+            <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0" style={{ background: gradient }} />
+          )}
+        </div>
 
         {/* Left — white, elegant text composition */}
-        <div className="relative z-10 flex flex-col justify-center w-full md:w-[45%] px-10 md:px-16 py-24 bg-white">
-          <p className="text-xs font-black tracking-[0.25em] uppercase mb-10" style={{ color: primary }}>
+        <div className="relative z-10 flex flex-col justify-center w-full md:w-[45%] px-10 md:px-16 py-16 md:py-24 bg-white">
+          <p className="text-xs font-black tracking-[0.25em] uppercase mb-8 md:mb-10" style={{ color: primary }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1
-            className="text-4xl md:text-5xl lg:text-6xl leading-tight mb-8 text-balance"
+            className="text-4xl md:text-5xl lg:text-6xl leading-tight mb-6 md:mb-8 text-balance"
             style={{
               color: "#111111",
               fontFamily: "var(--font-heading, inherit)",
@@ -43,8 +52,8 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
           >
             {config?.hero_title || company.name}
           </h1>
-          <div className="w-12 h-0.5 mb-8" style={{ backgroundColor: primary }} />
-          <p className="text-lg leading-relaxed mb-12" style={{ color: "#666666" }}>
+          <div className="w-12 h-0.5 mb-6 md:mb-8" style={{ backgroundColor: primary }} />
+          <p className="text-lg leading-relaxed mb-10 md:mb-12" style={{ color: "#666666" }}>
             {config?.hero_subtitle || `Welcome to ${company.name}.`}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -61,7 +70,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
           </div>
         </div>
 
-        {/* Right — full-height image bleeds to edge, no overlay */}
+        {/* Right — full-height image bleeds to edge (desktop only) */}
         <div className="hidden md:block md:w-[55%] relative">
           {heroImage ? (
             <img src={heroImage} alt={company.name}
@@ -71,6 +80,33 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
           )}
         </div>
       </section>
+
+      {/* ── ABOUT — WHITE, CENTERED STATEMENT (comes BEFORE services in Editorial) ── */}
+      {config?.about_text && (
+        <section className="py-28 bg-white">
+          <div className="max-w-3xl mx-auto px-8 text-center">
+            <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
+              Our Story
+            </p>
+            <h2
+              className="text-3xl md:text-4xl leading-relaxed mb-10"
+              style={{
+                color: "#111111",
+                fontFamily: "var(--font-heading, inherit)",
+                fontStyle: "italic",
+                fontWeight: 700,
+              }}
+            >
+              &ldquo;{config.about_text}&rdquo;
+            </h2>
+            <div className="w-12 h-0.5 mx-auto mb-10" style={{ backgroundColor: primary }} />
+            <Link href="/about" className="btn text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
+              Meet the Team
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* ── SERVICES — LUXURY MENU ── */}
       {services.length > 0 && (
@@ -134,33 +170,6 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                 </div>
               )}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── ABOUT — WHITE, CENTERED STATEMENT ── */}
-      {config?.about_text && (
-        <section className="py-28 bg-white">
-          <div className="max-w-3xl mx-auto px-8 text-center">
-            <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
-              Our Story
-            </p>
-            <h2
-              className="text-3xl md:text-4xl leading-relaxed mb-10"
-              style={{
-                color: "#111111",
-                fontFamily: "var(--font-heading, inherit)",
-                fontStyle: "italic",
-                fontWeight: 700,
-              }}
-            >
-              &ldquo;{config.about_text}&rdquo;
-            </h2>
-            <div className="w-12 h-0.5 mx-auto mb-10" style={{ backgroundColor: primary }} />
-            <Link href="/about" className="btn text-white"
-              style={{ backgroundColor: primary, borderColor: primary }}>
-              Meet the Team
-            </Link>
           </div>
         </section>
       )}
