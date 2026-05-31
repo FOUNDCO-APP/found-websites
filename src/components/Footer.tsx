@@ -82,7 +82,7 @@ export default function Footer({ company }: { company: Company }) {
 
         <div className="border-t border-gray-800 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-2 text-xs text-gray-500">
           <p>© {new Date().getFullYear()} {company.name}. All rights reserved.</p>
-          <p>Powered by <span style={{ color: primary }}>Found Co.</span></p>
+          <p>Built with <a href="https://foundco.app" target="_blank" rel="noopener noreferrer" style={{ color: "#666666", textDecoration: "none" }}>Found</a></p>
         </div>
       </div>
     </footer>
