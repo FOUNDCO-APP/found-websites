@@ -80,9 +80,8 @@ export default function Navbar({ company }: { company: Company }) {
                 {company.phone}
               </a>
             )}
-            <Link href={ctaHref}
-              className="text-xs font-black text-white px-6 py-2.5 tracking-widest uppercase"
-              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+            <Link href={ctaHref} className="btn btn-sm text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
               {ctaLabel}
             </Link>
           </div>
@@ -152,8 +151,8 @@ export default function Navbar({ company }: { company: Company }) {
             </a>
           )}
           <Link href={ctaHref} onClick={() => setOpen(false)}
-            className="text-center font-black text-white py-5 text-xs tracking-widest uppercase"
-            style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+            className="btn btn-lg text-white text-center"
+            style={{ backgroundColor: primary, borderColor: primary }}>
             {ctaLabel}
           </Link>
         </div>

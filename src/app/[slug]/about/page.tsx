@@ -47,14 +47,12 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             <p className="text-gray-400 text-center">About content coming soon.</p>
           )}
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link href={ctaHref}
-              className="inline-block font-black text-white px-8 py-4 tracking-wide uppercase text-sm"
-              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+            <Link href={ctaHref} className="btn text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
               {intentLabel[company.primary_intent] || "Get in Touch"}
             </Link>
-            <Link href="/services"
-              className="inline-block font-black px-8 py-4 tracking-wide uppercase text-sm"
-              style={{ borderRadius: "var(--button-radius, 6px)", border: `1px solid ${primary}`, color: primary }}>
+            <Link href="/services" className="btn"
+              style={{ borderColor: primary, color: primary }}>
               Our Services
             </Link>
           </div>

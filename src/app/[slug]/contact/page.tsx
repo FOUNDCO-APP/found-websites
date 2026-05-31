@@ -98,9 +98,8 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
               <p className="mb-8 leading-relaxed text-sm" style={{ opacity: 0.85 }}>
                 Fill out our quick form and we&apos;ll be in touch within one business day.
               </p>
-              <Link href="/estimate"
-                className="inline-block font-black bg-white px-8 py-4 text-xs tracking-widest uppercase"
-                style={{ color: primary, borderRadius: "var(--button-radius, 6px)" }}>
+              <Link href="/estimate" className="btn bg-white"
+                style={{ color: primary, borderColor: "white" }}>
                 {intentLabel[company.primary_intent] || "Send a Message"}
               </Link>
             </div>

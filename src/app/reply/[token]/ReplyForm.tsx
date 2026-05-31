@@ -139,12 +139,11 @@ export default function ReplyForm({
         <button
           type="submit"
           disabled={pending}
+          className="btn btn-lg w-full text-white disabled:opacity-60"
           style={{
-            display: "block", width: "100%", padding: "15px",
             background: pending ? "#cccccc" : primaryColor,
-            color: "#ffffff", border: "none", borderRadius: "50px",
-            fontSize: "15px", fontWeight: 800, cursor: pending ? "not-allowed" : "pointer",
-            fontFamily: "inherit",
+            borderColor: pending ? "#cccccc" : primaryColor,
+            cursor: pending ? "not-allowed" : "pointer",
           }}
         >
           {pending ? "Sending…" : `Send to ${firstName}`}

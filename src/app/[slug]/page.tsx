@@ -71,27 +71,16 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             {config?.hero_subtitle || `Welcome to ${company.name}.`}
           </p>
 
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link href={primaryHref}
-              className="inline-flex items-center justify-center font-black text-white text-sm tracking-widest uppercase"
-              style={{
-                backgroundColor: primary,
-                borderRadius: "var(--button-radius, 6px)",
-                border: `2px solid ${primary}`,
-                padding: "16px 36px",
-                minWidth: "180px",
-              }}>
+              className="btn btn-lg w-full sm:w-auto text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
               {primaryLabel}
             </Link>
             {secondaryLabel && secondaryHref && (
               <Link href={secondaryHref}
-                className="inline-flex items-center justify-center font-black text-white text-sm tracking-widest uppercase hover:bg-white/10 transition-colors"
-                style={{
-                  borderRadius: "var(--button-radius, 6px)",
-                  border: "2px solid rgba(255,255,255,0.35)",
-                  padding: "16px 36px",
-                  minWidth: "180px",
-                }}>
+                className="btn btn-lg w-full sm:w-auto text-white"
+                style={{ borderColor: "rgba(255,255,255,0.35)" }}>
                 {secondaryLabel}
               </Link>
             )}
@@ -131,9 +120,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
               ))}
             </div>
             <div className="mt-12">
-              <Link href="/services"
-                className="inline-block font-black text-white px-10 py-4 text-sm tracking-wide uppercase"
-                style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+              <Link href="/services" className="btn text-white"
+                style={{ backgroundColor: primary, borderColor: primary }}>
                 View All Services
               </Link>
             </div>
@@ -150,9 +138,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
               style={{ fontFamily: "var(--font-heading, inherit)" }}>
               {config.about_text}
             </h2>
-            <Link href="/about"
-              className="inline-block font-black text-white px-10 py-4 text-sm tracking-wide uppercase mt-4"
-              style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+            <Link href="/about" className="btn mt-4 text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
               Our Story
             </Link>
           </div>
@@ -205,9 +192,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             )}
             send us a message and we&apos;ll be in touch.
           </p>
-          <Link href={primaryHref}
-            className="inline-block font-black text-white px-12 py-5 text-base tracking-wide uppercase"
-            style={{ backgroundColor: primary, borderRadius: "var(--button-radius, 6px)" }}>
+          <Link href={primaryHref} className="btn btn-lg text-white"
+            style={{ backgroundColor: primary, borderColor: primary }}>
             {primaryLabel}
           </Link>
         </div>

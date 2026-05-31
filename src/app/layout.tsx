@@ -23,6 +23,10 @@ const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-
 export const metadata: Metadata = {
   title: "Found Co.",
   description: "Get Found.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
