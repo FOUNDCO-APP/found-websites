@@ -12,6 +12,11 @@ export default function ReplyForm({
   defaultSubject,
   defaultMessage,
   primaryColor,
+  companyName,
+  companyPhone,
+  companyLogoUrl,
+  websiteUrl,
+  alreadyReplied,
 }: {
   token: string
   customerName: string
@@ -19,75 +24,132 @@ export default function ReplyForm({
   defaultSubject: string
   defaultMessage: string
   primaryColor: string
+  companyName: string
+  companyPhone: string | null
+  companyLogoUrl: string | null
+  websiteUrl: string
+  alreadyReplied: boolean
 }) {
   const [state, formAction, pending] = useActionState(sendReply, initialState)
+  const firstName = customerName.split(" ")[0]
+
+  if (alreadyReplied) return null
 
   if (state.success) {
     return (
-      <div className="text-center py-16 px-8">
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-          style={{ backgroundColor: `${primaryColor}22` }}
-        >
-          <svg className="w-8 h-8" fill="none" stroke={primaryColor} viewBox="0 0 24 24">
+      <div style={{ padding: "48px 32px", textAlign: "center" }}>
+        <div style={{
+          width: "56px", height: "56px", borderRadius: "50%",
+          background: `${primaryColor}18`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 20px",
+        }}>
+          <svg width="24" height="24" fill="none" stroke={primaryColor} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-black mb-3" style={{ color: "#111111" }}>Message sent.</h2>
-        <p className="text-gray-500 max-w-sm mx-auto">
-          Your reply has been delivered to {customerName.split(" ")[0]}. They'll receive a professional email from your business.
+        <p style={{ margin: "0 0 8px", fontSize: "20px", fontWeight: 800, color: "#111111" }}>Message sent.</p>
+        <p style={{ margin: 0, fontSize: "14px", color: "#888888" }}>
+          {firstName} will receive a professional email from {companyName}.
         </p>
       </div>
     )
   }
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction}>
       <input type="hidden" name="token" value={token} />
 
-      <div>
-        <label className="block text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#999999" }}>To</label>
-        <div className="w-full border border-gray-100 rounded-xl px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-500">
-          {customerName} — {customerEmail}
-        </div>
+      {/* To */}
+      <div style={{ padding: "20px 28px 0", borderBottom: "1px solid #f0f0f0" }}>
+        <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#bbbbbb" }}>To</span>
+        <p style={{ margin: "4px 0 16px", fontSize: "14px", color: "#555555" }}>
+          {customerName} &mdash; <span style={{ color: "#aaaaaa" }}>{customerEmail}</span>
+        </p>
       </div>
 
-      <div>
-        <label className="block text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#999999" }}>Subject</label>
+      {/* Subject */}
+      <div style={{ padding: "16px 28px 0", borderBottom: "1px solid #f0f0f0" }}>
+        <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#bbbbbb" }}>Subject</span>
         <input
           name="subject"
           type="text"
           defaultValue={defaultSubject}
           required
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2"
-          style={{ "--tw-ring-color": primaryColor } as React.CSSProperties}
+          style={{
+            display: "block", width: "100%", border: "none", outline: "none",
+            fontSize: "14px", color: "#111111", padding: "6px 0 16px",
+            background: "transparent", boxSizing: "border-box",
+          }}
         />
       </div>
 
-      <div>
-        <label className="block text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "#999999" }}>Message</label>
+      {/* Message */}
+      <div style={{ padding: "16px 28px 0" }}>
+        <span style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#bbbbbb" }}>Message</span>
         <textarea
           name="message"
           rows={8}
           defaultValue={defaultMessage}
           required
-          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 resize-none leading-relaxed"
-          style={{ "--tw-ring-color": primaryColor } as React.CSSProperties}
+          style={{
+            display: "block", width: "100%", border: "none", outline: "none",
+            fontSize: "14px", color: "#111111", lineHeight: "1.7",
+            padding: "6px 0 16px", background: "transparent",
+            resize: "none", boxSizing: "border-box", fontFamily: "inherit",
+          }}
         />
       </div>
 
+      {/* Signature preview */}
+      <div style={{ margin: "0 28px 24px", padding: "16px 0", borderTop: "1px solid #eeeeee" }}>
+        <p style={{ margin: "0 0 10px", fontSize: "10px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#cccccc" }}>
+          Your signature — included automatically
+        </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {companyLogoUrl ? (
+            <img src={companyLogoUrl} alt={companyName} style={{ height: "28px", width: "auto", opacity: 0.4 }} />
+          ) : (
+            <div style={{
+              width: "28px", height: "28px", borderRadius: "50%",
+              background: `${primaryColor}33`,
+              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>
+              <span style={{ fontSize: "12px", fontWeight: 900, color: primaryColor }}>
+                {companyName.charAt(0)}
+              </span>
+            </div>
+          )}
+          <div>
+            <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: "#bbbbbb" }}>{companyName}</p>
+            {companyPhone && <p style={{ margin: 0, fontSize: "12px", color: "#cccccc" }}>{companyPhone}</p>}
+            <p style={{ margin: 0, fontSize: "12px", color: "#cccccc" }}>{websiteUrl}</p>
+          </div>
+        </div>
+      </div>
+
       {state.error && (
-        <p className="text-sm font-medium text-red-600 bg-red-50 rounded-xl px-4 py-3">{state.error}</p>
+        <div style={{ margin: "0 28px 16px", padding: "12px 16px", background: "#fff5f5", borderRadius: "8px" }}>
+          <p style={{ margin: 0, fontSize: "13px", color: "#cc0000" }}>{state.error}</p>
+        </div>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="w-full font-bold text-white py-4 rounded-full text-base disabled:opacity-60"
-        style={{ backgroundColor: primaryColor }}
-      >
-        {pending ? "Sending…" : `Send to ${customerName.split(" ")[0]}`}
-      </button>
+      {/* Send button */}
+      <div style={{ padding: "0 28px 28px" }}>
+        <button
+          type="submit"
+          disabled={pending}
+          style={{
+            display: "block", width: "100%", padding: "15px",
+            background: pending ? "#cccccc" : primaryColor,
+            color: "#ffffff", border: "none", borderRadius: "50px",
+            fontSize: "15px", fontWeight: 800, cursor: pending ? "not-allowed" : "pointer",
+            fontFamily: "inherit",
+          }}
+        >
+          {pending ? "Sending…" : `Send to ${firstName}`}
+        </button>
+      </div>
     </form>
   )
 }

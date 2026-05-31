@@ -8,7 +8,7 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
 
   const { data: lead } = await supabase
     .from("leads")
-    .select("*, companies(name, phone, logo_url, primary_color, slug, website_config(*))")
+    .select("*, companies(name, phone, logo_url, primary_color, slug)")
     .eq("reply_token", token)
     .single()
 
@@ -27,73 +27,62 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
   const websiteUrl = `https://${company.slug}.foundco.app`
 
   const defaultSubject = `Re: Your estimate request — ${company.name}`
-  const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}!${lead.service ? ` I'd love to help with your ${lead.service.toLowerCase()} project` : ""} and will be in touch soon.\n\n${company.name}${company.phone ? `\n${company.phone}` : ""}\n${websiteUrl}`
+  const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out! I'd love to help${lead.service ? ` with your ${lead.service.toLowerCase()} project` : ""} and will be in touch soon.`
 
   const alreadyReplied = !!lead.replied_at
 
   return (
-    <div style={{ background: "#f5f5f5", minHeight: "100vh", padding: "40px 20px", fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <div style={{ maxWidth: "600px", margin: "0 auto" }}>
+    <div style={{
+      background: "#f7f7f7",
+      minHeight: "100vh",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+    }}>
+      {/* Found wordmark */}
+      <div style={{ textAlign: "center", padding: "32px 20px 0" }}>
+        <p style={{ margin: 0, fontSize: "13px", fontWeight: 800, letterSpacing: "4px", textTransform: "uppercase", color: "#aaaaaa" }}>
+          Found
+        </p>
+      </div>
 
-        {/* Header */}
-        <div style={{ background: "#111111", borderRadius: "16px 16px 0 0", padding: "32px", textAlign: "center" }}>
-          {company.logo_url ? (
-            <img src={company.logo_url} alt={company.name} style={{ height: "48px", width: "auto", margin: "0 auto", display: "block" }} />
-          ) : (
-            <>
-              <div style={{
-                width: "52px", height: "52px", borderRadius: "50%",
-                background: primary, display: "inline-flex",
-                alignItems: "center", justifyContent: "center", marginBottom: "12px"
-              }}>
-                <span style={{ fontSize: "22px", fontWeight: 900, color: "#ffffff" }}>{company.name.charAt(0)}</span>
-              </div>
-              <p style={{ margin: 0, fontSize: "20px", fontWeight: 900, color: "#ffffff" }}>{company.name}</p>
-            </>
-          )}
-          <p style={{ margin: "8px 0 0", fontSize: "12px", color: "#888888", letterSpacing: "2px", textTransform: "uppercase", fontWeight: 700 }}>
-            Reply to Estimate Request
+      <div style={{ maxWidth: "560px", margin: "20px auto", padding: "0 20px 60px" }}>
+
+        {/* Context */}
+        <div style={{ textAlign: "center", padding: "20px 0 28px" }}>
+          <p style={{ margin: "0 0 4px", fontSize: "22px", fontWeight: 800, color: "#111111" }}>
+            {alreadyReplied ? "Already replied." : `Reply to ${firstName}`}
+          </p>
+          <p style={{ margin: 0, fontSize: "14px", color: "#888888" }}>
+            {alreadyReplied
+              ? `You've already sent a reply to this request from ${lead.name}.`
+              : `Estimate request${lead.service ? ` · ${lead.service}` : ""}`
+            }
           </p>
         </div>
 
-        {/* Body */}
-        <div style={{ background: "#ffffff", padding: "36px 32px", borderRadius: "0 0 16px 16px" }}>
-          {alreadyReplied ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <p style={{ fontSize: "18px", fontWeight: 800, color: "#111111", margin: "0 0 8px" }}>Already sent.</p>
-              <p style={{ fontSize: "14px", color: "#888888", margin: 0 }}>You've already replied to this request from {lead.name}.</p>
-            </div>
-          ) : !lead.email ? (
-            <div style={{ textAlign: "center", padding: "40px 0" }}>
-              <p style={{ fontSize: "18px", fontWeight: 800, color: "#111111", margin: "0 0 8px" }}>No email on file.</p>
-              <p style={{ fontSize: "14px", color: "#888888", margin: 0 }}>{lead.name} didn't provide an email. Give them a call at {lead.phone}.</p>
+        {/* Card */}
+        <div style={{ background: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          {!alreadyReplied && !lead.email ? (
+            <div style={{ padding: "48px 32px", textAlign: "center" }}>
+              <p style={{ fontSize: "17px", fontWeight: 700, color: "#111111", margin: "0 0 8px" }}>No email on file.</p>
+              <p style={{ fontSize: "14px", color: "#888888", margin: 0 }}>
+                {lead.name} didn't provide an email address. Give them a call at <strong>{lead.phone}</strong>.
+              </p>
             </div>
           ) : (
-            <>
-              <div style={{ marginBottom: "28px", padding: "16px 20px", background: "#f9f9f9", borderRadius: "12px" }}>
-                <p style={{ margin: "0 0 4px", fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: "#999999" }}>Request from</p>
-                <p style={{ margin: "0 0 2px", fontSize: "17px", fontWeight: 800, color: "#111111" }}>{lead.name}</p>
-                {lead.service && <p style={{ margin: 0, fontSize: "13px", color: "#666666" }}>{lead.service}</p>}
-              </div>
-
-              <ReplyForm
-                token={token}
-                customerName={lead.name}
-                customerEmail={lead.email}
-                defaultSubject={defaultSubject}
-                defaultMessage={defaultMessage}
-                primaryColor={primary}
-              />
-            </>
+            <ReplyForm
+              token={token}
+              customerName={lead.name}
+              customerEmail={lead.email || ""}
+              defaultSubject={defaultSubject}
+              defaultMessage={defaultMessage}
+              primaryColor={primary}
+              companyName={company.name}
+              companyPhone={company.phone}
+              companyLogoUrl={company.logo_url}
+              websiteUrl={websiteUrl}
+              alreadyReplied={alreadyReplied}
+            />
           )}
-        </div>
-
-        {/* Footer */}
-        <div style={{ textAlign: "center", padding: "20px 0" }}>
-          <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 800, color: "#888888" }}>You've been Found.</p>
-          <p style={{ margin: 0, fontSize: "11px", color: "#bbbbbb" }}>
-            Powered by <a href="https://foundco.app" style={{ color: "#bbbbbb", textDecoration: "underline" }}>Found</a>
-          </p>
         </div>
 
       </div>

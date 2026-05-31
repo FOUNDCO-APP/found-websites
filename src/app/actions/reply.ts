@@ -18,7 +18,7 @@ export async function sendReply(_: unknown, formData: FormData) {
 
   const { data: lead } = await supabase
     .from("leads")
-    .select("*, companies(name, phone, email, logo_url, primary_color, slug, website_config(*))")
+    .select("*, companies(name, phone, email, logo_url, primary_color, slug)")
     .eq("reply_token", token)
     .single()
 
@@ -35,10 +35,11 @@ export async function sendReply(_: unknown, formData: FormData) {
   }
 
   const { error } = await resend.emails.send({
-    from: `${company.name} <hello@foundco.app>`,
+    from: `${company.name} via Found <hello@foundco.app>`,
     to: lead.email,
     subject,
-    html: buildCustomerReplyEmail({ company, message }),
+    html: buildCustomerReplyHtml({ company, message }),
+    text: buildCustomerReplyText({ company, message }),
   })
 
   if (error) {
@@ -54,7 +55,24 @@ export async function sendReply(_: unknown, formData: FormData) {
   return { success: true }
 }
 
-function buildCustomerReplyEmail({
+function buildCustomerReplyText({
+  company,
+  message,
+}: {
+  company: { name: string; phone: string | null; slug: string }
+  message: string
+}) {
+  const websiteUrl = `https://${company.slug}.foundco.app`
+  const sig = [
+    company.name,
+    company.phone,
+    websiteUrl,
+  ].filter(Boolean).join("\n")
+
+  return `${message}\n\n--\n${sig}`
+}
+
+function buildCustomerReplyHtml({
   company,
   message,
 }: {
@@ -62,11 +80,24 @@ function buildCustomerReplyEmail({
   message: string
 }) {
   const websiteUrl = `https://${company.slug}.foundco.app`
+  const primary = company.primary_color || "#111111"
+  const initial = company.name.charAt(0).toUpperCase()
+
   const paragraphs = message
     .split("\n")
     .filter(Boolean)
     .map((p) => `<p style="margin:0 0 18px;font-size:15px;color:#222222;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">${p}</p>`)
     .join("")
+
+  const logoBlock = company.logo_url
+    ? `<img src="${company.logo_url}" alt="${company.name}" style="height:36px;width:auto;display:block;margin-bottom:10px;" />`
+    : `<table cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+        <tr>
+          <td style="width:32px;height:32px;border-radius:50%;background:${primary};text-align:center;vertical-align:middle;">
+            <span style="font-size:15px;font-weight:900;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">${initial}</span>
+          </td>
+        </tr>
+      </table>`
 
   return `<!DOCTYPE html>
 <html>
@@ -82,10 +113,7 @@ function buildCustomerReplyEmail({
       <table cellpadding="0" cellspacing="0" style="margin-top:32px;padding-top:20px;border-top:1px solid #e5e5e5;width:100%;">
         <tr>
           <td>
-            ${company.logo_url
-              ? `<img src="${company.logo_url}" alt="${company.name}" style="height:36px;width:auto;display:block;margin-bottom:12px;" />`
-              : ""
-            }
+            ${logoBlock}
             <p style="margin:0;font-size:14px;font-weight:700;color:#111111;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">${company.name}</p>
             ${company.phone ? `<p style="margin:4px 0 0;font-size:13px;color:#555555;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">${company.phone}</p>` : ""}
             <p style="margin:4px 0 0;font-size:13px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
