@@ -1,19 +1,86 @@
 {
-  "company_id": "9fdc7cda-3151-412b-9cec-978a5ea93304",
-  "hero_title": "Tucson's Premier Roofing, Painting & Remodeling Experts",
-  "hero_subtitle": "We're not a national chain — we're your neighbors. Licensed, insured, Hablamos Español.",
-  "about_text": "Barrio means neighborhood — and that's how we work. Tucson locals, no subcontractors, no surprises. Licensed, insured, and accountable.",
-  "services": [
-    {"name":"Roofing","description":"Full replacements, repairs, inspections, and emergency patches."},
-    {"name":"Remodeling","description":"Kitchens, bathrooms, and whole-home renovations."},
-    {"name":"Renovations","description":"Room additions, garage conversions, and structural repairs."},
-    {"name":"Painting","description":"Interior and exterior painting with proper prep."},
-    {"name":"New Construction","description":"New homes, ADUs, and light commercial builds."}
-  ],
-  "testimonials": [
-    {"name":"Sarah M.","role":"Homeowner","quote":"Barrio Builders transformed our kitchen. Outstanding work."},
-    {"name":"Michael R.","role":"Business Owner","quote":"Professional and efficient. Results were fantastic."}
-  ],
-  "service_areas": ["Tucson","Marana","Oro Valley","Sahuarita","Green Valley","Vail"],
-  "published": true
+  "_note": "Complete Barrio Builders seed — generated from onboarding session May 31, 2026. Run seed-barrio.sql in Supabase to insert.",
+
+  "companies": {
+    "id": "9fdc7cda-3151-412b-9cec-978a5ea93304",
+    "name": "Barrio Builders",
+    "slug": "barrio-builders",
+    "industry_category": "home_services",
+    "vibe": "bold",
+    "primary_intent": "quote",
+    "secondary_intent": "call",
+    "phone": "(520) 261-1212",
+    "email": "hello@barriobuilders.com",
+    "city": "Tucson",
+    "state": "AZ",
+    "logo_url": null,
+    "primary_color": "#1EAB46",
+    "accent_color_1": "#5F5F5F",
+    "accent_color_2": "#C0C0C0",
+    "active": true
+  },
+
+  "website_config": {
+    "company_id": "9fdc7cda-3151-412b-9cec-978a5ea93304",
+    "hero_title": "Built for Tucson. Built to Last.",
+    "hero_subtitle": "From remodels to new floors, Barrio Builders brings quality craftsmanship and honest work to every Tucson home and business. Hablamos Español.",
+    "hero_image_url": null,
+    "hero_video_url": null,
+    "about_text": "We're not a national chain — we're your neighbors. Barrio Builders serves Tucson families with quality remodeling, construction, and finishing work that stands the test of time. When you hire us, you get a crew that cares about your home as much as you do.",
+    "services": [
+      {
+        "name": "Remodeling",
+        "description": "From kitchen transformations to full home remodels, we handle every detail with craftsmanship that shows for years to come."
+      },
+      {
+        "name": "Renovations",
+        "description": "Breathe new life into any space. We renovate with quality materials and an eye for detail that comes through in every finish."
+      },
+      {
+        "name": "Painting",
+        "description": "Interior or exterior, our crews deliver clean lines and lasting color that makes your property look its best."
+      },
+      {
+        "name": "Drywall",
+        "description": "Smooth, seamless installation and repair. We prep it right so every wall is perfect — no shortcuts, ever."
+      },
+      {
+        "name": "Framing",
+        "description": "Strong bones make a strong home. Our framing is precise, code-compliant, and built to last for decades."
+      },
+      {
+        "name": "Flooring",
+        "description": "From hardwood to tile, we install flooring that looks beautiful and holds up to real Tucson life."
+      }
+    ],
+    "testimonials": [
+      {
+        "name": "Maria Gonzalez",
+        "role": "Homeowner, Tucson AZ",
+        "quote": "Barrio Builders remodeled our kitchen and we couldn't be happier. Professional, clean, and they finished on time. 100% recommended."
+      },
+      {
+        "name": "Tom Richards",
+        "role": "Property Owner, Marana AZ",
+        "quote": "They replaced my entire roof after the monsoon season. Fair price, great work, and they kept me updated the whole time."
+      },
+      {
+        "name": "Rosa & Daniel Peralta",
+        "role": "Homeowners, South Tucson AZ",
+        "quote": "Hablamos con el equipo de Barrio Builders y desde el principio nos sentimos en confianza. El trabajo quedó perfecto."
+      }
+    ],
+    "service_areas": [
+      "Tucson",
+      "Marana",
+      "Oro Valley",
+      "Sahuarita",
+      "Green Valley",
+      "Vail",
+      "Catalina Foothills"
+    ],
+    "social_links": {},
+    "custom_domain": null,
+    "published": true
+  }
 }
