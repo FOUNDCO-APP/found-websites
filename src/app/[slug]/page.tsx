@@ -53,7 +53,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   return (
     <>
       {/* ── HERO ── */}
-      <section className="relative min-h-[96vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[75vh] md:min-h-[85vh] flex items-center overflow-hidden">
 
         {/* Background — video > image > gradient */}
         {heroVideo ? (
@@ -66,9 +66,9 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
 
-        {/* Dark overlay — only when image/video is behind text */}
+        {/* Dark overlay */}
         {(heroVideo || heroImage) && (
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/62" />
         )}
 
         {/* Content */}
@@ -213,14 +213,21 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       )}
 
       {/* ── FINAL CTA ── */}
-      <section className="py-28 text-center" style={{ backgroundColor: "#111111" }}>
-        <div className="max-w-2xl mx-auto px-8">
+      <section className="relative py-28 text-center overflow-hidden">
+        {heroImage ? (
+          <img src={heroImage} alt={company.name}
+            className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0" style={{ background: gradient }} />
+        )}
+        {heroImage && <div className="absolute inset-0 bg-black/72" />}
+        <div className="relative z-10 max-w-2xl mx-auto px-8">
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             Ready to Get Started?
           </h2>
-          <p className="mb-10 text-lg" style={{ color: "#888888" }}>
+          <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
             {company.phone && (
               <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                 className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
