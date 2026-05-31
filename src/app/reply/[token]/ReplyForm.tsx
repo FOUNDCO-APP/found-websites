@@ -139,7 +139,7 @@ export default function ReplyForm({
         <button
           type="submit"
           disabled={pending}
-          className="btn btn-lg w-full text-white disabled:opacity-60"
+          className="btn w-full text-white disabled:opacity-60"
           style={{
             background: pending ? "#cccccc" : primaryColor,
             borderColor: pending ? "#cccccc" : primaryColor,

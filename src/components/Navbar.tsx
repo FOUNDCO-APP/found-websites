@@ -80,7 +80,7 @@ export default function Navbar({ company }: { company: Company }) {
                 {company.phone}
               </a>
             )}
-            <Link href={ctaHref} className="btn btn-sm text-white"
+            <Link href={ctaHref} className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
               {ctaLabel}
             </Link>
@@ -151,7 +151,7 @@ export default function Navbar({ company }: { company: Company }) {
             </a>
           )}
           <Link href={ctaHref} onClick={() => setOpen(false)}
-            className="btn btn-lg text-white text-center"
+            className="btn text-white text-center"
             style={{ backgroundColor: primary, borderColor: primary }}>
             {ctaLabel}
           </Link>

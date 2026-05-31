@@ -81,7 +81,7 @@ export default function EstimateForm({
       )}
 
       <button type="submit" disabled={pending}
-        className="btn btn-lg w-full text-white disabled:opacity-60"
+        className="btn w-full text-white disabled:opacity-60"
         style={{ backgroundColor: primaryColor, borderColor: primaryColor }}>
         {pending ? "Sending..." : "Send Request"}
       </button>

@@ -125,7 +125,7 @@ export default function Footer({ company }: { company: Company }) {
                 <li>{company.city}{company.state ? `, ${company.state}` : ""}</li>
               )}
               <li className="pt-2">
-                <Link href={ctaHref} className="btn btn-sm text-white"
+                <Link href={ctaHref} className="btn text-white"
                   style={{ backgroundColor: primary, borderColor: primary }}>
                   {ctaLabel}
                 </Link>

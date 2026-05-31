@@ -73,13 +73,13 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
           <div className="flex flex-col sm:flex-row gap-4">
             <Link href={primaryHref}
-              className="btn btn-lg w-full sm:w-auto text-white"
+              className="btn w-full sm:w-auto text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
               {primaryLabel}
             </Link>
             {secondaryLabel && secondaryHref && (
               <Link href={secondaryHref}
-                className="btn btn-lg w-full sm:w-auto text-white"
+                className="btn w-full sm:w-auto text-white"
                 style={{ borderColor: "rgba(255,255,255,0.35)" }}>
                 {secondaryLabel}
               </Link>
@@ -192,7 +192,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             )}
             send us a message and we&apos;ll be in touch.
           </p>
-          <Link href={primaryHref} className="btn btn-lg text-white"
+          <Link href={primaryHref} className="btn text-white"
             style={{ backgroundColor: primary, borderColor: primary }}>
             {primaryLabel}
           </Link>

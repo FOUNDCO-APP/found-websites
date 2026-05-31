@@ -69,7 +69,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
               <p className="mb-6 text-lg font-black" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                 Ready to get started?
               </p>
-              <Link href={ctaHref} className="btn btn-lg text-white"
+              <Link href={ctaHref} className="btn text-white"
                 style={{ backgroundColor: primary, borderColor: primary }}>
                 {intentLabel[company.primary_intent] || "Get in Touch"}
               </Link>
