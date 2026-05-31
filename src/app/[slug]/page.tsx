@@ -194,37 +194,29 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
       {/* ── TESTIMONIALS ── */}
       {testimonials.length > 0 && (
-        <section className="relative py-24 overflow-hidden">
-          {img(2) ? (
-            <>
-              <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/80" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-white" />
-          )}
-          <div className="relative z-10 max-w-6xl mx-auto px-8">
+        <section className="py-24 bg-white">
+          <div className="max-w-6xl mx-auto px-8">
             <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
               Client Stories
             </p>
-            <h2 className="text-4xl md:text-5xl font-black mb-16 text-white"
-              style={{ fontFamily: "var(--font-heading, inherit)" }}>
+            <h2 className="text-4xl md:text-5xl font-black mb-16"
+              style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
               What Clients Say
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {testimonials.map((t) => (
                 <div key={t.name} className="p-10 border-t-4" style={{
                   borderColor: primary,
-                  backgroundColor: "rgba(255,255,255,0.07)",
+                  backgroundColor: "#f7f7f7",
                   borderRadius: `0 0 var(--card-radius, 10px) var(--card-radius, 10px)`,
-                  backdropFilter: "blur(4px)",
+                  boxShadow: "var(--card-shadow, 0 2px 8px rgba(0,0,0,0.06))",
                 }}>
-                  <p className="text-lg leading-relaxed mb-8 italic" style={{ color: "#dddddd" }}>
+                  <p className="text-lg leading-relaxed mb-8 italic" style={{ color: "#333333" }}>
                     &ldquo;{t.quote}&rdquo;
                   </p>
                   <div>
-                    <p className="font-black text-sm tracking-wide uppercase text-white">{t.name}</p>
-                    <p className="text-xs mt-1" style={{ color: "#aaaaaa" }}>{t.role}</p>
+                    <p className="font-black text-sm tracking-wide uppercase" style={{ color: "#111111" }}>{t.name}</p>
+                    <p className="text-xs mt-1" style={{ color: "#776F6F" }}>{t.role}</p>
                   </div>
                 </div>
               ))}
