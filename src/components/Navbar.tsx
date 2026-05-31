@@ -7,7 +7,7 @@ import { intentLabel, intentHref } from "@/types/company"
 function BrandMark({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="font-black uppercase text-2xl md:text-xl"
+      className="font-black uppercase text-2xl lg:text-3xl"
       style={{
         color,
         fontFamily: "var(--font-heading, inherit)",
