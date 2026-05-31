@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel } from "@/types/company"
 import EstimateForm from "./EstimateForm"
+import { heroGradient } from "@/lib/color"
 
 export default async function EstimatePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -11,11 +12,12 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   if (!company) notFound()
 
   const primary = company.primary_color
+  const gradient = heroGradient(primary)
   const services = company.website_config?.services || []
 
   return (
     <>
-      <section className="py-20 text-white" style={{ backgroundColor: "#111111" }}>
+      <section className="py-24 text-white" style={{ background: gradient }}>
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>No Obligation</p>
           <h1 className="text-4xl md:text-5xl font-black mb-4">{intentLabel[company.primary_intent] || "Get in Touch"}</h1>

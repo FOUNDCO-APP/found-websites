@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
+import { heroGradient } from "@/lib/color"
 
 export default async function AboutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -11,13 +12,14 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   if (!company) notFound()
 
   const primary = company.primary_color
+  const gradient = heroGradient(primary)
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
   return (
     <>
-      <section className="py-20 text-white" style={{ backgroundColor: "#111111" }}>
+      <section className="py-24 text-white" style={{ background: gradient }}>
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>About Us</p>
           <h1 className="text-4xl md:text-5xl font-black mb-4">{company.name}</h1>

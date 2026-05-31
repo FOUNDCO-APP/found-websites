@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import ServiceIcon from "@/components/ServiceIcon"
+import { heroGradient } from "@/lib/color"
 
 export default async function ServicesPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -13,13 +14,14 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
 
   const services = company.website_config?.services || []
   const primary = company.primary_color
+  const gradient = heroGradient(primary)
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
   return (
     <>
-      <section className="py-24 text-white" style={{ backgroundColor: "#111111" }}>
+      <section className="py-24 text-white" style={{ background: gradient }}>
         <div className="max-w-6xl mx-auto px-8">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>What We Do</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: "var(--font-heading, inherit)" }}>Our Services</h1>

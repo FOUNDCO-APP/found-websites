@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
+import { heroGradient } from "@/lib/color"
 
 export default async function GalleryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
@@ -20,10 +21,11 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     .order("created_at", { ascending: false })
 
   const primary = company.primary_color
+  const gradient = heroGradient(primary)
 
   return (
     <>
-      <section className="py-20 text-white" style={{ backgroundColor: "#111111" }}>
+      <section className="py-24 text-white" style={{ background: gradient }}>
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>Our Work</p>
           <h1 className="text-4xl md:text-5xl font-black mb-4">Gallery</h1>
