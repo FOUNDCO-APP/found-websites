@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
+import { getStockImages, pickImg } from "@/lib/stockImages"
 import ServiceIcon from "@/components/ServiceIcon"
 import type { Metadata } from "next"
 
@@ -29,8 +30,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
-  const imgs = config?.stock_images || []
-  const img = (i: number): string | null => imgs[i % imgs.length] || null
+  const imgs = await getStockImages(company)
+  const img = (i: number) => pickImg(imgs, i)
   const heroImage = config?.hero_image_url || img(0)
 
   return (

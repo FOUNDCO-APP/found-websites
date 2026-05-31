@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
+import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -29,8 +30,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     : intentHref[company.primary_intent] || "/contact"
   const serviceAreas = config?.service_areas || []
   const services = config?.services || []
-  const imgs = config?.stock_images || []
-  const img = (i: number): string | null => imgs[i % imgs.length] || null
+  const imgs = await getStockImages(company)
+  const img = (i: number) => pickImg(imgs, i)
 
   return (
     <>
@@ -147,8 +148,16 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
 
       {/* ── SERVICES PREVIEW ── */}
       {services.length > 0 && (
-        <section className="py-20" style={{ backgroundColor: "#111111" }}>
-          <div className="max-w-6xl mx-auto px-8">
+        <section className="relative py-20 overflow-hidden">
+          {img(1) ? (
+            <>
+              <img src={img(1)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-black/78" />
+            </>
+          ) : (
+            <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
+          )}
+          <div className="relative z-10 max-w-6xl mx-auto px-8">
             <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
               <h2 className="text-3xl md:text-4xl font-black text-white"
@@ -179,17 +188,25 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       )}
 
       {/* ── FINAL CTA ── */}
-      <section className="py-28 text-center bg-white">
-        <div className="max-w-2xl mx-auto px-8">
+      <section className="relative py-28 text-center overflow-hidden">
+        {img(2) ? (
+          <>
+            <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/72" />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
+        )}
+        <div className="relative z-10 max-w-2xl mx-auto px-8">
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
-          <h2 className="text-4xl md:text-5xl font-black mb-6"
-            style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-6"
+            style={{ fontFamily: "var(--font-heading, inherit)" }}>
             Ready to Get Started?
           </h2>
-          <p className="mb-10 text-lg" style={{ color: "#888888" }}>
+          <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
             {company.phone && (
               <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="font-bold hover:underline" style={{ color: "#111111" }}>{company.phone}</a> or{" "}</>
+                className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
             )}
             send us a message and we&apos;ll be in touch.
           </p>

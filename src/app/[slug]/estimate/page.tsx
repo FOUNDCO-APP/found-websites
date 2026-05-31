@@ -3,6 +3,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel } from "@/types/company"
 import EstimateForm from "./EstimateForm"
 import { heroGradient } from "@/lib/color"
+import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -24,14 +25,24 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   const primary = company.primary_color
   const gradient = heroGradient(primary)
   const services = company.website_config?.services || []
+  const imgs = await getStockImages(company)
+  const img = (i: number) => pickImg(imgs, i)
 
   return (
     <>
-      <section className="py-24 text-white" style={{ background: gradient }}>
-        <div className="max-w-6xl mx-auto px-8">
+      <section className="relative min-h-[45vh] flex items-center overflow-hidden">
+        {img(0) ? (
+          <>
+            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/70" />
+          </>
+        ) : (
+          <div className="absolute inset-0" style={{ background: gradient }} />
+        )}
+        <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>No Obligation</p>
-          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: "var(--font-heading, inherit)" }}>{intentLabel[company.primary_intent] || "Get in Touch"}</h1>
-          <p className="text-lg max-w-xl" style={{ color: "#888888" }}>Tell us about your project and we&apos;ll be in touch within one business day.</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{intentLabel[company.primary_intent] || "Get in Touch"}</h1>
+          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>Tell us about your project and we&apos;ll be in touch within one business day.</p>
         </div>
       </section>
 

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel } from "@/types/company"
 import { heroGradient } from "@/lib/color"
+import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -23,8 +24,8 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
 
   const primary = company.primary_color
   const gradient = heroGradient(primary)
-  const imgs = company.website_config?.stock_images || []
-  const img = (i: number): string | null => imgs[i % imgs.length] || null
+  const imgs = await getStockImages(company)
+  const img = (i: number) => pickImg(imgs, i)
 
   return (
     <>
