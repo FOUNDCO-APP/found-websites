@@ -287,6 +287,32 @@ Auto-generated from company data on every page load. Owner never touches this.
 
 ---
 
+## SECTION RHYTHM RULE (APPROVED — May 31, 2026)
+### This is foolproof. It applies to every Found client. No exceptions.
+
+**The rule: photos get exactly two reserved slots per page — the header and the final CTA. Every section in between uses a solid background (white, light gray, or solid dark #111111). Never a photo.**
+
+This prevents any two photo sections from sitting adjacent to each other and competing.
+
+**Per-page rhythm:**
+
+| Page | Section order |
+|---|---|
+| **All inner pages** | Photo header → White/Light content sections → Solid dark mid-sections → Photo CTA |
+| **Homepage only** | Photo hero → Light (services) → Photo (about strip) → White (testimonials) → Photo (CTA) |
+
+The homepage earns a third photo slot (about strip) because two clean sections separate it from the next photo. This is the only exception and it is locked.
+
+**Implementation rules for Craig and Marcus:**
+- `img()` calls are only permitted in: page headers and final CTA sections
+- Mid-page dark sections use `backgroundColor: "#111111"` — never a photo background
+- Mid-page light sections use `backgroundColor: "#f7f7f7"` — never a photo background
+- If you are tempted to add a photo to a mid-page section, don't. Bring it to Jony first.
+
+**Why:** Contrast creates impact. A photo section hits harder after a clean section. Two photo sections in a row cancel each other out — the eye stops reading either as special.
+
+---
+
 ## MOTION SYSTEM (APPROVED CONCEPT — Not Yet Built)
 
 Subtle arrival animations. Nothing dramatic. Nothing that screams "developer added animations."

@@ -148,15 +148,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
 
       {/* ── SERVICES PREVIEW ── */}
       {services.length > 0 && (
-        <section className="relative py-20 overflow-hidden">
-          {img(1) ? (
-            <>
-              <img src={img(1)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/78" />
-            </>
-          ) : (
-            <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
-          )}
+        <section className="relative py-20" style={{ backgroundColor: "#111111" }}>
           <div className="relative z-10 max-w-6xl mx-auto px-8">
             <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
