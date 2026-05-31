@@ -4,6 +4,8 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
+import { fetchStockPhoto } from "@/lib/pexels"
+import { createClient } from "@/lib/supabase/server"
 import ServiceIcon from "@/components/ServiceIcon"
 import { getServiceIcon } from "@/components/ServiceIcon"
 
@@ -31,9 +33,22 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
   const services = config?.services || []
   const testimonials = config?.testimonials || []
-  const heroImage = config?.hero_image_url ?? null
   const heroVideo = config?.hero_video_url ?? null
   const gradient = heroGradient(primary)
+
+  // If no hero image, fetch one from Pexels and save it for next time
+  let heroImage = config?.hero_image_url ?? null
+  if (!heroImage && !heroVideo && process.env.PEXELS_API_KEY) {
+    const stockUrl = await fetchStockPhoto(company.industry_category, company.vibe, company.city)
+    if (stockUrl) {
+      heroImage = stockUrl
+      const supabase = await createClient()
+      await supabase
+        .from("website_config")
+        .update({ hero_image_url: stockUrl })
+        .eq("company_id", company.id)
+    }
+  }
 
   return (
     <>
