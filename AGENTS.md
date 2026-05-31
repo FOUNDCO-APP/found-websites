@@ -1,6 +1,6 @@
 # AGENTS.md — The Found Co. Team
 ### Built in the spirit of Apple. Every decision goes through this team.
-*Last updated: May 29, 2026*
+*Last updated: May 31, 2026*
 
 ---
 
