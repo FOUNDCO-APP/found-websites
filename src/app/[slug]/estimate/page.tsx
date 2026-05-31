@@ -18,15 +18,15 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   return (
     <>
       <section className="py-24 text-white" style={{ background: gradient }}>
-        <div className="max-w-6xl mx-auto px-4">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>No Obligation</p>
-          <h1 className="text-4xl md:text-5xl font-black mb-4">{intentLabel[company.primary_intent] || "Get in Touch"}</h1>
-          <p className="text-gray-400 text-lg max-w-xl">Tell us about your project and we&apos;ll be in touch within one business day.</p>
+        <div className="max-w-6xl mx-auto px-8">
+          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>No Obligation</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: "var(--font-heading, inherit)" }}>{intentLabel[company.primary_intent] || "Get in Touch"}</h1>
+          <p className="text-lg max-w-xl" style={{ color: "#888888" }}>Tell us about your project and we&apos;ll be in touch within one business day.</p>
         </div>
       </section>
 
       <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
+        <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
             <div className="lg:col-span-2 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
               <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>Tell us about your project</h2>

@@ -5,11 +5,10 @@ import { intentLabel, intentHref } from "@/types/company"
 function BrandMark({ name, primary }: { name: string; primary: string }) {
   return (
     <span
-      className="font-black uppercase"
+      className="font-black uppercase text-xl md:text-base"
       style={{
         color: primary,
         fontFamily: "var(--font-heading, inherit)",
-        fontSize: "0.95rem",
         letterSpacing: "0.12em",
         lineHeight: 1,
       }}

@@ -20,17 +20,17 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   return (
     <>
       <section className="py-24 text-white" style={{ background: gradient }}>
-        <div className="max-w-6xl mx-auto px-4">
-          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: primary }}>About Us</p>
-          <h1 className="text-4xl md:text-5xl font-black mb-4">{company.name}</h1>
-          <p className="text-gray-400 text-lg max-w-xl">
+        <div className="max-w-6xl mx-auto px-8">
+          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>About Us</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5" style={{ fontFamily: "var(--font-heading, inherit)" }}>{company.name}</h1>
+          <p className="text-lg max-w-xl" style={{ color: "#888888" }}>
             {company.city ? `Locally owned and operated in ${company.city}${company.state ? `, ${company.state}` : ""}.` : "Local and independent."}
           </p>
         </div>
       </section>
 
       <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-4xl mx-auto px-8">
           {company.website_config?.about_text ? (
             <p className="text-gray-600 text-lg leading-relaxed mb-10">{company.website_config.about_text}</p>
           ) : (
