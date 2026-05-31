@@ -62,7 +62,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-8 max-w-4xl"
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-8 max-w-4xl text-balance"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             {config?.hero_title || company.name}
           </h1>
@@ -88,18 +88,24 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
         </div>
       </section>
 
-      {/* ── SERVICES ── */}
+      {/* ── SERVICES TEASER ── */}
       {services.length > 0 && (
         <section className="py-24" style={{ backgroundColor: "#f7f7f7" }}>
           <div className="max-w-6xl mx-auto px-8">
             <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
               What We Do
             </p>
-            <h2 className="text-4xl md:text-5xl font-black mb-16" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-              Our Services
-            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
+              <h2 className="text-4xl md:text-5xl font-black" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                Our Services
+              </h2>
+              <Link href="/services" className="text-sm font-black uppercase tracking-widest shrink-0 hover:opacity-70 transition-opacity"
+                style={{ color: primary }}>
+                View All →
+              </Link>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {services.map((service) => (
+              {services.slice(0, 3).map((service) => (
                 <div key={service.name}
                   className="bg-white p-8 border-l-4"
                   style={{
@@ -119,29 +125,43 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
                 </div>
               ))}
             </div>
-            <div className="mt-12">
-              <Link href="/services" className="btn text-white"
-                style={{ backgroundColor: primary, borderColor: primary }}>
-                View All Services
-              </Link>
-            </div>
+            {services.length > 3 && (
+              <div className="mt-12">
+                <Link href="/services" className="btn text-white"
+                  style={{ backgroundColor: primary, borderColor: primary }}>
+                  See All {services.length} Services
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {/* ── ABOUT ── */}
+      {/* ── ABOUT STRIP ── */}
       {config?.about_text && (
         <section className="py-28" style={{ backgroundColor: "#111111" }}>
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
-            <h2 className="text-4xl md:text-5xl font-black text-white mb-8 leading-tight"
-              style={{ fontFamily: "var(--font-heading, inherit)" }}>
-              {config.about_text}
-            </h2>
-            <Link href="/about" className="btn mt-4 text-white"
-              style={{ backgroundColor: primary, borderColor: primary }}>
-              Our Story
-            </Link>
+          <div className="max-w-6xl mx-auto px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+              <div>
+                <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
+                <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>
+                  Who We Are
+                </p>
+                <h2 className="text-3xl md:text-4xl font-black text-white mb-0 leading-tight"
+                  style={{ fontFamily: "var(--font-heading, inherit)" }}>
+                  {company.name}
+                </h2>
+              </div>
+              <div>
+                <p className="text-lg leading-relaxed mb-8" style={{ color: "#aaaaaa" }}>
+                  {config.about_text}
+                </p>
+                <Link href="/about" className="btn text-white"
+                  style={{ backgroundColor: primary, borderColor: primary }}>
+                  Our Story
+                </Link>
+              </div>
+            </div>
           </div>
         </section>
       )}
