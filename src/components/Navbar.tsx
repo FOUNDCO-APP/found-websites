@@ -34,11 +34,8 @@ export default function Navbar({ company }: { company: Company }) {
   const pathname = usePathname()
   const primary = company.primary_color
 
-  // Extract current page from proxy-rewritten path (e.g. /barriobuilders/about → /about)
-  const segments = pathname.split("/")
-  const currentPage = "/" + (segments[2] || "")
-
-  const isActive = (href: string) => currentPage === href
+  // usePathname returns the browser URL path e.g. /services, /about, /
+  const isActive = (href: string) => pathname === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
@@ -59,11 +56,11 @@ export default function Navbar({ company }: { company: Company }) {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-bold tracking-widest uppercase">
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium tracking-wide uppercase">
             {navLinks.map((item) => (
               <Link key={item.label} href={item.href}
                 className="transition-colors"
-                style={{ color: isActive(item.href) ? primary : "#aaaaaa" }}>
+                style={{ color: isActive(item.href) ? primary : "#999999" }}>
                 {item.label}
               </Link>
             ))}
