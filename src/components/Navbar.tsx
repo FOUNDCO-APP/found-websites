@@ -44,7 +44,7 @@ export default function Navbar({ company }: { company: Company }) {
   return (
     <>
       <header className="sticky top-0 z-50 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between">
 
           {/* Logo */}
           <Link href="/" className="flex items-center">
