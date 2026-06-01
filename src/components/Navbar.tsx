@@ -55,7 +55,9 @@ export default function Navbar({ company }: { company: Company }) {
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
             {company.logo_url ? (
-              <img src={company.logo_url} alt={company.name} className="h-9 w-auto" />
+              <img src={company.logo_url} alt={company.name}
+                className="w-auto object-contain"
+                style={{ maxHeight: "48px", maxWidth: "180px" }} />
             ) : (
               <BrandMark name={company.name} color={primary} vibe={vibe} />
             )}
@@ -116,7 +118,9 @@ export default function Navbar({ company }: { company: Company }) {
           <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #f0f0f0" }}>
             <Link href="/" onClick={() => setOpen(false)}>
               {company.logo_url ? (
-                <img src={company.logo_url} alt={company.name} className="h-9 w-auto" />
+                <img src={company.logo_url} alt={company.name}
+                  className="w-auto object-contain"
+                  style={{ maxHeight: "64px", maxWidth: "220px" }} />
               ) : (
                 <BrandMark name={company.name} color={primary} vibe={vibe} />
               )}
@@ -175,7 +179,9 @@ export default function Navbar({ company }: { company: Company }) {
           <div className="flex items-center justify-between px-8 py-6">
             <Link href="/" onClick={() => setOpen(false)}>
               {company.logo_url ? (
-                <img src={company.logo_url} alt={company.name} className="h-8 w-auto brightness-0 invert" />
+                <img src={company.logo_url} alt={company.name}
+                  className="w-auto object-contain brightness-0 invert"
+                  style={{ maxHeight: "56px", maxWidth: "200px" }} />
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />
               )}
