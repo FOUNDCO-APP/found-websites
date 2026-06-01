@@ -242,17 +242,56 @@ Icons are matched by keyword detection in the service name — not manual assign
 - Phone number: shown with phone SVG icon in primary color, font-black
 - CTA button: primary color background
 
-### Mobile Menu
-- Full-screen overlay — not a drawer, not a dropdown
-- Background: #111111
-- Left border: 3px solid primary color (signature detail)
-- Animation: slides in from right using translateX, 320ms cubic-bezier(0.4, 0, 0.2, 1)
-- Nav items numbered: 01, 02, 03, 04, 05 (xs, font-black, primary color)
+### Mobile Menu — TWO VERSIONS (APPROVED — June 1, 2026)
+
+The mobile menu is vibe-aware. Bold/Modern get the dark overlay. Calm/Warm get the white panel. These are completely different experiences.
+
+**Bold / Modern vibe (e.g. Barrio Builders):**
+- Full-screen dark overlay (#111111)
+- Left border: 3px solid primary color
+- Animation: slides in from right, 320ms cubic-bezier(0.4, 0, 0.2, 1)
+- Nav items numbered: 01, 02, 03... (xs, font-black, primary color)
 - Item text: text-3xl, font-black, white, heading font
 - Items separated by border-b border-white/10
-- Hover: item indents slightly (hover:pl-2, transition-all 200ms)
-- Phone number anchored to bottom, primary color, text-xl font-black
-- CTA button anchored to bottom, full width
+- Hover: item indents slightly (hover:pl-2)
+- Phone + CTA button anchored to bottom
+
+**Calm / Warm vibe (e.g. Blue Luna Events):**
+- Full-screen white panel
+- Left border: 2px solid primary color
+- Same slide-in animation
+- Nav items: text-2xl, font-bold, italic heading font, dark (#333333)
+- Active item: primary color
+- Items separated by border-b in #f5f5f5
+- Header has subtle bottom border
+- Phone + CTA button anchored to bottom with top border separator
+
+### Logo Sizing System (APPROVED — June 1, 2026)
+
+Logos come in all shapes — wide, tall, square. A fixed height breaks wide logos.
+The correct system uses `maxHeight + maxWidth + object-contain` so any logo fits correctly.
+
+| Location | Max height | Max width |
+|---|---|---|
+| Desktop navbar | 48px | 180px |
+| Calm/warm mobile menu | 64px | 220px |
+| Bold/modern mobile menu | 56px | 200px |
+
+`object-contain` always preserves aspect ratio. Never crop. Never distort.
+`w-auto` lets the image fill to maxWidth naturally.
+
+### BrandMark Name Length System (APPROVED — June 1, 2026)
+
+When there is no logo, the business name renders as the BrandMark.
+Long names must scale down automatically — never overflow the navbar.
+
+| Name length | Font size | Letter spacing | Weight |
+|---|---|---|---|
+| > 20 chars | text-base | tracking-wide | Bold for calm, Black for bold |
+| 15–20 chars | text-lg / text-xl | tracking-wider | Same |
+| < 15 chars | text-2xl / text-3xl | tracking-[0.12em] | Same |
+
+Calm/warm vibes use font-bold (700). Bold/modern use font-black (900).
 
 ---
 
@@ -310,6 +349,54 @@ The homepage earns a third photo slot (about strip) because two clean sections s
 - If you are tempted to add a photo to a mid-page section, don't. Bring it to Jony first.
 
 **Why:** Contrast creates impact. A photo section hits harder after a clean section. Two photo sections in a row cancel each other out — the eye stops reading either as special.
+
+---
+
+## EDITORIAL LAYOUT (APPROVED — June 1, 2026)
+*For: wellness + calm, beauty + calm, beauty + modern, events + calm, pet services + calm/editorial*
+
+Editorial must feel like opening a different magazine from Impact. Same platform — nobody should be able to tell.
+
+**Section order (different from Impact):**
+Hero → About statement → Services (luxury menu) → Testimonials (pull quotes) → CTA
+
+**Hero — magazine cover split:**
+- Full viewport height (min-h-screen)
+- Left 45%: pure white, italic Playfair headline (text-4xl–6xl), overline, accent line, subtitle, pill buttons
+- Right 55%: full-height image bleeds to the edge — NO overlay (the white left side provides contrast)
+- Mobile: full-width image (h-72) above the text panel — not hidden
+
+**About — centered statement (comes BEFORE services):**
+- White background
+- About text rendered as a large italic quote in quotation marks (not a paragraph)
+- Centered, max-w-3xl
+- Primary color divider line + "Meet the Team" CTA below
+
+**Services — luxury menu rows:**
+- Warm off-white background (#F9F8F6)
+- Each service: icon + italic Playfair name on left, description on right
+- Rows separated by thin lines (#E8E6E3), first row has primary color top border (2px)
+- No cards. No grid. A menu.
+- Shows up to 6 services (not 3 like Impact)
+
+**Testimonials — oversized pull quotes:**
+- Warm off-white background (#F9F8F6)
+- Oversized decorative quotation mark in primary color (text-8xl, opacity 0.4)
+- Quote in italic Playfair, text-2xl–3xl
+- Line + name attribution below
+- Shows 2 testimonials max — curated, not a grid
+
+**CTA — photo (rhythm rule honored):**
+- Photo background (img index 1 from stock pool)
+- Custom copy written per layout type: *"Let's Make Something Unforgettable"*
+- Same pill button as rest of site
+
+**What Editorial is NOT:**
+- Not full-bleed hero
+- Not a grid of cards
+- Not a dark about section
+- Not a numbered mobile menu
+- Not Impact with different fonts
 
 ---
 

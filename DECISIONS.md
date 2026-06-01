@@ -156,6 +156,30 @@ Run `scripts/seed-barrio.sql` in Supabase SQL Editor to insert.
 
 ---
 
+## INDUSTRY SECTION MANIFESTS (DECISION PENDING — June 1, 2026)
+
+**Concept approved by Steve + Jony. Design session not yet held.**
+
+The insight: every Found client gets the same section order (Hero → Services → About → Testimonials → CTA). That's one story for every business type. It's not enough.
+
+Different industries need different sections, different ordering, and different data fields:
+- A restaurant needs hours + a menu preview
+- A salon needs pricing visible on the services section
+- A balloon artist needs a gallery-forward layout where the work sells itself
+- A contractor needs a trust strip (licensed, insured, local)
+- A spa needs a philosophy section, not just service cards
+
+**What needs to happen:**
+1. Shawn walks the team through each of the 11 industry categories — what do their customers need to see that we're not showing?
+2. Steve + Jony define the section manifest per industry (which sections, what order)
+3. Craig identifies what new Supabase fields are needed (hours, pricing, team, menu items, etc.)
+4. Angela identifies which onboarding questions need to be added per industry
+5. Marcus + Craig build the section library and wire manifests to the layout system
+
+**This is the next major architectural decision. Nothing in the onboarding flow should be built until the section manifests are designed.**
+
+---
+
 ## UPGRADE FEATURES (APPROVED)
 
 **[2026-05-28] — Upgrade: Estimates & Quotes**
