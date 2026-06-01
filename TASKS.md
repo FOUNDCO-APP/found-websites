@@ -34,19 +34,19 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-1. **Build Editorial layout**
-   - Owner: Jony (design) + Marcus (build)
-   - Status: ⏳ Designed this session, not built
-   - Notes: Split hero (text left, image right), service list rows instead of grid, generous white space, Playfair + Lato, calm/editorial feel. For wellness, beauty, spa businesses.
+1. **Industry section manifest design session**
+   - Owner: Steve (product) + Jony (design) + Shawn (domain knowledge)
+   - Status: ⏳ Discussion opened June 1 — not yet designed
+   - Notes: Each of the 11 industry categories needs its own section manifest — which sections to show, what order, what data fields are unique to that industry (hours, pricing, team, menu, etc.). Shawn walks the team through what each industry's customers actually need to see. This unlocks Portrait, Cinematic, and the onboarding flow.
 
 2. **Build Portrait layout**
    - Owner: Jony (design) + Marcus (build)
-   - Status: ⏳ Designed this session, not built
+   - Status: ⏳ Designed May 31, not built
    - Notes: Photography-forward, image fills top 60% of hero, text bottom-anchored. Masonry services, photo strip mid-page, split about section. For food, events, visual businesses, balloon artists.
 
 3. **Build Cinematic layout**
    - Owner: Jony (design) + Marcus (build)
-   - Status: ⏳ Designed this session, not built
+   - Status: ⏳ Designed May 31, not built
    - Notes: True 100vh fullscreen hero, centered headline, horizontal scroll services on mobile, full-bleed about section, large single pull-quote testimonials. For events, fitness, high-energy businesses.
 
 ---
@@ -72,8 +72,16 @@ Exit criteria:
 - ✅ Barrio Builders seed data confirmed in Supabase
 - ✅ Pexels API integration (5-photo pool, self-healing, all pages)
 - ✅ Impact layout built and Jony-approved (Barrio Builders)
+- ✅ Editorial layout built and Jony-approved (Blue Luna Events)
+- ✅ Layout component system (ImpactLayout, EditorialLayout, page.tsx switch)
 - ✅ Section rhythm rule locked (photo header + photo CTA only)
 - ✅ All pages have imagery
+- ✅ Vibe-aware Navbar (calm = white menu, bold = dark menu)
+- ✅ Logo sizing system (maxHeight+maxWidth+object-contain — works for all logo shapes)
+- ✅ BrandMark scales with name length
+- ✅ Customer auto-reply email on lead submission
+- ✅ Blue Luna Events (Instance #2) — live at blueluna.foundco.app
+- ✅ Teal palette updated to #6ECECE (Tiffany blue)
 - ✅ Permanent decision docs: DECISIONS.md, DESIGN_DECISIONS.md, ONBOARDING.md
 
 ---

@@ -4,6 +4,67 @@
 
 ---
 
+## Session: June 1, 2026 — Editorial Layout + Blue Luna Events + Industry Manifests Discussion
+**AI:** Claude Code (Sonnet 4.6) + Full Apple Team
+**Worked on:** Editorial layout built and polished, Blue Luna Events as Instance #2, vibe-aware navbar, industry section manifest discussion opened
+
+### ✅ Completed This Session
+
+**Email system:**
+- Customer auto-reply email built and deployed — when a visitor submits the estimate/contact form and includes their email, they immediately receive a confirmation from the Found client's business
+- Owner notification email was already working (Resend + foundco.app domain already verified)
+
+**Layout system architecture:**
+- `src/types/layout.ts` — shared LayoutProps type
+- `src/components/layouts/ImpactLayout.tsx` — extracted from page.tsx, Barrio Builders / contractors / bold vibes
+- `src/components/layouts/EditorialLayout.tsx` — new, magazine aesthetic
+- `page.tsx` — clean switch statement routes to correct layout by industry + vibe
+- Portrait + Cinematic fall back to Impact until built
+
+**Editorial layout (fully rebuilt after v1 was rejected):**
+- Hero: full viewport split — white left (italic Playfair headline), full-height image right bleeds to edge, no overlay
+- Mobile: full-width image (h-72) above text panel — no more blank white screen
+- Section order: Hero → **About statement first** → Services (luxury menu rows) → Testimonials (oversized pull quotes) → CTA (photo)
+- Different emotional journey from Impact — brand story leads, services follow
+- Calm mobile menu: white slide-in panel, italic Playfair nav links (completely different from Impact's dark overlay)
+
+**Blue Luna Events (Instance #2):**
+- Ran full onboarding questions — events + calm → Editorial layout confirmed
+- Seeded in Supabase: slug = `blueluna`, primary = #6ECECE, vibe = calm
+- Real logo uploaded to Supabase Storage from local file
+- Tiffany blue (#6ECECE) set as primary color — matched from actual logo
+- Live at blueluna.foundco.app
+
+**Vibe-aware Navbar:**
+- BrandMark: font size + letter-spacing scales automatically with name length (long names no longer overflow)
+- Calm/warm mobile menu: white slide-in panel, italic nav links, refined close button
+- Bold/modern mobile menu: unchanged dark numbered overlay
+- Logo shows in both mobile menus (was showing BrandMark only before)
+- Logo sizing system: `maxHeight + maxWidth + object-contain` — works for wide, tall, and square logos at all sizes
+
+**Palette update:**
+- Teal swatch: `#00695C` → `#6ECECE` (Tiffany blue, confirmed from Blue Luna logo, works on both light and dark backgrounds)
+
+### ⏳ Still Pending
+
+| Item | Status | Notes |
+|---|---|---|
+| Industry section manifests | ❌ Not designed | Discussion opened — each industry needs different sections, different order, different data fields. Shawn to lead the design session with the team. |
+| Portrait layout | ❌ Not built | Next after industry manifests |
+| Cinematic layout | ❌ Not built | After Portrait |
+| Onboarding question flow | ❌ Not built | Spec in ONBOARDING.md — blocked until all 4 layouts exist |
+| Site reveal moment | ❌ Not built | Blocked until onboarding is built |
+| Color palette preset UI | ❌ Not built | 12 swatches ready, needs onboarding screen |
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Industry section manifest design session** — Shawn walks team through what each of the 11 industry types needs that we're not showing. Steve + Jony design the section library. Craig specs the new schema fields. This unlocks everything else.
+2. **Portrait layout** — visual businesses (balloon artists, food, events with lots of photos)
+3. **Cinematic layout** — high-energy businesses (fitness, events, nightlife)
+4. **Onboarding flow** — Angela's full spec in ONBOARDING.md, ready to build once layouts are done
+
+---
+
 ## Session: May 31, 2026 — Impact Layout Built + Full Site Polish
 **AI:** Claude Code (Sonnet 4.6) + Full Apple Team
 **Worked on:** Barrio Builders full site build, image system, Impact layout polish, section rhythm rule
