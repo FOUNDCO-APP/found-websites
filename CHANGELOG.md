@@ -4,6 +4,26 @@
 
 ---
 
+## Session: June 1, 2026 — Docs Completed + All Decisions Captured
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Verified all session decisions captured, missing docs added, security fix
+
+### ✅ Completed This Session (addendum)
+
+- DESIGN_DECISIONS.md: added vibe-aware mobile menu specs, logo sizing system, BrandMark scaling, Editorial layout full spec
+- DECISIONS.md: added industry section manifests concept + design session requirements
+- upload-blueluna-logo.mjs: removed hardcoded service role key (security fix)
+- All docs verified complete before session close
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Industry section manifest design session** — Shawn walks team through what each of the 11 industry types needs. Steve + Jony design the section library. Craig specs new schema fields. Angela updates onboarding questions per industry. This is the unlock for everything else.
+2. **Portrait layout** — photography-forward, for balloon artists, food, visual businesses
+3. **Cinematic layout** — high-energy, events, fitness
+4. **Onboarding flow** — Angela's spec ready in ONBOARDING.md, build after all 4 layouts exist
+
+---
+
 ## Session: June 1, 2026 — Editorial Layout + Blue Luna Events + Industry Manifests Discussion
 **AI:** Claude Code (Sonnet 4.6) + Full Apple Team
 **Worked on:** Editorial layout built and polished, Blue Luna Events as Instance #2, vibe-aware navbar, industry section manifest discussion opened
