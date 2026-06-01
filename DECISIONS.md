@@ -120,7 +120,7 @@ Approved by: Steve Jobs + Jony Ive
 | Gold | #F9A825 | Vibrant, optimistic, creative |
 | Rose | #AD1457 | Elegant, feminine, refined |
 | Plum | #6A1B9A | Luxurious, creative, distinctive |
-| Teal | #00695C | Fresh, calm, trustworthy |
+| Teal | #6ECECE | Fresh, calm, elegant — works beautifully on white and dark backgrounds |
 | Midnight | #212121 | Sophisticated, minimal, premium |
 | Clay | #8D6E63 | Warm, earthy, approachable |
 | Sky | #0277BD | Clean, open, professional |

@@ -115,7 +115,11 @@ export default function Navbar({ company }: { company: Company }) {
         >
           <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #f0f0f0" }}>
             <Link href="/" onClick={() => setOpen(false)}>
-              <BrandMark name={company.name} color={primary} vibe={vibe} />
+              {company.logo_url ? (
+                <img src={company.logo_url} alt={company.name} className="h-9 w-auto" />
+              ) : (
+                <BrandMark name={company.name} color={primary} vibe={vibe} />
+              )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"
               className="w-10 h-10 flex items-center justify-center"
