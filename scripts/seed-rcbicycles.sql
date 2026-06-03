@@ -5,6 +5,12 @@
 -- Generated: June 3, 2026
 -- ============================================================
 
+-- STEP 0: Add missing columns (safe to run even if they already exist)
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS photo_keywords TEXT;
+ALTER TABLE website_config ADD COLUMN IF NOT EXISTS tagline TEXT;
+ALTER TABLE website_config ADD COLUMN IF NOT EXISTS cta_headline TEXT;
+ALTER TABLE website_config ADD COLUMN IF NOT EXISTS stock_images JSONB DEFAULT '[]'::jsonb;
+
 INSERT INTO companies (
   id, name, slug, industry_category, vibe,
   primary_intent, secondary_intent,
