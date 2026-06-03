@@ -10,7 +10,7 @@ export async function getStockImages(company: Company): Promise<string[]> {
   if (existing.length >= 3) return existing
   if (!process.env.PEXELS_API_KEY) return []
 
-  const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city)
+  const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city, company.photo_keywords)
   if (fetched.length) {
     const supabase = await createClient()
     await supabase

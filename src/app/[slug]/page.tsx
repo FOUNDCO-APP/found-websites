@@ -26,7 +26,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   // Fetch 5 stock photos on first visit — saved to DB so all pages use the same pool
   let imgs: string[] = config?.stock_images || []
   if (imgs.length < 3 && !heroVideo && process.env.PEXELS_API_KEY) {
-    const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city)
+    const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city, company.photo_keywords)
     if (fetched.length) {
       imgs = fetched
       const supabase = await createClient()

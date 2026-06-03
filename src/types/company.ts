@@ -43,6 +43,7 @@ export type Company = {
   primary_color: string
   accent_color_1: string
   accent_color_2: string
+  photo_keywords: string | null
   website_config: WebsiteConfig | null
 }
 

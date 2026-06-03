@@ -67,14 +67,14 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
         </div>
       </section>
 
-      {/* ── GALLERY STRIP — pure visual, no text, hover zoom ── */}
+      {/* ── GALLERY STRIP — 75vw mobile (clear swipe), 3-col desktop ── */}
       {imgs.length >= 2 && (
-        <div className="flex gap-0.5 overflow-x-auto" style={{ backgroundColor: "#0a0a0a" }}>
-          {[img(1), img(2), img(3)].filter(Boolean).map((src, i) => (
+        <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+          {[img(1), img(2), img(3), img(4)].filter(Boolean).map((src, i) => (
             <div
               key={i}
-              className="relative flex-none overflow-hidden"
-              style={{ height: "260px", width: "calc(33.333% - 1px)", minWidth: "200px" }}
+              className={`relative flex-none overflow-hidden ${i === 3 ? "md:hidden" : "md:flex-1"}`}
+              style={{ height: "260px", width: "75vw" }}
             >
               <img
                 src={src!}
