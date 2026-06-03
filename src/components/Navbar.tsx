@@ -7,7 +7,7 @@ import { intentLabel, intentHref } from "@/types/company"
 
 function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: string }) {
   const len = name.length
-  const fontSize = len > 20 ? "text-base" : len > 14 ? "text-lg lg:text-xl" : "text-2xl lg:text-3xl"
+  const fontSize = len > 20 ? "text-lg lg:text-xl" : len > 14 ? "text-2xl lg:text-3xl" : "text-3xl lg:text-4xl"
   const tracking = len > 20 ? "tracking-wide" : len > 14 ? "tracking-wider" : "tracking-[0.12em]"
   const weight = vibe === "calm" || vibe === "warm" ? "font-bold" : "font-black"
 
