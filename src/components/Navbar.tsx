@@ -76,10 +76,11 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 {/* Color logo — white navbar state. mix-blend-mode:multiply erases white bg */}
                 {company.logo_url && (
                   <img src={company.logo_url} alt={company.name}
-                    className="h-full w-auto object-contain transition-opacity duration-300"
+                    className="h-full w-auto object-contain"
                     style={{
                       opacity: isOverlay ? 0 : 1,
-                      mixBlendMode: "multiply",
+                      transition: "opacity 300ms, mix-blend-mode 0ms 300ms",
+                      mixBlendMode: scrolled ? "multiply" : "normal",
                     }} />
                 )}
                 {/* White logo — transparent/dark navbar state */}
