@@ -88,21 +88,9 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
             <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
               Our Story
             </p>
-            <h2
-              className="text-3xl md:text-4xl mb-8"
-              style={{
-                color: "#111111",
-                fontFamily: "var(--font-heading, inherit)",
-                fontStyle: "italic",
-                fontWeight: 700,
-              }}
-            >
-              {company.name}
-            </h2>
-            <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
-            {config.tagline && (
-              <p
-                className="text-xl md:text-2xl mb-6"
+            {config.tagline ? (
+              <h2
+                className="text-3xl md:text-4xl mb-8"
                 style={{
                   color: "#111111",
                   fontFamily: "var(--font-heading, inherit)",
@@ -111,8 +99,9 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                 }}
               >
                 {config.tagline}
-              </p>
-            )}
+              </h2>
+            ) : null}
+            <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
             {config.about_text && (
               <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
                 {config.about_text}
