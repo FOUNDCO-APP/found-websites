@@ -7,7 +7,7 @@ import type { Company } from "@/types/company"
 // Works regardless of which page the visitor hits first.
 export async function getStockImages(company: Company): Promise<string[]> {
   const existing = company.website_config?.stock_images || []
-  if (existing.length >= 3) return existing
+  if (existing.length >= 3) return [...existing].sort(() => Math.random() - 0.5)
   if (!process.env.PEXELS_API_KEY) return []
 
   const fetched = await fetchStockPhotos(company.industry_category, company.vibe, 5, company.city, company.photo_keywords)
