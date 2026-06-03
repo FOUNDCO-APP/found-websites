@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
 import PortraitLayout from "@/components/layouts/PortraitLayout"
+import CinematicLayout from "@/components/layouts/CinematicLayout"
 import type { LayoutProps } from "@/types/layout"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -45,7 +46,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   switch (layout) {
     case "editorial": return <EditorialLayout {...props} />
     case "portrait":  return <PortraitLayout {...props} />
-    case "cinematic": return <ImpactLayout {...props} />   // Cinematic coming next
+    case "cinematic": return <CinematicLayout {...props} />
     default:          return <ImpactLayout {...props} />
   }
 }
