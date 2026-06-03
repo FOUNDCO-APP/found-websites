@@ -73,14 +73,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           <Link href="/" className="flex items-center shrink-0">
             {company.logo_url || company.logo_white_url ? (
               <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
-                {/* Color logo — white navbar state. mix-blend-mode:multiply erases white bg */}
+                {/* Color logo — white navbar state */}
                 {company.logo_url && (
                   <img src={company.logo_url} alt={company.name}
-                    className="h-full w-auto object-contain"
+                    className="h-full w-auto object-contain transition-opacity duration-300"
                     style={{
                       opacity: isOverlay ? 0 : 1,
-                      transition: "opacity 300ms, mix-blend-mode 0ms 300ms",
-                      mixBlendMode: scrolled ? "multiply" : "normal",
                     }} />
                 )}
                 {/* White logo — transparent/dark navbar state */}
