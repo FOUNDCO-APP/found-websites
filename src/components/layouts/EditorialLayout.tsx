@@ -81,15 +81,15 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
         </div>
       </section>
 
-      {/* ── ABOUT — WHITE, CENTERED STATEMENT (comes BEFORE services in Editorial) ── */}
+      {/* ── ABOUT — BRAND STORY (comes BEFORE services in Editorial) ── */}
       {config?.about_text && (
         <section className="py-28 bg-white">
-          <div className="max-w-3xl mx-auto px-8 text-center">
+          <div className="max-w-2xl mx-auto px-8 text-center">
             <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
               Our Story
             </p>
             <h2
-              className="text-3xl md:text-4xl leading-relaxed mb-10"
+              className="text-3xl md:text-4xl mb-8"
               style={{
                 color: "#111111",
                 fontFamily: "var(--font-heading, inherit)",
@@ -97,9 +97,12 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                 fontWeight: 700,
               }}
             >
-              &ldquo;{config.about_text}&rdquo;
+              {company.name}
             </h2>
-            <div className="w-12 h-0.5 mx-auto mb-10" style={{ backgroundColor: primary }} />
+            <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
+            <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
+              {config.about_text}
+            </p>
             <Link href="/about" className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
               Meet the Team

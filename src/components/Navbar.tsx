@@ -57,7 +57,7 @@ export default function Navbar({ company }: { company: Company }) {
             {company.logo_url ? (
               <img src={company.logo_url} alt={company.name}
                 className="w-auto object-contain"
-                style={{ maxHeight: "48px", maxWidth: "180px" }} />
+                style={{ maxHeight: "64px", maxWidth: "220px" }} />
             ) : (
               <BrandMark name={company.name} color={primary} vibe={vibe} />
             )}
@@ -126,9 +126,9 @@ export default function Navbar({ company }: { company: Company }) {
               )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"
-              className="w-10 h-10 flex items-center justify-center"
-              style={{ border: "1px solid #eeeeee", borderRadius: "50px" }}>
-              <svg width="16" height="16" fill="none" stroke="#555555" viewBox="0 0 24 24" strokeWidth={2}>
+              className="w-12 h-12 flex items-center justify-center"
+              style={{ border: "1px solid #cccccc", borderRadius: "50px" }}>
+              <svg width="22" height="22" fill="none" stroke="#444444" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -187,9 +187,9 @@ export default function Navbar({ company }: { company: Company }) {
               )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"
-              className="w-12 h-12 flex items-center justify-center border border-white/20 hover:border-white/60 transition-colors"
+              className="w-12 h-12 flex items-center justify-center border border-white/40 hover:border-white/70 transition-colors"
               style={{ borderRadius: "var(--button-radius, 6px)" }}>
-              <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
+              <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
