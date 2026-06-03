@@ -6,6 +6,8 @@
 
 UPDATE website_config
 SET
+  -- hero_image_url must be null so the shuffled pool drives hero + all CTAs
+  hero_image_url = null,
   stock_images = '[
     "https://images.unsplash.com/photo-1514995428455-447d4443fa7f?w=1920&q=80&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1553530666-ba11a7da3888?w=1920&q=80&auto=format&fit=crop",
@@ -17,8 +19,7 @@ SET
     "https://images.unsplash.com/photo-1654923064926-be7e64267a31?w=1920&q=80&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1562166453-2783119c313a?w=1920&q=80&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1590288488147-f46142daf112?w=1920&q=80&auto=format&fit=crop"
-  ]'::jsonb,
-  hero_image_url = 'https://images.unsplash.com/photo-1514995428455-447d4443fa7f?w=1920&q=80&auto=format&fit=crop'
+  ]'::jsonb
 WHERE company_id = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
 
 -- VERIFY
