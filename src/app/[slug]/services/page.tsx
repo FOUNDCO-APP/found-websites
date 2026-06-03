@@ -49,7 +49,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
         )}
         {heroImage && <div className="absolute inset-0 bg-black/70" />}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-20 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>
+          <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#ffffff" }}>
             What We Do
           </p>
           <h1 className="text-5xl md:text-7xl font-black text-white leading-none mb-6 text-balance"

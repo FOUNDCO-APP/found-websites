@@ -36,7 +36,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
         {(heroVideo || heroImage) && <div className="absolute inset-0 bg-black/62" />}
 
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-32 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-6" style={{ color: primary }}>
+          <p className="text-xs font-black tracking-widest uppercase mb-6" style={{ color: "#ffffff" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-8 max-w-4xl text-balance"

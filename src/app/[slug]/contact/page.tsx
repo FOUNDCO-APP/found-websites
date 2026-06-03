@@ -39,7 +39,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>Get In Touch</p>
+          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>Get In Touch</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>Contact Us</h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>We&apos;d love to hear from you.</p>
         </div>

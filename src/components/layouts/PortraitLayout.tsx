@@ -39,7 +39,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
         }} />
 
         <div className="relative z-10 max-w-6xl mx-auto px-8 pb-16 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>
+          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1

@@ -49,7 +49,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-20 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>
+          <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#ffffff" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1 className="text-5xl md:text-7xl font-black leading-none mb-8 text-balance text-white"
