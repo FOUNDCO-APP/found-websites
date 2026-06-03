@@ -17,6 +17,7 @@ export type WebsiteConfig = {
   hero_image_url: string | null
   stock_images: string[]
   about_text: string | null
+  tagline: string | null
   services: ServiceItem[]
   testimonials: Testimonial[]
   service_areas: string[]

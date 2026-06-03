@@ -120,6 +120,11 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
                   style={{ fontFamily: "var(--font-heading, inherit)" }}>
                   {company.name}
                 </h2>
+                {config?.tagline && (
+                  <p className="text-lg font-black mt-5 leading-snug" style={{ color: primary }}>
+                    {config.tagline}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-lg leading-relaxed mb-8" style={{ color: "#cccccc" }}>{config.about_text}</p>

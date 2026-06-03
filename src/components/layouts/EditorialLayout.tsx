@@ -100,9 +100,24 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
               {company.name}
             </h2>
             <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
-            <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
-              {config.about_text}
-            </p>
+            {config.tagline && (
+              <p
+                className="text-xl md:text-2xl mb-6"
+                style={{
+                  color: "#111111",
+                  fontFamily: "var(--font-heading, inherit)",
+                  fontStyle: "italic",
+                  fontWeight: 700,
+                }}
+              >
+                {config.tagline}
+              </p>
+            )}
+            {config.about_text && (
+              <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
+                {config.about_text}
+              </p>
+            )}
             <Link href="/about" className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
               Meet the Team
