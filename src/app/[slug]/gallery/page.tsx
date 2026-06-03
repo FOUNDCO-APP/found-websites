@@ -62,28 +62,30 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             // Phase 3: real client photos from media table
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {photos.map((photo) => (
-                <div key={photo.id} className="aspect-square overflow-hidden bg-gray-100"
+                <a key={photo.id} href={photo.url} target="_blank" rel="noopener noreferrer"
+                  className="block aspect-square overflow-hidden bg-gray-100 cursor-zoom-in"
                   style={{ borderRadius: "var(--card-radius, 10px)" }}>
                   <img
                     src={photo.thumbnail_url || photo.url}
                     alt="Project photo"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
-                </div>
+                </a>
               ))}
             </div>
           ) : imgs.length > 0 ? (
             // Fallback: show curated stock_images pool so gallery is never empty
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {imgs.map((url, i) => (
-                <div key={i} className="aspect-video overflow-hidden bg-gray-100"
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                  className="block aspect-video overflow-hidden bg-gray-100 cursor-zoom-in"
                   style={{ borderRadius: "var(--card-radius, 10px)" }}>
                   <img
                     src={url}
                     alt={`${company.name} photo ${i + 1}`}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
-                </div>
+                </a>
               ))}
             </div>
           ) : (

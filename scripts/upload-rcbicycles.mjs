@@ -24,13 +24,21 @@ const LOGO = {
 // Real client photos — these become stock_images for the site
 // mtn-bike goes first — best hero candidate
 const PHOTOS = [
-  { path: `${BASE}/NEW SITE/images/mtn-bike.jpg`,            name: "mtn-bike.jpg",           desc: "Mountain biker on trail against blue sky" },
-  { path: `${BASE}/NEW SITE/images/bike-rider.jpg`,          name: "bike-rider.jpg",          desc: "Racing cyclist in motion — speed and precision" },
-  { path: `${BASE}/NEW SITE/images/bikes-on-university.jpg`, name: "bikes-on-university.jpg", desc: "Cyclists riding on University Avenue, Tucson" },
-  { path: `${BASE}/NEW SITE/images/slide bg blue.jpg`,        name: "slide-bg-blue.jpg",       desc: "Bike wheel close-up with blue tones" },
-  { path: `${BASE}/NEW SITE/images/bike rentals.jpg`,         name: "bike-rentals.jpg",        desc: "Group of riders at a community bike rental event" },
-  { path: `${BASE}/NEW SITE/images/bike tuneup.jpg`,          name: "bike-tuneup.jpg",         desc: "Mechanic performing precision chain repair" },
-  { path: `${BASE}/NEW SITE/images/bike accesories.jpg`,      name: "bike-accessories.jpg",    desc: "Cyclist adjusting wheel — accessories and maintenance" },
+  { path: `${BASE}/NEW SITE/images/mtn-bike.jpg`,            name: "mtn-bike.jpg",            desc: "Mountain biker on trail against blue sky" },
+  { path: `${BASE}/NEW SITE/images/bike-rider.jpg`,          name: "bike-rider.jpg",           desc: "Racing cyclist in motion — speed and precision" },
+  { path: `${BASE}/NEW SITE/images/bikes-on-university.jpg`, name: "bikes-on-university.jpg",  desc: "Cyclists riding on University Avenue, Tucson" },
+  { path: `${BASE}/NEW SITE/images/slide bg blue.jpg`,        name: "slide-bg-blue.jpg",        desc: "Bike wheel close-up with blue tones" },
+  { path: `${BASE}/NEW SITE/images/slide bg.jpg`,             name: "slide-bg.jpg",             desc: "Bike wheel spokes close-up detail" },
+  { path: `${BASE}/NEW SITE/images/bike rentals.jpg`,         name: "bike-rentals.jpg",         desc: "Group of riders at a community bike rental event" },
+  { path: `${BASE}/NEW SITE/images/bike tuneup.jpg`,          name: "bike-tuneup.jpg",          desc: "Mechanic performing precision chain repair" },
+  { path: `${BASE}/NEW SITE/images/bike accesories.jpg`,      name: "bike-accessories.jpg",     desc: "Cyclist adjusting wheel — accessories and maintenance" },
+  { path: `${BASE}/NEW SITE/images/bike bars.jpg`,            name: "bike-bars.jpg",            desc: "Handlebars and cockpit detail" },
+  { path: `${BASE}/NEW SITE/images/bike brakes.jpg`,          name: "bike-brakes.jpg",          desc: "Brake system close-up" },
+  { path: `${BASE}/NEW SITE/images/bike derailleurs.jpg`,     name: "bike-derailleurs.jpg",     desc: "Derailleur and drivetrain detail" },
+  { path: `${BASE}/NEW SITE/images/bike drive train.jpg`,     name: "bike-drivetrain.jpg",      desc: "Full drivetrain — chain, cassette, and gears" },
+  { path: `${BASE}/NEW SITE/images/bike headsets.jpg`,        name: "bike-headsets.jpg",        desc: "Headset and fork detail" },
+  { path: `${BASE}/NEW SITE/images/bike wheels.jpg`,          name: "bike-wheels.jpg",          desc: "Wheel set — rims and spokes" },
+  { path: `${BASE}/NEW SITE/images/bike bottom brackets.jpg`, name: "bike-bottom-brackets.jpg", desc: "Bottom bracket and crank installation" },
 ]
 
 async function uploadFile(filePath, storagePath, contentType) {
