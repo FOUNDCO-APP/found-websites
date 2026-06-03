@@ -6,6 +6,7 @@ import { fetchStockPhotos } from "@/lib/pexels"
 import { createClient } from "@/lib/supabase/server"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
+import PortraitLayout from "@/components/layouts/PortraitLayout"
 import type { LayoutProps } from "@/types/layout"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -43,7 +44,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   // Route to the correct layout — falls back to Impact for unbuilt layouts
   switch (layout) {
     case "editorial": return <EditorialLayout {...props} />
-    case "portrait":  return <ImpactLayout {...props} />   // Portrait coming next
+    case "portrait":  return <PortraitLayout {...props} />
     case "cinematic": return <ImpactLayout {...props} />   // Cinematic coming next
     default:          return <ImpactLayout {...props} />
   }
