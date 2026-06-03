@@ -5,6 +5,7 @@ import type { Company } from "@/types/company"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import { getVibe } from "@/lib/vibe"
+import { getLayout } from "@/lib/layout"
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -163,6 +164,7 @@ export default async function CompanyLayout({
 
   const { primary_color, accent_color_1 } = company
   const vibe = getVibe(company.vibe)
+  const layout = getLayout(company.industry_category, company.vibe)
   const schemas = buildJsonLd(company)
 
   return (
@@ -185,7 +187,7 @@ export default async function CompanyLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
         />
       ))}
-      <Navbar company={company} />
+      <Navbar company={company} transparent={layout === "cinematic"} />
       <main className="flex-1">{children}</main>
       <Footer company={company} />
     </div>

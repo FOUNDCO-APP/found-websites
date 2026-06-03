@@ -40,6 +40,7 @@ export type Company = {
   city: string | null
   state: string | null
   logo_url: string | null
+  logo_white_url: string | null
   primary_color: string
   accent_color_1: string
   accent_color_2: string

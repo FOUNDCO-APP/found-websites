@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { Company } from "@/types/company"
@@ -29,12 +29,23 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ]
 
-export default function Navbar({ company }: { company: Company }) {
+export default function Navbar({ company, transparent = false }: { company: Company; transparent?: boolean }) {
   const [open, setOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
   const primary = company.primary_color
   const vibe = company.vibe || "bold"
   const isCalm = vibe === "calm" || vibe === "warm"
+
+  useEffect(() => {
+    if (!transparent) return
+    const onScroll = () => setScrolled(window.scrollY > 60)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [transparent])
+
+  // In transparent mode before scroll: overlay on hero, white text/logo
+  const isOverlay = transparent && !scrolled
 
   const isActive = (href: string) => pathname === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
@@ -42,24 +53,34 @@ export default function Navbar({ company }: { company: Company }) {
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
-  // Calm/warm: lighter, more refined navbar. Bold/modern: strong, high-contrast.
-  const navBorder = isCalm ? "1px solid #eeeeee" : "1px solid #f0f0f0"
-  const navLinkWeight = isCalm ? "font-medium" : "font-medium"
-  const inactiveColor = isCalm ? "#aaaaaa" : "#999999"
+  const navBorder = isOverlay ? "none" : isCalm ? "1px solid #eeeeee" : "1px solid #f0f0f0"
+  const navLinkWeight = "font-medium"
+  const inactiveColor = isOverlay ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
+  const barColor = isOverlay ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white" style={{ borderBottom: navBorder }}>
+      <header
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: isOverlay ? "transparent" : "#ffffff",
+          borderBottom: navBorder,
+        }}
+      >
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between gap-4">
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            {company.logo_url ? (
+            {isOverlay && company.logo_white_url ? (
+              <img src={company.logo_white_url} alt={company.name}
+                className="w-auto object-contain"
+                style={{ maxHeight: "64px", maxWidth: "220px" }} />
+            ) : company.logo_url ? (
               <img src={company.logo_url} alt={company.name}
                 className="w-auto object-contain"
                 style={{ maxHeight: "64px", maxWidth: "220px" }} />
             ) : (
-              <BrandMark name={company.name} color={primary} vibe={vibe} />
+              <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
             )}
           </Link>
 
@@ -68,7 +89,7 @@ export default function Navbar({ company }: { company: Company }) {
             {navLinks.map((item) => (
               <Link key={item.label} href={item.href}
                 className={`transition-colors ${navLinkWeight}`}
-                style={{ color: isActive(item.href) ? primary : inactiveColor }}>
+                style={{ color: isActive(item.href) && !isOverlay ? primary : inactiveColor }}>
                 {item.label}
               </Link>
             ))}
@@ -76,11 +97,11 @@ export default function Navbar({ company }: { company: Company }) {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-5 shrink-0">
-            <div className="w-px h-5 bg-gray-200" />
+            <div className="w-px h-5" style={{ backgroundColor: isOverlay ? "rgba(255,255,255,0.3)" : "#e5e5e5" }} />
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                 className="flex items-center gap-1.5 text-sm font-black transition-colors hover:opacity-80"
-                style={{ color: primary }}>
+                style={{ color: isOverlay ? "#ffffff" : primary }}>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
@@ -96,9 +117,9 @@ export default function Navbar({ company }: { company: Company }) {
           {/* Hamburger */}
           <button className="md:hidden flex flex-col justify-center items-end gap-1.5 w-10 h-10"
             onClick={() => setOpen(true)} aria-label="Open menu">
-            <span className="block w-6 h-0.5" style={{ backgroundColor: isCalm ? "#555555" : "#1a1a1a" }} />
-            <span className="block w-4 h-0.5" style={{ backgroundColor: isCalm ? "#555555" : "#1a1a1a" }} />
-            <span className="block w-6 h-0.5" style={{ backgroundColor: isCalm ? "#555555" : "#1a1a1a" }} />
+            <span className="block w-6 h-0.5 transition-colors" style={{ backgroundColor: barColor }} />
+            <span className="block w-4 h-0.5 transition-colors" style={{ backgroundColor: barColor }} />
+            <span className="block w-6 h-0.5 transition-colors" style={{ backgroundColor: barColor }} />
           </button>
         </div>
       </header>

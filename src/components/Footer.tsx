@@ -60,8 +60,10 @@ export default function Footer({ company }: { company: Company }) {
           {/* Brand */}
           <div>
             <div className="mb-5">
-              {company.logo_url ? (
-                <img src={company.logo_url} alt={company.name} className="h-10 w-auto opacity-90" />
+              {company.logo_white_url ? (
+                <img src={company.logo_white_url} alt={company.name} className="h-10 w-auto" />
+              ) : company.logo_url ? (
+                <img src={company.logo_url} alt={company.name} className="h-10 w-auto brightness-0 invert" />
               ) : (
                 <BrandMark name={company.name} primary={logoColor("dark", primary)} />
               )}
