@@ -85,10 +85,20 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       style={{ opacity: isOverlay ? 1 : 0 }} />
                   </>
                 ) : (
-                  /* No white logo — filter to white on dark hero, color on white navbar */
-                  <img src={company.logo_url!} alt={company.name}
-                    className="h-full w-auto object-contain transition-all duration-300"
-                    style={{ filter: isOverlay ? "brightness(0) invert(1)" : "none" }} />
+                  /* No white logo — stack two copies, crossfade with opacity */
+                  <>
+                    {/* Color logo — visible when scrolled */}
+                    <img src={company.logo_url!} alt={company.name}
+                      className="h-full w-auto object-contain transition-opacity duration-300"
+                      style={{ opacity: isOverlay ? 0 : 1 }} />
+                    {/* White version — visible on dark hero */}
+                    <img src={company.logo_url!} alt=""
+                      className="h-full w-auto object-contain absolute inset-0 transition-opacity duration-300"
+                      style={{
+                        opacity: isOverlay ? 1 : 0,
+                        filter: "brightness(0) invert(1)",
+                      }} />
+                  </>
                 )}
               </div>
             ) : (
