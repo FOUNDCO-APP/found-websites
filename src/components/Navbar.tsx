@@ -71,14 +71,24 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            {isOverlay && company.logo_white_url ? (
-              <img src={company.logo_white_url} alt={company.name}
-                className="w-auto object-contain"
-                style={{ maxHeight: "64px", maxWidth: "220px" }} />
-            ) : company.logo_url ? (
-              <img src={company.logo_url} alt={company.name}
-                className="w-auto object-contain"
-                style={{ maxHeight: "64px", maxWidth: "220px" }} />
+            {company.logo_url || company.logo_white_url ? (
+              <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
+                {/* Color logo — white navbar state. mix-blend-mode:multiply erases white bg */}
+                {company.logo_url && (
+                  <img src={company.logo_url} alt={company.name}
+                    className="h-full w-auto object-contain transition-opacity duration-300"
+                    style={{
+                      opacity: isOverlay ? 0 : 1,
+                      mixBlendMode: "multiply",
+                    }} />
+                )}
+                {/* White logo — transparent/dark navbar state */}
+                {company.logo_white_url && (
+                  <img src={company.logo_white_url} alt={company.name}
+                    className="h-full w-auto object-contain absolute inset-0 transition-opacity duration-300"
+                    style={{ opacity: isOverlay ? 1 : 0 }} />
+                )}
+              </div>
             ) : (
               <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
             )}
