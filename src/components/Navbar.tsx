@@ -61,7 +61,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   return (
     <>
       <header
-        className="sticky top-0 z-50 transition-all duration-300"
+        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-300`}
         style={{
           backgroundColor: isOverlay ? "transparent" : "#ffffff",
           borderBottom: navBorder,
