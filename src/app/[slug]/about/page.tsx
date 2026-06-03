@@ -4,6 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -32,6 +33,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const services = config?.services || []
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
+  const industryDefs = getIndustryDefaults(company.industry_category)
+  const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
 
   return (
     <>
@@ -71,10 +74,12 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
                 <p className="text-xs font-black tracking-widest uppercase mb-6" style={{ color: primary }}>
                   Our Story
                 </p>
-                <p className="text-xl md:text-2xl font-black leading-snug mb-0"
-                  style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                  We&apos;re not a national chain.<br />We&apos;re your neighbors.
-                </p>
+                {config?.tagline && (
+                  <p className="text-xl md:text-2xl font-black leading-snug mb-0"
+                    style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                    {config.tagline}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-8">
                 <p className="text-lg leading-relaxed" style={{ color: "#444444" }}>
@@ -100,17 +105,13 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       <section className="py-20" style={{ backgroundColor: "#f7f7f7" }}>
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            {[
-              { label: "Locally Owned", body: `Based right here in ${company.city || "your community"} — not a franchise, not a call center.` },
-              { label: "Quality First", body: "We stand behind every job. If something isn't right, we make it right." },
-              { label: "Free Estimates", body: "No pressure. No surprises. Get a clear quote before any work begins." },
-            ].map((v) => (
+            {industryDefs.values.map((v) => (
               <div key={v.label} className="flex flex-col gap-3">
                 <div className="w-8 h-0.5" style={{ backgroundColor: primary }} />
                 <h3 className="font-black text-lg" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                   {v.label}
                 </h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#776F6F" }}>{v.body}</p>
+                <p className="text-sm leading-relaxed" style={{ color: "#776F6F" }}>{v.body(company.city || "")}</p>
               </div>
             ))}
           </div>
@@ -193,7 +194,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            Ready to Get Started?
+            {ctaHeadline}
           </h2>
           <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
             {company.phone && (

@@ -18,6 +18,7 @@ export type WebsiteConfig = {
   stock_images: string[]
   about_text: string | null
   tagline: string | null
+  cta_headline: string | null
   services: ServiceItem[]
   testimonials: Testimonial[]
   service_areas: string[]

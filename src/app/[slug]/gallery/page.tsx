@@ -3,6 +3,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -35,6 +36,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const gradient = heroGradient(primary)
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
+  const industryDefs = getIndustryDefaults(company.industry_category)
 
   return (
     <>
@@ -50,7 +52,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>Our Work</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>Gallery</h1>
-          <p className="text-lg" style={{ color: "#cccccc" }}>Real work. Real results.</p>
+          <p className="text-lg" style={{ color: "#cccccc" }}>{industryDefs.gallerySubtitle}</p>
         </div>
       </section>
 

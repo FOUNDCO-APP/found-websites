@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { logoColor } from "@/lib/color"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 
 function BrandMark({ name, primary }: { name: string; primary: string }) {
   return (
@@ -45,6 +46,8 @@ export default function Footer({ company }: { company: Company }) {
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
+  const industryDefs = getIndustryDefaults(company.industry_category)
+  const footerTagline = company.website_config?.tagline || industryDefs.footerTagline
   const socialLinks = (company.website_config?.social_links || {}) as Record<string, string>
   const activeSocials = Object.entries(socialLinks).filter(([, url]) => url)
 
@@ -66,7 +69,7 @@ export default function Footer({ company }: { company: Company }) {
             <p className="text-sm leading-relaxed mb-5" style={{ color: "#888888" }}>
               {company.city}{company.state ? `, ${company.state}` : ""}
               {company.city ? " — " : ""}
-              Licensed, insured, and accountable.
+              {footerTagline}
             </p>
             {activeSocials.length > 0 && (
               <div className="flex gap-4">

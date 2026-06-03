@@ -4,6 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 import ServiceIcon from "@/components/ServiceIcon"
 import type { Metadata } from "next"
 
@@ -33,6 +34,8 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
   const heroImage = config?.hero_image_url || img(0)
+  const industryDefs = getIndustryDefaults(company.industry_category)
+  const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
 
   return (
     <>
@@ -54,7 +57,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
             Our Services
           </h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
-            Every job handled by our own team — no subcontractors, no surprises.
+            {config?.hero_subtitle || industryDefs.servicesIntro}
           </p>
         </div>
       </section>
@@ -102,11 +105,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
             How It Works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              { step: "01", title: "Free Estimate", body: "Tell us what you need. We come out, take a look, and give you a clear, honest quote — no pressure." },
-              { step: "02", title: "We Get to Work", body: "Our own crew shows up on time, keeps the job site clean, and communicates with you every step of the way." },
-              { step: "03", title: "You Love the Result", body: "We don't consider the job done until you're satisfied. Quality you can see, craftsmanship that lasts." },
-            ].map((item) => (
+            {industryDefs.process.map((item) => (
               <div key={item.step} className="flex flex-col gap-5">
                 <span className="text-5xl font-black leading-none"
                   style={{ color: primary, fontFamily: "var(--font-heading, inherit)" }}>
@@ -139,7 +138,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6 text-balance"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            Ready to Get Started?
+            {ctaHeadline}
           </h2>
           <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
             {company.phone && (

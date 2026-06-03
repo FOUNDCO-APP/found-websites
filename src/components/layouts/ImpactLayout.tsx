@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 import ServiceIcon from "@/components/ServiceIcon"
 import type { LayoutProps } from "@/types/layout"
 
@@ -19,6 +20,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
     : company.secondary_intent ? intentHref[company.secondary_intent] : null
 
   const img = (i: number) => imgs[i % imgs.length] || null
+  const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
 
   return (
     <>
@@ -176,7 +178,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
         <div className="relative z-10 max-w-2xl mx-auto px-8">
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6" style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            Ready to Get Started?
+            {ctaHeadline}
           </h2>
           <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
             {company.phone && (
