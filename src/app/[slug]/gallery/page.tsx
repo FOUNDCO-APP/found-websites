@@ -59,6 +59,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           {photos && photos.length > 0 ? (
+            // Phase 3: real client photos from media table
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {photos.map((photo) => (
                 <div key={photo.id} className="aspect-square overflow-hidden bg-gray-100"
@@ -66,12 +67,27 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                   <img
                     src={photo.thumbnail_url || photo.url}
                     alt="Project photo"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : imgs.length > 0 ? (
+            // Fallback: show curated stock_images pool so gallery is never empty
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {imgs.map((url, i) => (
+                <div key={i} className="aspect-video overflow-hidden bg-gray-100"
+                  style={{ borderRadius: "var(--card-radius, 10px)" }}>
+                  <img
+                    src={url}
+                    alt={`${company.name} photo ${i + 1}`}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
                 </div>
               ))}
             </div>
           ) : (
+            // Empty state: no photos at all
             <div className="flex flex-col items-center justify-center py-32 text-center">
               <div className="w-12 h-1 mb-10" style={{ backgroundColor: primary }} />
               <p className="text-2xl font-black mb-4"
