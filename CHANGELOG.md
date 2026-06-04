@@ -4,6 +4,60 @@
 
 ---
 
+## Session: June 4, 2026 — Platform Polish Pass Complete
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Gallery rebuild, lightbox, all-layout animations, navbar fixes, photo system plan
+
+### ✅ Completed This Session
+
+**Gallery — rebuilt platform-wide:**
+- Masonry layout (CSS columns, 2-col mobile / 3-col desktop, 3px gaps, natural aspect ratios)
+- GalleryLightbox client component — tap photo → full-screen, swipe left/right, arrow buttons, keyboard nav, photo counter, brand color accent line, body scroll lock
+- Minimal header: "Our Work" + photo count only (company name removed — already in navbar)
+- Empty state: "Our work speaks for itself." brand statement + CTA
+- Photo CTA at bottom (section rhythm rule honored)
+
+**Navbar fixes:**
+- Fixed/transparent only on Cinematic homepage — inner pages always sticky
+- `colorLogoReady` initializes correctly on inner pages (color logo shows immediately on white navbar)
+- `isHome` guard on colorLogoReady effect so inner pages never reset logo state
+- Logo crossfade: background transitions first, logos swap after bg is white
+- Logo sizes matched across navbar and all mobile menus (48px)
+- RC Bicycles logos: original clean PNGs from Shawn uploaded, damaged mobile-session files replaced
+
+**All 4 layouts — animations complete:**
+- Impact: fast confident punch (400-500ms), service cards stagger 80ms, InView on all sections
+- Editorial: slow magazine drift (700-900ms), image panel fades from right, service rows stagger 60ms
+- Portrait: warm light rising (500-700ms), gallery strip sequence fade, InView on all sections
+- Cinematic: already complete from previous session
+- New `fade-left` keyframe for Editorial image panel
+- `prefers-reduced-motion` respected across all layouts
+
+**Hamburger menu:**
+- Bold menu nav items stagger in (90ms apart, 400ms, 24px slide from left)
+- White logo uses `logo_white_url` directly (no filter artifacts)
+- Logo size matched to navbar on all menus
+
+**Photo system — plan locked (no code yet):**
+- `industry_photo_pools` table exists, is empty — this is the gap
+- Plan: curate 15-20 photos per industry, upload to Supabase Storage, tag with subject/mood/subcategory metadata
+- Keyword scoring function to match photos to specific business types within an industry
+- Angela's onboarding adds sub-industry question to drive photo matching
+
+### ⚠️ SECURITY — Still Action Required
+- Rotate GitHub PAT: github.com → Settings → Developer Settings → Personal Access Tokens
+- Rotate Supabase service role key: supabase.com → Project Settings → API
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Rotate security keys** — urgent, been pending since June 3
+2. **Industry section manifest session** — Shawn walks team through all 11 industry types
+3. **Photo curation session** — Shawn approves 15-20 photos per industry, team tags metadata
+4. **Populate `industry_photo_pools` table** — after curation
+5. **Build onboarding flow** — Angela's spec in ONBOARDING.md, all layouts exist, all photos ready
+
+---
+
 ## Session: June 3, 2026 — Cinematic Animations + Navbar Fade Fix
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Navbar transparent fade fix, Cinematic hero entrance animations, Ken Burns, scroll reveals
