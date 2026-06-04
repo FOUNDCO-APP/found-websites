@@ -61,7 +61,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   return (
     <>
       <header
-        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50`}
+        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-300`}
         style={{
           backgroundColor: isOverlay ? "transparent" : "#ffffff",
           borderBottom: navBorder,
@@ -71,12 +71,32 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            {company.logo_url ? (
-              <img
-                src={company.logo_url}
-                alt={company.name}
-                className={`h-12 w-auto object-contain ${isOverlay ? "brightness-0 invert" : ""}`}
-              />
+            {company.logo_url || company.logo_white_url ? (
+              company.logo_white_url ? (
+                // Two-logo crossfade: white logo fades out first, color logo fades in after navbar is white
+                <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
+                  {company.logo_url && (
+                    <img src={company.logo_url} alt={company.name}
+                      className="h-full w-auto object-contain"
+                      style={{
+                        opacity: isOverlay ? 0 : 1,
+                        mixBlendMode: "multiply",
+                        transition: isOverlay ? "opacity 150ms ease" : "opacity 200ms ease 220ms",
+                      }} />
+                  )}
+                  <img src={company.logo_white_url} alt={company.name}
+                    className="absolute top-0 left-0 h-full w-auto object-contain"
+                    style={{ opacity: isOverlay ? 1 : 0, transition: "opacity 150ms ease" }} />
+                </div>
+              ) : (
+                // Single logo: CSS filter turns it white on dark hero, transitions smoothly
+                <img src={company.logo_url!} alt={company.name}
+                  className="h-12 w-auto object-contain"
+                  style={{
+                    filter: isOverlay ? "brightness(0) invert(1)" : "none",
+                    transition: "filter 300ms ease",
+                  }} />
+              )
             ) : (
               <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
             )}
