@@ -32,6 +32,7 @@ const navLinks = [
 export default function Navbar({ company, transparent = false }: { company: Company; transparent?: boolean }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [colorLogoReady, setColorLogoReady] = useState(false)
   const pathname = usePathname()
   const primary = company.primary_color
   const vibe = company.vibe || "bold"
@@ -43,6 +44,18 @@ export default function Navbar({ company, transparent = false }: { company: Comp
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
   }, [transparent])
+
+  // Wait for background transition to finish before showing color logo
+  useEffect(() => {
+    if (!transparent) return
+    let t: ReturnType<typeof setTimeout>
+    if (scrolled) {
+      t = setTimeout(() => setColorLogoReady(true), 280)
+    } else {
+      setColorLogoReady(false)
+    }
+    return () => clearTimeout(t)
+  }, [scrolled, transparent])
 
   // In transparent mode before scroll: overlay on hero, white text/logo
   const isOverlay = transparent && !scrolled
@@ -82,15 +95,15 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
                       style={{
-                        opacity: isOverlay ? 0 : 1,
-                        transition: "opacity 250ms ease",
+                        opacity: colorLogoReady ? 1 : 0,
+                        transition: "opacity 150ms ease",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
                     className="absolute top-0 left-0 h-full w-auto object-contain"
                     style={{
-                      opacity: isOverlay ? 1 : 0,
-                      transition: "opacity 250ms ease",
+                      opacity: (isOverlay || !colorLogoReady) ? 1 : 0,
+                      transition: "opacity 200ms ease",
                     }} />
                 </div>
               ) : (
