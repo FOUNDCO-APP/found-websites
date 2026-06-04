@@ -73,6 +73,23 @@ h1, h2, h3, h4, h5, h6 {
   to   { transform: scale(1.06); }
 }
 
+.ken-burns {
+  animation: ken-burns 10000ms ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ken-burns {
+    animation: none;
+    will-change: auto;
+  }
+  [style*="fade-up"], [style*="fade-in"], [style*="scale-x-reveal"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 .btn-lg {
   padding: 18px 36px;
   font-size: 0.8rem;

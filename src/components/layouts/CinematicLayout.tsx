@@ -32,11 +32,7 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
             className="absolute inset-0 w-full h-full object-cover" />
         ) : heroImage ? (
           <img src={heroImage} alt={company.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              animation: "ken-burns 10000ms ease-in-out infinite alternate",
-              willChange: "transform",
-            }} />
+            className="absolute inset-0 w-full h-full object-cover ken-burns" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}

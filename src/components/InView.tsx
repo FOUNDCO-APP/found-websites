@@ -14,6 +14,10 @@ export default function InView({ children, className, delay = 0, distance = 32 }
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true)
+      return
+    }
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(
