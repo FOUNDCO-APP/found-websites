@@ -4,6 +4,50 @@
 
 ---
 
+## Session: June 3, 2026 — Cinematic Animations + Navbar Fade Fix
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Navbar transparent fade fix, Cinematic hero entrance animations, Ken Burns, scroll reveals
+
+### ✅ Completed This Session
+
+**Navbar transparent fade — root cause fixed:**
+- Previous fix had `transparent` (= rgba(0,0,0,0)) transitioning to `#ffffff` — browser interpolated through gray-black
+- Fix: `rgba(255,255,255,0)` → `#ffffff` — now fades through white only, smooth and clean
+- Pushed to main ✅
+
+**Cinematic hero entrance — staggered reveal (Jony approved):**
+- Tagline fades up: 150ms delay
+- Headline fades up: 300ms delay, 900ms duration, spring easing
+- Color rule line draws across from center: 600ms delay (scale-x-reveal keyframe)
+- Subtitle fades up: 750ms delay
+- CTA buttons fade in: 950ms delay
+- Scroll indicator fades in: 1200ms delay
+
+**Ken Burns on hero image:**
+- Hero background image gently scales 1.0 → 1.06 over 10s, infinite alternate
+- Pure CSS `@keyframes ken-burns`, GPU-composited (transform only)
+- Creates a live, cinematic feeling without being distracting
+
+**Scroll reveals on every section (IntersectionObserver):**
+- New reusable component: `src/components/InView.tsx` — works for any layout
+- Services section, About section, Testimonials, Final CTA — all fade up as you scroll
+- Desktop service cards stagger in with 60ms delay per card
+- 650ms ease-out, triggers once at 12% visibility
+
+### ⚠️ SECURITY — Still Action Required
+The June 3 mobile session shared a GitHub PAT and Supabase service role key in the chat.
+- Rotate GitHub PAT: github.com → Settings → Developer Settings → Personal Access Tokens
+- Rotate Supabase service role key: supabase.com → Project Settings → API
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Rotate security keys** (above) — do this before next session
+2. **Verify animations on live site** — check rcbicycles.foundco.app after Vercel deploys
+3. **Industry section manifest design session** — NOW priority (all 4 layouts exist)
+4. **Onboarding flow** — spec ready in ONBOARDING.md, unblocked
+
+---
+
 ## Session: June 3, 2026 — Logo Transition Fix Improved + Git Conflict Resolved (Desktop)
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Reviewed BRIEF, improved mobile session's logo fix, resolved git conflict
