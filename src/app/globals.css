@@ -90,6 +90,22 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ── Gallery masonry ── */
+.masonry {
+  columns: 2;
+  column-gap: 3px;
+}
+
+@media (min-width: 768px) {
+  .masonry { columns: 3; }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 3px;
+  display: block;
+}
+
 .btn-lg {
   padding: 18px 36px;
   font-size: 0.8rem;

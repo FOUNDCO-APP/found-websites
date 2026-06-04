@@ -1,18 +1,18 @@
 import { notFound } from "next/navigation"
+import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
-import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
-import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { intentLabel, intentHref } from "@/types/company"
+import InView from "@/components/InView"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const { getCompanyBySlug, getCompanyByDomain } = await import("@/lib/company")
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
-  return { title: company ? `Our Work | ${company.name}` : "Gallery" }
+  return { title: company ? `Our Work — ${company.name}` : "Gallery" }
 }
 
 export default async function GalleryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -33,81 +33,116 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     .order("created_at", { ascending: false })
 
   const primary = company.primary_color
-  const gradient = heroGradient(primary)
   const imgs = await getStockImages(company)
-  const img = (i: number) => pickImg(imgs, i)
-  const industryDefs = getIndustryDefaults(company.industry_category)
+
+  const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
+  const ctaHref = company.primary_intent === "call"
+    ? `tel:${company.phone?.replace(/\D/g, "")}`
+    : intentHref[company.primary_intent] || "/contact"
+
+  // Real photos take priority; fall back to stock
+  const allPhotos: string[] = photos && photos.length > 0
+    ? photos.map(p => p.thumbnail_url || p.url)
+    : imgs
+
+  const hasPhotos = allPhotos.length > 0
+  const ctaImg = pickImg(imgs, 0)
 
   return (
     <>
-      <section className="relative min-h-[45vh] flex items-center overflow-hidden">
-        {img(0) ? (
-          <>
-            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/70" />
-          </>
-        ) : (
-          <div className="absolute inset-0" style={{ background: gradient }} />
-        )}
-        <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>Our Work</p>
-          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>Gallery</h1>
-          <p className="text-lg" style={{ color: "#cccccc" }}>{industryDefs.gallerySubtitle}</p>
+      {/* ── Header — minimal, lets the photos do the talking ── */}
+      <section className="py-12 px-8 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
+            Our Work
+          </p>
+          <div className="flex items-end justify-between gap-4">
+            <h1
+              className="text-4xl md:text-5xl font-black leading-none"
+              style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}
+            >
+              {company.name}
+            </h1>
+            {hasPhotos && (
+              <span className="text-sm font-black shrink-0 pb-1" style={{ color: "#bbbbbb" }}>
+                {allPhotos.length} {allPhotos.length === 1 ? "photo" : "photos"}
+              </span>
+            )}
+          </div>
+          <div className="w-12 h-1 mt-5" style={{ backgroundColor: primary }} />
         </div>
       </section>
 
-      <section className="py-20 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          {photos && photos.length > 0 ? (
-            // Phase 3: real client photos from media table
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {photos.map((photo) => (
-                <a key={photo.id} href={photo.url} target="_blank" rel="noopener noreferrer"
-                  className="block aspect-square overflow-hidden bg-gray-100 cursor-zoom-in"
-                  style={{ borderRadius: "var(--card-radius, 10px)" }}>
-                  <img
-                    src={photo.thumbnail_url || photo.url}
-                    alt="Project photo"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                  />
-                </a>
-              ))}
-            </div>
-          ) : imgs.length > 0 ? (
-            // Fallback: show curated stock_images pool so gallery is never empty
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {imgs.map((url, i) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                  className="block aspect-video overflow-hidden bg-gray-100 cursor-zoom-in"
-                  style={{ borderRadius: "var(--card-radius, 10px)" }}>
+      {hasPhotos ? (
+        <>
+          {/* ── Masonry grid ── */}
+          <section className="bg-white pt-1">
+            <div className="masonry px-0.5">
+              {allPhotos.map((url, i) => (
+                <InView key={i} className="masonry-item" delay={i < 6 ? i * 40 : 0} distance={0}>
                   <img
                     src={url}
-                    alt={`${company.name} photo ${i + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    alt={`${company.name} — photo ${i + 1}`}
+                    className="w-full h-auto block"
+                    loading={i < 4 ? "eager" : "lazy"}
                   />
-                </a>
+                </InView>
               ))}
             </div>
-          ) : (
-            // Empty state: no photos at all
-            <div className="flex flex-col items-center justify-center py-32 text-center">
-              <div className="w-12 h-1 mb-10" style={{ backgroundColor: primary }} />
-              <p className="text-2xl font-black mb-4"
-                style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                Photos Coming Soon
+          </section>
+
+          {/* ── Final CTA ── */}
+          <section className="relative py-24 text-center overflow-hidden">
+            {ctaImg ? (
+              <>
+                <img src={ctaImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/65" />
+              </>
+            ) : (
+              <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
+            )}
+            <div className="relative z-10 px-8">
+              <div className="w-10 h-1 mx-auto mb-8" style={{ backgroundColor: primary }} />
+              <h2
+                className="text-3xl md:text-4xl font-black text-white mb-4"
+                style={{ fontFamily: "var(--font-heading, inherit)" }}
+              >
+                Ready to get started?
+              </h2>
+              <p className="mb-10 text-base" style={{ color: "#cccccc" }}>
+                Let&apos;s talk about your project.
               </p>
-              <p className="text-base max-w-sm mb-10" style={{ color: "#888888" }}>
-                We&apos;re documenting our latest work. Check back soon — or reach out to see examples directly.
-              </p>
-              <a href={`tel:${company.phone?.replace(/\D/g, "") || ""}`}
-                className="btn text-white"
+              <Link href={ctaHref} className="btn text-white"
                 style={{ backgroundColor: primary, borderColor: primary }}>
-                {company.phone || "Contact Us"}
-              </a>
+                {ctaLabel}
+              </Link>
             </div>
-          )}
-        </div>
-      </section>
+          </section>
+        </>
+      ) : (
+        /* ── Empty state ── */
+        <section className="py-40 px-8 text-center bg-white">
+          <div className="max-w-md mx-auto">
+            <div className="w-12 h-1 mx-auto mb-12" style={{ backgroundColor: primary }} />
+            <h2
+              className="text-4xl font-black mb-5"
+              style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}
+            >
+              Our work speaks for itself.
+            </h2>
+            <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>
+              We&apos;re documenting our latest projects.
+            </p>
+            <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>
+              Check back soon — or reach out to see examples directly.
+            </p>
+            <Link href={ctaHref} className="btn text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
+              {ctaLabel}
+            </Link>
+          </div>
+        </section>
+      )}
     </>
   )
 }
