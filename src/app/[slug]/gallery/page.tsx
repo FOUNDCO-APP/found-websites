@@ -4,7 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
-import InView from "@/components/InView"
+import GalleryLightbox from "@/components/GalleryLightbox"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -72,20 +72,13 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
       {hasPhotos ? (
         <>
-          {/* ── Masonry grid ── */}
+          {/* ── Masonry grid + lightbox ── */}
           <section className="bg-white pt-1">
-            <div className="masonry px-0.5">
-              {allPhotos.map((url, i) => (
-                <InView key={i} className="masonry-item" delay={i < 6 ? i * 40 : 0} distance={0}>
-                  <img
-                    src={url}
-                    alt={`${company.name} — photo ${i + 1}`}
-                    className="w-full h-auto block"
-                    loading={i < 4 ? "eager" : "lazy"}
-                  />
-                </InView>
-              ))}
-            </div>
+            <GalleryLightbox
+              photos={allPhotos}
+              companyName={company.name}
+              primary={primary}
+            />
           </section>
 
           {/* ── Final CTA ── */}
