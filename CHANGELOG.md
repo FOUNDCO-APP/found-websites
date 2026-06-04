@@ -44,6 +44,14 @@
 - Keyword scoring function to match photos to specific business types within an industry
 - Angela's onboarding adds sub-industry question to drive photo matching
 
+**Logo + gallery polish (same session, later):**
+- All logos bumped to 56px across navbar and all mobile menus — Blue Luna nav/hamburger now match
+- Got Smoothie calm menu: logo `min-w-0` + close button `flex-shrink-0` — wide logos can't push close button off screen, maxWidth tightened to 160px
+- Bold menu logos: maxWidth tightened to 180px
+- `galleryLabel` added to `IndustryDefaults` type + all 11 industry entries
+- Gallery page uses industry-specific label: Our Work / Our Menu / Our Space / Our Portfolio / Our Collection / Our Studio / Our Projects
+- All four live sites verified ✅
+
 ### ⚠️ SECURITY — Still Action Required
 - Rotate GitHub PAT: github.com → Settings → Developer Settings → Personal Access Tokens
 - Rotate Supabase service role key: supabase.com → Project Settings → API
