@@ -74,19 +74,28 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           <Link href="/" className="flex items-center shrink-0">
             {company.logo_url || company.logo_white_url ? (
               company.logo_white_url ? (
-                // Two-logo crossfade: both fade simultaneously so there's never a gap
+                // Background transitions first (500ms), logos swap after bg is white
+                // Scrolling down: 450ms delay so color logo only appears on white bg
+                // Scrolling up: swap instantly before bg becomes transparent
                 <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
                   {company.logo_url && (
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
                       style={{
                         opacity: isOverlay ? 0 : 1,
-                        transition: "opacity 500ms ease",
+                        transition: isOverlay
+                          ? "opacity 150ms ease 0ms"
+                          : "opacity 200ms ease 450ms",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
                     className="absolute top-0 left-0 h-full w-auto object-contain"
-                    style={{ opacity: isOverlay ? 1 : 0, transition: "opacity 300ms ease" }} />
+                    style={{
+                      opacity: isOverlay ? 1 : 0,
+                      transition: isOverlay
+                        ? "opacity 150ms ease 50ms"
+                        : "opacity 200ms ease 450ms",
+                    }} />
                 </div>
               ) : (
                 // Single logo: CSS filter turns it white on dark hero, transitions smoothly
