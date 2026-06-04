@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: May 31, 2026*
+*Last updated: June 3, 2026**
 
 ---
 
@@ -37,17 +37,17 @@ Exit criteria:
 1. **Industry section manifest design session**
    - Owner: Steve (product) + Jony (design) + Shawn (domain knowledge)
    - Status: ⏳ Discussion opened June 1 — not yet designed
-   - Notes: Each of the 11 industry categories needs its own section manifest — which sections to show, what order, what data fields are unique to that industry (hours, pricing, team, menu, etc.). Shawn walks the team through what each industry's customers actually need to see. This unlocks Portrait, Cinematic, and the onboarding flow.
+   - Notes: Each of the 11 industry categories needs its own section manifest. All 4 layouts now exist — this is the last blocker before onboarding.
 
-2. **Build Portrait layout**
-   - Owner: Jony (design) + Marcus (build)
-   - Status: ⏳ Designed May 31, not built
-   - Notes: Photography-forward, image fills top 60% of hero, text bottom-anchored. Masonry services, photo strip mid-page, split about section. For food, events, visual businesses, balloon artists.
+2. **Build onboarding question flow**
+   - Owner: Angela (UX) + Craig (build)
+   - Status: ⏳ UNBLOCKED — all 4 layouts now exist
+   - Notes: Full spec in ONBOARDING.md. Owner answers questions on phone → site live in under 10 min.
 
-3. **Build Cinematic layout**
-   - Owner: Jony (design) + Marcus (build)
-   - Status: ⏳ Designed May 31, not built
-   - Notes: True 100vh fullscreen hero, centered headline, horizontal scroll services on mobile, full-bleed about section, large single pull-quote testimonials. For events, fitness, high-energy businesses.
+3. **Verify Cinematic navbar fix**
+   - Owner: Shawn
+   - Status: ⏳ Deployed June 3 — needs live test
+   - Notes: Check rcbicycles.foundco.app scroll behavior. Logo should transition cleanly white→color with no white block flash.
 
 ---
 
@@ -83,6 +83,11 @@ Exit criteria:
 - ✅ Blue Luna Events (Instance #2) — live at blueluna.foundco.app
 - ✅ Teal palette updated to #6ECECE (Tiffany blue)
 - ✅ Permanent decision docs: DECISIONS.md, DESIGN_DECISIONS.md, ONBOARDING.md
+- ✅ Portrait layout built (Got Smoothie — food + warm)
+- ✅ Cinematic layout built (RC Bicycles — retail + modern)
+- ✅ All 4 layouts live: Impact, Editorial, Portrait, Cinematic
+- ✅ RC Bicycles logo — white bg removed, transparent PNG in Supabase
+- ✅ Cinematic navbar logo flash fixed — single img, CSS filter only, no stacking
 
 ---
 

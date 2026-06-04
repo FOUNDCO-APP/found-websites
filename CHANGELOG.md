@@ -4,6 +4,63 @@
 
 ---
 
+## Session: June 3, 2026 — All 4 Layouts Confirmed + Cinematic Navbar Flash Fixed
+**AI:** Claude (Sonnet 4.6) — claude.ai chat interface
+**Worked on:** Confirmed all 4 layouts built, RC Bicycles logo fixed, Cinematic navbar white flash resolved
+
+### ✅ Completed This Session
+
+**Layout system — fully confirmed:**
+- All 4 layouts are built and wired: ImpactLayout, EditorialLayout, PortraitLayout, CinematicLayout ✅
+- CHANGELOG was out of date — Portrait and Cinematic were built but docs not updated
+- Client → layout mapping confirmed:
+  - Barrio Builders → Impact (home_services + bold)
+  - Blue Luna Events → Editorial (events + calm)
+  - Got Smoothie → Portrait (food + warm)
+  - RC Bicycles → Cinematic (retail + modern)
+- Got Smoothie (gotsmoothie.foundco.app) and RC Bicycles (rcbicycles.foundco.app) confirmed live
+
+**RC Bicycles logo — transparent PNG processed and uploaded:**
+- Original logo had white background baked into PNG canvas
+- White background removed via Python/Pillow — 75% of pixels now transparent
+- Clean PNG uploaded to Supabase Storage: `logos/rcbicycles/logo.png`
+- companies table updated with new logo_url
+
+**Cinematic navbar logo white flash — root cause found and fixed:**
+- Problem: on scroll, header snaps to white but logo transition lagged — white block visible behind logo
+- Multiple band-aids tried and removed (mix-blend-mode, opacity stacking, wrapper div bg, stacking order flip)
+- Final correct fix: stripped everything back to ONE img element
+  - `brightness-0 invert` Tailwind classes when isOverlay (dark hero)
+  - No filter, no classes when scrolled (white navbar)
+  - Same DOM element the whole time — no stacking, no opacity juggling, no render flash
+- Also removed `transition-all` from header — background now snaps instantly, no white rectangle fade
+
+**Repo access pattern established for claude.ai sessions:**
+- Repo cloned to container, changes made directly, pushed via git
+- GitHub PAT configured for push access
+- Supabase service role key used for storage uploads and DB updates
+- ⚠️ SECURITY: rotate GitHub PAT + Supabase service role key — both were shared in this session
+
+### ⏳ Still Pending
+
+| Item | Status | Notes |
+|---|---|---|
+| Cinematic navbar flash | ⏳ Verify on live site | Check rcbicycles.foundco.app after deploy |
+| Industry section manifest design session | ❌ Not designed | Shawn walks team through 11 industry types — this is NOW |
+| Onboarding question flow | ❌ Not built | UNBLOCKED — all 4 layouts now exist. Spec in ONBOARDING.md |
+| Site reveal moment | ❌ Not built | Needs onboarding first |
+| Color palette preset UI | ❌ Not built | 12 swatches ready |
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Verify Cinematic navbar fix** — scroll test on rcbicycles.foundco.app
+2. **Industry section manifest session** — all 4 layouts exist, this is now the blocker
+3. **Onboarding flow** — Angela's spec in ONBOARDING.md, ready to build
+4. **Site reveal moment** — after onboarding is built
+
+---
+
+
 ## Session: June 1, 2026 — Docs Completed + All Decisions Captured
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Verified all session decisions captured, missing docs added, security fix
