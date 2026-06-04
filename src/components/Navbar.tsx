@@ -73,20 +73,19 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           <Link href="/" className="flex items-center shrink-0">
             {company.logo_url || company.logo_white_url ? (
               company.logo_white_url ? (
-                // Two-logo crossfade: white logo fades out first, color logo fades in after navbar is white
+                // Two-logo crossfade: both fade simultaneously so there's never a gap
                 <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
                   {company.logo_url && (
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
                       style={{
                         opacity: isOverlay ? 0 : 1,
-                        mixBlendMode: "multiply",
-                        transition: isOverlay ? "opacity 150ms ease" : "opacity 200ms ease 220ms",
+                        transition: "opacity 300ms ease",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
                     className="absolute top-0 left-0 h-full w-auto object-contain"
-                    style={{ opacity: isOverlay ? 1 : 0, transition: "opacity 150ms ease" }} />
+                    style={{ opacity: isOverlay ? 1 : 0, transition: "opacity 300ms ease" }} />
                 </div>
               ) : (
                 // Single logo: CSS filter turns it white on dark hero, transitions smoothly
@@ -217,7 +216,13 @@ export default function Navbar({ company, transparent = false }: { company: Comp
         >
           <div className="flex items-center justify-between px-8 py-6">
             <Link href="/" onClick={() => setOpen(false)}>
-              {company.logo_url ? (
+              {company.logo_white_url ? (
+                // Use dedicated white logo directly — no filter artifacts
+                <img src={company.logo_white_url} alt={company.name}
+                  className="w-auto object-contain"
+                  style={{ maxHeight: "56px", maxWidth: "200px" }} />
+              ) : company.logo_url ? (
+                // No white logo — invert the color logo
                 <img src={company.logo_url} alt={company.name}
                   className="w-auto object-contain brightness-0 invert"
                   style={{ maxHeight: "56px", maxWidth: "200px" }} />
