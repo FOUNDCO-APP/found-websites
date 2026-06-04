@@ -82,12 +82,16 @@ async function writePool(industry: string, photos: { url: string; desc: string }
 
 export async function saveApprovedPhotos(
   industry: string,
-  photos: { url: string; desc: string }[]
+  photos: { url: string; desc: string }[],
+  tag?: string  // search query used — becomes the sub-type label
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const existing = await readPool(industry)
     const existingUrls = new Set(existing.map((p) => p.url))
-    const merged = [...existing, ...photos.filter((p) => !existingUrls.has(p.url))]
+    const newPhotos = photos
+      .filter((p) => !existingUrls.has(p.url))
+      .map((p) => ({ ...p, tag: tag || null }))
+    const merged = [...existing, ...newPhotos]
     await writePool(industry, merged)
     return { success: true }
   } catch (err) {

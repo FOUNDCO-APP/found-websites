@@ -105,7 +105,7 @@ export default function PhotoCurator() {
     if (!toSave.length) return
     setSaving(true)
     setSaveError(null)
-    const result = await saveApprovedPhotos(activeIndustry, toSave)
+    const result = await saveApprovedPhotos(activeIndustry, toSave, activeQuery || undefined)
     if (result.success) {
       setSavedIndustry(activeIndustry)
       await loadCounts()
@@ -304,10 +304,12 @@ export default function PhotoCurator() {
           <>
             <div>
               <p className="font-black text-sm" style={{ color: "#4caf50" }}>
-                ✓ Saved — {currentApproved} photos approved for {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
+                ✓ Saved — {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
               </p>
               <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
-                Tap Next to continue, or select more photos to add.
+                {savedIndustry && activeQuery
+                  ? `Tagged as "${activeQuery}" — search another term or tap Next.`
+                  : "Tagged as general — works for any business in this category."}
               </p>
             </div>
             <button
