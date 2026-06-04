@@ -4,6 +4,41 @@
 
 ---
 
+## Session: June 4, 2026 — Admin Photo Curator Built
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Admin photo curation page, logo fixes
+
+### ✅ Completed This Session
+
+**Admin photo curator — `/admin/photos`:**
+- Built `src/app/admin/photos/` — 4 files: page.tsx, actions.ts, PhotoCurator.tsx, AdminLogin.tsx
+- Dark grid UI, all 11 industry tabs with approved count badges
+- 24 Pexels photos per industry loaded on demand
+- Tap to select (green checkmark overlay), Approve button saves directly to `industry_photo_pools` table
+- Deduplication — won't save the same photo twice
+- Auth via `ADMIN_KEY` cookie (30-day session)
+- `ADMIN_KEY=Jayd3n1128!$7` set in .env.local
+
+**⚠️ ACTION REQUIRED — Vercel env var:**
+- Vercel CLI couldn't authenticate headlessly
+- Shawn must manually add `ADMIN_KEY=Jayd3n1128!$7` in Vercel dashboard → Settings → Environment Variables → then Redeploy
+- Without this, the admin page login won't work on production
+
+**Logo fixes:**
+- All logo slots use fixed 160×48px containers with `object-contain object-left`
+- Got Smoothie wide logo no longer breaks navbar or mobile menu
+- Calm menu panel has `overflow: hidden` as safety net
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Set ADMIN_KEY in Vercel dashboard + redeploy** — must do before using admin page
+2. **Rotate security keys** — GitHub PAT + Supabase service role (urgent since June 3)
+3. **Go through photo curator** — approve 10-15 photos per industry across all 11 tabs
+4. **Industry section manifest session** — Shawn walks team through all 11 industry types
+5. **Build onboarding flow** — Angela's spec in ONBOARDING.md, unblocked once photos are approved
+
+---
+
 ## Session: June 4, 2026 — Platform Polish Pass Complete
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Gallery rebuild, lightbox, all-layout animations, navbar fixes, photo system plan
