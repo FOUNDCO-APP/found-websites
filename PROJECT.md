@@ -1,6 +1,6 @@
 # PROJECT.md — Found Co. / found-websites
 ### Read this every session. Every AI. Every time.
-*Last updated: May 29, 2026*
+*Last updated: June 6, 2026*
 
 ---
 
@@ -11,10 +11,12 @@ Web design, branding, SEO, hosting, social media, print brokerage.
 
 **Other businesses Shawn owns or manages:**
 - **Say It Marketing** (sayitmarketing.com) — Web design + SEO agency
-- **Barrio Builders** (barriobuilders.com) — Roofing, remodeling, painting, Tucson AZ (Instance #1 guinea pig)
-- **Blue Luna Events** (bluelunaevents.com) — Events, owned by Monique (Shawn's girlfriend)
-- **Spa Mambo** — Spa/wellness client
-- **Dog & Cat Groomer** (dogandcatgroomer.com) — Eimy's grooming business in Glendale, AZ
+- **Barrio Builders** (barriobuilders.com) — Roofing, remodeling, painting, Tucson AZ (Instance #1)
+- **Blue Luna Events** (bluelunaevents.com) — Events, owned by Monique (Instance #2)
+- **Got Smoothie** (gotsmoothie.foundco.app) — Food/smoothie bar (Instance #3)
+- **RC Bicycles** (rcbicycles.foundco.app) — Retail bike shop (Instance #4)
+- **Spa Mambo** — Spa/wellness client (future instance)
+- **Dog & Cat Groomer** (dogandcatgroomer.com) — Eimy's grooming business in Glendale, AZ (future instance)
 
 ---
 
@@ -29,14 +31,12 @@ It is a mobile-first SaaS platform that gives any small business owner three thi
 
 **The core promise:** Owner answers questions → professional website is generated → it looks like Apple built it. No tech skills. No designers. No drag-and-drop. Done in under 10 minutes.
 
-**Barrio Builders** is Instance #1 — the guinea pig that proves the platform works.
-
 ---
 
 ## REPO STRUCTURE
 
 **Local path:** `C:\Users\SuperShawn\Documents\GitHub\found-websites`
-**GitHub:** `github.com/found-co/found-websites` (pending transfer to found-co org)
+**GitHub:** `github.com/FOUNDCO-APP/found-websites`
 **Hosting:** Vercel (switched from Netlify on May 29, 2026)
 
 **How multi-tenancy works:**
@@ -54,14 +54,12 @@ It is a mobile-first SaaS platform that gives any small business owner three thi
 | Frontend / App | Next.js 16 (PWA) | Single codebase for app + all client websites |
 | Styling | Tailwind CSS v4 | Utility-first, mobile-first |
 | Database + Auth | Supabase | mmctzloztgkbqvofmkou.supabase.co |
-| File Storage | Supabase Storage | Buckets: media (private), logos (public), assets (public) |
+| File Storage | Supabase Storage | Buckets: media (private), logos (public), assets (public), config (public) |
 | Hosting | Vercel | Auto-deploy on push to main |
-| App Store (Phase 2) | Capacitor.js | Wraps PWA for iOS + Android |
+| App Store (Phase 3) | Capacitor.js | Wraps PWA for iOS + Android |
 | AI Content | Claude API | Pre-fills website content from onboarding answers |
-| Email | Resend or Supabase Edge Functions | Lead notifications to business owner |
-| Payments (Phase 2) | Stripe | Subscription billing + upgrade features |
-
-**Never add:** WordPress, unnecessary npm packages, paid tools without clear revenue reason.
+| Email | Resend | Lead notifications to business owner |
+| Payments (Phase 3) | Stripe | Subscription billing + upgrade features |
 
 ---
 
@@ -81,29 +79,75 @@ White:          #FFFFFF  — backgrounds, reversed text
 
 **Design philosophy:** Apple-influenced. Clean, minimal, mobile-first.
 **Button style:** Pill-shaped (border-radius: 9999px)
-**Icons:** Flat SVGs only. No emoji as icons.
-**Typography logo:** Business name rendered as elegant type — no logo needed.
+**Typography logo (BrandMark):** Business name as elegant type — for owners without a logo
 
 ---
 
-## BARRIO BUILDERS (INSTANCE #1)
+## 4 LAYOUT SYSTEM — ALL BUILT ✅
 
+Each company gets a layout based on `industry_category` + `vibe`:
+
+| Layout | Vibe | Best For | Live Example |
+|---|---|---|---|
+| **Impact** | bold | Contractors, home services, trades | Barrio Builders |
+| **Editorial** | calm/warm | Events, wellness, beauty, luxury | Blue Luna Events |
+| **Portrait** | warm | Food, visual businesses, photography | Got Smoothie |
+| **Cinematic** | modern | Retail, fitness, high-energy | RC Bicycles |
+
+**All 4 layouts have:**
+- Personality-matched hero entrance animations
+- InView scroll reveals on every section
+- Ken Burns on Cinematic hero
+- `prefers-reduced-motion` respected
+
+Layout files: `src/components/layouts/`
+
+---
+
+## LIVE CLIENT SITES
+
+| Company | Slug | Layout | URL |
+|---|---|---|---|
+| Barrio Builders | barriobuilders | Impact | barriobuilders.foundco.app |
+| Blue Luna Events | blueluna | Editorial | blueluna.foundco.app |
+| Got Smoothie | gotsmoothie | Portrait | gotsmoothie.foundco.app |
+| RC Bicycles | rcbicycles | Cinematic | rcbicycles.foundco.app |
+
+---
+
+## PHOTO POOL SYSTEM
+
+**Architecture:** Curated JSON files in Supabase Storage `config` bucket.
+
+**File path per industry:** `config/photo-pools/{industry}.json`
+
+**Format:**
+```json
+{
+  "industry": "home_services",
+  "photos": [
+    {
+      "url": "https://images.pexels.com/...",
+      "desc": "Team-written description for alt text and SEO",
+      "tag": "painting",
+      "keywords": ["painting", "renovation", "interior", "contractor", "professional"]
+    }
+  ]
+}
 ```
-Business name:  Barrio Builders
-Domain:         barriobuilders.com
-Phone:          520.261.1212
-Email:          info@barriobuilders.com
-Location:       Tucson, AZ
-Languages:      English + Spanish ("Hablamos Español")
-Owner:          Michael
-Slug:           barrio-builders (in Supabase companies table)
 
-Primary Color:  #2E7D32
-Background:     #111111 (dark sections)
-```
+**`tag` values:** `null` = general (any business in category) · or specific sub-type e.g. `wedding`, `barber`, `food truck`, `yoga studio`
 
-**Services:** Remodeling, Renovations, Painting, Roofing, New Construction
-**Positioning:** "We're not a national chain — we're your neighbors."
+**Priority chain in `stockImages.ts`:**
+1. Client's own real photos (Phase 3)
+2. Cached `stock_images` on `website_config`
+3. **Industry photo pool from Storage** ← curated by Shawn + team
+4. Pexels API fallback
+5. Gradient fallback
+
+**All 11 industries curated:** home_services, food, wellness, events, retail, fitness, beauty, automotive, pet_services, cleaning, landscaping — team-written descriptions + keywords on every photo.
+
+**Admin curation page:** `foundco.app/admin/photos` (key: ask Shawn)
 
 ---
 
@@ -112,35 +156,19 @@ Background:     #111111 (dark sections)
 **Project:** mmctzloztgkbqvofmkou.supabase.co
 
 **Tables:**
-- `companies` — every Found Co. client business (slug, name, colors, phone, logo_url, industry, intent, etc.)
+- `companies` — every Found Co. client business (slug, name, colors, phone, logo_url, logo_white_url, industry, vibe, intent, etc.)
 - `profiles` — admin + worker users (extends Supabase Auth)
 - `projects` — jobs/events a company is working on
 - `media` — photos/videos with two flags: `website_flag` ❤️ and `social_flag` ⭐
-- `website_config` — per-company website content (hero, services, testimonials, social links, custom_domain, published)
+- `website_config` — per-company website content (hero, services, testimonials, social links, custom_domain, stock_images)
 - `leads` — estimate/contact form submissions from client websites
-- `subscriptions` — billing + plan status per company (Phase 2)
+- `subscriptions` — billing + plan status per company (Phase 3)
 
 **Storage buckets:**
-- `media` — private, 50MB limit, images + videos
-- `logos` — public, 50MB limit, images only
-- `assets` — public, 50MB limit, images only
-
-**Row Level Security:** Enabled on all tables. Each company sees only its own data.
-Public can submit leads (no auth required for contact forms on client websites).
-
----
-
-## COMPANY TYPE SYSTEM
-
-Each company has two CTA intents — drives the primary and secondary button throughout the site:
-
-| Intent | Button Label | Destination |
-|---|---|---|
-| `call` | Call Us | `tel:` link |
-| `quote` | Get a Free Estimate | `/estimate` |
-| `book` | Book Now | `/contact` |
-| `visit` | Visit Us | `/contact` |
-| `shop` | Shop Now | `/shop` |
+- `media` — private, client photos/videos
+- `logos` — public, client logo files
+- `assets` — public, image files
+- `config` — public, JSON config files (photo pools live here)
 
 ---
 
@@ -151,54 +179,47 @@ Each company has two CTA intents — drives the primary and secondary button thr
 | Home | `/[slug]` | ✅ Built |
 | About | `/[slug]/about` | ✅ Built |
 | Services | `/[slug]/services` | ✅ Built |
-| Gallery | `/[slug]/gallery` | ✅ Built |
+| Gallery | `/[slug]/gallery` | ✅ Built — masonry + lightbox + swipe |
 | Contact | `/[slug]/contact` | ✅ Built |
 | Estimate | `/[slug]/estimate` | ✅ Built |
 | Found Co. root | `/` | ⏳ Coming soon placeholder |
+| Admin photo curator | `/admin/photos` | ✅ Built |
 
 ---
 
-## BUILD ORDER
+## CURRENT PHASE — Phase 2: Onboarding Flow
 
-| Step | What | Status |
-|---|---|---|
-| 1 | Supabase schema + storage + RLS | ✅ Done |
-| 2 | Next.js scaffold + Supabase connected | ✅ Done |
-| 3 | Multi-tenant routing engine (proxy + slug system) | ✅ Done |
-| 4 | All client website pages (home, about, services, gallery, contact, estimate) | ✅ Done |
-| 5 | Vercel deployment configured | ✅ Done |
-| 6 | Barrio Builders seed data | ✅ Done (scripts/seed-barrio.json) |
-| 7 | Onboarding flow (questions → site generation) | 🔨 Next |
-| 8 | In-app camera system | ⏳ Upcoming |
-| 9 | Two-flag curation (heart ❤️ + star ⭐) | ⏳ Upcoming |
-| 10 | Admin PWA dashboard | ⏳ Upcoming |
-| 11 | Worker PWA (upload only) | ⏳ Upcoming |
-| 12 | Gallery auto-sync (heart → website) | ⏳ Upcoming |
-| 13 | Social export pipeline (star → sized photos) | ⏳ Upcoming |
-| 14 | Stripe billing + upgrade features | ⏳ Phase 2 |
-| 15 | Capacitor → App Store + Google Play | ⏳ Phase 2 |
-| 16 | foundco.app marketing site | ⏳ Phase 2 |
+**What's blocking onboarding:**
+- Industry section manifests — Shawn walks team through all 11 types (NOT YET DONE)
+- Once manifests are decided, onboarding build begins
+
+**What's ready for onboarding:**
+- All 4 layouts ✅
+- All photo pools curated with descriptions + keywords ✅
+- Full onboarding spec in `ONBOARDING.md` ✅
+- Claude API content generation planned ✅
 
 ---
 
 ## PENDING ADMIN TASKS (SHAWN TO DO)
 
+- [ ] Rotate GitHub PAT (urgent — exposed June 3)
+- [ ] Rotate Supabase service role key (urgent — exposed June 3)
 - [ ] Form Found Co., LLC in Arizona — azcc.gov (~$50)
 - [ ] Run USPTO trademark search for "Found" — USPTO.gov → TESS
 - [ ] Create GitHub Organization `found-co` and transfer found-websites repo
 - [ ] Set up foundco.app email
-- [ ] Pay Apple Developer Program ($99) when ready for App Store (Step 15)
-- [ ] Connect Vercel to GitHub for auto-deploy
+- [ ] Pay Apple Developer Program ($99) when ready for App Store
 
 ---
 
 ## IMPORTANT LINKS
 
 - **Supabase:** app.supabase.com → project mmctzloztgkbqvofmkou
-- **Vercel:** vercel.com
-- **Domain:** foundco.app (purchased May 28, 2026 via Namecheap)
-- **Guinea pig site:** barriobuilders.com
-- **GitHub org:** github.com/found-co
+- **Vercel:** vercel.com → found-websites project
+- **Domain:** foundco.app
+- **GitHub:** github.com/FOUNDCO-APP/found-websites
+- **Admin page:** foundco.app/admin/photos
 
 ---
 
