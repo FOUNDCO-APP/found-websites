@@ -57,8 +57,9 @@ export default function Navbar({ company, transparent = false }: { company: Comp
     return () => clearTimeout(t)
   }, [scrolled, transparent])
 
-  // In transparent mode before scroll: overlay on hero, white text/logo
-  const isOverlay = transparent && !scrolled
+  // Only overlay on the homepage — inner pages always get sticky white navbar
+  const isHome = pathname === "/"
+  const isOverlay = transparent && isHome && !scrolled
 
   const isActive = (href: string) => pathname === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
@@ -73,7 +74,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   return (
     <>
       <header
-        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-[300ms]`}
+        className={`${transparent && isHome ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-[300ms]`}
         style={{
           backgroundColor: isOverlay ? "rgba(255,255,255,0)" : "#ffffff",
           borderBottomWidth: "1px",

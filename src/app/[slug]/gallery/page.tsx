@@ -51,25 +51,22 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       {/* ── Header — minimal, lets the photos do the talking ── */}
-      <section className="py-12 px-8 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
-        <div className="max-w-6xl mx-auto">
-          <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
+      <section className="py-10 px-8 bg-white" style={{ borderBottom: "1px solid #f0f0f0" }}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <h1
+            className="text-xs font-black tracking-widest uppercase"
+            style={{ color: primary }}
+          >
             Our Work
-          </p>
-          <div className="flex items-end justify-between gap-4">
-            <h1
-              className="text-4xl md:text-5xl font-black leading-none"
-              style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}
-            >
-              {company.name}
-            </h1>
-            {hasPhotos && (
-              <span className="text-sm font-black shrink-0 pb-1" style={{ color: "#bbbbbb" }}>
-                {allPhotos.length} {allPhotos.length === 1 ? "photo" : "photos"}
-              </span>
-            )}
-          </div>
-          <div className="w-12 h-1 mt-5" style={{ backgroundColor: primary }} />
+          </h1>
+          {hasPhotos && (
+            <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>
+              {allPhotos.length} {allPhotos.length === 1 ? "photo" : "photos"}
+            </span>
+          )}
+        </div>
+        <div className="max-w-6xl mx-auto">
+          <div className="w-10 h-0.5 mt-4" style={{ backgroundColor: primary }} />
         </div>
       </section>
 
