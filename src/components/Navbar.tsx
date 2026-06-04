@@ -71,36 +71,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
-            {company.logo_url || company.logo_white_url ? (
-              <div className="relative" style={{ height: "48px", maxWidth: "220px", background: "transparent" }}>
-                {company.logo_white_url ? (
-                  <>
-                    {/* Color logo — scrolled white navbar */}
-                    <img src={company.logo_url!} alt={company.name}
-                      className="h-full w-auto object-contain transition-opacity duration-300"
-                      style={{ opacity: isOverlay ? 0 : 1 }} />
-                    {/* White logo — transparent hero overlay */}
-                    <img src={company.logo_white_url} alt={company.name}
-                      className="h-full w-auto object-contain absolute inset-0 transition-opacity duration-300"
-                      style={{ opacity: isOverlay ? 1 : 0 }} />
-                  </>
-                ) : (
-                  /* No white logo — stack two copies, crossfade with opacity */
-                  <>
-                    {/* White version — underneath, visible on dark hero */}
-                    <img src={company.logo_url!} alt=""
-                      className="h-full w-auto object-contain transition-opacity duration-300"
-                      style={{
-                        opacity: isOverlay ? 1 : 0,
-                        filter: "brightness(0) invert(1)",
-                      }} />
-                    {/* Color logo — on top, visible when scrolled */}
-                    <img src={company.logo_url!} alt={company.name}
-                      className="h-full w-auto object-contain absolute inset-0 transition-opacity duration-300"
-                      style={{ opacity: isOverlay ? 0 : 1 }} />
-                  </>
-                )}
-              </div>
+            {company.logo_url ? (
+              <img
+                src={company.logo_url}
+                alt={company.name}
+                className={`h-12 w-auto object-contain ${isOverlay ? "brightness-0 invert" : ""}`}
+              />
             ) : (
               <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
             )}
