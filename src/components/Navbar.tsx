@@ -63,7 +63,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
       <header
         className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-300`}
         style={{
-          backgroundColor: isOverlay ? "transparent" : "#ffffff",
+          backgroundColor: isOverlay ? "rgba(255,255,255,0)" : "#ffffff",
           borderBottom: navBorder,
         }}
       >

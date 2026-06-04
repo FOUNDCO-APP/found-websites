@@ -52,6 +52,27 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn:hover { opacity: 0.85; }
 
+/* ── Cinematic animation keyframes ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-x-reveal {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+
 .btn-lg {
   padding: 18px 36px;
   font-size: 0.8rem;
