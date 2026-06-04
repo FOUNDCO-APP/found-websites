@@ -85,7 +85,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                         opacity: isOverlay ? 0 : 1,
                         transition: isOverlay
                           ? "opacity 150ms ease 0ms"
-                          : "opacity 200ms ease 450ms",
+                          : "opacity 300ms ease-in 600ms",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
@@ -94,7 +94,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       opacity: isOverlay ? 1 : 0,
                       transition: isOverlay
                         ? "opacity 150ms ease 50ms"
-                        : "opacity 200ms ease 450ms",
+                        : "opacity 150ms ease 450ms",
                     }} />
                 </div>
               ) : (
