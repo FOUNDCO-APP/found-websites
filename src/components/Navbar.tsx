@@ -166,7 +166,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
       {isCalm ? (
         // Calm: white slide-in panel, refined
         <div
-          className="fixed inset-0 z-[100] flex flex-col bg-white"
+          className="fixed inset-0 z-[100] flex flex-col bg-white overflow-hidden"
           style={{
             transform: open ? "translateX(0)" : "translateX(100%)",
             transition: "transform 300ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -175,17 +175,18 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           }}
         >
           <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #f0f0f0" }}>
-            <Link href="/" onClick={() => setOpen(false)} className="min-w-0 mr-4">
+            <Link href="/" onClick={() => setOpen(false)} className="flex-shrink-0">
               {company.logo_url ? (
-                <img src={company.logo_url} alt={company.name}
-                  className="w-auto object-contain block"
-                  style={{ maxHeight: "56px", maxWidth: "160px" }} />
+                <div style={{ height: "48px", width: "140px" }}>
+                  <img src={company.logo_url} alt={company.name}
+                    className="h-full w-full object-contain object-left" />
+                </div>
               ) : (
                 <BrandMark name={company.name} color={primary} vibe={vibe} />
               )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"
-              className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
+              className="w-12 h-12 flex-shrink-0 flex items-center justify-center ml-4"
               style={{ border: "1px solid #cccccc", borderRadius: "50px" }}>
               <svg width="22" height="22" fill="none" stroke="#444444" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
