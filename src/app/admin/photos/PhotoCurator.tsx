@@ -26,6 +26,9 @@ export default function PhotoCurator() {
   const [saving, setSaving] = useState(false)
   const [savedIndustry, setSavedIndustry] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [searchInput, setSearchInput] = useState("")
+  const [activeQuery, setActiveQuery] = useState<string | null>(null)  // null = default industry query
+  const [searching, setSearching] = useState(false)
 
   const loadCounts = useCallback(async () => {
     const counts = await getApprovedCounts()
@@ -34,16 +37,15 @@ export default function PhotoCurator() {
 
   useEffect(() => { loadCounts() }, [loadCounts])
 
-  const loadPhotos = useCallback(async (industry: string) => {
-    if (photos[industry]) return
-    setPhotos(prev => ({ ...prev, [industry]: "loading" }))
-    // Load photos and already-approved URLs in parallel
+  const loadPhotos = useCallback(async (industry: string, customQuery?: string) => {
+    const cacheKey = customQuery ? `${industry}::${customQuery}` : industry
+    if (!customQuery && photos[industry]) return  // use cache for default loads only
+    setPhotos(prev => ({ ...prev, [cacheKey]: "loading" }))
     const [results, approvedUrls] = await Promise.all([
-      fetchIndustryPhotos(industry),
-      getApprovedUrls(industry),
+      fetchIndustryPhotos(industry, customQuery),
+      customQuery ? Promise.resolve([] as string[]) : getApprovedUrls(industry),
     ])
-    setPhotos(prev => ({ ...prev, [industry]: results }))
-    // Pre-select photos that are already approved so checkmarks show immediately
+    setPhotos(prev => ({ ...prev, [cacheKey]: results }))
     if (approvedUrls.length > 0) {
       const approvedSet = new Set(approvedUrls)
       const preSelected = new Set(results.filter(p => approvedSet.has(p.url)).map(p => p.id))
@@ -53,7 +55,27 @@ export default function PhotoCurator() {
     }
   }, [photos])
 
-  useEffect(() => { loadPhotos(activeIndustry) }, [activeIndustry, loadPhotos])
+  useEffect(() => {
+    setActiveQuery(null)
+    setSearchInput("")
+    loadPhotos(activeIndustry)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndustry])
+
+  async function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    const q = searchInput.trim()
+    if (!q) return
+    setSearching(true)
+    setActiveQuery(q)
+    await loadPhotos(activeIndustry, q)
+    setSearching(false)
+  }
+
+  function clearSearch() {
+    setActiveQuery(null)
+    setSearchInput("")
+  }
 
   function togglePhoto(industry: string, photoId: number) {
     // Clear saved banner when user starts selecting again
@@ -67,7 +89,8 @@ export default function PhotoCurator() {
   }
 
   const selectedSet = selected[activeIndustry] || new Set<number>()
-  const currentPhotos = photos[activeIndustry]
+  const cacheKey = activeQuery ? `${activeIndustry}::${activeQuery}` : activeIndustry
+  const currentPhotos = photos[cacheKey]
   const selectedCount = selectedSet.size
   const currentApproved = approvedCounts[activeIndustry] || 0
   const doneCount = INDUSTRIES.filter(i => (approvedCounts[i.key] || 0) >= DONE_THRESHOLD).length
@@ -172,6 +195,49 @@ export default function PhotoCurator() {
           </p>
         )}
       </div>
+
+      {/* Search bar */}
+      <form onSubmit={handleSearch} className="px-6 pb-4 flex gap-2">
+        <input
+          type="text"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder={`Search Pexels… e.g. "spa facial treatment"`}
+          className="flex-1 px-4 py-2.5 text-sm bg-white/8 text-white placeholder-white/30 rounded-lg border border-white/10 focus:outline-none focus:border-white/30"
+          style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+        />
+        <button
+          type="submit"
+          disabled={searching || !searchInput.trim()}
+          className="px-5 py-2.5 font-black text-xs uppercase tracking-widest rounded-lg disabled:opacity-40 transition-opacity shrink-0"
+          style={{ backgroundColor: "#2E7D32", color: "#fff" }}
+        >
+          {searching ? "…" : "Search"}
+        </button>
+        {activeQuery && (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg shrink-0"
+            style={{ backgroundColor: "#333", color: "#aaa" }}
+          >
+            Clear
+          </button>
+        )}
+      </form>
+
+      {/* Active search indicator */}
+      {activeQuery && (
+        <div className="px-6 pb-3">
+          <p className="text-xs" style={{ color: "#666" }}>
+            Showing results for <span className="font-black" style={{ color: "#aaa" }}>"{activeQuery}"</span>
+            {" · "}
+            <button onClick={clearSearch} className="underline" style={{ color: "#666" }}>
+              back to defaults
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Photo grid */}
       <div className="px-3 pb-36">

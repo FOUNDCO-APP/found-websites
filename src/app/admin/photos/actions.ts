@@ -36,8 +36,8 @@ export interface PexelsPhoto {
   desc: string
 }
 
-export async function fetchIndustryPhotos(industry: string): Promise<PexelsPhoto[]> {
-  const query = industryQueries[industry] || industry
+export async function fetchIndustryPhotos(industry: string, customQuery?: string): Promise<PexelsPhoto[]> {
+  const query = customQuery?.trim() || industryQueries[industry] || industry
   try {
     const res = await fetch(
       `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=24&orientation=landscape`,
