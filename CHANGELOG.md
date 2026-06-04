@@ -4,6 +4,52 @@
 
 ---
 
+## Session: June 5-6, 2026 — Photo Pools Complete — All 11 Industries Tagged, Described, Approved
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Full photo pool curation — all 11 industries reviewed, tagged, described, and approved by Shawn
+
+### ✅ Completed This Session
+
+**All 11 industry photo pools — fully curated:**
+- Every photo reviewed by the Apple team with Shawn approving each industry
+- Every photo has a team-written description (replaces Pexels alt text)
+- Every photo has team-approved keywords (5 per photo, for matching engine)
+- Sub-type tags verified and corrected across all industries
+
+**Critical fixes made during review:**
+- Automotive: 8 beard trim/barber photos removed → moved to Beauty pool (tagged `barber`)
+- Events: 9 general photos retagged as `wedding` (were incorrectly labeled general)
+- Retail: 2 cosmetics store photos retagged as `beauty store`
+- Fitness: yoga photos retagged from `yoga class` → `yoga studio`
+- Landscaping: 6 general garden photos added by team (was missing general category entirely)
+- Fitness: 5 yoga studio photos added by team for variety (was all heavy gym/male weightlifting)
+
+**Final pool summary:**
+- home_services: 29 photos — general(10) · camera install(9) · tv install(7) · painting(3)
+- food: 19 photos — general(12) · food truck(7)
+- wellness: 13 photos — general(13)
+- events: 24 photos — wedding(9) · balloon decor(8) · balloon garland(7)
+- retail: 11 photos — general(9) · beauty store(2)
+- fitness: 16 photos — general(11) · yoga studio(5)
+- beauty: 40 photos — general(11) · barber(20) · pedicure(6) · manicure(3)
+- automotive: 12 photos — general(12)
+- pet_services: 12 photos — general(9) · pet groomer(3)
+- cleaning: 9 photos — general(4) · home cleaner(2) · commercial cleaner(3)
+- landscaping: 18 photos — general(6) · hardscaping(5) · paver(3) · tree trimmer(3) · tree grooming(1)
+
+**Storage:** All pools saved to `config/photo-pools/{industry}.json` in Supabase Storage
+**PoolPhoto type:** Updated to include `keywords?: string[]` field
+**Cache cleared:** All 4 live sites had stock_images cache cleared — will pull from curated pools on next load
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Rotate security keys** — GitHub PAT + Supabase service role (urgent since June 3)
+2. **Industry section manifest session** — Shawn walks team through all 11 industry types
+3. **Build onboarding flow** — Angela's spec in ONBOARDING.md, photo pools now ready
+4. **Add sub-industry question to onboarding** (Angela's Q2.5) — drives photo tag matching
+
+---
+
 ## Session: June 5, 2026 — Admin Photo Curator Working
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Fixed admin photo curator end-to-end — table, storage, save, highlights
