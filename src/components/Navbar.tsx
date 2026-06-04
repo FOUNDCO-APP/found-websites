@@ -92,7 +92,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 // Background transitions first (500ms), logos swap after bg is white
                 // Scrolling down: 450ms delay so color logo only appears on white bg
                 // Scrolling up: swap instantly before bg becomes transparent
-                <div className="relative" style={{ height: "56px", maxWidth: "220px" }}>
+                <div className="relative" style={{ height: "48px", width: "160px" }}>
                   {company.logo_url && (
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
@@ -109,13 +109,15 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     }} />
                 </div>
               ) : (
-                // Single logo: CSS filter turns it white on dark hero, transitions smoothly
-                <img src={company.logo_url!} alt={company.name}
-                  className="h-14 w-auto object-contain"
-                  style={{
-                    filter: isOverlay ? "brightness(0) invert(1)" : "none",
-                    transition: "filter 500ms ease",
-                  }} />
+                // Single logo: fixed container prevents wide logos from breaking layout
+                <div style={{ height: "48px", width: "160px" }}>
+                  <img src={company.logo_url!} alt={company.name}
+                    className="h-full w-full object-contain object-left"
+                    style={{
+                      filter: isOverlay ? "brightness(0) invert(1)" : "none",
+                      transition: "filter 500ms ease",
+                    }} />
+                </div>
               )
             ) : (
               <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
@@ -177,7 +179,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #f0f0f0" }}>
             <Link href="/" onClick={() => setOpen(false)} className="flex-shrink-0">
               {company.logo_url ? (
-                <div style={{ height: "48px", width: "140px" }}>
+                <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url} alt={company.name}
                     className="h-full w-full object-contain object-left" />
                 </div>
@@ -240,14 +242,15 @@ export default function Navbar({ company, transparent = false }: { company: Comp
             <Link href="/" onClick={() => setOpen(false)}>
               {company.logo_white_url ? (
                 // Use dedicated white logo directly — no filter artifacts
-                <img src={company.logo_white_url} alt={company.name}
-                  className="w-auto object-contain"
-                  style={{ maxHeight: "56px", maxWidth: "180px" }} />
+                <div style={{ height: "48px", width: "160px" }}>
+                  <img src={company.logo_white_url} alt={company.name}
+                    className="h-full w-full object-contain object-left" />
+                </div>
               ) : company.logo_url ? (
-                // No white logo — invert the color logo
-                <img src={company.logo_url} alt={company.name}
-                  className="w-auto object-contain brightness-0 invert"
-                  style={{ maxHeight: "56px", maxWidth: "180px" }} />
+                <div style={{ height: "48px", width: "160px" }}>
+                  <img src={company.logo_url} alt={company.name}
+                    className="h-full w-full object-contain object-left brightness-0 invert" />
+                </div>
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />
               )}
