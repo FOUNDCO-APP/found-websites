@@ -1,7 +1,8 @@
 export type PoolPhoto = {
   url: string
   desc: string
-  tag: string | null  // search query used at approval — e.g. "spa facial", "nail studio", null = general
+  tag: string | null        // sub-type — e.g. "spa facial", "nail studio", null = general
+  keywords?: string[]       // team-approved matching keywords
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
