@@ -264,8 +264,8 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 className="flex items-baseline gap-5 py-5 border-b border-white/10 group hover:pl-2 transition-all duration-200"
                 style={{
                   opacity: open ? 1 : 0,
-                  transform: open ? "translateX(0)" : "translateX(-16px)",
-                  transition: `opacity 280ms ease ${80 + i * 60}ms, transform 280ms ease ${80 + i * 60}ms`,
+                  transform: open ? "translateX(0)" : "translateX(-24px)",
+                  transition: `opacity 400ms ease ${120 + i * 90}ms, transform 400ms ease ${120 + i * 90}ms`,
                 }}>
                 <span className="text-xs font-black tabular-nums" style={{ color: primary, letterSpacing: "0.1em" }}>
                   0{i + 1}
