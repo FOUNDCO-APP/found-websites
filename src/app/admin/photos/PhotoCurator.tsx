@@ -25,6 +25,7 @@ export default function PhotoCurator() {
   const [approvedCounts, setApprovedCounts] = useState<Record<string, number>>({})
   const [saving, setSaving] = useState(false)
   const [savedIndustry, setSavedIndustry] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const loadCounts = useCallback(async () => {
     const counts = await getApprovedCounts()
@@ -68,11 +69,14 @@ export default function PhotoCurator() {
 
     if (!toSave.length) return
     setSaving(true)
+    setSaveError(null)
     const result = await saveApprovedPhotos(activeIndustry, toSave)
     if (result.success) {
       setSelected(prev => ({ ...prev, [activeIndustry]: new Set() }))
       setSavedIndustry(activeIndustry)
       await loadCounts()
+    } else {
+      setSaveError(result.error || "Save failed")
     }
     setSaving(false)
   }
@@ -152,8 +156,8 @@ export default function PhotoCurator() {
           {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
         </p>
         {currentApproved > 0 && (
-          <p className="text-xs font-black" style={{ color: currentApproved >= DONE_THRESHOLD ? "#2E7D32" : "#888" }}>
-            {currentApproved >= DONE_THRESHOLD ? `✓ ${currentApproved} approved — done` : `${currentApproved} approved — need ${DONE_THRESHOLD - currentApproved} more`}
+          <p className="text-xs font-black" style={{ color: "#2E7D32" }}>
+            ✓ {currentApproved} approved
           </p>
         )}
       </div>
@@ -223,12 +227,10 @@ export default function PhotoCurator() {
           <>
             <div>
               <p className="font-black text-sm" style={{ color: "#4caf50" }}>
-                ✓ Saved — {currentApproved} photos approved
+                ✓ Saved — {currentApproved} photos approved for {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
               </p>
               <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
-                {currentApproved >= DONE_THRESHOLD
-                  ? "This industry is complete. Move to the next tab."
-                  : `Need ${DONE_THRESHOLD - currentApproved} more to complete this industry.`}
+                Tap Next to continue, or select more photos to add.
               </p>
             </div>
             <button
@@ -250,9 +252,14 @@ export default function PhotoCurator() {
           </>
         ) : (
           <>
-            <p className="font-black text-sm text-white">
-              {selectedCount} photo{selectedCount !== 1 ? "s" : ""} selected
-            </p>
+            <div>
+              <p className="font-black text-sm text-white">
+                {selectedCount} photo{selectedCount !== 1 ? "s" : ""} selected
+              </p>
+              {saveError && (
+                <p className="text-xs mt-0.5 text-red-400">{saveError}</p>
+              )}
+            </div>
             <button
               onClick={handleApprove}
               disabled={saving || selectedCount === 0}

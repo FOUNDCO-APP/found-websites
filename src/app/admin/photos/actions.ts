@@ -1,6 +1,14 @@
 "use server"
 import { cookies } from "next/headers"
-import { createClient } from "@/lib/supabase/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+
+// Admin actions need service role key to bypass RLS
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
 
 const PEXELS_KEY = process.env.PEXELS_API_KEY || ""
 
@@ -50,7 +58,7 @@ export async function saveApprovedPhotos(
   photos: { url: string; desc: string }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = getAdminClient()
 
     // Get existing pool for this industry (vibe null = universal)
     const { data: existing } = await supabase
@@ -92,7 +100,7 @@ export async function saveApprovedPhotos(
 
 export async function getApprovedCounts(): Promise<Record<string, number>> {
   try {
-    const supabase = await createClient()
+    const supabase = getAdminClient()
     const { data } = await supabase
       .from("industry_photo_pools")
       .select("industry_category, photos")
