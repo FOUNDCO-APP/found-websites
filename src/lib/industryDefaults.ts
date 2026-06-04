@@ -5,6 +5,7 @@ type IndustryDefaults = {
   footerTagline: string
   servicesIntro: string
   ctaHeadline: string
+  galleryLabel: string
   gallerySubtitle: string
   values: ValueItem[]
   process: ProcessItem[]
@@ -15,6 +16,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Licensed, insured, and accountable.",
     servicesIntro: "Every job handled by our own team — no subcontractors, no surprises.",
     ctaHeadline: "Ready to Get Started?",
+    galleryLabel: "Our Work",
     gallerySubtitle: "Real work. Real results.",
     values: [
       { label: "Locally Owned", body: (city) => `Based right here in ${city || "your community"} — not a franchise, not a call center.` },
@@ -31,6 +33,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Fresh ingredients. Real food. Made for you.",
     servicesIntro: "Everything made fresh — real ingredients, no shortcuts, served fast.",
     ctaHeadline: "Come Fuel Up.",
+    galleryLabel: "Our Menu",
     gallerySubtitle: "Fresh food, real ingredients.",
     values: [
       { label: "Fresh Daily",       body: () => "Everything is made fresh — we never use frozen or pre-packaged shortcuts." },
@@ -47,6 +50,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Your wellbeing, our priority.",
     servicesIntro: "Every service designed around your comfort, your goals, and your pace.",
     ctaHeadline: "Ready to Feel Your Best?",
+    galleryLabel: "Our Space",
     gallerySubtitle: "Your sanctuary awaits.",
     values: [
       { label: "Expert Care",        body: () => "Our practitioners bring years of training and a genuine passion for your wellbeing." },
@@ -63,6 +67,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Making every moment unforgettable.",
     servicesIntro: "Full-service event production — from the first call to the final detail.",
     ctaHeadline: "Let's Make Something Unforgettable.",
+    galleryLabel: "Our Portfolio",
     gallerySubtitle: "Every event, a memory.",
     values: [
       { label: "Creative Vision",       body: () => "We bring ideas you didn't know were possible. Every event is a blank canvas." },
@@ -79,6 +84,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Locally owned. Carefully curated.",
     servicesIntro: "Every product selected with care — because you deserve better than what the big box stores carry.",
     ctaHeadline: "Come See Us.",
+    galleryLabel: "Our Collection",
     gallerySubtitle: "Our collection, your style.",
     values: [
       { label: "Locally Owned",      body: (city) => `Based in ${city || "your community"} — your purchase supports a real local business.` },
@@ -95,6 +101,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Built for results. Designed for you.",
     servicesIntro: "Every class, every session, every program designed to push you further.",
     ctaHeadline: "Start Your Journey.",
+    galleryLabel: "Our Studio",
     gallerySubtitle: "Results you can see.",
     values: [
       { label: "Expert Coaches",     body: () => "Certified trainers who care as much about your results as you do." },
@@ -111,6 +118,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Look good. Feel great. Be you.",
     servicesIntro: "Every service designed to bring out the best version of you.",
     ctaHeadline: "Book Your Appointment.",
+    galleryLabel: "Our Work",
     gallerySubtitle: "Every look, a transformation.",
     values: [
       { label: "Expert Stylists",     body: () => "Years of training, a passion for craft, and an eye for what works for you specifically." },
@@ -127,6 +135,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Honest work. Fair prices. Every time.",
     servicesIntro: "Certified mechanics who treat your vehicle like their own.",
     ctaHeadline: "Schedule Your Service.",
+    galleryLabel: "Our Work",
     gallerySubtitle: "Quality work you can trust.",
     values: [
       { label: "Certified Mechanics", body: () => "ASE-certified technicians with the training to do the job right the first time." },
@@ -143,6 +152,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Your pet deserves the best.",
     servicesIntro: "Gentle, professional care for pets who deserve nothing but the best.",
     ctaHeadline: "Book for Your Pet.",
+    galleryLabel: "Our Work",
     gallerySubtitle: "Happy pets. Happy owners.",
     values: [
       { label: "Animal Lovers",             body: () => "We got into this because we love animals. That shows in every interaction." },
@@ -159,6 +169,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Cleaner home. Clearer mind.",
     servicesIntro: "Professional cleaning services that leave your space spotless — every single time.",
     ctaHeadline: "Get a Free Quote.",
+    galleryLabel: "Our Work",
     gallerySubtitle: "Clean spaces. Happy spaces.",
     values: [
       { label: "Thorough & Reliable",         body: () => "We don't cut corners. Every surface, every room, done right." },
@@ -175,6 +186,7 @@ const defaults: Record<string, IndustryDefaults> = {
     footerTagline: "Beautiful outdoors start here.",
     servicesIntro: "Expert landscaping that transforms your outdoor space into something you're proud of.",
     ctaHeadline: "Get a Free Estimate.",
+    galleryLabel: "Our Projects",
     gallerySubtitle: "Outdoor spaces transformed.",
     values: [
       { label: "Local Experts",          body: (city) => `We know the ${city || "local"} climate, soil, and plants better than anyone.` },
@@ -193,6 +205,7 @@ const fallback: IndustryDefaults = {
   footerTagline: "Locally owned. Community focused.",
   servicesIntro: "Professional services tailored to your needs.",
   ctaHeadline: "Ready to Get Started?",
+  galleryLabel: "Gallery",
   gallerySubtitle: "Our work speaks for itself.",
   values: [
     { label: "Locally Owned",  body: (city) => `Based right here in ${city || "your community"} — people you can trust.` },

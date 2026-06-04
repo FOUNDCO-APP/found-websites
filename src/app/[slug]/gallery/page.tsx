@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
 import GalleryLightbox from "@/components/GalleryLightbox"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -34,6 +35,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
   const primary = company.primary_color
   const imgs = await getStockImages(company)
+  const galleryLabel = getIndustryDefaults(company.industry_category).galleryLabel
 
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
@@ -57,7 +59,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             className="text-xs font-black tracking-widest uppercase"
             style={{ color: primary }}
           >
-            Our Work
+            {galleryLabel}
           </h1>
           {hasPhotos && (
             <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>

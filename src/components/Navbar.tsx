@@ -92,7 +92,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 // Background transitions first (500ms), logos swap after bg is white
                 // Scrolling down: 450ms delay so color logo only appears on white bg
                 // Scrolling up: swap instantly before bg becomes transparent
-                <div className="relative" style={{ height: "48px", maxWidth: "220px" }}>
+                <div className="relative" style={{ height: "56px", maxWidth: "220px" }}>
                   {company.logo_url && (
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
@@ -111,7 +111,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
               ) : (
                 // Single logo: CSS filter turns it white on dark hero, transitions smoothly
                 <img src={company.logo_url!} alt={company.name}
-                  className="h-12 w-auto object-contain"
+                  className="h-14 w-auto object-contain"
                   style={{
                     filter: isOverlay ? "brightness(0) invert(1)" : "none",
                     transition: "filter 500ms ease",
@@ -175,17 +175,17 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           }}
         >
           <div className="flex items-center justify-between px-8 py-6" style={{ borderBottom: "1px solid #f0f0f0" }}>
-            <Link href="/" onClick={() => setOpen(false)}>
+            <Link href="/" onClick={() => setOpen(false)} className="min-w-0 mr-4">
               {company.logo_url ? (
                 <img src={company.logo_url} alt={company.name}
-                  className="w-auto object-contain"
-                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
+                  className="w-auto object-contain block"
+                  style={{ maxHeight: "56px", maxWidth: "160px" }} />
               ) : (
                 <BrandMark name={company.name} color={primary} vibe={vibe} />
               )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"
-              className="w-12 h-12 flex items-center justify-center"
+              className="w-12 h-12 flex-shrink-0 flex items-center justify-center"
               style={{ border: "1px solid #cccccc", borderRadius: "50px" }}>
               <svg width="22" height="22" fill="none" stroke="#444444" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -241,12 +241,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 // Use dedicated white logo directly — no filter artifacts
                 <img src={company.logo_white_url} alt={company.name}
                   className="w-auto object-contain"
-                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
+                  style={{ maxHeight: "56px", maxWidth: "180px" }} />
               ) : company.logo_url ? (
                 // No white logo — invert the color logo
                 <img src={company.logo_url} alt={company.name}
                   className="w-auto object-contain brightness-0 invert"
-                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
+                  style={{ maxHeight: "56px", maxWidth: "180px" }} />
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />
               )}
