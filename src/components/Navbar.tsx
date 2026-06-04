@@ -83,16 +83,14 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       className="h-full w-auto object-contain"
                       style={{
                         opacity: isOverlay ? 0 : 1,
-                        transition: isOverlay
-                          ? "opacity 150ms ease"
-                          : "opacity 220ms ease 100ms",
+                        transition: "opacity 250ms ease",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
                     className="absolute top-0 left-0 h-full w-auto object-contain"
                     style={{
                       opacity: isOverlay ? 1 : 0,
-                      transition: "opacity 200ms ease",
+                      transition: "opacity 250ms ease",
                     }} />
                 </div>
               ) : (
