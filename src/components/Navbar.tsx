@@ -60,7 +60,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   return (
     <>
       <header
-        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-500`}
+        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-[400ms]`}
         style={{
           backgroundColor: isOverlay ? "rgba(255,255,255,0)" : "#ffffff",
           borderBottomWidth: "1px",
@@ -85,7 +85,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                         opacity: isOverlay ? 0 : 1,
                         transition: isOverlay
                           ? "opacity 150ms ease 0ms"
-                          : "opacity 300ms ease-in 600ms",
+                          : "opacity 200ms ease 300ms",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
@@ -94,7 +94,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       opacity: isOverlay ? 1 : 0,
                       transition: isOverlay
                         ? "opacity 150ms ease 50ms"
-                        : "opacity 150ms ease 450ms",
+                        : "opacity 150ms ease 200ms",
                     }} />
                 </div>
               ) : (
