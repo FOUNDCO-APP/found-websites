@@ -4,6 +4,40 @@
 
 ---
 
+## Session: June 3, 2026 — Logo Transition Fix Improved + Git Conflict Resolved (Desktop)
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Reviewed BRIEF, improved mobile session's logo fix, resolved git conflict
+
+### ✅ Completed This Session
+
+**Logo transition fix — upgraded from mobile session's version:**
+- Mobile session used single-logo `brightness-0 invert` with instant snap (no transition-all)
+- Problem: ignored `logo_white_url`, abrupt background switch looked jarring
+- New approach in `Navbar.tsx`:
+  - If company has `logo_white_url`: staggered crossfade — white logo fades out in 150ms, color logo delayed 220ms so navbar is already white before it appears. No white box flash.
+  - If company has only `logo_url`: CSS filter `brightness(0) invert(1)` with smooth 300ms transition
+  - Restored `transition-all duration-300` on the header so navbar smoothly fades from transparent to white on scroll
+- Resolved git conflict between mobile and desktop sessions
+- Pushed to main ✅
+
+**Gotsmoothie upload script (`scripts/upload-gotsmoothie-logo.mjs`):**
+- Encoding corruption from mobile session (em dashes + checkmarks garbled)
+- NOT committed — left unstaged, needs cleanup
+
+### ⚠️ SECURITY — Action Required
+The June 3 mobile session shared a GitHub PAT and Supabase service role key in the chat.
+- Rotate GitHub PAT: github.com → Settings → Developer Settings → Personal Access Tokens
+- Rotate Supabase service role key: supabase.com → Project Settings → API
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Rotate security keys** (above) — do this before next session
+2. **Verify logo fix on live site** — scroll test rcbicycles.foundco.app after Vercel deploys
+3. **Industry section manifest design session** — NOW priority (all 4 layouts exist)
+4. **Onboarding flow** — spec ready in ONBOARDING.md, unblocked
+
+---
+
 ## Session: June 3, 2026 — All 4 Layouts Confirmed + Cinematic Navbar Flash Fixed
 **AI:** Claude (Sonnet 4.6) — claude.ai chat interface
 **Worked on:** Confirmed all 4 layouts built, RC Bicycles logo fixed, Cinematic navbar white flash resolved
