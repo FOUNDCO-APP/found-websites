@@ -4,6 +4,40 @@
 
 ---
 
+## Session: June 5, 2026 — Admin Photo Curator Working
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Fixed admin photo curator end-to-end — table, storage, save, highlights
+
+### ✅ Completed This Session
+
+**Root cause found and fixed — photos now save correctly:**
+- `industry_photo_pools` DB table didn't exist → created via Supabase SQL editor
+- PostgREST schema cache refused to pick up the new table (tried NOTIFY, grants, project restart — all failed)
+- Switched to Supabase Storage JSON files instead: `config/photo-pools/{industry}.json`
+- Created new `config` bucket (public, allows application/json)
+- `photoPool.ts` now reads from public Storage URL with 5min cache
+- Admin `actions.ts` writes/merges via service role Storage API
+- Full write + read tested and confirmed working
+
+**Admin curator UX fixed:**
+- Approved photos stay highlighted after saving — checkmarks don't clear
+- On tab load: approved URLs fetched from Storage, matching photos pre-selected
+- Progress bar, tab badges, and status strip all working correctly
+- `getApprovedUrls(industry)` server action added
+
+**Other fixes this session:**
+- All navbar logos fixed at 160×48px fixed containers — Got Smoothie no longer breaks layout
+- `galleryLabel` per industry added (Our Work / Our Menu / Our Space / Our Portfolio / etc.)
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Go through all 11 industry tabs** in `foundco.app/admin/photos` and approve 8-15 photos each
+2. **Rotate security keys** — GitHub PAT + Supabase service role (urgent since June 3)
+3. **Industry section manifest session** — Shawn walks team through all 11 types
+4. **Build onboarding flow** — Angela's spec in ONBOARDING.md, unblocked once photos approved
+
+---
+
 ## Session: June 4, 2026 — Admin Photo Curator Built
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Admin photo curation page, logo fixes

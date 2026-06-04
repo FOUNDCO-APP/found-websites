@@ -35,10 +35,10 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-1. **Set ADMIN_KEY in Vercel + redeploy**
+1. **Curate photos in admin page** — foundco.app/admin/photos
    - Owner: Shawn
-   - Status: ⚠️ Blocking — admin page won't work without this
-   - Notes: Go to vercel.com → found-websites → Settings → Environment Variables → add ADMIN_KEY=Jayd3n1128!$7 → Redeploy
+   - Status: ⏳ Ready — approve 8-15 photos per industry across all 11 tabs
+   - Notes: Storage backend now works. Checkmarks persist. Go tab by tab.
 
 2. **Rotate security keys**
    - Owner: Shawn
