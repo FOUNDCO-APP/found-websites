@@ -2,7 +2,10 @@
 import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-// Admin actions need service role key to bypass RLS
+// Storage bucket + path for photo pools
+const BUCKET = "config"
+const POOL_PATH = (industry: string) => `photo-pools/${industry}.json`
+
 function getAdminClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -53,45 +56,39 @@ export async function fetchIndustryPhotos(industry: string): Promise<PexelsPhoto
   }
 }
 
+async function readPool(industry: string): Promise<{ url: string; desc: string }[]> {
+  try {
+    const supabase = getAdminClient()
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .download(POOL_PATH(industry))
+    if (error || !data) return []
+    const text = await data.text()
+    const parsed = JSON.parse(text)
+    return parsed.photos || []
+  } catch {
+    return []
+  }
+}
+
+async function writePool(industry: string, photos: { url: string; desc: string }[]): Promise<void> {
+  const supabase = getAdminClient()
+  const json = JSON.stringify({ industry, photos }, null, 2)
+  const blob = new Blob([json], { type: "application/json" })
+  await supabase.storage
+    .from(BUCKET)
+    .upload(POOL_PATH(industry), blob, { upsert: true, contentType: "application/json" })
+}
+
 export async function saveApprovedPhotos(
   industry: string,
   photos: { url: string; desc: string }[]
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = getAdminClient()
-
-    // Get existing pool for this industry (vibe null = universal)
-    const { data: existing } = await supabase
-      .from("industry_photo_pools")
-      .select("id, photos")
-      .eq("industry_category", industry)
-      .is("vibe", null)
-      .maybeSingle()
-
-    const existingPhotos: { url: string; desc: string }[] = existing?.photos || []
-
-    // Deduplicate by URL
-    const existingUrls = new Set(existingPhotos.map((p) => p.url))
-    const newPhotos = photos.filter((p) => !existingUrls.has(p.url))
-    const merged = [...existingPhotos, ...newPhotos]
-
-    if (existing?.id) {
-      await supabase
-        .from("industry_photo_pools")
-        .update({ photos: merged })
-        .eq("id", existing.id)
-    } else {
-      await supabase
-        .from("industry_photo_pools")
-        .insert({
-          industry_category: industry,
-          vibe: null,
-          photos: merged,
-          keywords: null,
-          active: true,
-        })
-    }
-
+    const existing = await readPool(industry)
+    const existingUrls = new Set(existing.map((p) => p.url))
+    const merged = [...existing, ...photos.filter((p) => !existingUrls.has(p.url))]
+    await writePool(industry, merged)
     return { success: true }
   } catch (err) {
     return { success: false, error: String(err) }
@@ -99,21 +96,18 @@ export async function saveApprovedPhotos(
 }
 
 export async function getApprovedCounts(): Promise<Record<string, number>> {
-  try {
-    const supabase = getAdminClient()
-    const { data } = await supabase
-      .from("industry_photo_pools")
-      .select("industry_category, photos")
-      .is("vibe", null)
-
-    const counts: Record<string, number> = {}
-    for (const row of data || []) {
-      counts[row.industry_category] = (row.photos as unknown[])?.length || 0
-    }
-    return counts
-  } catch {
-    return {}
-  }
+  const industries = [
+    "home_services","food","wellness","events","retail",
+    "fitness","beauty","automotive","pet_services","cleaning","landscaping",
+  ]
+  const counts: Record<string, number> = {}
+  await Promise.all(
+    industries.map(async (ind) => {
+      const pool = await readPool(ind)
+      if (pool.length > 0) counts[ind] = pool.length
+    })
+  )
+  return counts
 }
 
 export async function adminLogin(key: string): Promise<boolean> {
