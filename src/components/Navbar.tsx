@@ -49,7 +49,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
   // Wait for background transition to finish before showing color logo
   useEffect(() => {
-    if (!transparent) return
+    if (!transparent || !isHome) return
     let t: ReturnType<typeof setTimeout>
     if (scrolled) {
       t = setTimeout(() => setColorLogoReady(true), 280)
@@ -57,7 +57,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
       setColorLogoReady(false)
     }
     return () => clearTimeout(t)
-  }, [scrolled, transparent])
+  }, [scrolled, transparent, isHome])
 
   // Only overlay on the homepage — inner pages always get sticky white navbar
   const isOverlay = transparent && isHome && !scrolled

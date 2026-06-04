@@ -69,7 +69,7 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
       {/* ── Lightbox overlay ── */}
       {selected !== null && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center"
+          className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 px-6"
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
           onClick={close}
           onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
@@ -79,14 +79,8 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
             else if (delta < -50) next()
           }}
         >
-          {/* Photo — inset from edges so arrows don't overlap */}
-          <img
-            src={photos[selected]}
-            alt={`${companyName} — photo ${selected + 1}`}
-            className="max-w-full max-h-full object-contain"
-            style={{ maxHeight: "85vh", maxWidth: "80vw" }}
-            onClick={e => e.stopPropagation()}
-          />
+          {/* Color accent line at top */}
+          <div className="absolute top-0 left-0 right-0 h-0.5" style={{ backgroundColor: primary }} />
 
           {/* Close */}
           <button
@@ -100,47 +94,48 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
             </svg>
           </button>
 
-          {/* Prev arrow — desktop */}
-          {photos.length > 1 && (
-            <button
-              onClick={e => { e.stopPropagation(); prev() }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center"
-              style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
-              aria-label="Previous photo"
-            >
-              <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-          )}
-
-          {/* Next arrow — desktop */}
-          {photos.length > 1 && (
-            <button
-              onClick={e => { e.stopPropagation(); next() }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center"
-              style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
-              aria-label="Next photo"
-            >
-              <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          )}
-
-          {/* Counter */}
-          <div
-            className="absolute bottom-5 left-1/2 -translate-x-1/2 text-xs font-black tracking-widest"
-            style={{ color: "rgba(255,255,255,0.5)" }}
-          >
-            {selected + 1} / {photos.length}
-          </div>
-
-          {/* Color accent line at top */}
-          <div
-            className="absolute top-0 left-0 right-0 h-0.5"
-            style={{ backgroundColor: primary }}
+          {/* Photo */}
+          <img
+            src={photos[selected]}
+            alt={`${companyName} — photo ${selected + 1}`}
+            className="object-contain"
+            style={{ maxHeight: "75vh", maxWidth: "100%"  }}
+            onClick={e => e.stopPropagation()}
           />
+
+          {/* Controls row — prev · counter · next */}
+          {photos.length > 1 && (
+            <div
+              className="flex items-center gap-8"
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                onClick={prev}
+                className="w-11 h-11 flex items-center justify-center"
+                style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
+                aria-label="Previous photo"
+              >
+                <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <span className="text-xs font-black tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+                {selected + 1} / {photos.length}
+              </span>
+
+              <button
+                onClick={next}
+                className="w-11 h-11 flex items-center justify-center"
+                style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
+                aria-label="Next photo"
+              >
+                <svg width="18" height="18" fill="none" stroke="white" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </>
