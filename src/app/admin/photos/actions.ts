@@ -110,6 +110,11 @@ export async function getApprovedCounts(): Promise<Record<string, number>> {
   return counts
 }
 
+export async function getApprovedUrls(industry: string): Promise<string[]> {
+  const pool = await readPool(industry)
+  return pool.map((p) => p.url)
+}
+
 export async function adminLogin(key: string): Promise<boolean> {
   if (key === process.env.ADMIN_KEY) {
     const cookieStore = await cookies()

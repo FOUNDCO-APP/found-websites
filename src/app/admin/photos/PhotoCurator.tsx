@@ -1,6 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
-import { fetchIndustryPhotos, saveApprovedPhotos, getApprovedCounts, type PexelsPhoto } from "./actions"
+import { fetchIndustryPhotos, saveApprovedPhotos, getApprovedCounts, getApprovedUrls, type PexelsPhoto } from "./actions"
 
 const INDUSTRIES = [
   { key: "home_services", label: "Home Services" },
@@ -37,8 +37,20 @@ export default function PhotoCurator() {
   const loadPhotos = useCallback(async (industry: string) => {
     if (photos[industry]) return
     setPhotos(prev => ({ ...prev, [industry]: "loading" }))
-    const results = await fetchIndustryPhotos(industry)
+    // Load photos and already-approved URLs in parallel
+    const [results, approvedUrls] = await Promise.all([
+      fetchIndustryPhotos(industry),
+      getApprovedUrls(industry),
+    ])
     setPhotos(prev => ({ ...prev, [industry]: results }))
+    // Pre-select photos that are already approved so checkmarks show immediately
+    if (approvedUrls.length > 0) {
+      const approvedSet = new Set(approvedUrls)
+      const preSelected = new Set(results.filter(p => approvedSet.has(p.url)).map(p => p.id))
+      if (preSelected.size > 0) {
+        setSelected(prev => ({ ...prev, [industry]: new Set([...(prev[industry] || []), ...preSelected]) }))
+      }
+    }
   }, [photos])
 
   useEffect(() => { loadPhotos(activeIndustry) }, [activeIndustry, loadPhotos])
@@ -72,7 +84,6 @@ export default function PhotoCurator() {
     setSaveError(null)
     const result = await saveApprovedPhotos(activeIndustry, toSave)
     if (result.success) {
-      setSelected(prev => ({ ...prev, [activeIndustry]: new Set() }))
       setSavedIndustry(activeIndustry)
       await loadCounts()
     } else {
