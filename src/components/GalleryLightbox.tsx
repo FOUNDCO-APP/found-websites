@@ -79,12 +79,12 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
             else if (delta < -50) next()
           }}
         >
-          {/* Photo */}
+          {/* Photo — inset from edges so arrows don't overlap */}
           <img
             src={photos[selected]}
             alt={`${companyName} — photo ${selected + 1}`}
             className="max-w-full max-h-full object-contain"
-            style={{ maxHeight: "90vh", maxWidth: "90vw" }}
+            style={{ maxHeight: "85vh", maxWidth: "80vw" }}
             onClick={e => e.stopPropagation()}
           />
 
@@ -104,7 +104,7 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
           {photos.length > 1 && (
             <button
               onClick={e => { e.stopPropagation(); prev() }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 hidden md:flex items-center justify-center"
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center"
               style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
               aria-label="Previous photo"
             >
@@ -118,7 +118,7 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
           {photos.length > 1 && (
             <button
               onClick={e => { e.stopPropagation(); next() }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 hidden md:flex items-center justify-center"
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center"
               style={{ border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50px" }}
               aria-label="Next photo"
             >

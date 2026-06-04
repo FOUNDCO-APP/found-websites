@@ -32,8 +32,10 @@ const navLinks = [
 export default function Navbar({ company, transparent = false }: { company: Company; transparent?: boolean }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [colorLogoReady, setColorLogoReady] = useState(false)
   const pathname = usePathname()
+  const isHome = pathname === "/"
+  // Start ready on inner pages — they always have a white navbar
+  const [colorLogoReady, setColorLogoReady] = useState(!(transparent && isHome))
   const primary = company.primary_color
   const vibe = company.vibe || "bold"
   const isCalm = vibe === "calm" || vibe === "warm"
@@ -58,7 +60,6 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   }, [scrolled, transparent])
 
   // Only overlay on the homepage — inner pages always get sticky white navbar
-  const isHome = pathname === "/"
   const isOverlay = transparent && isHome && !scrolled
 
   const isActive = (href: string) => pathname === href
