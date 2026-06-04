@@ -4,6 +4,7 @@ import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import ServiceIcon from "@/components/ServiceIcon"
+import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
 
 export default function EditorialLayout({ company, imgs, gradient, heroImage }: LayoutProps) {
@@ -26,11 +27,12 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
 
   return (
     <>
-      {/* ── HERO — MAGAZINE COVER ── */}
+      {/* ── HERO — magazine cover, slow deliberate reveal ── */}
       <section className="flex flex-col md:flex-row min-h-[90vh] md:min-h-screen">
 
         {/* Mobile: full-width image on top */}
-        <div className="md:hidden w-full h-72 relative">
+        <div className="md:hidden w-full h-72 relative"
+          style={{ animation: "fade-in 800ms ease-out 100ms both" }}>
           {heroImage ? (
             <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
@@ -40,7 +42,8 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
 
         {/* Left — white, elegant text composition */}
         <div className="relative z-10 flex flex-col justify-center w-full md:w-[45%] px-10 md:px-16 py-16 md:py-24 bg-white">
-          <p className="text-xs font-black tracking-[0.25em] uppercase mb-8 md:mb-10" style={{ color: primary }}>
+          <p className="text-xs font-black tracking-[0.25em] uppercase mb-8 md:mb-10"
+            style={{ color: primary, animation: "fade-up 700ms ease-out 200ms both" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1
@@ -50,15 +53,23 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
               fontFamily: "var(--font-heading, inherit)",
               fontStyle: "italic",
               fontWeight: 700,
+              animation: "fade-up 900ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both",
             }}
           >
             {config?.hero_title || company.name}
           </h1>
-          <div className="w-12 h-0.5 mb-6 md:mb-8" style={{ backgroundColor: primary }} />
-          <p className="text-lg leading-relaxed mb-10 md:mb-12" style={{ color: "#666666" }}>
+          <div className="w-12 h-0.5 mb-6 md:mb-8"
+            style={{
+              backgroundColor: primary,
+              animation: "scale-x-reveal 600ms ease-out 680ms both",
+              transformOrigin: "left",
+            }} />
+          <p className="text-lg leading-relaxed mb-10 md:mb-12"
+            style={{ color: "#666666", animation: "fade-up 700ms ease-out 830ms both" }}>
             {config?.hero_subtitle || `Welcome to ${company.name}.`}
           </p>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4"
+            style={{ animation: "fade-in 600ms ease-out 1020ms both" }}>
             <Link href={primaryHref} className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
               {primaryLabel}
@@ -72,8 +83,9 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
           </div>
         </div>
 
-        {/* Right — full-height image bleeds to edge (desktop only) */}
-        <div className="hidden md:block md:w-[55%] relative">
+        {/* Right — full-height image drifts in from right (desktop only) */}
+        <div className="hidden md:block md:w-[55%] relative"
+          style={{ animation: "fade-left 800ms ease-out 200ms both" }}>
           {heroImage ? (
             <img src={heroImage} alt={company.name}
               className="absolute inset-0 w-full h-full object-cover" />
@@ -83,51 +95,17 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
         </div>
       </section>
 
-      {/* ── ABOUT — BRAND STORY (comes BEFORE services in Editorial) ── */}
+      {/* ── ABOUT — brand story ── */}
       {config?.about_text && (
         <section className="py-28 bg-white">
-          <div className="max-w-2xl mx-auto px-8 text-center">
-            <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
-              Our Story
-            </p>
-            {config.tagline ? (
-              <h2
-                className="text-3xl md:text-4xl mb-8"
-                style={{
-                  color: "#111111",
-                  fontFamily: "var(--font-heading, inherit)",
-                  fontStyle: "italic",
-                  fontWeight: 700,
-                }}
-              >
-                {config.tagline}
-              </h2>
-            ) : null}
-            <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
-            {config.about_text && (
-              <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
-                {config.about_text}
+          <InView distance={20}>
+            <div className="max-w-2xl mx-auto px-8 text-center">
+              <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
+                Our Story
               </p>
-            )}
-            <Link href="/about" className="btn text-white"
-              style={{ backgroundColor: primary, borderColor: primary }}>
-              Meet the Team
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* ── SERVICES — LUXURY MENU ── */}
-      {services.length > 0 && (
-        <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
-          <div className="max-w-5xl mx-auto px-8">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-20">
-              <div>
-                <p className="text-xs font-black tracking-[0.2em] uppercase mb-4" style={{ color: primary }}>
-                  What We Offer
-                </p>
+              {config.tagline ? (
                 <h2
-                  className="text-4xl md:text-5xl"
+                  className="text-3xl md:text-4xl mb-8"
                   style={{
                     color: "#111111",
                     fontFamily: "var(--font-heading, inherit)",
@@ -135,40 +113,79 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                     fontWeight: 700,
                   }}
                 >
-                  Our Services
+                  {config.tagline}
                 </h2>
-              </div>
-              <Link href="/services"
-                className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
-                style={{ color: primary }}>
-                View All →
+              ) : null}
+              <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
+              {config.about_text && (
+                <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
+                  {config.about_text}
+                </p>
+              )}
+              <Link href="/about" className="btn text-white"
+                style={{ backgroundColor: primary, borderColor: primary }}>
+                Meet the Team
               </Link>
             </div>
+          </InView>
+        </section>
+      )}
 
-            {/* Service rows — luxury menu style */}
+      {/* ── SERVICES — luxury menu ── */}
+      {services.length > 0 && (
+        <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
+          <div className="max-w-5xl mx-auto px-8">
+            <InView distance={20}>
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-20">
+                <div>
+                  <p className="text-xs font-black tracking-[0.2em] uppercase mb-4" style={{ color: primary }}>
+                    What We Offer
+                  </p>
+                  <h2
+                    className="text-4xl md:text-5xl"
+                    style={{
+                      color: "#111111",
+                      fontFamily: "var(--font-heading, inherit)",
+                      fontStyle: "italic",
+                      fontWeight: 700,
+                    }}
+                  >
+                    Our Services
+                  </h2>
+                </div>
+                <Link href="/services"
+                  className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
+                  style={{ color: primary }}>
+                  View All →
+                </Link>
+              </div>
+            </InView>
+
             <div>
               {services.slice(0, 6).map((service, i) => (
-                <div key={service.name}
-                  className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-8 items-start"
-                  style={{ borderTop: `${i === 0 ? "2px" : "1px"} solid ${i === 0 ? primary : "#E8E6E3"}` }}>
-                  <div className="flex items-center gap-4">
-                    <ServiceIcon serviceName={service.name} color={primary} size={18} />
-                    <h3
-                      className="text-xl"
-                      style={{
-                        color: "#111111",
-                        fontFamily: "var(--font-heading, inherit)",
-                        fontStyle: "italic",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {service.name}
-                    </h3>
+                <InView key={service.name} delay={i * 60} distance={16}>
+                  <div
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-8 items-start"
+                    style={{ borderTop: `${i === 0 ? "2px" : "1px"} solid ${i === 0 ? primary : "#E8E6E3"}` }}>
+                    <div className="flex items-center gap-4">
+                      <ServiceIcon serviceName={service.name} color={primary} size={18} />
+                      <h3
+                        className="text-xl"
+                        style={{
+                          color: "#111111",
+                          fontFamily: "var(--font-heading, inherit)",
+                          fontStyle: "italic",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {service.name}
+                      </h3>
+                    </div>
+                    <p className="text-base leading-relaxed" style={{ color: "#777777" }}>
+                      {service.description}
+                    </p>
                   </div>
-                  <p className="text-base leading-relaxed" style={{ color: "#777777" }}>
-                    {service.description}
-                  </p>
-                </div>
+                </InView>
               ))}
               {services.length > 6 && (
                 <div className="pt-10" style={{ borderTop: "1px solid #E8E6E3" }}>
@@ -183,7 +200,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
         </section>
       )}
 
-      {/* ── TESTIMONIALS — OVERSIZED PULL QUOTES ── */}
+      {/* ── TESTIMONIALS — oversized pull quotes ── */}
       {testimonials.length > 0 && (
         <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
           <div className="max-w-3xl mx-auto px-8">
@@ -192,40 +209,41 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
             </p>
             <div className="flex flex-col gap-20">
               {testimonials.slice(0, 2).map((t, i) => (
-                <div key={t.name} className="flex flex-col gap-6">
-                  {/* Oversized quotation mark */}
-                  <span
-                    className="text-8xl leading-none"
-                    style={{ color: primary, fontFamily: "var(--font-heading, inherit)", opacity: 0.4 }}
-                  >
-                    &ldquo;
-                  </span>
-                  <p
-                    className="text-2xl md:text-3xl leading-relaxed -mt-8"
-                    style={{
-                      color: "#222222",
-                      fontFamily: "var(--font-heading, inherit)",
-                      fontStyle: "italic",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {t.quote}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <div className="w-8 h-px" style={{ backgroundColor: primary }} />
-                    <div>
-                      <p className="text-sm font-black tracking-wide uppercase" style={{ color: "#111111" }}>{t.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "#999999" }}>{t.role}</p>
+                <InView key={t.name} delay={i * 120} distance={20}>
+                  <div className="flex flex-col gap-6">
+                    <span
+                      className="text-8xl leading-none"
+                      style={{ color: primary, fontFamily: "var(--font-heading, inherit)", opacity: 0.4 }}
+                    >
+                      &ldquo;
+                    </span>
+                    <p
+                      className="text-2xl md:text-3xl leading-relaxed -mt-8"
+                      style={{
+                        color: "#222222",
+                        fontFamily: "var(--font-heading, inherit)",
+                        fontStyle: "italic",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {t.quote}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="w-8 h-px" style={{ backgroundColor: primary }} />
+                      <div>
+                        <p className="text-sm font-black tracking-wide uppercase" style={{ color: "#111111" }}>{t.name}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "#999999" }}>{t.role}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </InView>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* ── FINAL CTA — PHOTO (rhythm rule) ── */}
+      {/* ── FINAL CTA ── */}
       <section className="relative py-32 text-center overflow-hidden">
         {img(1) ? (
           <>
@@ -235,26 +253,28 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
-        <div className="relative z-10 max-w-2xl mx-auto px-8">
-          <div className="w-12 h-0.5 mx-auto mb-12" style={{ backgroundColor: primary }} />
-          <h2
-            className="text-4xl md:text-5xl text-white mb-6 text-balance"
-            style={{ fontFamily: "var(--font-heading, inherit)", fontStyle: "italic", fontWeight: 700 }}
-          >
-            {ctaHeadline}
-          </h2>
-          <p className="mb-12 text-lg" style={{ color: "#cccccc" }}>
-            {company.phone && (
-              <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
-            )}
-            send us a message and we&apos;ll be in touch.
-          </p>
-          <Link href={primaryHref} className="btn text-white"
-            style={{ backgroundColor: primary, borderColor: primary }}>
-            {primaryLabel}
-          </Link>
-        </div>
+        <InView distance={20}>
+          <div className="relative z-10 max-w-2xl mx-auto px-8">
+            <div className="w-12 h-0.5 mx-auto mb-12" style={{ backgroundColor: primary }} />
+            <h2
+              className="text-4xl md:text-5xl text-white mb-6 text-balance"
+              style={{ fontFamily: "var(--font-heading, inherit)", fontStyle: "italic", fontWeight: 700 }}
+            >
+              {ctaHeadline}
+            </h2>
+            <p className="mb-12 text-lg" style={{ color: "#cccccc" }}>
+              {company.phone && (
+                <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                  className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
+              )}
+              send us a message and we&apos;ll be in touch.
+            </p>
+            <Link href={primaryHref} className="btn text-white"
+              style={{ backgroundColor: primary, borderColor: primary }}>
+              {primaryLabel}
+            </Link>
+          </div>
+        </InView>
       </section>
     </>
   )
