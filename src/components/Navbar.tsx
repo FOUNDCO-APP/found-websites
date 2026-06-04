@@ -53,7 +53,6 @@ export default function Navbar({ company, transparent = false }: { company: Comp
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
-  const navBorder = isOverlay ? "none" : isCalm ? "1px solid #eeeeee" : "1px solid #f0f0f0"
   const navLinkWeight = "font-medium"
   const inactiveColor = isOverlay ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
   const barColor = isOverlay ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
@@ -61,10 +60,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   return (
     <>
       <header
-        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-300`}
+        className={`${transparent ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-500`}
         style={{
           backgroundColor: isOverlay ? "rgba(255,255,255,0)" : "#ffffff",
-          borderBottom: navBorder,
+          borderBottomWidth: "1px",
+          borderBottomStyle: "solid",
+          borderBottomColor: isOverlay ? "rgba(0,0,0,0)" : isCalm ? "#eeeeee" : "#f0f0f0",
         }}
       >
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between gap-4">
@@ -80,7 +81,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       className="h-full w-auto object-contain"
                       style={{
                         opacity: isOverlay ? 0 : 1,
-                        transition: "opacity 300ms ease",
+                        transition: "opacity 500ms ease",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
@@ -93,7 +94,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                   className="h-12 w-auto object-contain"
                   style={{
                     filter: isOverlay ? "brightness(0) invert(1)" : "none",
-                    transition: "filter 300ms ease",
+                    transition: "filter 500ms ease",
                   }} />
               )
             ) : (
@@ -158,7 +159,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
               {company.logo_url ? (
                 <img src={company.logo_url} alt={company.name}
                   className="w-auto object-contain"
-                  style={{ maxHeight: "64px", maxWidth: "220px" }} />
+                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
               ) : (
                 <BrandMark name={company.name} color={primary} vibe={vibe} />
               )}
@@ -220,12 +221,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 // Use dedicated white logo directly — no filter artifacts
                 <img src={company.logo_white_url} alt={company.name}
                   className="w-auto object-contain"
-                  style={{ maxHeight: "56px", maxWidth: "200px" }} />
+                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
               ) : company.logo_url ? (
                 // No white logo — invert the color logo
                 <img src={company.logo_url} alt={company.name}
                   className="w-auto object-contain brightness-0 invert"
-                  style={{ maxHeight: "56px", maxWidth: "200px" }} />
+                  style={{ maxHeight: "48px", maxWidth: "220px" }} />
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />
               )}
