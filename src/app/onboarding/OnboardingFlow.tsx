@@ -28,6 +28,22 @@ type Answers = {
 const orderedSteps: Step[] = ["welcome", "name", "description", "subIndustry", "location", "contact", "different", "services", "photos", "logo", "color", "vibe", "testimonials", "summary"]
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const stepLabels: Record<Step, string> = {
+  welcome: "Start",
+  name: "Business name",
+  description: "What you do",
+  subIndustry: "Business type",
+  location: "Location",
+  contact: "Contact",
+  different: "Difference",
+  services: "Services",
+  photos: "Photos",
+  logo: "Logo",
+  color: "Color",
+  vibe: "Vibe",
+  testimonials: "Reviews",
+  summary: "Review",
+}
 
 const initialAnswers: Answers = {
   name: "",
@@ -242,6 +258,10 @@ export default function OnboardingFlow() {
     update("subIndustry", option)
   }
 
+  function resetDetectedIndustry() {
+    setAnswers((current) => ({ ...current, industry: null, subIndustry: "" }))
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f7f7] text-[#111111]">
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-8">
@@ -249,15 +269,21 @@ export default function OnboardingFlow() {
           <div className="text-sm font-black uppercase tracking-[0.16em]" style={{ color: FOUND_BLACK }}>
             Found
           </div>
-          {stepIndex > 0 && (
-            <button
-              type="button"
-              onClick={back}
-              className="rounded-full border border-black/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-[#555]"
-            >
-              Back
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            <div className="text-right text-[10px] font-black uppercase tracking-[0.16em] text-[#777]">
+              <span className="block text-[#111]">{stepLabels[step]}</span>
+              <span>{stepIndex + 1} of {orderedSteps.length}</span>
+            </div>
+            {stepIndex > 0 && (
+              <button
+                type="button"
+                onClick={back}
+                className="rounded-full border border-black/15 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-[#111]"
+              >
+                Back
+              </button>
+            )}
+          </div>
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-12">
@@ -276,9 +302,16 @@ export default function OnboardingFlow() {
               </p>
             )}
             {step === "subIndustry" && manifest && (
-              <p className="mt-5 max-w-xl text-lg leading-8 text-[#555]">
-                {manifest.primaryJob}
-              </p>
+              <div className="mt-5 max-w-xl">
+                <p className="text-lg leading-8 text-[#555]">{manifest.primaryJob}</p>
+                <button
+                  type="button"
+                  onClick={resetDetectedIndustry}
+                  className="mt-4 text-xs font-black uppercase tracking-[0.16em] text-[#111] underline decoration-[#32D074] decoration-2 underline-offset-4"
+                >
+                  Wrong business type? Change it
+                </button>
+              </div>
             )}
           </div>
 
@@ -510,7 +543,7 @@ export default function OnboardingFlow() {
               <p><strong className="text-[#111]">Vibe:</strong> {answers.vibe}</p>
               {result?.url && (
                 <p className="pt-3 text-base text-[#666]">
-                  Site created: <a className="font-black underline" href={result.url.replace("https://", "http://")} target="_blank">{result.url}</a>
+                  Site created: <a className="font-black underline" href={result.url} target="_blank" rel="noreferrer">{result.url}</a>
                 </p>
               )}
               {result?.error && (
