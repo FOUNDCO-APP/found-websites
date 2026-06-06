@@ -12,6 +12,7 @@ const matrix: Record<string, Record<string, LayoutType>> = {
   pet_services:  { bold: "portrait", calm: "editorial", modern: "editorial", warm: "portrait" },
   cleaning:      { bold: "impact", calm: "editorial", modern: "cinematic", warm: "impact" },
   landscaping:   { bold: "impact", calm: "portrait", modern: "cinematic", warm: "portrait" },
+  real_estate:    { bold: "impact", calm: "editorial", modern: "cinematic", warm: "portrait" },
 }
 
 export function getLayout(industryCategory: string, vibe: string): LayoutType {

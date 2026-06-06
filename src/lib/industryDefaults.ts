@@ -199,6 +199,23 @@ const defaults: Record<string, IndustryDefaults> = {
       { step: "03", title: "Enjoy Your Space",    body: "Step outside to a yard you're genuinely proud of. That's the goal." },
     ],
   },
+  real_estate: {
+    footerTagline: "Local guidance. Real relationships.",
+    servicesIntro: "Whether you're buying, selling, investing, or exploring your next move, the right relationship matters.",
+    ctaHeadline: "Let's Talk About Your Next Move.",
+    galleryLabel: "Featured Properties",
+    gallerySubtitle: "Homes, opportunities, and neighborhoods worth knowing.",
+    values: [
+      { label: "Local Market Knowledge", body: (city) => `Focused on ${city || "the local market"} with guidance that feels personal, not generic.` },
+      { label: "Relationship First",     body: () => "Real estate is built on trust, follow-up, and staying connected long before the transaction." },
+      { label: "Backed by Experience",   body: () => "Clear advice, steady communication, and a simple path from first conversation to next step." },
+    ],
+    process: [
+      { step: "01", title: "Start the Conversation", body: "Tell us what you're thinking about: buying, selling, investing, or just watching the market." },
+      { step: "02", title: "Get Clear Guidance",     body: "We'll help you understand your options, your timing, and the opportunities that fit your goals." },
+      { step: "03", title: "Stay Connected",         body: "Good real estate relationships are built over time. We keep the conversation useful and simple." },
+    ],
+  },
 }
 
 const fallback: IndustryDefaults = {

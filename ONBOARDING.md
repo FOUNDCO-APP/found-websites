@@ -61,6 +61,21 @@ No logo. No progress bar. Just that message and one button.
 
 ---
 
+### Q2.5 — Sub-Industry
+**Question text:** "What kind of business is it?"
+**Input type:** Friendly choice cards based on the industry detected from Q2.
+**Examples:**
+- Food: Smoothie shop, Food truck, Restaurant, Bakery, Catering
+- Beauty: Barber, Nail salon, Hair salon, Esthetician, Beauty store
+- Events: Weddings, Balloon decor, Party rentals, Venue, Photography
+- Wellness: Solo provider, Multi-provider spa, Massage, Yoga studio, Therapy, Wellness coaching
+- Home services: Roofing, Painting, Remodeling, Handyman, TV install, Camera install
+**Why:** This lets Found choose better photos, sections, copy, and CTAs without making the owner understand the system.
+**Critical tone note:** Never show internal labels like `home_services`, `pet_services`, or `sub_industry`.
+**Backend use:** Saves `sub_industry` as a real company field. Drives industry manifests, preferred photo tags, and Claude prompt context.
+
+---
+
 ### Q3 — Where They Work
 **Question text:** "Where are you based, and where do you work?"
 **Input type:** Single line text
@@ -175,6 +190,29 @@ Auto-selected stock photo should be high quality and industry-specific — not g
 
 ---
 
+## INDUSTRY-SPECIFIC QUESTIONS
+
+These appear only when the selected industry needs them. The owner should never feel like they are answering every possible business question.
+
+### Pricing
+- Beauty: ask for starting prices.
+- Food: ask for menu prices if they have them.
+- Wellness: optional for solo providers; visible pricing for multi-provider spa/studio businesses.
+- Fitness: optional class/session/membership prices only.
+- Home services, landscaping, cleaning, automotive: do not ask for fixed pricing during onboarding.
+
+### Hours & Location
+- Required for visit-based businesses: food, retail, beauty, wellness, fitness, automotive, pet services.
+- Optional for service-area or appointment-first businesses: home services, landscaping, cleaning, events.
+
+### Testimonials
+Always optional. Never block launch.
+
+### Contacts
+Every new lead should create or update a lightweight contact record. The full contact dashboard comes later.
+
+---
+
 ### FINAL SCREEN — The Reveal
 
 *After all answers are submitted and the site is generated.*
@@ -200,6 +238,7 @@ If it does not produce that reaction, we have failed and we go back.
 |---|---|---|
 | Q1 (business name) | companies.name | BrandMark, site title, reveal message |
 | Q2 (what they do) | industry_category (auto-detected) | Layout matrix, stock photo selection, Claude content prompt |
+| Q2.5 (sub-industry) | companies.sub_industry | Section manifest, photo tag matching, Claude prompt context |
 | Q3 (location) | city, state, service_areas | Overline text, SEO schema, address |
 | Q4 (phone) | phone | CTA buttons, navbar, footer, lead email |
 | Q5 (email) | email | Lead notifications, account |
@@ -225,6 +264,14 @@ After onboarding is complete, Claude API receives: business name, what they do (
 
 **Tone instruction to Claude API:**
 "Write like the owner wrote this themselves on a great day — proud of their work, clear about what they do, talking directly to their customer. Not corporate. Not generic. Not template copy. If a roofer reads this, it should sound like a roofer who loves their job wrote it."
+
+---
+
+## IMPLEMENTATION NOTE
+
+The first content generation pass is wired in `src/lib/contentGeneration.ts`. Claude runs once during onboarding site creation when `ANTHROPIC_API_KEY` is configured, and the generated copy is saved into `website_config`. If Claude is unavailable, Found saves fallback copy from the same onboarding answers so launch is never blocked.
+
+The first reveal screen is wired in `src/app/onboarding/OnboardingFlow.tsx`. After site creation, Found moves into a Pure Studio / Signal Green reveal: "Found it.", "[Business Name] is live.", device-style website preview, and two actions: "See your site" and "Make changes."
 
 ---
 

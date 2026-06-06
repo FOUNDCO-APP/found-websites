@@ -27,6 +27,7 @@ const industryQueries: Record<string, string> = {
   pet_services:  "dog cat pet grooming animal cute happy owner",
   cleaning:      "clean home professional spotless organized service sparkle",
   landscaping:   "garden landscape lawn outdoor plants nature green yard",
+  real_estate:    "real estate agent professional home neighborhood property",
 }
 
 export interface PexelsPhoto {
@@ -102,7 +103,7 @@ export async function saveApprovedPhotos(
 export async function getApprovedCounts(): Promise<Record<string, number>> {
   const industries = [
     "home_services","food","wellness","events","retail",
-    "fitness","beauty","automotive","pet_services","cleaning","landscaping",
+    "fitness","beauty","automotive","pet_services","cleaning","landscaping","real_estate",
   ]
   const counts: Record<string, number> = {}
   await Promise.all(

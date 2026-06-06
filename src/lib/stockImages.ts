@@ -6,7 +6,7 @@ import type { Company } from "@/types/company"
 // Priority order:
 // 1. Client's own real photos (Phase 3 — heart flag → website_flag in media table)
 // 2. Client's curated stock_images (already saved — shuffle and return)
-// 3. Industry photo pool from industry_photo_pools table
+// 3. Industry photo pool from Supabase Storage, matched by sub_industry when available
 // 4. Pexels API with company photo_keywords or industry default
 // 5. Empty array → gradient fallback in templates
 
@@ -18,7 +18,7 @@ export async function getStockImages(company: Company): Promise<string[]> {
   }
 
   // Level 3: industry photo pool
-  const pool = await getPhotoPool(company.industry_category, company.vibe || "bold")
+  const pool = await getPhotoPool(company.industry_category, company.vibe || "bold", company.sub_industry ?? undefined)
   if (pool.length) {
     const shuffled = [...pool].sort(() => Math.random() - 0.5)
     // Cache to stock_images so future loads skip the DB query
@@ -37,7 +37,7 @@ export async function getStockImages(company: Company): Promise<string[]> {
       company.vibe || "bold",
       10,
       company.city,
-      company.photo_keywords
+      company.photo_keywords || company.sub_industry
     )
     if (fetched.length) {
       const supabase = await createClient()

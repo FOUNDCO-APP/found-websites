@@ -19,6 +19,14 @@
 Approved by: Steve Jobs
 Why: Simple, clear, searchable. Tells the customer exactly what it does for them.
 
+**[2026-06-06] — Found brand direction is Pure Studio with a Signal Green heartbeat.**
+Approved by: Shawn + Jony Ive + Steve Jobs
+Why: Found should be a quiet black/white product world so client websites can carry their own color. Signal Green is reserved for meaning: action, live state, reveal, success, and the "Found it" moment. Found should feel Apple-level, but not imitate Apple colors.
+
+**[2026-06-06] — Found logo direction starts as a refined uppercase FOUND wordmark.**
+Approved by: Shawn + Jony Ive + Steve Jobs
+Why: The word itself is strong. Avoid generic discovery cliches like map pins, magnifying glasses, sparkles, or an overdesigned icon. Explore the O only if it stays subtle enough to work without explanation.
+
 **[2026-05-28] — Found is for ALL small business types — not just contractors.**
 Approved by: Steve Jobs
 Why: Balloon artists, barbers, food carts, aestheticians, T-shirt sellers from home, restaurants, groomers — they all have the same problem. Found solves it for every single one of them. No vertical is excluded.
@@ -30,6 +38,18 @@ Why: This is the entire product in one sentence. Every feature must serve this p
 **[2026-05-31] — Onboarding feels like talking to a best friend — not filling out a form.**
 Approved by: Steve Jobs + Angela Ahrendts
 Why: Shawn's exact words. The owner should answer with enthusiasm and excitement, as if telling someone who is genuinely interested about their business. If it feels like paperwork, we have failed.
+
+**[2026-06-04] — Add a sub-industry question after "What do you do?" and save it as a real field.**
+Approved by: Shawn + Jony Ive + Steve Jobs + Angela Ahrendts + Craig Federighi + Priya Nair
+Why: This gives Found enough context to choose better sections, photos, copy, and CTAs without exposing complexity to the owner. The question stays human: "What kind of business is it?"
+
+**[2026-06-04] — REVISED: All 12 industry section manifests are approved, including Real Estate.**
+Approved by: Shawn + Jony Ive + Steve Jobs + Angela Ahrendts + Craig Federighi + Priya Nair + Marcus Webb
+Why: Each industry now has its own homepage story, required onboarding fields, sub-industry choices, CTA intent, photo tag direction, and natural upgrade paths. Found should choose the right structure silently; the owner should never pick sections. Real Estate is scoped as personal brand, lead capture, contact memory, and simple follow-up without IDX/MLS in the first version.
+
+**[2026-06-04] — Real Estate uses existing layouts first; no new visual template yet.**
+Approved by: Shawn + Jony Ive + Steve Jobs + Craig Federighi + Marcus Webb
+Why: Real Estate needs a distinct section manifest, not a fifth layout yet. Use Impact, Editorial, Portrait, or Cinematic first, then add a dedicated layout only if Coach John or future users prove it is needed.
 
 **[2026-05-28] — Two-flag photo system: ❤️ Heart = website/gallery. ⭐ Star = social media prep. Independent flags — a photo can be both, one, or neither.**
 Approved by: Steve Jobs
@@ -46,6 +66,18 @@ Why: These owners are exhausted. When they get a break, Found should be ready fo
 **[2026-05-28] — Lead system: customer fills out form on website → owner gets email notification → email has a one-tap button to reply directly to the client.**
 Approved by: Steve Jobs
 Why: Speed of response wins jobs. Owner should be able to reply to a lead in one tap from their phone.
+
+**[2026-06-04] — Found needs a lightweight contact database for leads, current clients, and previous clients.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts + Priya Nair
+Why: Every name, phone, email, lead, booking, estimate, invoice, and repeat customer should have a home. This is not a complicated CRM. It is the simple customer memory layer owners need to follow up, rebook, and stay connected.
+
+**[2026-06-04] — Relationship automation is an upgrade path, not a CRM clone.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair + Phil Schiller
+Why: Real estate agents and many small businesses need simple automated email/text follow-up to stay in front of leads and clients. Found should make this feel as easy as using an iPhone, with consent, opt-out, and compliance handled by the system. It should not become GoHighLevel, Salesforce, or a complex automation builder.
+
+**[2026-06-04] — Contact database foundation belongs in Phase 2; full contact dashboard belongs in Phase 3.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: Every lead should create or update a contact as soon as onboarding/leads are live, but a full CRM-style dashboard would delay the core product. Build the memory layer now; expand the management surface later.
 
 **[2026-05-29] — Barrio Builders (Michael, Tucson AZ) is Instance #1. Every feature must work for Barrio Builders first before it ships.**
 Approved by: Steve Jobs
@@ -156,9 +188,9 @@ Run `scripts/seed-barrio.sql` in Supabase SQL Editor to insert.
 
 ---
 
-## INDUSTRY SECTION MANIFESTS (DECISION PENDING — June 1, 2026)
+## INDUSTRY SECTION MANIFESTS (APPROVED — revised June 4, 2026)
 
-**Concept approved by Steve + Jony. Design session not yet held.**
+**Concept approved by Steve + Jony on June 1. Full 12-industry manifest approved by Shawn + team on June 4.**
 
 The insight: every Found client gets the same section order (Hero → Services → About → Testimonials → CTA). That's one story for every business type. It's not enough.
 
@@ -169,14 +201,12 @@ Different industries need different sections, different ordering, and different 
 - A contractor needs a trust strip (licensed, insured, local)
 - A spa needs a philosophy section, not just service cards
 
-**What needs to happen:**
-1. Shawn walks the team through each of the 11 industry categories — what do their customers need to see that we're not showing?
-2. Steve + Jony define the section manifest per industry (which sections, what order)
-3. Craig identifies what new Supabase fields are needed (hours, pricing, team, menu items, etc.)
-4. Angela identifies which onboarding questions need to be added per industry
-5. Marcus + Craig build the section library and wire manifests to the layout system
-
-**This is the next major architectural decision. Nothing in the onboarding flow should be built until the section manifests are designed.**
+**Approved implementation direction:**
+1. Found chooses the section manifest silently; the owner never picks sections.
+2. Q2.5 asks the human sub-industry question: "What kind of business is it?"
+3. `companies.sub_industry` stores the answer.
+4. Craig and Marcus wire the approved manifest into onboarding and site generation.
+5. Real Estate is the 12th industry, scoped to personal brand, lead capture, contact memory, and simple follow-up without IDX/MLS first.
 
 ---
 
@@ -186,9 +216,37 @@ Different industries need different sections, different ordering, and different 
 Approved by: Steve Jobs
 Why: Contractors and service businesses live on quotes. This is their #1 admin task after getting a lead.
 
+**[2026-06-04] — Estimates & Quotes upgrade includes deposits, conversion to invoice, final payment, and receipt.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: Service businesses do not just send estimates. They need the full flow: quote, client approval, deposit, work, final invoice, final payment, receipt. Stripe should handle payments; Found should make the workflow simple.
+
 **[2026-05-28] — Upgrade: Shopping Cart (simplified, not Shopify)**
 Approved by: Steve Jobs
 Why: T-shirt sellers, product makers, food businesses need to sell. Keep it elegant and simple.
+
+**[2026-06-04] — Online Menu is an upgrade path for restaurants and food businesses.**
+Approved by: Shawn + Jony Ive + Phil Schiller
+Why: Food businesses may need more than a static menu preview. The upgrade should support a clean online menu experience without turning Found into a complicated restaurant POS.
+
+**[2026-06-04] — Real Estate is approved as the 12th Found industry.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Phil Schiller + Angela Ahrendts + Craig Federighi + Priya Nair + Marcus Webb
+Why: Real estate agents and investors are network-heavy, referral-driven, and often stuck with overcomplicated systems like GoHighLevel. Found should give them a personal brand website, lead capture, contact memory, and simple follow-up automation without becoming an MLS/IDX or transaction-management platform. CoachJohnRealEstate.com is the reference customer.
+
+**[2026-06-04] — Pricing questions are industry-specific, not global.**
+Approved by: Shawn + Jony Ive + Steve Jobs + Angela Ahrendts
+Why: Beauty and food often need visible pricing. Wellness and fitness may need optional starting prices. Home services, landscaping, cleaning, and automotive should not be forced into fixed prices because estimates depend on the job.
+
+**[2026-06-04] — Wellness supports a multi-provider spa/studio branch.**
+Approved by: Shawn + Jony Ive + Steve Jobs + Angela Ahrendts + Craig Federighi + Priya Nair
+Why: Spa Mambo proves that some wellness businesses need visible pricing, provider/artist profiles, and booking with a specific person. Solo wellness providers should not be forced into that complexity.
+
+**[2026-06-04] — Hours and location are required only for visit-based businesses.**
+Approved by: Shawn + Jony Ive + Angela Ahrendts
+Why: Food, retail, beauty, wellness, fitness, automotive, and pet services usually need hours/location. Home services, landscaping, cleaning, and events may be service-area or appointment-based, so forcing hours/location would feel like paperwork.
+
+**[2026-06-04] — Testimonials stay optional for every industry.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts
+Why: A new business should never be blocked from launching because it lacks testimonials. Social proof helps, but it is not required for the magic moment.
 
 **[2026-05-28] — Upgrade: Shared Gallery Link**
 Approved by: Steve Jobs

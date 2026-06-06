@@ -13,6 +13,7 @@ const industryQueries: Record<string, string> = {
   pet_services:  "dog cat pet grooming animal cute happy",
   cleaning:      "clean home professional spotless organized service",
   landscaping:   "garden landscape lawn outdoor plants nature green",
+  real_estate:    "real estate agent professional home neighborhood property",
 }
 
 const vibeModifiers: Record<string, string> = {

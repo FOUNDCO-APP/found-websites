@@ -120,7 +120,9 @@ Upgrades are add-ons the owner can purchase at any time.
 | Upgrade | What It Does |
 |---|---|
 | **Shopping Cart** | Stripe-powered product listings for owners who sell physical goods or services |
-| **Estimates & Quotes** | Create, send, and track estimates — owner builds a quote, client approves it |
+| **Online Menu** | Restaurant/food menu upgrade — clean item list, categories, photos, prices, and optional ordering path |
+| **Estimates & Quotes** | Create, send, and track estimates — client approves, pays deposit, final invoice/payment/receipt follows |
+| **Relationship Automation** | Simple email/text follow-up for leads and clients — consent, opt-out, and compliance handled by Found |
 | **Shared Gallery Link** | Shareable link the owner sends to a client showing their project in progress |
 | **Custom Domain** | Connect their own domain (e.g., barriobuilders.com) instead of [slug].foundco.app |
 | **Additional Pages** | Blog, FAQ, Team page, Service area pages |
@@ -156,6 +158,30 @@ Workers document. Owners decide. Simple.
 
 ---
 
+## LIGHTWEIGHT CONTACT DATABASE
+
+Every person who touches the business should live in one simple contact layer:
+- New leads from website forms
+- Current clients/customers
+- Previous clients/customers
+- Guests, appointment names, or customer records imported from admin workflows like Spa Mambo
+
+This is **not** a heavy CRM. No pipelines, no bloated sales screens, no enterprise software.
+
+The owner needs simple memory:
+- Who contacted me?
+- What did they ask for?
+- Have I worked with them before?
+- Can I call, email, or message them again?
+- Did they receive an estimate, invoice, receipt, booking, or payment request?
+
+Future upgrades like estimates, invoices, deposits, online ordering, booking, and email/SMS follow-up should all connect back to the same contact record.
+
+**Relationship automation upgrade:**
+Found can help owners stay in front of leads and previous clients with simple email/text follow-up. This must feel Apple-simple: no workflow builder, no confusing pipelines, no GoHighLevel-style complexity. The owner should choose a simple follow-up path, and Found handles the timing, consent, opt-out, and delivery details.
+
+---
+
 ## PLATFORM STRATEGY
 
 | Phase | What | Status |
@@ -181,6 +207,7 @@ Workers document. Owners decide. Simple.
 - Not a drag-and-drop website builder
 - Not an auto-poster to social media
 - Not a project management tool (no timelines, budgets, invoices — yet)
+- Not a GoHighLevel clone or complicated CRM automation builder
 - Not CompanyCam (too expensive, too complex, construction-only, no website)
 - Not Squarespace (no connection to the job site, too much work)
 - Not for enterprise — built for the one-person shop and small crews

@@ -14,6 +14,7 @@ const INDUSTRIES = [
   { key: "pet_services",  label: "Pet Services" },
   { key: "cleaning",      label: "Cleaning" },
   { key: "landscaping",   label: "Landscaping" },
+  { key: "real_estate",   label: "Real Estate" },
 ]
 
 const DONE_THRESHOLD = 8
@@ -127,8 +128,8 @@ export default function PhotoCurator() {
         </p>
         <div className="flex items-end justify-between gap-4">
           <h1 className="text-2xl font-black text-white">Photo Curation</h1>
-          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === 11 ? "#2E7D32" : "#555" }}>
-            {doneCount === 11 ? "✓ All done!" : `${doneCount} / 11 complete`}
+          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "#2E7D32" : "#555" }}>
+            {doneCount === INDUSTRIES.length ? "✓ All done!" : `${doneCount} / ${INDUSTRIES.length} complete`}
           </p>
         </div>
 
@@ -136,7 +137,7 @@ export default function PhotoCurator() {
         <div className="mt-3 h-1 rounded-full w-full" style={{ backgroundColor: "#222" }}>
           <div
             className="h-1 rounded-full transition-all duration-500"
-            style={{ backgroundColor: "#2E7D32", width: `${(doneCount / 11) * 100}%` }}
+            style={{ backgroundColor: "#2E7D32", width: `${(doneCount / INDUSTRIES.length) * 100}%` }}
           />
         </div>
       </div>

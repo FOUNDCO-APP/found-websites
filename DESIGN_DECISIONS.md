@@ -13,6 +13,36 @@ If it would embarrass Apple, it does not ship.
 
 ---
 
+## FOUND BRAND IDENTITY (APPROVED — June 6, 2026)
+
+Found is **Pure Studio with a Signal Green heartbeat**.
+
+The Found product experience should feel like a quiet black-and-white product stage. The generated client website is the product being revealed, so Found must not compete with client colors. Signal Green is used only when something becomes active, live, found, or ready.
+
+**Core palette:**
+
+| Role | Hex | Usage |
+|---|---|---|
+| Found Black | #080A09 | Primary product background, cinematic reveal surface |
+| Found White | #FFFFFF | Primary type and clean surfaces |
+| Soft Surface | #F5F7F4 | Light studio surfaces and device interiors |
+| Quiet Gray | #8A918B | Muted supporting text and secondary UI |
+| Signal Green | #32D074 | CTA, live indicator, success, reveal, "Found it" |
+| Deep Green | #0E3B24 | Dark green depth, never as broad decoration |
+
+**Rules:**
+- Do not make Found a green brand. Found is black, white, and quiet.
+- Signal Green means action or reveal. It is not a background theme.
+- Client site colors belong to the client. Found UI should not fight them.
+- Do not imitate Apple's palette. Imitate Apple's restraint.
+
+**Logo direction:**
+- Primary mark: refined uppercase `FOUND` wordmark.
+- Avoid map pins, magnifying glasses, sparkles, and generic SaaS icons.
+- The `O` may be explored as a subtle discovery/reveal detail, but the plain wordmark remains the baseline.
+
+---
+
 ## VIBE SYSTEM (APPROVED — May 29, 2026)
 
 Four vibes. Each is a complete, self-contained design language.

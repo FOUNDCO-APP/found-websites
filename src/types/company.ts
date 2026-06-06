@@ -34,6 +34,7 @@ export type Company = {
   industry_category: string
   primary_intent: string
   secondary_intent: string | null
+  sub_industry: string | null
   vibe: string
   phone: string | null
   email: string | null
@@ -48,7 +49,7 @@ export type Company = {
   website_config: WebsiteConfig | null
 }
 
-export type Intent = 'call' | 'visit' | 'book' | 'quote' | 'shop'
+export type Intent = 'call' | 'visit' | 'book' | 'quote' | 'shop' | 'contact'
 
 export const intentLabel: Record<string, string> = {
   call: 'Call Us',
@@ -56,6 +57,7 @@ export const intentLabel: Record<string, string> = {
   book: 'Book Now',
   quote: 'Get a Free Estimate',
   shop: 'Shop Now',
+  contact: 'Contact Us',
 }
 
 export const intentHref: Record<string, string> = {
@@ -64,4 +66,5 @@ export const intentHref: Record<string, string> = {
   book: '/contact',
   quote: '/estimate',
   shop: '/shop',
+  contact: '/contact',
 }

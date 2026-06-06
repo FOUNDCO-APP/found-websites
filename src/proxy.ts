@@ -6,6 +6,7 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'foundco.app'
 export function proxy(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
   const pathname = request.nextUrl.pathname
+  const hostWithoutPort = hostname.split(':')[0]
 
   // Pass through static files and Next.js internals
   if (
@@ -17,7 +18,12 @@ export function proxy(request: NextRequest) {
   }
 
   // Root domain (foundco.app) — coming soon / admin landing
-  if (hostname === ROOT_DOMAIN || hostname === `www.${ROOT_DOMAIN}`) {
+  if (
+    hostname === ROOT_DOMAIN ||
+    hostname === `www.${ROOT_DOMAIN}` ||
+    hostWithoutPort === 'localhost' ||
+    hostWithoutPort === '127.0.0.1'
+  ) {
     return NextResponse.next()
   }
 

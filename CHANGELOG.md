@@ -4,6 +4,58 @@
 
 ---
 
+## Session: June 6, 2026 - Found Brand Direction + Reveal First Pass
+**AI:** Codex (GPT-5) + Apple Team
+**Worked on:** Locked Found's brand direction and added the first Pure Studio / Signal Green onboarding reveal
+
+### Completed This Session
+
+- Approved Found brand direction: **Pure Studio with a Signal Green heartbeat**
+  - Found product world stays black, white, and quiet
+  - Signal Green `#32D074` is reserved for action, live state, success, and reveal
+  - Client site colors remain separate so Found does not compete with the websites it creates
+- Approved logo direction: refined uppercase `FOUND` wordmark
+  - Avoid map pins, magnifying glasses, sparkles, and generic SaaS marks
+  - The `O` can be explored only if it stays subtle
+- Documented decisions in `DECISIONS.md`, `DESIGN_DECISIONS.md`, `PROJECT.md`, and `ONBOARDING.md`
+- Added first reveal screen to `/onboarding`
+  - Shows "Found it.", live status, generated business name, generated URL, and device-style preview
+  - Primary action: "See your site"
+  - Secondary action: "Make changes"
+
+### What To Work On Next (In Order)
+
+1. **Real file uploads** - logo upload, hero photo/video upload, and gallery photo upload during onboarding
+2. **Contact foundation** - leads create/update lightweight contacts; full contact dashboard stays Phase 3
+3. **Curate Real Estate photo pool** - replace Pexels fallback with approved images
+4. **Found homepage direction** - rebuild the root Found experience around Pure Studio / Signal Green
+
+---
+
+## Session: June 5, 2026 - Onboarding Claude Content Generation Wired
+**AI:** Codex (GPT-5) + Apple Team
+**Worked on:** Connected onboarding save flow to Claude API content generation with deterministic fallback copy
+
+### Completed This Session
+
+- Added `src/lib/contentGeneration.ts`
+  - Calls Anthropic Messages API once during onboarding site creation when `ANTHROPIC_API_KEY` is set
+  - Defaults to `claude-haiku-4-5`, with `ANTHROPIC_MODEL` override available
+  - Sends Found's industry manifest, sub-industry, vibe, services, location, and differentiator as prompt context
+  - Returns/saves structured homepage copy: hero title, hero subtitle, about text, tagline, CTA headline, and service descriptions
+  - Sanitizes the response and falls back to Found's built-in deterministic copy if the key is missing, the API fails, or JSON is invalid
+- Updated `/onboarding` save action to use generated copy before inserting `website_config`
+- Verified with `npm.cmd run build` after allowing the build to fetch Google Fonts
+
+### What To Work On Next (In Order)
+
+1. **Real file uploads** - logo upload, hero photo/video upload, and gallery photo upload during onboarding
+2. **Site reveal moment** - Angela/Jony first-look screen after generated site creation
+3. **Contact foundation** - leads create/update lightweight contacts; full contact dashboard stays Phase 3
+4. **Curate Real Estate photo pool** - replace Pexels fallback with approved images
+
+---
+
 ## Session: June 5-6, 2026 — Photo Pools Complete — All 11 Industries Tagged, Described, Approved
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Full photo pool curation — all 11 industries reviewed, tagged, described, and approved by Shawn
@@ -43,10 +95,10 @@
 
 ### 🔜 What To Work On Next (In Order)
 
-1. **Rotate security keys** — GitHub PAT + Supabase service role (urgent since June 3)
-2. **Industry section manifest session** — Shawn walks team through all 11 industry types
-3. **Build onboarding flow** — Angela's spec in ONBOARDING.md, photo pools now ready
-4. **Add sub-industry question to onboarding** (Angela's Q2.5) — drives photo tag matching
+1. **Industry section manifest session** — Shawn walks team through all 11 industry types
+2. **Build onboarding flow** — Angela's spec in ONBOARDING.md, photo pools now ready
+3. **Add sub-industry question to onboarding** (Angela's Q2.5) — drives photo tag matching
+4. **Build the site reveal moment** — choreographed first-look experience
 
 ---
 
@@ -97,11 +149,11 @@
 - Tap to select (green checkmark overlay), Approve button saves directly to `industry_photo_pools` table
 - Deduplication — won't save the same photo twice
 - Auth via `ADMIN_KEY` cookie (30-day session)
-- `ADMIN_KEY=Jayd3n1128!$7` set in .env.local
+- `ADMIN_KEY` set in .env.local
 
 **⚠️ ACTION REQUIRED — Vercel env var:**
 - Vercel CLI couldn't authenticate headlessly
-- Shawn must manually add `ADMIN_KEY=Jayd3n1128!$7` in Vercel dashboard → Settings → Environment Variables → then Redeploy
+- Shawn must manually add `ADMIN_KEY` in Vercel dashboard → Settings → Environment Variables → then Redeploy
 - Without this, the admin page login won't work on production
 
 **Logo fixes:**

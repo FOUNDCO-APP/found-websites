@@ -15,6 +15,7 @@ Web design, branding, SEO, hosting, social media, print brokerage.
 - **Blue Luna Events** (bluelunaevents.com) — Events, owned by Monique (Instance #2)
 - **Got Smoothie** (gotsmoothie.foundco.app) — Food/smoothie bar (Instance #3)
 - **RC Bicycles** (rcbicycles.foundco.app) — Retail bike shop (Instance #4)
+- **Coach John Real Estate** (CoachJohnRealEstate.com) — Real estate personal brand / lead follow-up reference customer (future instance)
 - **Spa Mambo** — Spa/wellness client (future instance)
 - **Dog & Cat Groomer** (dogandcatgroomer.com) — Eimy's grooming business in Glendale, AZ (future instance)
 
@@ -57,7 +58,7 @@ It is a mobile-first SaaS platform that gives any small business owner three thi
 | File Storage | Supabase Storage | Buckets: media (private), logos (public), assets (public), config (public) |
 | Hosting | Vercel | Auto-deploy on push to main |
 | App Store (Phase 3) | Capacitor.js | Wraps PWA for iOS + Android |
-| AI Content | Claude API | Pre-fills website content from onboarding answers |
+| AI Content | Claude API | Generates website content once during onboarding, with Found template fallback |
 | Email | Resend | Lead notifications to business owner |
 | Payments (Phase 3) | Stripe | Subscription billing + upgrade features |
 
@@ -66,19 +67,22 @@ It is a mobile-first SaaS platform that gives any small business owner three thi
 ## FOUND CO. BRAND SYSTEM
 
 ```
-App name:       Found
-Company:        Found Co.
-Domain:         foundco.app
-Tagline:        Get Found.
+App name:        Found
+Company:         Found Co.
+Domain:          foundco.app
+Tagline:         Get Found.
 
-Primary Green:  #2E7D32  — main brand color
-Dark Green:     #1B5E20  — hover / accent states
-Near Black:     #111111  — dark sections, hero backgrounds
-White:          #FFFFFF  — backgrounds, reversed text
+Brand direction: Pure Studio with a Signal Green heartbeat
+Found Black:     #080A09  — product/reveal background
+Signal Green:    #32D074  — action, live state, success, reveal only
+Soft Surface:    #F5F7F4  — light studio surfaces
+Quiet Gray:      #8A918B  — secondary UI and muted copy
+White:           #FFFFFF  — primary type and clean surfaces
 ```
 
 **Design philosophy:** Apple-influenced. Clean, minimal, mobile-first.
 **Button style:** Pill-shaped (border-radius: 9999px)
+**Found logo direction:** Refined uppercase `FOUND` wordmark.
 **Typography logo (BrandMark):** Business name as elegant type — for owners without a logo
 
 ---
@@ -145,7 +149,7 @@ Layout files: `src/components/layouts/`
 4. Pexels API fallback
 5. Gradient fallback
 
-**All 11 industries curated:** home_services, food, wellness, events, retail, fitness, beauty, automotive, pet_services, cleaning, landscaping — team-written descriptions + keywords on every photo.
+**Photo pools curated:** 11 original industries curated — home_services, food, wellness, events, retail, fitness, beauty, automotive, pet_services, cleaning, landscaping. Real Estate was added afterward as the 12th industry and can use Pexels fallback until its curated pool is approved.
 
 **Admin curation page:** `foundco.app/admin/photos` (key: ask Shawn)
 
@@ -162,6 +166,9 @@ Layout files: `src/components/layouts/`
 - `media` — photos/videos with two flags: `website_flag` ❤️ and `social_flag` ⭐
 - `website_config` — per-company website content (hero, services, testimonials, social links, custom_domain, stock_images)
 - `leads` — estimate/contact form submissions from client websites
+- `contacts` — planned lightweight customer memory layer for leads, current clients, and previous clients
+- `contact_consents` / `message_sequences` / `messages` — planned relationship automation upgrade tables for compliant email/text follow-up
+- `estimates` / `invoices` / `payments` — planned upgrade tables for quotes, deposits, final payments, and receipts
 - `subscriptions` — billing + plan status per company (Phase 3)
 
 **Storage buckets:**
@@ -189,22 +196,28 @@ Layout files: `src/components/layouts/`
 
 ## CURRENT PHASE — Phase 2: Onboarding Flow
 
-**What's blocking onboarding:**
-- Industry section manifests — Shawn walks team through all 11 types (NOT YET DONE)
-- Once manifests are decided, onboarding build begins
+**What's still missing for onboarding:**
+- Real file uploads for logo, hero photo/video, and gallery photos
+- Site reveal moment after site creation
+- Shawn approval of the full flow end-to-end
 
 **What's ready for onboarding:**
 - All 4 layouts ✅
-- All photo pools curated with descriptions + keywords ✅
+- 11 original photo pools curated with descriptions + keywords ✅
+- All 12 industry manifests approved ✅
+- `src/lib/industryManifests.ts` config foundation ✅
 - Full onboarding spec in `ONBOARDING.md` ✅
-- Claude API content generation planned ✅
+- Claude API content generation from onboarding answers with fallback copy ✅
+
+**Current onboarding implementation note:** `/onboarding` now saves `companies` and `website_config`, consumes the approved industry manifests and Q2.5 sub-industry, and generates homepage/service copy through Claude API when `ANTHROPIC_API_KEY` is set. If Claude is unavailable, Found saves deterministic fallback copy so the owner can still launch.
 
 ---
 
 ## PENDING ADMIN TASKS (SHAWN TO DO)
 
-- [ ] Rotate GitHub PAT (urgent — exposed June 3)
-- [ ] Rotate Supabase service role key (urgent — exposed June 3)
+- [x] Rotate GitHub PAT (completed June 4, 2026)
+- [x] Rotate Supabase service role key (completed June 4, 2026)
+- [x] Rotate ADMIN_KEY (completed June 4, 2026)
 - [ ] Form Found Co., LLC in Arizona — azcc.gov (~$50)
 - [ ] Run USPTO trademark search for "Found" — USPTO.gov → TESS
 - [ ] Create GitHub Organization `found-co` and transfer found-websites repo
