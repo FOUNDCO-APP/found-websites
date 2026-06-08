@@ -27,14 +27,22 @@ export default function Home() {
     <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
       <section className="relative min-h-screen overflow-hidden">
         <Image
-          src="/images/found-signal-green-approved.png"
+          src="/images/found-hero-mobile-v3.png"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center"
+          className="object-cover object-center md:hidden"
         />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_48%,rgba(8,10,9,0)_0%,rgba(8,10,9,0.22)_38%,rgba(8,10,9,0.58)_100%)]" />
+        <Image
+          src="/images/found-hero-desktop-v3.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="hidden object-cover object-center md:block"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,9,0.42)_0%,rgba(8,10,9,0.12)_38%,rgba(8,10,9,0.78)_100%)] md:bg-[radial-gradient(circle_at_22%_48%,rgba(8,10,9,0.05)_0%,rgba(8,10,9,0.2)_36%,rgba(8,10,9,0.56)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#080A09] to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
@@ -51,12 +59,10 @@ export default function Home() {
             </Link>
           </header>
 
-          <div className="flex flex-1 items-end pb-10 md:items-center md:pb-0">
+          <div className="flex flex-1 items-start pt-16 md:items-center md:pt-0">
             <div className="max-w-[590px]">
-              <div className="mb-9 hidden items-center gap-6 md:flex">
+              <div className="mb-9 hidden md:block">
                 <FoundWordmark className="h-14 w-[330px] text-white" />
-                <span className="h-2 w-2 rounded-full bg-[#32D074] shadow-[0_0_24px_rgba(50,208,116,1)]" />
-                <span className="h-px w-44 bg-gradient-to-r from-[#32D074] to-transparent" />
               </div>
 
               <p className="mb-5 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
@@ -65,7 +71,6 @@ export default function Home() {
               <h1 className="text-5xl font-light leading-[0.98] tracking-normal text-white md:text-7xl">
                 Your business beautifully online.
               </h1>
-              <div className="mt-7 h-px w-28 bg-gradient-to-r from-[#32D074] to-transparent" />
               <p className="mt-7 max-w-md text-base font-medium leading-8 text-white/70 md:text-lg">
                 Answer a few questions. Found turns your work, voice, and location into a website that feels made for you.
               </p>
