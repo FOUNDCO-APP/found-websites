@@ -123,32 +123,53 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.7rem;
 }
 
-/* Found homepage hero responsive art direction */
-@media (max-width: 767px) and (min-height: 501px) {
-  .found-hero-header {
-    min-height: 2.75rem;
-    position: relative;
+/* Found homepage hero responsive system */
+.found-home-hero,
+.found-hero-shell {
+  min-height: 100svh !important;
+  height: 100svh;
+}
+
+.found-hero-shell {
+  box-sizing: border-box;
+  overflow: hidden;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.found-start-link,
+.found-hero-actions a {
+  white-space: nowrap;
+}
+
+/* Desktop */
+@media (min-width: 1181px) {
+  .found-hero-shell {
+    padding: clamp(2rem, 4.5vh, 3.8rem) clamp(2.5rem, 3.2vw, 4rem) clamp(1.5rem, 3vh, 2.5rem) !important;
   }
 
-  .found-nav-wordmark {
-    width: 10rem !important;
+  .found-hero-content {
+    align-items: flex-start !important;
+    padding-top: clamp(2.25rem, 5.2vh, 4.8rem) !important;
   }
 
-  .found-start-link {
-    min-height: 2.75rem;
-    padding: 0 1.15rem !important;
-    font-size: 0.68rem !important;
-    position: absolute;
-    right: 3rem;
-    top: 0;
+  .found-hero-copy {
+    max-width: clamp(36rem, 32.5vw, 39rem) !important;
+  }
+
+  .found-hero-title {
+    max-width: clamp(36rem, 32.5vw, 39rem) !important;
+    font-size: clamp(4.45rem, 4.65vw, 5.25rem) !important;
   }
 
   .found-hero-actions {
-    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    position: static !important;
+    margin-top: clamp(2rem, 4vh, 3rem) !important;
   }
 }
 
-@media (orientation: landscape) and (max-height: 500px) {
+/* Tablet and iPad */
+@media (min-width: 768px) and (max-width: 1180px) {
   .found-hero-mobile-img {
     display: none !important;
   }
@@ -159,72 +180,214 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .found-hero-shell {
-    min-height: 100svh;
-    padding: 1.35rem 8vw 1.35rem !important;
+    padding: clamp(1.6rem, 3vh, 2.5rem) clamp(2rem, 4vw, 3.5rem) clamp(1.3rem, 2vh, 2rem) !important;
   }
 
-  .found-nav-wordmark {
+  .found-hero-content {
+    align-items: flex-start !important;
+    padding-top: clamp(2.1rem, 5vh, 3.6rem) !important;
+  }
+
+  .found-desktop-wordmark svg {
+    width: clamp(14rem, 26vw, 18rem) !important;
+    height: auto !important;
+  }
+
+  .found-hero-copy {
+    max-width: min(32vw, 21rem) !important;
+  }
+
+  .found-hero-title {
+    max-width: min(32vw, 21rem) !important;
+    font-size: clamp(2.65rem, 4.4vw, 3.6rem) !important;
+  }
+
+  .found-hero-desktop-copy {
+    max-width: min(31vw, 20rem) !important;
+    margin-top: 1.4rem !important;
+    font-size: clamp(0.95rem, 1.6vw, 1.15rem) !important;
+    line-height: 1.6 !important;
+  }
+
+  .found-hero-actions {
+    position: static !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    margin-top: clamp(1.5rem, 3vh, 2.25rem) !important;
+  }
+
+  .found-hero-actions a {
+    min-height: 3.3rem !important;
+    padding-inline: clamp(1.4rem, 2.4vw, 2rem) !important;
+    font-size: clamp(0.72rem, 1.1vw, 0.86rem) !important;
+  }
+
+  .found-hero-categories {
+    display: none !important;
+  }
+}
+
+/* Phone portrait */
+@media (max-width: 767px) and (orientation: portrait) {
+  .found-hero-mobile-img {
     display: block !important;
-    width: 10rem !important;
-    height: 1.8rem !important;
   }
 
-  .found-header-spacer,
+  .found-hero-desktop-img,
   .found-desktop-wordmark,
   .found-hero-desktop-copy,
   .found-hero-categories {
     display: none !important;
   }
 
+  .found-hero-shell {
+    padding: 1.5rem 1.5rem calc(1.4rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .found-hero-header {
+    min-height: 2.75rem;
+    position: relative;
+  }
+
+  .found-nav-wordmark {
+    display: block !important;
+    width: 10rem !important;
+    height: 1.9rem !important;
+  }
+
   .found-start-link {
-    min-height: 3rem;
-    padding: 0 2rem !important;
+    position: absolute;
+    top: 0;
+    right: 3rem;
+    min-height: 2.75rem;
+    padding: 0 1.15rem !important;
+    font-size: 0.68rem !important;
   }
 
   .found-hero-content {
     align-items: flex-start !important;
-    padding-top: clamp(0.9rem, 3.3vh, 1.4rem) !important;
+    padding-top: clamp(2.4rem, 5.5vh, 3.8rem) !important;
   }
 
   .found-hero-copy {
-    max-width: min(39vw, 29rem) !important;
+    max-width: min(84vw, 22rem) !important;
   }
 
   .found-hero-title {
-    max-width: min(39vw, 29rem) !important;
-    font-size: clamp(2.1rem, 5vw, 3.15rem) !important;
-    line-height: 0.98 !important;
+    max-width: min(84vw, 22rem) !important;
+    font-size: clamp(2.55rem, 10vw, 3.15rem) !important;
   }
 
   .found-hero-mobile-copy {
     display: block !important;
-    max-width: min(32vw, 22rem) !important;
-    margin-top: 1rem !important;
-    font-size: clamp(0.78rem, 1.7vw, 0.98rem) !important;
+    max-width: min(72vw, 19rem) !important;
+    margin-top: 1.1rem !important;
+    font-size: 0.86rem !important;
     line-height: 1.55 !important;
   }
 
   .found-hero-actions {
     position: absolute !important;
-    left: 8vw !important;
-    right: auto !important;
-    bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    inset-inline: 1.5rem !important;
+    bottom: calc(1.35rem + env(safe-area-inset-bottom)) !important;
     display: flex !important;
-    flex-direction: row !important;
-    gap: 1rem !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
     margin-top: 0 !important;
-    max-width: 34rem !important;
   }
 
   .found-hero-actions a {
-    min-height: 3.55rem !important;
-    min-width: 10.5rem;
+    min-height: 3.35rem !important;
+    width: 100%;
+    padding: 0 1.35rem !important;
+    font-size: 0.76rem !important;
+  }
+}
+
+/* Phone landscape */
+@media (max-width: 1180px) and (max-height: 700px) and (orientation: landscape) {
+  .found-hero-mobile-img {
+    display: none !important;
+  }
+
+  .found-hero-desktop-img {
+    display: block !important;
+    object-position: center center;
+  }
+
+  .found-desktop-wordmark,
+  .found-hero-desktop-copy,
+  .found-hero-categories {
+    display: none !important;
+  }
+
+  .found-hero-shell {
+    padding: 1.1rem 5vw calc(0.9rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .found-hero-header {
+    min-height: 2.8rem;
+  }
+
+  .found-nav-wordmark {
+    display: block !important;
+    width: clamp(8.75rem, 15vw, 11rem) !important;
+    height: 1.75rem !important;
+  }
+
+  .found-header-spacer {
+    display: none !important;
+  }
+
+  .found-start-link {
+    min-height: 2.8rem !important;
     padding: 0 1.65rem !important;
-    font-size: 0.78rem !important;
-    line-height: 1.2 !important;
+    font-size: clamp(0.68rem, 1.35vw, 0.82rem) !important;
+  }
+
+  .found-hero-content {
+    align-items: flex-start !important;
+    padding-top: clamp(0.95rem, 3vh, 1.7rem) !important;
+  }
+
+  .found-hero-copy {
+    max-width: min(36vw, 26rem) !important;
+  }
+
+  .found-hero-title {
+    max-width: min(36vw, 26rem) !important;
+    font-size: clamp(2.05rem, 5vw, 3.1rem) !important;
+  }
+
+  .found-hero-mobile-copy {
+    display: block !important;
+    max-width: min(31vw, 21rem) !important;
+    margin-top: 0.9rem !important;
+    font-size: clamp(0.78rem, 1.6vw, 0.95rem) !important;
+    line-height: 1.5 !important;
+  }
+
+  .found-hero-actions {
+    position: absolute !important;
+    left: 5vw !important;
+    right: auto !important;
+    bottom: calc(0.95rem + env(safe-area-inset-bottom)) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: clamp(0.8rem, 2vw, 1.15rem) !important;
+    margin-top: 0 !important;
+    max-width: min(50vw, 34rem) !important;
+  }
+
+  .found-hero-actions a {
+    min-height: clamp(3.15rem, 10vh, 4rem) !important;
+    min-width: clamp(9.5rem, 18vw, 12.2rem);
+    padding: 0 clamp(1.2rem, 2.4vw, 1.8rem) !important;
+    font-size: clamp(0.7rem, 1.3vw, 0.84rem) !important;
+    line-height: 1.15 !important;
   }
 
   .found-hero-actions a:last-child {
-    min-width: 13.5rem;
+    min-width: clamp(12rem, 22vw, 15rem);
   }
 }
