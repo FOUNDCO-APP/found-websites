@@ -1,58 +1,25 @@
 import Link from "next/link"
+import Image from "next/image"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 
 function DeviceStage() {
   return (
-    <div className="relative mx-auto min-h-[520px] w-full max-w-[720px] lg:min-h-[620px]" aria-hidden="true">
-      <div className="absolute left-1/2 top-1/2 h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#32D074]/18" />
-      <div className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06]" />
-      <div className="absolute left-[6%] top-[10%] hidden h-[260px] w-[430px] -rotate-6 rounded-[34px] border border-white/12 bg-white/[0.035] p-3 shadow-[0_34px_110px_rgba(0,0,0,0.55)] md:block">
-        <div className="h-full rounded-[25px] bg-[#F5F7F4] p-6 text-[#080A09]">
-          <div className="flex items-center justify-between">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em]">Barrio Builders</div>
-            <div className="h-2 w-14 rounded-full bg-[#32D074]" />
-          </div>
-          <div className="mt-12 max-w-[260px]">
-            <div className="h-8 w-56 rounded-full bg-[#080A09]" />
-            <div className="mt-4 h-3 w-64 rounded-full bg-black/18" />
-            <div className="mt-2 h-3 w-44 rounded-full bg-black/12" />
-            <div className="mt-7 h-10 w-36 rounded-full bg-[#32D074]" />
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute right-[6%] top-[3%] h-[500px] w-[250px] rounded-[48px] border border-white/16 bg-[#131713] p-3 shadow-[0_35px_120px_rgba(0,0,0,0.65)]">
-        <div className="h-full overflow-hidden rounded-[36px] bg-[#F5F7F4] text-[#080A09]">
-          <div className="h-56 bg-[#101110] p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div className="h-2 w-16 rounded-full bg-white" />
-              <div className="h-2 w-2 rounded-full bg-[#32D074] shadow-[0_0_22px_rgba(50,208,116,0.9)]" />
-            </div>
-            <div className="mt-24">
-              <div className="h-7 w-32 rounded-full bg-white" />
-              <div className="mt-3 h-2 w-24 rounded-full bg-white/30" />
-            </div>
-          </div>
-          <div className="space-y-3 p-6">
-            <div className="h-3 w-20 rounded-full bg-black/80" />
-            <div className="h-16 rounded-2xl bg-black/[0.07]" />
-            <div className="h-16 rounded-2xl bg-black/[0.07]" />
-            <div className="h-11 rounded-full bg-[#32D074]" />
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-[6%] left-[3%] h-[190px] w-[330px] rotate-[5deg] rounded-[28px] border border-white/12 bg-white/[0.04] p-3 shadow-[0_28px_90px_rgba(0,0,0,0.55)]">
-        <div className="h-full rounded-[20px] bg-[#111] p-6 text-white">
-          <div className="flex items-center justify-between">
-            <div className="h-2 w-20 rounded-full bg-[#32D074]" />
-            <div className="text-[9px] font-black uppercase tracking-[0.18em] text-white/35">Live</div>
-          </div>
-          <div className="mt-12 h-7 w-44 rounded-full bg-white" />
-          <div className="mt-3 h-2 w-56 rounded-full bg-white/24" />
-        </div>
+    <div className="relative mx-auto aspect-[16/10] w-full max-w-[900px] lg:max-w-[980px]" aria-hidden="true">
+      <div className="absolute inset-0 rounded-full bg-[#32D074]/10 blur-3xl" />
+      <Image
+        src="/images/found-hero-devices.png"
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 1024px) 100vw, 58vw"
+        className="object-contain drop-shadow-[0_40px_120px_rgba(0,0,0,0.65)]"
+      />
+      <div className="absolute bottom-[18%] right-[12%] hidden items-center gap-3 text-xs font-black uppercase tracking-[0.22em] text-[#32D074] md:flex">
+        <span>Live</span>
+        <span className="h-2 w-2 rounded-full bg-[#32D074] shadow-[0_0_24px_rgba(50,208,116,1)]" />
+        <span className="h-px w-36 bg-gradient-to-r from-[#32D074] to-transparent" />
       </div>
     </div>
   )
@@ -67,7 +34,7 @@ export default function Home() {
           <div className="absolute bottom-0 right-0 h-[520px] w-[520px] rounded-full bg-white/[0.045] blur-3xl" />
         </div>
 
-        <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-6 py-7 md:px-10">
+        <div className="relative mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
           <header className="flex items-center justify-between">
             <div className="text-sm font-black uppercase tracking-[0.24em] text-white">Found</div>
             <Link
@@ -78,17 +45,17 @@ export default function Home() {
             </Link>
           </header>
 
-          <div className="grid flex-1 items-center gap-10 py-12 lg:grid-cols-[0.82fr_1.18fr]">
-            <div className="max-w-2xl">
-              <p className="mb-7 inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+          <div className="grid flex-1 items-center gap-8 py-12 lg:grid-cols-[0.72fr_1.28fr]">
+            <div className="relative z-10 max-w-2xl">
+              <p className="mb-8 inline-flex items-center gap-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
                 <span className="h-2 w-2 rounded-full bg-[#32D074] shadow-[0_0_22px_rgba(50,208,116,0.9)]" />
-                Pure Studio
+                Found it.
               </p>
-              <h1 className="text-6xl font-black leading-none tracking-normal sm:text-7xl lg:text-8xl">
-                Get Found.
+              <h1 className="text-6xl font-black leading-[0.92] tracking-normal sm:text-7xl lg:text-8xl">
+                Your business, beautifully online.
               </h1>
               <p className="mt-7 max-w-xl text-xl leading-9 text-white/62">
-                Answer a few questions. Watch your business become beautifully online.
+                Answer a few questions. Found turns the conversation into a website you can open, share, and feel proud of.
               </p>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                 <Link
