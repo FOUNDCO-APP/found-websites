@@ -32,7 +32,7 @@ export default function Home() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center md:hidden"
+          className="object-cover object-center md:hidden [@media_(max-height:500px)]:block"
         />
         <Image
           src="/images/found-hero-desktop-v3.png"
@@ -40,15 +40,15 @@ export default function Home() {
           fill
           priority
           sizes="100vw"
-          className="hidden object-cover object-center md:block"
+          className="hidden object-cover object-center md:block [@media_(max-height:500px)]:hidden"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,9,0.42)_0%,rgba(8,10,9,0.12)_38%,rgba(8,10,9,0.78)_100%)] md:bg-[radial-gradient(circle_at_22%_48%,rgba(8,10,9,0.05)_0%,rgba(8,10,9,0.2)_36%,rgba(8,10,9,0.56)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#080A09] to-transparent" />
 
         <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
           <header className="flex items-center justify-between">
-            <FoundWordmark className="h-8 w-44 text-white md:hidden" />
-            <div className="hidden md:block" />
+            <FoundWordmark className="h-8 w-44 text-white md:hidden [@media_(max-height:500px)]:block [@media_(max-height:500px)]:h-6 [@media_(max-height:500px)]:w-36" />
+            <div className="hidden md:block [@media_(max-height:500px)]:hidden" />
             <Link
               href="/onboarding"
               className="rounded-full border border-white/18 bg-black/20 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-white backdrop-blur-md transition hover:border-white/40"
@@ -59,20 +59,20 @@ export default function Home() {
 
           <div className="flex flex-1 items-start pt-12 md:items-center md:pt-0 [@media_(max-height:500px)]:pt-3">
             <div className="max-w-[350px] md:max-w-[590px] [@media_(max-height:500px)]:max-w-[430px]">
-              <div className="mb-9 hidden md:block">
+              <div className="mb-9 hidden md:block [@media_(max-height:500px)]:hidden">
                 <FoundWordmark className="h-14 w-[330px] text-white" />
               </div>
 
-              <h1 className="text-[2.65rem] font-light leading-[0.98] tracking-normal text-white md:text-7xl [@media_(max-height:500px)]:max-w-[390px] [@media_(max-height:500px)]:text-4xl">
+              <h1 className="text-[2.65rem] font-light leading-[0.98] tracking-normal text-white md:text-7xl [@media_(max-height:500px)]:max-w-[310px] [@media_(max-height:500px)]:text-[2.15rem]">
                 Your business beautifully online.
               </h1>
-              <p className="mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden [@media_(max-height:500px)]:hidden">
+              <p className="mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden [@media_(max-height:500px)]:block [@media_(max-height:500px)]:mt-3 [@media_(max-height:500px)]:max-w-[260px] [@media_(max-height:500px)]:text-xs [@media_(max-height:500px)]:leading-5">
                 Answer a few questions. Found builds the site.
               </p>
-              <p className="mt-7 hidden max-w-md text-base font-medium leading-8 text-white/70 md:block md:text-lg">
+              <p className="mt-7 hidden max-w-md text-base font-medium leading-8 text-white/70 md:block md:text-lg [@media_(max-height:500px)]:hidden">
                 Answer a few questions. Found turns your work, voice, and location into a website that feels made for you.
               </p>
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row md:mt-9 [@media_(max-height:500px)]:mt-5">
+              <div className="absolute inset-x-6 bottom-8 flex flex-col gap-3 sm:flex-row md:static md:inset-auto md:mt-9 [@media_(max-height:500px)]:absolute [@media_(max-height:500px)]:inset-auto [@media_(max-height:500px)]:bottom-5 [@media_(max-height:500px)]:left-6 [@media_(max-height:500px)]:mt-0 [@media_(max-height:500px)]:max-w-[350px] [@media_(max-height:500px)]:flex-row">
                 <Link
                   href="/onboarding"
                   className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-7 text-xs font-black uppercase tracking-widest text-[#080A09] shadow-[0_0_34px_rgba(50,208,116,0.22)] transition hover:bg-[#5DE894] md:min-h-14 md:px-8 md:text-sm"
