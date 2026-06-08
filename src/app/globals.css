@@ -122,3 +122,109 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 20px;
   font-size: 0.7rem;
 }
+
+/* Found homepage hero responsive art direction */
+@media (max-width: 767px) and (min-height: 501px) {
+  .found-hero-header {
+    min-height: 2.75rem;
+    position: relative;
+  }
+
+  .found-nav-wordmark {
+    width: 10rem !important;
+  }
+
+  .found-start-link {
+    min-height: 2.75rem;
+    padding: 0 1.15rem !important;
+    font-size: 0.68rem !important;
+    position: absolute;
+    right: 3rem;
+    top: 0;
+  }
+
+  .found-hero-actions {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .found-hero-mobile-img {
+    display: none !important;
+  }
+
+  .found-hero-desktop-img {
+    display: block !important;
+    object-position: center center;
+  }
+
+  .found-hero-shell {
+    min-height: 100svh;
+    padding: 1.35rem 8vw 1.35rem !important;
+  }
+
+  .found-nav-wordmark {
+    display: block !important;
+    width: 10rem !important;
+    height: 1.8rem !important;
+  }
+
+  .found-header-spacer,
+  .found-desktop-wordmark,
+  .found-hero-desktop-copy,
+  .found-hero-categories {
+    display: none !important;
+  }
+
+  .found-start-link {
+    min-height: 3rem;
+    padding: 0 2rem !important;
+  }
+
+  .found-hero-content {
+    align-items: flex-start !important;
+    padding-top: clamp(0.9rem, 3.3vh, 1.4rem) !important;
+  }
+
+  .found-hero-copy {
+    max-width: min(39vw, 29rem) !important;
+  }
+
+  .found-hero-title {
+    max-width: min(39vw, 29rem) !important;
+    font-size: clamp(2.1rem, 5vw, 3.15rem) !important;
+    line-height: 0.98 !important;
+  }
+
+  .found-hero-mobile-copy {
+    display: block !important;
+    max-width: min(32vw, 22rem) !important;
+    margin-top: 1rem !important;
+    font-size: clamp(0.78rem, 1.7vw, 0.98rem) !important;
+    line-height: 1.55 !important;
+  }
+
+  .found-hero-actions {
+    position: absolute !important;
+    left: 8vw !important;
+    right: auto !important;
+    bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1rem !important;
+    margin-top: 0 !important;
+    max-width: 34rem !important;
+  }
+
+  .found-hero-actions a {
+    min-height: 3.55rem !important;
+    min-width: 10.5rem;
+    padding: 0 1.65rem !important;
+    font-size: 0.78rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .found-hero-actions a:last-child {
+    min-width: 13.5rem;
+  }
+}
