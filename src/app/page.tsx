@@ -32,7 +32,7 @@ export default function Home() {
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center md:hidden [@media_(max-height:500px)]:block"
+          className="object-cover object-center md:hidden [@media_(max-height:500px)]:hidden"
         />
         <Image
           src="/images/found-hero-desktop-v3.png"
@@ -40,7 +40,7 @@ export default function Home() {
           fill
           priority
           sizes="100vw"
-          className="hidden object-cover object-center md:block [@media_(max-height:500px)]:hidden"
+          className="hidden object-cover object-center md:block [@media_(max-height:500px)]:block [@media_(max-height:500px)]:object-center"
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,9,0.42)_0%,rgba(8,10,9,0.12)_38%,rgba(8,10,9,0.78)_100%)] md:bg-[radial-gradient(circle_at_22%_48%,rgba(8,10,9,0.05)_0%,rgba(8,10,9,0.2)_36%,rgba(8,10,9,0.56)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#080A09] to-transparent" />
@@ -87,7 +87,7 @@ export default function Home() {
                 </a>
               </div>
 
-              <div className="mt-16 hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 md:flex">
+              <div className="mt-16 hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 md:flex [@media_(max-height:500px)]:hidden">
                 <span>Websites</span>
                 <span className="text-[#32D074]">•</span>
                 <span>Bookings</span>
