@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 6, 2026*
+*Last updated: June 7, 2026*
 
 ---
 
@@ -91,10 +91,10 @@ Exit criteria:
 
 ## NEXT
 
-1. Real file uploads for logo and owner photos/videos
-2. Contact foundation - leads create/update lightweight contacts; full contact dashboard stays Phase 3
-3. Curate Real Estate photo pool
-4. Tighten the Found homepage around the approved brand identity
+1. Location intelligence - city autocomplete + nearby service area chips
+2. Differentiator suggestions - industry-specific helper chips
+3. Real file uploads for logo and owner photos/videos
+4. Logo color extraction from uploaded logos
 
 ---
 

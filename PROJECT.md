@@ -197,8 +197,10 @@ Layout files: `src/components/layouts/`
 ## CURRENT PHASE — Phase 2: Onboarding Flow
 
 **What's still missing for onboarding:**
+- Location intelligence: city autocomplete and nearby service area chips
+- Differentiator suggestions by industry
 - Real file uploads for logo, hero photo/video, and gallery photos
-- Site reveal moment after site creation
+- Logo color extraction from uploaded logos
 - Shawn approval of the full flow end-to-end
 
 **What's ready for onboarding:**
@@ -210,6 +212,8 @@ Layout files: `src/components/layouts/`
 - Claude API content generation from onboarding answers with fallback copy ✅
 
 **Current onboarding implementation note:** `/onboarding` now saves `companies` and `website_config`, consumes the approved industry manifests and Q2.5 sub-industry, and generates homepage/service copy through Claude API when `ANTHROPIC_API_KEY` is set. If Claude is unavailable, Found saves deterministic fallback copy so the owner can still launch.
+
+**Current Found homepage note:** `/` now establishes the approved Found identity: Pure Studio with a Signal Green heartbeat, a refined `FOUND` wordmark, a cinematic device-stage hero, and a direct CTA into onboarding.
 
 ---
 

@@ -4,6 +4,30 @@
 
 ---
 
+## Session: June 7, 2026 - Found Homepage Foundation Built
+**AI:** Codex (GPT-5) + Apple Team
+**Worked on:** Replaced the root placeholder with the first real Found Pure Studio / Signal Green homepage
+
+### Completed This Session
+
+- Rebuilt `src/app/page.tsx` as the Found product-stage homepage
+  - Refined uppercase `FOUND` wordmark
+  - Pure Studio black/white foundation
+  - Signal Green used only for live/action/reveal meaning
+  - Device-style website stage showing the product idea without copying Apple UI
+  - Primary CTA into `/onboarding`
+  - Short "No templates. No builder. Just a conversation." section
+- Verified with `npm.cmd run build`
+
+### What To Work On Next (In Order)
+
+1. **Location intelligence** - city autocomplete + nearby service area chips for SEO/AEO/GEO
+2. **Differentiator suggestions** - industry-specific helper chips on "What makes you different?"
+3. **Real file uploads** - logo upload, hero photo/video upload, and gallery photo upload during onboarding
+4. **Logo color extraction** - suggest colors from uploaded logo before the palette presets
+
+---
+
 ## Session: June 6, 2026 - Found Brand Direction + Reveal First Pass
 **AI:** Codex (GPT-5) + Apple Team
 **Worked on:** Locked Found's brand direction and added the first Pure Studio / Signal Green onboarding reveal
