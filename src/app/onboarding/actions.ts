@@ -242,7 +242,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   const vibe = normalizeVibe(input.vibe)
 
   if (!name || !industry || !subIndustry || !phone || !email) {
-    return { success: false, error: "Business name, business type, phone, and email are required." }
+    const missing = [!name && "name", !industry && "industry", !subIndustry && "subIndustry", !phone && "phone", !email && "email"].filter(Boolean)
+    console.error("[onboarding] missing fields:", missing)
+    return { success: false, error: `Missing: ${missing.join(", ")}. Please go back and complete those steps.` }
   }
 
   const manifest = getIndustryManifest(industry)
