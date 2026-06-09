@@ -877,7 +877,7 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
                                 onClick={() => autoAdvance(() => {
                                   if (!manifest) {
                                     const k = Object.entries(industryLabels).find(([, l]) => l === option)?.[0] ?? null
-                                    setAnswers((prev) => ({ ...prev, industry: k, subIndustry: "" }))
+                                    setAnswers((prev) => ({ ...prev, industry: k, subIndustry: option }))
                                   } else {
                                     set("subIndustry", option)
                                   }
