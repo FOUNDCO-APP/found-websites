@@ -1,11 +1,12 @@
 "use client"
 
-import { useMemo, useState, useEffect } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, saveAbandonedLead } from "./actions"
+import { US_CITIES } from "@/data/us-cities"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -288,6 +289,8 @@ function GeneratingScreen() {
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
 function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: string; primaryColor: string; onEdit: () => void }) {
+  const [iframeReady, setIframeReady] = useState(false)
+
   return (
     <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: FOUND_BLACK, animation: "fade-in 0.7s ease-out both" }}>
       <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]" style={{ backgroundColor: `${primaryColor}1a` }} />
@@ -319,23 +322,43 @@ function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: 
             </div>
             <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>
           </div>
+
+          {/* Phone mockup with live site preview */}
           <div className="flex items-center justify-center" style={{ animation: "fade-up 0.85s ease-out both" }}>
             <div className="relative w-[272px] rounded-[44px] border border-white/10 bg-[#141715] p-[10px]" style={{ height: 560, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
               <div className="absolute left-1/2 top-[18px] h-[22px] w-[80px] -translate-x-1/2 rounded-full bg-[#0a0c0b]" />
-              <div className="h-full overflow-hidden rounded-[36px] bg-[#F5F7F4]">
-                <div className="relative h-52 flex flex-col justify-end p-5" style={{ backgroundColor: primaryColor }}>
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
-                  <div className="relative">
-                    <div className="h-3 w-28 rounded-full bg-white" />
-                    <div className="mt-2 h-2 w-20 rounded-full bg-white/35" />
+
+              {/* Screen area */}
+              <div className="relative h-full overflow-hidden rounded-[36px] bg-[#F5F7F4]">
+
+                {/* Placeholder skeleton — fades out when iframe loads */}
+                <div
+                  className="absolute inset-0 transition-opacity duration-700"
+                  style={{ opacity: iframeReady ? 0 : 1, pointerEvents: "none" }}
+                >
+                  <div className="relative flex h-52 flex-col justify-end p-5" style={{ backgroundColor: primaryColor }}>
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
+                    <div className="relative">
+                      <div className="h-3 w-28 rounded-full bg-white" />
+                      <div className="mt-2 h-2 w-20 rounded-full bg-white/35" />
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 p-5">
+                    <div className="h-2 w-16 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
+                    <div className="h-12 rounded-xl bg-black/[0.05]" />
+                    <div className="h-12 rounded-xl bg-black/[0.05]" />
+                    <div className="h-10 rounded-full" style={{ backgroundColor: primaryColor }} />
                   </div>
                 </div>
-                <div className="space-y-2.5 p-5">
-                  <div className="h-2 w-16 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
-                  <div className="h-12 rounded-xl bg-black/[0.05]" />
-                  <div className="h-12 rounded-xl bg-black/[0.05]" />
-                  <div className="h-10 rounded-full" style={{ backgroundColor: primaryColor }} />
-                </div>
+
+                {/* Live site iframe — fades in when loaded */}
+                <iframe
+                  src={url}
+                  title={`${name} website preview`}
+                  className="absolute inset-0 h-full w-full border-0 transition-opacity duration-700"
+                  style={{ opacity: iframeReady ? 1 : 0, pointerEvents: "none" }}
+                  onLoad={() => setIframeReady(true)}
+                />
               </div>
             </div>
           </div>
@@ -409,52 +432,149 @@ function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: 
 }
 
 // ── Location input ────────────────────────────────────────────────────────────
-// TODO: Replace city <input> with Google Places Autocomplete (types: ['(cities)'])
-// when NEXT_PUBLIC_GOOGLE_PLACES_KEY is available.
 function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, primaryColor }: {
   location: string; serviceAreas: string[]
   onLocation: (v: string) => void; onAreas: (v: string[]) => void
   isLight: boolean; primaryColor: string
 }) {
-  const [draft, setDraft] = useState("")
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false)
+  const [areaDraft, setAreaDraft] = useState("")
+  const [showAreaSuggestions, setShowAreaSuggestions] = useState(false)
+  const cityBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const areaBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tk = getTokens(isLight, primaryColor)
 
-  function addArea(text: string) {
-    const t = text.trim()
-    if (!t || serviceAreas.includes(t)) { setDraft(""); return }
-    onAreas([...serviceAreas, t]); setDraft("")
+  const dropdownBg    = isLight ? "#ffffff" : "#1a1c1b"
+  const dropdownBorder = isLight ? "rgba(8,10,9,0.1)" : "rgba(255,255,255,0.1)"
+
+  const citySuggestions = useMemo(() => {
+    if (location.length < 1) return []
+    const q = location.toLowerCase()
+    return US_CITIES.filter(([city, state]) => {
+      const full = `${city}, ${state}`.toLowerCase()
+      return city.toLowerCase().startsWith(q) || full.startsWith(q)
+    }).slice(0, 6)
+  }, [location])
+
+  const areaSuggestions = useMemo(() => {
+    if (areaDraft.length < 1) return []
+    const q = areaDraft.toLowerCase()
+    return US_CITIES.filter(([city, state]) => {
+      const formatted = `${city}, ${state}`
+      return (
+        city.toLowerCase().startsWith(q) &&
+        formatted !== location &&
+        !serviceAreas.includes(formatted)
+      )
+    }).slice(0, 5)
+  }, [areaDraft, location, serviceAreas])
+
+  function selectCity(city: string, state: string) {
+    onLocation(`${city}, ${state}`)
+    setShowCitySuggestions(false)
+  }
+
+  function addArea(city: string, state: string) {
+    const formatted = `${city}, ${state}`
+    if (!serviceAreas.includes(formatted)) onAreas([...serviceAreas, formatted])
+    setAreaDraft("")
+    setShowAreaSuggestions(false)
+  }
+
+  function addAreaFromDraft() {
+    const t = areaDraft.trim()
+    if (t && !serviceAreas.includes(t)) onAreas([...serviceAreas, t])
+    setAreaDraft("")
   }
 
   return (
     <div className="space-y-6">
-      <input
-        autoFocus
-        value={location}
-        onChange={(e) => onLocation(e.target.value)}
-        placeholder="Tucson, AZ"
-        className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
-        style={{ color: tk.text, borderBottomColor: location.length > 2 ? SIGNAL_GREEN : tk.border(false) }}
-      />
+      {/* City autocomplete */}
+      <div className="relative">
+        <input
+          autoFocus
+          value={location}
+          onChange={(e) => { onLocation(e.target.value); setShowCitySuggestions(true) }}
+          onFocus={() => setShowCitySuggestions(true)}
+          onBlur={() => { cityBlurTimer.current = setTimeout(() => setShowCitySuggestions(false), 150) }}
+          placeholder="Tucson, AZ"
+          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+          style={{ color: tk.text, borderBottomColor: location.length > 2 ? SIGNAL_GREEN : tk.border(false) }}
+        />
+        {showCitySuggestions && citySuggestions.length > 0 && (
+          <div
+            className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl shadow-xl"
+            style={{ backgroundColor: dropdownBg, border: `1px solid ${dropdownBorder}` }}
+          >
+            {citySuggestions.map(([city, state]) => (
+              <button
+                key={`${city}-${state}`}
+                type="button"
+                onMouseDown={() => {
+                  if (cityBlurTimer.current) clearTimeout(cityBlurTimer.current)
+                  selectCity(city, state)
+                }}
+                className="block w-full px-4 py-3 text-left text-sm font-black uppercase tracking-[0.08em] transition hover:opacity-60"
+                style={{ color: tk.text }}
+              >
+                {city}, {state}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Service area chips */}
       {location.length > 3 && (
         <div className="space-y-3" style={{ animation: "fade-up 0.35s ease-out both" }}>
           <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: tk.hint }}>Also serve nearby?</p>
           <div className="flex flex-wrap items-center gap-2">
             {serviceAreas.map((area) => (
-              <span key={area} className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.1em]"
-                style={{ borderColor: tk.cardBorder(false), color: tk.text, backgroundColor: tk.cardBg(false) }}>
+              <span
+                key={area}
+                className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.1em]"
+                style={{ borderColor: tk.cardBorder(false), color: tk.text, backgroundColor: tk.cardBg(false) }}
+              >
                 {area}
                 <button type="button" onClick={() => onAreas(serviceAreas.filter((a) => a !== area))} style={{ color: tk.hint }}>×</button>
               </span>
             ))}
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(draft) } }}
-              onBlur={() => draft.trim() && addArea(draft)}
-              placeholder="Add a city"
-              className={`w-24 border-0 border-b bg-transparent px-0 py-1 text-xs font-black uppercase tracking-[0.1em] outline-none focus:border-[#32D074] ${tk.placeholder}`}
-              style={{ color: tk.text, borderBottomColor: tk.border(false) }}
-            />
+            {/* Area city autocomplete */}
+            <div className="relative">
+              <input
+                value={areaDraft}
+                onChange={(e) => { setAreaDraft(e.target.value); setShowAreaSuggestions(true) }}
+                onFocus={() => setShowAreaSuggestions(true)}
+                onBlur={() => { areaBlurTimer.current = setTimeout(() => setShowAreaSuggestions(false), 150) }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addAreaFromDraft() }
+                }}
+                placeholder="Add a city"
+                className={`w-24 border-0 border-b bg-transparent px-0 py-1 text-xs font-black uppercase tracking-[0.1em] outline-none focus:border-[#32D074] ${tk.placeholder}`}
+                style={{ color: tk.text, borderBottomColor: tk.border(false) }}
+              />
+              {showAreaSuggestions && areaSuggestions.length > 0 && (
+                <div
+                  className="absolute left-0 top-full z-20 mt-1 overflow-hidden rounded-lg shadow-xl"
+                  style={{ backgroundColor: dropdownBg, border: `1px solid ${dropdownBorder}`, minWidth: "180px" }}
+                >
+                  {areaSuggestions.map(([city, state]) => (
+                    <button
+                      key={`area-${city}-${state}`}
+                      type="button"
+                      onMouseDown={() => {
+                        if (areaBlurTimer.current) clearTimeout(areaBlurTimer.current)
+                        addArea(city, state)
+                      }}
+                      className="block w-full px-3 py-2 text-left text-xs font-black uppercase tracking-[0.08em] transition hover:opacity-60"
+                      style={{ color: tk.text }}
+                    >
+                      {city}, {state}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -607,7 +727,7 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
         <div className="grid min-h-screen md:grid-cols-2">
 
           {/* ── Left: conversation ── */}
-          <div className="relative flex min-h-screen flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK }}>
+          <div className="relative flex flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK, height: "100dvh" }}>
 
             {/* White phase panel — sweeps up from below when questions begin */}
             {phase === "questions" && (
@@ -619,9 +739,9 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
             )}
 
             {/* Content layer */}
-            <div className="relative z-10 flex min-h-screen flex-col px-7 py-8 md:px-12 md:py-10">
+            <div className="relative z-10 flex h-full flex-col">
 
-              <header className="flex items-center justify-between">
+              <header className="shrink-0 flex items-center justify-between px-7 pt-8 pb-2 md:px-12 md:pt-10">
                 {onClose ? (
                   <svg viewBox="0 0 420 72" className="h-7 w-36" aria-label="Found" style={{ color: tk.text }}>
                     <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
@@ -647,11 +767,14 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
                 )}
               </header>
 
+              {/* Scrollable body — lets content scroll on short viewports / keyboard-open */}
+              <div className="flex-1 overflow-y-auto px-7 md:px-12">
+
               {/* ── Welcome (dark) ── */}
               {phase === "welcome" && (
                 <section
                   key="welcome"
-                  className="flex flex-1 flex-col justify-center py-10"
+                  className="flex min-h-full flex-col justify-center py-10"
                   style={{ animation: "fade-up 0.38s ease-out both" }}
                 >
                   <div className="mb-10 max-w-lg">
@@ -679,12 +802,11 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
 
               {/* ── Questions (light) ── */}
               {phase === "questions" && (
-                <>
-                  <section
-                    key={step}
-                    className="flex flex-1 flex-col justify-center py-10"
-                    style={{ animation: "fade-up 0.38s ease-out both" }}
-                  >
+                <section
+                  key={step}
+                  className="flex min-h-full flex-col justify-center py-8"
+                  style={{ animation: "fade-up 0.38s ease-out both" }}
+                >
                     <div className="mb-8 max-w-lg">
                       {answers.industry && !["description"].includes(step) && (
                         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
@@ -949,22 +1071,23 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
                     {result?.error && (
                       <p className="mt-5 text-sm font-bold text-red-500">{result.error}</p>
                     )}
-                  </section>
+                </section>
+              )}
 
-                  {/* CTA — hidden on auto-advance steps */}
-                  {!isAutoStep && (
-                    <footer className="pb-2">
-                      <button
-                        type="button" onClick={advance}
-                        disabled={!ready}
-                        className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-10"
-                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                      >
-                        {step === "testimonials" ? "Build my site" : "Continue →"}
-                      </button>
-                    </footer>
-                  )}
-                </>
+              </div>{/* end scrollable body */}
+
+              {/* Continue button — always visible, never behind the keyboard */}
+              {phase === "questions" && !isAutoStep && (
+                <footer className="shrink-0 px-7 pb-6 pt-2 md:px-12">
+                  <button
+                    type="button" onClick={advance}
+                    disabled={!ready}
+                    className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-10"
+                    style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                  >
+                    {step === "testimonials" ? "Build my site" : "Continue →"}
+                  </button>
+                </footer>
               )}
             </div>
           </div>
