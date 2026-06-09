@@ -250,9 +250,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .found-start-link {
-    position: absolute;
-    top: 0;
-    right: 3rem;
     min-height: 2.75rem;
     padding: 0 1.15rem !important;
     font-size: 0.68rem !important;
