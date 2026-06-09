@@ -4,6 +4,54 @@
 
 ---
 
+## Session: June 8, 2026 - Found Homepage Hero Art + Responsive System
+**AI:** Codex (GPT-5) + Apple Team
+**Worked on:** Rebuilt the Found marketing homepage hero around the approved Signal Green direction and cleaned up responsive behavior
+
+### Completed This Session
+
+- Replaced the earlier duplicated-logo hero treatment
+  - Removed baked-in `FOUND`/headline artwork from the page background
+  - Generated and shipped distinct desktop/mobile v3 hero assets
+  - Device screens now show different client outcomes: real estate, wellness, HVAC, and restaurant/menu
+  - Client sample sites use different palettes and button styles so Found does not look like one template repeated
+- Refined homepage copy and brand hierarchy
+  - Removed visible `Found Co.` from the hero
+  - Removed `Found it.` from the hero
+  - Changed root metadata title to `FOUND`
+  - Kept the hero message focused: `FOUND` + `Your business beautifully online.`
+- Refactored the hero responsive CSS system in `src/app/globals.css`
+  - Replaced stacked height-only exceptions with named responsive states
+  - Desktop: copy high-left, device art on the right, CTAs in the copy column
+  - Tablet/iPad: copy higher and constrained so it avoids the mockups
+  - Phone portrait: portrait art, short mobile copy, CTAs pinned toward the bottom
+  - Phone landscape: wide art, compact mobile copy, CTAs pinned toward the bottom, desktop category row hidden
+- Verified production after push
+  - Latest pushed commit: `88a3bc6` (`Refactor Found hero responsive system`)
+  - `https://foundco.app` returned `200`
+  - Production HTML included the new hero markup/CSS
+
+### Important Handoff Notes
+
+- Shawn approved the direction, but real-device visual review was still in progress when the session wrapped.
+- Shawn specifically asked future AI not to keep bandaging responsive issues with random one-off overrides.
+- Future responsive changes should follow the four approved states:
+  1. Desktop: `min-width: 1181px`
+  2. Tablet/iPad: `768px-1180px`
+  3. Phone portrait: `max-width: 767px` + portrait
+  4. Phone landscape: `max-width: 1180px` + landscape/short height
+- Before pushing future homepage visual changes, verify the actual screenshots Shawn provides or use real viewport screenshots.
+- Leave `scripts/upload-gotsmoothie-logo.mjs` alone unless Shawn explicitly asks; it was already dirty and unrelated to this work.
+
+### What To Work On Next (In Order)
+
+1. **Final real-device homepage QA** - Shawn should review live desktop, iPad, iPhone portrait, and iPhone landscape after commit `88a3bc6`
+2. **If approved, lock homepage hero baseline** - avoid further hero layout churn until onboarding design catches up
+3. **Bring onboarding UI into the same Jony-approved visual system** - current onboarding still needs the Found premium treatment
+4. **Resume Phase 2 product tasks** - location intelligence, differentiator suggestions, uploads, logo color extraction
+
+---
+
 ## Session: June 7, 2026 - Found Homepage Foundation Built
 **AI:** Codex (GPT-5) + Apple Team
 **Worked on:** Replaced the root placeholder with the first real Found Pure Studio / Signal Green homepage

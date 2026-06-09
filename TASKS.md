@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 7, 2026*
+*Last updated: June 8, 2026*
 
 ---
 
@@ -35,6 +35,11 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
+0. **June 8 handoff: homepage hero QA + next product work**
+   - Owner: Shawn + Jony + Craig
+   - Status: In review after June 8, 2026 responsive refactor
+   - Notes: Found homepage hero v3 is live at `foundco.app`. Latest pushed commit is `88a3bc6`. Shawn should review desktop, iPad, iPhone portrait, and iPhone landscape on real devices before the hero is considered locked. Next AI should not keep bandaging responsive issues with one-off overrides; use the approved four-state system in `src/app/globals.css`.
+
 1. **Run Supabase sub_industry migration**
    - Owner: Shawn + Priya
    - Status: ✅ Completed June 4, 2026
@@ -51,6 +56,11 @@ Exit criteria:
    - Notes: Pure Studio / Signal Green reveal screen now appears after onboarding creates the site.
 
 ## RECENTLY COMPLETED
+
+0. **Found homepage hero v3 + responsive system**
+   - Owner: Jony + Steve + Craig
+   - Status: Completed June 8, 2026; awaiting Shawn's final real-device QA
+   - Notes: Shipped distinct client-site device mockups, removed redundant `Found Co.` / `Found it.`, and refactored hero responsive CSS around desktop, tablet/iPad, phone portrait, and phone landscape states.
 
 1. **Rotate security keys**
    - Owner: Shawn
@@ -91,6 +101,7 @@ Exit criteria:
 
 ## NEXT
 
+0. Lock homepage hero after Shawn's real-device QA, then bring `/onboarding` into the same approved Found visual system.
 1. Location intelligence - city autocomplete + nearby service area chips
 2. Differentiator suggestions - industry-specific helper chips
 3. Real file uploads for logo and owner photos/videos
