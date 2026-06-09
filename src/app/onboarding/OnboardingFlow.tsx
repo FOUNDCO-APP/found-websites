@@ -5,10 +5,13 @@ import Link from "next/link"
 import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
-import { createOnboardingSite } from "./actions"
+import { createOnboardingSite, saveAbandonedLead } from "./actions"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const LIGHT_BG = "#FAFAF9"
+
+type Phase = "welcome" | "questions"
 
 type Step =
   | "welcome" | "name" | "description" | "subIndustry" | "location"
@@ -111,6 +114,94 @@ function getAffirmation(step: Step, a: Answers): string {
   }
 }
 
+// ── Color tokens ──────────────────────────────────────────────────────────────
+function getTokens(isLight: boolean, primaryColor: string) {
+  return {
+    text:        isLight ? FOUND_BLACK          : "#ffffff",
+    muted:       isLight ? "rgba(8,10,9,0.65)"  : "rgba(255,255,255,0.45)",
+    hint:        isLight ? "rgba(8,10,9,0.55)"  : "rgba(255,255,255,0.25)",
+    border:      (active: boolean) => active ? SIGNAL_GREEN : (isLight ? "rgba(8,10,9,0.15)" : "rgba(255,255,255,0.13)"),
+    cardBg:      (active: boolean) => active ? `${primaryColor}14` : (isLight ? "rgba(8,10,9,0.03)" : "rgba(255,255,255,0.025)"),
+    cardBorder:  (active: boolean, accent?: string) => active ? (accent ?? primaryColor) : (isLight ? "rgba(8,10,9,0.10)" : "rgba(255,255,255,0.09)"),
+    chipBorder:  (active: boolean) => active ? primaryColor : (isLight ? "rgba(8,10,9,0.14)" : "rgba(255,255,255,0.12)"),
+    placeholder: isLight ? "placeholder:text-[#757575]" : "placeholder:text-white/18",
+    inputCls:    isLight
+      ? "border-0 border-b-2 bg-transparent px-0 py-3 font-light outline-none transition-colors duration-200"
+      : "border-0 border-b-2 bg-transparent px-0 py-3 font-light outline-none transition-colors duration-200",
+  }
+}
+
+// ── Save Spot dialog ──────────────────────────────────────────────────────────
+function SaveSpotDialog({
+  businessName,
+  form,
+  onChange,
+  onSave,
+  onDismiss,
+  saving,
+}: {
+  businessName: string
+  form: { firstName: string; email: string }
+  onChange: (v: { firstName: string; email: string }) => void
+  onSave: () => void
+  onDismiss: () => void
+  saving: boolean
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center"
+      style={{ backgroundColor: "rgba(8,10,9,0.78)" }}
+    >
+      <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white px-8 pt-8 pb-10">
+        <h2 className="text-2xl font-light" style={{ color: FOUND_BLACK }}>
+          Want us to save your spot?
+        </h2>
+        <p className="mt-2 text-sm leading-6" style={{ color: "rgba(8,10,9,0.55)" }}>
+          {businessName
+            ? `${businessName} is waiting. Drop your email and we'll hold your place.`
+            : "Drop your email and we'll hold your place."}
+        </p>
+        <div className="mt-6 space-y-5">
+          <input
+            autoFocus
+            value={form.firstName}
+            onChange={(e) => onChange({ ...form, firstName: e.target.value })}
+            placeholder="Your first name"
+            className="w-full border-b-2 bg-transparent pb-2 text-xl font-light outline-none placeholder:text-[#757575]"
+            style={{ color: FOUND_BLACK, borderBottomColor: form.firstName ? SIGNAL_GREEN : "rgba(8,10,9,0.15)" }}
+          />
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => onChange({ ...form, email: e.target.value })}
+            onKeyDown={(e) => e.key === "Enter" && onSave()}
+            placeholder="Your email"
+            className="w-full border-b-2 bg-transparent pb-2 text-xl font-light outline-none placeholder:text-[#757575]"
+            style={{ color: FOUND_BLACK, borderBottomColor: form.email.includes("@") ? SIGNAL_GREEN : "rgba(8,10,9,0.15)" }}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!form.email.includes("@") || saving}
+          className="mt-7 w-full rounded-full py-4 text-sm font-black uppercase tracking-widest disabled:opacity-40"
+          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, boxShadow: "0 0 24px rgba(50,208,116,0.28)" }}
+        >
+          {saving ? "Saving…" : "Save my spot →"}
+        </button>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="mt-3 w-full py-2 text-xs font-black uppercase tracking-[0.14em]"
+          style={{ color: "rgba(8,10,9,0.38)" }}
+        >
+          No thanks
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Live Preview ──────────────────────────────────────────────────────────────
 function LivePreview({ answers: a }: { answers: Answers }) {
   const color = a.primaryColor || SIGNAL_GREEN
@@ -119,16 +210,12 @@ function LivePreview({ answers: a }: { answers: Answers }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 p-10">
       <p className="text-[10px] font-black uppercase tracking-[0.26em] text-white/20">Preview</p>
-
       <div
         className="relative w-[260px] rounded-[42px] border border-white/10 bg-[#141715] p-[9px]"
         style={{ height: 530, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}
       >
-        {/* Notch */}
         <div className="absolute left-1/2 top-[17px] h-5 w-[72px] -translate-x-1/2 rounded-full bg-[#0a0c0b]" />
-        {/* Screen */}
         <div className="h-full overflow-hidden rounded-[35px] bg-white">
-          {/* Hero */}
           <div className="relative flex h-44 flex-col justify-end p-4" style={{ backgroundColor: color }}>
             <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
             <div className="relative">
@@ -140,8 +227,7 @@ function LivePreview({ answers: a }: { answers: Answers }) {
               <p className="text-[13px] font-black leading-tight text-white">{name}</p>
             </div>
           </div>
-          {/* Body */}
-          <div className="p-4 space-y-2">
+          <div className="space-y-2 p-4">
             {a.services.length > 0 ? (
               a.services.slice(0, 3).map((svc, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg bg-black/[0.04] px-3 py-2">
@@ -164,13 +250,9 @@ function LivePreview({ answers: a }: { answers: Answers }) {
           </div>
         </div>
       </div>
-
       {a.name && (
         <div className="flex items-center gap-1.5">
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 8px ${SIGNAL_GREEN}80` }}
-          />
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 8px ${SIGNAL_GREEN}80` }} />
           <span className="text-[10px] font-black uppercase tracking-[0.22em] text-white/30">Building</span>
         </div>
       )}
@@ -197,11 +279,7 @@ function GeneratingScreen() {
           animation: "spin 1s linear infinite",
         }}
       />
-      <p
-        key={idx}
-        className="text-xl font-light tracking-wide text-white/75"
-        style={{ animation: "fade-up 0.5s ease-out both" }}
-      >
+      <p key={idx} className="text-xl font-light tracking-wide text-white/75" style={{ animation: "fade-up 0.5s ease-out both" }}>
         {GENERATING_LINES[idx]}
       </p>
     </main>
@@ -212,10 +290,7 @@ function GeneratingScreen() {
 function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: string; primaryColor: string; onEdit: () => void }) {
   return (
     <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: FOUND_BLACK, animation: "fade-in 0.7s ease-out both" }}>
-      <div
-        className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]"
-        style={{ backgroundColor: `${primaryColor}1a` }}
-      />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]" style={{ backgroundColor: `${primaryColor}1a` }} />
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-7 py-8">
         <header className="flex items-center justify-between">
           <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
@@ -226,39 +301,26 @@ function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: 
             <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Live</span>
           </div>
         </header>
-
         <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_0.88fr]">
           <div style={{ animation: "fade-up 0.6s ease-out both" }}>
             <p className="mb-6 text-xs font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>Found it.</p>
-            <h1 className="text-5xl font-light leading-[1.05] text-white md:text-7xl">
-              {name}<br />is live.
-            </h1>
-            <p className="mt-6 max-w-sm text-base leading-8 text-white/45">
-              Your business now has a place online. Open it, look around, and make it yours.
-            </p>
+            <h1 className="text-5xl font-light leading-[1.05] text-white md:text-7xl">{name}<br />is live.</h1>
+            <p className="mt-6 max-w-sm text-base leading-8 text-white/45">Your business now has a place online. Open it, look around, and make it yours.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a
-                href={url} target="_blank" rel="noreferrer"
+              <a href={url} target="_blank" rel="noreferrer"
                 className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-              >
+                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                 See your site
               </a>
-              <button
-                type="button" onClick={onEdit}
-                className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-8 text-sm font-black uppercase tracking-widest text-white transition hover:border-white/35"
-              >
+              <button type="button" onClick={onEdit}
+                className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-8 text-sm font-black uppercase tracking-widest text-white transition hover:border-white/35">
                 Make changes
               </button>
             </div>
             <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>
           </div>
-
           <div className="flex items-center justify-center" style={{ animation: "fade-up 0.85s ease-out both" }}>
-            <div
-              className="relative w-[272px] rounded-[44px] border border-white/10 bg-[#141715] p-[10px]"
-              style={{ height: 560, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}
-            >
+            <div className="relative w-[272px] rounded-[44px] border border-white/10 bg-[#141715] p-[10px]" style={{ height: 560, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
               <div className="absolute left-1/2 top-[18px] h-[22px] w-[80px] -translate-x-1/2 rounded-full bg-[#0a0c0b]" />
               <div className="h-full overflow-hidden rounded-[36px] bg-[#F5F7F4]">
                 <div className="relative h-52 flex flex-col justify-end p-5" style={{ backgroundColor: primaryColor }}>
@@ -284,10 +346,11 @@ function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: 
 }
 
 // ── Service chip input ────────────────────────────────────────────────────────
-function ServiceChipInput({ value, onChange, primaryColor, industry }: {
-  value: string[]; onChange: (v: string[]) => void; primaryColor: string; industry: string | null
+function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: {
+  value: string[]; onChange: (v: string[]) => void; isLight: boolean; primaryColor: string; industry: string | null
 }) {
   const [draft, setDraft] = useState("")
+  const tk = getTokens(isLight, primaryColor)
   const manifest = industry ? getIndustryManifest(industry) : null
   const suggestions = (manifest?.subIndustries ?? []).slice(0, 6)
 
@@ -307,13 +370,10 @@ function ServiceChipInput({ value, onChange, primaryColor, industry }: {
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((chip) => (
-            <span
-              key={chip}
-              className="flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-black uppercase tracking-[0.11em] text-white"
-              style={{ borderColor: primaryColor, backgroundColor: `${primaryColor}18` }}
-            >
+            <span key={chip} className="flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-black uppercase tracking-[0.11em]"
+              style={{ borderColor: tk.chipBorder(true), backgroundColor: `${primaryColor}18`, color: tk.text }}>
               {chip}
-              <button type="button" onClick={() => onChange(value.filter((c) => c !== chip))} className="text-white/40 hover:text-white/80">×</button>
+              <button type="button" onClick={() => onChange(value.filter((c) => c !== chip))} style={{ color: tk.muted }}>×</button>
             </span>
           ))}
         </div>
@@ -325,16 +385,20 @@ function ServiceChipInput({ value, onChange, primaryColor, industry }: {
         onKeyDown={handleKey}
         onBlur={() => draft.trim() && add(draft)}
         placeholder="Type a service, press Enter"
-        className="w-full border-0 border-b-2 bg-transparent px-0 py-3 text-2xl font-light text-white outline-none placeholder:text-white/20 transition-colors duration-200"
-        style={{ borderBottomColor: draft ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
+        className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+        style={{ color: tk.text, borderBottomColor: draft ? SIGNAL_GREEN : tk.border(false) }}
       />
+      {isLight && (
+        <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: "rgba(8,10,9,0.35)" }}>
+          Press Enter to add each service
+        </p>
+      )}
       {suggestions.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {suggestions.filter((s) => !value.includes(s)).map((s) => (
-            <button
-              key={s} type="button" onClick={() => add(s)}
-              className="rounded-full border border-white/12 px-3 py-1 text-xs font-black uppercase tracking-[0.1em] text-white/38 transition hover:border-white/30 hover:text-white/70"
-            >
+            <button key={s} type="button" onClick={() => add(s)}
+              className="rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.1em] transition"
+              style={{ borderColor: tk.chipBorder(false), color: tk.muted }}>
               {s}
             </button>
           ))}
@@ -347,11 +411,13 @@ function ServiceChipInput({ value, onChange, primaryColor, industry }: {
 // ── Location input ────────────────────────────────────────────────────────────
 // TODO: Replace city <input> with Google Places Autocomplete (types: ['(cities)'])
 // when NEXT_PUBLIC_GOOGLE_PLACES_KEY is available.
-function LocationInput({ location, serviceAreas, onLocation, onAreas }: {
+function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, primaryColor }: {
   location: string; serviceAreas: string[]
   onLocation: (v: string) => void; onAreas: (v: string[]) => void
+  isLight: boolean; primaryColor: string
 }) {
   const [draft, setDraft] = useState("")
+  const tk = getTokens(isLight, primaryColor)
 
   function addArea(text: string) {
     const t = text.trim()
@@ -366,21 +432,18 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas }: {
         value={location}
         onChange={(e) => onLocation(e.target.value)}
         placeholder="Tucson, AZ"
-        className="w-full border-0 border-b-2 bg-transparent px-0 py-3 text-3xl font-light text-white outline-none placeholder:text-white/20 transition-colors duration-200"
-        style={{ borderBottomColor: location.length > 2 ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
+        className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+        style={{ color: tk.text, borderBottomColor: location.length > 2 ? SIGNAL_GREEN : tk.border(false) }}
       />
-
       {location.length > 3 && (
         <div className="space-y-3" style={{ animation: "fade-up 0.35s ease-out both" }}>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-white/30">Also serve nearby?</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: tk.hint }}>Also serve nearby?</p>
           <div className="flex flex-wrap items-center gap-2">
             {serviceAreas.map((area) => (
-              <span
-                key={area}
-                className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] px-3 py-1 text-xs font-black uppercase tracking-[0.1em] text-white"
-              >
+              <span key={area} className="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-[0.1em]"
+                style={{ borderColor: tk.cardBorder(false), color: tk.text, backgroundColor: tk.cardBg(false) }}>
                 {area}
-                <button type="button" onClick={() => onAreas(serviceAreas.filter((a) => a !== area))} className="text-white/40 hover:text-white">×</button>
+                <button type="button" onClick={() => onAreas(serviceAreas.filter((a) => a !== area))} style={{ color: tk.hint }}>×</button>
               </span>
             ))}
             <input
@@ -389,7 +452,8 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas }: {
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(draft) } }}
               onBlur={() => draft.trim() && addArea(draft)}
               placeholder="Add a city"
-              className="border-0 border-b border-white/18 bg-transparent px-0 py-1 text-xs font-black uppercase tracking-[0.1em] text-white outline-none placeholder:text-white/22 focus:border-[#32D074] w-24"
+              className={`w-24 border-0 border-b bg-transparent px-0 py-1 text-xs font-black uppercase tracking-[0.1em] outline-none focus:border-[#32D074] ${tk.placeholder}`}
+              style={{ color: tk.text, borderBottomColor: tk.border(false) }}
             />
           </div>
         </div>
@@ -398,35 +462,37 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas }: {
   )
 }
 
-// ── Option card (for steps that auto-advance on tap) ──────────────────────────
-function OptionCard({ active, primaryColor, onClick, title, body }: {
-  active: boolean; primaryColor: string; onClick: () => void; title: string; body: string
+// ── Option card ───────────────────────────────────────────────────────────────
+function OptionCard({ active, isLight, primaryColor, onClick, title, body }: {
+  active: boolean; isLight: boolean; primaryColor: string; onClick: () => void; title: string; body: string
 }) {
+  const tk = getTokens(isLight, primaryColor)
   return (
-    <button
-      type="button" onClick={onClick}
+    <button type="button" onClick={onClick}
       className="min-h-[7rem] rounded-2xl border p-5 text-left transition-all duration-150"
-      style={{
-        borderColor: active ? primaryColor : "rgba(255,255,255,0.09)",
-        backgroundColor: active ? `${primaryColor}14` : "rgba(255,255,255,0.025)",
-      }}
-    >
-      <span className="block text-base font-black text-white">{title}</span>
-      <span className="mt-2 block text-sm leading-6 text-white/42">{body}</span>
+      style={{ borderColor: tk.cardBorder(active), backgroundColor: tk.cardBg(active) }}>
+      <span className="block text-base font-black" style={{ color: tk.text }}>{title}</span>
+      <span className="mt-2 block text-sm leading-6" style={{ color: tk.muted }}>{body}</span>
     </button>
   )
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow() {
-  const [stepIndex, setStepIndex] = useState(0)
-  const [answers, setAnswers] = useState<Answers>(INITIAL)
-  const [saving, setSaving] = useState(false)
-  const [result, setResult] = useState<{ url?: string; error?: string } | null>(null)
+export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
+  const [phase, setPhase]           = useState<Phase>("welcome")
+  const [stepIndex, setStepIndex]   = useState(0)
+  const [answers, setAnswers]       = useState<Answers>(INITIAL)
+  const [saving, setSaving]         = useState(false)
+  const [result, setResult]         = useState<{ url?: string; error?: string } | null>(null)
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
+  const [savingLead, setSavingLead]         = useState(false)
 
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
   const affirm  = getAffirmation(step, answers)
+  const isLight = phase === "questions"
+  const tk      = getTokens(isLight, answers.primaryColor)
   const manifest = answers.industry ? getIndustryManifest(answers.industry) : null
 
   const subOptions = useMemo(() => {
@@ -439,6 +505,11 @@ export default function OnboardingFlow() {
   }
 
   function advance() {
+    if (step === "welcome") {
+      setPhase("questions")
+      setStepIndex(1)
+      return
+    }
     if (!canAdvance(step, answers)) return
     if (stepIndex < STEPS.length - 1) setStepIndex((i) => i + 1)
     else void submit()
@@ -452,10 +523,7 @@ export default function OnboardingFlow() {
   async function submit() {
     if (saving) return
     setSaving(true)
-    const res = await createOnboardingSite({
-      ...answers,
-      services: answers.services.join(", "),
-    })
+    const res = await createOnboardingSite({ ...answers, services: answers.services.join(", ") })
     if (res.success && res.url) {
       setResult({ url: res.url })
     } else {
@@ -474,6 +542,40 @@ export default function OnboardingFlow() {
     }))
   }
 
+  function requestClose() {
+    if (stepIndex === 0) {
+      onClose?.()
+      return
+    }
+    if (answers.email.includes("@")) {
+      // Already have email — auto-save and close silently
+      void saveAbandonedLead({
+        firstName: answers.name.split(" ")[0] ?? "",
+        email: answers.email,
+        businessName: answers.name || undefined,
+        stepAbandoned: step,
+        partialAnswers: { name: answers.name, description: answers.description, industry: answers.industry, location: answers.location, stepIndex },
+      }).then(() => onClose?.())
+      return
+    }
+    setShowSaveDialog(true)
+  }
+
+  async function handleSaveLead() {
+    if (!saveLeadForm.email.includes("@")) return
+    setSavingLead(true)
+    await saveAbandonedLead({
+      firstName: saveLeadForm.firstName,
+      email: saveLeadForm.email,
+      businessName: answers.name || undefined,
+      stepAbandoned: step,
+      partialAnswers: { name: answers.name, description: answers.description, industry: answers.industry, location: answers.location, phone: answers.phone, stepIndex },
+    })
+    setSavingLead(false)
+    setShowSaveDialog(false)
+    onClose?.()
+  }
+
   // ── Screens ────────────────────────────────────────────────────────────────
   if (saving && !result) return <GeneratingScreen />
   if (result?.url) return (
@@ -485,337 +587,396 @@ export default function OnboardingFlow() {
     />
   )
 
-  // ── Layout ─────────────────────────────────────────────────────────────────
   const isAutoStep = ["subIndustry", "vibe", "photos", "logo"].includes(step)
 
+  // ── Layout ─────────────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
-      <div className="grid min-h-screen md:grid-cols-2">
+    <>
+      {showSaveDialog && (
+        <SaveSpotDialog
+          businessName={answers.name}
+          form={saveLeadForm}
+          onChange={setSaveLeadForm}
+          onSave={handleSaveLead}
+          onDismiss={() => { setShowSaveDialog(false); onClose?.() }}
+          saving={savingLead}
+        />
+      )}
 
-        {/* ── Left: conversation ── */}
-        <div className="flex min-h-screen flex-col px-7 py-8 md:min-h-0 md:px-12 md:py-10">
+      <main className="relative min-h-screen overflow-hidden">
+        <div className="grid min-h-screen md:grid-cols-2">
 
-          <header className="flex items-center justify-between">
-            <Link href="/">
-              <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
-                <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-              </svg>
-            </Link>
-          </header>
+          {/* ── Left: conversation ── */}
+          <div className="relative flex min-h-screen flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK }}>
 
-          {/* Question */}
-          <section
-            key={step}
-            className="flex flex-1 flex-col justify-center py-10"
-            style={{ animation: "fade-up 0.38s ease-out both" }}
-          >
-            <div className="mb-8 max-w-lg">
-              {answers.industry && !["welcome","description"].includes(step) && (
-                <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-                  {industryLabels[answers.industry]}
-                </p>
-              )}
-              <h1 className="text-3xl font-light leading-tight text-white md:text-[2.6rem]">
-                {questionTitle(step, answers)}
-              </h1>
-              {step === "welcome" && (
-                <p className="mt-4 text-base leading-8 text-white/45">
-                  Answer however feels natural — like telling a friend about your business.
-                </p>
-              )}
-              {step === "description" && (
-                <p className="mt-3 text-sm text-white/35">In your own words. This is how Found understands your business.</p>
-              )}
-              {step === "location" && (
-                <p className="mt-3 text-sm text-white/35">Your city anchors your headline, your CTA, and your SEO.</p>
-              )}
-              {ready && affirm && (
-                <p
-                  className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
-                  style={{ color: SIGNAL_GREEN, animation: "fade-in 0.3s ease-out both" }}
-                >
-                  {affirm}
-                </p>
-              )}
-            </div>
-
-            {/* ── Inputs ── */}
-
-            {step === "name" && (
-              <input
-                autoFocus
-                value={answers.name}
-                onChange={(e) => set("name", e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && advance()}
-                placeholder="e.g. Barrio Builders"
-                className="w-full border-0 border-b-2 bg-transparent px-0 py-3 text-4xl font-light text-white outline-none placeholder:text-white/18 transition-colors duration-200"
-                style={{ borderBottomColor: answers.name ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
+            {/* White phase panel — sweeps up from below when questions begin */}
+            {phase === "questions" && (
+              <div
+                key="light-panel"
+                className="absolute inset-0 z-0"
+                style={{ backgroundColor: LIGHT_BG, animation: "sweep-up 300ms cubic-bezier(0.32,0.72,0,1) both" }}
               />
             )}
 
-            {step === "description" && (
-              <textarea
-                autoFocus
-                value={answers.description}
-                onChange={(e) => handleDescription(e.target.value)}
-                placeholder="I do roofing and remodeling in Tucson... I'm a balloon artist for parties and events... I run a smoothie shop..."
-                rows={4}
-                className="w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-2xl font-light leading-relaxed text-white outline-none placeholder:text-white/18 transition-colors duration-200"
-                style={{ borderBottomColor: answers.description.length > 8 ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
-              />
-            )}
+            {/* Content layer */}
+            <div className="relative z-10 flex min-h-screen flex-col px-7 py-8 md:px-12 md:py-10">
 
-            {step === "subIndustry" && (
-              <div className="space-y-4">
-                {manifest && (
+              <header className="flex items-center justify-between">
+                {onClose ? (
+                  <svg viewBox="0 0 420 72" className="h-7 w-36" aria-label="Found" style={{ color: tk.text }}>
+                    <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+                  </svg>
+                ) : (
+                  <Link href="/">
+                    <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
+                      <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+                    </svg>
+                  </Link>
+                )}
+                {onClose && (
                   <button
                     type="button"
-                    onClick={() => setAnswers((prev) => ({ ...prev, industry: null, subIndustry: "" }))}
-                    className="text-xs font-black uppercase tracking-[0.14em] text-white/30 underline decoration-[#32D074] underline-offset-4 hover:text-white/55"
+                    onClick={requestClose}
+                    className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-black/10"
+                    aria-label="Close"
                   >
-                    Not {manifest.label}? Change it
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" style={{ color: tk.text }}>
+                      <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                 )}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {subOptions.map((option) => {
-                    const active = answers.subIndustry === option || (!manifest && industryLabels[answers.industry ?? ""] === option)
-                    return (
-                      <button
-                        key={option} type="button"
-                        onClick={() => autoAdvance(() => {
-                          if (!manifest) {
-                            const k = Object.entries(industryLabels).find(([, l]) => l === option)?.[0] ?? null
-                            setAnswers((prev) => ({ ...prev, industry: k, subIndustry: "" }))
-                          } else {
-                            set("subIndustry", option)
-                          }
-                        })}
-                        className="min-h-[3.25rem] rounded-xl border px-4 py-3 text-left text-sm font-black uppercase tracking-[0.1em] transition-all duration-150"
-                        style={{
-                          borderColor: active ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
-                          backgroundColor: active ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.025)",
-                          color: active ? "#fff" : "rgba(255,255,255,0.55)",
-                        }}
-                      >
-                        {option}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+              </header>
 
-            {step === "location" && (
-              <LocationInput
-                location={answers.location}
-                serviceAreas={answers.serviceAreas}
-                onLocation={(v) => set("location", v)}
-                onAreas={(v) => set("serviceAreas", v)}
-              />
-            )}
-
-            {step === "contact" && (
-              <div className="space-y-6">
-                <input
-                  autoFocus type="tel"
-                  value={answers.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                  placeholder="Phone number"
-                  className="w-full border-0 border-b-2 bg-transparent px-0 py-3 text-3xl font-light text-white outline-none placeholder:text-white/18 transition-colors duration-200"
-                  style={{ borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
-                />
-                <input
-                  type="email"
-                  value={answers.email}
-                  onChange={(e) => set("email", e.target.value)}
-                  placeholder="Email address"
-                  className="w-full border-0 border-b-2 bg-transparent px-0 py-3 text-2xl font-light text-white outline-none placeholder:text-white/18 transition-colors duration-200"
-                  style={{ borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
-                />
-                <p className="text-xs text-white/25">Not shown publicly. Leads from your site go here.</p>
-              </div>
-            )}
-
-            {step === "different" && (
-              <div className="space-y-5">
-                <textarea
-                  autoFocus
-                  value={answers.different}
-                  onChange={(e) => set("different", e.target.value)}
-                  placeholder="We've been in Tucson for 20 years and treat every home like our own..."
-                  rows={4}
-                  className="w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-2xl font-light leading-relaxed text-white outline-none placeholder:text-white/18 transition-colors duration-200"
-                  style={{ borderBottomColor: answers.different.length > 8 ? SIGNAL_GREEN : "rgba(255,255,255,0.13)" }}
-                />
-                {answers.industry && DIFFERENTIATOR_CHIPS[answers.industry] && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-white/25">Quick adds</p>
-                    <div className="flex flex-wrap gap-2">
-                      {DIFFERENTIATOR_CHIPS[answers.industry].map((chip) => (
-                        <button
-                          key={chip} type="button"
-                          onClick={() => set("different", answers.different ? `${answers.different}, ${chip}` : chip)}
-                          className="rounded-full border border-white/12 px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-white/38 transition hover:border-white/28 hover:text-white/68"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
+              {/* ── Welcome (dark) ── */}
+              {phase === "welcome" && (
+                <section
+                  key="welcome"
+                  className="flex flex-1 flex-col justify-center py-10"
+                  style={{ animation: "fade-up 0.38s ease-out both" }}
+                >
+                  <div className="mb-10 max-w-lg">
+                    <h1 className="text-3xl font-light leading-tight text-white md:text-[2.6rem]">
+                      Let's build your website.
+                    </h1>
+                    <p className="mt-4 text-base leading-8 text-white/45">
+                      Answer a few questions. We'll do the rest.
+                    </p>
                   </div>
-                )}
-              </div>
-            )}
+                  <button
+                    type="button"
+                    onClick={advance}
+                    className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest sm:w-auto sm:px-12 md:py-6"
+                    style={{
+                      backgroundColor: SIGNAL_GREEN,
+                      color: FOUND_BLACK,
+                      boxShadow: "0 0 40px rgba(50,208,116,0.38)",
+                    }}
+                  >
+                    Let's go →
+                  </button>
+                </section>
+              )}
 
-            {step === "services" && (
-              <ServiceChipInput
-                value={answers.services}
-                onChange={(v) => set("services", v)}
-                primaryColor={answers.primaryColor}
-                industry={answers.industry}
-              />
-            )}
+              {/* ── Questions (light) ── */}
+              {phase === "questions" && (
+                <>
+                  <section
+                    key={step}
+                    className="flex flex-1 flex-col justify-center py-10"
+                    style={{ animation: "fade-up 0.38s ease-out both" }}
+                  >
+                    <div className="mb-8 max-w-lg">
+                      {answers.industry && !["description"].includes(step) && (
+                        <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+                          {industryLabels[answers.industry]}
+                        </p>
+                      )}
+                      <h1 className="text-3xl font-light leading-tight md:text-[2.6rem]" style={{ color: tk.text }}>
+                        {questionTitle(step, answers)}
+                      </h1>
+                      {step === "description" && (
+                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>In your own words. This is how Found understands your business.</p>
+                      )}
+                      {step === "location" && (
+                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
+                      )}
+                      {step === "contact" && (
+                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>Not shown publicly. Leads from your site go here.</p>
+                      )}
+                      {ready && affirm && (
+                        <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
+                          style={{ color: SIGNAL_GREEN, animation: "fade-in 0.3s ease-out both" }}>
+                          {affirm}
+                        </p>
+                      )}
+                    </div>
 
-            {step === "photos" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <OptionCard active={answers.photoChoice === "stock"} primaryColor={answers.primaryColor}
-                  onClick={() => autoAdvance(() => set("photoChoice", "stock"))}
-                  title="Skip for now"
-                  body="We'll pull great photos for your industry automatically."
-                />
-                <OptionCard active={answers.photoChoice === "upload_later"} primaryColor={answers.primaryColor}
-                  onClick={() => autoAdvance(() => set("photoChoice", "upload_later"))}
-                  title="Add photos later"
-                  body="Launch now. Drop in real work photos when you're ready."
-                />
-              </div>
-            )}
+                    {/* ── Inputs ── */}
 
-            {step === "logo" && (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <OptionCard active={answers.logoChoice === "brandmark"} primaryColor={answers.primaryColor}
-                  onClick={() => autoAdvance(() => set("logoChoice", "brandmark"))}
-                  title="Not yet — that's okay"
-                  body="Found turns your business name into a clean professional wordmark."
-                />
-                <OptionCard active={answers.logoChoice === "upload_later"} primaryColor={answers.primaryColor}
-                  onClick={() => autoAdvance(() => set("logoChoice", "upload_later"))}
-                  title="I have a logo"
-                  body="Upload coming soon. We'll launch with a wordmark and swap it in."
-                />
-              </div>
-            )}
+                    {step === "name" && (
+                      <input
+                        autoFocus
+                        value={answers.name}
+                        onChange={(e) => set("name", e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && advance()}
+                        placeholder="e.g. Barrio Builders"
+                        className={`w-full text-4xl ${tk.inputCls} ${tk.placeholder}`}
+                        style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
+                      />
+                    )}
 
-            {step === "color" && (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {palettes.map((p) => {
-                  const active = answers.primaryColor.toLowerCase() === p.hex.toLowerCase()
-                  return (
-                    <button
-                      key={p.hex} type="button"
-                      onClick={() => set("primaryColor", p.hex)}
-                      className="flex min-h-[4rem] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-all duration-150"
-                      style={{
-                        borderColor: active ? p.hex : "rgba(255,255,255,0.08)",
-                        backgroundColor: active ? `${p.hex}18` : "rgba(255,255,255,0.025)",
-                      }}
-                    >
-                      <span className="h-8 w-8 shrink-0 rounded-full" style={{ backgroundColor: p.hex }} />
-                      <span>
-                        <span className="block text-sm font-black text-white">{p.name}</span>
-                        <span className="block text-xs text-white/38">{p.feel}</span>
-                      </span>
-                    </button>
-                  )
-                })}
-                <label className="flex min-h-[4rem] cursor-pointer items-center gap-4 rounded-xl border border-white/08 bg-white/[0.025] px-4 py-3 transition hover:border-white/18">
-                  <span className="h-8 w-8 shrink-0 rounded-full border border-white/18" style={{ backgroundColor: answers.primaryColor }} />
-                  <span className="flex-1">
-                    <span className="block text-sm font-black text-white">Custom</span>
-                    <input
-                      value={answers.primaryColor}
-                      onChange={(e) => set("primaryColor", e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-0.5 w-full bg-transparent text-xs font-black uppercase text-white/38 outline-none"
-                      placeholder="#2E7D32"
-                    />
-                  </span>
-                </label>
-              </div>
-            )}
+                    {step === "description" && (
+                      <textarea
+                        autoFocus
+                        value={answers.description}
+                        onChange={(e) => handleDescription(e.target.value)}
+                        placeholder="I do roofing and remodeling in Tucson... I'm a balloon artist for parties and events..."
+                        rows={4}
+                        className={`w-full resize-none text-[2rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
+                        style={{ color: tk.text, borderBottomColor: answers.description.length > 8 ? SIGNAL_GREEN : tk.border(false) }}
+                      />
+                    )}
 
-            {step === "vibe" && (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {[
-                  { key: "bold",   label: "Bold",   desc: "Strong and confident",    radius: "8px"  },
-                  { key: "calm",   label: "Calm",   desc: "Soft and elevated",        radius: "22px" },
-                  { key: "modern", label: "Modern", desc: "Clean and sharp",          radius: "4px"  },
-                  { key: "warm",   label: "Warm",   desc: "Friendly and approachable",radius: "18px" },
-                ].map((o) => {
-                  const active = answers.vibe === o.key
-                  return (
-                    <button
-                      key={o.key} type="button"
-                      onClick={() => autoAdvance(() => set("vibe", o.key))}
-                      className="min-h-[7rem] border p-5 text-left transition-all duration-150"
-                      style={{
-                        borderRadius: o.radius,
-                        borderColor: active ? answers.primaryColor : "rgba(255,255,255,0.09)",
-                        backgroundColor: active ? `${answers.primaryColor}14` : "rgba(255,255,255,0.025)",
-                      }}
-                    >
-                      <div className="mb-3 h-0.5 w-10" style={{ backgroundColor: answers.primaryColor }} />
-                      <span className="block text-base font-black text-white">{o.label}</span>
-                      <span className="mt-1 block text-xs text-white/40">{o.desc}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+                    {step === "subIndustry" && (
+                      <div className="space-y-4">
+                        {manifest && (
+                          <button type="button"
+                            onClick={() => setAnswers((prev) => ({ ...prev, industry: null, subIndustry: "" }))}
+                            className="text-xs font-black uppercase tracking-[0.14em] underline decoration-[#32D074] underline-offset-4"
+                            style={{ color: tk.muted }}>
+                            Not {manifest.label}? Change it
+                          </button>
+                        )}
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {subOptions.map((option) => {
+                            const active = answers.subIndustry === option || (!manifest && industryLabels[answers.industry ?? ""] === option)
+                            return (
+                              <button key={option} type="button"
+                                onClick={() => autoAdvance(() => {
+                                  if (!manifest) {
+                                    const k = Object.entries(industryLabels).find(([, l]) => l === option)?.[0] ?? null
+                                    setAnswers((prev) => ({ ...prev, industry: k, subIndustry: "" }))
+                                  } else {
+                                    set("subIndustry", option)
+                                  }
+                                })}
+                                className="min-h-[3.25rem] rounded-xl border px-4 py-3 text-left text-sm font-black uppercase tracking-[0.1em] transition-all duration-150"
+                                style={{
+                                  borderColor: active ? SIGNAL_GREEN : tk.cardBorder(false),
+                                  backgroundColor: active ? `${SIGNAL_GREEN}14` : tk.cardBg(false),
+                                  color: active ? tk.text : tk.muted,
+                                }}>
+                                {option}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
 
-            {step === "testimonials" && (
-              <div className="space-y-4">
-                <textarea
-                  autoFocus
-                  value={answers.testimonials}
-                  onChange={(e) => set("testimonials", e.target.value)}
-                  placeholder={"Maria — She made everything simple and stress-free.\nDaniel — Best contractor I've ever hired."}
-                  rows={5}
-                  className="w-full resize-none border-0 border-b-2 bg-transparent px-0 py-3 text-xl font-light leading-relaxed text-white outline-none placeholder:text-white/18"
-                  style={{ borderBottomColor: "rgba(255,255,255,0.13)" }}
-                />
-                <p className="text-xs text-white/25">Optional. Each line is one review. Your site looks great without these too.</p>
-              </div>
-            )}
+                    {step === "location" && (
+                      <LocationInput
+                        location={answers.location}
+                        serviceAreas={answers.serviceAreas}
+                        onLocation={(v) => set("location", v)}
+                        onAreas={(v) => set("serviceAreas", v)}
+                        isLight={isLight}
+                        primaryColor={answers.primaryColor}
+                      />
+                    )}
 
-            {result?.error && (
-              <p className="mt-5 text-sm font-bold text-red-400">{result.error}</p>
-            )}
-          </section>
+                    {step === "contact" && (
+                      <div className="space-y-6">
+                        <input
+                          autoFocus type="tel"
+                          value={answers.phone}
+                          onChange={(e) => set("phone", e.target.value)}
+                          placeholder="Phone number"
+                          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
+                        />
+                        <input
+                          type="email"
+                          value={answers.email}
+                          onChange={(e) => set("email", e.target.value)}
+                          placeholder="Email address"
+                          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
+                        />
+                      </div>
+                    )}
 
-          {/* CTA — hidden on auto-advance steps */}
-          {!isAutoStep && (
-            <footer className="pb-2">
-              <button
-                type="button" onClick={advance}
-                disabled={!ready}
-                className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-22 sm:w-auto sm:px-10"
-                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-              >
-                {step === "welcome" ? "Let's go" : step === "testimonials" ? "Build my site" : "Continue"}
-              </button>
-            </footer>
-          )}
+                    {step === "different" && (
+                      <div className="space-y-5">
+                        <textarea
+                          autoFocus
+                          value={answers.different}
+                          onChange={(e) => set("different", e.target.value)}
+                          placeholder="We've been in Tucson for 20 years and treat every home like our own..."
+                          rows={4}
+                          className={`w-full resize-none text-[2rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.different.length > 8 ? SIGNAL_GREEN : tk.border(false) }}
+                        />
+                        {answers.industry && DIFFERENTIATOR_CHIPS[answers.industry] && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: tk.hint }}>Quick adds</p>
+                            <div className="flex flex-wrap gap-2">
+                              {DIFFERENTIATOR_CHIPS[answers.industry].map((chip) => (
+                                <button key={chip} type="button"
+                                  onClick={() => set("different", answers.different ? `${answers.different}, ${chip}` : chip)}
+                                  className="rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] transition"
+                                  style={{ borderColor: tk.chipBorder(false), color: tk.muted }}>
+                                  {chip}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {step === "services" && (
+                      <ServiceChipInput
+                        value={answers.services}
+                        onChange={(v) => set("services", v)}
+                        isLight={isLight}
+                        primaryColor={answers.primaryColor}
+                        industry={answers.industry}
+                      />
+                    )}
+
+                    {step === "photos" && (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <OptionCard active={answers.photoChoice === "stock"} isLight={isLight} primaryColor={answers.primaryColor}
+                          onClick={() => autoAdvance(() => set("photoChoice", "stock"))}
+                          title="Skip for now"
+                          body="We'll pull great photos for your industry automatically." />
+                        <OptionCard active={answers.photoChoice === "upload_later"} isLight={isLight} primaryColor={answers.primaryColor}
+                          onClick={() => autoAdvance(() => set("photoChoice", "upload_later"))}
+                          title="Add photos later"
+                          body="Launch now. Drop in real work photos when you're ready." />
+                      </div>
+                    )}
+
+                    {step === "logo" && (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <OptionCard active={answers.logoChoice === "brandmark"} isLight={isLight} primaryColor={answers.primaryColor}
+                          onClick={() => autoAdvance(() => set("logoChoice", "brandmark"))}
+                          title="Not yet — that's okay"
+                          body="Found turns your business name into a clean professional wordmark." />
+                        <OptionCard active={answers.logoChoice === "upload_later"} isLight={isLight} primaryColor={answers.primaryColor}
+                          onClick={() => autoAdvance(() => set("logoChoice", "upload_later"))}
+                          title="I have a logo"
+                          body="Upload coming soon. We'll launch with a wordmark and swap it in." />
+                      </div>
+                    )}
+
+                    {step === "color" && (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {palettes.map((p) => {
+                          const active = answers.primaryColor.toLowerCase() === p.hex.toLowerCase()
+                          return (
+                            <button key={p.hex} type="button"
+                              onClick={() => set("primaryColor", p.hex)}
+                              className="flex min-h-[4rem] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-all duration-150"
+                              style={{ borderColor: tk.cardBorder(active, p.hex), backgroundColor: tk.cardBg(active) }}>
+                              <span className="h-8 w-8 shrink-0 rounded-full" style={{ backgroundColor: p.hex }} />
+                              <span>
+                                <span className="block text-sm font-black" style={{ color: tk.text }}>{p.name}</span>
+                                <span className="block text-xs" style={{ color: tk.muted }}>{p.feel}</span>
+                              </span>
+                            </button>
+                          )
+                        })}
+                        <label className="flex min-h-[4rem] cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 transition"
+                          style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                          <span className="h-8 w-8 shrink-0 rounded-full border" style={{ backgroundColor: answers.primaryColor, borderColor: tk.cardBorder(false) }} />
+                          <span className="flex-1">
+                            <span className="block text-sm font-black" style={{ color: tk.text }}>Custom</span>
+                            <input
+                              value={answers.primaryColor}
+                              onChange={(e) => set("primaryColor", e.target.value)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="mt-0.5 w-full bg-transparent text-xs font-black uppercase outline-none"
+                              style={{ color: tk.muted }}
+                              placeholder="#2E7D32"
+                            />
+                          </span>
+                        </label>
+                      </div>
+                    )}
+
+                    {step === "vibe" && (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {[
+                          { key: "bold",   label: "Bold",   desc: "Strong and confident",    radius: "8px"  },
+                          { key: "calm",   label: "Calm",   desc: "Soft and elevated",        radius: "22px" },
+                          { key: "modern", label: "Modern", desc: "Clean and sharp",          radius: "4px"  },
+                          { key: "warm",   label: "Warm",   desc: "Friendly and approachable",radius: "18px" },
+                        ].map((o) => {
+                          const active = answers.vibe === o.key
+                          return (
+                            <button key={o.key} type="button"
+                              onClick={() => autoAdvance(() => set("vibe", o.key))}
+                              className="min-h-[7rem] border p-5 text-left transition-all duration-150"
+                              style={{ borderRadius: o.radius, borderColor: tk.cardBorder(active), backgroundColor: tk.cardBg(active) }}>
+                              <div className="mb-3 h-0.5 w-10" style={{ backgroundColor: answers.primaryColor }} />
+                              <span className="block text-base font-black" style={{ color: tk.text }}>{o.label}</span>
+                              <span className="mt-1 block text-xs" style={{ color: tk.muted }}>{o.desc}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {step === "testimonials" && (
+                      <div className="space-y-4">
+                        <textarea
+                          autoFocus
+                          value={answers.testimonials}
+                          onChange={(e) => set("testimonials", e.target.value)}
+                          placeholder={"Maria — She made everything simple and stress-free.\nDaniel — Best contractor I've ever hired."}
+                          rows={5}
+                          className={`w-full resize-none text-xl leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: tk.border(false) }}
+                        />
+                        <p className="text-[0.9rem]" style={{ color: tk.hint }}>
+                          Optional. Each line is one review. Your site looks great without these too.
+                        </p>
+                      </div>
+                    )}
+
+                    {result?.error && (
+                      <p className="mt-5 text-sm font-bold text-red-500">{result.error}</p>
+                    )}
+                  </section>
+
+                  {/* CTA — hidden on auto-advance steps */}
+                  {!isAutoStep && (
+                    <footer className="pb-2">
+                      <button
+                        type="button" onClick={advance}
+                        disabled={!ready}
+                        className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-10"
+                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                      >
+                        {step === "testimonials" ? "Build my site" : "Continue →"}
+                      </button>
+                    </footer>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* ── Right: live preview (desktop only) ── */}
+          <div className="hidden flex-col md:flex"
+            style={{ backgroundColor: "#050705", borderLeft: "1px solid rgba(255,255,255,0.045)" }}>
+            <LivePreview answers={answers} />
+          </div>
+
         </div>
-
-        {/* ── Right: live preview (desktop only) ── */}
-        <div
-          className="hidden md:flex flex-col"
-          style={{ backgroundColor: "#050705", borderLeft: "1px solid rgba(255,255,255,0.045)" }}
-        >
-          <LivePreview answers={answers} />
-        </div>
-
-      </div>
-    </main>
+      </main>
+    </>
   )
 }
