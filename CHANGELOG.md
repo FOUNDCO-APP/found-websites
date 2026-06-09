@@ -4,6 +4,59 @@
 
 ---
 
+## Session: June 9, 2026 — Option B + C: Slide-Up Drawer, Light Question Screens, Save-Spot Lead Capture
+**AI:** Claude Code (Sonnet 4.6) + Apple Team
+**Worked on:** Implemented approved Option B + C design direction, added save-spot lead capture on dismiss
+
+### ✅ Completed This Session
+
+**Design review (Jony led, Steve approved):**
+- Confirmed B + C together is correct — they solve different problems and belong together
+- Welcome screen redesigned: trimmed subtext, big Signal Green pill button with 0.0 40px rgba(50,208,116,0.38) glow
+- Three transition moments locked: welcome→questions (white sweeps up), questions→generating (dark returns), generating→reveal (already solid)
+- Three architecture decisions locked: URL updates to /onboarding when drawer opens, dismissal friction dialog if ≥1 question answered, no progress persistence yet (Phase 3)
+- Save-spot lead capture added (Shawn's idea): dismissal becomes an offer, not a warning
+
+**Option C — Slide-up drawer (commit `7517ab7`):**
+- `src/app/page.tsx` converted to client component; "Build my site" + "Start" trigger `setDrawerOpen(true)` instead of navigating
+- `src/components/OnboardingDrawer.tsx` — new full-screen panel, slides up from below (500ms cubic-bezier(0.32,0.72,0,1)), locks body scroll, manages URL pushState/popState
+- Auto-opens when landing with `?start=1` (resume link from save-spot email)
+- Browser back button closes drawer
+- `/onboarding` standalone page still works as fallback
+
+**Option B — Light question screens:**
+- `phase` state: `'welcome' | 'questions'`
+- Welcome screen stays Pure Studio dark — big Signal Green button, soft glow
+- On "Let's go →": white `#FAFAF9` panel sweeps up from below (`@keyframes sweep-up`, 300ms), covering dark welcome
+- All question steps render on white with FOUND_BLACK text — accessibility fixed
+- Reveal + Generating screens stay dark — full arc: Dark / Light / Dark ✅
+- `getTokens(isLight, primaryColor)` helper: all colors (text, muted, hint, borders, card bg/border, placeholders) switch based on phase
+- Accessibility: all inputs min `text-[2rem]`, all hints `text-[0.9rem]`, placeholder `#757575` (4.54:1 WCAG AA on #FAFAF9)
+- X button in header when in drawer mode — color adapts to phase
+
+**Save-spot lead capture (Shawn's idea — approved by full team):**
+- `saveAbandonedLead` server action added to `src/app/onboarding/actions.ts`
+- `requestClose()` logic: if stepIndex 0 → close immediately; if email already collected → auto-save silently + close; if not → show SaveSpotDialog
+- `SaveSpotDialog`: bottom sheet on mobile, centered card on desktop — first name + email → saves `type: 'onboarding_abandoned'` lead to Supabase → sends one Angela-tone follow-up email via Resend
+- Migration script: `scripts/migration-add-lead-type.sql` — must be run in Supabase SQL editor
+
+### ⚠️ ACTION REQUIRED — Run migration before save-spot is live
+
+Shawn must run `scripts/migration-add-lead-type.sql` in Supabase SQL editor:
+- Makes `company_id` nullable in `leads` table (abandoned leads have no company yet)
+- Adds `type varchar(64)` and `partial_answers jsonb` columns
+- Without this, save-spot will throw a DB error on submit
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Run Supabase migration** — `scripts/migration-add-lead-type.sql` in SQL editor before testing save-spot
+2. **Test on real devices** — verify drawer entrance on iPhone portrait, iPad, desktop; check light question screens contrast; test X button + save dialog
+3. **Angela's affirmations** — write exact wording for each step affirmation (visual system is now stable — this was the blocker)
+4. **Wire Google Places API** — Shawn to get API key from Google Cloud Console (Places API, restrict to foundco.app + localhost)
+5. **Real file uploads** — logo and hero photo to Supabase Storage
+
+---
+
 ## Session: June 8, 2026 — Homepage Responsive Fixes + Onboarding Rebuild + Design Direction Locked
 **AI:** Claude Code (Sonnet 4.6) + Apple Team
 **Worked on:** Fixed all homepage responsive issues from Codex session, rebuilt onboarding in Found visual system, locked design direction for next onboarding phase

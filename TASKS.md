@@ -35,14 +35,10 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-0. **Onboarding redesign — Option C (slide-up drawer) + Option B (light question screens)**
-   - Owner: Jony + Angela + Craig
-   - Status: ACTIVE — Approved by Shawn June 8, 2026. Build starts next session.
-   - Decision: Locked by Steve. Jony led.
-   - Option C: "Build my site" on homepage slides a full-screen panel up from the bottom (like Typeform, like an iOS sheet). No hard page navigation. Homepage stays beneath. The entrance IS the wow moment.
-   - Option B: Question screens flip to white/near-white background with FOUND_BLACK text and Signal Green accents. Welcome screen and RevealScreen stay Pure Studio dark. The arc: Dark welcome → light questions → dark reveal. Ceremony / Work / Ceremony.
-   - Accessibility rules locked: input font min 2rem, hint text min 0.9rem at WCAG AA contrast, placeholder visible at rest (not invisible until typing), every screen has an obvious primary action.
-   - Current code: `src/app/onboarding/OnboardingFlow.tsx` (full rewrite June 8). `src/app/page.tsx` needs the drawer trigger added. CSS for slide-up animation goes in `src/app/globals.css`.
+0. **Run Supabase migration for save-spot lead capture**
+   - Owner: Shawn (manual step in Supabase SQL editor)
+   - Status: READY — script at `scripts/migration-add-lead-type.sql`
+   - Notes: Makes company_id nullable, adds type + partial_answers columns to leads table. Required before save-spot dialog can save leads. Without this, the DB insert will fail.
 
 1. **Wire Google Places API for city autocomplete**
    - Owner: Craig + Shawn
@@ -53,7 +49,12 @@ Exit criteria:
 
 ## RECENTLY COMPLETED
 
-0. **Homepage hero — all responsive issues resolved (June 8, 2026)**
+0. **Option B + C — Slide-up drawer + light question screens + save-spot lead capture (June 9, 2026)**
+   - Owner: Jony + Angela + Craig + Shawn
+   - Status: ✅ Shipped. Commit `7517ab7`. Vercel deploying.
+   - Notes: Drawer slides up from homepage, dark/light/dark arc, X button + save-spot dialog, Resend follow-up email. Migration still needs to be run in Supabase.
+
+1. **Homepage hero — all responsive issues resolved (June 8, 2026)**
    - Owner: Jony + Steve + Craig
    - Status: ✅ Completed and verified on Dell Latitude 5400 (Firefox full-screen), iPhone portrait, and iPad
    - Notes: FOUND wordmark moved from copy column to persistent nav header on all screen sizes (removed `md:hidden`). Removed `found-desktop-wordmark` div — freed ~92px, fixed Dell Latitude overflow. iPhone subtitle `<br />` added between sentences. START button absolute positioning removed from portrait CSS — now flows naturally. Categories margin `mt-16` → `mt-8`. Commits: `f0e2d61`, `1ad478f`.
