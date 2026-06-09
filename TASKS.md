@@ -35,34 +35,50 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-0. **June 8 handoff: homepage hero QA + next product work**
-   - Owner: Shawn + Jony + Craig
-   - Status: In review after June 8, 2026 responsive refactor
-   - Notes: Found homepage hero v3 is live at `foundco.app`. Latest pushed commit is `88a3bc6`. Shawn should review desktop, iPad, iPhone portrait, and iPhone landscape on real devices before the hero is considered locked. Next AI should not keep bandaging responsive issues with one-off overrides; use the approved four-state system in `src/app/globals.css`.
+0. **Onboarding redesign — Option C (slide-up drawer) + Option B (light question screens)**
+   - Owner: Jony + Angela + Craig
+   - Status: ACTIVE — Approved by Shawn June 8, 2026. Build starts next session.
+   - Decision: Locked by Steve. Jony led.
+   - Option C: "Build my site" on homepage slides a full-screen panel up from the bottom (like Typeform, like an iOS sheet). No hard page navigation. Homepage stays beneath. The entrance IS the wow moment.
+   - Option B: Question screens flip to white/near-white background with FOUND_BLACK text and Signal Green accents. Welcome screen and RevealScreen stay Pure Studio dark. The arc: Dark welcome → light questions → dark reveal. Ceremony / Work / Ceremony.
+   - Accessibility rules locked: input font min 2rem, hint text min 0.9rem at WCAG AA contrast, placeholder visible at rest (not invisible until typing), every screen has an obvious primary action.
+   - Current code: `src/app/onboarding/OnboardingFlow.tsx` (full rewrite June 8). `src/app/page.tsx` needs the drawer trigger added. CSS for slide-up animation goes in `src/app/globals.css`.
 
-1. **Run Supabase sub_industry migration**
+1. **Wire Google Places API for city autocomplete**
+   - Owner: Craig + Shawn
+   - Status: Stub in place. Waiting for Shawn to get Google Maps API key from Google Cloud Console.
+   - Notes: Restrict key to Places API + foundco.app + localhost. Server-side proxy at `/api/places`. Replace current city `<input>` in LocationInput component. Show nearby service area chips after city selection. See `// TODO: Replace city <input> with Google Places Autocomplete` in OnboardingFlow.tsx.
+
+---
+
+## RECENTLY COMPLETED
+
+0. **Homepage hero — all responsive issues resolved (June 8, 2026)**
+   - Owner: Jony + Steve + Craig
+   - Status: ✅ Completed and verified on Dell Latitude 5400 (Firefox full-screen), iPhone portrait, and iPad
+   - Notes: FOUND wordmark moved from copy column to persistent nav header on all screen sizes (removed `md:hidden`). Removed `found-desktop-wordmark` div — freed ~92px, fixed Dell Latitude overflow. iPhone subtitle `<br />` added between sentences. START button absolute positioning removed from portrait CSS — now flows naturally. Categories margin `mt-16` → `mt-8`. Commits: `f0e2d61`, `1ad478f`.
+
+1. **Onboarding — full visual rebuild in Found system (June 8, 2026)**
+   - Owner: Jony + Angela + Craig
+   - Status: ✅ Shipped, live on Vercel. Commit: `1fa6970`.
+   - Notes: Pure Studio dark foundation, desktop two-column with live phone preview, `key={step}` transition animations, auto-advance on tap steps, Signal Green affirmations, ServiceChipInput, LocationInput with service area chips, GeneratingScreen (spinning ring + rotating lines), RevealScreen (full dark, phone mockup, green live indicator). No step counter, no back button. This is the foundation; Option B+C redesign is the active NOW task.
+
+2. **Run Supabase sub_industry migration**
    - Owner: Shawn + Priya
    - Status: ✅ Completed June 4, 2026
    - Notes: `scripts/add-sub-industry.sql` was run in Supabase SQL Editor.
 
-2. **Build onboarding question flow**
+3. **Build onboarding question flow**
    - Owner: Angela + Craig + Marcus
    - Status: ✅ Core flow completed June 5, 2026
    - Notes: `/onboarding` asks Angela's core questions, saves companies/config records, uses Q2.5 sub-industry, and now generates copy through Claude API when configured.
 
-3. **Site reveal moment**
+4. **Site reveal moment**
    - Owner: Angela + Jony
    - Status: ✅ First pass completed June 6, 2026
    - Notes: Pure Studio / Signal Green reveal screen now appears after onboarding creates the site.
 
-## RECENTLY COMPLETED
-
-0. **Found homepage hero v3 + responsive system**
-   - Owner: Jony + Steve + Craig
-   - Status: Completed June 8, 2026; awaiting Shawn's final real-device QA
-   - Notes: Shipped distinct client-site device mockups, removed redundant `Found Co.` / `Found it.`, and refactored hero responsive CSS around desktop, tablet/iPad, phone portrait, and phone landscape states.
-
-1. **Rotate security keys**
+5. **Rotate security keys**
    - Owner: Shawn
    - Status: ✅ Completed June 4, 2026
    - Notes: GitHub PAT, Supabase service role key, and ADMIN_KEY rotated.
@@ -101,11 +117,11 @@ Exit criteria:
 
 ## NEXT
 
-0. Lock homepage hero after Shawn's real-device QA, then bring `/onboarding` into the same approved Found visual system.
-1. Location intelligence - city autocomplete + nearby service area chips
-2. Differentiator suggestions - industry-specific helper chips
-3. Real file uploads for logo and owner photos/videos
-4. Logo color extraction from uploaded logos
+0. **Angela's affirmations** — Write exact wording for each onboarding step affirmation. System must be visually stable (Option B) before wording session. Angela owns content, Jony approves display.
+1. **Real file uploads** — Logo upload and hero photo upload wired to Supabase Storage. Currently "I have a logo / I'll add it later" stubs only.
+2. **Logo color extraction** — After logo upload, suggest a palette from the logo's dominant color before Q9 color picker.
+3. **FOUND wordmark size decision** — Nav wordmark is now h-8 w-44 (smaller than the old h-14 w-[330px] desktop version). Shawn said "not sure how I feel about it yet." Revisit after Option B+C ships.
+4. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
 
 ---
 

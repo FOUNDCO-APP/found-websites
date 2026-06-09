@@ -4,6 +4,84 @@
 
 ---
 
+## Session: June 8, 2026 — Homepage Responsive Fixes + Onboarding Rebuild + Design Direction Locked
+**AI:** Claude Code (Sonnet 4.6) + Apple Team
+**Worked on:** Fixed all homepage responsive issues from Codex session, rebuilt onboarding in Found visual system, locked design direction for next onboarding phase
+
+### ✅ Completed This Session
+
+**Homepage hero fixes (all verified on real devices):**
+- Moved FOUND wordmark from copy column into nav header on ALL screen sizes (removed `md:hidden`)
+- Removed `found-desktop-wordmark` div from copy column — freed ~92px of vertical space, fixed Dell Latitude 5400 overflow where header was cut off
+- iPhone subtitle: added `<br />` between the two sentences to reduce overlap with device art
+- Categories bullet row (Websites • Bookings • Quotes • Social): reduced `mt-16` → `mt-8`, now visible on desktop
+- Fixed START button on iPhone portrait: removed `position: absolute` from `.found-start-link` portrait CSS — was misaligned above the shell padding. Now flows naturally in flex header alongside FOUND wordmark.
+- Cleaned up dead `found-desktop-wordmark` CSS references in tablet, portrait, and landscape states
+- Added `@keyframes spin` to globals.css for generating screen spinner
+
+**Onboarding — full rebuild (`src/app/onboarding/OnboardingFlow.tsx`):**
+- Pure Studio dark foundation: `#080A09` background, white type, Signal Green accents throughout
+- Desktop two-column layout: question/conversation on left, live site preview on right
+- Live preview panel (desktop only): phone mockup updates in real time as owner types — name, industry, color, services all reflect immediately
+- Question transitions: `key={step}` triggers `fade-up` CSS animation on every step change
+- Removed: summary step, step counter ("X of 14"), Back button — forward motion only (Steve approved)
+- Auto-advance on single-tap steps (subIndustry, vibe, photos, logo) — 320ms delay after tap
+- Signal Green affirmations appear inline when field is ready: "Barrio Builders. Perfect." / "Home Services — makes sense." / etc.
+- `ServiceChipInput` component: chip-based service entry with industry sub-type suggestions
+- `LocationInput` component: city text input + service area chip row (appears after city is typed). Google Places autocomplete stubbed with `// TODO` comment — ready for API key
+- Differentiator chips (Q6): industry-specific quick-add phrases (e.g. "Family owned", "Licensed & insured", "Free estimates")
+- `GeneratingScreen`: spinning ring + 3 rotating lines ("Building your site." → "Writing your story." → "Almost ready.")
+- `RevealScreen`: full-screen Pure Studio reveal with phone mockup, Signal Green live indicator, site URL, "See your site" + "Make changes" CTAs
+- `actions.ts`: added `serviceAreas?: string[]` — merges typed service areas with derived city
+
+**Commits pushed today:**
+- `f0e2d61` — Move FOUND wordmark to nav on all screen sizes, fix desktop overflow
+- `1ad478f` — Fix START button alignment on iPhone portrait
+- `1fa6970` — Rebuild onboarding in Found visual system with live desktop preview
+
+### ⚠️ Design Feedback From Shawn (Session End — Addressed Next Session)
+
+Shawn reviewed the new onboarding on real devices and gave the following feedback:
+
+1. **Too dark for accessibility** — Shawn wears readers. Grayed-out placeholder text (white/18–25%) is invisible until typing starts. Subtext under location felt too small to read. For the target audience (small business owners, not all tech-savvy), contrast must be much higher.
+2. **Welcome screen has no "wow" and no clear call to action** — Doesn't communicate that you should type. Felt like something was broken. No invitation, no intrigue.
+3. **Transition from homepage to onboarding is a hard cut** — Needs a cinematic entrance. Referenced Typeform and Spa Mambo as examples.
+4. **Overall: alive but bland** — The green activating as you type is great. The initial landing doesn't pull you in.
+
+### 🔒 Design Decisions Locked for Next Session
+
+**Option B + C approved by Shawn, designed by Jony, approved by Steve:**
+
+**Option B — Light questions, dark bookends:**
+- Welcome screen: stays dark, Pure Studio, cinematic
+- Question screens: flip to clean white/near-white background with FOUND_BLACK text and Signal Green accents — maximum readability, Typeform-level contrast, Signal Green pops harder on white
+- Reveal screen: returns to dark — the site is born in darkness
+
+**Option C — Slide-up drawer from homepage:**
+- Onboarding does NOT navigate to a new page
+- Clicking "Build my site" on homepage slides a full-screen panel up from the bottom — like Typeform, like an iOS sheet
+- Homepage stays beneath. The entrance IS the wow moment.
+- This replaces the hard-cut page navigation currently in place
+
+**Together:** Dark homepage → slide-up reveals dark welcome screen → "Let's go" flips to light question screens → light questions throughout → dark reveal when site is ready. Dark / Light / Dark. Ceremony / Work / Ceremony.
+
+**Additional design rules for light question screens:**
+- Minimum font size for inputs: 2rem (32px) — never smaller
+- Minimum font size for hints/subtext: 0.9rem at white/75+ or black/65+
+- Placeholder text: visible at rest (not invisible until typing) — use opacity that passes WCAG AA (4.5:1)
+- Every screen must have an obvious primary action — no ambiguity about what to do
+- "Press Enter →" keyboard hint on text input steps (desktop)
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Implement Option C: slide-up drawer** — Homepage "Build my site" CTA opens onboarding as a slide-up full-screen sheet (no page navigation). Smooth entrance animation.
+2. **Implement Option B: light question screens** — Flip question screens to white/near-white. Dark welcome and dark reveal stay. Apply new contrast/font-size rules throughout.
+3. **Wire Google Places API** — Shawn to get API key from Google Cloud Console (Places API, restrict to foundco.app + localhost). Server-side proxy route. City autocomplete + nearby service area chips replace the current text stub.
+4. **Angela's affirmations session** — Write exact wording for each step's affirmation now that the visual system is settled.
+5. **Real file uploads** — Logo and hero photo upload (to Supabase Storage), not just "I'll add later" placeholder.
+
+---
+
 ## Session: June 8, 2026 - Found Homepage Hero Art + Responsive System
 **AI:** Codex (GPT-5) + Apple Team
 **Worked on:** Rebuilt the Found marketing homepage hero around the approved Signal Green direction and cleaned up responsive behavior
