@@ -47,7 +47,7 @@ export default function Home() {
 
         <div className="found-hero-shell relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
           <header className="found-hero-header flex items-center justify-between">
-            <FoundWordmark className="found-nav-wordmark h-8 w-44 text-white md:hidden" />
+            <FoundWordmark className="found-nav-wordmark h-8 w-44 text-white" />
             <div className="found-header-spacer hidden md:block" />
             <Link
               href="/onboarding"
@@ -59,15 +59,11 @@ export default function Home() {
 
           <div className="found-hero-content flex flex-1 items-start pt-12 md:items-center md:pt-0">
             <div className="found-hero-copy max-w-[350px] md:max-w-[590px]">
-              <div className="found-desktop-wordmark mb-9 hidden md:block">
-                <FoundWordmark className="h-14 w-[330px] text-white" />
-              </div>
-
               <h1 className="found-hero-title text-[2.65rem] font-light leading-[0.98] tracking-normal text-white md:text-7xl">
                 Your business beautifully online.
               </h1>
               <p className="found-hero-mobile-copy mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden">
-                Answer a few questions. Found builds the site.
+                Answer a few questions.<br />Found builds the site.
               </p>
               <p className="found-hero-desktop-copy mt-7 hidden max-w-md text-base font-medium leading-8 text-white/70 md:block md:text-lg">
                 Answer a few questions. Found turns your work, voice, and location into a website that feels made for you.
@@ -87,7 +83,7 @@ export default function Home() {
                 </a>
               </div>
 
-              <div className="found-hero-categories mt-16 hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 md:flex">
+              <div className="found-hero-categories mt-8 hidden items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-white/60 md:flex">
                 <span>Websites</span>
                 <span className="text-[#32D074]">•</span>
                 <span>Bookings</span>

@@ -188,11 +188,6 @@ h1, h2, h3, h4, h5, h6 {
     padding-top: clamp(2.1rem, 5vh, 3.6rem) !important;
   }
 
-  .found-desktop-wordmark svg {
-    width: clamp(14rem, 26vw, 18rem) !important;
-    height: auto !important;
-  }
-
   .found-hero-copy {
     max-width: min(32vw, 21rem) !important;
   }
@@ -234,7 +229,6 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .found-hero-desktop-img,
-  .found-desktop-wordmark,
   .found-hero-desktop-copy,
   .found-hero-categories {
     display: none !important;
@@ -315,7 +309,6 @@ h1, h2, h3, h4, h5, h6 {
     object-position: center center;
   }
 
-  .found-desktop-wordmark,
   .found-hero-desktop-copy,
   .found-hero-categories {
     display: none !important;
