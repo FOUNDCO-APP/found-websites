@@ -10,6 +10,7 @@ type OnboardingInput = {
   industry: string | null
   subIndustry: string
   location: string
+  serviceAreas?: string[]
   phone: string
   email: string
   different: string
@@ -151,7 +152,10 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   const supabase = getAdminClient()
   const companyId = crypto.randomUUID()
   const slug = await uniqueSlug(slugify(name))
-  const { city, state, serviceAreas } = splitLocation(input.location)
+  const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
+  const serviceAreas = input.serviceAreas?.length
+    ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]
+    : derivedAreas
   const services = parseServices(input.services)
   const testimonials = parseTestimonials(input.testimonials)
   const generatedContent = await generateWebsiteContent({
