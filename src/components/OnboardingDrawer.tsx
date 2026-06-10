@@ -10,21 +10,25 @@ export default function OnboardingDrawer({
   open: boolean
   onClose: () => void
 }) {
-  // Lock body scroll and manage URL
+  // Lock body scroll, manage URL, and sync theme-color with drawer state
   useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
     if (open) {
       document.body.style.overflow = "hidden"
       if (window.location.pathname !== "/onboarding") {
         window.history.pushState({ drawer: true }, "", "/onboarding")
       }
+      if (meta) meta.content = "#32D074"
     } else {
       document.body.style.overflow = ""
       if (window.location.pathname === "/onboarding") {
         window.history.pushState({}, "", "/")
       }
+      if (meta) meta.content = "#080A09"
     }
     return () => {
       document.body.style.overflow = ""
+      if (meta) meta.content = "#080A09"
     }
   }, [open])
 
@@ -45,7 +49,7 @@ export default function OnboardingDrawer({
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(8,10,9,0.35)" }}
+        style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.82) 0px, rgba(50,208,116,0.3) 48px, rgba(8,10,9,0.38) 88px)" }}
       />
 
       {/* Drawer — peek gap reveals scrim + rounded corners */}
@@ -56,7 +60,7 @@ export default function OnboardingDrawer({
         style={{
           top: "max(10px, env(safe-area-inset-top))",
           transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: "0 -32px 64px rgba(50,208,116,0.5), 0 -48px 80px rgba(0,0,0,0.6), inset 0 3px 0 rgba(50,208,116,0.9)",
+          boxShadow: "0 -16px 40px rgba(0,0,0,0.5), inset 0 3px 0 rgba(50,208,116,0.9)",
         }}
         aria-modal="true"
         aria-hidden={!open}
