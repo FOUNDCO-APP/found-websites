@@ -45,7 +45,7 @@ export default function OnboardingDrawer({
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(8,10,9,0.72)" }}
+        style={{ background: "rgba(8,10,9,0.48)" }}
       />
 
       {/* Drawer — peek gap reveals scrim + rounded corners */}
@@ -56,7 +56,7 @@ export default function OnboardingDrawer({
         style={{
           top: "max(10px, env(safe-area-inset-top))",
           transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: "0 -32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.14)",
+          boxShadow: "0 -32px 80px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.42)",
         }}
         aria-modal="true"
         aria-hidden={!open}

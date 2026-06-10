@@ -43,8 +43,8 @@ export default function Home() {
     setTimeout(() => {
       setDrawerOpen(true)
       setCinematic("fading")
-    }, 650)
-    setTimeout(() => setCinematic("off"), 1250)
+    }, 1500)
+    setTimeout(() => setCinematic("off"), 2300)
   }
 
   return (
@@ -156,41 +156,63 @@ export default function Home() {
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      {/* Cinematic entrance — black flash + Signal Green pulse + "Finally." */}
+      {/* Cinematic entrance — black flash + pulse + FINALLY + LET'S BUILD YOUR SITE */}
       {cinematic !== "off" && (
         <div
-          className="fixed inset-0 z-[45] flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[45] flex flex-col items-center justify-center pointer-events-none"
           style={{
             backgroundColor: FOUND_BLACK,
             opacity: cinematic === "on" ? 1 : 0,
-            transition: cinematic === "fading" ? "opacity 500ms ease-out" : "none",
+            transition: cinematic === "fading" ? "opacity 600ms ease-out" : "none",
+            gap: "clamp(1rem, 3vw, 1.5rem)",
           }}
           aria-hidden="true"
         >
+          {/* Signal Green pulse */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               style={{
-                width: "280px",
-                height: "280px",
+                width: "320px",
+                height: "320px",
                 borderRadius: "50%",
-                background: `radial-gradient(circle, rgba(50,208,116,0.55) 0%, rgba(50,208,116,0.2) 45%, transparent 70%)`,
-                animation: "cinematic-pulse 700ms ease-out forwards",
+                background: "radial-gradient(circle, rgba(50,208,116,0.5) 0%, rgba(50,208,116,0.18) 45%, transparent 70%)",
+                animation: "cinematic-pulse 1200ms ease-out forwards",
               }}
             />
           </div>
+          {/* FINALLY */}
           <p
             style={{
               fontFamily: "var(--font-dm-sans), Arial, sans-serif",
-              fontSize: "clamp(2.4rem, 7vw, 3.5rem)",
+              fontSize: "clamp(2.6rem, 9vw, 4.5rem)",
               fontWeight: 300,
-              letterSpacing: "0.2em",
+              letterSpacing: "0.38em",
+              textTransform: "uppercase",
               color: "white",
               position: "relative",
               zIndex: 1,
-              animation: "cinematic-word-in 300ms ease-out 180ms both",
+              animation: "cinematic-word-in 500ms ease-out 200ms both",
+              marginRight: "-0.38em",
             }}
           >
-            Finally.
+            Finally
+          </p>
+          {/* LET'S BUILD YOUR SITE */}
+          <p
+            style={{
+              fontFamily: "var(--font-dm-sans), Arial, sans-serif",
+              fontSize: "clamp(0.65rem, 2.2vw, 0.85rem)",
+              fontWeight: 700,
+              letterSpacing: "0.28em",
+              textTransform: "uppercase",
+              color: SIGNAL_GREEN,
+              position: "relative",
+              zIndex: 1,
+              animation: "cinematic-word-in 500ms ease-out 950ms both",
+              marginRight: "-0.28em",
+            }}
+          >
+            Let&apos;s build your site
           </p>
         </div>
       )}
