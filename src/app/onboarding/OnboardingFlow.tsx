@@ -120,7 +120,7 @@ function getTokens(isLight: boolean, primaryColor: string) {
   return {
     text:        isLight ? FOUND_BLACK          : "#ffffff",
     muted:       isLight ? "rgba(8,10,9,0.65)"  : "rgba(255,255,255,0.45)",
-    hint:        isLight ? "rgba(8,10,9,0.55)"  : "rgba(255,255,255,0.25)",
+    hint:        isLight ? "rgba(8,10,9,0.65)"  : "rgba(255,255,255,0.35)",
     border:      (active: boolean) => active ? SIGNAL_GREEN : (isLight ? "rgba(8,10,9,0.15)" : "rgba(255,255,255,0.13)"),
     cardBg:      (active: boolean) => active ? `${primaryColor}14` : (isLight ? "rgba(8,10,9,0.03)" : "rgba(255,255,255,0.025)"),
     cardBorder:  (active: boolean, accent?: string) => active ? (accent ?? primaryColor) : (isLight ? "rgba(8,10,9,0.10)" : "rgba(255,255,255,0.09)"),
@@ -412,7 +412,7 @@ function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: 
         style={{ color: tk.text, borderBottomColor: draft ? SIGNAL_GREEN : tk.border(false) }}
       />
       {isLight && (
-        <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: "rgba(8,10,9,0.35)" }}>
+        <p className="text-sm font-black uppercase tracking-[0.12em]" style={{ color: "rgba(8,10,9,0.5)" }}>
           Press Enter to add each service
         </p>
       )}
@@ -527,7 +527,7 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
       {/* Service area chips */}
       {location.length > 3 && (
         <div className="space-y-3" style={{ animation: "fade-up 0.35s ease-out both" }}>
-          <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: tk.hint }}>Also serve nearby?</p>
+          <p className="text-sm font-black uppercase tracking-[0.14em]" style={{ color: tk.hint }}>Also serve nearby?</p>
           <div className="flex flex-wrap items-center gap-2">
             {serviceAreas.map((area) => (
               <span
@@ -550,7 +550,7 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
                   if (e.key === "Enter") { e.preventDefault(); addAreaFromDraft() }
                 }}
                 placeholder="Add a city"
-                className={`w-24 border-0 border-b bg-transparent px-0 py-1 text-xs font-black uppercase tracking-[0.1em] outline-none focus:border-[#32D074] ${tk.placeholder}`}
+                className={`w-28 border-0 border-b bg-transparent px-0 py-1 text-sm font-semibold outline-none focus:border-[#32D074] ${tk.placeholder}`}
                 style={{ color: tk.text, borderBottomColor: tk.border(false) }}
               />
               {showAreaSuggestions && areaSuggestions.length > 0 && (
@@ -772,27 +772,35 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
 
               {/* ── Welcome (dark) ── */}
               {phase === "welcome" && (
-                <section
-                  key="welcome"
-                  className="flex min-h-full flex-col justify-center py-10"
-                  style={{ animation: "fade-up 0.38s ease-out both" }}
-                >
-                  <div className="mb-10 max-w-lg">
-                    <h1 className="text-3xl font-light leading-tight text-white md:text-[2.6rem]">
+                <section key="welcome" className="relative flex min-h-full flex-col justify-center py-10">
+                  {/* Ambient Signal Green glow */}
+                  <div
+                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-2/3"
+                    style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)" }}
+                  />
+                  <div className="relative mb-10 max-w-lg">
+                    <h1
+                      className="text-4xl font-light leading-tight text-white md:text-[2.8rem]"
+                      style={{ animation: "fade-up 0.45s ease-out both" }}
+                    >
                       Let's build your website.
                     </h1>
-                    <p className="mt-4 text-base leading-8 text-white/45">
+                    <p
+                      className="mt-4 text-base leading-8 text-white/60"
+                      style={{ animation: "fade-up 0.45s 0.12s ease-out both" }}
+                    >
                       Answer a few questions. We'll do the rest.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={advance}
-                    className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest sm:w-auto sm:px-12 md:py-6"
+                    className="relative w-full rounded-full py-5 text-sm font-black uppercase tracking-widest sm:w-auto sm:px-12 md:py-6"
                     style={{
                       backgroundColor: SIGNAL_GREEN,
                       color: FOUND_BLACK,
                       boxShadow: "0 0 40px rgba(50,208,116,0.38)",
+                      animation: "fade-up 0.45s 0.24s ease-out both",
                     }}
                   >
                     Let's go →
@@ -817,13 +825,13 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
                         {questionTitle(step, answers)}
                       </h1>
                       {step === "description" && (
-                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>In your own words. This is how Found understands your business.</p>
+                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>In your own words. This is how Found understands your business.</p>
                       )}
                       {step === "location" && (
-                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
+                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
                       )}
                       {step === "contact" && (
-                        <p className="mt-3 text-[0.9rem]" style={{ color: tk.hint }}>Not shown publicly. Leads from your site go here.</p>
+                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>Not shown publicly. Leads from your site go here.</p>
                       )}
                       {ready && affirm && (
                         <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
@@ -1062,7 +1070,7 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
                           className={`w-full resize-none text-xl leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
                           style={{ color: tk.text, borderBottomColor: tk.border(false) }}
                         />
-                        <p className="text-[0.9rem]" style={{ color: tk.hint }}>
+                        <p className="text-[1rem]" style={{ color: tk.hint }}>
                           Optional. Each line is one review. Your site looks great without these too.
                         </p>
                       </div>
@@ -1078,7 +1086,7 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
 
               {/* Continue button — always visible, never behind the keyboard */}
               {phase === "questions" && !isAutoStep && (
-                <footer className="shrink-0 px-7 pb-6 pt-2 md:px-12">
+                <footer className="shrink-0 px-7 pt-2 md:px-12" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
                   <button
                     type="button" onClick={advance}
                     disabled={!ready}

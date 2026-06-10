@@ -39,15 +39,34 @@ export default function OnboardingDrawer({
   }, [handlePop])
 
   return (
-    <div
-      className={`fixed inset-0 z-50 will-change-transform transition-transform duration-500 ${
-        open ? "translate-y-0" : "translate-y-full"
-      }`}
-      style={{ transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)" }}
-      aria-modal="true"
-      aria-hidden={!open}
-    >
-      <OnboardingFlow onClose={onClose} />
-    </div>
+    <>
+      {/* Scrim — dims the homepage, creates depth during slide-up */}
+      <div
+        className={`fixed inset-0 z-40 transition-opacity duration-300 ${
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
+      />
+
+      {/* Drawer */}
+      <div
+        className={`fixed inset-0 z-50 will-change-transform transition-transform duration-500 rounded-t-3xl overflow-hidden ${
+          open ? "translate-y-0" : "translate-y-full"
+        }`}
+        style={{
+          transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
+          boxShadow: "0 -24px 60px rgba(0,0,0,0.5)",
+        }}
+        aria-modal="true"
+        aria-hidden={!open}
+      >
+        {/* Handle pill */}
+        <div
+          className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 h-1 w-10 rounded-full pointer-events-none"
+          style={{ backgroundColor: "rgba(120,120,120,0.35)" }}
+        />
+        <OnboardingFlow onClose={onClose} />
+      </div>
+    </>
   )
 }
