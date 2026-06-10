@@ -56,7 +56,7 @@ export default function OnboardingDrawer({
         style={{
           top: "max(10px, env(safe-area-inset-top))",
           transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: "0 -32px 80px rgba(0,0,0,0.7), inset 0 3px 0 rgba(50,208,116,0.75)",
+          boxShadow: "0 -32px 64px rgba(50,208,116,0.5), 0 -48px 80px rgba(0,0,0,0.6), inset 0 3px 0 rgba(50,208,116,0.9)",
         }}
         aria-modal="true"
         aria-hidden={!open}
@@ -64,7 +64,7 @@ export default function OnboardingDrawer({
         {/* Signal Green halo at top edge — frames the sheet, creates separation from page */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
-          style={{ background: "radial-gradient(ellipse 70% 100% at 50% 0%, rgba(50,208,116,0.15) 0%, transparent 70%)" }}
+          style={{ background: "radial-gradient(ellipse 80% 80px at 50% 0%, rgba(50,208,116,0.45) 0%, transparent 100%)" }}
         />
         {/* Handle pill — visible on dark background */}
         <div

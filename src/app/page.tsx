@@ -254,6 +254,9 @@ export default function Home() {
             style={{
               width: "150vmax",
               height: "150vmax",
+              minWidth: "150vmax",
+              minHeight: "150vmax",
+              flexShrink: 0,
               borderRadius: "50%",
               backgroundColor: SIGNAL_GREEN,
               animation: "iris-open 250ms cubic-bezier(0.4, 0, 0.6, 1) forwards",
