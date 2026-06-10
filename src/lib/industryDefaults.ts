@@ -13,7 +13,7 @@ type IndustryDefaults = {
 
 const defaults: Record<string, IndustryDefaults> = {
   home_services: {
-    footerTagline: "Licensed, insured, and accountable.",
+    footerTagline: "Locally owned. Built to last.",
     servicesIntro: "Every job handled by our own team — no subcontractors, no surprises.",
     ctaHeadline: "Ready to Get Started?",
     galleryLabel: "Our Work",

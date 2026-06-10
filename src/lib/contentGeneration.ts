@@ -85,12 +85,14 @@ function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
 export function buildFallbackWebsiteContent(input: ContentGenerationInput): GeneratedWebsiteContent {
   const cityLabel = input.city || "Your Area"
   const industryLabel = input.subIndustry.replace(/\b\w/g, (char) => char.toUpperCase())
-  const aboutParts = [input.description, input.different].map(compact).filter(Boolean)
+  const locationPhrase = input.city
+    ? `${input.city}${input.state ? `, ${input.state}` : ""}`
+    : "Your Area"
 
   return {
-    heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : `${input.name} Is Ready`,
-    heroSubtitle: compact(input.different) || compact(input.description) || input.manifest.primaryJob,
-    aboutText: aboutParts.join(" ") || input.manifest.primaryJob,
+    heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : input.name,
+    heroSubtitle: input.manifest.primaryJob,
+    aboutText: `${input.name} is a locally owned ${industryLabel.toLowerCase()} business serving ${locationPhrase}. ${input.manifest.primaryJob}`,
     tagline: null,
     ctaHeadline: null,
     services: input.services.length

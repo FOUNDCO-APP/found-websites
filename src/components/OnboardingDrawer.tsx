@@ -40,12 +40,12 @@ export default function OnboardingDrawer({
 
   return (
     <>
-      {/* Scrim — dims the homepage, creates depth during slide-up */}
+      {/* Scrim — dims the homepage behind the sheet */}
       <div
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "linear-gradient(180deg, rgba(50,208,116,0.12) 0%, rgba(0,0,0,0.62) 60%)" }}
+        style={{ background: "rgba(8,10,9,0.72)" }}
       />
 
       {/* Drawer — peek gap reveals scrim + rounded corners */}
@@ -61,9 +61,14 @@ export default function OnboardingDrawer({
         aria-modal="true"
         aria-hidden={!open}
       >
+        {/* Signal Green halo at top edge — frames the sheet, creates separation from page */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
+          style={{ background: "radial-gradient(ellipse 70% 100% at 50% 0%, rgba(50,208,116,0.15) 0%, transparent 70%)" }}
+        />
         {/* Handle pill — visible on dark background */}
         <div
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 h-1.5 w-12 rounded-full pointer-events-none"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
         />
         <OnboardingFlow onClose={onClose} drawerMode />
