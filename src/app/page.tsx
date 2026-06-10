@@ -27,6 +27,7 @@ function FoundWordmark({ className = "" }: { className?: string }) {
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [cinematic, setCinematic] = useState<"off" | "on" | "fading">("off")
 
   // Auto-open drawer when landing via the save-spot resume link
   useEffect(() => {
@@ -37,7 +38,13 @@ export default function Home() {
   }, [])
 
   function openDrawer() {
-    setDrawerOpen(true)
+    if (drawerOpen || cinematic !== "off") return
+    setCinematic("on")
+    setTimeout(() => {
+      setDrawerOpen(true)
+      setCinematic("fading")
+    }, 650)
+    setTimeout(() => setCinematic("off"), 1250)
   }
 
   return (
@@ -148,6 +155,45 @@ export default function Home() {
       </main>
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
+      {/* Cinematic entrance — black flash + Signal Green pulse + "Finally." */}
+      {cinematic !== "off" && (
+        <div
+          className="fixed inset-0 z-[45] flex items-center justify-center pointer-events-none"
+          style={{
+            backgroundColor: FOUND_BLACK,
+            opacity: cinematic === "on" ? 1 : 0,
+            transition: cinematic === "fading" ? "opacity 500ms ease-out" : "none",
+          }}
+          aria-hidden="true"
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div
+              style={{
+                width: "280px",
+                height: "280px",
+                borderRadius: "50%",
+                background: `radial-gradient(circle, rgba(50,208,116,0.55) 0%, rgba(50,208,116,0.2) 45%, transparent 70%)`,
+                animation: "cinematic-pulse 700ms ease-out forwards",
+              }}
+            />
+          </div>
+          <p
+            style={{
+              fontFamily: "var(--font-dm-sans), Arial, sans-serif",
+              fontSize: "clamp(2.4rem, 7vw, 3.5rem)",
+              fontWeight: 300,
+              letterSpacing: "0.2em",
+              color: "white",
+              position: "relative",
+              zIndex: 1,
+              animation: "cinematic-word-in 300ms ease-out 180ms both",
+            }}
+          >
+            Finally.
+          </p>
+        </div>
+      )}
     </>
   )
 }

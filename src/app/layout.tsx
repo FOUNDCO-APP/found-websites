@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import {
   Inter,
   Oswald,
@@ -19,6 +19,10 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" })
 const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-merriweather", weight: ["400", "700"] })
 const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-sans", weight: ["400", "600", "700"] })
+
+export const viewport: Viewport = {
+  themeColor: "#080A09",
+}
 
 export const metadata: Metadata = {
   title: "FOUND",
