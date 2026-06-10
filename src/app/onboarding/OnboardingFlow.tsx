@@ -741,7 +741,10 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
             {/* Content layer */}
             <div className="relative z-10 flex h-full flex-col">
 
-              <header className="shrink-0 flex items-center justify-between px-7 pt-8 pb-2 md:px-12 md:pt-10">
+              <header
+                className="shrink-0 flex items-center justify-between px-7 pt-8 pb-2 md:px-12 md:pt-10"
+                style={onClose ? { paddingTop: "max(2rem, env(safe-area-inset-top))" } : undefined}
+              >
                 {onClose ? (
                   <svg viewBox="0 0 420 72" className="h-7 w-36" aria-label="Found" style={{ color: tk.text }}>
                     <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
@@ -775,7 +778,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                 <section key="welcome" className="relative flex min-h-full flex-col justify-center py-10">
                   {/* Ambient Signal Green glow */}
                   <div
-                    className="pointer-events-none absolute bottom-0 left-0 right-0 h-2/3"
+                    className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
                     style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)" }}
                   />
                   <div className="relative mb-10 max-w-lg">

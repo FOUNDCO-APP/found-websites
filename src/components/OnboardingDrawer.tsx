@@ -60,7 +60,7 @@ export default function OnboardingDrawer({
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.82) 0px, rgba(50,208,116,0.3) 48px, rgba(8,10,9,0.38) 88px)" }}
+        style={{ background: "rgba(8,10,9,0.55)" }}
       />
 
       {/* Drawer — peek gap reveals scrim + rounded corners */}
@@ -69,7 +69,7 @@ export default function OnboardingDrawer({
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
-          top: "max(10px, env(safe-area-inset-top))",
+          top: 0,
           transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
           boxShadow: "0 -16px 40px rgba(0,0,0,0.5), inset 0 3px 0 rgba(50,208,116,0.9)",
         }}
@@ -81,10 +81,10 @@ export default function OnboardingDrawer({
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
           style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.45) 0px, transparent 72px)" }}
         />
-        {/* Handle pill — visible on dark background */}
+        {/* Handle pill — sits below the safe area / Dynamic Island */}
         <div
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
-          style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
+          className="absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
+          style={{ top: "calc(env(safe-area-inset-top) + 12px)", backgroundColor: "rgba(255,255,255,0.3)" }}
         />
         <OnboardingFlow onClose={onClose} drawerMode />
       </div>
