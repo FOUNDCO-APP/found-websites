@@ -29,6 +29,16 @@ export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [cinematic, setCinematic] = useState<"off" | "on" | "fading">("off")
 
+  // Set html background to match page — fixes white iOS status bar in safe area
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = FOUND_BLACK
+    document.body.style.backgroundColor = FOUND_BLACK
+    return () => {
+      document.documentElement.style.backgroundColor = ""
+      document.body.style.backgroundColor = ""
+    }
+  }, [])
+
   // Auto-open drawer when landing via the save-spot resume link
   useEffect(() => {
     if (window.location.search.includes("start=1")) {
@@ -43,8 +53,8 @@ export default function Home() {
     setTimeout(() => {
       setDrawerOpen(true)
       setCinematic("fading")
-    }, 1500)
-    setTimeout(() => setCinematic("off"), 2300)
+    }, 2300)
+    setTimeout(() => setCinematic("off"), 3100)
   }
 
   return (
@@ -159,12 +169,11 @@ export default function Home() {
       {/* Cinematic entrance — black flash + pulse + FINALLY + LET'S BUILD YOUR SITE */}
       {cinematic !== "off" && (
         <div
-          className="fixed inset-0 z-[45] flex flex-col items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-[45] flex items-center justify-center pointer-events-none"
           style={{
             backgroundColor: FOUND_BLACK,
             opacity: cinematic === "on" ? 1 : 0,
-            transition: cinematic === "fading" ? "opacity 600ms ease-out" : "none",
-            gap: "clamp(1rem, 3vw, 1.5rem)",
+            transition: cinematic === "fading" ? "opacity 700ms ease-out" : "none",
           }}
           aria-hidden="true"
         >
@@ -172,48 +181,69 @@ export default function Home() {
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               style={{
-                width: "320px",
-                height: "320px",
+                width: "340px",
+                height: "340px",
                 borderRadius: "50%",
                 background: "radial-gradient(circle, rgba(50,208,116,0.5) 0%, rgba(50,208,116,0.18) 45%, transparent 70%)",
-                animation: "cinematic-pulse 1200ms ease-out forwards",
+                animation: "cinematic-pulse 1400ms ease-out forwards",
               }}
             />
           </div>
-          {/* FINALLY */}
-          <p
+
+          {/* Text block — inline-flex column so FINALLY sets container width */}
+          <div
             style={{
-              fontFamily: "var(--font-dm-sans), Arial, sans-serif",
-              fontSize: "clamp(2.6rem, 9vw, 4.5rem)",
-              fontWeight: 300,
-              letterSpacing: "0.38em",
-              textTransform: "uppercase",
-              color: "white",
               position: "relative",
               zIndex: 1,
-              animation: "cinematic-word-in 500ms ease-out 200ms both",
-              marginRight: "-0.38em",
+              display: "inline-flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              gap: "clamp(0.9rem, 2.5vw, 1.3rem)",
             }}
           >
-            Finally
-          </p>
-          {/* LET'S BUILD YOUR SITE */}
-          <p
-            style={{
-              fontFamily: "var(--font-dm-sans), Arial, sans-serif",
-              fontSize: "clamp(0.65rem, 2.2vw, 0.85rem)",
-              fontWeight: 700,
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-              color: SIGNAL_GREEN,
-              position: "relative",
-              zIndex: 1,
-              animation: "cinematic-word-in 500ms ease-out 950ms both",
-              marginRight: "-0.28em",
-            }}
-          >
-            Let&apos;s build your site
-          </p>
+            {/* FINALLY */}
+            <span
+              style={{
+                fontFamily: "var(--font-dm-sans), Arial, sans-serif",
+                fontSize: "clamp(2.6rem, 9vw, 4.5rem)",
+                fontWeight: 300,
+                letterSpacing: "0.38em",
+                textTransform: "uppercase",
+                color: "white",
+                whiteSpace: "nowrap",
+                display: "block",
+                animation: "cinematic-word-in 500ms ease-out 200ms both",
+              }}
+            >
+              Finally
+            </span>
+
+            {/* LET'S BUILD YOUR SITE — four words spread to match FINALLY width */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                animation: "cinematic-word-in 500ms ease-out 1200ms both",
+              }}
+            >
+              {["Let’s", "Build", "Your", "Site"].map((word) => (
+                <span
+                  key={word}
+                  style={{
+                    fontFamily: "var(--font-dm-sans), Arial, sans-serif",
+                    fontSize: "clamp(0.7rem, 2vw, 0.95rem)",
+                    fontWeight: 700,
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                    color: SIGNAL_GREEN,
+                  }}
+                >
+                  {word}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </>
