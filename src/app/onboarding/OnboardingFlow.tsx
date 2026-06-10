@@ -598,7 +598,7 @@ function OptionCard({ active, isLight, primaryColor, onClick, title, body }: {
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
+export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () => void; drawerMode?: boolean }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
@@ -723,11 +723,11 @@ export default function OnboardingFlow({ onClose }: { onClose?: () => void }) {
         />
       )}
 
-      <main className="relative min-h-screen overflow-hidden">
-        <div className="grid min-h-screen md:grid-cols-2">
+      <main className={`relative overflow-hidden ${drawerMode ? "h-full" : "min-h-screen"}`}>
+        <div className={`grid md:grid-cols-2 ${drawerMode ? "h-full" : "min-h-screen"}`}>
 
           {/* ── Left: conversation ── */}
-          <div className="relative flex flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK, height: "100dvh" }}>
+          <div className="relative flex flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK, height: drawerMode ? "100%" : "100dvh" }}>
 
             {/* White phase panel — sweeps up from below when questions begin */}
             {phase === "questions" && (

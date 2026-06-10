@@ -48,24 +48,25 @@ export default function OnboardingDrawer({
         style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
       />
 
-      {/* Drawer */}
+      {/* Drawer — peek gap reveals scrim + rounded corners */}
       <div
-        className={`fixed inset-0 z-50 will-change-transform transition-transform duration-500 rounded-t-3xl overflow-hidden ${
+        className={`fixed inset-x-0 bottom-0 z-50 will-change-transform transition-transform duration-500 rounded-t-[28px] overflow-hidden ${
           open ? "translate-y-0" : "translate-y-full"
         }`}
         style={{
+          top: "max(10px, env(safe-area-inset-top))",
           transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: "0 -24px 60px rgba(0,0,0,0.5)",
+          boxShadow: "0 -32px 80px rgba(0,0,0,0.7), 0 -1px 0 rgba(255,255,255,0.08)",
         }}
         aria-modal="true"
         aria-hidden={!open}
       >
-        {/* Handle pill */}
+        {/* Handle pill — visible on dark background */}
         <div
-          className="absolute top-2.5 left-1/2 -translate-x-1/2 z-10 h-1 w-10 rounded-full pointer-events-none"
-          style={{ backgroundColor: "rgba(120,120,120,0.35)" }}
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-10 h-1.5 w-12 rounded-full pointer-events-none"
+          style={{ backgroundColor: "rgba(255,255,255,0.3)" }}
         />
-        <OnboardingFlow onClose={onClose} />
+        <OnboardingFlow onClose={onClose} drawerMode />
       </div>
     </>
   )
