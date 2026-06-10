@@ -10,25 +10,36 @@ export default function OnboardingDrawer({
   open: boolean
   onClose: () => void
 }) {
-  // Lock body scroll, manage URL, and sync theme-color with drawer state
+  // Lock body scroll, manage URL, and sync status bar color with drawer state
   useEffect(() => {
-    const meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
+    // Find or create theme-color meta — querySelector silently fails if Next.js
+    // renders the tag with unexpected attributes, so we always create a fallback
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
+    if (!meta) {
+      meta = document.createElement('meta') as HTMLMetaElement
+      meta.name = 'theme-color'
+      document.head.appendChild(meta)
+    }
+
     if (open) {
       document.body.style.overflow = "hidden"
       if (window.location.pathname !== "/onboarding") {
         window.history.pushState({ drawer: true }, "", "/onboarding")
       }
-      if (meta) meta.content = "#32D074"
+      meta.content = "#32D074"
+      document.documentElement.style.backgroundColor = "#32D074"
     } else {
       document.body.style.overflow = ""
       if (window.location.pathname === "/onboarding") {
         window.history.pushState({}, "", "/")
       }
-      if (meta) meta.content = "#080A09"
+      meta.content = "#080A09"
+      document.documentElement.style.backgroundColor = "#080A09"
     }
     return () => {
       document.body.style.overflow = ""
-      if (meta) meta.content = "#080A09"
+      meta!.content = "#080A09"
+      document.documentElement.style.backgroundColor = "#080A09"
     }
   }, [open])
 
@@ -68,7 +79,7 @@ export default function OnboardingDrawer({
         {/* Signal Green halo at top edge — frames the sheet, creates separation from page */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
-          style={{ background: "radial-gradient(ellipse 80% 80px at 50% 0%, rgba(50,208,116,0.45) 0%, transparent 100%)" }}
+          style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.45) 0px, transparent 72px)" }}
         />
         {/* Handle pill — visible on dark background */}
         <div
