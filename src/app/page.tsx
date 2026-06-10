@@ -27,7 +27,7 @@ function FoundWordmark({ className = "" }: { className?: string }) {
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [cinematic, setCinematic] = useState<"off" | "on" | "fading">("off")
+  const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
 
   // Set html background to match page — fixes white iOS status bar in safe area
   useEffect(() => {
@@ -50,11 +50,12 @@ export default function Home() {
   function openDrawer() {
     if (drawerOpen || cinematic !== "off") return
     setCinematic("on")
+    setTimeout(() => setCinematic("iris"), 3000)
     setTimeout(() => {
       setDrawerOpen(true)
       setCinematic("fading")
-    }, 2300)
-    setTimeout(() => setCinematic("off"), 3100)
+    }, 3300)
+    setTimeout(() => setCinematic("off"), 4200)
   }
 
   return (
@@ -166,51 +167,52 @@ export default function Home() {
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
-      {/* Cinematic entrance — black flash + pulse + FINALLY + LET'S BUILD YOUR SITE */}
+      {/* Cinematic overlay — black screen, breathing glow, FINALLY, second line */}
       {cinematic !== "off" && (
         <div
           className="fixed inset-0 z-[45] flex items-center justify-center pointer-events-none"
           style={{
             backgroundColor: FOUND_BLACK,
-            opacity: cinematic === "on" ? 1 : 0,
+            opacity: cinematic === "fading" ? 0 : 1,
             transition: cinematic === "fading" ? "opacity 700ms ease-out" : "none",
           }}
           aria-hidden="true"
         >
-          {/* Signal Green pulse */}
+          {/* Breathing Signal Green glow */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               style={{
-                width: "340px",
-                height: "340px",
+                width: "480px",
+                height: "480px",
                 borderRadius: "50%",
-                background: "radial-gradient(circle, rgba(50,208,116,0.5) 0%, rgba(50,208,116,0.18) 45%, transparent 70%)",
-                animation: "cinematic-pulse 1400ms ease-out forwards",
+                background: "radial-gradient(circle, rgba(50,208,116,0.32) 0%, rgba(50,208,116,0.1) 50%, transparent 70%)",
+                animation: "cinematic-breathe 2s ease-in-out infinite",
               }}
             />
           </div>
 
-          {/* Text block — inline-flex column so FINALLY sets container width */}
+          {/* Text — centered, scale contrast */}
           <div
             style={{
               position: "relative",
               zIndex: 1,
-              display: "inline-flex",
+              display: "flex",
               flexDirection: "column",
-              alignItems: "stretch",
-              gap: "clamp(0.9rem, 2.5vw, 1.3rem)",
+              alignItems: "center",
+              gap: "clamp(1rem, 3vw, 1.4rem)",
+              textAlign: "center",
             }}
           >
             {/* FINALLY */}
             <span
               style={{
                 fontFamily: "var(--font-dm-sans), Arial, sans-serif",
-                fontSize: "clamp(2.6rem, 9vw, 4.5rem)",
+                fontSize: "clamp(3.2rem, 11vw, 5rem)",
                 fontWeight: 300,
-                letterSpacing: "0.38em",
+                letterSpacing: "0.32em",
+                paddingLeft: "0.32em",
                 textTransform: "uppercase",
                 color: "white",
-                whiteSpace: "nowrap",
                 display: "block",
                 animation: "cinematic-word-in 500ms ease-out 200ms both",
               }}
@@ -218,32 +220,45 @@ export default function Home() {
               Finally
             </span>
 
-            {/* LET'S BUILD YOUR SITE — four words spread to match FINALLY width */}
-            <div
+            {/* Let’s build your site */}
+            <span
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                animation: "cinematic-word-in 500ms ease-out 1200ms both",
+                fontFamily: "var(--font-dm-sans), Arial, sans-serif",
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
+                fontWeight: 400,
+                letterSpacing: "0.14em",
+                paddingLeft: "0.14em",
+                textTransform: "uppercase",
+                color: SIGNAL_GREEN,
+                display: "block",
+                animation: "cinematic-word-in 500ms ease-out 1400ms both",
               }}
             >
-              {["Let’s", "Build", "Your", "Site"].map((word) => (
-                <span
-                  key={word}
-                  style={{
-                    fontFamily: "var(--font-dm-sans), Arial, sans-serif",
-                    fontSize: "clamp(0.7rem, 2vw, 0.95rem)",
-                    fontWeight: 700,
-                    letterSpacing: "0.1em",
-                    textTransform: "uppercase",
-                    color: SIGNAL_GREEN,
-                  }}
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
+              Let&apos;s build your site
+            </span>
           </div>
+        </div>
+      )}
+
+      {/* Iris — Signal Green circle expands to cover screen, fades as drawer rises */}
+      {(cinematic === "iris" || cinematic === "fading") && (
+        <div
+          className="fixed inset-0 z-[46] flex items-center justify-center pointer-events-none"
+          style={{
+            opacity: cinematic === "fading" ? 0 : 1,
+            transition: cinematic === "fading" ? "opacity 700ms ease-out" : "none",
+          }}
+          aria-hidden="true"
+        >
+          <div
+            style={{
+              width: "150vmax",
+              height: "150vmax",
+              borderRadius: "50%",
+              backgroundColor: SIGNAL_GREEN,
+              animation: "iris-open 250ms cubic-bezier(0.4, 0, 0.6, 1) forwards",
+            }}
+          />
         </div>
       )}
     </>
