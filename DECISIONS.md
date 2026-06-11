@@ -13,6 +13,74 @@
 
 ---
 
+## CONTENT ARCHITECTURE DECISIONS (APPROVED — June 10, 2026)
+
+**[2026-06-10] — Website Job Framework: every Found industry has one primary website job.**
+Approved by: Shawn + Steve Jobs + Jony Ive
+The 7 jobs: Book me / Hire me / Quote me / Visit me / Order from me / Trust me / Find me.
+Why: The website job determines layout, CTA, sections, copy tone, and onboarding questions. Two businesses in the same industry can have different jobs (food truck = Visit me, home baker = Order from me).
+
+**[2026-06-10] — Found industry taxonomy expanded from 12 to 22 industries.**
+Approved by: Shawn + Steve Jobs + Jony Ive
+Full 22-industry list:
+Tier 1 (already built): Home Services, Food, Beauty, Wellness, Fitness, Events, Retail, Cleaning, Landscaping, Automotive, Pet Services, Real Estate
+Tier 2 — build now (4 priority): Creative Services, Home-Based Food, Education & Instruction, Music & Performance
+Tier 2 — next sprint: Professional Services, Healthcare, Childcare & Family, Makers & Crafts
+Tier 3 — later: Home & Property Specialists, Nonprofit & Community
+Why: Found is for ALL small businesses. A musician, a home tortilla maker, a private tutor, a graphic designer — they all have the same problem. Found solves it for every one of them.
+
+**[2026-06-10] — Sub-industry vocabulary table is the core of the copy architecture.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Craig Federighi
+One entry per sub-industry (~120 rows). Each defines: appointmentWord, customerWord, workWord, galleryLabel, servicesLabel, aboutLabel, reviewsLabel, ctaVerb.
+Examples: barber → {cut, client, fresh cuts, Fresh Cuts, Services & Pricing, About the Shop, What Clients Say, Book your cut}. food truck → {order, customer, food, The Food, What's Good, The Truck, What People Say, Place an order}.
+Used everywhere: layout section labels, CTA buttons, nav links, Angela's affirmations, Claude prompt vocabulary. Write once, works everywhere.
+Why: Structural copy (labels, buttons, nav) can be cross-referenced with vocabulary swaps. Emotional copy (hero subtitle, about text) cannot — that requires Claude or smart templates.
+
+**[2026-06-10] — Fallback copy uses 7 job-family templates + vocabulary table. NOT 120 static entries.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts + Craig Federighi
+One template per website job. The vocabulary table makes each render sub-industry specific.
+Why: 7 maintainable templates beat 120 static entries. If we update one template, it improves every industry in that job family. The static library would be expensive to write, expensive to maintain, and stale within months.
+
+**[2026-06-10] — Claude API failure at onboarding is completely silent. Owner never sees an error.**
+Approved by: Shawn + Steve Jobs + Craig Federighi
+If Claude fails (outage, expired card, rate limit, bad response) → fallback templates run automatically → site still generates → owner sees the reveal screen → site goes live. No error state.
+Why: The owner's experience cannot depend on a third-party API being healthy. Degrade gracefully, fix later, never show a broken state.
+
+**[2026-06-10] — `copy_generated` flag added to website_config. Admin can see + fix fallback sites.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+When fallback runs: `website_config.copy_generated = false`. Shawn's admin panel shows which sites used fallback. One-button Claude regeneration per site replaces fallback copy with custom copy after API is restored.
+Why: Shawn's real concern — "what if my credit card expires?" This flag means nothing is lost. Every affected site gets upgraded the moment the API is back.
+
+**[2026-06-10] — Photo wiring bug fixed. Homepage now uses getStockImages() — curated pools first.**
+Approved by: Shawn + Craig Federighi + Marcus Webb
+`[slug]/page.tsx` was calling Pexels directly, bypassing the curated industry photo pools entirely. Fixed: now calls `getStockImages(company)` which routes through curated pools → Pexels → gradient in correct priority. All 250+ curated photos are now actually used.
+Why: We spent hours curating photo pools. They were being ignored by a direct Pexels call in the homepage.
+
+**[2026-06-10] — Industry default copy approved at industry level (not sub-industry level) as a baseline.**
+Approved by: Shawn + Angela Ahrendts + Jony Ive
+12-industry baseline copy approved. Each industry has: heroSubtitle, aboutText template, ctaHeadline. Sub-industry vocabulary table makes these feel specific when rendered. Claude call at onboarding replaces all of this with truly custom copy 95%+ of the time.
+The 12 industry baselines:
+- Home Services: "Licensed, local, and honest. We show up, do the work, and back it up." / CTA: "Let's get started."
+- Food: "Come hungry. Leave happy. Made fresh, right here in {city}." / CTA: "Come find us."
+- Wellness: "A calm space to take care of yourself. Every session tailored to you." / CTA: "Book your first visit."
+- Events: "We handle the details so you can be present for the moments that matter." / CTA: "Tell us about your event."
+- Retail: "Everything here is chosen with care. Come in and find something you'll love." / CTA: "Come see what's new."
+- Fitness: "Every body. Every level. Your first session starts here." / CTA: "Start your first session."
+- Beauty: "Great work speaks for itself. Come see what we can do." / CTA: "Book your appointment."
+- Automotive: "Straight answers, honest prices, quality work. Every time." / CTA: "Bring your car in."
+- Pet Services: "Your pet deserves gentle hands and a familiar face." / CTA: "Book your pet's visit."
+- Cleaning: "We handle it so you don't have to. Reliable, thorough, and on time." / CTA: "Get a free quote."
+- Landscaping: "We turn outdoor space into something you're proud of." / CTA: "Get a free estimate."
+- Real Estate: "The right agent makes all the difference. Let's talk." / CTA: "Let's connect."
+
+**[2026-06-10] — Owner copy editing and Claude regeneration approved for Phase 3.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts
+Phase 3 owner app includes: tap any section title to rename, tap any copy block to edit inline, "Regenerate" button per section triggers Claude using original onboarding answers + any updates. Cannot delete sections or break layout. Text editable, structure immutable.
+Upgrade path: basic text editing free, Claude regeneration is a paid feature.
+Why: When an owner can edit their own site, it stops being "a site Found made for me" and becomes "my site." Ownership drives retention.
+
+---
+
 ## CORE PRODUCT DECISIONS
 
 **[2026-05-28] — App name is "Found." Company is "Found Co." Domain is foundco.app. Tagline is "Get Found."**

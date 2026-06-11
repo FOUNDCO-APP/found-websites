@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 8, 2026*
+*Last updated: June 11, 2026*
 
 ---
 
@@ -35,24 +35,81 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-0. **Run Supabase migration for save-spot lead capture**
-   - Owner: Shawn (manual step in Supabase SQL editor)
-   - Status: READY — script at `scripts/migration-add-lead-type.sql`
-   - Notes: Makes company_id nullable, adds type + partial_answers columns to leads table. Required before save-spot dialog can save leads. Without this, the DB insert will fail.
+1. **End-to-end flow test** — Shawn tests full onboarding on his phone: name → industry → location → services → photo upload → logo upload → color (auto-detected) → vibe → submit → reveal screen → live site. Phase 2 exit criterion #5.
 
-1. **Wire Google Places API for city autocomplete**
-   - Owner: Craig + Shawn
-   - Status: Stub in place. Waiting for Shawn to get Google Maps API key from Google Cloud Console.
-   - Notes: Restrict key to Places API + foundco.app + localhost. Server-side proxy at `/api/places`. Replace current city `<input>` in LocationInput component. Show nearby service area chips after city selection. See `// TODO: Replace city <input> with Google Places Autocomplete` in OnboardingFlow.tsx.
+2. **Photo pool curation for 10 new industries** — blocked on session with Shawn. All 10 new industries coded but photo pools empty; stock fallback runs instead.
+
+---
+
+## RECENTLY COMPLETED (June 11, 2026)
+
+3. **Angela's affirmations** ✅ SHIPPED
+   - All 10 onboarding steps now have contextual Signal Green affirmations
+   - New steps added: photos ("That's your hero. First thing people see."), logo ("Logo's in. It'll show at the top of every page."), color ("That color goes on every button and accent across your site."), testimonials ("Those go straight on your homepage.")
+   - Improved existing: name → "That's the one.", description → "We know how to build this.", location → adds "that's your market. It goes everywhere.", contact → "Every button on your site goes here.", different → "That's your edge.", services → "that's your homepage lineup."
+
+4. **Vocab wiring — inner pages** ✅ SHIPPED
+   - `about/page.tsx`: "Our Story" → `vocab.aboutLabel`, "Our Services" (button + section heading) → `vocab.servicesLabel`, "send us a message and we'll be in touch." → `vocab.ctaBodyText`
+   - `gallery/page.tsx`: `generateMetadata` title was hardcoded "Our Work" → now uses `vocab.galleryLabel`; body switched from `getIndustryDefaults` to `getVocab` for sub-industry accuracy
+   - Confirmed: Molca's sub_industry = "food truck" matches vocab key exactly → all labels resolve correctly
+
+---
+
+## RECENTLY COMPLETED (June 10, 2026)
+
+4. **Real file uploads — logo + hero photo** ✅ SHIPPED
+   - Owner: Craig
+   - `src/app/onboarding/uploadActions.ts` — `uploadLogoFile` + `uploadHeroFile` server actions, `company-assets` Supabase bucket (auto-created on first upload)
+   - Logo step: real upload zone with preview + Replace link; "Not yet" still auto-advances to wordmark
+   - Photos step: real upload zone + stock-photo fallback; uploaded photo used as hero_image_url
+   - Pre-generated `sessionId` = company ID so uploads land at permanent path `logos/{id}/logo.{ext}` before site creation
+   - Both URLs threaded through `createOnboardingSite` → saved to `companies.logo_url` + `website_config.hero_image_url`
+   - MANUAL STEP REQUIRED: Create `company-assets` bucket in Supabase Storage → set Public = true (auto-created on first upload if permissions allow, but creating it manually first is safer)
+
+---
+
+1. **Build 4 priority new industries**
+   - Owner: Craig + Marcus + Jony
+   - Status: ✅ CODE COMPLETE — photo pools need Shawn curation
+   - Notes: Creative Services, Home-Based Food, Education & Instruction, Music & Performance all added to: `industryManifests.ts` (manifests), `industryDefaults.ts` (values/process/CTA copy), `industryDetection.ts` (keyword detection + labels), `subIndustryVocabulary.ts` (already existed), `layout.ts` (layout matrix rows), `OnboardingFlow.tsx` (differentiator chips). TypeScript clean. REMAINING: photo pool JSON files need to be curated in a session with Shawn — save to Supabase Storage at `config/photo-pools/{industry}.json`.
+
+2. **Menu page for food industry**
+   - Owner: Craig + Marcus
+   - Status: ✅ SHIPPED
+   - Notes: `/[slug]/menu/page.tsx` built. `menu_items: MenuCategory[] | null` added to `WebsiteConfig` type. Navbar now shows "Menu" → `/menu` for food and home_based_food industries (all other industries keep "Services"). Falls back to `config.services` displayed in menu-list style if no `menu_items` yet. Services page header strings now use vocab too. TypeScript clean.
+
+3. **Admin fallback copy alert + one-tap regenerate**
+   - Owner: Craig + Priya
+   - Status: ✅ SHIPPED — migration run June 10, 2026 ✅
+   - Notes: `copy_generated: boolean` added to `GeneratedWebsiteContent`, `WebsiteConfig` type, and saved in onboarding action. `buildFallbackWebsiteContent` returns `false`, Claude success path returns `true`. Admin panel at `/admin/copy` — lists all sites with fallback copy, shows current hero subtitle so Shawn can see what's wrong, one-tap Regenerate calls server action → Claude rewrites all copy fields → updates DB live. MIGRATION REQUIRED: run `scripts/migration-add-copy-generated.sql` in Supabase SQL Editor before first use.
 
 ---
 
 ## RECENTLY COMPLETED
 
+0c. **Sub-industry vocabulary table (June 10, 2026)**
+   - Owner: Craig + Marcus
+   - Status: ✅ Shipped. `src/lib/subIndustryVocabulary.ts` created.
+   - Notes: ~120 sub-industries across 16 industry categories. Each entry maps to 9 vocabulary fields (servicesLabel, servicesOverline, aboutLabel, reviewsLabel, reviewsOverline, galleryLabel, ctaBodyText, customerWord, appointmentWord) plus websiteJob. Lookup function: exact → partial → industry default → global default.
+
+0d. **7 job-family fallback copy templates (June 10, 2026)**
+   - Owner: Angela + Craig
+   - Status: ✅ Shipped. `buildFallbackWebsiteContent` in `src/lib/contentGeneration.ts` rebuilt.
+   - Notes: Replaced broken function that used `manifest.primaryJob` (an internal instruction string) as visible hero subtitle and about text. Now 7 templates keyed to websiteJob — book_me, hire_me, quote_me, visit_me, order_from_me, trust_me, find_me. Each uses name + location + sub-industry label + differentiator substitution. No live site will show internal copy again.
+
+0e. **Section labels wired into all 4 layout templates (June 10, 2026)**
+   - Owner: Marcus + Craig
+   - Status: ✅ Shipped. All 4 layouts updated.
+   - Notes: ImpactLayout, EditorialLayout, PortraitLayout, CinematicLayout — all hardcoded section headers replaced with vocabulary table lookups. "What We Do" → `vocab.servicesOverline`. "Our Services" → `vocab.servicesLabel`. "Our Story" / "Who We Are" → `vocab.aboutLabel`. "What Clients Say" / "Client Stories" → `vocab.reviewsOverline`. "send us a message" CTA → `vocab.ctaBodyText`. "What Riders Say" hardcoded for RC Bicycles — fixed. TypeScript clean.
+
 0. **Option B + C — Slide-up drawer + light question screens + save-spot lead capture (June 9, 2026)**
    - Owner: Jony + Angela + Craig + Shawn
-   - Status: ✅ Shipped. Commit `7517ab7`. Vercel deploying.
-   - Notes: Drawer slides up from homepage, dark/light/dark arc, X button + save-spot dialog, Resend follow-up email. Migration still needs to be run in Supabase.
+   - Status: ✅ Shipped. Commit `7517ab7`. Vercel deployed.
+   - Notes: Drawer slides up from homepage, dark/light/dark arc, X button + save-spot dialog, Resend follow-up email.
+
+0b. **Supabase migration for save-spot lead capture (June 10, 2026)**
+   - Owner: Shawn
+   - Status: ✅ Completed. `scripts/migration-add-lead-type.sql` run in Supabase SQL editor.
 
 1. **Homepage hero — all responsive issues resolved (June 8, 2026)**
    - Owner: Jony + Steve + Craig
@@ -118,11 +175,10 @@ Exit criteria:
 
 ## NEXT
 
-0. **Angela's affirmations** — Write exact wording for each onboarding step affirmation. System must be visually stable (Option B) before wording session. Angela owns content, Jony approves display.
-1. **Real file uploads** — Logo upload and hero photo upload wired to Supabase Storage. Currently "I have a logo / I'll add it later" stubs only.
-2. **Logo color extraction** — After logo upload, suggest a palette from the logo's dominant color before Q9 color picker.
-3. **FOUND wordmark size decision** — Nav wordmark is now h-8 w-44 (smaller than the old h-14 w-[330px] desktop version). Shawn said "not sure how I feel about it yet." Revisit after Option B+C ships.
-4. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
+1. **Wire Google Places API for city autocomplete** — Stub in place. BLOCKED: waiting for Shawn to get API key from Google Cloud Console (Places API, restrict to foundco.app + localhost). Server-side proxy at `/api/places`. See `// TODO` in OnboardingFlow.tsx.
+2. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
+3. **Photo pool curation for 10 new industries** — blocked on session with Shawn. Save to Supabase Storage at `config/photo-pools/{industry}.json`.
+4. **"Your copy was auto-generated" nudge** — backlog 1j. `copy_generated` flag exists. Owner sees quiet prompt in app: "Want Claude to write a custom version?" One tap to trigger regenerate.
 
 ---
 
@@ -165,12 +221,23 @@ Exit criteria:
 
 ## BLOCKED
 
-- Real onboarding file uploads — logo, hero photo/video, and gallery uploads still use launch-now choices only
+- Google Places API city autocomplete — waiting on Shawn to create API key in Google Cloud Console
+- Photo pool curation for 10 new industries — requires curation session with Shawn
 
 ---
 
 ## BACKLOG
 
+— **INDUSTRY EXPANSION —**
+✅ All 22 industries built (June 10, 2026): home_services, food, wellness, events, retail, fitness, beauty, automotive, pet_services, cleaning, landscaping, real_estate, creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit
+- Photo pools still needed for the 10 new industries (requires Shawn curation session)
+
+— **OWNER APP — PHASE 3 —**
+1h. Owner copy editing — tap any section title to rename it. Tap any copy block to edit inline. Tap, type, done. Feels like texting. Text editable, layout immutable. Cannot delete sections or break structure.
+1i. Claude regeneration from owner app — owner taps "Regenerate this section" → Claude rewrites it using their original onboarding answers + any edits they've made since. Premium upgrade path.
+1j. "Your copy was auto-generated" nudge — if `copy_generated: false`, owner sees a quiet prompt in their app: "Want Claude to write a custom version?" One tap to trigger.
+
+— **EXISTING BACKLOG —**
 1. Stripe subscription billing for Found Co. clients
 2. Lightweight contact database — leads, current clients, previous clients, guest/customer names
 3. Relationship automation upgrade — simple compliant email/text follow-up for contacts

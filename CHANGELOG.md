@@ -4,6 +4,52 @@
 
 ---
 
+## Session: June 10, 2026 — Industry Taxonomy Expanded + Content Architecture Locked + Photo Bug Fixed
+**AI:** Claude Code (Sonnet 4.6) + Apple Team
+**Worked on:** Full content/copy architecture planning, expanded industry taxonomy to 22, fixed photo wiring bug, locked all decisions
+
+### ✅ Completed This Session
+
+**Photo wiring bug fixed (Craig):**
+- `[slug]/page.tsx` was bypassing curated industry photo pools entirely — calling Pexels directly
+- Fixed: now calls `getStockImages(company)` — routes through curated pools → Pexels → gradient in correct priority
+- All 250+ curated photos are now actually used on live sites
+
+**Supabase migration confirmed done (Shawn):**
+- `scripts/migration-add-lead-type.sql` run. Save-spot lead capture is fully live.
+
+**Full content architecture designed and locked (team session):**
+- Website Job Framework approved: 7 jobs (Book me, Hire me, Quote me, Visit me, Order from me, Trust me, Find me)
+- Sub-industry vocabulary table approved: ~120 sub-industries × 8 vocabulary words each. Structural copy cross-referenced; emotional copy stays Claude-generated.
+- 7 job-family fallback templates approved — replaces broken `primaryJob`-as-copy fallback. NOT 120 static entries.
+- Industry baseline copy approved for all 12 existing industries (see DECISIONS.md)
+- Claude failure strategy locked: silent fallback, `copy_generated` flag, admin regeneration, owner never sees error
+- Owner copy editing approved for Phase 3: tap to edit any text, Claude regeneration per section, text editable / structure immutable
+
+**Full 22-industry taxonomy locked (Jony-led planning session):**
+- 12 existing industries confirmed
+- 4 priority new industries approved: Creative Services, Home-Based Food, Education & Instruction, Music & Performance
+- 4 next-sprint industries identified: Professional Services, Healthcare, Childcare & Family, Makers & Crafts
+- 2 later industries: Home & Property Specialists, Nonprofit & Community
+- Website job assigned to every industry
+- See DECISIONS.md [2026-06-10] for full taxonomy
+
+**Section label system designed (Jony):**
+- All hardcoded section labels banned: "What We Do", "Our Services", "Who We Are", "What Clients Say", etc.
+- Every template will read from sub-industry vocabulary table
+- Full label table documented in DESIGN_DECISIONS.md [2026-06-10]
+
+### 🔜 What To Work On Next (In Order)
+
+1. **Build sub-industry vocabulary table** — `src/lib/subIndustryVocabulary.ts`, ~120 rows, 8 fields each
+2. **Build 7 job-family fallback templates** — replace broken `buildFallbackWebsiteContent` in `contentGeneration.ts`
+3. **Wire section labels into all 4 layout templates** — depends on vocabulary table
+4. **Build 4 priority new industries** — manifests, sub-industries, vocab entries, layout matrix, photo pools
+5. **Add menu page for food industry** — `/[slug]/menu/page.tsx`, swap nav link
+6. **Add admin fallback copy alert** — `copy_generated` flag + admin view + one-button regeneration
+
+---
+
 ## Session: June 9, 2026 — Option B + C: Slide-Up Drawer, Light Question Screens, Save-Spot Lead Capture
 **AI:** Claude Code (Sonnet 4.6) + Apple Team
 **Worked on:** Implemented approved Option B + C design direction, added save-spot lead capture on dismiss

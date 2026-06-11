@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
@@ -10,6 +11,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
   const primary = company.primary_color
   const services = config?.services || []
   const testimonials = config?.testimonials || []
+  const vocab = getVocab(company.sub_industry, company.industry_category)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -108,13 +110,13 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
                 <div>
                   <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
-                    What We Do
+                    {vocab.servicesOverline}
                   </p>
                   <h2
                     className="text-4xl md:text-5xl font-black"
                     style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}
                   >
-                    Our Services
+                    {vocab.servicesLabel}
                   </h2>
                 </div>
                 <Link
@@ -180,7 +182,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
             <InView distance={20}>
               <div>
                 <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>
-                  Our Story
+                  {vocab.aboutLabel}
                 </p>
                 <h2
                   className="text-3xl md:text-4xl font-black mb-5 leading-tight"
@@ -199,7 +201,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
                 </p>
                 <Link href="/about" className="btn text-white self-start"
                   style={{ backgroundColor: primary, borderColor: primary }}>
-                  Meet the Team
+                  {vocab.aboutLabel}
                 </Link>
               </div>
             </InView>
@@ -212,7 +214,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
         <section className="py-24" style={{ backgroundColor: "#f7f7f7" }}>
           <div className="max-w-4xl mx-auto px-8">
             <p className="text-xs font-black tracking-widest uppercase mb-16" style={{ color: primary }}>
-              Client Stories
+              {vocab.reviewsOverline}
             </p>
             <div className="flex flex-col">
               {testimonials.slice(0, 3).map((t, i) => (
@@ -268,7 +270,7 @@ export default function PortraitLayout({ company, imgs, gradient, heroImage }: L
                   or{" "}
                 </>
               )}
-              send us a message and we&apos;ll be in touch.
+              {vocab.ctaBodyText}
             </p>
             <Link href={primaryHref} className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>

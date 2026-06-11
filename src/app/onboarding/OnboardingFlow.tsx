@@ -6,6 +6,7 @@ import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, saveAbandonedLead } from "./actions"
+import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { US_CITIES } from "@/data/us-cities"
 
 const FOUND_BLACK = "#080A09"
@@ -32,6 +33,8 @@ type Answers = {
   services: string[]
   photoChoice: string
   logoChoice: string
+  logoUrl: string
+  heroImageUrl: string
   primaryColor: string
   vibe: string
   testimonials: string
@@ -47,6 +50,7 @@ const INITIAL: Answers = {
   name: "", description: "", industry: null, subIndustry: "",
   location: "", serviceAreas: [], phone: "", email: "",
   different: "", services: [], photoChoice: "", logoChoice: "",
+  logoUrl: "", heroImageUrl: "",
   primaryColor: "#2E7D32", vibe: "", testimonials: "",
 }
 
@@ -62,7 +66,17 @@ const DIFFERENTIATOR_CHIPS: Record<string, string[]> = {
   pet_services:   ["Fear-free certified", "First groom free", "Vet recommended", "Mobile service", "All breeds welcome"],
   cleaning:       ["Eco-friendly products", "Background checked", "Satisfaction guaranteed", "Same-week booking"],
   landscaping:    ["Free estimates", "Licensed & insured", "Bilingual crew", "Seasonal plans", "Water-smart designs"],
-  real_estate:    ["Local market expert", "First-time buyer specialist", "Military relocation", "Investment properties"],
+  real_estate:        ["Local market expert", "First-time buyer specialist", "Military relocation", "Investment properties"],
+  creative_services:     ["10+ years experience", "Bilingual", "Rush turnaround available", "Revisions included", "Award winning"],
+  home_based_food:       ["Family recipe", "Made to order", "Gluten-free options", "Locally sourced", "Cottage licensed"],
+  education:             ["Free first session", "Bilingual", "Online available", "All ages welcome", "Results guaranteed"],
+  music_performance:     ["Available weekends", "All genres", "Sound system included", "Bilingual", "Family-friendly sets"],
+  professional_services: ["Free consultation", "Bilingual", "Virtual meetings available", "20+ years experience", "Flat-fee options"],
+  healthcare:            ["New patients welcome", "Bilingual", "Telehealth available", "Same-week appointments", "Most insurance accepted"],
+  childcare:             ["Licensed & certified", "CPR certified", "Bilingual staff", "Small group sizes", "Open early & late"],
+  makers_crafts:         ["Custom orders welcome", "Ships nationwide", "Bilingual", "Wholesale available", "Made to order"],
+  home_property:         ["Licensed & insured", "Free estimates", "Same-week service", "Bilingual", "Satisfaction guaranteed"],
+  nonprofit:             ["501(c)3 certified", "Volunteer-run", "Bilingual programs", "Free to community", "Accepting donations"],
 }
 
 const GENERATING_LINES = ["Building your site.", "Writing your story.", "Almost ready."]
@@ -105,13 +119,32 @@ function questionTitle(step: Step, a: Answers): string {
 
 function getAffirmation(step: Step, a: Answers): string {
   switch (step) {
-    case "name":        return a.name.trim() ? `${a.name.trim()}. Perfect.` : ""
-    case "description": return a.industry ? `${industryLabels[a.industry]} — makes sense.` : "Got it."
-    case "location":    return a.location.trim() ? `${a.location.trim()}.` : ""
-    case "contact":     return a.phone && a.email.includes("@") ? "That's your primary CTA on the whole site." : ""
-    case "different":   return a.different.trim().length > 8 ? "That's your story. It'll be front and center." : ""
-    case "services":    return a.services.length > 0 ? `${a.services.length} service${a.services.length > 1 ? "s" : ""} — solid.` : ""
-    default:            return ""
+    case "name":
+      return a.name.trim() ? `${a.name.trim()}. That's the one.` : ""
+    case "description":
+      return a.industry
+        ? `${industryLabels[a.industry]}. We know how to build this.`
+        : a.description.trim().length > 8 ? "Got it." : ""
+    case "location":
+      return a.location.trim() ? `${a.location.trim()} — that's your market. It goes everywhere.` : ""
+    case "contact":
+      return a.phone && a.email.includes("@") ? "Every button on your site goes here." : ""
+    case "different":
+      return a.different.trim().length > 8 ? "That's your edge. It'll be front and center." : ""
+    case "services":
+      return a.services.length > 0
+        ? `${a.services.length} ${a.services.length === 1 ? "service" : "services"} — that's your homepage lineup.`
+        : ""
+    case "photos":
+      return a.photoChoice === "uploaded" ? "That's your hero. First thing people see." : ""
+    case "logo":
+      return a.logoChoice === "uploaded" && a.logoUrl ? "Logo's in. It'll show at the top of every page." : ""
+    case "color":
+      return /^#[0-9a-f]{6}$/i.test(a.primaryColor) ? "That color goes on every button and accent across your site." : ""
+    case "testimonials":
+      return a.testimonials.trim().length > 8 ? "Those go straight on your homepage." : ""
+    default:
+      return ""
   }
 }
 
@@ -608,6 +641,14 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
 
+  // Pre-generate the company ID so logo/hero uploads go to the permanent path
+  const sessionId = useMemo(() => crypto.randomUUID(), [])
+
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError]         = useState<string | null>(null)
+  const [heroUploading, setHeroUploading] = useState(false)
+  const [heroError, setHeroError]         = useState<string | null>(null)
+
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
   const affirm  = getAffirmation(step, answers)
@@ -643,7 +684,13 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   async function submit() {
     if (saving) return
     setSaving(true)
-    const res = await createOnboardingSite({ ...answers, services: answers.services.join(", ") })
+    const res = await createOnboardingSite({
+      ...answers,
+      services: answers.services.join(", "),
+      companyId: sessionId,
+      logoUrl: answers.logoUrl || undefined,
+      heroImageUrl: answers.heroImageUrl || undefined,
+    })
     if (res.success && res.url) {
       setResult({ url: res.url })
     } else {
@@ -660,6 +707,44 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       industry: detected ?? prev.industry,
       subIndustry: detected && detected !== prev.industry ? "" : prev.subIndustry,
     }))
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    setLogoError(null)
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await uploadLogoFile(fd, sessionId)
+    setLogoUploading(false)
+    if (res.success && res.url) {
+      set("logoUrl", res.url)
+      set("logoChoice", "uploaded")
+      if (res.dominantColor) set("primaryColor", res.dominantColor)
+    } else {
+      setLogoError(res.error ?? "Upload failed.")
+    }
+    // Reset input so the same file can be re-selected after a clear
+    e.target.value = ""
+  }
+
+  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setHeroUploading(true)
+    setHeroError(null)
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await uploadHeroFile(fd, sessionId)
+    setHeroUploading(false)
+    if (res.success && res.url) {
+      set("heroImageUrl", res.url)
+      set("photoChoice", "uploaded")
+    } else {
+      setHeroError(res.error ?? "Upload failed.")
+    }
+    e.target.value = ""
   }
 
   function requestClose() {
@@ -707,7 +792,11 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
     />
   )
 
-  const isAutoStep = ["subIndustry", "vibe", "photos", "logo"].includes(step)
+  const isAutoStep =
+    step === "subIndustry" ||
+    step === "vibe" ||
+    (step === "photos" && answers.photoChoice !== "uploaded") ||
+    (step === "logo" && answers.logoChoice !== "uploaded")
 
   // ── Layout ─────────────────────────────────────────────────────────────────
   return (
@@ -979,32 +1068,126 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     )}
 
                     {step === "photos" && (
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-3">
                         <OptionCard active={answers.photoChoice === "stock"} isLight={isLight} primaryColor={answers.primaryColor}
                           onClick={() => autoAdvance(() => set("photoChoice", "stock"))}
                           title="Skip for now"
                           body="We'll pull great photos for your industry automatically." />
-                        <OptionCard active={answers.photoChoice === "upload_later"} isLight={isLight} primaryColor={answers.primaryColor}
-                          onClick={() => autoAdvance(() => set("photoChoice", "upload_later"))}
-                          title="Add photos later"
-                          body="Launch now. Drop in real work photos when you're ready." />
+
+                        {/* Hero photo upload */}
+                        {answers.heroImageUrl ? (
+                          <div className="flex items-center gap-4 rounded-xl border p-4 transition-all"
+                            style={{ borderColor: tk.cardBorder(true), backgroundColor: tk.cardBg(true) }}>
+                            <div className="h-14 w-20 shrink-0 rounded-lg overflow-hidden">
+                              <img src={answers.heroImageUrl} alt="Hero" className="h-full w-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-black" style={{ color: tk.text }}>Photo uploaded</p>
+                              <p className="text-xs mt-0.5" style={{ color: tk.muted }}>This will be your hero image</p>
+                            </div>
+                            <label className="shrink-0 cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                              style={{ color: answers.primaryColor }}>
+                              Replace
+                              <input type="file" accept="image/png,image/jpeg,image/webp"
+                                className="sr-only" onChange={handleHeroUpload} disabled={heroUploading} />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed p-8 transition hover:opacity-80 active:opacity-60"
+                            style={{ borderColor: tk.cardBorder(false) }}>
+                            {heroUploading ? (
+                              <div className="flex items-center gap-3">
+                                <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="text-sm font-black" style={{ color: tk.muted }}>Uploading...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: tk.muted }}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                </svg>
+                                <p className="text-sm font-black text-center" style={{ color: tk.text }}>Upload your own photo</p>
+                                <p className="text-xs text-center" style={{ color: tk.muted }}>JPG · PNG · WEBP · up to 20 MB</p>
+                                {heroError && <p className="text-xs font-black text-red-500">{heroError}</p>}
+                              </>
+                            )}
+                            <input type="file" accept="image/png,image/jpeg,image/webp"
+                              className="sr-only" onChange={handleHeroUpload} disabled={heroUploading} />
+                          </label>
+                        )}
                       </div>
                     )}
 
                     {step === "logo" && (
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-3">
                         <OptionCard active={answers.logoChoice === "brandmark"} isLight={isLight} primaryColor={answers.primaryColor}
                           onClick={() => autoAdvance(() => set("logoChoice", "brandmark"))}
                           title="Not yet — that's okay"
                           body="Found turns your business name into a clean professional wordmark." />
-                        <OptionCard active={answers.logoChoice === "upload_later"} isLight={isLight} primaryColor={answers.primaryColor}
-                          onClick={() => autoAdvance(() => set("logoChoice", "upload_later"))}
-                          title="I have a logo"
-                          body="Upload coming soon. We'll launch with a wordmark and swap it in." />
+
+                        {/* Real upload zone */}
+                        {answers.logoUrl ? (
+                          <div className="flex items-center gap-4 rounded-xl border p-4 transition-all"
+                            style={{ borderColor: tk.cardBorder(true), backgroundColor: tk.cardBg(true) }}>
+                            <div className="h-14 w-14 shrink-0 rounded-lg border flex items-center justify-center overflow-hidden"
+                              style={{ borderColor: tk.cardBorder(false), backgroundColor: "#fff" }}>
+                              <img src={answers.logoUrl} alt="Logo" className="max-h-12 max-w-12 object-contain" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-black" style={{ color: tk.text }}>Logo uploaded</p>
+                              <p className="text-xs mt-0.5 truncate" style={{ color: tk.muted }}>Tap continue or replace below</p>
+                            </div>
+                            <label className="shrink-0 cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                              style={{ color: answers.primaryColor }}>
+                              Replace
+                              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                className="sr-only" onChange={handleLogoUpload} disabled={logoUploading} />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed p-8 transition hover:opacity-80 active:opacity-60"
+                            style={{ borderColor: tk.cardBorder(false) }}>
+                            {logoUploading ? (
+                              <div className="flex items-center gap-3">
+                                <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                </svg>
+                                <span className="text-sm font-black" style={{ color: tk.muted }}>Uploading...</span>
+                              </div>
+                            ) : (
+                              <>
+                                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: tk.muted }}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                </svg>
+                                <p className="text-sm font-black text-center" style={{ color: tk.text }}>I have a logo — upload it</p>
+                                <p className="text-xs text-center" style={{ color: tk.muted }}>PNG · JPG · SVG · WEBP · under 5 MB</p>
+                                {logoError && <p className="text-xs font-black text-red-500">{logoError}</p>}
+                              </>
+                            )}
+                            <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                              className="sr-only" onChange={handleLogoUpload} disabled={logoUploading} />
+                          </label>
+                        )}
                       </div>
                     )}
 
                     {step === "color" && (
+                      <div className="space-y-4">
+                      {answers.logoUrl && (
+                        <div className="flex items-center gap-3 rounded-xl px-4 py-3"
+                          style={{ backgroundColor: `${answers.primaryColor}18`, border: `1px solid ${answers.primaryColor}40` }}>
+                          <div className="h-8 w-8 shrink-0 rounded overflow-hidden border flex items-center justify-center"
+                            style={{ borderColor: `${answers.primaryColor}30`, backgroundColor: "#fff" }}>
+                            <img src={answers.logoUrl} alt="Logo" className="max-h-7 max-w-7 object-contain" />
+                          </div>
+                          <p className="text-xs font-black" style={{ color: answers.primaryColor }}>
+                            Color detected from your logo — change it below if needed.
+                          </p>
+                        </div>
+                      )}
                       <div className="grid gap-2 sm:grid-cols-2">
                         {palettes.map((p) => {
                           const active = answers.primaryColor.toLowerCase() === p.hex.toLowerCase()
@@ -1036,6 +1219,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                             />
                           </span>
                         </label>
+                      </div>
                       </div>
                     )}
 
@@ -1092,7 +1276,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                 <footer className="shrink-0 px-7 pt-2 md:px-12" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
                   <button
                     type="button" onClick={advance}
-                    disabled={!ready}
+                    disabled={!ready || logoUploading || heroUploading}
                     className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-10"
                     style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >

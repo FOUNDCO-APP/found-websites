@@ -5,6 +5,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -34,6 +35,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
   const industryDefs = getIndustryDefaults(company.industry_category)
+  const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
 
   return (
@@ -72,7 +74,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
               <div>
                 <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
                 <p className="text-xs font-black tracking-widest uppercase mb-6" style={{ color: primary }}>
-                  Our Story
+                  {vocab.aboutLabel}
                 </p>
                 {config?.tagline && (
                   <p className="text-xl md:text-2xl font-black leading-snug mb-0"
@@ -92,7 +94,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
                   </Link>
                   <Link href="/services" className="btn"
                     style={{ borderColor: primary, color: primary }}>
-                    Our Services
+                    {vocab.servicesLabel}
                   </Link>
                 </div>
               </div>
@@ -155,7 +157,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
               <h2 className="text-3xl md:text-4xl font-black text-white"
                 style={{ fontFamily: "var(--font-heading, inherit)" }}>
-                What We Do
+                {vocab.servicesLabel}
               </h2>
               <Link href="/services"
                 className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
@@ -201,7 +203,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
               <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                 className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
             )}
-            send us a message and we&apos;ll be in touch.
+            {vocab.ctaBodyText}.
           </p>
           <Link href={ctaHref} className="btn text-white"
             style={{ backgroundColor: primary, borderColor: primary }}>

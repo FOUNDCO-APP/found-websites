@@ -9,6 +9,17 @@ export type Testimonial = {
   quote: string
 }
 
+export type MenuItem = {
+  name: string
+  description: string
+  price: string | null
+}
+
+export type MenuCategory = {
+  category: string
+  items: MenuItem[]
+}
+
 export type WebsiteConfig = {
   id: string
   hero_title: string | null
@@ -20,11 +31,13 @@ export type WebsiteConfig = {
   tagline: string | null
   cta_headline: string | null
   services: ServiceItem[]
+  menu_items: MenuCategory[] | null
   testimonials: Testimonial[]
   service_areas: string[]
   social_links: Record<string, string>
   custom_domain: string | null
   published: boolean
+  copy_generated: boolean
 }
 
 export type Company = {

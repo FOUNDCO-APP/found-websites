@@ -4,6 +4,74 @@
 
 ---
 
+## SUB-INDUSTRY SECTION LABEL SYSTEM (APPROVED — June 10, 2026)
+
+**Hardcoded section labels are banned. Every section header reads from the sub-industry vocabulary table.**
+Approved by: Shawn + Jony Ive + Steve Jobs
+
+"What We Do", "Our Services", "Who We Are", "What Clients Say" are generic and unacceptable. Every sub-industry has its own vocabulary. The templates must use it.
+
+**The banned hardcoded strings (never use these again):**
+- "What We Do" — replaced by sub-industry servicesLabel
+- "Our Services" — replaced by sub-industry servicesLabel
+- "Who We Are" — replaced by sub-industry aboutLabel
+- "What Clients Say" — replaced by sub-industry reviewsLabel
+- "Our Gallery" — replaced by sub-industry galleryLabel
+- "Client Stories" — replaced by sub-industry reviewsLabel
+
+**Sub-industry section label examples — what replaces them:**
+
+| Sub-Industry | Services label | Gallery label | About label | Reviews label |
+|---|---|---|---|---|
+| Barber | Services & Pricing | Fresh Cuts | About the Shop | What Clients Say |
+| Lash Tech | Lash Services | The Work | About Me | Client Reviews |
+| Spa | Our Treatments | The Space | Our Philosophy | Client Stories |
+| Nail Salon | Services & Pricing | The Work | About the Studio | Client Reviews |
+| Restaurant | The Menu | The Food | Our Story | What People Say |
+| Food Truck | What's Good | The Food | The Truck | What People Say |
+| Home Baker | What We Make | The Goods | Our Story | What Customers Say |
+| Private Tutor | Subjects & Rates | Student Results | About Me | Parent Reviews |
+| Musician / Band | Sets & Packages | Listen | About the Band | What People Say |
+| Landscaper | What We Do | Recent Projects | About Us | Client Stories |
+| Pet Groomer | Grooming Services | Happy Clients | About the Shop | Pet Parent Reviews |
+| Real Estate Agent | How I Help | Featured Properties | About Me | Client Stories |
+| Graphic Designer | Services | The Work | About Me | Client Stories |
+| Personal Trainer | Programs & Rates | Client Results | My Approach | Client Stories |
+| Contractor | What We Build | Our Work | Who We Are | What Clients Say |
+| Cleaner | What We Clean | Before & After | How We Work | Client Stories |
+
+Full vocabulary table covers all ~120 sub-industries. New sub-industries added as industries expand.
+
+**Implementation rule for Craig and Marcus:**
+Every layout template reads section labels from `company.sub_industry → vocabularyTable[subIndustry]`. If no match, fall back to the industry-level default. If no industry default, use the safe generic. The templates should have zero hardcoded section header strings.
+
+**Tone rule for Jony:**
+Section labels should match the business personality. A spa says "Our Treatments" — not clinical, not cute. A barber says "Fresh Cuts" — direct, confident. A tutor says "Subjects & Rates" — practical, parent-focused. Every label should feel like the owner chose it themselves.
+
+---
+
+## OWNER COPY EDITING UX (APPROVED CONCEPT — Phase 3)
+
+Tap-to-edit must feel like texting, not like using a website builder.
+Approved by: Shawn + Jony Ive + Angela Ahrendts + Steve Jobs
+
+**Rules:**
+- Tap any text → inline edit field appears in place. No modal. No drawer. No settings menu.
+- Type new text → tap away or press Enter → saved immediately.
+- Section titles, hero headline, hero subtitle, about text, service names, service descriptions — all editable.
+- Section order, page structure, layout type — NOT editable. Owner edits words, not architecture.
+- "Regenerate with AI" appears as a subtle option per section — tapping it sends that section to Claude for a rewrite using the owner's original onboarding answers.
+- Changes save to `website_config` in Supabase in real time. Site reflects instantly.
+
+**What it is NOT:**
+- Not a drag-and-drop builder.
+- Not a CMS dashboard.
+- Not a settings panel.
+- Not a way to delete sections.
+- Not a way to add new section types.
+
+---
+
 ## THE STANDARD
 
 Every Found website must look like Apple built it.

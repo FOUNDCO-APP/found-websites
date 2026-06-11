@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
 import GalleryLightbox from "@/components/GalleryLightbox"
-import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -13,7 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
-  return { title: company ? `Our Work — ${company.name}` : "Gallery" }
+  if (!company) return { title: "Gallery" }
+  const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
+  return { title: `${vocab.galleryLabel} — ${company.name}` }
 }
 
 export default async function GalleryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -35,7 +37,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
   const primary = company.primary_color
   const imgs = await getStockImages(company)
-  const galleryLabel = getIndustryDefaults(company.industry_category).galleryLabel
+  const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
+  const galleryLabel = vocab.galleryLabel
 
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"

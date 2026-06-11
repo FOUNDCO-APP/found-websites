@@ -20,6 +20,9 @@ type OnboardingInput = {
   services: string
   photoChoice: string
   logoChoice: string
+  logoUrl?: string
+  heroImageUrl?: string
+  companyId?: string
   primaryColor: string
   vibe: string
   testimonials: string
@@ -253,7 +256,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   }
 
   const supabase = getAdminClient()
-  const companyId = crypto.randomUUID()
+  const companyId = input.companyId || crypto.randomUUID()
   const slug = await uniqueSlug(slugify(name))
   const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const serviceAreas = input.serviceAreas?.length
@@ -289,7 +292,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       email,
       city,
       state,
-      logo_url: null,
+      logo_url: input.logoUrl ?? null,
       primary_color: primaryColor,
       accent_color_1: mix(primaryColor, "#000000", 0.22),
       accent_color_2: mix(primaryColor, "#ffffff", 0.72),
@@ -308,7 +311,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       company_id: companyId,
       hero_title: generatedContent.heroTitle,
       hero_subtitle: generatedContent.heroSubtitle,
-      hero_image_url: null,
+      hero_image_url: input.heroImageUrl ?? null,
       hero_video_url: null,
       about_text: generatedContent.aboutText,
       tagline: generatedContent.tagline,
@@ -319,6 +322,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       social_links: {},
       custom_domain: null,
       published: true,
+      copy_generated: generatedContent.copy_generated,
     })
 
   if (configError) {

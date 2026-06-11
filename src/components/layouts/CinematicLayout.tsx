@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
@@ -10,6 +11,7 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
   const primary = company.primary_color
   const services = config?.services || []
   const testimonials = config?.testimonials || []
+  const vocab = getVocab(company.sub_industry, company.industry_category)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -118,11 +120,11 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
                 <div>
                   <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>
-                    What We Do
+                    {vocab.servicesOverline}
                   </p>
                   <h2 className="text-4xl md:text-5xl font-black"
                     style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                    Our Services
+                    {vocab.servicesLabel}
                   </h2>
                 </div>
                 <Link href="/services"
@@ -211,7 +213,7 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
                   </p>
                   <Link href="/about" className="btn text-white"
                     style={{ backgroundColor: primary, borderColor: primary }}>
-                    Our Story
+                    {vocab.aboutLabel}
                   </Link>
                 </div>
               </div>
@@ -226,7 +228,7 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
           <InView>
             <div className="max-w-4xl mx-auto px-8 text-center">
               <p className="text-xs font-black tracking-widest uppercase mb-16" style={{ color: primary }}>
-                What Riders Say
+                {vocab.reviewsOverline}
               </p>
               <span
                 className="text-9xl leading-none font-black block -mb-6"
@@ -280,7 +282,7 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
                   or{" "}
                 </>
               )}
-              send us a message and we&apos;ll be in touch.
+              {vocab.ctaBodyText}
             </p>
             <Link href={primaryHref} className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>

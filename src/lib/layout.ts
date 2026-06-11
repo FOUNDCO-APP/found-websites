@@ -12,7 +12,17 @@ const matrix: Record<string, Record<string, LayoutType>> = {
   pet_services:  { bold: "portrait", calm: "editorial", modern: "editorial", warm: "portrait" },
   cleaning:      { bold: "impact", calm: "editorial", modern: "cinematic", warm: "impact" },
   landscaping:   { bold: "impact", calm: "portrait", modern: "cinematic", warm: "portrait" },
-  real_estate:    { bold: "impact", calm: "editorial", modern: "cinematic", warm: "portrait" },
+  real_estate:        { bold: "impact",    calm: "editorial", modern: "cinematic", warm: "portrait" },
+  creative_services:  { bold: "cinematic", calm: "editorial", modern: "cinematic", warm: "portrait" },
+  home_based_food:    { bold: "portrait",  calm: "editorial", modern: "cinematic", warm: "portrait" },
+  education:          { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
+  music_performance:       { bold: "cinematic", calm: "editorial", modern: "cinematic", warm: "portrait" },
+  professional_services:   { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
+  healthcare:              { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
+  childcare:               { bold: "impact",    calm: "portrait",  modern: "editorial", warm: "portrait" },
+  makers_crafts:           { bold: "cinematic", calm: "editorial", modern: "portrait",  warm: "portrait" },
+  home_property:           { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
+  nonprofit:               { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
 }
 
 export function getLayout(industryCategory: string, vibe: string): LayoutType {

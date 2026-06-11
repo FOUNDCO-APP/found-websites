@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
@@ -12,6 +13,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
   const primary = company.primary_color
   const services = config?.services || []
   const testimonials = config?.testimonials || []
+  const vocab = getVocab(company.sub_industry, company.industry_category)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -101,7 +103,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
           <InView distance={20}>
             <div className="max-w-2xl mx-auto px-8 text-center">
               <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
-                Our Story
+                {vocab.aboutLabel}
               </p>
               {config.tagline ? (
                 <h2
@@ -124,7 +126,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
               )}
               <Link href="/about" className="btn text-white"
                 style={{ backgroundColor: primary, borderColor: primary }}>
-                Meet the Team
+                {vocab.aboutLabel}
               </Link>
             </div>
           </InView>
@@ -139,7 +141,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
               <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-20">
                 <div>
                   <p className="text-xs font-black tracking-[0.2em] uppercase mb-4" style={{ color: primary }}>
-                    What We Offer
+                    {vocab.servicesOverline}
                   </p>
                   <h2
                     className="text-4xl md:text-5xl"
@@ -150,7 +152,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                       fontWeight: 700,
                     }}
                   >
-                    Our Services
+                    {vocab.servicesLabel}
                   </h2>
                 </div>
                 <Link href="/services"
@@ -205,7 +207,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
         <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
           <div className="max-w-3xl mx-auto px-8">
             <p className="text-xs font-black tracking-[0.2em] uppercase mb-20" style={{ color: primary }}>
-              Client Stories
+              {vocab.reviewsOverline}
             </p>
             <div className="flex flex-col gap-20">
               {testimonials.slice(0, 2).map((t, i) => (
@@ -267,7 +269,7 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                 <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                   className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
               )}
-              send us a message and we&apos;ll be in touch.
+              {vocab.ctaBodyText}
             </p>
             <Link href={primaryHref} className="btn text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>

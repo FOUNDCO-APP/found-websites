@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
@@ -10,6 +11,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
   const primary = company.primary_color
   const services = config?.services || []
   const testimonials = config?.testimonials || []
+  const vocab = getVocab(company.sub_industry, company.industry_category)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -74,10 +76,10 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
           <div className="max-w-6xl mx-auto px-8">
             <InView>
               <div>
-                <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>What We Do</p>
+                <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>{vocab.servicesOverline}</p>
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
                   <h2 className="text-4xl md:text-5xl font-black" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                    Our Services
+                    {vocab.servicesLabel}
                   </h2>
                   <Link href="/services" className="text-sm font-black uppercase tracking-widest shrink-0 hover:opacity-70 transition-opacity"
                     style={{ color: primary }}>
@@ -131,7 +133,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
               <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
                 <div>
                   <div className="w-12 h-1 mb-8" style={{ backgroundColor: primary }} />
-                  <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>Who We Are</p>
+                  <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: primary }}>{vocab.aboutLabel}</p>
                   <h2 className="text-3xl md:text-4xl font-black text-white leading-tight"
                     style={{ fontFamily: "var(--font-heading, inherit)" }}>
                     {company.name}
@@ -145,7 +147,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
                 <div>
                   <p className="text-lg leading-relaxed mb-8" style={{ color: "#cccccc" }}>{config.about_text}</p>
                   <Link href="/about" className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>
-                    Our Story
+                    {vocab.aboutLabel}
                   </Link>
                 </div>
               </div>
@@ -160,9 +162,9 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
           <div className="max-w-6xl mx-auto px-8">
             <InView>
               <div>
-                <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>Client Stories</p>
+                <p className="text-xs font-black tracking-widest uppercase mb-3" style={{ color: primary }}>{vocab.reviewsOverline}</p>
                 <h2 className="text-4xl md:text-5xl font-black mb-16" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                  What Clients Say
+                  {vocab.reviewsLabel}
                 </h2>
               </div>
             </InView>
@@ -207,7 +209,7 @@ export default function ImpactLayout({ company, imgs, gradient, heroImage, heroV
                 <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                   className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
               )}
-              send us a message and we&apos;ll be in touch.
+              {vocab.ctaBodyText}
             </p>
             <Link href={primaryHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>
               {primaryLabel}

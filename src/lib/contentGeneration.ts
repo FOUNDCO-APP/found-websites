@@ -1,4 +1,5 @@
 import type { IndustryManifest } from "@/lib/industryManifests"
+import { getWebsiteJob, type WebsiteJob } from "@/lib/subIndustryVocabulary"
 
 type ServiceItem = {
   name: string
@@ -25,6 +26,7 @@ export type GeneratedWebsiteContent = {
   tagline: string | null
   ctaHeadline: string | null
   services: ServiceItem[]
+  copy_generated: boolean
 }
 
 type ClaudeMessageResponse = {
@@ -82,19 +84,83 @@ function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
   return fallback.map((service, index) => generated[index] || service)
 }
 
+function buildJobFamilyCopy(
+  name: string,
+  industryLabel: string,
+  cityLabel: string,
+  locationPhrase: string,
+  differentiator: string | null,
+  job: WebsiteJob,
+): { heroSubtitle: string; aboutText: string; ctaHeadline: string } {
+  const ind = industryLabel.toLowerCase()
+  const diff = differentiator
+    ? differentiator.charAt(0).toUpperCase() + differentiator.slice(1).replace(/\.?\s*$/, ".") + " "
+    : ""
+
+  switch (job) {
+    case "book_me":
+      return {
+        heroSubtitle: `${industryLabel} in ${cityLabel}. Book online — easy scheduling, real results.`,
+        aboutText: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We take care of every detail so you can enjoy the experience.`,
+        ctaHeadline: "Ready to book?",
+      }
+    case "hire_me":
+      return {
+        heroSubtitle: `Trusted ${ind} serving ${cityLabel}. We show up, do the work right, and stand behind it.`,
+        aboutText: `${name} serves ${locationPhrase} with dependable ${ind} work. ${diff}We show up on time, do the job right, and leave things better than we found them.`,
+        ctaHeadline: "Get your free estimate",
+      }
+    case "quote_me":
+      return {
+        heroSubtitle: `Fast, honest estimates from ${cityLabel}'s trusted ${ind} team.`,
+        aboutText: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}We give straight answers and fair prices — no guesswork, no surprises.`,
+        ctaHeadline: "Request a free quote",
+      }
+    case "visit_me":
+      return {
+        heroSubtitle: `Your local ${ind} in ${cityLabel}. Come see what we're all about.`,
+        aboutText: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We're proud of what we do and even prouder of the people we do it for.`,
+        ctaHeadline: "Come see us",
+      }
+    case "order_from_me":
+      return {
+        heroSubtitle: `Fresh ${ind} from ${cityLabel}. Made with care in every order.`,
+        aboutText: `${name} is a small-batch ${ind} in ${locationPhrase}. ${diff}We stay small on purpose — it's how we keep the quality up.`,
+        ctaHeadline: "Place an order",
+      }
+    case "trust_me":
+      return {
+        heroSubtitle: `Experienced ${ind} in ${cityLabel}. Every client gets the full attention they deserve.`,
+        aboutText: `${name} serves ${locationPhrase} with the expertise and care that only comes from real experience. ${diff}We take your situation seriously.`,
+        ctaHeadline: "Let's talk",
+      }
+    case "find_me":
+      return {
+        heroSubtitle: `${industryLabel} based in ${cityLabel}. Shows, bookings, and everything in between.`,
+        aboutText: `${name} is a ${ind} in ${locationPhrase}. ${diff}The work speaks for itself — take a look.`,
+        ctaHeadline: "Get in touch",
+      }
+  }
+}
+
 export function buildFallbackWebsiteContent(input: ContentGenerationInput): GeneratedWebsiteContent {
   const cityLabel = input.city || "Your Area"
-  const industryLabel = input.subIndustry.replace(/\b\w/g, (char) => char.toUpperCase())
+  const industryLabel = (input.subIndustry || input.industry).replace(/\b\w/g, (c) => c.toUpperCase())
   const locationPhrase = input.city
     ? `${input.city}${input.state ? `, ${input.state}` : ""}`
     : "Your Area"
+  const differentiator = input.different?.trim() || null
+
+  const job = getWebsiteJob(input.subIndustry || null, input.industry)
+  const copy = buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
 
   return {
     heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : input.name,
-    heroSubtitle: input.manifest.primaryJob,
-    aboutText: `${input.name} is a locally owned ${industryLabel.toLowerCase()} business serving ${locationPhrase}. ${input.manifest.primaryJob}`,
+    heroSubtitle: copy.heroSubtitle,
+    aboutText: copy.aboutText,
     tagline: null,
-    ctaHeadline: null,
+    ctaHeadline: copy.ctaHeadline,
+    copy_generated: false,
     services: input.services.length
       ? input.services
       : [{
@@ -118,8 +184,8 @@ function buildPrompt(input: ContentGenerationInput) {
     `Location: ${[input.city, input.state].filter(Boolean).join(", ") || "Not provided"}`,
     `What makes them different: ${input.different || "Not provided"}`,
     `Selected vibe: ${input.vibe}`,
-    `Primary customer job: ${input.manifest.primaryJob}`,
-    `Jony design note: ${input.manifest.jonyNote}`,
+    `Design direction (internal brief — never copy this text into output): ${input.manifest.primaryJob}`,
+    `Voice and feel (internal — never copy this text into output): ${input.manifest.jonyNote}`,
     `Primary call to action intent: ${input.manifest.primaryIntent}`,
     `Secondary call to action intent: ${input.manifest.secondaryIntent || "none"}`,
     `Services to keep in this order: ${input.services.map((service) => service.name).join(", ") || "Create one general service"}`,
@@ -171,6 +237,7 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
       aboutText: limit(generated.aboutText, fallback.aboutText, 420),
       tagline: typeof generated.tagline === "string" ? limit(generated.tagline, "", 80) || null : null,
       ctaHeadline: typeof generated.ctaHeadline === "string" ? limit(generated.ctaHeadline, "", 90) || null : null,
+      copy_generated: true,
       services: sanitizeServices(generated.services, fallback.services),
     }
   } catch (error) {

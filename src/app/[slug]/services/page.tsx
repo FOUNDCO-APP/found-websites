@@ -5,6 +5,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import type { Metadata } from "next"
 
@@ -35,6 +36,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const img = (i: number) => pickImg(imgs, i)
   const heroImage = config?.hero_image_url || img(0)
   const industryDefs = getIndustryDefaults(company.industry_category)
+  const vocab = getVocab(company.sub_industry, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
 
   return (
@@ -50,11 +52,11 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
         {heroImage && <div className="absolute inset-0 bg-black/70" />}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-20 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#ffffff" }}>
-            What We Do
+            {vocab.servicesOverline}
           </p>
           <h1 className="text-5xl md:text-7xl font-black text-white leading-none mb-6 text-balance"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            Our Services
+            {vocab.servicesLabel}
           </h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
             {config?.hero_subtitle || industryDefs.servicesIntro}
@@ -145,7 +147,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
               <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                 className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
             )}
-            send us a message and we&apos;ll be in touch.
+            {vocab.ctaBodyText}
           </p>
           <Link href={ctaHref} className="btn text-white"
             style={{ backgroundColor: primary, borderColor: primary }}>

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 
 function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: string }) {
   const len = name.length
@@ -21,13 +22,21 @@ function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: s
   )
 }
 
-const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "About", href: "/about" },
-  { label: "Services", href: "/services" },
-  { label: "Gallery", href: "/gallery" },
-  { label: "Contact", href: "/contact" },
-]
+const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
+
+function getNavLinks(industryCategory: string, subIndustry: string | null) {
+  const isFood = FOOD_INDUSTRIES.has(industryCategory)
+  const vocab = getVocab(subIndustry, industryCategory)
+  return [
+    { label: "Home",              href: "/" },
+    { label: "About",             href: "/about" },
+    isFood
+      ? { label: "Menu",          href: "/menu" }
+      : { label: "Services",      href: "/services" },
+    { label: vocab.galleryLabel,  href: "/gallery" },
+    { label: "Contact",           href: "/contact" },
+  ]
+}
 
 export default function Navbar({ company, transparent = false }: { company: Company; transparent?: boolean }) {
   const [open, setOpen] = useState(false)
@@ -126,7 +135,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-7 text-xs tracking-wide uppercase">
-            {navLinks.map((item) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item) => (
               <Link key={item.label} href={item.href}
                 className={`transition-colors ${navLinkWeight}`}
                 style={{ color: isActive(item.href) && !isOverlay ? primary : inactiveColor }}>
@@ -197,7 +206,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           </div>
 
           <nav className="flex-1 flex flex-col justify-center px-8 gap-0">
-            {navLinks.map((item) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item) => (
               <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
                 className="py-5 text-2xl font-bold"
                 style={{
@@ -265,7 +274,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           </div>
 
           <nav className="flex-1 flex flex-col justify-center px-8 gap-0">
-            {navLinks.map((item, i) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item, i) => (
               <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
                 className="flex items-baseline gap-5 py-5 border-b border-white/10 group hover:pl-2 transition-all duration-200"
                 style={{
