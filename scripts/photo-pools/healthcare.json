@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=1920&q=80&auto=format&fit=crop", "desc": "Physical therapist guiding patient through shoulder exercise", "tag": "physical therapy" },
+    { "url": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1920&q=80&auto=format&fit=crop", "desc": "Healthcare professional in clean clinical setting", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&q=80&auto=format&fit=crop", "desc": "Therapist listening actively in a calm counseling session", "tag": "therapy" },
+    { "url": "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=1920&q=80&auto=format&fit=crop", "desc": "Doctor reviewing chart with patient in consultation room", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1920&q=80&auto=format&fit=crop", "desc": "Medical professional in white coat at bright modern desk", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1519494026892-8f4e3faae9fe?w=1920&q=80&auto=format&fit=crop", "desc": "Acupuncture needles placed on patient's back in dim warm light", "tag": "acupuncture" },
+    { "url": "https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=1920&q=80&auto=format&fit=crop", "desc": "Wellness clinic reception — calm, minimalist, inviting", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=1920&q=80&auto=format&fit=crop", "desc": "Chiropractor performing spinal adjustment technique", "tag": "chiropractic" },
+    { "url": "https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=1920&q=80&auto=format&fit=crop", "desc": "Massage therapy session — hands working on client's back", "tag": "massage" },
+    { "url": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1920&q=80&auto=format&fit=crop", "desc": "Person doing yoga in a bright airy studio space", "tag": "therapy" },
+    { "url": "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=1920&q=80&auto=format&fit=crop", "desc": "Naturopath or nutritionist reviewing wellness plan with client", "tag": "naturopathy" },
+    { "url": "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=1920&q=80&auto=format&fit=crop", "desc": "Mental health therapy — two people in comfortable chairs", "tag": "therapy" }
+  ]
+}

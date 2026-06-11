@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&q=80&auto=format&fit=crop", "desc": "Baker rolling dough in home kitchen with flour dusted surface", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=1920&q=80&auto=format&fit=crop", "desc": "Beautifully plated homemade meal on rustic wooden table", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1607877361964-d82cf04c2571?w=1920&q=80&auto=format&fit=crop", "desc": "Freshly baked artisan bread loaves cooling on rack", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=1920&q=80&auto=format&fit=crop", "desc": "Colorful weekly meal prep containers lined up on counter", "tag": "meal prep" },
+    { "url": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=1920&q=80&auto=format&fit=crop", "desc": "Assorted pastries and croissants on a wooden cutting board", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=1920&q=80&auto=format&fit=crop", "desc": "Homemade food styled for photography — warm and inviting", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=1920&q=80&auto=format&fit=crop", "desc": "Glazed donuts with colorful toppings on display", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=1920&q=80&auto=format&fit=crop", "desc": "Layered celebration cake decorated with fresh flowers", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1606890542220-d30cde1d1f4d?w=1920&q=80&auto=format&fit=crop", "desc": "Homemade tamales wrapped in corn husks on a tray", "tag": "tamales" },
+    { "url": "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=1920&q=80&auto=format&fit=crop", "desc": "Hands placing cookies on baking tray in bright kitchen", "tag": "baked goods" },
+    { "url": "https://images.unsplash.com/photo-1621188988909-fbef0a44b470?w=1920&q=80&auto=format&fit=crop", "desc": "Cottage kitchen with jars of homemade preserves and goods", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?w=1920&q=80&auto=format&fit=crop", "desc": "Caramel and candy confections handmade in small batches", "tag": "sweets" }
+  ]
+}

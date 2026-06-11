@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1920&q=80&auto=format&fit=crop", "desc": "Graphic designer at laptop with colorful design work on screen", "tag": "graphic design" },
+    { "url": "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=1920&q=80&auto=format&fit=crop", "desc": "UX designer working on wireframes and UI mockups", "tag": "web design" },
+    { "url": "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=1920&q=80&auto=format&fit=crop", "desc": "Photographer reviewing shots on camera in studio", "tag": "photography" },
+    { "url": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1920&q=80&auto=format&fit=crop", "desc": "Close-up of camera lens with shallow depth of field", "tag": "photography" },
+    { "url": "https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?w=1920&q=80&auto=format&fit=crop", "desc": "Photographer with camera against bright background", "tag": "photography" },
+    { "url": "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=1920&q=80&auto=format&fit=crop", "desc": "Developer at dual monitor setup in modern workspace", "tag": "web design" },
+    { "url": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&q=80&auto=format&fit=crop", "desc": "Creative team collaborating around a table with sticky notes", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1920&q=80&auto=format&fit=crop", "desc": "Modern open creative office with natural light", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1593510987185-1ec2256148a3?w=1920&q=80&auto=format&fit=crop", "desc": "Graphic design workspace with drawing tablet and monitor", "tag": "graphic design" },
+    { "url": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80&auto=format&fit=crop", "desc": "Designer working on laptop with design software open", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=1920&q=80&auto=format&fit=crop", "desc": "Video editor working on timeline in editing suite", "tag": "video" },
+    { "url": "https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=1920&q=80&auto=format&fit=crop", "desc": "Podcast or voiceover session at professional microphone", "tag": "video" }
+  ]
+}

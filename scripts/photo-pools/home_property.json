@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1920&q=80&auto=format&fit=crop", "desc": "Beautiful suburban home exterior with manicured front lawn", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1920&q=80&auto=format&fit=crop", "desc": "Bright modern home interior with open floor plan", "tag": "staging" },
+    { "url": "https://images.unsplash.com/photo-1556020685-ae41abfc9365?w=1920&q=80&auto=format&fit=crop", "desc": "Warmly lit living room with stylish furnishings and fireplace", "tag": "staging" },
+    { "url": "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?w=1920&q=80&auto=format&fit=crop", "desc": "Modern house with clean lines and landscaped entry", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80&auto=format&fit=crop", "desc": "Luxury home living area with high ceilings and natural light", "tag": "staging" },
+    { "url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1920&q=80&auto=format&fit=crop", "desc": "Bright updated kitchen with quartz countertops and white cabinetry", "tag": "staging" },
+    { "url": "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=1920&q=80&auto=format&fit=crop", "desc": "Staged dining room with elegant table setting and neutral tones", "tag": "staging" },
+    { "url": "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=1920&q=80&auto=format&fit=crop", "desc": "Property inspector examining roof and gutters on exterior", "tag": "inspection" },
+    { "url": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80&auto=format&fit=crop", "desc": "Real estate photographer setting up camera in a staged room", "tag": "photography" },
+    { "url": "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1920&q=80&auto=format&fit=crop", "desc": "Pool and patio of well-maintained residential property", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1600121848594-d8644e57abab?w=1920&q=80&auto=format&fit=crop", "desc": "Aerial drone shot of a well-kept neighborhood property", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=1920&q=80&auto=format&fit=crop", "desc": "Property manager reviewing checklist outside rental unit", "tag": "management" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1501612780327-45045538702b?w=1920&q=80&auto=format&fit=crop", "desc": "Live band performing on stage with colorful concert lighting", "tag": "live band" },
+    { "url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1920&q=80&auto=format&fit=crop", "desc": "DJ performing at turntables with stage lighting behind", "tag": "dj" },
+    { "url": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&q=80&auto=format&fit=crop", "desc": "Guitarist performing on stage in atmospheric light", "tag": "live band" },
+    { "url": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=1920&q=80&auto=format&fit=crop", "desc": "Concert crowd with hands raised and colorful stage lights", "tag": "live band" },
+    { "url": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=1920&q=80&auto=format&fit=crop", "desc": "Acoustic guitar being strummed in a warmly lit setting", "tag": "acoustic" },
+    { "url": "https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=1920&q=80&auto=format&fit=crop", "desc": "Vocalist performing at microphone on a lit stage", "tag": "live band" },
+    { "url": "https://images.unsplash.com/photo-1470019693664-1d202d2c0907?w=1920&q=80&auto=format&fit=crop", "desc": "Full band on stage — drums, guitar, bass under spotlight", "tag": "live band" },
+    { "url": "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1920&q=80&auto=format&fit=crop", "desc": "Musician in recording studio with headphones and equipment", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1526142684086-7ebd69df27a5?w=1920&q=80&auto=format&fit=crop", "desc": "Grand piano on a stage with dramatic spotlight from above", "tag": "acoustic" },
+    { "url": "https://images.unsplash.com/photo-1563009843-dfcd0c7b3f0c?w=1920&q=80&auto=format&fit=crop", "desc": "Mariachi or Latin band performing at an outdoor celebration", "tag": "mariachi" },
+    { "url": "https://images.unsplash.com/photo-1532932081640-fe6f9b46adf0?w=1920&q=80&auto=format&fit=crop", "desc": "DJ controller and mixer close-up at an event", "tag": "dj" },
+    { "url": "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?w=1920&q=80&auto=format&fit=crop", "desc": "Musicians setting up equipment before a performance", "tag": null }
+  ]
+}

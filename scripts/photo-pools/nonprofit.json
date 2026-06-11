@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1593113598332-cd288d649433?w=1920&q=80&auto=format&fit=crop", "desc": "Diverse group of volunteers working together outdoors", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1582213782179-e4b1351c401c?w=1920&q=80&auto=format&fit=crop", "desc": "Community volunteers sorting donations at a food bank", "tag": "food bank" },
+    { "url": "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=1920&q=80&auto=format&fit=crop", "desc": "Volunteer handing food box to community member at drive", "tag": "food bank" },
+    { "url": "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1920&q=80&auto=format&fit=crop", "desc": "Multicultural community event with smiling participants", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=1920&q=80&auto=format&fit=crop", "desc": "Fundraising table setup at an outdoor community gathering", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=1920&q=80&auto=format&fit=crop", "desc": "Two people shaking hands at a nonprofit partner event", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=1920&q=80&auto=format&fit=crop", "desc": "Mentor and youth participant working on a project together", "tag": "youth" },
+    { "url": "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=1920&q=80&auto=format&fit=crop", "desc": "Volunteers painting a community mural on a neighborhood wall", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1617521835029-f86b9cee47fa?w=1920&q=80&auto=format&fit=crop", "desc": "Animal rescue volunteers caring for dogs at a shelter", "tag": "animal rescue" },
+    { "url": "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=1920&q=80&auto=format&fit=crop", "desc": "Community garden with diverse volunteers tending raised beds", "tag": "community garden" },
+    { "url": "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=1920&q=80&auto=format&fit=crop", "desc": "Nonprofit team meeting reviewing mission board together", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1540479859555-17af45c78602?w=1920&q=80&auto=format&fit=crop", "desc": "Hands forming a circle together — teamwork and community", "tag": null }
+  ]
+}

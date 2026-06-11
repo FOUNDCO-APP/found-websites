@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1920&q=80&auto=format&fit=crop", "desc": "Professional reviewing documents at a clean modern desk", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1920&q=80&auto=format&fit=crop", "desc": "Two business professionals shaking hands in a bright office", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=1920&q=80&auto=format&fit=crop", "desc": "Business professional in suit standing confidently", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1521791055366-0d553872952f?w=1920&q=80&auto=format&fit=crop", "desc": "Conference room with team in a professional business meeting", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1920&q=80&auto=format&fit=crop", "desc": "Consultant presenting strategy on whiteboard to small group", "tag": "consulting" },
+    { "url": "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=1920&q=80&auto=format&fit=crop", "desc": "Professional working at laptop in sleek modern office", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=1920&q=80&auto=format&fit=crop", "desc": "Person typing on laptop with spreadsheet visible on screen", "tag": "accounting" },
+    { "url": "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=1920&q=80&auto=format&fit=crop", "desc": "Law books stacked on wooden desk — legal professional setting", "tag": "legal" },
+    { "url": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1920&q=80&auto=format&fit=crop", "desc": "Team working together around table in collaborative session", "tag": "consulting" },
+    { "url": "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1920&q=80&auto=format&fit=crop", "desc": "Financial advisor reviewing graphs and charts with client", "tag": "accounting" },
+    { "url": "https://images.unsplash.com/photo-1588702547919-26089e690ecc?w=1920&q=80&auto=format&fit=crop", "desc": "HR professional in one-on-one interview setting", "tag": "hr" },
+    { "url": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1920&q=80&auto=format&fit=crop", "desc": "Aerial view of person working with papers and laptop on desk", "tag": null }
+  ]
+}

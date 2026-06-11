@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=1920&q=80&auto=format&fit=crop", "desc": "Potter's hands shaping wet clay on a spinning wheel", "tag": "pottery" },
+    { "url": "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1920&q=80&auto=format&fit=crop", "desc": "Jeweler's hands working on a delicate ring with tools", "tag": "jewelry" },
+    { "url": "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=1920&q=80&auto=format&fit=crop", "desc": "Handmade soy candles in glass jars on a rustic wooden table", "tag": "candles" },
+    { "url": "https://images.unsplash.com/photo-1621600411688-4be93cd68504?w=1920&q=80&auto=format&fit=crop", "desc": "Woodworker planing a board in a sunlit workshop", "tag": "woodworking" },
+    { "url": "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=1920&q=80&auto=format&fit=crop", "desc": "Artisan hands carefully finishing a handcrafted piece", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1503464518788-4b6b2cbb8e96?w=1920&q=80&auto=format&fit=crop", "desc": "Colorful knitting yarn and needles on a cozy surface", "tag": "fiber arts" },
+    { "url": "https://images.unsplash.com/photo-1589496933738-f8a8200aef31?w=1920&q=80&auto=format&fit=crop", "desc": "Handmade goods arranged on a market display table", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1553413077-190dd305871c?w=1920&q=80&auto=format&fit=crop", "desc": "Stained glass or mosaic work in progress on a light table", "tag": "glass" },
+    { "url": "https://images.unsplash.com/photo-1618220179428-22790b461013?w=1920&q=80&auto=format&fit=crop", "desc": "Row of handmade ceramic mugs drying on a shelf", "tag": "pottery" },
+    { "url": "https://images.unsplash.com/photo-1606722590583-6951b5ea92ad?w=1920&q=80&auto=format&fit=crop", "desc": "Leather crafting — artisan cutting and stitching by hand", "tag": "leather" },
+    { "url": "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=1920&q=80&auto=format&fit=crop", "desc": "Handmade soap bars wrapped with kraft paper and twine", "tag": "soap" },
+    { "url": "https://images.unsplash.com/photo-1584473457406-6240486418e9?w=1920&q=80&auto=format&fit=crop", "desc": "Macro shot of intricate silver jewelry on velvet display", "tag": "jewelry" }
+  ]
+}

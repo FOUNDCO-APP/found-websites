@@ -1,0 +1,16 @@
+{
+  "photos": [
+    { "url": "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=1920&q=80&auto=format&fit=crop", "desc": "Caregiver reading storybook to young child on a colorful rug", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1602030638412-bb8dcc0bc8b0?w=1920&q=80&auto=format&fit=crop", "desc": "Children doing arts and crafts activity at a low table", "tag": "daycare" },
+    { "url": "https://images.unsplash.com/photo-1587395728053-4cc59a08d9f0?w=1920&q=80&auto=format&fit=crop", "desc": "Two children reading together on a bright classroom floor", "tag": null },
+    { "url": "https://images.unsplash.com/photo-1536967945793-12ebfc78c4e0?w=1920&q=80&auto=format&fit=crop", "desc": "Happy children playing on colorful playground equipment", "tag": "after school" },
+    { "url": "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=1920&q=80&auto=format&fit=crop", "desc": "Bright daycare room with learning stations and cozy corners", "tag": "daycare" },
+    { "url": "https://images.unsplash.com/photo-1542736667-069246bdbc6d?w=1920&q=80&auto=format&fit=crop", "desc": "Children at colorful learning activity table with teacher nearby", "tag": "daycare" },
+    { "url": "https://images.unsplash.com/photo-1472746729193-8c032e5f4047?w=1920&q=80&auto=format&fit=crop", "desc": "Child and caregiver laughing together on a sunny afternoon", "tag": "nanny" },
+    { "url": "https://images.unsplash.com/photo-1567343483886-5b28e8ab4b4b?w=1920&q=80&auto=format&fit=crop", "desc": "Children doing messy paint art together — hands covered in color", "tag": "daycare" },
+    { "url": "https://images.unsplash.com/photo-1576495199011-eb94736d05d6?w=1920&q=80&auto=format&fit=crop", "desc": "Toddler group circle time with caring teacher", "tag": "daycare" },
+    { "url": "https://images.unsplash.com/photo-1474540412665-1cdae210ae6b?w=1920&q=80&auto=format&fit=crop", "desc": "Kids running and playing in a safe outdoor yard", "tag": "after school" },
+    { "url": "https://images.unsplash.com/photo-1612965607446-25e1332775ae?w=1920&q=80&auto=format&fit=crop", "desc": "Child doing puzzle with one-on-one caregiver guidance", "tag": "nanny" },
+    { "url": "https://images.unsplash.com/photo-1594608661623-aa0bd3a69d98?w=1920&q=80&auto=format&fit=crop", "desc": "School-age children seated attentively in a learning space", "tag": "after school" }
+  ]
+}
