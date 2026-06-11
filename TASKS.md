@@ -37,7 +37,7 @@ Exit criteria:
 
 1. **End-to-end flow test** — Shawn tests full onboarding on his phone: name → industry → location → services → photo upload → logo upload → color (auto-detected) → vibe → submit → reveal screen → live site. Phase 2 exit criterion #5.
 
-2. **Photo pool curation for 10 new industries** — blocked on session with Shawn. All 10 new industries coded but photo pools empty; stock fallback runs instead.
+2. **Photo pool curation for 10 new industries** ✅ DONE — 12 curated Unsplash photos per industry, sub-type tagged, uploaded to Supabase Storage June 11, 2026. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
 
 ---
 
