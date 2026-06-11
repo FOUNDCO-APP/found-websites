@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 11, 2026*
+*Last updated: June 11, 2026 (evening)*
 
 ---
 
@@ -43,7 +43,33 @@ Exit criteria:
 
 ## RECENTLY COMPLETED (June 11, 2026)
 
-3. **Angela's affirmations** ✅ SHIPPED
+3e. **Upload stuck bug — fixed** ✅ SHIPPED
+   - Root causes: (1) Next.js server actions have 1MB default body limit — iPhone photos (3–15MB) silently killed the request; (2) no try/catch → any error = infinite spinner; (3) HEIC not in accept attribute
+   - Fix: hero upload now resizes client-side with Canvas API (HEIC → JPEG, max 2400px, ~500KB output) BEFORE sending to server action. iOS Safari decodes HEIC into canvas natively.
+   - Logo upload: try/catch + finally so spinner always stops. Sharp still runs server-side for dominant color extraction.
+   - next.config.ts: `serverExternalPackages: ["sharp"]`, `experimental.serverActions.bodySizeLimit: "25mb"`
+   - Both file inputs: `accept="image/*"` (was png/jpeg/webp only)
+
+3. **Jony's contact visibility design** ✅ SHIPPED
+   - Onboarding contact step: soft inline toggle per field — "✓ Shows on your contact page — tap to hide" / "Hidden from your site — tap to show"
+   - "Send leads to a different number or email?" expander — lead_phone + lead_email routing
+   - Question title: "What's your business phone and email?" (was "How do customers reach you?")
+   - Hint text updated — was wrong ("Not shown publicly. Leads from your site go here.") — now "You control what shows publicly — each field has a toggle below it."
+   - contact/page.tsx: gates phone/email display on phone_visible / email_visible flags
+   - Migration: `scripts/migration-add-contact-visibility.sql` — 4 new columns on companies (DEFAULT true = existing sites unaffected) ✅ run June 11, 2026
+   - TypeScript clean.
+
+3b. **Phone numbers replaced with "Call Us" everywhere** ✅ SHIPPED
+   - All 4 layout templates + services/menu/about pages: CTA sections now show ghost "Call Us" button with phone icon instead of raw number
+   - Navbar desktop + both mobile drawer variants: raw phone number replaced with "Call Us" link
+   - Contact page intentionally kept showing the number (now gated by phone_visible flag)
+
+3c. **Admin copy panel — now shows all sites** ✅ SHIPPED
+   - Was filtering `.eq("copy_generated", false)` — broke because migration set all existing sites to `true` by default
+   - Fixed: removed filter, added AI/Fallback/Updated badge per row, empty state updated
+   - copy_generated migration confirmed run June 10, 2026
+
+4. **Angela's affirmations** ✅ SHIPPED
    - All 10 onboarding steps now have contextual Signal Green affirmations
    - New steps added: photos ("That's your hero. First thing people see."), logo ("Logo's in. It'll show at the top of every page."), color ("That color goes on every button and accent across your site."), testimonials ("Those go straight on your homepage.")
    - Improved existing: name → "That's the one.", description → "We know how to build this.", location → adds "that's your market. It goes everywhere.", contact → "Every button on your site goes here.", different → "That's your edge.", services → "that's your homepage lineup."
