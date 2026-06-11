@@ -87,6 +87,32 @@ const DIFFERENTIATOR_CHIPS: Record<string, string[]> = {
 
 const GENERATING_LINES = ["Building your site.", "Writing your story.", "Almost ready."]
 
+// Resizes a photo client-side and returns a JPEG Blob.
+// Handles HEIC on iOS (Safari can decode HEIC natively into a canvas).
+// Reduces iPhone photos from 10+ MB to < 1 MB before the server action upload.
+function resizeImageToJpeg(file: File, maxPx = 2400, quality = 0.85): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
+      const canvas = document.createElement("canvas")
+      canvas.width  = Math.round(img.width  * scale)
+      canvas.height = Math.round(img.height * scale)
+      const ctx = canvas.getContext("2d")
+      if (!ctx) { reject(new Error("Canvas unavailable")); return }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error("Canvas toBlob failed")),
+        "image/jpeg", quality,
+      )
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")) }
+    img.src = url
+  })
+}
+
 function canAdvance(step: Step, a: Answers): boolean {
   switch (step) {
     case "welcome":      return true
@@ -720,19 +746,23 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
     if (!file) return
     setLogoUploading(true)
     setLogoError(null)
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await uploadLogoFile(fd, sessionId)
-    setLogoUploading(false)
-    if (res.success && res.url) {
-      set("logoUrl", res.url)
-      set("logoChoice", "uploaded")
-      if (res.dominantColor) set("primaryColor", res.dominantColor)
-    } else {
-      setLogoError(res.error ?? "Upload failed.")
+    try {
+      const fd = new FormData()
+      fd.append("file", file)
+      const res = await uploadLogoFile(fd, sessionId)
+      if (res.success && res.url) {
+        set("logoUrl", res.url)
+        set("logoChoice", "uploaded")
+        if (res.dominantColor) set("primaryColor", res.dominantColor)
+      } else {
+        setLogoError(res.error ?? "Upload failed — please try again.")
+      }
+    } catch {
+      setLogoError("Upload failed — please try again.")
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ""
     }
-    // Reset input so the same file can be re-selected after a clear
-    e.target.value = ""
   }
 
   async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -740,17 +770,25 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
     if (!file) return
     setHeroUploading(true)
     setHeroError(null)
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await uploadHeroFile(fd, sessionId)
-    setHeroUploading(false)
-    if (res.success && res.url) {
-      set("heroImageUrl", res.url)
-      set("photoChoice", "uploaded")
-    } else {
-      setHeroError(res.error ?? "Upload failed.")
+    try {
+      // Resize client-side: converts HEIC/PNG/any format → JPEG, reduces large iPhone
+      // photos (3–15 MB) to a manageable size before hitting the server action.
+      const resized = await resizeImageToJpeg(file, 2400, 0.85)
+      const fd = new FormData()
+      fd.append("file", new File([resized], "hero.jpg", { type: "image/jpeg" }))
+      const res = await uploadHeroFile(fd, sessionId)
+      if (res.success && res.url) {
+        set("heroImageUrl", res.url)
+        set("photoChoice", "uploaded")
+      } else {
+        setHeroError(res.error ?? "Upload failed — please try again.")
+      }
+    } catch {
+      setHeroError("Upload failed — please try again.")
+    } finally {
+      setHeroUploading(false)
+      e.target.value = ""
     }
-    e.target.value = ""
   }
 
   function requestClose() {
@@ -1188,7 +1226,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                                 {heroError && <p className="text-xs font-black text-red-500">{heroError}</p>}
                               </>
                             )}
-                            <input type="file" accept="image/png,image/jpeg,image/webp"
+                            <input type="file" accept="image/*"
                               className="sr-only" onChange={handleHeroUpload} disabled={heroUploading} />
                           </label>
                         )}
