@@ -29,6 +29,11 @@ type Answers = {
   serviceAreas: string[]
   phone: string
   email: string
+  phoneVisible: boolean
+  emailVisible: boolean
+  separateLeads: boolean
+  leadPhone: string
+  leadEmail: string
   different: string
   services: string[]
   photoChoice: string
@@ -49,6 +54,7 @@ const STEPS: Step[] = [
 const INITIAL: Answers = {
   name: "", description: "", industry: null, subIndustry: "",
   location: "", serviceAreas: [], phone: "", email: "",
+  phoneVisible: true, emailVisible: true, separateLeads: false, leadPhone: "", leadEmail: "",
   different: "", services: [], photoChoice: "", logoChoice: "",
   logoUrl: "", heroImageUrl: "",
   primaryColor: "#2E7D32", vibe: "", testimonials: "",
@@ -106,7 +112,7 @@ function questionTitle(step: Step, a: Answers): string {
     case "description":  return "What do you do? Tell me in your own words."
     case "subIndustry":  return "What kind of business is it?"
     case "location":     return "Where are you based?"
-    case "contact":      return "How do customers reach you?"
+    case "contact":      return "What's your business phone and email?"
     case "different":    return "What makes you different?"
     case "services":     return "What services do you offer?"
     case "photos":       return "Got photos of your work?"
@@ -923,7 +929,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                         <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
                       )}
                       {step === "contact" && (
-                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>Not shown publicly. Leads from your site go here.</p>
+                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>You control what shows publicly — each field has a toggle below it.</p>
                       )}
                       {ready && affirm && (
                         <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
@@ -1008,23 +1014,92 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     )}
 
                     {step === "contact" && (
-                      <div className="space-y-6">
-                        <input
-                          autoFocus type="tel"
-                          value={answers.phone}
-                          onChange={(e) => set("phone", e.target.value)}
-                          placeholder="Phone number"
-                          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
-                          style={{ color: tk.text, borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
-                        />
-                        <input
-                          type="email"
-                          value={answers.email}
-                          onChange={(e) => set("email", e.target.value)}
-                          placeholder="Email address"
-                          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
-                          style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
-                        />
+                      <div className="space-y-8">
+                        {/* Phone */}
+                        <div>
+                          <input
+                            autoFocus type="tel"
+                            value={answers.phone}
+                            onChange={(e) => set("phone", e.target.value)}
+                            placeholder="Phone number"
+                            className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                          {answers.phone.length > 6 && (
+                            <button type="button"
+                              onClick={() => set("phoneVisible", !answers.phoneVisible)}
+                              className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
+                              style={{ color: answers.phoneVisible ? SIGNAL_GREEN : tk.muted }}>
+                              {answers.phoneVisible
+                                ? "✓ Shows on your contact page — tap to hide"
+                                : "Hidden from your site — tap to show"}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Email */}
+                        <div>
+                          <input
+                            type="email"
+                            value={answers.email}
+                            onChange={(e) => set("email", e.target.value)}
+                            placeholder="Email address"
+                            className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                          {answers.email.includes("@") && (
+                            <button type="button"
+                              onClick={() => set("emailVisible", !answers.emailVisible)}
+                              className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
+                              style={{ color: answers.emailVisible ? SIGNAL_GREEN : tk.muted }}>
+                              {answers.emailVisible
+                                ? "✓ Shows on your contact page — tap to hide"
+                                : "Hidden from your site — tap to show"}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Lead routing — only shows when both fields are valid */}
+                        {answers.phone.length > 6 && answers.email.includes("@") && (
+                          !answers.separateLeads ? (
+                            <button type="button"
+                              onClick={() => set("separateLeads", true)}
+                              className="text-xs font-black uppercase tracking-[0.14em] underline decoration-[#32D074] underline-offset-4"
+                              style={{ color: tk.muted }}>
+                              Send leads to a different number or email?
+                            </button>
+                          ) : (
+                            <div className="space-y-5">
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: tk.muted }}>
+                                  Lead notifications go to:
+                                </p>
+                                <button type="button"
+                                  onClick={() => { set("separateLeads", false); set("leadPhone", ""); set("leadEmail", "") }}
+                                  className="text-xs font-black uppercase tracking-[0.14em]"
+                                  style={{ color: tk.muted }}>
+                                  Cancel
+                                </button>
+                              </div>
+                              <input
+                                type="tel"
+                                value={answers.leadPhone}
+                                onChange={(e) => set("leadPhone", e.target.value)}
+                                placeholder="Lead notification phone (optional)"
+                                className={`w-full text-xl ${tk.inputCls} ${tk.placeholder}`}
+                                style={{ color: tk.text, borderBottomColor: answers.leadPhone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
+                              />
+                              <input
+                                type="email"
+                                value={answers.leadEmail}
+                                onChange={(e) => set("leadEmail", e.target.value)}
+                                placeholder="Lead notification email"
+                                className={`w-full text-xl ${tk.inputCls} ${tk.placeholder}`}
+                                style={{ color: tk.text, borderBottomColor: answers.leadEmail.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
+                              />
+                            </div>
+                          )
+                        )}
                       </div>
                     )}
 

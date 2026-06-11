@@ -49,7 +49,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
             <div className="space-y-8">
-              {company.phone && (
+              {company.phone && company.phone_visible !== false && (
                 <div className="flex items-start gap-4">
                   <div className="w-11 h-11 flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${primary}18`, borderRadius: "var(--card-radius, 10px)" }}>
@@ -66,7 +66,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                   </div>
                 </div>
               )}
-              {company.email && (
+              {company.email && company.email_visible !== false && (
                 <div className="flex items-start gap-4">
                   <div className="w-11 h-11 flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${primary}18`, borderRadius: "var(--card-radius, 10px)" }}>

@@ -51,6 +51,10 @@ export type Company = {
   vibe: string
   phone: string | null
   email: string | null
+  phone_visible: boolean | null
+  email_visible: boolean | null
+  lead_phone: string | null
+  lead_email: string | null
   city: string | null
   state: string | null
   logo_url: string | null
