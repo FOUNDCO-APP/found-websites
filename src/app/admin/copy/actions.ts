@@ -21,6 +21,7 @@ export type SiteNeedingCopy = {
   state: string | null
   vibe: string
   hero_subtitle: string | null
+  copy_generated: boolean | null
   config_id: string
 }
 
@@ -44,7 +45,6 @@ export async function getSitesNeedingCopy(): Promise<SiteNeedingCopy[]> {
         vibe
       )
     `)
-    .eq("copy_generated", false)
     .order("id", { ascending: false })
     .limit(100)
 
@@ -71,6 +71,7 @@ export async function getSitesNeedingCopy(): Promise<SiteNeedingCopy[]> {
         state: c.state,
         vibe: c.vibe,
         hero_subtitle: row.hero_subtitle,
+        copy_generated: row.copy_generated ?? null,
         config_id: row.id,
       }
     })

@@ -6,7 +6,7 @@ import { regenerateSiteCopy, type SiteNeedingCopy } from "./actions"
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNeedingCopy[] }) {
-  const [sites, setSites] = useState(initialSites)
+  const [sites] = useState(initialSites)
   const [states, setStates] = useState<Record<string, "idle" | "pending" | "done" | "error">>({})
   const [isPending, startTransition] = useTransition()
 
@@ -18,36 +18,27 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
     setStatus(site.company_id, "pending")
     startTransition(async () => {
       const result = await regenerateSiteCopy(site.company_id)
-      if (result.success) {
-        setStatus(site.company_id, "done")
-        setTimeout(() => {
-          setSites((prev) => prev.filter((s) => s.company_id !== site.company_id))
-        }, 1400)
-      } else {
-        setStatus(site.company_id, "error")
-      }
+      setStatus(site.company_id, result.success ? "done" : "error")
     })
   }
 
   if (sites.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-6"
-          style={{ backgroundColor: "#32D07420" }}>
-          <svg width="28" height="28" fill="none" stroke="#32D074" viewBox="0 0 24 24" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <p className="text-xl font-black" style={{ color: "#ffffff" }}>All sites have Claude copy.</p>
-        <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>Nothing needs regeneration right now.</p>
+        <p className="text-xl font-black" style={{ color: "#ffffff" }}>No sites yet.</p>
+        <p className="text-sm mt-2" style={{ color: "rgba(255,255,255,0.45)" }}>Sites will appear here once the first one is created.</p>
       </div>
     )
   }
 
+  const fallbackCount = sites.filter((s) => !s.copy_generated).length
+
   return (
     <div>
       <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
-        {sites.length} site{sites.length !== 1 ? "s" : ""} used fallback copy — Claude was down or not configured when they signed up.
+        {fallbackCount > 0
+          ? `${fallbackCount} site${fallbackCount !== 1 ? "s" : ""} used fallback copy — tap Regenerate to have Claude rewrite them.`
+          : "All sites have Claude-written copy. Regenerate any time to refresh."}
       </p>
 
       <div className="flex flex-col gap-3">
@@ -68,7 +59,7 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
             >
               {/* Site info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <p className="font-black text-base truncate" style={{ color: "#ffffff" }}>
                     {site.company_name}
                   </p>
@@ -76,6 +67,22 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
                     style={{ backgroundColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.45)" }}>
                     {site.industry.replace(/_/g, " ")}
                   </span>
+                  {states[site.company_id] === "done" ? (
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded"
+                      style={{ backgroundColor: "rgba(50,208,116,0.15)", color: "#32D074" }}>
+                      Updated
+                    </span>
+                  ) : site.copy_generated ? (
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded"
+                      style={{ backgroundColor: "rgba(50,208,116,0.08)", color: "rgba(50,208,116,0.6)" }}>
+                      AI
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded"
+                      style={{ backgroundColor: "rgba(255,180,0,0.12)", color: "#ffb400" }}>
+                      Fallback
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs mb-2 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
                   {site.city}{site.state ? `, ${site.state}` : ""}
