@@ -175,16 +175,24 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
             {ctaHeadline}
           </h2>
           <p className="mb-10 text-lg" style={{ color: "#cccccc" }}>
-            {company.phone && (
-              <>Call us at <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="font-bold text-white hover:underline">{company.phone}</a> or{" "}</>
-            )}
             {vocab.ctaBodyText}
           </p>
-          <Link href={ctaHref} className="btn text-white"
-            style={{ backgroundColor: primary, borderColor: primary }}>
-            {intentLabel[company.primary_intent] || "Contact Us"}
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href={ctaHref} className="btn text-white w-full sm:w-auto"
+              style={{ backgroundColor: primary, borderColor: primary }}>
+              {intentLabel[company.primary_intent] || "Contact Us"}
+            </Link>
+            {company.phone && (
+              <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                className="btn inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+                style={{ borderColor: "rgba(255,255,255,0.3)", color: "#ffffff" }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                {company.phone}
+              </a>
+            )}
+          </div>
         </div>
       </section>
     </>
