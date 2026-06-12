@@ -6,4 +6,5 @@ export type LayoutProps = {
   gradient: string
   heroImage: string | null
   heroVideo: string | null
+  uploadedImgs?: string[]
 }

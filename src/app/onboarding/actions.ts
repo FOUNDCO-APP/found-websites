@@ -25,7 +25,7 @@ type OnboardingInput = {
   photoChoice: string
   logoChoice: string
   logoUrl?: string
-  heroImageUrl?: string
+  heroImageUrls?: string[]
   companyId?: string
   primaryColor: string
   vibe: string
@@ -319,7 +319,8 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       company_id: companyId,
       hero_title: generatedContent.heroTitle,
       hero_subtitle: generatedContent.heroSubtitle,
-      hero_image_url: input.heroImageUrl ?? null,
+      hero_image_url: input.heroImageUrls?.[0] ?? null,
+      hero_images: input.heroImageUrls ?? [],
       hero_video_url: null,
       about_text: generatedContent.aboutText,
       tagline: generatedContent.tagline,

@@ -25,9 +25,10 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
   // Use curated industry photo pools → Pexels fallback → gradient (priority handled in getStockImages)
   const imgs = await getStockImages(company)
-  const heroImage = config?.hero_image_url || imgs[0] || null
+  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
+  const heroImage = uploadedImgs[0] ?? imgs[0] ?? null
 
-  const props: LayoutProps = { company, imgs, gradient, heroImage, heroVideo }
+  const props: LayoutProps = { company, imgs, gradient, heroImage, heroVideo, uploadedImgs }
 
   // Route to the correct layout — falls back to Impact for unbuilt layouts
   switch (layout) {

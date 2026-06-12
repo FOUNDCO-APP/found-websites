@@ -89,6 +89,7 @@ export async function uploadLogoFile(
 export async function uploadHeroFile(
   formData: FormData,
   sessionId: string,
+  index = 0,
 ): Promise<{ success: boolean; url?: string; error?: string }> {
   const file = formData.get("file") as File | null
   if (!file || !file.size) return { success: false, error: "No file selected." }
@@ -101,7 +102,7 @@ export async function uploadHeroFile(
   const supabase = getAdminClient()
   await ensureBucket(supabase)
 
-  const path = `hero/${sessionId}/hero.${ext}`
+  const path = `hero/${sessionId}/hero-${index + 1}.${ext}`
   const bytes = await file.arrayBuffer()
 
   const { error } = await supabase.storage

@@ -124,6 +124,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     className="h-full w-full object-contain object-left"
                     style={{
                       filter: isOverlay ? "brightness(0) invert(1)" : "none",
+                      mixBlendMode: isOverlay ? "normal" : "multiply",
                       transition: "filter 500ms ease",
                     }} />
                 </div>

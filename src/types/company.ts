@@ -26,6 +26,7 @@ export type WebsiteConfig = {
   hero_subtitle: string | null
   hero_video_url: string | null
   hero_image_url: string | null
+  hero_images: string[] | null
   stock_images: string[]
   about_text: string | null
   tagline: string | null

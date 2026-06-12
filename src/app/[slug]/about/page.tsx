@@ -34,6 +34,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const services = config?.services || []
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
+  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
+  const uploaded = (i: number) => uploadedImgs[i] ?? uploadedImgs[0] ?? null
   const industryDefs = getIndustryDefaults(company.industry_category)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
@@ -42,9 +44,9 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     <>
       {/* ── HEADER ── */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
-        {img(0) ? (
+        {(uploaded(1) || img(0)) ? (
           <>
-            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={uploaded(1) ?? img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/68" />
           </>
         ) : (

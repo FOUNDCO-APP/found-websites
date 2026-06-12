@@ -39,7 +39,7 @@ type Answers = {
   photoChoice: string
   logoChoice: string
   logoUrl: string
-  heroImageUrl: string
+  heroImageUrls: string[]
   primaryColor: string
   vibe: string
   testimonials: string
@@ -56,7 +56,7 @@ const INITIAL: Answers = {
   location: "", serviceAreas: [], phone: "", email: "",
   phoneVisible: true, emailVisible: true, separateLeads: false, leadPhone: "", leadEmail: "",
   different: "", services: [], photoChoice: "", logoChoice: "",
-  logoUrl: "", heroImageUrl: "",
+  logoUrl: "", heroImageUrls: [],
   primaryColor: "#2E7D32", vibe: "", testimonials: "",
 }
 
@@ -123,7 +123,7 @@ function canAdvance(step: Step, a: Answers): boolean {
     case "contact":      return a.phone.trim().length > 6 && a.email.includes("@")
     case "different":    return a.different.trim().length > 8
     case "services":     return a.services.length > 0
-    case "photos":       return !!a.photoChoice
+    case "photos":       return !!a.photoChoice || a.heroImageUrls.length > 0
     case "logo":         return !!a.logoChoice
     case "color":        return /^#[0-9a-f]{6}$/i.test(a.primaryColor)
     case "vibe":         return ["bold","calm","modern","warm"].includes(a.vibe)
@@ -678,8 +678,9 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
 
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoError, setLogoError]         = useState<string | null>(null)
-  const [heroUploading, setHeroUploading] = useState(false)
+  const [heroUploading, setHeroUploading] = useState([false, false, false])
   const [heroError, setHeroError]         = useState<string | null>(null)
+  const [logoTipOpen, setLogoTipOpen]     = useState(false)
 
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
@@ -725,7 +726,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
         services: answers.services.join(", "),
         companyId: sessionId,
         logoUrl: answers.logoUrl || undefined,
-        heroImageUrl: answers.heroImageUrl || undefined,
+        heroImageUrls: answers.heroImageUrls,
       }),
       uiTimeout,
     ])
@@ -771,28 +772,30 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
     }
   }
 
-  async function handleHeroUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleHeroUpload(index: number, e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    setHeroUploading(true)
+    setHeroUploading((prev) => { const next = [...prev]; next[index] = true; return next })
     setHeroError(null)
     try {
-      // Resize client-side: converts HEIC/PNG/any format → JPEG, reduces large iPhone
-      // photos (3–15 MB) to a manageable size before hitting the server action.
       const resized = await resizeImageToJpeg(file, 2400, 0.85)
       const fd = new FormData()
-      fd.append("file", new File([resized], "hero.jpg", { type: "image/jpeg" }))
-      const res = await uploadHeroFile(fd, sessionId)
+      fd.append("file", new File([resized], `hero-${index + 1}.jpg`, { type: "image/jpeg" }))
+      const res = await uploadHeroFile(fd, sessionId, index)
       if (res.success && res.url) {
-        set("heroImageUrl", res.url)
-        set("photoChoice", "uploaded")
+        const url = res.url
+        setAnswers((prev) => {
+          const urls = [...prev.heroImageUrls]
+          urls[index] = url
+          return { ...prev, heroImageUrls: urls, photoChoice: "uploaded" }
+        })
       } else {
         setHeroError(res.error ?? "Upload failed — please try again.")
       }
     } catch {
       setHeroError("Upload failed — please try again.")
     } finally {
-      setHeroUploading(false)
+      setHeroUploading((prev) => { const next = [...prev]; next[index] = false; return next })
       e.target.value = ""
     }
   }
@@ -1187,55 +1190,43 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     )}
 
                     {step === "photos" && (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         <OptionCard active={answers.photoChoice === "stock"} isLight={isLight} primaryColor={answers.primaryColor}
-                          onClick={() => autoAdvance(() => set("photoChoice", "stock"))}
+                          onClick={() => autoAdvance(() => { set("photoChoice", "stock"); })}
                           title="Skip for now"
                           body="We'll pull great photos for your industry automatically." />
 
-                        {/* Hero photo upload */}
-                        {answers.heroImageUrl ? (
-                          <div className="flex items-center gap-4 rounded-xl border p-4 transition-all"
-                            style={{ borderColor: tk.cardBorder(true), backgroundColor: tk.cardBg(true) }}>
-                            <div className="h-14 w-20 shrink-0 rounded-lg overflow-hidden">
-                              <img src={answers.heroImageUrl} alt="Hero" className="h-full w-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black" style={{ color: tk.text }}>Photo uploaded</p>
-                              <p className="text-xs mt-0.5" style={{ color: tk.muted }}>This will be your hero image</p>
-                            </div>
-                            <label className="shrink-0 cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
-                              style={{ color: answers.primaryColor }}>
-                              Replace
-                              <input type="file" accept="image/png,image/jpeg,image/webp"
-                                className="sr-only" onChange={handleHeroUpload} disabled={heroUploading} />
-                            </label>
-                          </div>
-                        ) : (
-                          <label className="flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed p-8 transition hover:opacity-80 active:opacity-60"
-                            style={{ borderColor: tk.cardBorder(false) }}>
-                            {heroUploading ? (
-                              <div className="flex items-center gap-3">
-                                <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                </svg>
-                                <span className="text-sm font-black" style={{ color: tk.muted }}>Uploading...</span>
-                              </div>
-                            ) : (
-                              <>
-                                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5} style={{ color: tk.muted }}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                                </svg>
-                                <p className="text-sm font-black text-center" style={{ color: tk.text }}>Upload your own photo</p>
-                                <p className="text-xs text-center" style={{ color: tk.muted }}>JPG · PNG · WEBP · up to 20 MB</p>
-                                {heroError && <p className="text-xs font-black text-red-500">{heroError}</p>}
-                              </>
-                            )}
-                            <input type="file" accept="image/*"
-                              className="sr-only" onChange={handleHeroUpload} disabled={heroUploading} />
-                          </label>
-                        )}
+                        {/* Three photo slots */}
+                        <div className="grid grid-cols-3 gap-2">
+                          {[0, 1, 2].map((i) => {
+                            const url = answers.heroImageUrls[i]
+                            const uploading = heroUploading[i]
+                            const label = i === 0 ? "Photo 1" : i === 1 ? "Photo 2" : "Photo 3"
+                            const required = i === 0
+                            return (
+                              <label key={i} className="relative flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed aspect-square transition hover:opacity-80 active:opacity-60 overflow-hidden"
+                                style={{ borderColor: url ? answers.primaryColor : tk.cardBorder(false), backgroundColor: url ? "transparent" : tk.cardBg(false) }}>
+                                {url ? (
+                                  <img src={url} alt={label} className="absolute inset-0 w-full h-full object-cover" />
+                                ) : uploading ? (
+                                  <svg className="animate-spin" width="20" height="20" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                  </svg>
+                                ) : (
+                                  <div className="flex flex-col items-center gap-1 p-2">
+                                    <span className="text-xl font-light" style={{ color: tk.muted }}>+</span>
+                                    <span className="text-[10px] font-black text-center uppercase tracking-widest" style={{ color: tk.muted }}>{label}{required ? "" : " (optional)"}</span>
+                                  </div>
+                                )}
+                                <input type="file" accept="image/*" className="sr-only"
+                                  onChange={(e) => handleHeroUpload(i, e)} disabled={uploading} />
+                              </label>
+                            )
+                          })}
+                        </div>
+                        {heroError && <p className="text-xs font-black text-red-500">{heroError}</p>}
+                        <p className="text-xs text-center italic" style={{ color: answers.primaryColor }}>Once your site is live, you can add your full photo gallery.</p>
                       </div>
                     )}
 
@@ -1290,6 +1281,20 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                               className="sr-only" onChange={handleLogoUpload} disabled={logoUploading} />
                           </label>
                         )}
+
+                        {/* Collapsible logo tip */}
+                        <div className="pt-1">
+                          <button type="button" onClick={() => setLogoTipOpen((v) => !v)}
+                            className="text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                            style={{ color: tk.muted }}>
+                            {logoTipOpen ? "▾" : "▸"} Tips for a great logo
+                          </button>
+                          {logoTipOpen && (
+                            <p className="mt-2 text-xs leading-relaxed" style={{ color: tk.muted }}>
+                              For the best look, upload a file with a transparent background. If your logo has a white or dark background, it will appear as a box on your site. The file type you&apos;re looking for is called a <strong>PNG with transparency</strong> — your designer can send you one, or search &ldquo;[your logo name] transparent PNG&rdquo; online.
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
 
@@ -1395,7 +1400,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                 <footer className="shrink-0 px-7 pt-2 md:px-12" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
                   <button
                     type="button" onClick={advance}
-                    disabled={!ready || logoUploading || heroUploading}
+                    disabled={!ready || logoUploading || heroUploading.some(Boolean)}
                     className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition disabled:cursor-not-allowed disabled:opacity-30 sm:w-auto sm:px-10"
                     style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >

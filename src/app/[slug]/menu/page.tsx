@@ -36,7 +36,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
-  const heroImage = config?.hero_image_url || img(0)
+  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
+  const heroImage = uploadedImgs[1] ?? uploadedImgs[0] ?? img(0)
 
   // Menu data: prefer structured menu_items, fall back to services displayed as menu items
   const menuCategories = config?.menu_items && config.menu_items.length > 0
