@@ -206,8 +206,11 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
   if (!apiKey) return fallback
 
   try {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
     const response = await fetch(ANTHROPIC_ENDPOINT, {
       method: "POST",
+      signal: controller.signal,
       headers: {
         "content-type": "application/json",
         "x-api-key": apiKey,
@@ -220,6 +223,7 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
         messages: [{ role: "user", content: buildPrompt(input) }],
       }),
     })
+    clearTimeout(timeout)
 
     if (!response.ok) {
       console.error("[contentGeneration] Claude request failed:", response.status, await response.text())

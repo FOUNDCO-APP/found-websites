@@ -1,6 +1,5 @@
 "use server"
 
-import sharp from "sharp"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 const BUCKET = "company-assets"
@@ -27,6 +26,7 @@ async function ensureBucket(supabase: ReturnType<typeof getAdminClient>) {
 async function extractDominantColor(bytes: ArrayBuffer, mimeType: string): Promise<string | null> {
   if (mimeType === "image/svg+xml") return null
   try {
+    const sharp = (await import("sharp")).default
     const { data } = await sharp(Buffer.from(bytes))
       .resize(40, 40, { fit: "cover" })
       .removeAlpha()

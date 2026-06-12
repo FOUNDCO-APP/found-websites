@@ -716,13 +716,19 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   async function submit() {
     if (saving) return
     setSaving(true)
-    const res = await createOnboardingSite({
-      ...answers,
-      services: answers.services.join(", "),
-      companyId: sessionId,
-      logoUrl: answers.logoUrl || undefined,
-      heroImageUrl: answers.heroImageUrl || undefined,
-    })
+    const uiTimeout = new Promise<{ success: false; error: string }>((resolve) =>
+      setTimeout(() => resolve({ success: false, error: "This is taking longer than expected. Please try again." }), 25000)
+    )
+    const res = await Promise.race([
+      createOnboardingSite({
+        ...answers,
+        services: answers.services.join(", "),
+        companyId: sessionId,
+        logoUrl: answers.logoUrl || undefined,
+        heroImageUrl: answers.heroImageUrl || undefined,
+      }),
+      uiTimeout,
+    ])
     if (res.success && res.url) {
       setResult({ url: res.url })
     } else {
