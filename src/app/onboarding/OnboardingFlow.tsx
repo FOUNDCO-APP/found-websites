@@ -1239,22 +1239,36 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
 
                         {/* Real upload zone */}
                         {answers.logoUrl ? (
-                          <div className="flex items-center gap-4 rounded-xl border p-4 transition-all"
-                            style={{ borderColor: tk.cardBorder(true), backgroundColor: tk.cardBg(true) }}>
-                            <div className="h-14 w-14 shrink-0 rounded-lg border flex items-center justify-center overflow-hidden"
-                              style={{ borderColor: tk.cardBorder(false), backgroundColor: "#fff" }}>
-                              <img src={answers.logoUrl} alt="Logo" className="max-h-12 max-w-12 object-contain" />
+                          <div className="space-y-3">
+                            {/* Dual-background preview */}
+                            <p className="text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
+                              How your logo looks on your site
+                            </p>
+                            <div className="grid grid-cols-2 rounded-xl overflow-hidden border"
+                              style={{ borderColor: tk.cardBorder(false) }}>
+                              <div className="flex flex-col items-center justify-center gap-2 p-5" style={{ backgroundColor: "#111111", minHeight: "88px" }}>
+                                <img src={answers.logoUrl} alt="Logo on dark" className="max-h-10 max-w-full object-contain" />
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Dark sections</span>
+                              </div>
+                              <div className="flex flex-col items-center justify-center gap-2 p-5 border-l"
+                                style={{ backgroundColor: "#ffffff", borderColor: tk.cardBorder(false), minHeight: "88px" }}>
+                                <img src={answers.logoUrl} alt="Logo on light" className="max-h-10 max-w-full object-contain"
+                                  style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18)) drop-shadow(0 0 3px rgba(0,0,0,0.10))" }} />
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(0,0,0,0.3)" }}>Top nav bar</span>
+                              </div>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black" style={{ color: tk.text }}>Logo uploaded</p>
-                              <p className="text-xs mt-0.5 truncate" style={{ color: tk.muted }}>Tap continue or replace below</p>
+                            <p className="text-xs leading-relaxed" style={{ color: tk.muted }}>
+                              The left is how your logo looks on photo sections and the dark menu. The right is how it looks in the top navigation bar when someone scrolls down. If any part of your logo looks faint on the right side, we add a soft shadow to keep it visible. For a crisper look there, ask your designer for a version of your logo made for white backgrounds.
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-black" style={{ color: answers.primaryColor }}>Logo uploaded ✓</p>
+                              <label className="cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                                style={{ color: tk.muted }}>
+                                Replace
+                                <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                  className="sr-only" onChange={handleLogoUpload} disabled={logoUploading} />
+                              </label>
                             </div>
-                            <label className="shrink-0 cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
-                              style={{ color: answers.primaryColor }}>
-                              Replace
-                              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                className="sr-only" onChange={handleLogoUpload} disabled={logoUploading} />
-                            </label>
                           </div>
                         ) : (
                           <label className="flex flex-col items-center gap-3 cursor-pointer rounded-xl border-2 border-dashed p-8 transition hover:opacity-80 active:opacity-60"

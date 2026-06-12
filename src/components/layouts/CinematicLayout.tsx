@@ -178,18 +178,10 @@ export default function CinematicLayout({ company, imgs, gradient, heroImage, he
         </section>
       )}
 
-      {/* ── ABOUT — full-bleed dark, photo edge to edge, company name left / story right ── */}
+      {/* ── ABOUT — solid dark, no competing photo (CTA owns the final image) ── */}
       {config?.about_text && (
         <section className="relative py-28 overflow-hidden">
-          {img(1) ? (
-            <>
-              <img src={img(1)!} alt={company.name}
-                className="absolute inset-0 w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-black/78" />
-            </>
-          ) : (
-            <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
-          )}
+          <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
           <div className="relative z-10 max-w-6xl mx-auto px-8">
             <InView>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">

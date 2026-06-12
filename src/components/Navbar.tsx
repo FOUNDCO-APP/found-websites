@@ -118,13 +118,14 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     }} />
                 </div>
               ) : (
-                // Single logo: fixed container prevents wide logos from breaking layout
+                // Single logo: drop-shadow on white navbar keeps white logo elements visible
                 <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url!} alt={company.name}
                     className="h-full w-full object-contain object-left"
                     style={{
-                      filter: isOverlay ? "brightness(0) invert(1)" : "none",
-                      mixBlendMode: isOverlay ? "normal" : "multiply",
+                      filter: isOverlay
+                        ? "brightness(0) invert(1)"
+                        : "drop-shadow(0 0 1px rgba(0,0,0,0.18)) drop-shadow(0 0 3px rgba(0,0,0,0.10))",
                       transition: "filter 500ms ease",
                     }} />
                 </div>
@@ -224,7 +225,8 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           <div className="px-8 py-10 flex flex-col gap-4" style={{ borderTop: "1px solid #f0f0f0" }}>
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="text-lg font-black" style={{ color: primary }}
+                className="btn text-center font-black"
+                style={{ borderColor: primary, color: primary }}
                 onClick={() => setOpen(false)}>
                 Call Us
               </a>
@@ -294,10 +296,11 @@ export default function Navbar({ company, transparent = false }: { company: Comp
             ))}
           </nav>
 
-          <div className="px-8 py-10 flex flex-col gap-5">
+          <div className="px-8 py-10 flex flex-col gap-4">
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}
-                className="text-xl font-black" style={{ color: primary }}
+                className="btn text-center font-black"
+                style={{ borderColor: "rgba(255,255,255,0.4)", color: "#ffffff" }}
                 onClick={() => setOpen(false)}>
                 Call Us
               </a>
