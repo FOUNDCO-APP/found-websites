@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import OnboardingFlow from "@/app/onboarding/OnboardingFlow"
 
 export default function OnboardingDrawer({
@@ -10,10 +10,10 @@ export default function OnboardingDrawer({
   open: boolean
   onClose: () => void
 }) {
+  const savedScrollY = useRef(0)
+
   // Lock body scroll, manage URL, and sync status bar color with drawer state
   useEffect(() => {
-    // Find or create theme-color meta — querySelector silently fails if Next.js
-    // renders the tag with unexpected attributes, so we always create a fallback
     let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
     if (!meta) {
       meta = document.createElement('meta') as HTMLMetaElement
@@ -22,14 +22,26 @@ export default function OnboardingDrawer({
     }
 
     if (open) {
-      document.body.style.overflow = "hidden"
+      // iOS scroll lock — overflow:hidden alone doesn't stop momentum scrolling
+      savedScrollY.current = window.scrollY
+      document.body.style.position = "fixed"
+      document.body.style.top = `-${savedScrollY.current}px`
+      document.body.style.left = "0"
+      document.body.style.right = "0"
+      document.body.style.width = "100%"
       if (window.location.pathname !== "/onboarding") {
         window.history.pushState({ drawer: true }, "", "/onboarding")
       }
       meta.content = "#32D074"
-      document.documentElement.style.backgroundColor = "#32D074"
+      // FOUND_BLACK fills the safe-area gap at the bottom of the drawer
+      document.documentElement.style.backgroundColor = "#080A09"
     } else {
-      document.body.style.overflow = ""
+      document.body.style.position = ""
+      document.body.style.top = ""
+      document.body.style.left = ""
+      document.body.style.right = ""
+      document.body.style.width = ""
+      window.scrollTo(0, savedScrollY.current)
       if (window.location.pathname === "/onboarding") {
         window.history.pushState({}, "", "/")
       }
@@ -37,7 +49,11 @@ export default function OnboardingDrawer({
       document.documentElement.style.backgroundColor = "#080A09"
     }
     return () => {
-      document.body.style.overflow = ""
+      document.body.style.position = ""
+      document.body.style.top = ""
+      document.body.style.left = ""
+      document.body.style.right = ""
+      document.body.style.width = ""
       meta!.content = "#080A09"
       document.documentElement.style.backgroundColor = "#080A09"
     }

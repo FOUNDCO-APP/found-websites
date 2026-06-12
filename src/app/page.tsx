@@ -61,7 +61,7 @@ export default function Home() {
   return (
     <>
       <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
-        <section className="found-home-hero relative min-h-screen overflow-hidden">
+        <section className="found-home-hero relative min-h-[100dvh] overflow-hidden">
           <Image
             src="/images/found-hero-mobile-v3.png"
             alt=""
@@ -82,7 +82,7 @@ export default function Home() {
           <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-[#080A09] to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#080A09] to-transparent" />
 
-          <div className="found-hero-shell relative z-10 mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
+          <div className="found-hero-shell relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
             <header className="found-hero-header flex items-center justify-between">
               <FoundWordmark className="found-nav-wordmark h-8 w-44 text-white" />
               <div className="found-header-spacer hidden md:block" />

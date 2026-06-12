@@ -383,26 +383,24 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .found-hero-actions {
-    position: absolute !important;
-    left: 5vw !important;
+    position: static !important;
+    left: auto !important;
     right: auto !important;
-    bottom: calc(0.95rem + env(safe-area-inset-bottom)) !important;
+    bottom: auto !important;
     display: flex !important;
     flex-direction: row !important;
+    flex-wrap: wrap !important;
     gap: clamp(0.8rem, 2vw, 1.15rem) !important;
-    margin-top: 0 !important;
-    max-width: min(50vw, 34rem) !important;
+    margin-top: clamp(1.1rem, 3vh, 1.6rem) !important;
+    max-width: min(60vw, 34rem) !important;
   }
 
-  .found-hero-actions a {
-    min-height: clamp(3.15rem, 10vh, 4rem) !important;
-    min-width: clamp(9.5rem, 18vw, 12.2rem);
-    padding: 0 clamp(1.2rem, 2.4vw, 1.8rem) !important;
-    font-size: clamp(0.7rem, 1.3vw, 0.84rem) !important;
+  .found-hero-actions a,
+  .found-hero-actions button {
+    min-height: clamp(2.9rem, 9vh, 3.5rem) !important;
+    min-width: clamp(9rem, 17vw, 12rem) !important;
+    padding: 0 clamp(1.1rem, 2.2vw, 1.6rem) !important;
+    font-size: clamp(0.68rem, 1.3vw, 0.82rem) !important;
     line-height: 1.15 !important;
-  }
-
-  .found-hero-actions a:last-child {
-    min-width: clamp(12rem, 22vw, 15rem);
   }
 }
