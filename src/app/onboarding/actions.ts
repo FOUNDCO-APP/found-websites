@@ -23,6 +23,7 @@ type OnboardingInput = {
   different: string
   services: string
   photoChoice: string
+  slugPreference?: string
   logoChoice: string
   logoUrl?: string
   logoWhiteUrl?: string
@@ -50,14 +51,7 @@ function getAdminClient() {
   )
 }
 
-function slugify(name: string) {
-  return name
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 48) || `found-${crypto.randomUUID().slice(0, 8)}`
-}
+import { slugify } from "@/lib/slugify"
 
 async function uniqueSlug(base: string, city: string | null) {
   const supabase  = getAdminClient()
@@ -268,7 +262,10 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
 
   const supabase = getAdminClient()
   const companyId = input.companyId || crypto.randomUUID()
-  const slug = await uniqueSlug(slugify(name), city)
+  const preferredBase = input.slugPreference
+    ? input.slugPreference.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48)
+    : slugify(name)
+  const slug = await uniqueSlug(preferredBase, city)
   const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const serviceAreas = input.serviceAreas?.length
     ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]

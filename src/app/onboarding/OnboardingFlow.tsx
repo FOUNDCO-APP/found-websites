@@ -6,7 +6,9 @@ import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, saveAbandonedLead } from "./actions"
+import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
+import { slugify as clientSlugify } from "@/lib/slugify"
 import { US_CITIES } from "@/data/us-cities"
 
 const FOUND_BLACK = "#080A09"
@@ -682,9 +684,15 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   const [logoError, setLogoError]         = useState<string | null>(null)
   const [heroUploading, setHeroUploading] = useState([false, false, false])
   const [heroError, setHeroError]         = useState<string | null>(null)
-  const [logoTipOpen, setLogoTipOpen]         = useState(false)
+  const [logoTipOpen, setLogoTipOpen]               = useState(false)
   const [logoWhiteUploading, setLogoWhiteUploading] = useState(false)
   const [logoWhiteError, setLogoWhiteError]         = useState<string | null>(null)
+
+  // Slug picker state (name step)
+  const [slugCustom, setSlugCustom]       = useState("")
+  const [slugChecking, setSlugChecking]   = useState(false)
+  const [slugStatus, setSlugStatus]       = useState<"idle" | "ok" | "taken">("idle")
+  const [slugSuggestions, setSlugSuggestions] = useState<string[]>([])
 
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
@@ -729,6 +737,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
         ...answers,
         services: answers.services.join(", "),
         companyId: sessionId,
+        slugPreference: (slugCustom || clientSlugify(answers.name)) || undefined,
         logoUrl: answers.logoUrl || undefined,
         logoWhiteUrl: answers.logoWhiteUrl || undefined,
         navbarDark: answers.navbarDark,
@@ -827,6 +836,31 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       e.target.value = ""
     }
   }
+
+  // Real-time slug availability check (debounced 650ms)
+  useEffect(() => {
+    if (step !== "name" || answers.name.trim().length < 2) {
+      setSlugStatus("idle")
+      return
+    }
+    const effective = slugCustom || clientSlugify(answers.name)
+    if (!effective) return
+    setSlugChecking(true)
+    setSlugStatus("idle")
+    const city = answers.location.split(",")[0].trim() || null
+    const timer = setTimeout(async () => {
+      try {
+        const res = await checkSlugAvailable(effective, city)
+        setSlugStatus(res.available ? "ok" : "taken")
+        setSlugSuggestions(res.suggestions)
+      } catch {
+        setSlugStatus("idle")
+      } finally {
+        setSlugChecking(false)
+      }
+    }, 650)
+    return () => clearTimeout(timer)
+  }, [answers.name, slugCustom, step, answers.location])
 
   function requestClose() {
     if (stepIndex === 0) {
@@ -1017,15 +1051,117 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     {/* ── Inputs ── */}
 
                     {step === "name" && (
-                      <input
-                        autoFocus
-                        value={answers.name}
-                        onChange={(e) => set("name", e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && advance()}
-                        placeholder="e.g. Barrio Builders"
-                        className={`w-full text-4xl ${tk.inputCls} ${tk.placeholder}`}
-                        style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
-                      />
+                      <div className="space-y-5">
+                        <input
+                          autoFocus
+                          value={answers.name}
+                          onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle") }}
+                          onKeyDown={(e) => e.key === "Enter" && advance()}
+                          placeholder="e.g. Barrio Builders"
+                          className={`w-full text-4xl ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
+                        />
+
+                        {/* Slug preview — appears once name has content */}
+                        {answers.name.trim().length >= 2 && (() => {
+                          const effective = slugCustom || clientSlugify(answers.name)
+                          const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
+                          return (
+                            <div className="space-y-3">
+                              {/* Address preview bar */}
+                              <div className="flex items-center gap-3 rounded-xl border px-4 py-3"
+                                style={{ borderColor: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: tk.muted }}>
+                                    Your site address
+                                  </p>
+                                  <p className="text-sm font-black truncate" style={{ color: tk.text }}>
+                                    <span style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
+                                      {effective}
+                                    </span>
+                                    <span style={{ color: tk.muted }}>.{ROOT}</span>
+                                  </p>
+                                </div>
+                                {slugChecking && (
+                                  <svg className="animate-spin shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                  </svg>
+                                )}
+                                {!slugChecking && slugStatus === "ok" && (
+                                  <span className="shrink-0 text-xs font-black" style={{ color: SIGNAL_GREEN }}>✓ Available</span>
+                                )}
+                                {!slugChecking && slugStatus === "taken" && (
+                                  <span className="shrink-0 text-xs font-black" style={{ color: "#f87171" }}>✗ Taken</span>
+                                )}
+                              </div>
+
+                              {/* Taken: suggestions + custom input */}
+                              {slugStatus === "taken" && (
+                                <div className="space-y-3">
+                                  {slugSuggestions.length > 0 && (
+                                    <div>
+                                      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: tk.muted }}>
+                                        Available alternatives
+                                      </p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {slugSuggestions.map((s) => (
+                                          <button key={s} type="button"
+                                            onClick={() => setSlugCustom(s)}
+                                            className="px-3 py-2 text-xs font-black rounded-lg border transition hover:opacity-80"
+                                            style={{
+                                              borderColor: slugCustom === s ? SIGNAL_GREEN : tk.cardBorder(false),
+                                              backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}18` : tk.cardBg(false),
+                                              color: slugCustom === s ? SIGNAL_GREEN : tk.text,
+                                            }}>
+                                            {s}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: tk.muted }}>
+                                      Or type your own
+                                    </p>
+                                    <div className="flex items-center gap-1 rounded-lg border px-3 py-2"
+                                      style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                      <input
+                                        type="text"
+                                        value={slugCustom}
+                                        onChange={(e) => setSlugCustom(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48))}
+                                        placeholder="your-slug"
+                                        autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                                        className="flex-1 bg-transparent text-sm font-black outline-none"
+                                        style={{ color: tk.text }}
+                                      />
+                                      <span className="text-xs shrink-0" style={{ color: tk.muted }}>.{ROOT}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Available: offer to customise */}
+                              {slugStatus === "ok" && !slugCustom && (
+                                <button type="button"
+                                  onClick={() => setSlugCustom(effective)}
+                                  className="text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                                  style={{ color: tk.muted }}>
+                                  Change it →
+                                </button>
+                              )}
+                              {slugStatus === "ok" && slugCustom && (
+                                <button type="button"
+                                  onClick={() => setSlugCustom("")}
+                                  className="text-xs font-black uppercase tracking-widest transition hover:opacity-70"
+                                  style={{ color: tk.muted }}>
+                                  Reset to default
+                                </button>
+                              )}
+                            </div>
+                          )
+                        })()}
+                      </div>
                     )}
 
                     {step === "description" && (
