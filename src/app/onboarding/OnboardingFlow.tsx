@@ -1093,7 +1093,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                         {/* Phone */}
                         <div>
                           <input
-                            autoFocus type="tel"
+                            autoFocus type="tel" autoComplete="tel"
                             value={answers.phone}
                             onChange={(e) => set("phone", e.target.value)}
                             placeholder="Phone number"
@@ -1115,7 +1115,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                         {/* Email */}
                         <div>
                           <input
-                            type="email"
+                            type="email" autoComplete="email"
                             value={answers.email}
                             onChange={(e) => set("email", e.target.value)}
                             placeholder="Email address"
@@ -1157,7 +1157,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                                 </button>
                               </div>
                               <input
-                                type="tel"
+                                type="tel" autoComplete="tel"
                                 value={answers.leadPhone}
                                 onChange={(e) => set("leadPhone", e.target.value)}
                                 placeholder="Lead notification phone (optional)"
@@ -1165,7 +1165,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                                 style={{ color: tk.text, borderBottomColor: answers.leadPhone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
                               />
                               <input
-                                type="email"
+                                type="email" autoComplete="email"
                                 value={answers.leadEmail}
                                 onChange={(e) => set("leadEmail", e.target.value)}
                                 placeholder="Lead notification email"

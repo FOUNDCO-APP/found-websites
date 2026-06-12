@@ -59,18 +59,24 @@ function slugify(name: string) {
     .slice(0, 48) || `found-${crypto.randomUUID().slice(0, 8)}`
 }
 
-async function uniqueSlug(base: string) {
+async function uniqueSlug(base: string, city: string | null, subIndustry: string) {
   const supabase = getAdminClient()
-  for (let i = 0; i < 20; i += 1) {
-    const slug = i === 0 ? base : `${base}-${i + 1}`
-    const { data } = await supabase
-      .from("companies")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle()
+  const citySlug  = city       ? slugify(city)       : null
+  const indSlug   = subIndustry ? slugify(subIndustry) : null
+  const hex4 = () => Math.random().toString(16).slice(2, 6)
+
+  const candidates = [
+    base,
+    citySlug                    ? `${base}-${citySlug}`           : null,
+    indSlug && citySlug         ? `${base}-${indSlug}-${citySlug}`: null,
+    `${base}-${hex4()}`,
+  ].filter((s): s is string => !!s)
+
+  for (const slug of candidates) {
+    const { data } = await supabase.from("companies").select("id").eq("slug", slug).maybeSingle()
     if (!data) return slug
   }
-  return `${base}-${crypto.randomUUID().slice(0, 8)}`
+  return `${base}-${hex4()}`
 }
 
 function splitLocation(location: string) {
@@ -263,7 +269,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
 
   const supabase = getAdminClient()
   const companyId = input.companyId || crypto.randomUUID()
-  const slug = await uniqueSlug(slugify(name))
+  const slug = await uniqueSlug(slugify(name), city, subIndustry)
   const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const serviceAreas = input.serviceAreas?.length
     ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]
@@ -344,9 +350,108 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     return { success: false, error: "We created the company, but could not create the website content." }
   }
 
+  const siteUrl = `https://${slug}.${ROOT_DOMAIN}`
+  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? `https://${ROOT_DOMAIN}`
+
+  // Fire-and-forget welcome email — failure doesn't block site creation
+  resend.emails.send({
+    from:    "Found <hello@foundco.app>",
+    replyTo: "hello@foundco.app",
+    to:      email,
+    subject: `Your site is live — ${name}`,
+    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl }),
+    text:    `Your site is live at ${siteUrl}\n\nShare it, add it to your Instagram bio or Google Business profile, and you're in business.\n\nWant to connect your own domain? Visit ${appUrl}/connect-domain?slug=${slug}\n\nReply to this email if anything needs changing — we'll take care of it.\n\n— The Found Team`,
+  }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
+
   return {
     success: true,
     slug,
-    url: `https://${slug}.${ROOT_DOMAIN}`,
+    url: siteUrl,
   }
+}
+
+function buildWelcomeEmail({
+  name,
+  siteUrl,
+  slug,
+  appUrl,
+}: {
+  name: string
+  siteUrl: string
+  slug: string
+  appUrl: string
+}) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:540px;background:#ffffff;border-radius:16px;overflow:hidden;">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#080A09;padding:36px;text-align:center;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#32D074;">You're live</p>
+            <h1 style="margin:0;font-size:28px;font-weight:300;color:#ffffff;letter-spacing:6px;">FOUND</h1>
+          </td>
+        </tr>
+
+        <!-- Hero -->
+        <tr>
+          <td style="padding:40px 36px 28px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999999;">Your site is live</p>
+            <h2 style="margin:0 0 28px;font-size:26px;font-weight:900;color:#111111;line-height:1.25;">${name}</h2>
+            <a href="${siteUrl}" style="display:inline-block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 40px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">${siteUrl.replace("https://", "")}</a>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
+
+        <!-- What's on your site -->
+        <tr>
+          <td style="padding:28px 36px;">
+            <p style="margin:0 0 16px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#111111;">What's ready for you</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${["Home", "About", "Services", "Gallery", "Contact"].map(page => `
+              <tr>
+                <td style="padding:6px 0;border-bottom:1px solid #f5f5f5;">
+                  <span style="font-size:14px;color:#444444;">✓&nbsp;&nbsp;${page} page</span>
+                </td>
+              </tr>`).join("")}
+            </table>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
+
+        <!-- Next steps -->
+        <tr>
+          <td style="padding:28px 36px;">
+            <p style="margin:0 0 16px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#111111;">Three things to do right now</p>
+            <p style="margin:0 0 12px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">1. Visit your site</strong> and show someone — the first reaction is always the best.</p>
+            <p style="margin:0 0 12px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">2. Add your link</strong> to your Instagram bio and Google Business profile. That's where your next customer is looking.</p>
+            <p style="margin:0 0 20px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">3. Want your own domain?</strong> Visit the link below to connect <em>yourbusiness.com</em> to your Found site in minutes.</p>
+            <a href="${appUrl}/connect-domain?slug=${slug}" style="display:inline-block;border:2px solid #111111;color:#111111;font-size:13px;font-weight:900;padding:14px 28px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Connect your domain →</a>
+          </td>
+        </tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:24px 36px;text-align:center;">
+            <p style="margin:0 0 8px;font-size:14px;color:#444444;line-height:1.65;">Reply to this email if anything needs changing — we'll take care of it.</p>
+            <p style="margin:0;font-size:12px;color:#aaaaaa;">Powered by <a href="https://foundco.app" style="color:#aaaaaa;">Found</a></p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
 }
