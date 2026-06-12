@@ -388,19 +388,18 @@ h1, h2, h3, h4, h5, h6 {
     right: auto !important;
     bottom: auto !important;
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-    gap: clamp(0.8rem, 2vw, 1.15rem) !important;
-    margin-top: clamp(1.1rem, 3vh, 1.6rem) !important;
-    max-width: min(60vw, 34rem) !important;
+    flex-direction: column !important;
+    gap: 0.55rem !important;
+    margin-top: clamp(0.75rem, 2vh, 1.1rem) !important;
+    max-width: min(34vw, 22rem) !important;
   }
 
   .found-hero-actions a,
   .found-hero-actions button {
-    min-height: clamp(2.9rem, 9vh, 3.5rem) !important;
-    min-width: clamp(9rem, 17vw, 12rem) !important;
-    padding: 0 clamp(1.1rem, 2.2vw, 1.6rem) !important;
-    font-size: clamp(0.68rem, 1.3vw, 0.82rem) !important;
+    min-height: clamp(2.5rem, 7.5vh, 3rem) !important;
+    width: 100% !important;
+    padding: 0 clamp(1rem, 2vw, 1.4rem) !important;
+    font-size: clamp(0.67rem, 1.25vw, 0.8rem) !important;
     line-height: 1.15 !important;
   }
 }
