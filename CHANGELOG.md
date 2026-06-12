@@ -4,6 +4,110 @@
 
 ---
 
+## Session: June 12, 2026 — Slug System + Dark Navbar + Two-Logo + Connect Domain + Welcome Email
+**AI:** Claude Code (Sonnet 4.6) + Apple Team
+**Worked on:** Smart slug system, dark navbar mode, dual-logo onboarding, connect-domain page, welcome email, mobile nav polish
+
+### ✅ Completed This Session
+
+**Logo & Navbar fixes (Craig + Jony):**
+- `mix-blend-mode: multiply` was erasing white logo pixels — replaced with CSS drop-shadow: `drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.20))`
+- CinematicLayout about section: removed competing stock photo, now always `#111111` solid dark
+- Mobile "Call Us" button: now styled as a real pill button (`className="btn text-center font-black"`) with proper border + color — was rendering as plain text
+
+**Dark navbar mode (`navbar_dark` flag — Craig):**
+- `scripts/migration-028-add-navbar-dark.sql` — ⚠️ MUST BE RUN in Supabase SQL editor: `ALTER TABLE companies ADD COLUMN IF NOT EXISTS navbar_dark boolean DEFAULT false;`
+- `src/types/company.ts`: added `navbar_dark: boolean | null`
+- `src/components/Navbar.tsx`: full refactor — `isNavDark = !!company.navbar_dark`, `isOnDark = isOverlay || isNavDark`, background/border/text/logo all branch on this
+- When `navbar_dark = true`: navbar always `#111111`, logo always white (brightness(0) invert(1)), no transparent phase
+- Logo filter on light nav: `drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.20))`
+
+**Two-logo onboarding system (Angela + Craig):**
+- `src/app/onboarding/uploadActions.ts`: `uploadLogoFile` now takes `variant: "primary" | "light"` — second logo saves to `logos/{sessionId}/logo-light.{ext}`
+- Onboarding logo step: "Keep my site dark" button sets `navbarDark: true`; "I have a version for white backgrounds" triggers second logo upload
+- Logo swap on save: if both logos uploaded, `logo_url` = light-bg version, `logo_white_url` = dark-bg version (navbar crossfade system already handles this correctly)
+- `src/app/onboarding/actions.ts`: `logoWhiteUrl` + `navbarDark` wired through to insert
+
+**Vibe step dark/light nav toggle (Jony + Angela):**
+- Two tiles below vibe cards — mini navbar mockup previews (dark + light)
+- Sets `navbarDark: true/false` — overrides the logo-step preference if changed here
+
+**Smart slug system (Craig + Marcus):**
+- `src/lib/slugify.ts`: NEW shared client+server utility — camelCase splitting (`DoubleBlur → double-blur`), `&/@/+` normalization, 48-char limit
+- `src/app/onboarding/slugActions.ts`: NEW server action — `checkSlugAvailable(raw, city)` — checks DB, builds suggestions: city first, then SUFFIXES array (`studio/co/hq/shop/pro/lab/works`), returns first 3 available
+- `src/app/onboarding/OnboardingFlow.tsx`: slug preview card on name step — green ✓ / red ✗ with 650ms debounce, suggestion chips, "Or type your own" custom input, "Change it →" / "Reset to default" links
+- Slug fallback chain at submit: `preferred → preferred-city → preferred-4hexchars` (no industry in slug)
+- `actions.ts`: `slugPreference` honored at create, falls back gracefully
+
+**Autocomplete fix (Angela):**
+- `autoComplete="tel"` on all phone inputs in onboarding contact step
+- `autoComplete="email"` on all email inputs
+- Prevents iPhone showing wrong suggestions (e.g., usernames in phone field)
+
+**Welcome email on site creation (Craig):**
+- `src/app/onboarding/actions.ts`: `buildWelcomeEmail()` fires after successful site insert (fire-and-forget)
+- From: `Found <hello@foundco.app>`, replyTo: `hello@foundco.app`, via Resend
+- Email includes: live site URL button, pages list (Home/About/Services/Gallery/Contact), 3 next steps, connect-domain link
+
+**Connect domain page (Craig):**
+- `src/app/connect-domain/page.tsx`: server component, loads company by slug, shows `[slug].foundco.app` + current custom domain, renders form + DNS instructions
+- `src/app/connect-domain/ConnectDomainForm.tsx`: "use client" form, calls `connectDomain(slug, domain)`, success state with DNS reminder
+- `src/app/connect-domain/actions.ts`: validates domain format, verifies company exists, updates `website_config.custom_domain`, calls Vercel API (`POST /v10/projects/{projectId}/domains`) if env vars set — degrades gracefully if not
+- DNS instructions: A record → `76.76.21.21`, CNAME www → `cname.vercel-dns.com`
+
+### ⚠️ ACTION REQUIRED
+
+1. **Run migration-028** in Supabase SQL editor: `ALTER TABLE companies ADD COLUMN IF NOT EXISTS navbar_dark boolean DEFAULT false;`
+2. **Add Vercel env vars** for domain auto-registration: `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard (connect-domain page works without them — just skips the API call)
+
+### 🔜 What To Work On Next
+
+1. **End-to-end flow test** — Shawn tests full onboarding: name (slug preview) → industry → location → services → photos → logo (dark/light fork) → vibe (toggle) → submit → reveal → welcome email → live site
+2. **Google Places API** — Shawn gets key from Google Cloud Console (Places API, restrict to foundco.app + localhost)
+3. **Photo pool curation** — 10 new industries have empty pools; requires curation session with Shawn at /admin/photos
+4. **CHANGELOG + TASKS** — updated this session ✅
+
+---
+
+## Session: June 11, 2026 — Upload Fix + Contact Visibility + Admin Panel + Affirmations + Vocab Wiring
+**AI:** Claude Code (Sonnet 4.6) + Apple Team
+**Worked on:** iPhone upload bug, contact visibility toggles, admin copy panel fix, affirmations, inner-page vocab wiring
+
+### ✅ Completed This Session
+
+**Upload stuck bug fixed (Craig):**
+- Next.js server actions have 1MB default body limit — iPhone photos (3–15MB) silently killed the request
+- Fix: hero upload now resizes client-side via Canvas API (HEIC → JPEG, max 2400px, ~500KB output) before sending to server
+- Logo upload: try/catch + finally so spinner always stops
+- `next.config.ts`: `serverExternalPackages: ["sharp"]`, `experimental.serverActions.bodySizeLimit: "25mb"`
+- Both inputs: `accept="image/*"` (was png/jpeg/webp only)
+- Commit: shipped and confirmed working
+
+**Contact visibility design (Jony + Angela — commit shipped):**
+- Onboarding contact step: inline toggle per field — "✓ Shows on your contact page — tap to hide" / "Hidden — tap to show"
+- "Send leads to a different number or email?" expander for lead routing
+- `contact/page.tsx` gates phone/email display on `phone_visible` / `email_visible` flags
+- Migration: `scripts/migration-add-contact-visibility.sql` — ✅ run June 11, 2026
+
+**Admin copy panel fix (Craig):**
+- Was filtering `.eq("copy_generated", false)` — broke because migration defaulted all existing to `true`
+- Fixed: removed filter, added AI/Fallback/Updated badges per row
+
+**Angela's affirmations (all 10 steps — Angela):**
+- All onboarding steps have contextual Signal Green affirmations
+- Covers name, description, location, contact, differentiator, services, photos, logo, color, testimonials
+
+**Vocab wiring — inner pages (Craig + Marcus):**
+- `about/page.tsx`: "Our Story" → `vocab.aboutLabel`, "Our Services" → `vocab.servicesLabel`, CTA body → `vocab.ctaBodyText`
+- `gallery/page.tsx`: title uses `vocab.galleryLabel`; body switches to `getVocab` for sub-industry accuracy
+
+### 🔜 What To Work On Next (As Of June 11)
+1. End-to-end onboarding flow test on Shawn's phone
+2. Google Places API key
+3. Photo pool curation for 10 new industries
+
+---
+
 ## Session: June 10, 2026 — Industry Taxonomy Expanded + Content Architecture Locked + Photo Bug Fixed
 **AI:** Claude Code (Sonnet 4.6) + Apple Team
 **Worked on:** Full content/copy architecture planning, expanded industry taxonomy to 22, fixed photo wiring bug, locked all decisions

@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 11, 2026 (evening)*
+*Last updated: June 12, 2026*
 
 ---
 
@@ -35,9 +35,45 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-1. **End-to-end flow test** — Shawn tests full onboarding on his phone: name → industry → location → services → photo upload → logo upload → color (auto-detected) → vibe → submit → reveal screen → live site. Phase 2 exit criterion #5.
+1. **End-to-end flow test** — Shawn tests full onboarding: name (slug preview + availability check) → industry → location → services → photos → logo (dark/light fork) → vibe (nav toggle) → submit → reveal → welcome email lands → live site at [slug].foundco.app. Phase 2 exit criterion #5.
 
-2. **Photo pool curation for 10 new industries** ✅ DONE — 12 curated Unsplash photos per industry, sub-type tagged, uploaded to Supabase Storage June 11, 2026. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
+2. **Run migration-028** — `ALTER TABLE companies ADD COLUMN IF NOT EXISTS navbar_dark boolean DEFAULT false;` in Supabase SQL editor. Required before `navbar_dark` saves for new onboarding sessions.
+
+---
+
+## RECENTLY COMPLETED (June 12, 2026)
+
+3a. **Smart slug system** ✅ SHIPPED
+   - `src/lib/slugify.ts`: shared client+server utility — camelCase splitting, `&/@/+` normalization
+   - `src/app/onboarding/slugActions.ts`: `checkSlugAvailable()` — DB check + suggestion builder (city first, then studio/co/hq/shop/pro/lab/works)
+   - Slug preview card on name step: green ✓ / red ✗, 650ms debounce, suggestion chips, custom input, reset link
+   - Fallback chain at submit: preferred → preferred-city → preferred-4hexchars (no industry in slug ever)
+
+3b. **Dark navbar mode** ✅ SHIPPED (migration-028 required)
+   - `navbar_dark` boolean column on companies — white logos always show on dark nav
+   - `Navbar.tsx`: full refactor with `isNavDark` + `isOnDark` logic
+   - Onboarding logo step: "Keep my site dark" button; vibe step: dark/light nav toggle tiles
+
+3c. **Two-logo onboarding system** ✅ SHIPPED
+   - `uploadLogoFile` variant param: `"primary"` | `"light"` — second logo path `logo-light.{ext}`
+   - Logo swap on save: both logos uploaded → `logo_url` = light-bg version, `logo_white_url` = dark-bg version
+   - Onboarding UI: second upload zone appears conditionally
+
+3d. **Welcome email on site creation** ✅ SHIPPED
+   - `buildWelcomeEmail()` fires after successful insert, via Resend from `hello@foundco.app`
+   - Includes: live URL, pages list, 3 next steps, connect-domain link
+
+3e. **Connect domain page** ✅ SHIPPED
+   - `/connect-domain?slug=x` — shows foundco.app subdomain, form to save custom domain, DNS instructions
+   - Updates `website_config.custom_domain`; calls Vercel API if `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` set
+
+3f. **Autocomplete attributes** ✅ SHIPPED
+   - `autoComplete="tel"` on phone inputs, `autoComplete="email"` on email inputs in onboarding
+
+3g. **Mobile Call Us + logo shadow polish** ✅ SHIPPED
+   - Mobile nav Call Us: now a real pill button with border + color
+   - Logo drop-shadow strengthened: `0 1px 3px rgba(0,0,0,0.35)` + `0 0 6px rgba(0,0,0,0.20)`
+   - CinematicLayout about: solid `#111111` dark, no competing stock photo
 
 ---
 
@@ -202,9 +238,10 @@ Exit criteria:
 ## NEXT
 
 1. **Wire Google Places API for city autocomplete** — Stub in place. BLOCKED: waiting for Shawn to get API key from Google Cloud Console (Places API, restrict to foundco.app + localhost). Server-side proxy at `/api/places`. See `// TODO` in OnboardingFlow.tsx.
-2. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
-3. **Photo pool curation for 10 new industries** — blocked on session with Shawn. Save to Supabase Storage at `config/photo-pools/{industry}.json`.
+2. **Add Vercel env vars for domain API** — `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard → enables automatic domain registration when owner uses /connect-domain.
+3. **Photo pool curation for 10 new industries** — BLOCKED: requires curation session with Shawn at /admin/photos. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
 4. **"Your copy was auto-generated" nudge** — backlog 1j. `copy_generated` flag exists. Owner sees quiet prompt in app: "Want Claude to write a custom version?" One tap to trigger regenerate.
+5. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
 
 ---
 
