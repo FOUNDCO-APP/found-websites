@@ -59,16 +59,15 @@ function slugify(name: string) {
     .slice(0, 48) || `found-${crypto.randomUUID().slice(0, 8)}`
 }
 
-async function uniqueSlug(base: string, city: string | null, subIndustry: string) {
-  const supabase = getAdminClient()
-  const citySlug  = city       ? slugify(city)       : null
-  const indSlug   = subIndustry ? slugify(subIndustry) : null
-  const hex4 = () => Math.random().toString(16).slice(2, 6)
+async function uniqueSlug(base: string, city: string | null) {
+  const supabase  = getAdminClient()
+  const citySlug  = city ? slugify(city) : null
+  const hex4      = () => Math.random().toString(16).slice(2, 6)
 
+  // city makes a meaningful domain (doubleblur-tucson); industry does not
   const candidates = [
     base,
-    citySlug                    ? `${base}-${citySlug}`           : null,
-    indSlug && citySlug         ? `${base}-${indSlug}-${citySlug}`: null,
+    citySlug ? `${base}-${citySlug}` : null,
     `${base}-${hex4()}`,
   ].filter((s): s is string => !!s)
 
@@ -269,7 +268,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
 
   const supabase = getAdminClient()
   const companyId = input.companyId || crypto.randomUUID()
-  const slug = await uniqueSlug(slugify(name), city, subIndustry)
+  const slug = await uniqueSlug(slugify(name), city)
   const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const serviceAreas = input.serviceAreas?.length
     ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]
