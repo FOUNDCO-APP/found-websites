@@ -43,8 +43,9 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
   const isHome = pathname === "/"
-  // Start ready on inner pages — they always have a white navbar
-  const [colorLogoReady, setColorLogoReady] = useState(!(transparent && isHome))
+  const isNavDark = !!company.navbar_dark
+  // colorLogoReady: never true on dark-nav sites (white logo always shown)
+  const [colorLogoReady, setColorLogoReady] = useState(!(transparent && isHome) && !isNavDark)
   const primary = company.primary_color
   const vibe = company.vibe || "bold"
   const isCalm = vibe === "calm" || vibe === "warm"
@@ -57,8 +58,9 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   }, [transparent])
 
   // Wait for background transition to finish before showing color logo
+  // Skip entirely on dark-nav sites — color logo never shows
   useEffect(() => {
-    if (!transparent || !isHome) return
+    if (!transparent || !isHome || isNavDark) return
     let t: ReturnType<typeof setTimeout>
     if (scrolled) {
       t = setTimeout(() => setColorLogoReady(true), 280)
@@ -66,10 +68,12 @@ export default function Navbar({ company, transparent = false }: { company: Comp
       setColorLogoReady(false)
     }
     return () => clearTimeout(t)
-  }, [scrolled, transparent, isHome])
+  }, [scrolled, transparent, isHome, isNavDark])
 
-  // Only overlay on the homepage — inner pages always get sticky white navbar
+  // Only overlay on the homepage — inner pages always get sticky navbar
   const isOverlay = transparent && isHome && !scrolled
+  // isOnDark: logo and text should be white (either transparent hero or always-dark navbar)
+  const isOnDark = isOverlay || isNavDark
 
   const isActive = (href: string) => pathname === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
@@ -78,18 +82,18 @@ export default function Navbar({ company, transparent = false }: { company: Comp
     : intentHref[company.primary_intent] || "/contact"
 
   const navLinkWeight = "font-medium"
-  const inactiveColor = isOverlay ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
-  const barColor = isOverlay ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
+  const inactiveColor = isOnDark ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
+  const barColor = isOnDark ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
 
   return (
     <>
       <header
         className={`${transparent && isHome ? "fixed" : "sticky"} top-0 left-0 right-0 z-50 transition-all duration-[300ms]`}
         style={{
-          backgroundColor: isOverlay ? "rgba(255,255,255,0)" : "#ffffff",
+          backgroundColor: isOverlay ? "rgba(255,255,255,0)" : isNavDark ? "#111111" : "#ffffff",
           borderBottomWidth: "1px",
           borderBottomStyle: "solid",
-          borderBottomColor: isOverlay ? "rgba(0,0,0,0)" : isCalm ? "#eeeeee" : "#f0f0f0",
+          borderBottomColor: isOnDark ? "rgba(0,0,0,0)" : isCalm ? "#eeeeee" : "#f0f0f0",
         }}
       >
         <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between gap-4">
@@ -118,14 +122,14 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     }} />
                 </div>
               ) : (
-                // Single logo: drop-shadow on white navbar keeps white logo elements visible
+                // Single logo: invert on dark bg; strong shadow keeps white elements visible on white navbar
                 <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url!} alt={company.name}
                     className="h-full w-full object-contain object-left"
                     style={{
-                      filter: isOverlay
+                      filter: isOnDark
                         ? "brightness(0) invert(1)"
-                        : "drop-shadow(0 0 1px rgba(0,0,0,0.18)) drop-shadow(0 0 3px rgba(0,0,0,0.10))",
+                        : "drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.20))",
                       transition: "filter 500ms ease",
                     }} />
                 </div>
@@ -140,7 +144,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
             {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item) => (
               <Link key={item.label} href={item.href}
                 className={`transition-colors ${navLinkWeight}`}
-                style={{ color: isActive(item.href) && !isOverlay ? primary : inactiveColor }}>
+                style={{ color: isActive(item.href) && !isOnDark ? primary : inactiveColor }}>
                 {item.label}
               </Link>
             ))}
@@ -148,11 +152,11 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-5 shrink-0">
-            <div className="w-px h-5" style={{ backgroundColor: isOverlay ? "rgba(255,255,255,0.3)" : "#e5e5e5" }} />
+            <div className="w-px h-5" style={{ backgroundColor: isOnDark ? "rgba(255,255,255,0.3)" : "#e5e5e5" }} />
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                 className="flex items-center gap-1.5 text-sm font-black transition-colors hover:opacity-80"
-                style={{ color: isOverlay ? "#ffffff" : primary }}>
+                style={{ color: isOnDark ? "#ffffff" : primary }}>
                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>

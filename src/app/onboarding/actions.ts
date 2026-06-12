@@ -25,6 +25,8 @@ type OnboardingInput = {
   photoChoice: string
   logoChoice: string
   logoUrl?: string
+  logoWhiteUrl?: string
+  navbarDark?: boolean
   heroImageUrls?: string[]
   companyId?: string
   primaryColor: string
@@ -300,7 +302,10 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       lead_email: input.leadEmail?.trim() || null,
       city,
       state,
-      logo_url: input.logoUrl ?? null,
+      // When both logos are provided: swap so logo_url = light-bg version, logo_white_url = dark-bg version
+      logo_url: input.logoWhiteUrl ? input.logoWhiteUrl : (input.logoUrl ?? null),
+      logo_white_url: input.logoWhiteUrl ? (input.logoUrl ?? null) : null,
+      navbar_dark: input.navbarDark ?? false,
       primary_color: primaryColor,
       accent_color_1: mix(primaryColor, "#000000", 0.22),
       accent_color_2: mix(primaryColor, "#ffffff", 0.72),

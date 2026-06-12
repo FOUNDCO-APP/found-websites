@@ -56,6 +56,7 @@ async function extractDominantColor(bytes: ArrayBuffer, mimeType: string): Promi
 export async function uploadLogoFile(
   formData: FormData,
   sessionId: string,
+  variant: "primary" | "light" = "primary",
 ): Promise<{ success: boolean; url?: string; dominantColor?: string; error?: string }> {
   const file = formData.get("file") as File | null
   if (!file || !file.size) return { success: false, error: "No file selected." }
@@ -68,7 +69,9 @@ export async function uploadLogoFile(
   const supabase = getAdminClient()
   await ensureBucket(supabase)
 
-  const path = `logos/${sessionId}/logo.${ext}`
+  const path = variant === "light"
+    ? `logos/${sessionId}/logo-light.${ext}`
+    : `logos/${sessionId}/logo.${ext}`
   const bytes = await file.arrayBuffer()
 
   const { error } = await supabase.storage

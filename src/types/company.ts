@@ -60,6 +60,7 @@ export type Company = {
   state: string | null
   logo_url: string | null
   logo_white_url: string | null
+  navbar_dark: boolean | null
   primary_color: string
   accent_color_1: string
   accent_color_2: string
