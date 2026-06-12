@@ -374,8 +374,21 @@ h1, h2, h3, h4, h5, h6 {
     font-size: clamp(2.05rem, 5vw, 3.1rem) !important;
   }
 
+  .found-home-hero,
+  .found-hero-shell {
+    height: auto !important;
+  }
+
+  .found-hero-shell {
+    overflow: visible !important;
+  }
+
   .found-hero-mobile-copy {
-    display: none !important;
+    display: block !important;
+    max-width: min(31vw, 21rem) !important;
+    margin-top: 0.9rem !important;
+    font-size: clamp(0.78rem, 1.6vw, 0.95rem) !important;
+    line-height: 1.5 !important;
   }
 
   .found-hero-actions {
