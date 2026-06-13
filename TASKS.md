@@ -37,14 +37,13 @@ Exit criteria:
 
 ## NOW (MAX 3)
 
-1. **Run migration-029** — open Supabase SQL editor, run `scripts/migration-029-billing.sql`. Adds `stripe_customer_id`, `plan`, `trial_ends_at`, `subscription_status` to companies table.
+1. ✅ **migration-029 run** — `stripe_customer_id`, `plan`, `trial_ends_at`, `subscription_status` now on companies table.
 
-2. **Create Stripe products** — in Stripe dashboard (sandbox mode), create 3 products:
-   - Found — $39/month → copy the Price ID → add to Vercel as `STRIPE_PRICE_ID_FOUND`
-   - Found Pro — $69/month → `STRIPE_PRICE_ID_FOUND_PRO`
-   - Found Business — $99/month → `STRIPE_PRICE_ID_FOUND_BUSINESS`
+2. **Create Stripe products** — deploy is live, then hit:
+   `https://foundco.app/api/stripe/setup-products?key=YOUR_ADMIN_KEY`
+   Returns price IDs as JSON → paste into Vercel as `STRIPE_PRICE_ID_FOUND`, `STRIPE_PRICE_ID_FOUND_PRO`, `STRIPE_PRICE_ID_FOUND_BUSINESS`
 
-3. **Register Stripe webhook** — in Stripe dashboard → Developers → Webhooks → Add endpoint:
+3. **Register Stripe webhook** — Stripe dashboard → Developers → Webhooks → Add endpoint:
    - URL: `https://foundco.app/api/stripe/webhook`
    - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
    - Copy the signing secret → add to Vercel as `STRIPE_WEBHOOK_SECRET`
