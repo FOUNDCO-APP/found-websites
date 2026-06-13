@@ -262,11 +262,11 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
 
   const supabase = getAdminClient()
   const companyId = input.companyId || crypto.randomUUID()
+  const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const preferredBase = input.slugPreference
     ? input.slugPreference.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48)
     : slugify(name)
   const slug = await uniqueSlug(preferredBase, city)
-  const { city, state, serviceAreas: derivedAreas } = splitLocation(input.location)
   const serviceAreas = input.serviceAreas?.length
     ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]
     : derivedAreas

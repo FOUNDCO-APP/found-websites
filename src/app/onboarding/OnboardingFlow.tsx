@@ -1051,7 +1051,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     {/* ── Inputs ── */}
 
                     {step === "name" && (
-                      <div className="space-y-5">
+                      <div className="space-y-4">
                         <input
                           autoFocus
                           value={answers.name}
@@ -1062,101 +1062,82 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                           style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
                         />
 
-                        {/* Slug preview — appears once name has content */}
+                        {/* Compact slug status — always visible above keyboard */}
                         {answers.name.trim().length >= 2 && (() => {
                           const effective = slugCustom || clientSlugify(answers.name)
                           const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
+                          const statusColor = slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted
                           return (
                             <div className="space-y-3">
-                              {/* Address preview bar */}
-                              <div className="flex items-center gap-3 rounded-xl border px-4 py-3"
-                                style={{ borderColor: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: tk.muted }}>
-                                    Your site address
-                                  </p>
-                                  <p className="text-sm font-black truncate" style={{ color: tk.text }}>
-                                    <span style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
-                                      {effective}
-                                    </span>
-                                    <span style={{ color: tk.muted }}>.{ROOT}</span>
-                                  </p>
-                                </div>
+                              {/* Single compact row: url + status + change link */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-black" style={{ color: statusColor }}>
+                                  {effective}
+                                  <span style={{ color: tk.muted }}>.{ROOT}</span>
+                                </span>
                                 {slugChecking && (
-                                  <svg className="animate-spin shrink-0" width="16" height="16" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
+                                  <svg className="animate-spin shrink-0" width="12" height="12" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                   </svg>
                                 )}
                                 {!slugChecking && slugStatus === "ok" && (
-                                  <span className="shrink-0 text-xs font-black" style={{ color: SIGNAL_GREEN }}>✓ Available</span>
+                                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${SIGNAL_GREEN}20`, color: SIGNAL_GREEN }}>✓ Available</span>
                                 )}
                                 {!slugChecking && slugStatus === "taken" && (
-                                  <span className="shrink-0 text-xs font-black" style={{ color: "#f87171" }}>✗ Taken</span>
+                                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#f8717120", color: "#f87171" }}>✗ Taken</span>
+                                )}
+                                {slugStatus === "ok" && !slugCustom && (
+                                  <button type="button"
+                                    onClick={() => setSlugCustom(effective)}
+                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                    style={{ color: tk.muted }}>
+                                    Change →
+                                  </button>
+                                )}
+                                {slugStatus === "ok" && slugCustom && (
+                                  <button type="button"
+                                    onClick={() => setSlugCustom("")}
+                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                    style={{ color: tk.muted }}>
+                                    Reset
+                                  </button>
                                 )}
                               </div>
 
-                              {/* Taken: suggestions + custom input */}
+                              {/* Taken: suggestions + custom input (expands below) */}
                               {slugStatus === "taken" && (
                                 <div className="space-y-3">
                                   {slugSuggestions.length > 0 && (
-                                    <div>
-                                      <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: tk.muted }}>
-                                        Available alternatives
-                                      </p>
-                                      <div className="flex flex-wrap gap-2">
-                                        {slugSuggestions.map((s) => (
-                                          <button key={s} type="button"
-                                            onClick={() => setSlugCustom(s)}
-                                            className="px-3 py-2 text-xs font-black rounded-lg border transition hover:opacity-80"
-                                            style={{
-                                              borderColor: slugCustom === s ? SIGNAL_GREEN : tk.cardBorder(false),
-                                              backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}18` : tk.cardBg(false),
-                                              color: slugCustom === s ? SIGNAL_GREEN : tk.text,
-                                            }}>
-                                            {s}
-                                          </button>
-                                        ))}
-                                      </div>
+                                    <div className="flex flex-wrap gap-2">
+                                      {slugSuggestions.map((s) => (
+                                        <button key={s} type="button"
+                                          onClick={() => setSlugCustom(s)}
+                                          className="px-3 py-1.5 text-xs font-black rounded-lg border transition"
+                                          style={{
+                                            borderColor: slugCustom === s ? SIGNAL_GREEN : tk.cardBorder(false),
+                                            backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}18` : tk.cardBg(false),
+                                            color: slugCustom === s ? SIGNAL_GREEN : tk.text,
+                                          }}>
+                                          {s}
+                                        </button>
+                                      ))}
                                     </div>
                                   )}
-                                  <div>
-                                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: tk.muted }}>
-                                      Or type your own
-                                    </p>
-                                    <div className="flex items-center gap-1 rounded-lg border px-3 py-2"
-                                      style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                                      <input
-                                        type="text"
-                                        value={slugCustom}
-                                        onChange={(e) => setSlugCustom(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48))}
-                                        placeholder="your-slug"
-                                        autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                                        className="flex-1 bg-transparent text-sm font-black outline-none"
-                                        style={{ color: tk.text }}
-                                      />
-                                      <span className="text-xs shrink-0" style={{ color: tk.muted }}>.{ROOT}</span>
-                                    </div>
+                                  <div className="flex items-center gap-1 rounded-lg border px-3 py-2"
+                                    style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                    <input
+                                      type="text"
+                                      value={slugCustom}
+                                      onChange={(e) => setSlugCustom(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48))}
+                                      placeholder="or type your own"
+                                      autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                                      className="flex-1 bg-transparent text-sm font-black outline-none"
+                                      style={{ color: tk.text }}
+                                    />
+                                    <span className="text-xs shrink-0" style={{ color: tk.muted }}>.{ROOT}</span>
                                   </div>
                                 </div>
-                              )}
-
-                              {/* Available: offer to customise */}
-                              {slugStatus === "ok" && !slugCustom && (
-                                <button type="button"
-                                  onClick={() => setSlugCustom(effective)}
-                                  className="text-xs font-black uppercase tracking-widest transition hover:opacity-70"
-                                  style={{ color: tk.muted }}>
-                                  Change it →
-                                </button>
-                              )}
-                              {slugStatus === "ok" && slugCustom && (
-                                <button type="button"
-                                  onClick={() => setSlugCustom("")}
-                                  className="text-xs font-black uppercase tracking-widest transition hover:opacity-70"
-                                  style={{ color: tk.muted }}>
-                                  Reset to default
-                                </button>
                               )}
                             </div>
                           )
