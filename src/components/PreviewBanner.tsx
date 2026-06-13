@@ -15,8 +15,8 @@ function getBannerState(trialEndsAt: string | null): {
   if (!trialEndsAt) {
     return {
       bg: SIGNAL_GREEN,
-      message: "Your site is ready to share — activate your free trial to go live.",
-      cta: "Start my free trial →",
+      message: "Your site is live — add a card to start your free trial and remove this banner. No charge for 14 days.",
+      cta: "Add my card →",
     }
   }
 
@@ -26,7 +26,7 @@ function getBannerState(trialEndsAt: string | null): {
   if (daysRemaining <= 0) {
     return {
       bg: CHARCOAL,
-      message: "Your site is on hold — add a card to reactivate it.",
+      message: "Your site is on hold — add a card to reactivate it. This banner goes away the moment you do.",
       cta: "Reactivate →",
     }
   }
@@ -34,15 +34,15 @@ function getBannerState(trialEndsAt: string | null): {
   if (daysRemaining <= 9) {
     return {
       bg: AMBER,
-      message: `Your free trial ends in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"} — add a card to keep your site live.`,
-      cta: "Add a card →",
+      message: `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left on your trial — add a card to keep your site live and remove this banner.`,
+      cta: "Add my card →",
     }
   }
 
   return {
     bg: SIGNAL_GREEN,
-    message: "Your site is ready to share — activate your free trial to go live.",
-    cta: "Start my free trial →",
+    message: "Your site is live — add a card to start your free trial and remove this banner. No charge for 14 days.",
+    cta: "Add my card →",
   }
 }
 
