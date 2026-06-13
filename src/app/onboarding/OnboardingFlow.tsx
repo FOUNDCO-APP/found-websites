@@ -666,6 +666,75 @@ function OptionCard({ active, isLight, primaryColor, onClick, title, body }: {
   )
 }
 
+// ── Slug taken bottom sheet ───────────────────────────────────────────────────
+function SlugSheet({
+  effective, ROOT, suggestions, custom, onCustomChange, onPick, onConfirm, onDismiss,
+}: {
+  effective: string; ROOT: string; suggestions: string[]; custom: string
+  onCustomChange: (v: string) => void; onPick: (s: string) => void
+  onConfirm: () => void; onDismiss: () => void
+}) {
+  const chosen = custom || effective
+  return (
+    <>
+      {/* Scrim */}
+      <div className="fixed inset-0 z-40 bg-black/40" onClick={onDismiss} />
+      {/* Sheet — fixed above keyboard on iOS */}
+      <div
+        className="fixed inset-x-0 bottom-0 z-50 rounded-t-3xl px-6 pt-6 pb-10"
+        style={{ backgroundColor: "#ffffff", boxShadow: "0 -8px 40px rgba(0,0,0,0.18)" }}
+      >
+        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-black/10" />
+        <p className="text-lg font-black" style={{ color: FOUND_BLACK }}>
+          That address is taken
+        </p>
+        <p className="mt-1 text-sm leading-6" style={{ color: "rgba(8,10,9,0.50)" }}>
+          <span className="font-black" style={{ color: "#f87171" }}>{effective}</span>.{ROOT} is already in use.
+          Pick one below or type your own.
+        </p>
+
+        {suggestions.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {suggestions.map((s) => (
+              <button key={s} type="button"
+                onClick={() => onPick(s)}
+                className="rounded-full border px-4 py-2 text-xs font-black uppercase tracking-[0.1em] transition"
+                style={{
+                  borderColor: custom === s ? SIGNAL_GREEN : "rgba(8,10,9,0.12)",
+                  backgroundColor: custom === s ? `${SIGNAL_GREEN}14` : "transparent",
+                  color: custom === s ? SIGNAL_GREEN : FOUND_BLACK,
+                }}>
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex items-center gap-2 rounded-xl border px-4 py-3" style={{ borderColor: "rgba(8,10,9,0.12)" }}>
+          <input
+            type="text"
+            value={custom}
+            onChange={(e) => onCustomChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48))}
+            placeholder="or type your own"
+            autoCapitalize="none" autoCorrect="off" spellCheck={false}
+            className="flex-1 bg-transparent text-sm font-black outline-none placeholder:text-black/30"
+            style={{ color: FOUND_BLACK }}
+          />
+          <span className="shrink-0 text-xs font-black" style={{ color: "rgba(8,10,9,0.35)" }}>.{ROOT}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="mt-5 w-full rounded-full py-4 text-sm font-black uppercase tracking-widest"
+          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+          Use {chosen}.{ROOT} →
+        </button>
+      </div>
+    </>
+  )
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () => void; drawerMode?: boolean }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
@@ -689,10 +758,11 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   const [logoWhiteError, setLogoWhiteError]         = useState<string | null>(null)
 
   // Slug picker state (name step)
-  const [slugCustom, setSlugCustom]       = useState("")
-  const [slugChecking, setSlugChecking]   = useState(false)
-  const [slugStatus, setSlugStatus]       = useState<"idle" | "ok" | "taken">("idle")
+  const [slugCustom, setSlugCustom]         = useState("")
+  const [slugChecking, setSlugChecking]     = useState(false)
+  const [slugStatus, setSlugStatus]         = useState<"idle" | "ok" | "taken">("idle")
   const [slugSuggestions, setSlugSuggestions] = useState<string[]>([])
+  const [showSlugSheet, setShowSlugSheet]   = useState(false)
 
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
@@ -717,6 +787,11 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       return
     }
     if (!canAdvance(step, answers)) return
+    // If slug is taken, intercept and show the choice sheet instead of advancing
+    if (step === "name" && slugStatus === "taken") {
+      setShowSlugSheet(true)
+      return
+    }
     if (stepIndex < STEPS.length - 1) setStepIndex((i) => i + 1)
     else void submit()
   }
@@ -927,6 +1002,33 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
         />
       )}
 
+      {showSlugSheet && (() => {
+        const effective = slugCustom || clientSlugify(answers.name)
+        const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
+        // When slug was taken and user confirmed a suggestion (pre-verified available) → advance
+        // When user is just customizing a good slug → close sheet, re-check, user taps Next
+        const confirmedSuggestion = slugSuggestions.includes(slugCustom)
+        return (
+          <SlugSheet
+            effective={effective}
+            ROOT={ROOT}
+            suggestions={slugSuggestions}
+            custom={slugCustom}
+            onCustomChange={(v) => setSlugCustom(v)}
+            onPick={(s) => setSlugCustom(s)}
+            onConfirm={() => {
+              setShowSlugSheet(false)
+              if (confirmedSuggestion) {
+                setSlugStatus("ok")
+                setStepIndex((i) => i + 1)
+              }
+              // else: let debounce re-check the custom slug; user taps Next after ✓ appears
+            }}
+            onDismiss={() => setShowSlugSheet(false)}
+          />
+        )
+      })()}
+
       <main className={`relative overflow-hidden ${drawerMode ? "h-full" : "min-h-screen"}`}>
         <div className={`grid md:grid-cols-2 ${drawerMode ? "h-full" : "min-h-screen"}`}>
 
@@ -1051,93 +1153,67 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                     {/* ── Inputs ── */}
 
                     {step === "name" && (
-                      <div className="space-y-4">
-                        <input
-                          autoFocus
-                          value={answers.name}
-                          onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle") }}
-                          onKeyDown={(e) => e.key === "Enter" && advance()}
-                          placeholder="e.g. Barrio Builders"
-                          className={`w-full text-4xl ${tk.inputCls} ${tk.placeholder}`}
-                          style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
-                        />
+                      <div className="space-y-3">
+                        {/* Input with inline status icon — always visible above keyboard */}
+                        <div className="relative">
+                          <input
+                            autoFocus
+                            value={answers.name}
+                            onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false) }}
+                            onKeyDown={(e) => e.key === "Enter" && advance()}
+                            placeholder="e.g. Barrio Builders"
+                            className={`w-full text-4xl pr-8 ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                          {/* Status icon — inside the input's right edge, never hidden by keyboard */}
+                          <div className="absolute right-0 bottom-3 flex items-center">
+                            {slugChecking && (
+                              <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                            )}
+                            {!slugChecking && slugStatus === "ok" && (
+                              <span className="text-base font-black" style={{ color: SIGNAL_GREEN }}>✓</span>
+                            )}
+                            {!slugChecking && slugStatus === "taken" && (
+                              <span className="text-base font-black" style={{ color: "#f87171" }}>✗</span>
+                            )}
+                          </div>
+                        </div>
 
-                        {/* Compact slug status — always visible above keyboard */}
+                        {/* URL line — compact, below input, visible on taller phones */}
                         {answers.name.trim().length >= 2 && (() => {
                           const effective = slugCustom || clientSlugify(answers.name)
                           const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
-                          const statusColor = slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted
                           return (
-                            <div className="space-y-3">
-                              {/* Single compact row: url + status + change link */}
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-black" style={{ color: statusColor }}>
-                                  {effective}
-                                  <span style={{ color: tk.muted }}>.{ROOT}</span>
-                                </span>
-                                {slugChecking && (
-                                  <svg className="animate-spin shrink-0" width="12" height="12" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                  </svg>
-                                )}
-                                {!slugChecking && slugStatus === "ok" && (
-                                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${SIGNAL_GREEN}20`, color: SIGNAL_GREEN }}>✓ Available</span>
-                                )}
-                                {!slugChecking && slugStatus === "taken" && (
-                                  <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#f8717120", color: "#f87171" }}>✗ Taken</span>
-                                )}
-                                {slugStatus === "ok" && !slugCustom && (
-                                  <button type="button"
-                                    onClick={() => setSlugCustom(effective)}
-                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                    style={{ color: tk.muted }}>
-                                    Change →
-                                  </button>
-                                )}
-                                {slugStatus === "ok" && slugCustom && (
-                                  <button type="button"
-                                    onClick={() => setSlugCustom("")}
-                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                    style={{ color: tk.muted }}>
-                                    Reset
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Taken: suggestions + custom input (expands below) */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-black" style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
+                                {effective}<span style={{ color: tk.muted }}>.{ROOT}</span>
+                              </span>
+                              {slugStatus === "ok" && !slugCustom && (
+                                <button type="button"
+                                  onClick={() => setShowSlugSheet(true)}
+                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                  style={{ color: tk.muted }}>
+                                  Change →
+                                </button>
+                              )}
+                              {slugStatus === "ok" && slugCustom && (
+                                <button type="button"
+                                  onClick={() => setSlugCustom("")}
+                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                  style={{ color: tk.muted }}>
+                                  Reset
+                                </button>
+                              )}
                               {slugStatus === "taken" && (
-                                <div className="space-y-3">
-                                  {slugSuggestions.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                      {slugSuggestions.map((s) => (
-                                        <button key={s} type="button"
-                                          onClick={() => setSlugCustom(s)}
-                                          className="px-3 py-1.5 text-xs font-black rounded-lg border transition"
-                                          style={{
-                                            borderColor: slugCustom === s ? SIGNAL_GREEN : tk.cardBorder(false),
-                                            backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}18` : tk.cardBg(false),
-                                            color: slugCustom === s ? SIGNAL_GREEN : tk.text,
-                                          }}>
-                                          {s}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-1 rounded-lg border px-3 py-2"
-                                    style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                                    <input
-                                      type="text"
-                                      value={slugCustom}
-                                      onChange={(e) => setSlugCustom(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48))}
-                                      placeholder="or type your own"
-                                      autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                                      className="flex-1 bg-transparent text-sm font-black outline-none"
-                                      style={{ color: tk.text }}
-                                    />
-                                    <span className="text-xs shrink-0" style={{ color: tk.muted }}>.{ROOT}</span>
-                                  </div>
-                                </div>
+                                <button type="button"
+                                  onClick={() => setShowSlugSheet(true)}
+                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                  style={{ color: "#f87171" }}>
+                                  Pick another →
+                                </button>
                               )}
                             </div>
                           )
