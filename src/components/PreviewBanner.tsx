@@ -5,18 +5,25 @@ import { getPreviewCheckout } from "@/app/[slug]/previewActions"
 
 const SIGNAL_GREEN = "#32D074"
 const AMBER = "#F59E0B"
-const CHARCOAL = "#1a1a1a"
+const ROSE = "#F43F5E"
+const FOUND_BLACK = "#111111"
 
-function getBannerState(trialEndsAt: string | null): {
-  bg: string
-  message: string
+type BannerState = {
+  accent: string
+  label: string
+  headline: string
+  detail: string
   cta: string
-} {
+}
+
+function getBannerState(trialEndsAt: string | null): BannerState {
   if (!trialEndsAt) {
     return {
-      bg: SIGNAL_GREEN,
-      message: "Your site is live — add a card to start your free trial and remove this banner. No charge for 14 days.",
-      cta: "Add my card →",
+      accent: SIGNAL_GREEN,
+      label: "Live preview",
+      headline: "Your site is live.",
+      detail: "14 days free — no charge today.",
+      cta: "Start free trial →",
     }
   }
 
@@ -25,24 +32,30 @@ function getBannerState(trialEndsAt: string | null): {
 
   if (daysRemaining <= 0) {
     return {
-      bg: CHARCOAL,
-      message: "Your site is on hold — add a card to reactivate it. This banner goes away the moment you do.",
+      accent: ROSE,
+      label: "Site paused",
+      headline: "Your site is offline.",
+      detail: "Add a card to bring it back. Takes 30 seconds.",
       cta: "Reactivate →",
     }
   }
 
   if (daysRemaining <= 9) {
     return {
-      bg: AMBER,
-      message: `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left on your trial — add a card to keep your site live and remove this banner.`,
-      cta: "Add my card →",
+      accent: AMBER,
+      label: `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`,
+      headline: "Your trial is ending.",
+      detail: "Add a card to keep your site live and remove this card.",
+      cta: "Secure my site →",
     }
   }
 
   return {
-    bg: SIGNAL_GREEN,
-    message: "Your site is live — add a card to start your free trial and remove this banner. No charge for 14 days.",
-    cta: "Add my card →",
+    accent: SIGNAL_GREEN,
+    label: "Live preview",
+    headline: "Your site is live.",
+    detail: "14 days free — no charge today.",
+    cta: "Start free trial →",
   }
 }
 
@@ -60,15 +73,12 @@ export default function PreviewBanner({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    // stripe_customer_id is only set after checkout completes — null means no card on file yet
     if (params.get("preview") === "true" && !stripeCustomerId) setVisible(true)
   }, [stripeCustomerId])
 
   if (!visible) return null
 
-  const { bg, message, cta } = getBannerState(trialEndsAt)
-  const textColor = bg === CHARCOAL ? "rgba(255,255,255,0.9)" : "white"
-  const btnColor = bg === CHARCOAL ? "#ffffff" : bg
+  const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 
   async function handleActivate() {
     setLoading(true)
@@ -82,18 +92,45 @@ export default function PreviewBanner({
 
   return (
     <div
-      className="fixed bottom-5 left-1/2 z-50 flex w-[calc(100%-2.5rem)] max-w-lg -translate-x-1/2 items-center justify-between gap-4 rounded-2xl px-5 py-4 shadow-2xl"
-      style={{ backgroundColor: bg }}>
-      <p className="text-sm font-black leading-snug" style={{ color: textColor }}>
-        {message}
-      </p>
-      <button
-        onClick={handleActivate}
-        disabled={loading}
-        className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-xs font-black transition hover:opacity-90 active:opacity-75"
-        style={{ color: btnColor }}>
-        {loading ? "Loading…" : cta}
-      </button>
+      className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2.5rem)] max-w-sm -translate-x-1/2 overflow-hidden rounded-3xl shadow-2xl"
+      style={{ backgroundColor: FOUND_BLACK, border: "1px solid rgba(255,255,255,0.07)" }}>
+
+      {/* Top accent rule */}
+      <div className="h-px w-full" style={{ backgroundColor: accent }} />
+
+      <div className="px-6 pb-6 pt-5">
+        {/* Status label */}
+        <div className="mb-4 flex items-center gap-2">
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ backgroundColor: accent, boxShadow: `0 0 6px ${accent}` }}
+          />
+          <span
+            className="text-[10px] font-black uppercase tracking-[0.22em]"
+            style={{ color: accent }}>
+            {label}
+          </span>
+        </div>
+
+        {/* Headline */}
+        <p className="mb-1 text-[22px] font-light leading-tight tracking-tight text-white">
+          {headline}
+        </p>
+
+        {/* Detail */}
+        <p className="mb-5 text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+          {detail}
+        </p>
+
+        {/* CTA */}
+        <button
+          onClick={handleActivate}
+          disabled={loading}
+          className="w-full rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] active:opacity-75"
+          style={{ backgroundColor: accent, color: FOUND_BLACK }}>
+          {loading ? "One moment…" : cta}
+        </button>
+      </div>
     </div>
   )
 }
