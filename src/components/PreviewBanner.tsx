@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { getPreviewCheckout } from "@/app/[slug]/previewActions"
 
 const SIGNAL_GREEN = "#32D074"
@@ -69,14 +70,16 @@ export default function PreviewBanner({
   trialEndsAt: string | null
 }) {
   const [visible, setVisible] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const params = new URLSearchParams(window.location.search)
     if (params.get("preview") === "true" && !stripeCustomerId) setVisible(true)
   }, [stripeCustomerId])
 
-  if (!visible) return null
+  if (!visible || !mounted) return null
 
   const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 
@@ -90,9 +93,9 @@ export default function PreviewBanner({
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed bottom-5 left-1/2 z-50 w-[calc(100%-2.5rem)] max-w-sm -translate-x-1/2 overflow-hidden rounded-3xl shadow-2xl"
+      className="fixed bottom-5 left-1/2 z-[9999] w-[calc(100%-2.5rem)] max-w-sm -translate-x-1/2 overflow-hidden rounded-3xl shadow-2xl"
       style={{ backgroundColor: FOUND_BLACK, border: "1px solid rgba(255,255,255,0.07)" }}>
 
       {/* Top accent rule */}
@@ -131,6 +134,7 @@ export default function PreviewBanner({
           {loading ? "One moment…" : cta}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
