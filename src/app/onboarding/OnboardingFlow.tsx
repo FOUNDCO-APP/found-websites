@@ -380,7 +380,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, onEdit }: {
             <h1 className="text-5xl font-light leading-[1.05] text-white md:text-7xl">{name}<br />is live.</h1>
             <p className="mt-6 max-w-sm text-base leading-8 text-white/45">Your business now has a place online. Open it, look around, and make it yours.</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <a href={url} target="_blank" rel="noreferrer"
+              <a href={`${url}?preview=true`} target="_blank" rel="noreferrer"
                 className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
                 style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                 See your site
