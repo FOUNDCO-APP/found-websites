@@ -1,15 +1,9 @@
-import { redirect } from "next/navigation"
 import ActivateLoader from "./ActivateLoader"
 
-export const runtime = "edge"
+// Fully static — served from CDN, zero cold start, zero bundle size limit.
+// Slug is read client-side from the URL.
+export const dynamic = "force-static"
 
-export default async function ActivatePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ slug?: string; error?: string }>
-}) {
-  const { slug, error } = await searchParams
-  if (!slug) redirect("/")
-
-  return <ActivateLoader slug={slug} error={error} />
+export default function ActivatePage() {
+  return <ActivateLoader />
 }
