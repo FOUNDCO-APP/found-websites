@@ -82,15 +82,15 @@ export default function PreviewBanner({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between gap-4 px-5 py-4 shadow-lg"
+      className="fixed bottom-5 left-1/2 z-50 flex w-[calc(100%-2.5rem)] max-w-lg -translate-x-1/2 items-center justify-between gap-4 rounded-2xl px-5 py-4 shadow-2xl"
       style={{ backgroundColor: bg }}>
-      <p className="text-sm font-black leading-tight" style={{ color: textColor }}>
+      <p className="text-sm font-black leading-snug" style={{ color: textColor }}>
         {message}
       </p>
       <button
         onClick={handleActivate}
         disabled={loading}
-        className="shrink-0 rounded-lg bg-white px-4 py-2 text-xs font-black transition hover:opacity-90 active:opacity-75"
+        className="shrink-0 rounded-xl bg-white px-4 py-2.5 text-xs font-black transition hover:opacity-90 active:opacity-75"
         style={{ color: btnColor }}>
         {loading ? "Loading…" : cta}
       </button>
