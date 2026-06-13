@@ -3,7 +3,10 @@
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 
-const ActivateFlow = dynamic(() => import("./ActivateFlow"), { ssr: false })
+const ActivateFlow = dynamic(() => import("./ActivateFlow"), {
+  ssr: false,
+  loading: () => <div style={{ backgroundColor: "#111111", minHeight: "100vh" }} />,
+})
 
 const FOUND_BLACK = "#111111"
 
