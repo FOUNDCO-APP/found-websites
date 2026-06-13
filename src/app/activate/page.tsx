@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import ActivateFlow from "./ActivateFlow"
 
+export const runtime = "edge"
+
 export default async function ActivatePage({
   searchParams,
 }: {
