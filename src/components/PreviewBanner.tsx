@@ -70,6 +70,7 @@ export default function PreviewBanner({
 }) {
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [navigating, setNavigating] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -81,6 +82,7 @@ export default function PreviewBanner({
   const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 
   function handleActivate() {
+    setNavigating(true)
     const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
     window.location.href = `https://${root}/activate?slug=${slug}`
   }
@@ -123,7 +125,7 @@ export default function PreviewBanner({
 
           className="w-full rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] active:opacity-75"
           style={{ backgroundColor: accent, color: FOUND_BLACK }}>
-          {cta}
+          {navigating ? "On our way…" : cta}
         </button>
       </div>
     </div>,

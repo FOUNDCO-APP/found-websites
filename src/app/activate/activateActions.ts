@@ -40,7 +40,10 @@ export async function createActivationSetup(slug: string): Promise<{
     items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
     trial_period_days: 14,
     payment_behavior: "default_incomplete",
-    payment_settings: { save_default_payment_method: "on_subscription" },
+    payment_settings: {
+      save_default_payment_method: "on_subscription",
+      payment_method_types: ["card", "us_bank_account"],
+    },
     expand: ["pending_setup_intent"],
     metadata: { company_id: company.id, slug },
   })

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
-import { createActivationSetup } from "./activateActions"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#111111"
@@ -129,24 +128,22 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
   )
 }
 
-export default function ActivateFlow({ slug, error }: { slug: string; error?: string }) {
+export default function ActivateFlow({
+  slug,
+  setup,
+  error,
+}: {
+  slug: string
+  setup: { clientSecret: string; companyName: string } | null
+  error?: string
+}) {
   const [phase, setPhase] = useState<"splash" | "form">("splash")
-  const [setup, setSetup] = useState<{ clientSecret: string; companyName: string } | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(error ?? null)
+  const loadError = error ?? (!setup ? "This site is already activated or could not be found." : null)
 
   useEffect(() => {
-    createActivationSetup(slug).then((result) => {
-      if (!result) {
-        setLoadError("This site is already activated or could not be found.")
-        setPhase("form")
-        return
-      }
-      setSetup(result)
-    })
-
     const t = setTimeout(() => setPhase("form"), 1800)
     return () => clearTimeout(t)
-  }, [slug])
+  }, [])
 
   const companyName = setup?.companyName ?? ""
 
@@ -213,20 +210,12 @@ export default function ActivateFlow({ slug, error }: { slug: string; error?: st
             <div className="text-center">
               <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.4)" }}>{loadError}</p>
             </div>
-          ) : setup ? (
+          ) : (
             <Elements
               stripe={stripePromise}
-              options={{ clientSecret: setup.clientSecret, appearance: stripeAppearance }}>
+              options={{ clientSecret: setup!.clientSecret, appearance: stripeAppearance }}>
               <CardForm slug={slug} companyName={companyName} />
             </Elements>
-          ) : (
-            <div className="flex items-center gap-3">
-              <div
-                className="h-5 w-5 rounded-full border-t-2"
-                style={{ borderColor: SIGNAL_GREEN, animation: "spin 0.8s linear infinite" }}
-              />
-              <span className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>Preparing your trial…</span>
-            </div>
           )}
         </>
       )}
