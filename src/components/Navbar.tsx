@@ -127,9 +127,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                   <img src={company.logo_url!} alt={company.name}
                     className="h-full w-full object-contain object-left"
                     style={{
-                      filter: isOnDark
-                        ? "brightness(0) invert(1)"
-                        : "drop-shadow(0 1px 3px rgba(0,0,0,0.35)) drop-shadow(0 0 6px rgba(0,0,0,0.20))",
+                      filter: isOnDark ? "brightness(0) invert(1)" : "none",
                       transition: "filter 500ms ease",
                     }} />
                 </div>

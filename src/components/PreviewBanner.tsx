@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { getPreviewCheckout } from "@/app/[slug]/previewActions"
 
 const SIGNAL_GREEN = "#32D074"
 const AMBER = "#F59E0B"
@@ -71,7 +70,6 @@ export default function PreviewBanner({
 }) {
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -82,14 +80,9 @@ export default function PreviewBanner({
 
   const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 
-  async function handleActivate() {
-    setLoading(true)
-    try {
-      const result = await getPreviewCheckout(slug)
-      if (result?.url) window.location.href = result.url
-    } finally {
-      setLoading(false)
-    }
+  function handleActivate() {
+    const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+    window.location.href = `https://${root}/activate?slug=${slug}`
   }
 
   return createPortal(
@@ -127,10 +120,10 @@ export default function PreviewBanner({
         {/* CTA */}
         <button
           onClick={handleActivate}
-          disabled={loading}
+
           className="w-full rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] active:opacity-75"
           style={{ backgroundColor: accent, color: FOUND_BLACK }}>
-          {loading ? "One moment…" : cta}
+          {cta}
         </button>
       </div>
     </div>,

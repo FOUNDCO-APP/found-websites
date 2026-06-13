@@ -1,0 +1,242 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import { loadStripe } from "@stripe/stripe-js"
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { createActivationSetup } from "./activateActions"
+
+const SIGNAL_GREEN = "#32D074"
+const FOUND_BLACK = "#111111"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+
+const stripeAppearance = {
+  theme: "night" as const,
+  variables: {
+    colorPrimary: SIGNAL_GREEN,
+    colorBackground: "#161616",
+    colorText: "#ffffff",
+    colorDanger: "#F43F5E",
+    colorTextSecondary: "rgba(255,255,255,0.45)",
+    colorTextPlaceholder: "rgba(255,255,255,0.2)",
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    fontSizeBase: "14px",
+    borderRadius: "12px",
+  },
+  rules: {
+    ".Input": {
+      backgroundColor: "#111111",
+      border: "1px solid rgba(255,255,255,0.1)",
+      boxShadow: "none",
+      padding: "14px 16px",
+    },
+    ".Input:focus": {
+      border: `1px solid ${SIGNAL_GREEN}`,
+      boxShadow: `0 0 0 1px ${SIGNAL_GREEN}20`,
+      outline: "none",
+    },
+    ".Label": {
+      color: "rgba(255,255,255,0.4)",
+      fontSize: "10px",
+      fontWeight: "800",
+      letterSpacing: "0.18em",
+      textTransform: "uppercase",
+      marginBottom: "8px",
+    },
+    ".Error": {
+      color: "#F43F5E",
+      fontSize: "12px",
+    },
+  },
+}
+
+function CardForm({ slug, companyName }: { slug: string; companyName: string }) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!stripe || !elements) return
+    setLoading(true)
+    setError(null)
+
+    const { error: stripeError } = await stripe.confirmSetup({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/activate/confirm?slug=${slug}`,
+      },
+    })
+
+    if (stripeError) {
+      setError(stripeError.message ?? "Something went wrong — please try again.")
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div
+      className="w-full max-w-md overflow-hidden rounded-3xl"
+      style={{
+        backgroundColor: "#161616",
+        border: "1px solid rgba(255,255,255,0.07)",
+        animation: "fade-up 0.7s 0.1s ease-out both",
+      }}>
+
+      {/* Top accent rule */}
+      <div className="h-px w-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+
+      <div className="px-7 pb-7 pt-6">
+        {/* Label */}
+        <div className="mb-5 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
+          <span className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+            Your free trial
+          </span>
+        </div>
+
+        {/* Headline */}
+        <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
+          14 days free.
+        </p>
+        <p className="mb-6 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+          No charge today. Cancel anytime.
+        </p>
+
+        {/* Stripe card form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <PaymentElement options={{ layout: "tabs" }} />
+
+          {error && (
+            <p className="text-xs font-black" style={{ color: "#F43F5E" }}>{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={!stripe || loading}
+            className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+            {loading ? "One moment…" : "Activate free trial →"}
+          </button>
+
+          <p className="text-center text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+            {companyName} · Powered by Found
+          </p>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+export default function ActivateFlow({ slug, error }: { slug: string; error?: string }) {
+  const [phase, setPhase] = useState<"splash" | "form">("splash")
+  const [setup, setSetup] = useState<{ clientSecret: string; companyName: string } | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(error ?? null)
+
+  useEffect(() => {
+    createActivationSetup(slug).then((result) => {
+      if (!result) {
+        setLoadError("This site is already activated or could not be found.")
+        setPhase("form")
+        return
+      }
+      setSetup(result)
+    })
+
+    const t = setTimeout(() => setPhase("form"), 1800)
+    return () => clearTimeout(t)
+  }, [slug])
+
+  const companyName = setup?.companyName ?? ""
+
+  return (
+    <main
+      className="relative flex min-h-screen flex-col items-center justify-center px-5 py-12"
+      style={{ backgroundColor: FOUND_BLACK }}>
+
+      {/* Ambient glow */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]"
+        style={{ backgroundColor: `${SIGNAL_GREEN}12` }}
+      />
+
+      {/* Wordmark */}
+      <div className="absolute left-7 top-7" style={{ animation: "fade-in 0.5s ease-out both" }}>
+        <svg viewBox="0 0 420 72" className="h-6 w-32 text-white" aria-label="Found">
+          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+        </svg>
+      </div>
+
+      {/* ── SPLASH ── */}
+      {phase === "splash" && (
+        <div className="flex flex-col items-center text-center">
+          {/* Pulsing dot */}
+          <div className="relative mb-8">
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{
+                backgroundColor: SIGNAL_GREEN,
+                boxShadow: `0 0 20px ${SIGNAL_GREEN}, 0 0 40px ${SIGNAL_GREEN}60`,
+                animation: "pulse 1.4s ease-in-out infinite",
+              }}
+            />
+          </div>
+
+          <p
+            className="mb-3 text-xs font-black uppercase tracking-[0.28em]"
+            style={{ color: SIGNAL_GREEN, animation: "fade-up 0.5s 0.2s ease-out both", opacity: 0 }}>
+            Almost there
+          </p>
+
+          {companyName ? (
+            <h1
+              className="text-4xl font-light leading-[1.1] tracking-tight text-white md:text-5xl"
+              style={{ animation: "fade-up 0.6s 0.4s ease-out both", opacity: 0 }}>
+              {companyName}<br />
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>is going live.</span>
+            </h1>
+          ) : (
+            <h1
+              className="text-4xl font-light leading-[1.1] tracking-tight"
+              style={{ color: "rgba(255,255,255,0.3)", animation: "fade-up 0.6s 0.4s ease-out both", opacity: 0 }}>
+              Getting ready…
+            </h1>
+          )}
+        </div>
+      )}
+
+      {/* ── CARD FORM ── */}
+      {phase === "form" && (
+        <>
+          {loadError ? (
+            <div className="text-center">
+              <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.4)" }}>{loadError}</p>
+            </div>
+          ) : setup ? (
+            <Elements
+              stripe={stripePromise}
+              options={{ clientSecret: setup.clientSecret, appearance: stripeAppearance }}>
+              <CardForm slug={slug} companyName={companyName} />
+            </Elements>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div
+                className="h-5 w-5 rounded-full border-t-2"
+                style={{ borderColor: SIGNAL_GREEN, animation: "spin 0.8s linear infinite" }}
+              />
+              <span className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>Preparing your trial…</span>
+            </div>
+          )}
+        </>
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(0.85); }
+        }
+      `}</style>
+    </main>
+  )
+}
