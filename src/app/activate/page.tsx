@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation"
-import ActivateFlow from "./ActivateFlow"
+import dynamic from "next/dynamic"
 
 export const runtime = "edge"
+
+// ssr:false keeps all Stripe client code out of the Edge bundle entirely
+const ActivateFlow = dynamic(() => import("./ActivateFlow"), { ssr: false })
 
 export default async function ActivatePage({
   searchParams,
@@ -11,7 +14,5 @@ export default async function ActivatePage({
   const { slug, error } = await searchParams
   if (!slug) redirect("/")
 
-  // No Stripe calls here — page renders instantly.
-  // Stripe setup runs client-side while the splash plays.
   return <ActivateFlow slug={slug} error={error} />
 }
