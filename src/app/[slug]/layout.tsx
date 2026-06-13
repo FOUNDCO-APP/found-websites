@@ -191,7 +191,7 @@ export default async function CompanyLayout({
       <Navbar company={company} transparent={layout === "cinematic"} />
       <main className="flex-1">{children}</main>
       <Footer company={company} />
-      <PreviewBanner slug={company.slug} subscriptionStatus={company.subscription_status} trialEndsAt={company.trial_ends_at} />
+      <PreviewBanner slug={company.slug} stripeCustomerId={company.stripe_customer_id} trialEndsAt={company.trial_ends_at} />
     </div>
   )
 }

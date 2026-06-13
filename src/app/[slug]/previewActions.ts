@@ -9,14 +9,14 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
   const supabase = await createClient()
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, stripe_customer_id, subscription_status")
+    .select("id, name, stripe_customer_id")
     .eq("slug", slug)
     .single()
 
   if (!company) return null
 
-  const active = company.subscription_status === "active" || company.subscription_status === "trialing"
-  if (active) return null
+  // stripe_customer_id is only set after checkout completes — already paid, no need to show checkout
+  if (company.stripe_customer_id) return null
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 

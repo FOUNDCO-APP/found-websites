@@ -48,11 +48,11 @@ function getBannerState(trialEndsAt: string | null): {
 
 export default function PreviewBanner({
   slug,
-  subscriptionStatus,
+  stripeCustomerId,
   trialEndsAt,
 }: {
   slug: string
-  subscriptionStatus: string | null
+  stripeCustomerId: string | null
   trialEndsAt: string | null
 }) {
   const [visible, setVisible] = useState(false)
@@ -60,11 +60,9 @@ export default function PreviewBanner({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get("preview") === "true") {
-      const active = subscriptionStatus === "active" || subscriptionStatus === "trialing"
-      if (!active) setVisible(true)
-    }
-  }, [subscriptionStatus])
+    // stripe_customer_id is only set after checkout completes — null means no card on file yet
+    if (params.get("preview") === "true" && !stripeCustomerId) setVisible(true)
+  }, [stripeCustomerId])
 
   if (!visible) return null
 
