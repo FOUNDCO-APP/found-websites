@@ -354,9 +354,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     from:    "Found <hello@foundco.app>",
     replyTo: "hello@foundco.app",
     to:      email,
-    subject: `Your site is live — ${name}`,
+    subject: `${name} is live.`,
     html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl }),
-    text:    `Your site is live at ${siteUrl}\n\nShare it, add it to your Instagram bio or Google Business profile, and you're in business.\n\nWant to connect your own domain? Visit ${appUrl}/connect-domain?slug=${slug}\n\nReply to this email if anything needs changing — we'll take care of it.\n\n— The Found Team`,
+    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
   }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
@@ -377,71 +377,80 @@ function buildWelcomeEmail({
   slug: string
   appUrl: string
 }) {
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:540px;background:#ffffff;border-radius:16px;overflow:hidden;">
+  const displayUrl = siteUrl.replace("https://", "")
+  const connectUrl = `${appUrl}/connect-domain?slug=${slug}`
 
-        <!-- Header -->
+  const step = (n: string, title: string, body: string, link?: { href: string; label: string }) => `
+    <tr>
+      <td style="padding:0 0 20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="4" style="background:#32D074;border-radius:4px;">&nbsp;</td>
+            <td width="16">&nbsp;</td>
+            <td>
+              <p style="margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:2px;color:#32D074;">${n}</p>
+              <p style="margin:0 0 4px;font-size:16px;font-weight:900;color:#111111;line-height:1.3;">${title}</p>
+              <p style="margin:0${link ? " 0 10px" : ""};font-size:14px;color:#666666;line-height:1.6;">${body}</p>
+              ${link ? `<a href="${link.href}" style="font-size:13px;font-weight:900;color:#080A09;text-decoration:none;border-bottom:2px solid #32D074;padding-bottom:1px;">${link.label} →</a>` : ""}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>`
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${name} is live.</title>
+</head>
+<body style="margin:0;padding:0;background:#f2f2f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f0;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;">
+
+        <!-- FOUND wordmark header -->
         <tr>
-          <td style="background:#080A09;padding:36px;text-align:center;">
-            <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#32D074;">You're live</p>
-            <h1 style="margin:0;font-size:28px;font-weight:300;color:#ffffff;letter-spacing:6px;">FOUND</h1>
+          <td style="background:#080A09;border-radius:16px 16px 0 0;padding:28px 36px;text-align:center;">
+            <span style="font-size:22px;font-weight:200;color:#ffffff;letter-spacing:10px;text-transform:uppercase;">FOUND</span>
           </td>
         </tr>
 
-        <!-- Hero -->
+        <!-- Hero: business name + moment -->
         <tr>
-          <td style="padding:40px 36px 28px;text-align:center;">
-            <p style="margin:0 0 8px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999999;">Your site is live</p>
-            <h2 style="margin:0 0 28px;font-size:26px;font-weight:900;color:#111111;line-height:1.25;">${name}</h2>
-            <a href="${siteUrl}" style="display:inline-block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 40px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">${siteUrl.replace("https://", "")}</a>
+          <td style="background:#ffffff;padding:44px 36px 36px;text-align:center;">
+            <p style="margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#32D074;">Live now</p>
+            <h1 style="margin:0 0 10px;font-size:32px;font-weight:900;color:#080A09;line-height:1.1;">${name} is live.</h1>
+            <p style="margin:0 0 32px;font-size:16px;font-weight:400;color:#777777;line-height:1.5;">Your customers can find you now.</p>
+            <a href="${siteUrl}"
+              style="display:block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;">
+              Open your site →
+            </a>
+            <p style="margin:12px 0 0;font-size:12px;color:#aaaaaa;">${displayUrl}</p>
           </td>
         </tr>
 
         <!-- Divider -->
-        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
+        <tr><td style="background:#ffffff;padding:0 36px;"><div style="height:1px;background:#eeeeee;"></div></td></tr>
 
-        <!-- What's on your site -->
+        <!-- Three steps -->
         <tr>
-          <td style="padding:28px 36px;">
-            <p style="margin:0 0 16px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#111111;">What's ready for you</p>
+          <td style="background:#ffffff;border-radius:0 0 16px 16px;padding:32px 36px 36px;">
+            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do these three things</p>
             <table width="100%" cellpadding="0" cellspacing="0">
-              ${["Home", "About", "Services", "Gallery", "Contact"].map(page => `
-              <tr>
-                <td style="padding:6px 0;border-bottom:1px solid #f5f5f5;">
-                  <span style="font-size:14px;color:#444444;">✓&nbsp;&nbsp;${page} page</span>
-                </td>
-              </tr>`).join("")}
+              ${step("01", "Pin it.", "Add your link to your Instagram bio and Google Business profile today. That's where your next customer is looking.")}
+              ${step("02", "Connect your domain.", "Point your real domain here — takes about 10 minutes.", { href: connectUrl, label: "Connect now" })}
+              ${step("03", "Send it to one person.", "Your best customer. Right now. See what they say.")}
             </table>
           </td>
         </tr>
 
-        <!-- Divider -->
-        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
-
-        <!-- Next steps -->
-        <tr>
-          <td style="padding:28px 36px;">
-            <p style="margin:0 0 16px;font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#111111;">Three things to do right now</p>
-            <p style="margin:0 0 12px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">1. Visit your site</strong> and show someone — the first reaction is always the best.</p>
-            <p style="margin:0 0 12px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">2. Add your link</strong> to your Instagram bio and Google Business profile. That's where your next customer is looking.</p>
-            <p style="margin:0 0 20px;font-size:14px;color:#444444;line-height:1.65;"><strong style="color:#111;">3. Want your own domain?</strong> Visit the link below to connect <em>yourbusiness.com</em> to your Found site in minutes.</p>
-            <a href="${appUrl}/connect-domain?slug=${slug}" style="display:inline-block;border:2px solid #111111;color:#111111;font-size:13px;font-weight:900;padding:14px 28px;border-radius:50px;text-decoration:none;letter-spacing:0.03em;">Connect your domain →</a>
-          </td>
-        </tr>
-
-        <!-- Divider -->
-        <tr><td style="padding:0 36px;"><div style="height:1px;background:#f0f0f0;"></div></td></tr>
-
         <!-- Footer -->
         <tr>
-          <td style="padding:24px 36px;text-align:center;">
-            <p style="margin:0 0 8px;font-size:14px;color:#444444;line-height:1.65;">Reply to this email if anything needs changing — we'll take care of it.</p>
-            <p style="margin:0;font-size:12px;color:#aaaaaa;">Powered by <a href="https://foundco.app" style="color:#aaaaaa;">Found</a></p>
+          <td style="padding:24px 0 8px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:13px;color:#999999;">Reply to this email — we read every one.</p>
+            <p style="margin:0;font-size:13px;font-weight:700;color:#555555;">— The Found Team</p>
           </td>
         </tr>
 
