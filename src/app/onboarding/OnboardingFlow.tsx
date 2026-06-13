@@ -6,6 +6,7 @@ import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, saveAbandonedLead } from "./actions"
+import { createBillingSession } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
@@ -357,7 +358,7 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, email, onEdit }: { name: string; url: string; primaryColor: string; email: string; onEdit: () => void }) {
+function RevealScreen({ name, url, primaryColor, email, checkoutUrl, onEdit }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; onEdit: () => void }) {
   const [iframeReady, setIframeReady] = useState(false)
 
   return (
@@ -406,6 +407,25 @@ function RevealScreen({ name, url, primaryColor, email, onEdit }: { name: string
                     Don&apos;t see it? Check your spam — just this once.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Billing CTA — appears after email nudge */}
+            {checkoutUrl && (
+              <div
+                className="mt-8 rounded-2xl p-6"
+                style={{ animation: "fade-up 0.6s 1.4s ease-out both", opacity: 0, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <p className="text-xs font-black uppercase tracking-widest" style={{ color: SIGNAL_GREEN }}>14-day free trial</p>
+                <p className="mt-1.5 text-base font-black text-white">No charge today.</p>
+                <p className="mt-0.5 text-xs text-white/35">$39/month after your trial ends. Cancel anytime.</p>
+                <a
+                  href={checkoutUrl}
+                  className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
+                  style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                >
+                  Activate free trial →
+                </a>
               </div>
             )}
           </div>
@@ -759,7 +779,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
-  const [result, setResult]         = useState<{ url?: string; error?: string } | null>(null)
+  const [result, setResult]         = useState<{ url?: string; checkoutUrl?: string; error?: string } | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
@@ -838,8 +858,14 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       }),
       uiTimeout,
     ])
-    if (res.success && res.url) {
-      setResult({ url: res.url })
+    if (res.success && res.url && res.slug) {
+      const billing = await createBillingSession({
+        companyId: sessionId,
+        email: answers.email,
+        name: answers.name.trim(),
+        slug: res.slug,
+      })
+      setResult({ url: res.url, checkoutUrl: billing.url })
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)
@@ -997,6 +1023,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       url={result.url}
       primaryColor={answers.primaryColor}
       email={answers.email}
+      checkoutUrl={result.checkoutUrl}
       onEdit={() => { setResult(null); setSaving(false) }}
     />
   )

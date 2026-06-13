@@ -532,3 +532,68 @@ After the owner completes onboarding and the site is generated:
 - Secondary: "Make changes" (returns to edit mode)
 
 Designed with the same care as an Apple product reveal. This is the moment that sells them forever. It cannot be accidental, generic, or rushed.
+
+---
+
+## JUNE 12, 2026 DESIGN DECISIONS
+
+**[2026-06-12] — Slug availability indicator lives INSIDE the input field (right side), not below it.**
+Approved by: Shawn + Jony Ive + Craig Federighi
+Why: On iPhone, the virtual keyboard pushes everything below the focused input off screen. A status indicator below the input is invisible on any phone smaller than a Pro Max. The icon must sit inside the input container at the right edge — it scrolls and resizes with the input, sits above the keyboard, and is always visible regardless of screen size.
+Implementation: `position: absolute; right: 0; bottom: 0.75rem` inside a `position: relative` wrapper. Icon is 14px. Green checkmark (Signal Green `#32D074`) for available; red ✗ for taken; spinner for in-progress.
+
+**[2026-06-12] — Slug taken state triggers a SlugSheet bottom sheet, not a red message below the input.**
+Approved by: Shawn + Jony Ive
+Why: Showing "that's taken" with no path forward is a dead end. The sheet presents three pre-verified available alternatives as chips plus a custom text field. Owner taps a chip → advances immediately. Feels like the app is helping, not blocking.
+Implementation: `position: fixed; bottom: 0; left: 0; right: 0` — fixed elements sit above the iOS virtual keyboard in Mobile Safari. Scrim is `rgba(0,0,0,0.4)`. Sheet is white with `border-radius: 24px 24px 0 0`. Confirm button is Signal Green full-width. Pre-verified suggestions skip the debounce check; custom typed slugs re-trigger debounce on close.
+
+**[2026-06-12] — Logo on dark backgrounds uses drop-shadow instead of mix-blend-mode:multiply.**
+Approved by: Jony Ive
+Why: `mix-blend-mode:multiply` flattens light logos against dark backgrounds, turning white logos gray or invisible. Drop-shadow (`0 2px 8px rgba(0,0,0,0.35)`) lifts the logo off the dark surface and makes any logo color legible on dark navbar or dark footer. Multiply is banned on dark surfaces.
+Implementation: `filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35))` applied to `<img>` tag when navbar is dark or in footer.
+
+**[2026-06-12] — Dark navbar is always `#111111`. Logo in dark navbar always uses `logo_white_url`. The two-logo system is required for dark nav to work correctly.**
+Approved by: Jony Ive + Shawn
+Why: A dark business logo disappears on a #111111 navbar. Requiring the white logo variant ensures every dark-navbar site looks intentional. The fallback (dark logo + drop-shadow) is available but inferior — owners should upload the white version.
+Implementation: onboarding shows dual logo upload side by side (dark bg preview + light bg preview). Copy: "Upload your logo on dark" / "Upload your logo on light." Both fields optional — the system degrades gracefully to BrandMark if neither is provided.
+
+**[2026-06-12] — Dual-logo preview in onboarding: two live preview tiles side by side — dark background (left) + light background (right).**
+Approved by: Jony Ive + Shawn
+Why: Owners do not think in terms of "logo for dark" and "logo for light." They need to see both contexts simultaneously to understand why two versions matter. Showing it is faster than explaining it.
+Implementation: Two `64px × 180px` preview cards inside the logo upload step. Left card: `#111111` background, uses `logo_white_url` upload target. Right card: `#f5f5f5` background, uses `logo_url` upload target. Each card has its own upload trigger and drag/drop.
+
+**[2026-06-12] — Vibe step in onboarding uses mini navbar mockup tiles, not abstract swatches.**
+Approved by: Jony Ive
+Why: Abstract tiles (color + name) don't show the owner what their site will actually feel like. A mini navbar chip showing the actual font, weight, and shape of each vibe lets them make a real decision. They see Bold = Oswald, square buttons. Calm = Playfair, pill buttons. Modern = Space Grotesk, flat corners. Warm = Merriweather, pill buttons.
+Implementation: 4 tile grid. Each tile: 140×72px card with the vibe's heading font, a one-word sample ("Bold" / "Calm" / "Modern" / "Warm"), and a micro CTA button showing the button radius. Selected tile gets a 2px Signal Green border.
+
+**[2026-06-12] — Welcome email full design system approved. Replaces the previous "YOUR SITE IS LIVE" design entirely.**
+Approved by: Shawn + Jony Ive + Angela Ahrendts
+Why: The old email had three problems: (1) Heavy uppercase made it look like a system notification, not a premium product. (2) No preheader — email clients showed "FOUND Live now [Name] is live." as preview text, which is garbled and confusing. (3) The three-step section was passive — low contrast, low urgency.
+
+**New design system:**
+
+*Preheader (hidden):*
+`display:none` div immediately after `<body>`. Text: `[Name] is live. Your next steps are waiting — open to see them.` Padded with `&nbsp;&zwnj;` repeats to prevent email clients from appending body text to the preview.
+
+*Header:*
+`#080A09` (Found Black) background, 48px tall. FOUND wordmark only in white, centered. No "Live now" label. No business name in the header. Clean.
+
+*Hero:*
+White background. Business name as large headline (`[Name] is live.`). Period — not an exclamation mark. One green CTA button: `Open [name].foundco.app →`. Signal Green background, font-black, uppercase, no border-radius drama.
+
+*Three steps:*
+Numbered 01 / 02 / 03. Each step has a `4px Signal Green left border` accent. Steps: Pin it (add to Home Screen) → Connect your domain → Send it to one person. Each step has a one-line description below the title.
+
+*Footer:*
+FOUND wordmark. `hello@foundco.app`. Unsubscribe link. No decorative elements.
+
+*Plain text version:* Updated to match — no all-caps, no garbled structure.
+
+*Subject line:* `[Name] is live.`
+
+**[2026-06-12] — Reveal screen email nudge: a P.S. moment that appears 0.9 seconds after the site URL fades in.**
+Approved by: Shawn + Jony Ive + Angela Ahrendts
+Why: The reveal moment is about the site — the URL is the climax. The email nudge should not compete with it. Delaying it 0.9s makes it feel like a postscript, not a system message. It acknowledges that email can go to spam without panicking the owner.
+Copy: `We sent your next steps to [email]` (white/70, small) + `Don't see it? Check your spam — just this once.` (white/25, smaller).
+Implementation: `animation: fade-up 0.6s 0.9s ease-out both; opacity: 0` — starts invisible, plays at 0.9s delay. Envelope icon (white/30) left-aligned with the text block. `email` prop passed from `answers.email` at the call site.

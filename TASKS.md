@@ -16,28 +16,63 @@
 
 ## CURRENT PHASE
 
-**Phase 2: Onboarding Flow + Photo System**
+**Phase 3: Billing Foundation**
 
 Goals:
-- Populate photo pools with curated photos for the active industries
-- Complete industry section manifest decisions
-- Build the onboarding question flow that generates a complete website
-- Owner answers questions on their phone → site is live in under 10 minutes
+- Stripe subscription checkout at end of onboarding (14-day trial, card required)
+- Subscription status stored in DB and reflected in company record
+- Owner can manage billing via Stripe Customer Portal
+- Plan gates in place (custom domain → Pro+, worker upload → Pro+)
 
 Exit criteria:
-1. Original 11 industry photo pools populated (10+ photos each, approved by Shawn) ✅
-2. Industry section manifests decided for all 12 types ✅
-3. Owner can complete onboarding on mobile in under 10 minutes
-4. A complete website is generated and live at [slug].foundco.app
-5. Shawn approves the full flow end-to-end
+1. `STRIPE_PRICE_ID_FOUND` env var set in Vercel (Shawn creates product in Stripe dashboard)
+2. `STRIPE_WEBHOOK_SECRET` env var set in Vercel (Shawn registers webhook endpoint in Stripe)
+3. migration-029 run in Supabase
+4. Owner completes onboarding → sees billing card on reveal screen → enters card → trial activates
+5. Webhook updates company `subscription_status` to `trialing`
+
+**Phase 2: Onboarding Flow + Photo System — ✅ CLOSED June 12, 2026**
 
 ---
 
 ## NOW (MAX 3)
 
-1. **End-to-end flow test** — Shawn tests full onboarding: name (slug preview + availability check) → industry → location → services → photos → logo (dark/light fork) → vibe (nav toggle) → submit → reveal → welcome email lands → live site at [slug].foundco.app. Phase 2 exit criterion #5.
+1. **Run migration-029** — open Supabase SQL editor, run `scripts/migration-029-billing.sql`. Adds `stripe_customer_id`, `plan`, `trial_ends_at`, `subscription_status` to companies table.
 
-2. **Run migration-028** — `ALTER TABLE companies ADD COLUMN IF NOT EXISTS navbar_dark boolean DEFAULT false;` in Supabase SQL editor. Required before `navbar_dark` saves for new onboarding sessions.
+2. **Create Stripe products** — in Stripe dashboard (sandbox mode), create 3 products:
+   - Found — $39/month → copy the Price ID → add to Vercel as `STRIPE_PRICE_ID_FOUND`
+   - Found Pro — $69/month → `STRIPE_PRICE_ID_FOUND_PRO`
+   - Found Business — $99/month → `STRIPE_PRICE_ID_FOUND_BUSINESS`
+
+3. **Register Stripe webhook** — in Stripe dashboard → Developers → Webhooks → Add endpoint:
+   - URL: `https://foundco.app/api/stripe/webhook`
+   - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+   - Copy the signing secret → add to Vercel as `STRIPE_WEBHOOK_SECRET`
+
+---
+
+## RECENTLY COMPLETED (June 12, 2026 — Phase 3 kickoff)
+
+3-1a. **Stripe SDK installed** ✅ — `npm install stripe`
+
+3-1b. **migration-029 script created** ✅ — `scripts/migration-029-billing.sql` — adds `stripe_customer_id`, `plan`, `trial_ends_at`, `subscription_status` to companies. Run in Supabase SQL editor.
+
+3-1c. **`stripeActions.ts` — createBillingSession** ✅ SHIPPED
+   - Creates Stripe customer + saves `stripe_customer_id` to DB immediately
+   - Creates Checkout Session: `mode: subscription`, 14-day trial, card required
+   - `success_url`: owner's site `?trial=activated`, `cancel_url`: foundco.app
+   - Returns `url` (null if `STRIPE_PRICE_ID_FOUND` not yet set — graceful skip)
+
+3-1d. **Stripe webhook handler** ✅ SHIPPED — `src/app/api/stripe/webhook/route.ts`
+   - `checkout.session.completed` → updates company: `subscription_status: trialing`, `plan: found`, `trial_ends_at`
+   - `customer.subscription.updated/deleted` → syncs `subscription_status` by `stripe_customer_id`
+   - Signature verification via `STRIPE_WEBHOOK_SECRET`
+
+3-1e. **RevealScreen billing card** ✅ SHIPPED
+   - `createBillingSession` called after `createOnboardingSite` succeeds
+   - `checkoutUrl` passed to RevealScreen
+   - Billing card appears at 1.4s delay (after email nudge): "14-day free trial / No charge today / $39/month after / Activate free trial →"
+   - Gracefully absent if Stripe not yet configured (card simply doesn't render)
 
 ---
 

@@ -355,3 +355,55 @@ Status: ⏳ Upcoming
 **[2026-05-28] — Phase 5: Stripe billing, upgrade features, foundco.app marketing site.**
 Approved by: Steve Jobs + Phil Schiller
 Status: ⏳ Upcoming
+
+---
+
+## JUNE 12, 2026 DECISIONS
+
+**[2026-06-12] — Slug strategy: preferred → preferred-city → preferred-4hex. No industry in slug. No -2 suffixes. CamelCase input is split at uppercase boundaries.**
+Approved by: Shawn + Craig Federighi
+Why: Industry segments create ugly URLs (barriobuilders-roofing). Numeric suffixes look auto-generated and cheap. CamelCase splitting (BarrioBuilders → barrio-builders) lets owners type naturally. The three-step fallback chain produces clean, human-readable URLs at every tier.
+Implementation: `splitCamelCase()` normalizes input → preferred slug checked first → append `-{city}` → append `-{4 hex chars from nanoid}`.
+
+**[2026-06-12] — Dark navbar flag: `navbar_dark boolean DEFAULT false` added to companies table (migration-028).**
+Approved by: Shawn + Craig Federighi
+Why: Some businesses (nightclubs, barbers, dark-vibe contractors) need a dark navbar on a light-bodied site without going full dark mode. The flag gives them that without building a separate vibe.
+Implementation: `navbar_dark = true` → navbar background becomes `#111111`, logo always uses `logo_white_url`.
+
+**[2026-06-12] — Two-logo system: `logo_url` for light backgrounds. `logo_white_url` for dark backgrounds. Owner uploads both during onboarding.**
+Approved by: Shawn + Jony Ive
+Why: A dark logo disappears on a dark navbar. Many owners already have a white version of their logo for merchandise or dark backgrounds. The system should use the right one automatically — the owner should never see their logo disappear.
+Implementation: navbar dark → use `logo_white_url` (fallback to `logo_url` + drop-shadow). Footer always uses `logo_white_url`.
+
+**[2026-06-12] — Custom domain: connect-domain page, Vercel API (not manual DNS instructions). No domain registrar — owner brings their own.**
+Approved by: Shawn + Craig Federighi
+Why: Telling an owner to log into their registrar and enter DNS records is too much friction. Found should handle the Vercel domain assignment automatically and tell the owner exactly which DNS record to add — one instruction, one field.
+Implementation: `/connect-domain` page → owner types domain → Found calls Vercel API to add the domain to the project → instructions displayed.
+
+**[2026-06-12] — Welcome email fires on site creation via Resend. Subject line: `[Name] is live.` (not a sentence, a statement). From: hello@foundco.app.**
+Approved by: Shawn + Jony Ive + Angela Ahrendts
+Why: The old subject (`Your site is live — [Name]`) sounded like a notification. `[Name] is live.` sounds like a headline. The email is a moment, not a system message. Period at the end — period. Not an exclamation mark.
+Implementation: Server action in `onboarding/actions.ts` calls Resend after `createCompany()`. Fire-and-forget (does not block the reveal screen).
+
+**[2026-06-12] — Pricing revised. Old tier structure ($19/$39/$59) is retired. New structure: Found $39/mo, Found Pro $69/mo, Found Business $99/mo. Founding Member rate: $29/mo locked forever for first 25 clients.**
+Approved by: Shawn + Steve Jobs + Phil Schiller (Jony leads, Steve approves)
+Why: The old $19 Solo tier left money on the table and undersold the product. $39 is still accessible for a small business owner and positions Found against Squarespace properly. Founding Member creates urgency and rewards early adopters without discounting the product permanently for the general market.
+Billing model: 14-day free trial, card required at onboarding start, charged on day 15.
+
+| Tier | Price | Workers | Custom Domain | Photo Pipeline | Notes |
+|---|---|---|---|---|---|
+| Found | $39/mo | None | ❌ | ✅ | Base plan |
+| Found Pro | $69/mo | Unlimited upload-only | ✅ | ✅ | + contact DB, lead follow-up, copy regen |
+| Found Business | $99/mo | Unlimited | ✅ | ✅ | + booking, quotes, reviews, social export |
+| Founding Member | $29/mo | None | ❌ | ✅ | First 25 clients, locked forever |
+
+**[2026-06-12] — Photo pipeline (❤️ heart + ⭐ star curation) is a base feature of ALL plans, not a Pro upgrade.**
+Approved by: Shawn (decision made explicitly June 12)
+Why (Shawn's words): "Even a single user will love to be able to mark photos for their website and for their social media." The photo pipeline is the daily habit that keeps owners subscribed. It is the differentiator that makes Found feel alive after launch — not just a website that sits there. SEO benefit: fresh photos on the website = Google sees active business = better local search ranking.
+One photo → four uses: website gallery/hero sync + social exports (IG 1080×1350, FB 1080×1080) + quote/estimate attachments + shareable client gallery links.
+
+**[2026-06-12] — Stripe for Found Co. is a separate account under the same login, not mixed with Say It Marketing.**
+Approved by: Shawn
+Why: Found Co. billing must be isolated — separate bank account, separate API keys, separate Stripe balance and payout schedule. Two businesses under one Stripe login is the correct approach; mixing keys would create a financial and operational mess.
+Implementation: Stripe login → "New account" → named "Found Co." → own bank → sandbox API keys first → live keys after billing code is tested.
+Vercel env vars: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (browser-safe, publishable key) + `STRIPE_SECRET_KEY` (server-only, secret key). Both added to Vercel project as of June 12, 2026.
