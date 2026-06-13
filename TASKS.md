@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 12, 2026*
+*Last updated: June 13, 2026*
 
 ---
 
@@ -39,14 +39,55 @@ Exit criteria:
 
 1. ✅ **migration-029 run** — `stripe_customer_id`, `plan`, `trial_ends_at`, `subscription_status` now on companies table.
 
-2. **Create Stripe products** — deploy is live, then hit:
-   `https://foundco.app/api/stripe/setup-products?key=YOUR_ADMIN_KEY`
-   Returns price IDs as JSON → paste into Vercel as `STRIPE_PRICE_ID_FOUND`, `STRIPE_PRICE_ID_FOUND_PRO`, `STRIPE_PRICE_ID_FOUND_BUSINESS`
+2. ✅ **Stripe products + prices created** — Done programmatically via Node.js (no Stripe dashboard needed).
+   - Found: `price_1ThvPQIiS1OcukjvJwIsqZXu` (monthly)
+   - Found Pro: `price_1ThvPRIiS1OcukjvHAIAFtPE` (monthly)
+   - Found Business: `price_1ThvPSIiS1Ocukjv2KB1o5tp` (monthly)
+   - Yearly prices also created for all three
+   - Env vars added to Vercel: `STRIPE_PRICE_ID_FOUND`, `STRIPE_PRICE_ID_FOUND_PRO`, `STRIPE_PRICE_ID_FOUND_BUSINESS`, `STRIPE_WEBHOOK_SECRET`
 
-3. **Register Stripe webhook** — Stripe dashboard → Developers → Webhooks → Add endpoint:
-   - URL: `https://foundco.app/api/stripe/webhook`
-   - Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-   - Copy the signing secret → add to Vercel as `STRIPE_WEBHOOK_SECRET`
+3. ✅ **Webhook registered** — `https://foundco.app/api/stripe/webhook` — signing secret in Vercel.
+
+4. ✅ **Vercel + Supabase fully automated** — `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` all in `.env.local`. Claude can now push env vars and trigger redeploys without Shawn touching dashboards.
+
+5. ✅ **4 onboarding UX fixes** — see RECENTLY COMPLETED below.
+
+---
+
+## RECENTLY COMPLETED (June 13, 2026 — Phase 3 billing + UX polish)
+
+3-2a. **Vercel + Supabase full automation** ✅
+   - `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF` in `.env.local`
+   - Claude can now add env vars to Vercel and trigger redeploys programmatically
+   - Claude can now run SQL migrations via Supabase Management API — no SQL editor required
+
+3-2b. **Stripe billing fully wired** ✅
+   - All 3 products + 6 prices created in Stripe test mode via Node.js
+   - Webhook registered at `https://foundco.app/api/stripe/webhook`
+   - All env vars in Vercel and deployed
+
+3-2c. **Smart logo lightness detection (Canvas API)** ✅ (commits `15257c1`, `c237030`)
+   - `detectLogoLightness(url)` — samples non-transparent pixels, calculates average luminance
+   - Light logo (avg > 190) → auto-sets `navbarDark: true`; confirmation reads "Light logo detected — navigation set to dark"
+   - Dark logo (avg < 80) → keeps default light nav; shows Signal Green "✓ Your logo looks great on both backgrounds"
+   - Unknown → shows original two-choice fork unchanged
+
+3-2d. **Logo step copy cleanup** ✅ — Removed long explanatory paragraph below dual preview cards
+
+3-2e. **Color step "From your logo" card** ✅
+   - Logo-detected color now shown as a prominent card (48px swatch + hex + checkmark when selected)
+   - Clear divider "Or choose a different color" before preset grid
+   - Replaces the old small inline notification
+
+3-2f. **Preview banner (?preview=true)** ✅
+   - `src/components/PreviewBanner.tsx` — client component, fixed Signal Green bottom banner
+   - Reads `?preview=true` from URL on mount; only shows if `subscription_status` is not active/trialing
+   - "Start my free trial →" button calls `getPreviewCheckout(slug)` server action → Stripe Checkout URL
+   - Wired into `src/app/[slug]/layout.tsx`
+   - Reveal screen "See your site" link now opens `[slug].foundco.app?preview=true`
+   - Regular visitors never see the banner (no `?preview=true` in their URL)
+
+3-2g. **Company type updated** ✅ — Added `stripe_customer_id`, `plan`, `subscription_status`, `trial_ends_at` to `src/types/company.ts`
 
 ---
 

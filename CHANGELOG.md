@@ -4,6 +4,56 @@
 
 ---
 
+## Session: June 13, 2026 — Stripe Billing Activation + 4 UX Fixes
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Completing Phase 3 billing setup, then 4 onboarding UX improvements found during testing
+
+### ✅ Completed This Session
+
+**Stripe billing fully activated:**
+- All 3 products + 6 prices (monthly + yearly) created programmatically via Node.js (no Stripe dashboard)
+- Webhook registered at `https://foundco.app/api/stripe/webhook` with signing secret
+- `STRIPE_PRICE_ID_FOUND`, `STRIPE_PRICE_ID_FOUND_PRO`, `STRIPE_PRICE_ID_FOUND_BUSINESS`, `STRIPE_WEBHOOK_SECRET` added to Vercel and deployed
+- Vercel API token + Supabase personal access token saved to `.env.local` — Claude can now push env vars and run migrations autonomously
+
+**Smart logo lightness detection (commits `15257c1`, `c237030`):**
+- Canvas API samples non-transparent pixels on every logo upload
+- Light logo → auto-flips `navbarDark: true` with confirmation "Light logo detected — navigation set to dark"
+- Dark logo → keeps white nav, shows "✓ Your logo looks great on both backgrounds" in Signal Green
+- Unknown → original two-choice fork (unchanged)
+
+**Logo step copy cleanup:**
+- Removed the 3-sentence explanatory paragraph below the dual preview cards
+
+**Color step redesign ("From your logo" card):**
+- Logo-detected color now shown as a large card at the top of the color step (48px swatch, hex, ✓ checkmark)
+- Divider "Or choose a different color" before preset grid
+- Makes the detected color feel intentional and easy to confirm
+
+**Preview banner (`?preview=true`):**
+- `src/components/PreviewBanner.tsx` — client component, Signal Green fixed-bottom banner
+- Reads `?preview=true` from URL; only visible when `subscription_status` is not active/trialing
+- "Start my free trial →" button → `getPreviewCheckout(slug)` server action → Stripe Checkout
+- Wired into `src/app/[slug]/layout.tsx`
+- Reveal screen "See your site" link now appends `?preview=true`
+- Added `src/app/[slug]/previewActions.ts` — server action creates/reuses Stripe customer + fresh checkout URL
+- Company type updated with Stripe fields: `stripe_customer_id`, `plan`, `subscription_status`, `trial_ends_at`
+
+### ⚠️ Still Pending / Carry Forward
+
+- **Google Places API key** — city autocomplete stub in place, need key from Google Cloud Console
+- **Photo pool curation for 10 new industries** — session at `/admin/photos` needed (creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit)
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel** — currently only in `.env.local`, needed for `/connect-domain` in prod
+- **End-to-end billing test** — create a test account, go through onboarding, verify preview banner shows, click Start my free trial, complete Stripe checkout, verify webhook fires and `subscription_status` → trialing, verify banner disappears
+
+### 🔜 Next Session
+
+1. E2E billing test (see above)
+2. Add `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` to Vercel env vars (or do it programmatically)
+3. Photo pool curation session with Shawn
+
+---
+
 ## Session: June 12, 2026 (evening) — Slug Check Bug Fix
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Diagnosing 4 failed Vercel builds, fixing slug availability check
