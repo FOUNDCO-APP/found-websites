@@ -10,6 +10,15 @@
 
 ### ✅ Completed This Session
 
+**Slug status always visible on any device (Craig + Jony — commit `effdfec`):**
+- ✓/✗ icon moved inside the input field (right side) — always visible above keyboard on any screen size
+- Taken state: `SlugSheet` bottom sheet component (`position: fixed`) slides up from above the iOS keyboard
+- Sheet shows: taken address in red, 3 suggestion chips (pre-verified available), custom input, "Use this →" button
+- Pre-verified suggestion picked → confirm advances to next step immediately
+- Custom-typed slug → confirm closes sheet, debounce re-checks, icon updates, user taps Next
+- "Change →" link also opens the sheet for editing an available slug
+- Intercepted `advance()`: if `step === "name" && slugStatus === "taken"` → shows sheet instead of advancing
+
 **Root cause of 4 failed deployments (Craig):**
 - `actions.ts` had a TypeScript error (TS2448): `city` was referenced in `uniqueSlug(preferredBase, city)` before `splitLocation()` had declared it — one line below
 - This caused every build after commit `344b737` to fail: `539c521`, `7cf5dd5`, `344b737`, `90d21cf`
