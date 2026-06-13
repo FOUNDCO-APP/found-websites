@@ -292,19 +292,77 @@ Exit criteria:
 ## BACKLOG
 
 — **INDUSTRY EXPANSION —**
-✅ All 22 industries built (June 10, 2026): home_services, food, wellness, events, retail, fitness, beauty, automotive, pet_services, cleaning, landscaping, real_estate, creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit
-- Photo pools still needed for the 10 new industries (requires Shawn curation session)
+✅ All 22 industries built (June 10, 2026)
+- Photo pools still needed for 10 new industries (requires Shawn curation session)
 
-— **OWNER APP — PHASE 3 —**
-1h. Owner copy editing — tap any section title to rename it. Tap any copy block to edit inline. Tap, type, done. Feels like texting. Text editable, layout immutable. Cannot delete sections or break structure.
-1i. Claude regeneration from owner app — owner taps "Regenerate this section" → Claude rewrites it using their original onboarding answers + any edits they've made since. Premium upgrade path.
-1j. "Your copy was auto-generated" nudge — if `copy_generated: false`, owner sees a quiet prompt in their app: "Want Claude to write a custom version?" One tap to trigger.
+---
 
-— **EXISTING BACKLOG —**
-1. Stripe subscription billing for Found Co. clients
-2. Lightweight contact database — leads, current clients, previous clients, guest/customer names
-3. Relationship automation upgrade — simple compliant email/text follow-up for contacts
-4. Curate Real Estate photo pool
+— **PHASE 3 — BILLING (next up after Phase 2 closes)** —
+
+Pricing approved June 12, 2026:
+- Found: $39/month | $350/year — base plan
+- Found Pro: $69/month | $620/year — custom domain + team + client tools
+- Found Business: $99/month | $890/year — booking + quotes + unlimited workers
+- Founding Member: $29/month locked forever — first 25 clients
+- 14-day free trial, card required at onboarding, charged day 15
+
+3-1. **Stripe subscription checkout** — at end of onboarding, Stripe Checkout modal, 14-day trial, card required
+3-2. **Subscription status in DB** — `companies.stripe_customer_id`, `companies.plan`, `companies.trial_ends_at`, `companies.subscription_status`
+3-3. **Billing portal** — owner can upgrade / downgrade / cancel (Stripe Customer Portal)
+3-4. **Plan gates** — custom domain gated to Pro+, worker upload gated to Pro+, booking/quotes gated to Business
+3-5. **Founding Member flow** — special coupon code or flagged pricing for first 25
+
+---
+
+— **PHASE 4 — PHOTO PIPELINE** (core feature, ALL plans) —
+
+The photo pipeline is the daily habit that keeps owners subscribed. One action → four uses:
+website content + social media + quotes/estimates + client galleries.
+
+Why it matters (Shawn, June 12):
+- Fresh photos on website = Google sees active business = better local SEO
+- Photos stay in Found, NOT cluttering personal camera roll
+- Same job photos attach to quotes/estimates — more credible proposals
+- Owner can share gallery links with clients instead of texting 20 photos
+- Star a photo → sized for Instagram (1080×1350) + Facebook (1080×1080) instantly
+
+4-1. **In-app camera** — capture without touching personal camera roll. Photo goes straight into Found library.
+4-2. **Owner photo library** — all uploaded/captured photos in one grid view. Untagged by default.
+4-3. **❤️ Heart → website** — heart any photo → auto-syncs to gallery or hero on live site. Unheart → removes it.
+4-4. **⭐ Star → social** — star any photo → generates sized JPEGs for IG (1080×1350) + FB (1080×1080). Downloadable instantly.
+4-5. **Worker upload app** — upload-only PWA. Worker submits photos, owner hearts/stars them. Worker has NO site access.
+4-6. **Client gallery share** — owner selects photos → generates shareable link → client views gallery in browser (no app needed)
+4-7. **Quote photo attachments** — attach hearted/starred photos directly to estimate/quote PDFs
+
+---
+
+— **PHASE 5 — REVENUE TOOLS** —
+
+5-1. **Online booking / scheduling** — clients book appointments directly from website. Found Business.
+5-2. **Quote & estimate system** — request form → owner builds estimate with photos → client approves → deposit → invoice. Found Business.
+5-3. **Review collection** — post-job automated text/email: "How did we do?" → 5 stars → Google review link. Found Business.
+5-4. **Contact database** — leads, current clients, past clients, notes. Found Pro.
+5-5. **Lead follow-up** — automated email/text when contact form submitted. Found Pro.
+5-6. **Copy regeneration** — owner taps "Rewrite this section" → Claude rewrites using original answers. Found Pro.
+5-7. **Copy editing** — tap any text on site to edit inline. Text only, layout immutable. Found Pro.
+
+---
+
+— **PHASE 6 — ADD-ONS** —
+
+6-1. **Online Menu** — food businesses. Item photos, prices, categories. +$10/month.
+6-2. **Shopping Cart** — sell products via Stripe. Retail, makers, crafts. +$25/month.
+6-3. **Second Location** — additional location page. +$25/month per location.
+6-4. **Email marketing sequences** — simple follow-up campaigns. +$20/month.
+
+---
+
+— **INFRASTRUCTURE / PLATFORM** —
+- Google Places API city autocomplete — BLOCKED on Shawn getting API key
+- Curate Real Estate photo pool
+- Apple Developer Program ($99) + Capacitor → App Store + Google Play
+- foundco.app marketing site (Phil owns this)
+- USPTO trademark search + LLC formation (Shawn's to-do)
 5. Estimates & Quotes upgrade — quote approval, deposit, final invoice, final payment, receipt
 6. Shopping cart upgrade — simple Stripe-powered product sales
 7. Online menu upgrade — food/restaurant menu, item photos, prices, optional ordering path
