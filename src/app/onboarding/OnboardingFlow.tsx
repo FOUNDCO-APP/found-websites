@@ -357,7 +357,7 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: string; primaryColor: string; onEdit: () => void }) {
+function RevealScreen({ name, url, primaryColor, email, onEdit }: { name: string; url: string; primaryColor: string; email: string; onEdit: () => void }) {
   const [iframeReady, setIframeReady] = useState(false)
 
   return (
@@ -390,6 +390,24 @@ function RevealScreen({ name, url, primaryColor, onEdit }: { name: string; url: 
               </button>
             </div>
             <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>
+
+            {/* Email nudge — P.S. moment, delayed */}
+            {email && (
+              <div className="mt-8 flex items-start gap-3" style={{ animation: "fade-up 0.6s 0.9s ease-out both", opacity: 0 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-white/30">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m2 7 10 7 10-7" />
+                </svg>
+                <div>
+                  <p className="text-xs leading-5 text-white/45">
+                    We sent your next steps to <span className="font-black text-white/70">{email}</span>
+                  </p>
+                  <p className="mt-0.5 text-xs text-white/25">
+                    Don&apos;t see it? Check your spam — just this once.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Phone mockup with live site preview */}
@@ -978,6 +996,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       name={answers.name.trim() || "Your business"}
       url={result.url}
       primaryColor={answers.primaryColor}
+      email={answers.email}
       onEdit={() => { setResult(null); setSaving(false) }}
     />
   )
