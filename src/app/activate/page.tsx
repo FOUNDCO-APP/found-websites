@@ -1,10 +1,7 @@
 import { redirect } from "next/navigation"
-import dynamic from "next/dynamic"
+import ActivateLoader from "./ActivateLoader"
 
 export const runtime = "edge"
-
-// ssr:false keeps all Stripe client code out of the Edge bundle entirely
-const ActivateFlow = dynamic(() => import("./ActivateFlow"), { ssr: false })
 
 export default async function ActivatePage({
   searchParams,
@@ -14,5 +11,5 @@ export default async function ActivatePage({
   const { slug, error } = await searchParams
   if (!slug) redirect("/")
 
-  return <ActivateFlow slug={slug} error={error} />
+  return <ActivateLoader slug={slug} error={error} />
 }
