@@ -33,18 +33,24 @@ export async function createBillingSession({
   if (!stripe || !priceId) return {}
 
   try {
+    const supabase = getAdminClient()
+
+    // If stripe_customer_id is already set, checkout was already completed — no new session needed
+    const { data: existing } = await supabase
+      .from("companies")
+      .select("stripe_customer_id")
+      .eq("id", companyId)
+      .single()
+    if (existing?.stripe_customer_id) return {}
+
     const customer = await stripe.customers.create({
       email,
       name,
       metadata: { company_id: companyId, slug },
     })
 
-    // Persist customer ID immediately so webhook can find the company
-    const supabase = getAdminClient()
-    await supabase
-      .from("companies")
-      .update({ stripe_customer_id: customer.id })
-      .eq("id", companyId)
+    // Do NOT save stripe_customer_id here — webhook saves it after checkout.session.completed
+    // This keeps stripe_customer_id = null until card is actually on file
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `https://${ROOT_DOMAIN}`
     const siteUrl = `https://${slug}.${ROOT_DOMAIN}`
@@ -56,7 +62,7 @@ export async function createBillingSession({
       subscription_data: { trial_period_days: 14 },
       payment_method_collection: "always",
       success_url: `${siteUrl}?trial=activated`,
-      cancel_url: appUrl,
+      cancel_url: `${siteUrl}?preview=true`,
       metadata: { company_id: companyId, slug },
     })
 
