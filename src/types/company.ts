@@ -61,6 +61,10 @@ export type Company = {
   logo_url: string | null
   logo_white_url: string | null
   navbar_dark: boolean | null
+  stripe_customer_id: string | null
+  plan: string | null
+  subscription_status: string | null
+  trial_ends_at: string | null
   primary_color: string
   accent_color_1: string
   accent_color_2: string

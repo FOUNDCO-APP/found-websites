@@ -794,6 +794,8 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
   const [logoTipOpen, setLogoTipOpen]               = useState(false)
   const [logoWhiteUploading, setLogoWhiteUploading] = useState(false)
   const [logoWhiteError, setLogoWhiteError]         = useState<string | null>(null)
+  const [logoTheme, setLogoTheme]                   = useState<"light" | "dark" | "unknown" | null>(null)
+  const [logoDetectedColor, setLogoDetectedColor]   = useState<string | null>(null)
 
   // Slug picker state (name step)
   const [slugCustom, setSlugCustom]         = useState("")
@@ -882,6 +884,37 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
     }))
   }
 
+  function detectLogoLightness(url: string): Promise<"light" | "dark" | "unknown"> {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = "anonymous"
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas")
+          const scale = Math.min(1, 64 / Math.max(img.width, img.height))
+          canvas.width = Math.round(img.width * scale)
+          canvas.height = Math.round(img.height * scale)
+          const ctx = canvas.getContext("2d")
+          if (!ctx) { resolve("unknown"); return }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+          let totalLum = 0; let pixels = 0
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i + 3] > 32) {
+              totalLum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]
+              pixels++
+            }
+          }
+          if (!pixels) { resolve("unknown"); return }
+          const avg = totalLum / pixels
+          resolve(avg > 190 ? "light" : avg < 80 ? "dark" : "unknown")
+        } catch { resolve("unknown") }
+      }
+      img.onerror = () => resolve("unknown")
+      img.src = url
+    })
+  }
+
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -894,7 +927,15 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       if (res.success && res.url) {
         set("logoUrl", res.url)
         set("logoChoice", "uploaded")
-        if (res.dominantColor) set("primaryColor", res.dominantColor)
+        if (res.dominantColor) {
+          set("primaryColor", res.dominantColor)
+          setLogoDetectedColor(res.dominantColor)
+        }
+        detectLogoLightness(res.url).then((theme) => {
+          setLogoTheme(theme)
+          if (theme === "light") set("navbarDark", true)
+          else if (theme === "dark") set("navbarDark", false)
+        })
       } else {
         setLogoError(res.error ?? "Upload failed — please try again.")
       }
@@ -1524,50 +1565,57 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                                 <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(0,0,0,0.3)" }}>Top nav bar</span>
                               </div>
                             </div>
-                            <p className="text-xs leading-relaxed" style={{ color: tk.muted }}>
-                              The left is how your logo looks on photo sections and the dark menu. The right is how it looks in the top navigation bar when someone scrolls down. If any part of your logo looks faint on the right side, pick one of the options below — or your logo may already look great as-is with the subtle shadow we add automatically.
-                            </p>
-
-                            {/* Two-option fork */}
+                            {/* Smart fork — only shown when no decision made yet */}
                             {!answers.navbarDark && !answers.logoWhiteUrl && (
                               <div className="space-y-2">
-                                <p className="text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
-                                  If the light side looks faint:
-                                </p>
-                                <button type="button" onClick={() => set("navbarDark", true)}
-                                  className="w-full flex items-center gap-3 rounded-xl border p-4 text-left transition hover:opacity-80"
-                                  style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                                  <div className="h-8 w-10 shrink-0 rounded flex items-center justify-center" style={{ backgroundColor: "#111111" }}>
-                                    <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
-                                  </div>
-                                  <div>
-                                    <span className="block text-sm font-black" style={{ color: tk.text }}>Keep my site dark</span>
-                                    <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Dark navigation throughout — your logo always shows perfectly</span>
-                                  </div>
-                                </button>
-                                <label className="w-full flex items-center gap-3 rounded-xl border p-4 text-left cursor-pointer transition hover:opacity-80"
-                                  style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                                  <div className="h-8 w-10 shrink-0 rounded border flex items-center justify-center"
-                                    style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
-                                    {logoWhiteUploading ? (
-                                      <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                      </svg>
-                                    ) : (
-                                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ color: "#999" }}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                                      </svg>
-                                    )}
-                                  </div>
-                                  <div className="flex-1">
-                                    <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for white backgrounds</span>
-                                    <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Ask your designer for "the dark version of the logo" — then upload it here</span>
-                                    {logoWhiteError && <p className="text-xs font-black text-red-500 mt-1">{logoWhiteError}</p>}
-                                  </div>
-                                  <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                                    className="sr-only" onChange={handleLogoWhiteUpload} disabled={logoWhiteUploading} />
-                                </label>
+                                {logoTheme === "dark" && (
+                                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#32D074" }}>
+                                    ✓ Your logo looks great on both backgrounds.
+                                  </p>
+                                )}
+                                {(logoTheme === "unknown" || !logoTheme) && (
+                                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
+                                    If the light side looks faint:
+                                  </p>
+                                )}
+                                {(logoTheme === "unknown" || !logoTheme) && (
+                                  <>
+                                  <button type="button" onClick={() => set("navbarDark", true)}
+                                    className="w-full flex items-center gap-3 rounded-xl border p-4 text-left transition hover:opacity-80"
+                                    style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                    <div className="h-8 w-10 shrink-0 rounded flex items-center justify-center" style={{ backgroundColor: "#111111" }}>
+                                      <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
+                                    </div>
+                                    <div>
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Keep my site dark</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Dark navigation throughout — your logo always shows perfectly</span>
+                                    </div>
+                                  </button>
+                                  <label className="w-full flex items-center gap-3 rounded-xl border p-4 text-left cursor-pointer transition hover:opacity-80"
+                                    style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                    <div className="h-8 w-10 shrink-0 rounded border flex items-center justify-center"
+                                      style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
+                                      {logoWhiteUploading ? (
+                                        <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24" style={{ color: answers.primaryColor }}>
+                                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                      ) : (
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ color: "#999" }}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                        </svg>
+                                      )}
+                                    </div>
+                                    <div className="flex-1">
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for white backgrounds</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Ask your designer for "the dark version of the logo" — then upload it here</span>
+                                      {logoWhiteError && <p className="text-xs font-black text-red-500 mt-1">{logoWhiteError}</p>}
+                                    </div>
+                                    <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                      className="sr-only" onChange={handleLogoWhiteUpload} disabled={logoWhiteUploading} />
+                                  </label>
+                                  </>
+                                )}
                               </div>
                             )}
 
@@ -1579,7 +1627,9 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
                                   <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
-                                  Dark site — your logo will look great everywhere.
+                                  {logoTheme === "light"
+                                    ? "Light logo detected — navigation set to dark so it always stands out."
+                                    : "Dark navigation — your logo will look great everywhere."}
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("navbarDark", false)}>
@@ -1660,17 +1710,35 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
 
                     {step === "color" && (
                       <div className="space-y-4">
-                      {answers.logoUrl && (
-                        <div className="flex items-center gap-3 rounded-xl px-4 py-3"
-                          style={{ backgroundColor: `${answers.primaryColor}18`, border: `1px solid ${answers.primaryColor}40` }}>
-                          <div className="h-8 w-8 shrink-0 rounded overflow-hidden border flex items-center justify-center"
-                            style={{ borderColor: `${answers.primaryColor}30`, backgroundColor: "#fff" }}>
-                            <img src={answers.logoUrl} alt="Logo" className="max-h-7 max-w-7 object-contain" />
+                      {logoDetectedColor && (
+                        <>
+                          <div>
+                            <p className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
+                              From your logo
+                            </p>
+                            <button type="button"
+                              onClick={() => set("primaryColor", logoDetectedColor)}
+                              className="flex w-full items-center gap-4 rounded-2xl border-2 p-5 text-left transition"
+                              style={{
+                                borderColor: answers.primaryColor === logoDetectedColor ? logoDetectedColor : tk.cardBorder(false),
+                                backgroundColor: answers.primaryColor === logoDetectedColor ? `${logoDetectedColor}14` : tk.cardBg(false),
+                              }}>
+                              <span className="h-12 w-12 shrink-0 rounded-full shadow-md" style={{ backgroundColor: logoDetectedColor }} />
+                              <div className="flex-1">
+                                <span className="block text-base font-black" style={{ color: tk.text }}>Your brand color</span>
+                                <span className="block text-xs font-black uppercase mt-0.5" style={{ color: tk.muted }}>{logoDetectedColor}</span>
+                              </div>
+                              {answers.primaryColor === logoDetectedColor && (
+                                <span className="text-sm font-black shrink-0" style={{ color: logoDetectedColor }}>✓</span>
+                              )}
+                            </button>
                           </div>
-                          <p className="text-xs font-black" style={{ color: answers.primaryColor }}>
-                            Color detected from your logo — change it below if needed.
-                          </p>
-                        </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
+                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: tk.muted }}>Or choose a different color</span>
+                            <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
+                          </div>
+                        </>
                       )}
                       <div className="grid gap-2 sm:grid-cols-2">
                         {palettes.map((p) => {

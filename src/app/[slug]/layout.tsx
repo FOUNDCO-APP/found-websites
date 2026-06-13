@@ -4,6 +4,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import type { Company } from "@/types/company"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
+import PreviewBanner from "@/components/PreviewBanner"
 import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
 
@@ -190,6 +191,7 @@ export default async function CompanyLayout({
       <Navbar company={company} transparent={layout === "cinematic"} />
       <main className="flex-1">{children}</main>
       <Footer company={company} />
+      <PreviewBanner slug={company.slug} subscriptionStatus={company.subscription_status} />
     </div>
   )
 }
