@@ -75,8 +75,7 @@ export default function PreviewBanner({
 
   useEffect(() => {
     setMounted(true)
-    const params = new URLSearchParams(window.location.search)
-    if (params.get("preview") === "true" && !stripeCustomerId) setVisible(true)
+    if (!stripeCustomerId) setVisible(true)
   }, [stripeCustomerId])
 
   if (!visible || !mounted) return null
