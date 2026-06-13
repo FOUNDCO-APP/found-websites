@@ -4,6 +4,38 @@
 
 ---
 
+## Session: June 12, 2026 (evening) — Slug Check Bug Fix
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Diagnosing 4 failed Vercel builds, fixing slug availability check
+
+### ✅ Completed This Session
+
+**Root cause of 4 failed deployments (Craig):**
+- `actions.ts` had a TypeScript error (TS2448): `city` was referenced in `uniqueSlug(preferredBase, city)` before `splitLocation()` had declared it — one line below
+- This caused every build after commit `344b737` to fail: `539c521`, `7cf5dd5`, `344b737`, `90d21cf`
+- Fix: moved `splitLocation()` call above the `uniqueSlug()` call
+- Commit `7bc2cae` — now live ✅
+
+**Compact slug status UI (Craig + Jony):**
+- Old design: full bordered card below the name input — hidden behind iPhone keyboard on mobile
+- New design: compact single-line status (`double-blur.foundco.app · ✓ Available`) that stays visible above the keyboard
+- Taken state still expands suggestion chips + custom input below the input field
+- Both fixes in commit `7bc2cae`
+
+### ⚠️ Still Pending (carry to next session)
+
+- **Run migration-028** in Supabase SQL editor: `ALTER TABLE companies ADD COLUMN IF NOT EXISTS navbar_dark boolean DEFAULT false;`
+- **Add Vercel env vars**: `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` for automatic domain registration via connect-domain page
+- **End-to-end onboarding test** — Shawn testing slug check now
+
+### 🔜 Next Session
+
+1. Confirm slug check working end-to-end on Shawn's phone
+2. Run migration-028
+3. Full onboarding flow test: name → submit → welcome email → live site
+
+---
+
 ## Session: June 12, 2026 — Slug System + Dark Navbar + Two-Logo + Connect Domain + Welcome Email
 **AI:** Claude Code (Sonnet 4.6) + Apple Team
 **Worked on:** Smart slug system, dark navbar mode, dual-logo onboarding, connect-domain page, welcome email, mobile nav polish
