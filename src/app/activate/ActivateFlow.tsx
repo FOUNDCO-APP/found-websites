@@ -215,8 +215,12 @@ export default function ActivateFlow({
       {/* ── CARD FORM ── */}
       {phase === "form" && (
         loadError ? (
-          <div className="text-center">
-            <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.4)" }}>{loadError}</p>
+          <div className="text-center space-y-4">
+            <p className="text-lg font-light text-white">{loadError}</p>
+            <a href="/" className="block text-sm font-black uppercase tracking-widest"
+              style={{ color: SIGNAL_GREEN }}>
+              Back to Found →
+            </a>
           </div>
         ) : setup ? (
           <Elements
@@ -230,6 +234,14 @@ export default function ActivateFlow({
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
+        }
+        @keyframes fade-in {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </main>
