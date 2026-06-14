@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const supabase = getAdminClient()
   const now = new Date()
 
-  // Find Pro/Business leads with email that need day-3 or day-7 follow-up
+  // Find leads with email that need day-3 or day-7 follow-up
   const { data: leads, error } = await supabase
     .from("leads")
     .select(`
@@ -29,8 +29,6 @@ export async function GET(req: NextRequest) {
       companies ( name, phone, plan, email )
     `)
     .not("email", "is", null)
-    .in("companies.plan", ["found_pro", "found_business"])
-    .is("companies", "not.null")
 
   if (error) {
     console.error("[cron/lead-followup] query error:", error.message)
@@ -40,8 +38,12 @@ export async function GET(req: NextRequest) {
   let sent = 0
 
   for (const lead of leads ?? []) {
-    const company = lead.companies as { name: string; phone: string | null; plan: string; email: string | null } | null
-    if (!company || !lead.email) continue
+    const companyRaw = lead.companies
+    const company = (Array.isArray(companyRaw) ? companyRaw[0] : companyRaw) as
+      { name: string; phone: string | null; plan: string; email: string | null } | null
+    // Only run sequences for Pro and Business plans
+    if (!company || !["found_pro", "found_business"].includes(company.plan)) continue
+    if (!lead.email) continue
 
     const createdAt = new Date(lead.created_at)
     const daysSince = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
