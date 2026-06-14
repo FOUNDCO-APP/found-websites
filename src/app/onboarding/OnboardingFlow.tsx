@@ -515,7 +515,7 @@ function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: 
         onKeyDown={handleKey}
         onBlur={() => draft.trim() && add(draft)}
         placeholder="Type a service, press Enter"
-        className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+        className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
         style={{ color: tk.text, borderBottomColor: draft ? SIGNAL_GREEN : tk.border(false) }}
       />
       {isLight && (
@@ -605,7 +605,7 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
           onFocus={() => setShowCitySuggestions(true)}
           onBlur={() => { cityBlurTimer.current = setTimeout(() => setShowCitySuggestions(false), 150) }}
           placeholder="Tucson, AZ"
-          className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+          className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
           style={{ color: tk.text, borderBottomColor: location.length > 2 ? SIGNAL_GREEN : tk.border(false) }}
         />
         {showCitySuggestions && citySuggestions.length > 0 && (
@@ -1233,23 +1233,23 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                   className="flex min-h-full flex-col justify-start pt-6 pb-8"
                   style={{ animation: "fade-up 0.38s ease-out both" }}
                 >
-                    <div className="mb-5 max-w-lg">
+                    <div className="mb-4 max-w-lg">
                       {answers.industry && !["description"].includes(step) && (
                         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
                           {industryLabels[answers.industry]}
                         </p>
                       )}
-                      <h1 className="text-[1.65rem] font-light leading-tight md:text-[2.4rem]" style={{ color: tk.text }}>
+                      <h1 className="text-xl font-light leading-tight md:text-2xl" style={{ color: tk.text }}>
                         {questionTitle(step, answers)}
                       </h1>
                       {step === "description" && (
-                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>In your own words. This is how Found understands your business.</p>
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>In your own words. This is how Found understands your business.</p>
                       )}
                       {step === "location" && (
-                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
                       )}
                       {step === "contact" && (
-                        <p className="mt-3 text-[1rem]" style={{ color: tk.hint }}>You control what shows publicly — each field has a toggle below it.</p>
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>You control what shows publicly — each field has a toggle below it.</p>
                       )}
                       {ready && affirm && (
                         <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
@@ -1271,7 +1271,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                             onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false) }}
                             onKeyDown={(e) => e.key === "Enter" && advance()}
                             placeholder="e.g. Barrio Builders"
-                            className={`w-full text-4xl pr-8 ${tk.inputCls} ${tk.placeholder}`}
+                            className={`w-full text-[1.8rem] pr-8 ${tk.inputCls} ${tk.placeholder}`}
                             style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
                           />
                           {/* Status icon — inside the input's right edge, never hidden by keyboard */}
@@ -1336,8 +1336,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                         value={answers.description}
                         onChange={(e) => handleDescription(e.target.value)}
                         placeholder="I do roofing and remodeling in Tucson... I'm a balloon artist for parties and events..."
-                        rows={4}
-                        className={`w-full resize-none text-[2rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
+                        rows={3}
+                        className={`w-full resize-none text-[1.15rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
                         style={{ color: tk.text, borderBottomColor: answers.description.length > 8 ? SIGNAL_GREEN : tk.border(false) }}
                       />
                     )}
@@ -1399,7 +1399,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                             value={answers.phone}
                             onChange={(e) => set("phone", e.target.value)}
                             placeholder="Phone number"
-                            className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                            className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
                             style={{ color: tk.text, borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
                           />
                           {answers.phone.length > 6 && (
@@ -1421,7 +1421,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                             value={answers.email}
                             onChange={(e) => set("email", e.target.value)}
                             placeholder="Email address"
-                            className={`w-full text-[2rem] ${tk.inputCls} ${tk.placeholder}`}
+                            className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
                             style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
                           />
                           {answers.email.includes("@") && (
@@ -1487,8 +1487,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                           value={answers.different}
                           onChange={(e) => set("different", e.target.value)}
                           placeholder="We've been in Tucson for 20 years and treat every home like our own..."
-                          rows={4}
-                          className={`w-full resize-none text-[2rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
+                          rows={3}
+                          className={`w-full resize-none text-[1.15rem] leading-relaxed ${tk.inputCls} ${tk.placeholder}`}
                           style={{ color: tk.text, borderBottomColor: answers.different.length > 8 ? SIGNAL_GREEN : tk.border(false) }}
                         />
                         {answers.industry && DIFFERENTIATOR_CHIPS[answers.industry] && (
