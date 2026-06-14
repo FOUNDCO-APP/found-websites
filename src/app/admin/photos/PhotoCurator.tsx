@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import {
   fetchIndustryPhotos, saveApprovedPhotos, saveTeamPicks, promoteToLive,
   getApprovedCounts, getPendingCounts, getApprovedUrls, getTeamPickUrls,
-  getTeamPicks, removePendingPhoto, deletePool, type PexelsPhoto
+  getTeamPicks, removePendingPhoto, type PexelsPhoto
 } from "./actions"
 
 const INDUSTRIES = [
@@ -52,7 +52,6 @@ export default function PhotoCurator() {
   const [searchInput, setSearchInput] = useState("")
   const [activeQuery, setActiveQuery] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
-  const [deletingRogue, setDeletingRogue] = useState(false)
   const [pendingPhotos, setPendingPhotos] = useState<{ url: string; desc: string; tag?: string | null }[]>([])
   const [removingPending, setRemovingPending] = useState<string | null>(null)
 
@@ -207,13 +206,6 @@ export default function PhotoCurator() {
     setSaving(false)
   }
 
-  async function handleDeleteRogue() {
-    setDeletingRogue(true)
-    await deletePool(activeIndustry)
-    await loadCounts()
-    setDeletingRogue(false)
-  }
-
   const showBottomBar = selectedCount > 0 || justSaved
 
   return (
@@ -310,17 +302,6 @@ export default function PhotoCurator() {
             <p className="text-xs font-black" style={{ color: "#2E7D32" }}>
               ✓ {currentApproved} live
             </p>
-          )}
-          {/* Delete rogue data button — only for new industries with live data but no team approval */}
-          {isNewIndustry && currentApproved > 0 && currentPending === 0 && (
-            <button
-              onClick={handleDeleteRogue}
-              disabled={deletingRogue}
-              className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded disabled:opacity-40"
-              style={{ color: "#ff4444", border: "1px solid #ff4444" }}
-            >
-              {deletingRogue ? "Clearing…" : "Clear Rogue Data"}
-            </button>
           )}
         </div>
       </div>
