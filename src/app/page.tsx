@@ -153,24 +153,8 @@ export default function Home() {
         </section>
 
         {/* ── Promo banner ── */}
-        <section className="relative overflow-hidden" style={{ backgroundColor: SIGNAL_GREEN }}>
-          {/* Background price watermark */}
-          <div
-            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden"
-            aria-hidden="true"
-          >
-            <span style={{
-              fontSize: "clamp(5rem, 16vw, 13rem)",
-              fontWeight: 300,
-              color: "rgba(8,10,9,0.07)",
-              whiteSpace: "nowrap",
-              letterSpacing: "-0.01em",
-            }}>
-              $29 · $39 · $69
-            </span>
-          </div>
-
-          <div className="relative px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
+        <section style={{ backgroundColor: SIGNAL_GREEN }}>
+          <div className="px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
             <div className="md:grid md:grid-cols-2 md:gap-20 md:items-center">
 
               {/* Left: headline */}
@@ -201,7 +185,6 @@ export default function Home() {
                   Build my site
                 </button>
               </div>
-
             </div>
           </div>
         </section>
