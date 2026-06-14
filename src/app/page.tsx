@@ -153,22 +153,56 @@ export default function Home() {
         </section>
 
         {/* ── Promo banner ── */}
-        <section style={{ backgroundColor: SIGNAL_GREEN }}>
-          <div className="px-6 py-20 md:px-10 md:py-24 text-center max-w-3xl mx-auto">
-            <h2 className="text-4xl font-light leading-tight md:text-6xl mb-5" style={{ color: FOUND_BLACK }}>
-              Prices go up July 15.
-            </h2>
-            <p className="text-base md:text-lg font-medium mb-10" style={{ color: "rgba(8,10,9,0.55)" }}>
-              Start today at $29, $39, or $69/month — your price, locked in for a full year.
-            </p>
-            <button
-              type="button"
-              onClick={openDrawer}
-              className="inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-80 md:min-h-14"
-              style={{ backgroundColor: FOUND_BLACK, color: "white" }}
-            >
-              Build my site
-            </button>
+        <section className="relative overflow-hidden" style={{ backgroundColor: SIGNAL_GREEN }}>
+          {/* Background price watermark */}
+          <div
+            className="pointer-events-none select-none absolute inset-0 flex items-center justify-center overflow-hidden"
+            aria-hidden="true"
+          >
+            <span style={{
+              fontSize: "clamp(5rem, 16vw, 13rem)",
+              fontWeight: 300,
+              color: "rgba(8,10,9,0.07)",
+              whiteSpace: "nowrap",
+              letterSpacing: "-0.01em",
+            }}>
+              $29 · $39 · $69
+            </span>
+          </div>
+
+          <div className="relative px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
+            <div className="md:grid md:grid-cols-2 md:gap-20 md:items-center">
+
+              {/* Left: headline */}
+              <div className="mb-10 md:mb-0">
+                <h2
+                  className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
+                  style={{ color: FOUND_BLACK }}
+                >
+                  Prices go up<br />July 15.
+                </h2>
+              </div>
+
+              {/* Right: subtext + CTA */}
+              <div>
+                <p
+                  className="text-lg font-medium leading-relaxed mb-10 md:text-xl"
+                  style={{ color: "rgba(8,10,9,0.58)" }}
+                >
+                  Start today at $29, $39, or $69/month —<br className="hidden md:block" />
+                  your price, locked in for a full year.
+                </p>
+                <button
+                  type="button"
+                  onClick={openDrawer}
+                  className="inline-flex min-h-14 items-center justify-center rounded-full px-10 text-sm font-black uppercase tracking-widest transition hover:opacity-80"
+                  style={{ backgroundColor: FOUND_BLACK, color: "white" }}
+                >
+                  Build my site
+                </button>
+              </div>
+
+            </div>
           </div>
         </section>
 

@@ -73,35 +73,29 @@ export default function OnboardingDrawer({
 
   return (
     <>
-      {/* Scrim — dims the homepage behind the sheet */}
+      {/* Scrim */}
       <div
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(8,10,9,0.55)" }}
+        style={{ background: "rgba(8,10,9,0.6)" }}
+        onClick={open ? onClose : undefined}
       />
 
-      {/* Drawer — peek gap reveals scrim + rounded corners */}
+      {/* Drawer — mobile: slide up full-screen · desktop: right panel 520px */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-50 will-change-transform transition-transform duration-500 rounded-t-[28px] overflow-hidden ${
-          open ? "translate-y-0" : "translate-y-full"
-        }`}
-        style={{
-          top: 0,
-          transitionTimingFunction: "cubic-bezier(0.32, 0.72, 0, 1)",
-          boxShadow: "0 -16px 40px rgba(0,0,0,0.5), inset 0 3px 0 rgba(50,208,116,0.9)",
-        }}
+        className={`found-drawer ${open ? "found-drawer-open" : ""}`}
         aria-modal="true"
         aria-hidden={!open}
       >
-        {/* Signal Green halo at top edge — frames the sheet, creates separation from page */}
+        {/* Signal Green halo at top edge */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
           style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.45) 0px, transparent 72px)" }}
         />
-        {/* Handle pill — sits below the safe area / Dynamic Island */}
+        {/* Handle pill — mobile only */}
         <div
-          className="absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
+          className="md:hidden absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ top: "calc(env(safe-area-inset-top) + 12px)", backgroundColor: "rgba(255,255,255,0.3)" }}
         />
         <OnboardingFlow onClose={onClose} drawerMode plan={plan} />
