@@ -192,13 +192,15 @@ export async function getPendingCounts(): Promise<Record<string, number>> {
   return counts
 }
 
-// Shawn approves: promotes pending picks to live pool, clears pending
+// Shawn approves: merges pending picks into live pool, clears pending
 export async function promoteToLive(industry: string): Promise<{ success: boolean; error?: string }> {
   try {
     const pending = await readPoolFromPath(PENDING_POOL_PATH(industry))
     if (!pending.length) return { success: false, error: "No pending picks to promote" }
-    await writePool(industry, pending)
-    // Clear pending file
+    const existing = await readPool(industry)
+    const existingUrls = new Set(existing.map((p) => p.url))
+    const merged = [...existing, ...pending.filter((p) => !existingUrls.has(p.url))]
+    await writePool(industry, merged)
     const supabase = getAdminClient()
     await supabase.storage.from(BUCKET).remove([PENDING_POOL_PATH(industry)])
     return { success: true }
