@@ -3,34 +3,17 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
+import SiteNav from "@/components/SiteNav"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-
-function FoundWordmark({ className = "" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 420 72" role="img" aria-label="Found">
-      <text
-        x="0"
-        y="56"
-        fill="currentColor"
-        fontFamily="var(--font-dm-sans), Arial, sans-serif"
-        fontSize="58"
-        fontWeight="300"
-        letterSpacing="25"
-      >
-        FOUND
-      </text>
-    </svg>
-  )
-}
+const PROMO_AMBER = "#F0A500"
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
 
-  // Set html background to match page — fixes white iOS status bar in safe area
   useEffect(() => {
     document.documentElement.style.backgroundColor = FOUND_BLACK
     document.body.style.backgroundColor = FOUND_BLACK
@@ -40,7 +23,6 @@ export default function Home() {
     }
   }, [])
 
-  // Auto-open drawer when landing via the save-spot resume link
   useEffect(() => {
     if (window.location.search.includes("start=1")) {
       setDrawerOpen(true)
@@ -61,7 +43,11 @@ export default function Home() {
 
   return (
     <>
+      <SiteNav transparent onCta={openDrawer} />
+
       <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
+
+        {/* ── Hero ── */}
         <section className="found-home-hero relative min-h-[100dvh] overflow-hidden">
           <Image
             src="/images/found-hero-mobile-v3.png"
@@ -84,19 +70,10 @@ export default function Home() {
           <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#080A09] to-transparent" />
 
           <div className="found-hero-shell relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-[1500px] flex-col px-6 py-7 md:px-10">
-            <header className="found-hero-header flex items-center justify-between">
-              <FoundWordmark className="found-nav-wordmark h-8 w-44 text-white" />
-              <div className="found-header-spacer hidden md:block" />
-              <button
-                type="button"
-                onClick={openDrawer}
-                className="found-start-link rounded-full border border-white/18 bg-black/20 px-5 py-3 text-xs font-black uppercase tracking-[0.16em] text-white backdrop-blur-md transition hover:border-white/40"
-              >
-                Start
-              </button>
-            </header>
+            {/* Spacer for fixed nav */}
+            <div className="h-16 shrink-0" />
 
-            <div className="found-hero-content flex flex-1 items-start pt-12 md:items-center md:pt-0">
+            <div className="found-hero-content flex flex-1 items-start pt-8 md:items-center md:pt-0">
               <div className="found-hero-copy max-w-[350px] md:max-w-[590px]">
                 <h1 className="found-hero-title text-[2.65rem] font-light leading-[0.98] tracking-normal text-white md:text-7xl">
                   Your business beautifully online.
@@ -137,7 +114,71 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="pricing" className="bg-[#080A09] px-6 py-24 md:px-10 border-t border-white/[0.06]">
+        {/* ── How it works ── */}
+        <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
+              <div>
+                <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+                  How Found Works
+                </p>
+                <h2 className="max-w-xl text-4xl font-light leading-tight md:text-6xl">
+                  No templates. No builder. Just a conversation.
+                </h2>
+              </div>
+              <div className="grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
+                {[
+                  ["01", "Tell Found what you do.", "Business name, services, location, voice, photos, and the feeling of the brand."],
+                  ["02", "Found shapes the site.", "Industry, imagery, layout, color, copy, and calls to action come together quietly."],
+                  ["03", "Your business goes live.", "The reveal gives the owner a real site they can open, share, and improve."],
+                ].map(([step, title, body]) => (
+                  <div key={step} className="bg-[#0B0E0C] p-7">
+                    <div className="mb-12 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
+                    <h3 className="text-2xl font-light leading-tight">{title}</h3>
+                    <p className="mt-4 text-sm font-bold leading-7 text-white/48">{body}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-16 text-center">
+              <button
+                type="button"
+                onClick={openDrawer}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-8 text-sm font-black uppercase tracking-widest text-[#080A09] transition hover:bg-[#5DE894] md:min-h-14"
+              >
+                Build my site
+              </button>
+              <p className="mt-4 text-xs text-white/30 font-medium">Your site goes live in minutes.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Promo banner ── */}
+        <section className="relative overflow-hidden border-y" style={{ backgroundColor: "#0C0A07", borderColor: "rgba(240,165,0,0.18)" }}>
+          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(240,165,0,0.07) 0%, transparent 70%)" }} />
+          <div className="relative px-6 py-20 md:px-10 text-center max-w-3xl mx-auto">
+            <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: PROMO_AMBER }}>
+              Founding Rate · 30 Days Only
+            </p>
+            <h2 className="text-3xl font-light text-white md:text-5xl mb-5">
+              Lock in your rate before July 15.
+            </h2>
+            <p className="text-base md:text-lg font-medium mb-10 text-white/55">
+              $29 · $39 · $69 — your price for a full year.
+            </p>
+            <button
+              type="button"
+              onClick={openDrawer}
+              className="inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90 md:min-h-14"
+              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+            >
+              Claim your founding rate
+            </button>
+          </div>
+        </section>
+
+        {/* ── Pricing ── */}
+        <section id="pricing" className="bg-[#080A09] px-6 py-24 md:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="text-center mb-16">
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
@@ -171,7 +212,7 @@ export default function Home() {
                   normalPrice: "$69",
                   featured: true,
                   features: [
-                    "Everything in Found",
+                    "Everything in the Found plan",
                     "Every lead followed up — automatically",
                     "See who's interested and ready to hire",
                     "All your leads in one place",
@@ -212,9 +253,11 @@ export default function Home() {
                   }}
                 >
                   {plan.featured && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                      <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
-                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                      <span
+                        className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
+                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                      >
                         Most Popular
                       </span>
                     </div>
@@ -224,9 +267,9 @@ export default function Home() {
                   </p>
                   <h3 className="text-2xl font-black text-white mb-1">{plan.name}</h3>
                   <div className="mb-8">
-                    <p className="text-sm line-through text-white/25">{plan.normalPrice}/month</p>
+                    <p className="text-sm font-medium line-through" style={{ color: "#C4763A" }}>{plan.normalPrice}/month</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-black text-white">{plan.price}</span>
+                      <span className="text-4xl font-light text-white">{plan.price}</span>
                       <span className="text-sm text-white/40 font-medium">/month</span>
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
@@ -243,11 +286,8 @@ export default function Home() {
                   </ul>
                   <button
                     onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.key); openDrawer() }}
-                    className="w-full py-4 rounded-full text-xs font-black uppercase tracking-widest transition-all"
-                    style={{
-                      backgroundColor: plan.featured || selectedPlan === plan.key ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-                      color: plan.featured || selectedPlan === plan.key ? FOUND_BLACK : "rgba(255,255,255,0.7)",
-                    }}
+                    className="w-full py-4 rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90"
+                    style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >
                     Get started
                   </button>
@@ -256,43 +296,17 @@ export default function Home() {
             </div>
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
-              Founding rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a>
+              Founding rates expire July 15 · locked for 12 months, then regular price ·{" "}
+              <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a>
             </p>
           </div>
         </section>
 
-        <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10">
-          <div className="mx-auto max-w-7xl">
-            <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
-              <div>
-                <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-                  How Found Works
-                </p>
-                <h2 className="max-w-xl text-4xl font-light leading-tight md:text-6xl">
-                  No templates. No builder. Just a conversation.
-                </h2>
-              </div>
-              <div className="grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
-                {[
-                  ["01", "Tell Found what you do.", "Business name, services, location, voice, photos, and the feeling of the brand."],
-                  ["02", "Found shapes the site.", "Industry, imagery, layout, color, copy, and calls to action come together quietly."],
-                  ["03", "Your business goes live.", "The reveal gives the owner a real site they can open, share, and improve."],
-                ].map(([step, title, body]) => (
-                  <div key={step} className="bg-[#0B0E0C] p-7">
-                    <div className="mb-12 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
-                    <h3 className="text-2xl font-light leading-tight">{title}</h3>
-                    <p className="mt-4 text-sm font-bold leading-7 text-white/48">{body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} />
 
-      {/* Cinematic overlay — black screen, breathing glow, FINALLY, second line */}
+      {/* Cinematic overlay */}
       {cinematic !== "off" && (
         <div
           className="fixed inset-0 z-[45] flex items-center justify-center pointer-events-none"
@@ -303,7 +317,6 @@ export default function Home() {
           }}
           aria-hidden="true"
         >
-          {/* Breathing Signal Green glow */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div
               style={{
@@ -315,8 +328,6 @@ export default function Home() {
               }}
             />
           </div>
-
-          {/* Text — centered, scale contrast */}
           <div
             style={{
               position: "relative",
@@ -328,7 +339,6 @@ export default function Home() {
               textAlign: "center",
             }}
           >
-            {/* FINALLY */}
             <span
               style={{
                 fontFamily: "var(--font-dm-sans), Arial, sans-serif",
@@ -344,8 +354,6 @@ export default function Home() {
             >
               Finally
             </span>
-
-            {/* Let’s build your site */}
             <span
               style={{
                 fontFamily: "var(--font-dm-sans), Arial, sans-serif",
@@ -365,7 +373,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Iris — Signal Green circle expands to cover screen, fades as drawer rises */}
+      {/* Iris */}
       {(cinematic === "iris" || cinematic === "fading") && (
         <div
           className="fixed inset-0 z-[46] flex items-center justify-center pointer-events-none"

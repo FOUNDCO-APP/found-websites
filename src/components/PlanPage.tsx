@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
+import SiteNav from "./SiteNav"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -44,18 +44,10 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
 
       <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
 
-        {/* Nav */}
-        <nav className="flex items-center justify-between px-6 py-5 md:px-10 border-b border-white/[0.06]">
-          <Link href="/" className="text-xs font-black uppercase tracking-[0.2em] text-white/60 hover:text-white transition">
-            ← Found
-          </Link>
-          <Link href="/plans" className="text-xs font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition">
-            Compare plans
-          </Link>
-        </nav>
+        <SiteNav onCta={() => setDrawerOpen(true)} />
 
         {/* Hero */}
-        <section className="px-6 py-20 md:px-10 md:py-28 max-w-4xl mx-auto text-center">
+        <section className="px-6 pt-32 pb-20 md:px-10 md:pt-36 md:pb-28 max-w-4xl mx-auto text-center">
           <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
             {identity}
           </p>

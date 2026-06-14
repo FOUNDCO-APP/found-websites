@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import Link from "next/link"
+import SiteNav from "@/components/SiteNav"
 
 export const metadata: Metadata = {
   title: "Compare Plans | Found — $29, $39, $69/month",
@@ -58,15 +58,10 @@ export default function PlansPage() {
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
 
-      {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-5 md:px-10 border-b border-white/[0.06]">
-        <Link href="/" className="text-xs font-black uppercase tracking-[0.2em] text-white/60 hover:text-white transition">
-          ← Found
-        </Link>
-      </nav>
+      <SiteNav />
 
       {/* Header */}
-      <section className="px-6 py-20 md:px-10 text-center max-w-3xl mx-auto">
+      <section className="px-6 pt-36 pb-16 md:px-10 text-center max-w-3xl mx-auto">
         <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
           Plans
         </p>
