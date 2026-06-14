@@ -83,8 +83,7 @@ export default function PreviewBanner({
 
   function handleActivate() {
     setNavigating(true)
-    const root = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-    window.location.href = `https://${root}/activate?slug=${slug}`
+    window.location.href = "/activate"
   }
 
   return createPortal(
