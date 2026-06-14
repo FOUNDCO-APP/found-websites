@@ -61,12 +61,16 @@ function getBannerState(trialEndsAt: string | null): BannerState {
 
 export default function PreviewBanner({
   slug,
+  companyName,
   stripeCustomerId,
   trialEndsAt,
+  setupIntentSecret,
 }: {
   slug: string
+  companyName?: string
   stripeCustomerId: string | null
   trialEndsAt: string | null
+  setupIntentSecret?: string | null
 }) {
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -84,6 +88,11 @@ export default function PreviewBanner({
   function handleActivate() {
     setVisible(false)
     setNavigating(true)
+    // Hand off everything the activate page needs via sessionStorage —
+    // so the static page can render with zero server calls.
+    sessionStorage.setItem("activate_slug", slug)
+    if (companyName) sessionStorage.setItem("activate_name", companyName)
+    if (setupIntentSecret) sessionStorage.setItem("activate_secret", setupIntentSecret)
     window.location.href = "/activate"
   }
 
@@ -122,7 +131,6 @@ export default function PreviewBanner({
         {/* CTA */}
         <button
           onClick={handleActivate}
-
           className="w-full rounded-xl py-3.5 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] active:opacity-75"
           style={{ backgroundColor: accent, color: FOUND_BLACK }}>
           {navigating ? "On our way…" : cta}

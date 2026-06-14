@@ -55,6 +55,8 @@ const stripeAppearance = {
   },
 }
 
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+
 function CardForm({ slug, companyName }: { slug: string; companyName: string }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -70,7 +72,7 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
     const { error: stripeError } = await stripe.confirmSetup({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/activate/confirm?slug=${slug}`,
+        return_url: `https://${ROOT_DOMAIN}/activate/confirm?slug=${slug}`,
       },
     })
 
@@ -126,48 +128,52 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
 export default function ActivateFlow({
   slug,
   error,
+  preloadedSecret,
+  preloadedName,
 }: {
   slug: string
   error?: string
+  preloadedSecret?: string
+  preloadedName?: string
 }) {
   const [phase, setPhase] = useState<"splash" | "form">("splash")
   const [lineIdx, setLineIdx] = useState(0)
-  const [setup, setSetup] = useState<{ clientSecret: string; companyName: string } | null>(null)
+  const [clientSecret, setClientSecret] = useState<string | null>(preloadedSecret ?? null)
+  const [companyName, setCompanyName] = useState<string>(preloadedName ?? "")
   const [loadError, setLoadError] = useState<string | null>(error ?? null)
-  const [stripeReady, setStripeReady] = useState(false)
+  const [stripeReady, setStripeReady] = useState(!!preloadedSecret)
   const [minTimeReady, setMinTimeReady] = useState(false)
 
-  // Rotate splash lines
   useEffect(() => {
     const iv = setInterval(() => setLineIdx((i) => (i + 1) % SPLASH_LINES.length), 2000)
     return () => clearInterval(iv)
   }, [])
 
-  // Minimum splash time
   useEffect(() => {
     const t = setTimeout(() => setMinTimeReady(true), MIN_SPLASH_MS)
     return () => clearTimeout(t)
   }, [])
 
-  // Stripe setup — runs while splash plays
   useEffect(() => {
+    // Fast path: secret arrived from banner via sessionStorage — no server call needed
+    if (preloadedSecret) return
+
+    // Fallback: call server action (direct URL navigation, or companies without pre-created intent)
     createActivationSetup(slug).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
-        setMinTimeReady(true) // skip remaining wait on error
+        setMinTimeReady(true)
       } else {
-        setSetup(result)
+        setClientSecret(result.clientSecret)
+        if (!companyName) setCompanyName(result.companyName)
       }
       setStripeReady(true)
     })
-  }, [slug])
+  }, [slug, preloadedSecret, companyName])
 
-  // Advance to form when BOTH minimum time elapsed AND Stripe is ready
   useEffect(() => {
     if (minTimeReady && stripeReady) setPhase("form")
   }, [minTimeReady, stripeReady])
-
-  const companyName = setup?.companyName ?? ""
 
   return (
     <main
@@ -187,7 +193,6 @@ export default function ActivateFlow({
       {/* ── SPLASH ── */}
       {phase === "splash" && (
         <div className="flex flex-col items-center text-center">
-          {/* Spinner — same as onboarding generating screen */}
           <div className="mb-10" style={{
             width: 44, height: 44, borderRadius: "50%",
             border: "1.5px solid rgba(255,255,255,0.07)",
@@ -222,10 +227,10 @@ export default function ActivateFlow({
               Back to Found →
             </a>
           </div>
-        ) : setup ? (
+        ) : clientSecret ? (
           <Elements
             stripe={stripePromise}
-            options={{ clientSecret: setup.clientSecret, appearance: stripeAppearance }}>
+            options={{ clientSecret, appearance: stripeAppearance }}>
             <CardForm slug={slug} companyName={companyName} />
           </Elements>
         ) : null

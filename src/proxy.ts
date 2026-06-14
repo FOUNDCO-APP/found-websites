@@ -27,6 +27,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Serve /activate directly from the root static page — never rewrite to [slug]/activate.
+  // This keeps the activate page CDN-served with zero cold start on any subdomain.
+  if (pathname === '/activate' || pathname.startsWith('/activate/')) {
+    return NextResponse.next()
+  }
+
   let slug: string | null = null
 
   if (hostname.endsWith(`.${ROOT_DOMAIN}`)) {

@@ -191,7 +191,13 @@ export default async function CompanyLayout({
       <Navbar company={company} transparent={layout === "cinematic"} />
       <main className="flex-1">{children}</main>
       <Footer company={company} />
-      <PreviewBanner slug={company.slug} stripeCustomerId={company.stripe_customer_id} trialEndsAt={company.trial_ends_at} />
+      <PreviewBanner
+        slug={company.slug}
+        companyName={company.name}
+        stripeCustomerId={company.stripe_customer_id}
+        trialEndsAt={company.trial_ends_at}
+        setupIntentSecret={company.pending_setup_intent_secret}
+      />
     </div>
   )
 }
