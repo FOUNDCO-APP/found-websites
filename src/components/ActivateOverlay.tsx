@@ -10,12 +10,6 @@ const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
 const MIN_SPLASH_MS = 4500
 
-const SPLASH_LINES = [
-  "Building your site.",
-  "Setting up your free trial.",
-  "Almost ready.",
-]
-
 // Module-level: Stripe.js starts loading the moment this chunk is prefetched —
 // so it's ready before the user ever taps the button.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -58,13 +52,7 @@ const stripeAppearance = {
   },
 }
 
-function CardForm({
-  slug,
-  companyName,
-}: {
-  slug: string
-  companyName: string
-}) {
+function CardForm({ slug, companyName }: { slug: string; companyName: string }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -97,7 +85,7 @@ function CardForm({
         borderRadius: 24,
         backgroundColor: "#161616",
         border: "1px solid rgba(255,255,255,0.07)",
-        animation: "ao-fade-up 0.7s ease-out both",
+        animation: "ao-dissolve-in 0.7s ease-out both",
       }}>
       <div style={{ height: 1, backgroundColor: SIGNAL_GREEN }} />
       <div style={{ padding: "24px 28px 28px" }}>
@@ -159,7 +147,7 @@ export default function ActivateOverlay({
   onClose: () => void
 }) {
   const [phase, setPhase] = useState<"splash" | "form">("splash")
-  const [lineIdx, setLineIdx] = useState(0)
+  const [splashExiting, setSplashExiting] = useState(false)
   const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
   const [companyName, setCompanyName] = useState(initialName)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -173,18 +161,12 @@ export default function ActivateOverlay({
   }, [])
 
   useEffect(() => {
-    const iv = setInterval(() => setLineIdx((i) => (i + 1) % SPLASH_LINES.length), 2000)
-    return () => clearInterval(iv)
-  }, [])
-
-  useEffect(() => {
     const t = setTimeout(() => setMinTimeReady(true), MIN_SPLASH_MS)
     return () => clearTimeout(t)
   }, [])
 
   useEffect(() => {
-    if (setupIntentSecret) return // fast path — secret in hand, no server call
-
+    if (setupIntentSecret) return
     createActivationSetup(slug).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
@@ -197,8 +179,12 @@ export default function ActivateOverlay({
     })
   }, [slug, setupIntentSecret, companyName])
 
+  // Dissolve: fade splash out over 700ms, then bring form in
   useEffect(() => {
-    if (minTimeReady && stripeReady) setPhase("form")
+    if (!minTimeReady || !stripeReady) return
+    setSplashExiting(true)
+    const t = setTimeout(() => setPhase("form"), 700)
+    return () => clearTimeout(t)
   }, [minTimeReady, stripeReady])
 
   return createPortal(
@@ -215,7 +201,7 @@ export default function ActivateOverlay({
       overflowY: "auto",
       animation: "ao-fade-in 0.2s ease-out both",
     }}>
-      {/* Glow circle — same formula as RevealScreen (top-anchored, SIGNAL_GREEN at 1a opacity, 120px blur) */}
+      {/* Ambient glow — top-anchored, breathes once over 4s */}
       <div style={{
         position: "absolute",
         left: "50%", top: 0,
@@ -225,7 +211,19 @@ export default function ActivateOverlay({
         filter: "blur(120px)",
         transform: "translateX(-50%)",
         pointerEvents: "none",
+        animation: "ao-glow-pulse 4s ease-in-out both",
       }} />
+
+      {/* 1px progress bar — bottom edge, advances over MIN_SPLASH_MS */}
+      {phase === "splash" && (
+        <div style={{
+          position: "absolute", bottom: 0, left: 0,
+          height: 1,
+          backgroundColor: SIGNAL_GREEN,
+          opacity: 0.6,
+          animation: `ao-progress ${MIN_SPLASH_MS}ms linear both`,
+        }} />
+      )}
 
       {/* FOUND wordmark */}
       <div style={{ position: "absolute", left: 28, top: 28, animation: "ao-fade-in 0.5s ease-out both" }}>
@@ -234,58 +232,76 @@ export default function ActivateOverlay({
         </svg>
       </div>
 
-      {/* Close */}
+      {/* Close — pulled back to 30% so it exists without competing */}
       <button
         onClick={onClose}
         aria-label="Close"
         style={{
           position: "absolute", right: 24, top: 24,
           background: "none", border: "none", cursor: "pointer",
-          color: "rgba(255,255,255,0.3)", fontSize: 28, lineHeight: 1, padding: 4,
+          color: "rgba(255,255,255,0.30)", fontSize: 28, lineHeight: 1, padding: 4,
         }}>
         ×
       </button>
 
-      {/* SPLASH — mirrors onboarding GeneratingScreen (spinner + text) + RevealScreen (glow, label, company name) */}
+      {/* SPLASH */}
       {phase === "splash" && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 32 }}>
-          {/* 52px spinner — exact match with onboarding GeneratingScreen */}
-          <div style={{
-            width: 52, height: 52, borderRadius: "50%",
-            border: "1.5px solid rgba(255,255,255,0.07)",
-            borderTop: `1.5px solid ${SIGNAL_GREEN}`,
-            animation: "ao-spin 1s linear infinite",
-          }} />
-
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          gap: 24,
+          animation: splashExiting ? "ao-fade-out 0.7s ease-in both" : undefined,
+        }}>
           {companyName && (
-            <h1 style={{
-              fontSize: "clamp(2.5rem, 8vw, 3.5rem)",
-              fontWeight: 300,
-              lineHeight: 1.05,
-              letterSpacing: "-0.02em",
-              color: "white",
-              margin: 0,
-              animation: "ao-fade-up 0.6s 0.3s ease-out both",
-              opacity: 0,
-            }}>
-              {companyName}<br />
-              <span style={{ color: "rgba(255,255,255,0.35)" }}>is going live.</span>
-            </h1>
+            <>
+              {/* Company name — lands first */}
+              <h1 style={{
+                fontSize: "clamp(3rem, 9vw, 4.5rem)",
+                fontWeight: 300,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                color: "white",
+                margin: 0,
+                animation: "ao-fade-up 0.6s 0.1s ease-out both",
+                opacity: 0,
+              }}>
+                {companyName}
+              </h1>
+
+              {/* Completion clause — arrives 300ms after the name */}
+              <p style={{
+                fontSize: "clamp(1.5rem, 5vw, 2.25rem)",
+                fontWeight: 200,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                color: "rgba(255,255,255,0.45)",
+                margin: 0,
+                animation: "ao-fade-up 0.6s 0.4s ease-out both",
+                opacity: 0,
+              }}>
+                is going live.
+              </p>
+            </>
           )}
 
-          {/* Cycling text — same style as GeneratingScreen (text-xl font-light tracking-wide text-white/75) */}
-          <p key={lineIdx} style={{
-            fontSize: 20, fontWeight: 300, letterSpacing: "0.025em",
-            color: "rgba(255,255,255,0.75)",
-            animation: "ao-fade-up 0.5s ease-out both",
+          {/* Sub-copy — Steve: "about them, not the product" */}
+          <p style={{
+            fontSize: 16,
+            fontWeight: 300,
+            letterSpacing: "0.01em",
+            color: "rgba(255,255,255,0.45)",
             margin: 0,
+            animation: "ao-fade-up 0.6s 0.7s ease-out both",
+            opacity: 0,
           }}>
-            {SPLASH_LINES[lineIdx]}
+            People will find you now.
           </p>
         </div>
       )}
 
-      {/* FORM */}
+      {/* FORM — cross-dissolves in after splash exits */}
       {phase === "form" && (
         loadError ? (
           <div style={{ textAlign: "center" }}>
@@ -302,10 +318,13 @@ export default function ActivateOverlay({
       )}
 
       <style>{`
-        @keyframes ao-spin    { to { transform: rotate(360deg); } }
-        @keyframes ao-fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ao-fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        /* Neutralize Stripe test-mode badge link — popup is test-only, goes away in production */
+        @keyframes ao-fade-in    { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ao-fade-out   { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes ao-fade-up    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes ao-dissolve-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ao-glow-pulse  { 0% { transform: translateX(-50%) scale(0.95); opacity: 0.08; } 50% { transform: translateX(-50%) scale(1); opacity: 0.12; } 100% { transform: translateX(-50%) scale(0.97); opacity: 0.10; } }
+        @keyframes ao-progress    { from { width: 0%; } to { width: 100%; } }
+        /* Neutralize Stripe test-mode badge link — goes away in production with live keys */
         a[href*="stripe.com"],
         [class*="StripeElement-badge"],
         [class*="powered-by"],
