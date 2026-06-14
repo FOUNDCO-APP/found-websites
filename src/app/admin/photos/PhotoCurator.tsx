@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react"
 import {
   fetchIndustryPhotos, saveApprovedPhotos, saveTeamPicks, promoteToLive,
   getApprovedCounts, getPendingCounts, getApprovedUrls, getTeamPickUrls,
-  deletePool, type PexelsPhoto
+  getTeamPicks, removePendingPhoto, deletePool, type PexelsPhoto
 } from "./actions"
 
 const INDUSTRIES = [
@@ -53,6 +53,8 @@ export default function PhotoCurator() {
   const [activeQuery, setActiveQuery] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [deletingRogue, setDeletingRogue] = useState(false)
+  const [pendingPhotos, setPendingPhotos] = useState<{ url: string; desc: string; tag?: string | null }[]>([])
+  const [removingPending, setRemovingPending] = useState<string | null>(null)
 
   const loadCounts = useCallback(async () => {
     const [approved, pending] = await Promise.all([getApprovedCounts(), getPendingCounts()])
@@ -61,6 +63,15 @@ export default function PhotoCurator() {
   }, [])
 
   useEffect(() => { loadCounts() }, [loadCounts])
+
+  const loadPendingPhotos = useCallback(async (industry: string) => {
+    if (NEW_INDUSTRIES.has(industry)) {
+      const picks = await getTeamPicks(industry)
+      setPendingPhotos(picks)
+    } else {
+      setPendingPhotos([])
+    }
+  }, [])
 
   const loadPhotos = useCallback(async (industry: string, customQuery?: string) => {
     const cacheKey = customQuery ? `${industry}::${customQuery}` : industry
@@ -90,7 +101,9 @@ export default function PhotoCurator() {
     setSearchInput("")
     setSavedIndustry(null)
     setSaveMode(null)
+    setPendingPhotos([])
     loadPhotos(activeIndustry)
+    loadPendingPhotos(activeIndustry)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndustry])
 
@@ -143,6 +156,7 @@ export default function PhotoCurator() {
       setSavedIndustry(activeIndustry)
       setSaveMode("team")
       await loadCounts()
+      await loadPendingPhotos(activeIndustry)
     } else {
       setSaveError(result.error || "Submit failed")
     }
@@ -157,11 +171,22 @@ export default function PhotoCurator() {
     if (result.success) {
       setSavedIndustry(activeIndustry)
       setSaveMode("live")
+      setPendingPhotos([])
       await loadCounts()
     } else {
       setSaveError(result.error || "Approve failed")
     }
     setSaving(false)
+  }
+
+  async function handleRemovePending(url: string) {
+    setRemovingPending(url)
+    const result = await removePendingPhoto(activeIndustry, url)
+    if (result.success) {
+      setPendingPhotos(prev => prev.filter(p => p.url !== url))
+      await loadCounts()
+    }
+    setRemovingPending(null)
   }
 
   // Original approve — used for already-live original 12 industries
@@ -339,6 +364,56 @@ export default function PhotoCurator() {
             <button onClick={clearSearch} className="underline" style={{ color: "#666" }}>
               back to defaults
             </button>
+          </p>
+        </div>
+      )}
+
+      {/* Pending Review section — shows stored picks for new industries */}
+      {isNewIndustry && pendingPhotos.length > 0 && (
+        <div className="px-3 mb-6">
+          <div className="flex items-center gap-3 mb-3 px-3">
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#f5c842" }}>
+              Pending Review — Jony&apos;s Picks
+            </p>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black" style={{ backgroundColor: "#f5c842", color: "#000" }}>
+              {pendingPhotos.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
+            {pendingPhotos.map(photo => (
+              <div key={photo.url} className="relative rounded overflow-hidden" style={{ border: "2px solid #f5c842" }}>
+                <div className="aspect-video relative">
+                  <img
+                    src={photo.url}
+                    alt={photo.desc}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <button
+                    onClick={() => handleRemovePending(photo.url)}
+                    disabled={removingPending === photo.url}
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center font-black text-sm disabled:opacity-40"
+                    style={{ backgroundColor: "rgba(0,0,0,0.75)", color: "#fff" }}
+                    title="Remove this photo"
+                  >
+                    {removingPending === photo.url ? "…" : "×"}
+                  </button>
+                </div>
+                <div className="px-2 py-1.5" style={{ backgroundColor: "rgba(245,200,66,0.08)" }}>
+                  <p className="text-[10px] leading-tight" style={{ color: "#d4aa30" }}>
+                    {photo.desc || "No description"}
+                  </p>
+                  {photo.tag && (
+                    <p className="text-[9px] mt-0.5 font-black uppercase tracking-widest" style={{ color: "#555" }}>
+                      {photo.tag}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs mt-3 px-3" style={{ color: "#555" }}>
+            Remove any picks you don&apos;t want, then hit <span className="font-black" style={{ color: "#4caf50" }}>Approve → Go Live</span> when ready.
           </p>
         </div>
       )}

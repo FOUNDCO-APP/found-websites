@@ -158,6 +158,28 @@ export async function getTeamPickUrls(industry: string): Promise<string[]> {
   return pool.map((p) => p.url)
 }
 
+// Get full pending photo objects so Shawn can see and review them
+export async function getTeamPicks(industry: string): Promise<{ url: string; desc: string; tag?: string | null }[]> {
+  return readPoolFromPath(PENDING_POOL_PATH(industry))
+}
+
+// Remove a single photo from the pending pool
+export async function removePendingPhoto(industry: string, url: string): Promise<{ success: boolean }> {
+  try {
+    const existing = await readPoolFromPath(PENDING_POOL_PATH(industry))
+    const updated = existing.filter((p) => p.url !== url)
+    if (updated.length === 0) {
+      const supabase = getAdminClient()
+      await supabase.storage.from(BUCKET).remove([PENDING_POOL_PATH(industry)])
+    } else {
+      await writePoolToPath(PENDING_POOL_PATH(industry), industry, updated)
+    }
+    return { success: true }
+  } catch {
+    return { success: false }
+  }
+}
+
 // Get pending counts for all industries (for amber badge in tabs)
 export async function getPendingCounts(): Promise<Record<string, number>> {
   const counts: Record<string, number> = {}
