@@ -134,23 +134,12 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
           {/* Spacer for top bar */}
           <div className="h-[60px] shrink-0" />
 
-          {/* Faded FOUND watermark */}
+          {/* Signal Green ambient glow */}
           <div
-            className="pointer-events-none select-none absolute inset-0 flex items-end justify-center pb-24 overflow-hidden"
+            className="pointer-events-none absolute inset-0"
             aria-hidden="true"
-          >
-            <span style={{
-              fontSize: "clamp(7rem, 38vw, 14rem)",
-              fontWeight: 300,
-              letterSpacing: "0.28em",
-              paddingLeft: "0.28em",
-              color: "rgba(255,255,255,0.025)",
-              lineHeight: 1,
-              whiteSpace: "nowrap",
-            }}>
-              FOUND
-            </span>
-          </div>
+            style={{ background: "radial-gradient(ellipse 90% 55% at 50% 110%, rgba(50,208,116,0.18) 0%, transparent 70%)" }}
+          />
 
           {/* Large nav links */}
           <div className="flex-1 flex flex-col justify-center px-8 relative">

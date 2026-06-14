@@ -820,6 +820,15 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
     setAnswers((prev) => ({ ...prev, [key]: value }))
   }
 
+  function back() {
+    if (stepIndex <= 1) {
+      setPhase("welcome")
+      setStepIndex(0)
+    } else {
+      setStepIndex((i) => i - 1)
+    }
+  }
+
   function advance() {
     if (step === "welcome") {
       setPhase("questions")
@@ -1067,7 +1076,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       primaryColor={answers.primaryColor}
       email={answers.email}
       checkoutUrl={result.checkoutUrl}
-      onEdit={() => { setResult(null); setSaving(false) }}
+      onEdit={() => { setResult(null); setSaving(false); setPhase("questions"); setStepIndex(1) }}
     />
   )
 
@@ -1140,7 +1149,18 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                 className="shrink-0 flex items-center justify-between px-7 pt-8 pb-2 md:px-12 md:pt-10"
                 style={onClose ? { paddingTop: "max(2rem, env(safe-area-inset-top))" } : undefined}
               >
-                {onClose ? (
+                {phase === "questions" ? (
+                  <button
+                    type="button"
+                    onClick={back}
+                    className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-black/10"
+                    aria-label="Back"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5" style={{ color: tk.text }}>
+                      <path d="M15.75 19.5L8.25 12l7.5-7.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                ) : onClose ? (
                   <svg viewBox="0 0 420 72" className="h-7 w-36" aria-label="Found" style={{ color: tk.text }}>
                     <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
                   </svg>
@@ -1210,16 +1230,16 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
               {phase === "questions" && (
                 <section
                   key={step}
-                  className="flex min-h-full flex-col justify-center py-8"
+                  className="flex min-h-full flex-col justify-start pt-6 pb-8"
                   style={{ animation: "fade-up 0.38s ease-out both" }}
                 >
-                    <div className="mb-8 max-w-lg">
+                    <div className="mb-5 max-w-lg">
                       {answers.industry && !["description"].includes(step) && (
                         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
                           {industryLabels[answers.industry]}
                         </p>
                       )}
-                      <h1 className="text-3xl font-light leading-tight md:text-[2.6rem]" style={{ color: tk.text }}>
+                      <h1 className="text-[1.65rem] font-light leading-tight md:text-[2.4rem]" style={{ color: tk.text }}>
                         {questionTitle(step, answers)}
                       </h1>
                       {step === "description" && (
