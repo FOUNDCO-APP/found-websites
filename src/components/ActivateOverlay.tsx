@@ -258,26 +258,19 @@ export default function ActivateOverlay({
           }} />
 
           {companyName && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              {/* Small green label — mirrors RevealScreen's "Found it." */}
-              <p style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.24em", color: SIGNAL_GREEN, margin: 0 }}>
-                14 days free.
-              </p>
-              {/* Company name — mirrors RevealScreen's "{name} is live." */}
-              <h1 style={{
-                fontSize: "clamp(2.5rem, 8vw, 3.5rem)",
-                fontWeight: 300,
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
-                color: "white",
-                margin: 0,
-                animation: "ao-fade-up 0.6s 0.3s ease-out both",
-                opacity: 0,
-              }}>
-                {companyName}<br />
-                <span style={{ color: "rgba(255,255,255,0.35)" }}>is going live.</span>
-              </h1>
-            </div>
+            <h1 style={{
+              fontSize: "clamp(2.5rem, 8vw, 3.5rem)",
+              fontWeight: 300,
+              lineHeight: 1.05,
+              letterSpacing: "-0.02em",
+              color: "white",
+              margin: 0,
+              animation: "ao-fade-up 0.6s 0.3s ease-out both",
+              opacity: 0,
+            }}>
+              {companyName}<br />
+              <span style={{ color: "rgba(255,255,255,0.35)" }}>is going live.</span>
+            </h1>
           )}
 
           {/* Cycling text — same style as GeneratingScreen (text-xl font-light tracking-wide text-white/75) */}
