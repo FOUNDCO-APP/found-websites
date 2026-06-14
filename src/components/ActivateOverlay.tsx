@@ -8,7 +8,6 @@ import { createActivationSetup } from "@/app/activate/activateActions"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
-const MIN_SPLASH_MS = 4500
 
 // Module-level: Stripe.js starts loading the moment this chunk is prefetched.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -155,49 +154,32 @@ export default function ActivateOverlay({
   const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
   const [companyName, setCompanyName] = useState(initialName)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [stripeReady, setStripeReady] = useState(!!setupIntentSecret)
-  const [minTimeReady, setMinTimeReady] = useState(false)
-
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => { document.body.style.overflow = prev }
   }, [])
 
-  // MIN_SPLASH_MS gate
-  useEffect(() => {
-    const t = setTimeout(() => setMinTimeReady(true), MIN_SPLASH_MS)
-    return () => clearTimeout(t)
-  }, [])
-
-  // Fetch Stripe secret if not pre-created
+  // Fetch Stripe secret if not pre-created — runs in parallel with cinematic
   useEffect(() => {
     if (setupIntentSecret) return
     createActivationSetup(slug).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
-        setMinTimeReady(true)
       } else {
         setClientSecret(result.clientSecret)
         if (!companyName) setCompanyName(result.companyName)
       }
-      setStripeReady(true)
     })
   }, [slug, setupIntentSecret, companyName])
 
-  // Iris fires at 3000ms — matches page.tsx exactly
+  // Mirror page.tsx timing exactly: iris 3000ms, fading 3300ms, done 4000ms
   useEffect(() => {
-    const t = setTimeout(() => setCinPhase("iris"), 3000)
-    return () => clearTimeout(t)
+    const t1 = setTimeout(() => setCinPhase("iris"),   3000)
+    const t2 = setTimeout(() => setCinPhase("fading"), 3300)
+    const t3 = setTimeout(() => setCinPhase("done"),   4000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [])
-
-  // Once iris is showing AND both gates are clear → fade out, then show form
-  useEffect(() => {
-    if (cinPhase !== "iris" || !minTimeReady || !stripeReady) return
-    setCinPhase("fading")
-    const t = setTimeout(() => setCinPhase("done"), 700)
-    return () => clearTimeout(t)
-  }, [cinPhase, minTimeReady, stripeReady])
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
