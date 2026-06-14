@@ -182,7 +182,7 @@ export default function ActivateOverlay({
   }, [])
 
   return createPortal(
-    <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999, backgroundColor: FOUND_BLACK }}>
 
       {/* ── CINEMATIC LAYERS (text + iris) — mirrors page.tsx ── */}
       {cinPhase !== "done" && (
