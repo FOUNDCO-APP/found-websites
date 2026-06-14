@@ -7,14 +7,13 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { createActivationSetup } from "@/app/activate/activateActions"
 
 const SIGNAL_GREEN = "#32D074"
-const FOUND_BLACK = "#111111"
+const FOUND_BLACK = "#080A09"
 const MIN_SPLASH_MS = 4500
 
 const SPLASH_LINES = [
-  "Setting up your free trial…",
-  "Securing your space…",
-  "Locking in 14 days free…",
-  "Almost ready…",
+  "Building your site.",
+  "Setting up your free trial.",
+  "Almost ready.",
 ]
 
 // Module-level: Stripe.js starts loading the moment this chunk is prefetched —
@@ -216,15 +215,15 @@ export default function ActivateOverlay({
       overflowY: "auto",
       animation: "ao-fade-in 0.2s ease-out both",
     }}>
-      {/* Ambient glow */}
+      {/* Glow circle — same formula as RevealScreen (top-anchored, SIGNAL_GREEN at 1a opacity, 120px blur) */}
       <div style={{
         position: "absolute",
-        left: "50%", top: "33%",
+        left: "50%", top: 0,
         width: 384, height: 384,
         borderRadius: "50%",
-        backgroundColor: `${SIGNAL_GREEN}12`,
-        filter: "blur(140px)",
-        transform: "translate(-50%, -50%)",
+        backgroundColor: `${SIGNAL_GREEN}1a`,
+        filter: "blur(120px)",
+        transform: "translateX(-50%)",
         pointerEvents: "none",
       }} />
 
@@ -247,36 +246,44 @@ export default function ActivateOverlay({
         ×
       </button>
 
-      {/* SPLASH */}
+      {/* SPLASH — mirrors onboarding GeneratingScreen (spinner + text) + RevealScreen (glow, label, company name) */}
       {phase === "splash" && (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 32 }}>
+          {/* 52px spinner — exact match with onboarding GeneratingScreen */}
           <div style={{
-            width: 44, height: 44, borderRadius: "50%",
+            width: 52, height: 52, borderRadius: "50%",
             border: "1.5px solid rgba(255,255,255,0.07)",
             borderTop: `1.5px solid ${SIGNAL_GREEN}`,
             animation: "ao-spin 1s linear infinite",
-            marginBottom: 40,
           }} />
 
           {companyName && (
-            <h1 style={{
-              fontSize: "clamp(2rem, 8vw, 3rem)",
-              fontWeight: 300,
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              color: "white",
-              marginBottom: 16,
-              animation: "ao-fade-up 0.6s 0.3s ease-out both",
-              opacity: 0,
-            }}>
-              {companyName}<br />
-              <span style={{ color: "rgba(255,255,255,0.35)" }}>is going live.</span>
-            </h1>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              {/* Small green label — mirrors RevealScreen's "Found it." */}
+              <p style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.24em", color: SIGNAL_GREEN, margin: 0 }}>
+                14 days free.
+              </p>
+              {/* Company name — mirrors RevealScreen's "{name} is live." */}
+              <h1 style={{
+                fontSize: "clamp(2.5rem, 8vw, 3.5rem)",
+                fontWeight: 300,
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                color: "white",
+                margin: 0,
+                animation: "ao-fade-up 0.6s 0.3s ease-out both",
+                opacity: 0,
+              }}>
+                {companyName}<br />
+                <span style={{ color: "rgba(255,255,255,0.35)" }}>is going live.</span>
+              </h1>
+            </div>
           )}
 
+          {/* Cycling text — same style as GeneratingScreen (text-xl font-light tracking-wide text-white/75) */}
           <p key={lineIdx} style={{
-            fontSize: 16, fontWeight: 300,
-            color: "rgba(255,255,255,0.5)",
+            fontSize: 20, fontWeight: 300, letterSpacing: "0.025em",
+            color: "rgba(255,255,255,0.75)",
             animation: "ao-fade-up 0.5s ease-out both",
             margin: 0,
           }}>
