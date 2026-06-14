@@ -15,19 +15,27 @@ function getAdminClient() {
   )
 }
 
+function priceIdForPlan(plan?: string): string | undefined {
+  if (plan === "found_pro")      return process.env.STRIPE_PRICE_ID_FOUND_PRO
+  if (plan === "found_business") return process.env.STRIPE_PRICE_ID_FOUND_BUSINESS
+  return process.env.STRIPE_PRICE_ID_FOUND
+}
+
 export async function createSetupIntentForCompany({
   companyId,
   email,
   name,
   slug,
+  plan,
 }: {
   companyId: string
   email: string
   name: string
   slug: string
+  plan?: string
 }): Promise<void> {
   const stripe = getStripe()
-  const priceId = process.env.STRIPE_PRICE_ID_FOUND
+  const priceId = priceIdForPlan(plan)
   if (!stripe || !priceId) return
 
   try {

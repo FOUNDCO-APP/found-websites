@@ -6,9 +6,11 @@ import OnboardingFlow from "@/app/onboarding/OnboardingFlow"
 export default function OnboardingDrawer({
   open,
   onClose,
+  plan = "found_pro",
 }: {
   open: boolean
   onClose: () => void
+  plan?: string
 }) {
   const savedScrollY = useRef(0)
 
@@ -102,7 +104,7 @@ export default function OnboardingDrawer({
           className="absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ top: "calc(env(safe-area-inset-top) + 12px)", backgroundColor: "rgba(255,255,255,0.3)" }}
         />
-        <OnboardingFlow onClose={onClose} drawerMode />
+        <OnboardingFlow onClose={onClose} drawerMode plan={plan} />
       </div>
     </>
   )

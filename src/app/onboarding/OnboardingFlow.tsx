@@ -774,7 +774,7 @@ function SlugSheet({
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () => void; drawerMode?: boolean }) {
+export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro" }: { onClose?: () => void; drawerMode?: boolean; plan?: string }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
@@ -857,6 +857,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
         logoWhiteUrl: answers.logoWhiteUrl || undefined,
         navbarDark: answers.navbarDark,
         heroImageUrls: answers.heroImageUrls,
+        plan,
       }),
       uiTimeout,
     ])
@@ -866,6 +867,7 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
         email: answers.email,
         name: answers.name.trim(),
         slug: res.slug,
+        plan,
       })
       setResult({ url: res.url })
     } else {

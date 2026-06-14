@@ -27,6 +27,7 @@ function FoundWordmark({ className = "" }: { className?: string }) {
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
 
   // Set html background to match page — fixes white iOS status bar in safe area
@@ -136,6 +137,125 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="pricing" className="bg-[#080A09] px-6 py-24 md:px-10 border-t border-white/[0.06]">
+          <div className="mx-auto max-w-7xl">
+            <div className="text-center mb-16">
+              <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
+              <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
+              <p className="mt-5 text-base text-white/50 font-medium">14-day free trial. No charge today. Cancel anytime.</p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3 max-w-5xl mx-auto">
+              {[
+                {
+                  key: "found",
+                  identity: "For the solo owner",
+                  name: "Found",
+                  price: "$39",
+                  features: [
+                    "1 professional website",
+                    "foundco.app subdomain",
+                    "Claude-written copy",
+                    "Industry photo library",
+                    "Contact form + lead capture",
+                    "Lead auto-reply email",
+                    "Photo pipeline (heart → site, star → social)",
+                  ],
+                },
+                {
+                  key: "found_pro",
+                  identity: "For the growing business",
+                  name: "Found Pro",
+                  price: "$69",
+                  featured: true,
+                  features: [
+                    "Everything in Found",
+                    "Custom domain",
+                    "3-email lead follow-up sequence",
+                    "Lead open & click tracking",
+                    "Reply to leads from dashboard",
+                    "Contact database",
+                    "Workers can submit photos",
+                    "Claude copy regeneration",
+                  ],
+                },
+                {
+                  key: "found_business",
+                  identity: "For the full operation",
+                  name: "Found Business",
+                  price: "$99",
+                  features: [
+                    "Everything in Found Pro",
+                    "Online booking & scheduling",
+                    "Quote & estimate system",
+                    "Post-job review automation",
+                    "Full contact pipeline",
+                    "Email marketing sequences",
+                    "Unlimited workers",
+                  ],
+                },
+              ].map((plan) => (
+                <div
+                  key={plan.key}
+                  onClick={() => setSelectedPlan(plan.key)}
+                  className="relative rounded-2xl p-8 cursor-pointer transition-all"
+                  style={{
+                    backgroundColor: plan.featured ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.03)",
+                    border: selectedPlan === plan.key
+                      ? `2px solid ${SIGNAL_GREEN}`
+                      : plan.featured
+                      ? "2px solid rgba(50,208,116,0.3)"
+                      : "2px solid rgba(255,255,255,0.07)",
+                    transform: plan.featured ? "scale(1.02)" : "scale(1)",
+                  }}
+                >
+                  {plan.featured && (
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                      <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+                  <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>
+                    {plan.identity}
+                  </p>
+                  <h3 className="text-2xl font-black text-white mb-1">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1 mb-8">
+                    <span className="text-4xl font-black text-white">{plan.price}</span>
+                    <span className="text-sm text-white/40 font-medium">/month</span>
+                  </div>
+                  <ul className="space-y-3 mb-10">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
+                        <svg className="shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.key); openDrawer() }}
+                    className="w-full py-4 rounded-full text-xs font-black uppercase tracking-widest transition-all"
+                    style={{
+                      backgroundColor: plan.featured || selectedPlan === plan.key ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+                      color: plan.featured || selectedPlan === plan.key ? FOUND_BLACK : "rgba(255,255,255,0.7)",
+                    }}
+                  >
+                    Start free trial
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center mt-10 text-xs text-white/30 font-medium">
+              First 25 clients lock in at <span className="text-white/60 font-black">$29/month forever</span> · Compare all plans at{" "}
+              <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>foundco.app/plans</a>
+            </p>
+          </div>
+        </section>
+
         <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
@@ -165,7 +285,7 @@ export default function Home() {
         </section>
       </main>
 
-      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} />
 
       {/* Cinematic overlay — black screen, breathing glow, FINALLY, second line */}
       {cinematic !== "off" && (

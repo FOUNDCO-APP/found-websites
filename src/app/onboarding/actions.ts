@@ -33,6 +33,7 @@ type OnboardingInput = {
   primaryColor: string
   vibe: string
   testimonials: string
+  plan?: string
 }
 
 type OnboardingResult = {
@@ -312,6 +313,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       accent_color_1: mix(primaryColor, "#000000", 0.22),
       accent_color_2: mix(primaryColor, "#ffffff", 0.72),
       photo_keywords: subIndustry,
+      plan: ["found", "found_pro", "found_business"].includes(input.plan ?? "") ? input.plan : "found_pro",
       active: true,
     })
 
