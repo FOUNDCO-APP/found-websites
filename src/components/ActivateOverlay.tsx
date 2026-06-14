@@ -10,8 +10,7 @@ const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
 const MIN_SPLASH_MS = 4500
 
-// Module-level: Stripe.js starts loading the moment this chunk is prefetched —
-// so it's ready before the user ever taps the button.
+// Module-level: Stripe.js starts loading the moment this chunk is prefetched.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 const stripeAppearance = {
@@ -84,7 +83,7 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
       borderRadius: 24,
       backgroundColor: "#161616",
       border: "1px solid rgba(255,255,255,0.07)",
-      animation: "ao-fade-up 0.7s ease-out both",
+      animation: "cinematic-word-in 600ms ease-out both",
     }}>
       <div style={{ height: 1, backgroundColor: SIGNAL_GREEN }} />
       <div style={{ padding: "24px 28px 28px" }}>
@@ -134,6 +133,13 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
   )
 }
 
+// Cinematic phases mirror page.tsx exactly:
+// "text" → glow + FINALLY + name fades in
+// "iris" → green circle expands from center (250ms)
+// "fading" → both layers fade out (700ms) — gated on stripeReady + minTimeReady
+// "done" → Stripe form shown
+type CinPhase = "text" | "iris" | "fading" | "done"
+
 export default function ActivateOverlay({
   slug,
   companyName: initialName,
@@ -145,8 +151,7 @@ export default function ActivateOverlay({
   setupIntentSecret?: string | null
   onClose: () => void
 }) {
-  const [phase, setPhase] = useState<"splash" | "form">("splash")
-  const [splashExiting, setSplashExiting] = useState(false)
+  const [cinPhase, setCinPhase] = useState<CinPhase>("text")
   const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
   const [companyName, setCompanyName] = useState(initialName)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -159,11 +164,13 @@ export default function ActivateOverlay({
     return () => { document.body.style.overflow = prev }
   }, [])
 
+  // MIN_SPLASH_MS gate
   useEffect(() => {
     const t = setTimeout(() => setMinTimeReady(true), MIN_SPLASH_MS)
     return () => clearTimeout(t)
   }, [])
 
+  // Fetch Stripe secret if not pre-created
   useEffect(() => {
     if (setupIntentSecret) return
     createActivationSetup(slug).then((result) => {
@@ -178,124 +185,154 @@ export default function ActivateOverlay({
     })
   }, [slug, setupIntentSecret, companyName])
 
-  // Dissolve: fade splash out 700ms, then bring form in
+  // Iris fires at 3000ms — matches page.tsx exactly
   useEffect(() => {
-    if (!minTimeReady || !stripeReady) return
-    setSplashExiting(true)
-    const t = setTimeout(() => setPhase("form"), 700)
+    const t = setTimeout(() => setCinPhase("iris"), 3000)
     return () => clearTimeout(t)
-  }, [minTimeReady, stripeReady])
+  }, [])
+
+  // Once iris is showing AND both gates are clear → fade out, then show form
+  useEffect(() => {
+    if (cinPhase !== "iris" || !minTimeReady || !stripeReady) return
+    setCinPhase("fading")
+    const t = setTimeout(() => setCinPhase("done"), 700)
+    return () => clearTimeout(t)
+  }, [cinPhase, minTimeReady, stripeReady])
 
   return createPortal(
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 99999,
-      backgroundColor: FOUND_BLACK,
-      overflowY: "auto",
-      animation: "ao-fade-in 0.7s ease-out both",
-    }}>
-      {/* Green glow — exact match: absolute, left-1/2, top-0, h-96 w-96, -translate-x-1/2, blur-[120px], SIGNAL_GREEN at 1a opacity */}
-      <div style={{
-        pointerEvents: "none",
-        position: "absolute",
-        left: "50%", top: 0,
-        width: 384, height: 384,
-        borderRadius: "50%",
-        backgroundColor: `${SIGNAL_GREEN}1a`,
-        filter: "blur(120px)",
-        transform: "translateX(-50%)",
-      }} />
+    <div style={{ position: "fixed", inset: 0, zIndex: 99999 }}>
 
-      {/* ── SPLASH — mirrors RevealScreen layout exactly ── */}
-      {phase === "splash" && (
-        <div style={{
-          position: "relative",
-          minHeight: "100dvh",
-          display: "flex",
-          flexDirection: "column",
-          maxWidth: 1152,
-          margin: "0 auto",
-          padding: "32px 28px",
-          animation: splashExiting ? "ao-fade-out 0.7s ease-in both" : "ao-fade-up 0.6s ease-out both",
-        }}>
-          {/* Header — wordmark left, "Going live" badge right */}
-          <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <svg viewBox="0 0 420 72" style={{ height: 28, width: 144, color: "white" }} aria-label="Found">
-              <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-            </svg>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 10px ${SIGNAL_GREEN}` }} />
-              <span style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: SIGNAL_GREEN }}>
-                Going live
+      {/* ── CINEMATIC LAYERS (text + iris) — mirrors page.tsx ── */}
+      {cinPhase !== "done" && (
+        <>
+          {/* Layer 1: black screen + breathing glow + text */}
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              backgroundColor: FOUND_BLACK,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              opacity: cinPhase === "fading" ? 0 : 1,
+              transition: cinPhase === "fading" ? "opacity 700ms ease-out" : "none",
+            }}
+            aria-hidden="true"
+          >
+            {/* Breathing SIGNAL_GREEN radial glow — exact copy from page.tsx */}
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{
+                width: 480, height: 480,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(50,208,116,0.32) 0%, rgba(50,208,116,0.1) 50%, transparent 70%)",
+                animation: "cinematic-breathe 2s ease-in-out infinite",
+              }} />
+            </div>
+
+            {/* Text — centered, scale contrast */}
+            <div style={{
+              position: "relative", zIndex: 1,
+              display: "flex", flexDirection: "column", alignItems: "center",
+              gap: "clamp(1rem, 3vw, 1.4rem)",
+              textAlign: "center",
+            }}>
+              {/* FINALLY */}
+              <span style={{
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                fontSize: "clamp(3.2rem, 11vw, 5rem)",
+                fontWeight: 300,
+                letterSpacing: "0.32em",
+                paddingLeft: "0.32em",
+                textTransform: "uppercase",
+                color: "white",
+                display: "block",
+                animation: "cinematic-word-in 500ms ease-out 200ms both",
+              }}>
+                Finally
+              </span>
+
+              {/* [COMPANY NAME] IS READY! */}
+              <span style={{
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
+                fontWeight: 400,
+                letterSpacing: "0.14em",
+                paddingLeft: "0.14em",
+                textTransform: "uppercase",
+                color: SIGNAL_GREEN,
+                display: "block",
+                animation: "cinematic-word-in 500ms ease-out 1400ms both",
+              }}>
+                {companyName} is ready!
               </span>
             </div>
-          </header>
 
-          {/* Content — vertically centered, left-aligned */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", paddingTop: 48, paddingBottom: 48 }}>
-            <div>
-              {/* "Found it." label — exact match */}
-              <p style={{
-                fontSize: 12,
-                fontWeight: 900,
-                textTransform: "uppercase",
-                letterSpacing: "0.24em",
-                color: SIGNAL_GREEN,
-                marginBottom: 24,
+            {/* Close — subtle, always available */}
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              style={{
+                position: "absolute", right: 24, top: 24,
+                background: "none", border: "none", cursor: "pointer",
+                color: "rgba(255,255,255,0.2)", fontSize: 28, lineHeight: 1, padding: 4,
+                zIndex: 2,
               }}>
-                Found it.
-              </p>
-
-              {/* Headline — text-5xl md:text-7xl font-light leading-[1.05] */}
-              <h1 style={{
-                fontSize: "clamp(3rem, 8vw, 4.5rem)",
-                fontWeight: 300,
-                lineHeight: 1.05,
-                color: "white",
-                margin: "0 0 24px 0",
-              }}>
-                {companyName}<br />
-                is going live.
-              </h1>
-
-              {/* Sub-copy — max-w-sm text-base leading-8 text-white/45 */}
-              <p style={{
-                maxWidth: 384,
-                fontSize: 16,
-                lineHeight: "2rem",
-                color: "rgba(255,255,255,0.45)",
-                margin: 0,
-              }}>
-                Your business now has a place online.
-              </p>
-            </div>
+              ×
+            </button>
           </div>
 
-          {/* Close — subtle, bottom-right of header area */}
+          {/* Layer 2: SIGNAL_GREEN iris — expands from center, mirrors page.tsx exactly */}
+          {(cinPhase === "iris" || cinPhase === "fading") && (
+            <div
+              style={{
+                position: "absolute", inset: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                pointerEvents: "none",
+                opacity: cinPhase === "fading" ? 0 : 1,
+                transition: cinPhase === "fading" ? "opacity 700ms ease-out" : "none",
+              }}
+              aria-hidden="true"
+            >
+              <div style={{
+                width: "150vmax", height: "150vmax",
+                minWidth: "150vmax", minHeight: "150vmax",
+                flexShrink: 0,
+                borderRadius: "50%",
+                backgroundColor: SIGNAL_GREEN,
+                animation: "iris-open 250ms cubic-bezier(0.4, 0, 0.6, 1) forwards",
+              }} />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── STRIPE FORM — fades in after cinematic done ── */}
+      {cinPhase === "done" && (
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundColor: FOUND_BLACK,
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: "20px 20px 48px",
+          overflowY: "auto",
+          animation: "cinematic-word-in 600ms ease-out both",
+        }}>
+          {/* FOUND wordmark */}
+          <div style={{ position: "absolute", left: 28, top: 28 }}>
+            <svg viewBox="0 0 420 72" style={{ height: 24, width: 128, color: "white" }} aria-label="Found">
+              <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+            </svg>
+          </div>
+
+          {/* Close */}
           <button
             onClick={onClose}
             aria-label="Close"
             style={{
-              position: "absolute", right: 28, top: 28,
+              position: "absolute", right: 24, top: 24,
               background: "none", border: "none", cursor: "pointer",
               color: "rgba(255,255,255,0.25)", fontSize: 28, lineHeight: 1, padding: 4,
             }}>
             ×
           </button>
-        </div>
-      )}
 
-      {/* ── FORM — centered, fades in after splash dissolves ── */}
-      {phase === "form" && (
-        <div style={{
-          minHeight: "100dvh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px 20px 48px",
-        }}>
           {loadError ? (
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: 18, fontWeight: 300, color: "white", marginBottom: 16 }}>{loadError}</p>
@@ -312,9 +349,6 @@ export default function ActivateOverlay({
       )}
 
       <style>{`
-        @keyframes ao-fade-in  { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ao-fade-out { from { opacity: 1; } to { opacity: 0; } }
-        @keyframes ao-fade-up  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         /* Neutralize Stripe test-mode badge — goes away in production with live keys */
         a[href*="stripe.com"],
         [class*="StripeElement-badge"],
