@@ -358,7 +358,13 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, email, checkoutUrl }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string }) {
+function planDetails(plan?: string) {
+  if (plan === "found_business") return { price: 69, normal: 99 }
+  if (plan === "found_pro")      return { price: 39, normal: 69 }
+  return { price: 29, normal: 39 }
+}
+
+function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; plan?: string }) {
   const [iframeReady, setIframeReady] = useState(false)
 
   return (
@@ -407,23 +413,26 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl }: { name: s
             )}
 
             {/* Billing CTA — appears after email nudge */}
-            {checkoutUrl && (
-              <div
-                className="mt-8 rounded-2xl p-6"
-                style={{ animation: "fade-up 0.6s 1.4s ease-out both", opacity: 0, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <p className="text-xs font-black uppercase tracking-widest" style={{ color: SIGNAL_GREEN }}>14-day free trial</p>
-                <p className="mt-1.5 text-base font-black text-white">No charge today.</p>
-                <p className="mt-0.5 text-xs text-white/35">$39/month after your trial ends. Cancel anytime.</p>
-                <a
-                  href={checkoutUrl}
-                  className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-                  style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+            {checkoutUrl && (() => {
+              const { price, normal } = planDetails(plan)
+              return (
+                <div
+                  className="mt-8 rounded-2xl p-6"
+                  style={{ animation: "fade-up 0.6s 1.4s ease-out both", opacity: 0, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
-                  Activate free trial →
-                </a>
-              </div>
-            )}
+                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                  <p className="mt-1.5 text-base font-black text-white">${price}/month.</p>
+                  <p className="mt-0.5 text-xs text-white/35">Locked for 12 months, then ${normal}/month. Cancel anytime.</p>
+                  <a
+                    href={checkoutUrl}
+                    className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
+                    style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                  >
+                    Lock in my rate →
+                  </a>
+                </div>
+              )
+            })()}
           </div>
 
           {/* Phone mockup with live site preview */}
@@ -883,7 +892,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
         slug: res.slug,
         plan,
       })
-      setResult({ url: res.url })
+      const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
+      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)
@@ -1081,6 +1091,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       primaryColor={answers.primaryColor}
       email={answers.email}
       checkoutUrl={result.checkoutUrl}
+      plan={plan}
     />
   )
 
@@ -1300,35 +1311,52 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                           const effective = slugCustom || clientSlugify(answers.name)
                           const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
                           return (
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-black" style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
-                                {effective}<span style={{ color: tk.muted }}>.{ROOT}</span>
-                              </span>
-                              {slugStatus === "ok" && !slugCustom && (
-                                <button type="button"
-                                  onClick={() => setShowSlugSheet(true)}
-                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                  style={{ color: tk.muted }}>
-                                  Change →
-                                </button>
+                            <>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-black" style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
+                                  {effective}<span style={{ color: tk.muted }}>.{ROOT}</span>
+                                </span>
+                                {slugStatus === "ok" && !slugCustom && (
+                                  <button type="button"
+                                    onClick={() => setShowSlugSheet(true)}
+                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                    style={{ color: tk.muted }}>
+                                    Change →
+                                  </button>
+                                )}
+                                {slugStatus === "ok" && slugCustom && (
+                                  <button type="button"
+                                    onClick={() => setSlugCustom("")}
+                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
+                                    style={{ color: tk.muted }}>
+                                    Reset
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Inline suggestions — shown immediately when slug is taken */}
+                              {slugStatus === "taken" && slugSuggestions.length > 0 && (
+                                <div className="mt-3" style={{ animation: "fade-up 0.3s ease-out both" }}>
+                                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: "#f87171" }}>
+                                    That address is taken. Pick one:
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {slugSuggestions.map((s) => (
+                                      <button key={s} type="button"
+                                        onClick={() => setSlugCustom(s)}
+                                        className="rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] transition"
+                                        style={{
+                                          borderColor: slugCustom === s ? SIGNAL_GREEN : "rgba(248,113,113,0.35)",
+                                          backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}14` : "transparent",
+                                          color: slugCustom === s ? SIGNAL_GREEN : "#f87171",
+                                        }}>
+                                        {s}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
                               )}
-                              {slugStatus === "ok" && slugCustom && (
-                                <button type="button"
-                                  onClick={() => setSlugCustom("")}
-                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                  style={{ color: tk.muted }}>
-                                  Reset
-                                </button>
-                              )}
-                              {slugStatus === "taken" && (
-                                <button type="button"
-                                  onClick={() => setShowSlugSheet(true)}
-                                  className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                  style={{ color: "#f87171" }}>
-                                  Pick another →
-                                </button>
-                              )}
-                            </div>
+                            </>
                           )
                         })()}
                       </div>

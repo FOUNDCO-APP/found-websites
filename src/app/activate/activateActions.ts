@@ -14,13 +14,14 @@ function getAdminClient() {
 export async function createActivationSetup(slug: string): Promise<{
   clientSecret: string
   companyName: string
+  plan: string | null
 } | null> {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) return null
 
   const supabase = await createClient()
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret")
+    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan")
     .eq("slug", slug)
     .single()
 
@@ -29,7 +30,7 @@ export async function createActivationSetup(slug: string): Promise<{
 
   // Fast path — setup intent was pre-created during onboarding, zero Stripe API calls
   if (company.pending_setup_intent_secret) {
-    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name }
+    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: company.plan ?? null }
   }
 
   // Fallback for companies onboarded before this change — create on demand
@@ -44,7 +45,6 @@ export async function createActivationSetup(slug: string): Promise<{
   const subscription = await stripe.subscriptions.create({
     customer: customer.id,
     items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
-    trial_period_days: 14,
     payment_behavior: "default_incomplete",
     payment_settings: {
       save_default_payment_method: "on_subscription",
@@ -64,7 +64,7 @@ export async function createActivationSetup(slug: string): Promise<{
     .update({ pending_setup_intent_secret: setupIntent.client_secret })
     .eq("slug", slug)
 
-  return { clientSecret: setupIntent.client_secret, companyName: company.name }
+  return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: company.plan ?? null }
 }
 
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
@@ -84,10 +84,8 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       .from("companies")
       .update({
         stripe_customer_id: customerId,
-        subscription_status: "trialing",
-        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        plan: "found",
-        pending_setup_intent_secret: null, // consumed — clean up
+        subscription_status: "active",
+        pending_setup_intent_secret: null,
       })
       .eq("slug", slug)
 

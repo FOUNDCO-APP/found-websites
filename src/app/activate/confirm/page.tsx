@@ -15,5 +15,5 @@ export default async function ActivateConfirmPage({
 
   await confirmActivation(slug, setup_intent)
 
-  redirect(`https://${slug}.${rootDomain}?trial=activated`)
+  redirect(`https://${slug}.${rootDomain}?activated=true`)
 }

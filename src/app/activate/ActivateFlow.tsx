@@ -10,11 +10,17 @@ const FOUND_BLACK = "#111111"
 const MIN_SPLASH_MS = 4500
 
 const SPLASH_LINES = [
-  "Setting up your free trial…",
+  "Getting your site ready…",
   "Securing your space…",
-  "Locking in 14 days free…",
+  "Locking in your rate…",
   "Almost ready…",
 ]
+
+function planDetails(plan?: string | null) {
+  if (plan === "found_business") return { price: 69, normal: 99 }
+  if (plan === "found_pro")      return { price: 39, normal: 69 }
+  return { price: 29, normal: 39 }
+}
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -58,11 +64,12 @@ const stripeAppearance = {
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
-function CardForm({ slug, companyName }: { slug: string; companyName: string }) {
+function CardForm({ slug, companyName, plan }: { slug: string; companyName: string; plan?: string | null }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const { price, normal } = planDetails(plan)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -98,14 +105,14 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
             style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
           <span className="text-[10px] font-black uppercase tracking-[0.22em]"
             style={{ color: SIGNAL_GREEN }}>
-            Your free trial
+            Founding rate
           </span>
         </div>
         <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
-          14 days free.
+          ${price}/month.
         </p>
         <p className="mb-6 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-          No charge today. Cancel anytime.
+          Locked in for 12 months, then ${normal}/month. Cancel anytime.
         </p>
         <form onSubmit={handleSubmit} className="space-y-5">
           <PaymentElement options={{ layout: "tabs" }} />
@@ -115,7 +122,7 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
           <button type="submit" disabled={!stripe || loading}
             className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-            {loading ? "One moment…" : "Activate free trial →"}
+            {loading ? "One moment…" : "Lock in my rate →"}
           </button>
           <p className="text-center text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
             {companyName} · Powered by Found
@@ -141,6 +148,7 @@ export default function ActivateFlow({
   const [lineIdx, setLineIdx] = useState(0)
   const [clientSecret, setClientSecret] = useState<string | null>(preloadedSecret ?? null)
   const [companyName, setCompanyName] = useState<string>(preloadedName ?? "")
+  const [plan, setPlan] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(error ?? null)
   const [stripeReady, setStripeReady] = useState(!!preloadedSecret)
   const [minTimeReady, setMinTimeReady] = useState(false)
@@ -167,6 +175,7 @@ export default function ActivateFlow({
       } else {
         setClientSecret(result.clientSecret)
         if (!companyName) setCompanyName(result.companyName)
+        if (result.plan) setPlan(result.plan)
       }
       setStripeReady(true)
     })
@@ -232,7 +241,7 @@ export default function ActivateFlow({
           <Elements
             stripe={stripePromise}
             options={{ clientSecret, appearance: stripeAppearance }}>
-            <CardForm slug={slug} companyName={companyName} />
+            <CardForm slug={slug} companyName={companyName} plan={plan} />
           </Elements>
         ) : null
       )}
