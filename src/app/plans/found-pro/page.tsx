@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import PlanPage from "@/components/PlanPage"
 
 export const metadata: Metadata = {
-  title: "Found Pro — $69/month | Website + Leads + Custom Domain for Growing Businesses",
-  description: "Everything in Found plus a custom domain, 3-email lead follow-up sequences, lead tracking, contact database, and worker photo uploads. Built for businesses that are growing.",
+  title: "Found Pro — $39/month | Never Lose a Lead Again",
+  description: "Every inquiry followed up automatically. Your own domain, a contact list that builds itself, and your crew contributing photos from the field — $39/month.",
   openGraph: {
-    title: "Found Pro — $69/month | Website + Leads + Custom Domain for Growing Businesses",
-    description: "Custom domain, automated lead follow-up, contact database, and team photo uploads. The complete system for a growing local business.",
+    title: "Found Pro — $39/month | Never Lose a Lead Again",
+    description: "Automated follow-up, contact database, team photo uploads, and every lead handled — without lifting a finger.",
     url: "https://foundco.app/plans/found-pro",
   },
 }
@@ -16,27 +16,27 @@ export default function FoundProPlanPage() {
     <PlanPage
       plan="found_pro"
       name="Found Pro"
-      identity="For the growing business"
-      price={69}
+      identity="Never lose a lead again."
+      price={39}
+      normalPrice={69}
       featured
       tagline="Your business runs itself while you work."
-      description="Found Pro adds the systems that growing businesses need — a real domain, automated lead follow-up so no inquiry falls through the cracks, a contact database, and the ability for your team to contribute photos from the field."
+      description="Most businesses lose clients not because of bad work, but because they forgot to follow up. Found Pro fixes that — every inquiry gets answered, followed up, and tracked automatically. You stay focused on the job. Found handles the rest."
       features={[
-        { label: "Everything in Found", desc: "Full website, lead capture, auto-reply, photo pipeline." },
-        { label: "Custom domain", desc: "Connect yourbusiness.com and show up professionally everywhere." },
-        { label: "3-email lead follow-up sequence", desc: "Day 1 confirmation, day 3 check-in, day 7 final touch — all sent automatically, all branded to your business." },
-        { label: "Lead open & click tracking", desc: "See who opened your follow-up, who clicked, and who's ready to buy." },
-        { label: "Reply to leads from dashboard", desc: "Respond directly from Found without switching to your email app." },
-        { label: "Contact database", desc: "Every lead is saved as a contact — with their history, what they asked about, and every email exchanged." },
-        { label: "Workers can submit photos", desc: "Your crew takes photos on the job. They upload to Found. You heart or star them — they never touch your personal camera roll." },
-        { label: "Claude copy regeneration", desc: "Rewrite any section of your website on demand. New service? New location? Done in seconds." },
+        { label: "Everything in Found", desc: "Complete website, your own web address, industry photos, lead capture, and the photo system that keeps your site fresh." },
+        { label: "Every lead followed up — automatically", desc: "When someone contacts you, Found sends them a confirmation right away. Then checks in three days later. Then one final message a week after that. All sent on your behalf, all sounding like you. Every single time." },
+        { label: "See who's interested and ready to hire", desc: "Found shows you exactly who opened your follow-up, who clicked through, and who's been reading every message. So you know where to focus your time." },
+        { label: "All your leads in one place", desc: "Reply to any inquiry directly from Found without switching to your email app. Your whole conversation history is right there." },
+        { label: "Your entire contact list, organized", desc: "Every person who's ever reached out to you is saved as a contact — with what they asked about, when they reached out, and every message you've exchanged." },
+        { label: "Your crew contributes from the field", desc: "Your employees or crew get a simple upload link — not full account access. They take photos on the job and upload them. You see them in Found and decide what goes on your website and social." },
+        { label: "Rewrite any page on your site, anytime", desc: "Added a new service? Moved to a new city? Want a different tone? Found rewrites any section of your website in seconds — no designer, no developer." },
       ]}
       faqs={[
-        { q: "What makes Pro worth the extra $30/month?", a: "The lead follow-up sequence alone. Studies show businesses that follow up within an hour are 7x more likely to close a lead. Found Pro does it automatically — for every single inquiry, forever." },
-        { q: "How does the custom domain work?", a: "You point your existing domain to Found (we walk you through it), or buy a new one through your registrar. Takes about 5 minutes." },
-        { q: "What does 'workers can submit photos' mean?", a: "Your employees or subcontractors get a simple upload link — not full account access. They upload photos from a job site. You see them in Found and decide which ones go on the website or social." },
-        { q: "Can I downgrade to Found if I don't need all of this?", a: "Yes, anytime. Your site stays live. You'd lose the custom domain routing and lead sequences, but nothing is deleted." },
-        { q: "Is Found Pro right for a one-person business?", a: "Absolutely — especially if you're getting consistent leads and want to make sure none go cold. The automation works whether you have 1 employee or 10." },
+        { q: "What makes Pro worth the extra $10/month over Found?", a: "The follow-up sequence. Businesses that follow up within the first few days are far more likely to close a lead. Found Pro does it automatically, for every single inquiry, forever. Most Pro customers recover the cost on their first extra closed job." },
+        { q: "How does the automatic follow-up work?", a: "When someone fills out your contact form, they get an immediate reply. Three days later, Found sends a check-in on your behalf. Seven days later, one final message. All of them look like they came from you — your business name, your phone number, your tone." },
+        { q: "What does 'your crew contributes from the field' mean?", a: "You give your employees or subcontractors a simple upload link. They take photos at a job site and send them through. Those photos appear in Found for you to review. You heart them to go on the website, star them for social — the crew never sees your contacts, your leads, or your business data." },
+        { q: "Can I downgrade to Found if I don't need all of this?", a: "Yes, anytime. Your website stays live and your domain stays connected. You'd lose the automatic follow-up and contact history, but nothing is deleted." },
+        { q: "Is Found Pro right if it's just me running my business?", a: "Especially then. When you're running everything yourself, the automated follow-up does the job you don't have time to do. Every lead gets attention even when you're on a job, on the weekend, or just busy." },
       ]}
     />
   )

@@ -142,56 +142,58 @@ export default function Home() {
             <div className="text-center mb-16">
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
-              <p className="mt-5 text-base text-white/50 font-medium">14-day free trial. No charge today. Cancel anytime.</p>
+              <p className="mt-5 text-base text-white/50 font-medium">Founding rates expire July 15 — locked in for your first year.</p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 max-w-5xl mx-auto">
               {[
                 {
                   key: "found",
-                  identity: "For the solo owner",
+                  tagline: "Get online today.",
                   name: "Found",
-                  price: "$39",
+                  price: "$29",
+                  normalPrice: "$39",
                   features: [
-                    "1 professional website",
-                    "foundco.app subdomain",
-                    "Claude-written copy",
-                    "Industry photo library",
-                    "Contact form + lead capture",
-                    "Lead auto-reply email",
-                    "Photo pipeline (heart → site, star → social)",
+                    "Complete website, five pages",
+                    "Your own web address",
+                    "Professional copy, written for you",
+                    "Beautiful industry photos, built in",
+                    "Leads come straight to you",
+                    "Every inquiry answered instantly",
+                    "Take a photo. It's on your site.",
                   ],
                 },
                 {
                   key: "found_pro",
-                  identity: "For the growing business",
+                  tagline: "Never lose a lead again.",
                   name: "Found Pro",
-                  price: "$69",
+                  price: "$39",
+                  normalPrice: "$69",
                   featured: true,
                   features: [
                     "Everything in Found",
-                    "Custom domain",
-                    "3-email lead follow-up sequence",
-                    "Lead open & click tracking",
-                    "Reply to leads from dashboard",
-                    "Contact database",
-                    "Workers can submit photos",
-                    "Claude copy regeneration",
+                    "Every lead followed up — automatically",
+                    "See who's interested and ready to hire",
+                    "All your leads in one place",
+                    "Your entire contact list, organized",
+                    "Your crew contributes from the field",
+                    "Rewrite any page on your site, anytime",
                   ],
                 },
                 {
                   key: "found_business",
-                  identity: "For the full operation",
+                  tagline: "Run your whole business.",
                   name: "Found Business",
-                  price: "$99",
+                  price: "$69",
+                  normalPrice: "$99",
                   features: [
                     "Everything in Found Pro",
-                    "Online booking & scheduling",
-                    "Quote & estimate system",
-                    "Post-job review automation",
-                    "Full contact pipeline",
-                    "Email marketing sequences",
-                    "Unlimited workers",
+                    "Clients book themselves",
+                    "Send professional estimates, collect deposits",
+                    "More five-star reviews, without asking",
+                    "Reach your full client list",
+                    "Your whole team, no extra charge",
+                    "Show clients their finished job",
                   ],
                 },
               ].map((plan) => (
@@ -210,20 +212,24 @@ export default function Home() {
                   }}
                 >
                   {plan.featured && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                      <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
                         style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                         Most Popular
                       </span>
                     </div>
                   )}
                   <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>
-                    {plan.identity}
+                    {plan.tagline}
                   </p>
                   <h3 className="text-2xl font-black text-white mb-1">{plan.name}</h3>
-                  <div className="flex items-baseline gap-1 mb-8">
-                    <span className="text-4xl font-black text-white">{plan.price}</span>
-                    <span className="text-sm text-white/40 font-medium">/month</span>
+                  <div className="mb-8">
+                    <p className="text-sm line-through text-white/25">{plan.normalPrice}/month</p>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-black text-white">{plan.price}</span>
+                      <span className="text-sm text-white/40 font-medium">/month</span>
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
                   </div>
                   <ul className="space-y-3 mb-10">
                     {plan.features.map((f) => (
@@ -243,15 +249,14 @@ export default function Home() {
                       color: plan.featured || selectedPlan === plan.key ? FOUND_BLACK : "rgba(255,255,255,0.7)",
                     }}
                   >
-                    Start free trial
+                    Get started
                   </button>
                 </div>
               ))}
             </div>
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
-              First 25 clients lock in at <span className="text-white/60 font-black">$29/month forever</span> · Compare all plans at{" "}
-              <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>foundco.app/plans</a>
+              Founding rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a>
             </p>
           </div>
         </section>

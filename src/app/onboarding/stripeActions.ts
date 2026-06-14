@@ -59,7 +59,6 @@ export async function createSetupIntentForCompany({
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: priceId }],
-      trial_period_days: 14,
       payment_behavior: "default_incomplete",
       payment_settings: {
         save_default_payment_method: "on_subscription",

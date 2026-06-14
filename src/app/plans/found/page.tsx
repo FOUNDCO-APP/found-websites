@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import PlanPage from "@/components/PlanPage"
 
 export const metadata: Metadata = {
-  title: "Found — $39/month | Professional Website for Solo Business Owners",
-  description: "Get a professional website built in minutes. Lead capture, auto-reply emails, photo pipeline, and industry-curated content — all for $39/month with a 14-day free trial.",
+  title: "Found — $29/month | Get Your Business Online Today",
+  description: "A complete professional website, your own web address, and a photo pipeline that keeps your site fresh — built in minutes for $29/month.",
   openGraph: {
-    title: "Found — $39/month | Professional Website for Solo Business Owners",
-    description: "Get a professional website built in minutes. Lead capture, auto-reply emails, and a photo pipeline that feeds your site and social automatically.",
+    title: "Found — $29/month | Get Your Business Online Today",
+    description: "A complete website, your own web address, beautiful industry photos, and leads coming straight to you. Built in minutes.",
     url: "https://foundco.app/plans/found",
   },
 }
@@ -16,24 +16,25 @@ export default function FoundPlanPage() {
     <PlanPage
       plan="found"
       name="Found"
-      identity="For the solo owner"
-      price={39}
+      identity="Start here."
+      price={29}
+      normalPrice={39}
       tagline="Your business, professionally online — today."
-      description="You do great work. Found makes sure people can find you, contact you, and trust you before they even pick up the phone. A complete website, lead capture, and photo pipeline — set up in minutes."
+      description="You do great work. Found makes sure people can find you, contact you, and trust you before they even pick up the phone. A complete website, your own domain, and a photo system that keeps your site looking fresh — set up in minutes."
       features={[
-        { label: "Professional website", desc: "5 pages built for your industry — Home, About, Services, Gallery, Contact. Claude writes the copy." },
-        { label: "foundco.app subdomain", desc: "Go live immediately at yourbusiness.foundco.app. Upgrade to a custom domain anytime." },
-        { label: "Industry photo library", desc: "Curated, professional photos matched to your industry — not random stock images." },
-        { label: "Contact form + lead capture", desc: "Every inquiry is saved and forwarded to you instantly." },
-        { label: "Lead auto-reply email", desc: "When someone fills out your form, they automatically get a branded confirmation — making your business look responsive 24/7." },
-        { label: "Photo pipeline", desc: "Take a photo after a job. Heart it — it goes live on your website. Star it — it's sized and ready for Instagram and Facebook." },
+        { label: "A complete website", desc: "Five pages built for your business — Home, About, Services, Gallery, and Contact. Professional copy written for you, matched to what you actually do." },
+        { label: "Your own web address", desc: "Connect yourbusiness.com and show up professionally everywhere — Google, text messages, business cards, everywhere." },
+        { label: "Beautiful photos for your industry", desc: "Curated, professional photos matched to your type of business. Not random stock images — photos that look like your work." },
+        { label: "Leads come straight to you", desc: "Every inquiry from your website is saved and forwarded to you the moment it comes in. Nothing falls through the cracks." },
+        { label: "Every inquiry answered instantly", desc: "When someone fills out your form, they automatically get a professional reply — making your business look responsive 24 hours a day, even when you're on a job." },
+        { label: "Take a photo. It's on your site.", desc: "Finish a job, take a photo. Heart it in Found and it appears on your website gallery. Star it and it's sized and ready to post on Instagram and Facebook — no resizing, no editing app." },
       ]}
       faqs={[
-        { q: "How long does it take to go live?", a: "Most businesses are live in under 10 minutes. You answer a few questions, Found builds the site, and you see the finished result." },
-        { q: "Do I need any technical skills?", a: "None. Found asks you questions in plain English. No templates, no drag-and-drop, no code." },
-        { q: "What happens after the 14-day trial?", a: "You're charged $39/month starting day 15. You can cancel anytime before that and you won't be charged." },
-        { q: "Can I upgrade to Pro or Business later?", a: "Yes — upgrade anytime from your dashboard. Your site, leads, and photos carry over." },
-        { q: "What's the photo pipeline?", a: "You take a photo on your phone. Heart it in Found and it automatically appears on your website gallery. Star it and it's exported in the right dimensions for Instagram and Facebook posts — no resizing, no Canva." },
+        { q: "How long does it take to go live?", a: "Most businesses are live in under 10 minutes. You answer a few questions about your business, Found builds the site, and you see the finished result right away." },
+        { q: "Do I need any technical skills?", a: "None. Found asks you questions in plain English — your business name, what you do, where you're based, and how you want to sound. No templates, no drag-and-drop, no code." },
+        { q: "Can I use my own domain name?", a: "Yes — every plan includes your own web address. You can connect an existing domain you already own, or buy a new one through any registrar. We walk you through it." },
+        { q: "Can I upgrade to Pro or Business later?", a: "Yes — upgrade anytime from your dashboard. Your site, leads, and photos all carry over. Your founding rate stays locked in regardless of when you upgrade." },
+        { q: "How does the photo system work?", a: "You take photos on your phone — after a job, at a project, anywhere. Open Found, heart a photo and it goes live on your website. Star it and it exports in the exact dimensions for Instagram and Facebook. No resizing, no Canva, no extra steps." },
       ]}
     />
   )

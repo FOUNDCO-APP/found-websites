@@ -15,6 +15,7 @@ interface Props {
   name: string
   identity: string
   price: number
+  normalPrice: number
   featured?: boolean
   tagline: string
   description: string
@@ -22,7 +23,7 @@ interface Props {
   faqs: FAQ[]
 }
 
-export default function PlanPage({ plan, name, identity, price, featured, tagline, description, features, faqs }: Props) {
+export default function PlanPage({ plan, name, identity, price, normalPrice, featured, tagline, description, features, faqs }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
@@ -60,18 +61,21 @@ export default function PlanPage({ plan, name, identity, price, featured, taglin
           </p>
           <h1 className="text-5xl font-light leading-tight md:text-7xl text-white mb-6">{tagline}</h1>
           <p className="text-base md:text-lg text-white/55 font-medium leading-8 max-w-2xl mx-auto mb-10">{description}</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Start free trial — {name}
+              Get started — {name}
             </button>
             <div className="text-center">
-              <span className="text-3xl font-black text-white">${price}</span>
-              <span className="text-sm text-white/40 font-medium">/month</span>
-              <p className="text-xs text-white/30 mt-0.5">after 14-day free trial</p>
+              <p className="text-sm line-through text-white/25">${normalPrice}/month</p>
+              <div className="flex items-baseline gap-1 justify-center">
+                <span className="text-3xl font-black text-white">${price}</span>
+                <span className="text-sm text-white/40 font-medium">/month</span>
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
             </div>
           </div>
         </section>
@@ -133,18 +137,18 @@ export default function PlanPage({ plan, name, identity, price, featured, taglin
         <section className="px-6 pb-24 md:px-10 text-center">
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-light text-white mb-4">Ready to get started?</h2>
-            <p className="text-white/45 mb-8 font-medium">14-day free trial. No charge today. Your site goes live in minutes.</p>
+            <p className="text-white/45 mb-8 font-medium">Your site goes live today. Founding rate locked for 12 months.</p>
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Start building — {name}
+              Get started — {name}
             </button>
             <p className="mt-6 text-xs text-white/25">
-              Want to compare?{" "}
+              Founding rate expires July 15 · locked for 12 months, then ${normalPrice}/month.{" "}
               <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
-                See all plans
+                Compare all plans
               </Link>
             </p>
           </div>
