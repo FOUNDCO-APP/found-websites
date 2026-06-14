@@ -6,7 +6,7 @@ import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, saveAbandonedLead } from "./actions"
-import { createBillingSession } from "./stripeActions"
+import { createSetupIntentForCompany } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
@@ -861,13 +861,13 @@ export default function OnboardingFlow({ onClose, drawerMode }: { onClose?: () =
       uiTimeout,
     ])
     if (res.success && res.url && res.slug) {
-      const billing = await createBillingSession({
+      await createSetupIntentForCompany({
         companyId: sessionId,
         email: answers.email,
         name: answers.name.trim(),
         slug: res.slug,
       })
-      setResult({ url: res.url, checkoutUrl: billing.url })
+      setResult({ url: res.url })
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)

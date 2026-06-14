@@ -82,6 +82,7 @@ export default function PreviewBanner({
   const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 
   function handleActivate() {
+    setVisible(false)
     setNavigating(true)
     window.location.href = "/activate"
   }

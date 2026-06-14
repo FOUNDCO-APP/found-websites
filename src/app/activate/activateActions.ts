@@ -20,13 +20,19 @@ export async function createActivationSetup(slug: string): Promise<{
   const supabase = await createClient()
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, email, stripe_customer_id")
+    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret")
     .eq("slug", slug)
     .single()
 
   if (!company) return null
   if (company.stripe_customer_id) return null // already activated
 
+  // Fast path — setup intent was pre-created during onboarding, zero Stripe API calls
+  if (company.pending_setup_intent_secret) {
+    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name }
+  }
+
+  // Fallback for companies onboarded before this change — create on demand
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
   const customer = await stripe.customers.create({
@@ -51,6 +57,13 @@ export async function createActivationSetup(slug: string): Promise<{
   const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
   if (!setupIntent?.client_secret) return null
 
+  // Store it so any future visit to /activate is instant
+  const admin = getAdminClient()
+  await admin
+    .from("companies")
+    .update({ pending_setup_intent_secret: setupIntent.client_secret })
+    .eq("slug", slug)
+
   return { clientSecret: setupIntent.client_secret, companyName: company.name }
 }
 
@@ -74,6 +87,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
         subscription_status: "trialing",
         trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         plan: "found",
+        pending_setup_intent_secret: null, // consumed — clean up
       })
       .eq("slug", slug)
 
