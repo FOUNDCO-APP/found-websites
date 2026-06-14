@@ -55,6 +55,7 @@ const stripeAppearance = {
       marginBottom: "8px",
     },
     ".Error": { color: "#F43F5E", fontSize: "12px" },
+    ".Badge": { display: "none" },
   },
 }
 
@@ -304,6 +305,14 @@ export default function ActivateOverlay({
         @keyframes ao-spin    { to { transform: rotate(360deg); } }
         @keyframes ao-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes ao-fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        /* Neutralize Stripe test-mode badge link — popup is test-only, goes away in production */
+        a[href*="stripe.com"],
+        [class*="StripeElement-badge"],
+        [class*="powered-by"],
+        [class*="PoweredBy"] {
+          pointer-events: none !important;
+          opacity: 0 !important;
+        }
       `}</style>
     </div>,
     document.body
