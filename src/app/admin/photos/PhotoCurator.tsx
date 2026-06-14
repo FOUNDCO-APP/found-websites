@@ -162,10 +162,16 @@ export default function PhotoCurator() {
     setSaving(false)
   }
 
-  // Shawn approves: promote pending picks to live pool
+  // Shawn approves: save any new selections first, then promote everything to live
   async function handlePromoteToLive() {
     setSaving(true)
     setSaveError(null)
+    // If the user selected additional photos from the grid, save them to pending first
+    const photoList = currentPhotos && currentPhotos !== "loading" ? currentPhotos : []
+    const newPicks = photoList.filter(p => selectedSet.has(p.id)).map(p => ({ url: p.url, desc: p.desc }))
+    if (newPicks.length > 0) {
+      await saveTeamPicks(activeIndustry, newPicks, activeQuery || undefined)
+    }
     const result = await promoteToLive(activeIndustry)
     if (result.success) {
       setSavedIndustry(activeIndustry)
@@ -516,14 +522,14 @@ export default function PhotoCurator() {
                   >
                     {saving ? "Submitting…" : "Submit for Review"}
                   </button>
-                  {currentPending > 0 && (
+                  {(currentPending > 0 || selectedCount > 0) && (
                     <button
                       onClick={handlePromoteToLive}
                       disabled={saving}
                       className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
                       style={{ backgroundColor: "#2E7D32", color: "#fff" }}
                     >
-                      {saving ? "Approving…" : `Approve → Go Live (${currentPending})`}
+                      {saving ? "Approving…" : `Approve → Go Live (${currentPending + selectedCount})`}
                     </button>
                   )}
                 </>
