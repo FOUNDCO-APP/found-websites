@@ -7,7 +7,6 @@ import SiteNav from "@/components/SiteNav"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const PROMO_AMBER = "#F0A500"
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -132,7 +131,7 @@ export default function Home() {
                   ["02", "Found shapes the site.", "Industry, imagery, layout, color, copy, and calls to action come together quietly."],
                   ["03", "Your business goes live.", "The reveal gives the owner a real site they can open, share, and improve."],
                 ].map(([step, title, body]) => (
-                  <div key={step} className="bg-[#0B0E0C] p-7">
+                  <div key={step} className="bg-[#0B0E0C] p-7" style={{ borderTop: `2px solid ${SIGNAL_GREEN}` }}>
                     <div className="mb-12 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
                     <h3 className="text-2xl font-light leading-tight">{title}</h3>
                     <p className="mt-4 text-sm font-bold leading-7 text-white/48">{body}</p>
@@ -154,25 +153,21 @@ export default function Home() {
         </section>
 
         {/* ── Promo banner ── */}
-        <section className="relative overflow-hidden border-y" style={{ backgroundColor: "#0C0A07", borderColor: "rgba(240,165,0,0.18)" }}>
-          <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center, rgba(240,165,0,0.07) 0%, transparent 70%)" }} />
-          <div className="relative px-6 py-20 md:px-10 text-center max-w-3xl mx-auto">
-            <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: PROMO_AMBER }}>
-              Founding Rate · 30 Days Only
-            </p>
-            <h2 className="text-3xl font-light text-white md:text-5xl mb-5">
-              Lock in your rate before July 15.
+        <section style={{ backgroundColor: SIGNAL_GREEN }}>
+          <div className="px-6 py-20 md:px-10 md:py-24 text-center max-w-3xl mx-auto">
+            <h2 className="text-4xl font-light leading-tight md:text-6xl mb-5" style={{ color: FOUND_BLACK }}>
+              Prices go up July 15.
             </h2>
-            <p className="text-base md:text-lg font-medium mb-10 text-white/55">
-              $29 · $39 · $69 — your price for a full year.
+            <p className="text-base md:text-lg font-medium mb-10" style={{ color: "rgba(8,10,9,0.55)" }}>
+              Start today at $29, $39, or $69/month — your price, locked in for a full year.
             </p>
             <button
               type="button"
               onClick={openDrawer}
-              className="inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90 md:min-h-14"
-              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+              className="inline-flex min-h-12 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-80 md:min-h-14"
+              style={{ backgroundColor: FOUND_BLACK, color: "white" }}
             >
-              Claim your founding rate
+              Build my site
             </button>
           </div>
         </section>
@@ -241,15 +236,16 @@ export default function Home() {
                 <div
                   key={plan.key}
                   onClick={() => setSelectedPlan(plan.key)}
-                  className="relative rounded-2xl p-8 cursor-pointer transition-all"
+                  className="relative rounded-2xl p-10 cursor-pointer transition-all"
                   style={{
-                    backgroundColor: plan.featured ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.03)",
+                    backgroundColor: plan.featured ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
                     border: selectedPlan === plan.key
                       ? `2px solid ${SIGNAL_GREEN}`
                       : plan.featured
                       ? "2px solid rgba(50,208,116,0.3)"
                       : "2px solid rgba(255,255,255,0.07)",
                     transform: plan.featured ? "scale(1.02)" : "scale(1)",
+                    boxShadow: plan.featured ? "inset 0 0 80px rgba(50,208,116,0.05)" : "none",
                   }}
                 >
                   {plan.featured && (
