@@ -5,6 +5,7 @@ import type { Company } from "@/types/company"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
 import PreviewBanner from "@/components/PreviewBanner"
+import TrialActivatedSplash from "@/components/TrialActivatedSplash"
 import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
 
@@ -198,6 +199,7 @@ export default async function CompanyLayout({
         trialEndsAt={company.trial_ends_at}
         setupIntentSecret={company.pending_setup_intent_secret}
       />
+      <TrialActivatedSplash companyName={company.name} />
     </div>
   )
 }
