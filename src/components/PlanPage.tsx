@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 

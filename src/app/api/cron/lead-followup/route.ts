@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!)
+}
 
 function getAdminClient() {
   return createClient(
@@ -51,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     // Day 3 follow-up
     if (daysSince >= 3 && !lead.follow_up_3_sent_at) {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `Still thinking about it, ${firstName}?`,
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     // Day 7 follow-up
     if (daysSince >= 7 && !lead.follow_up_7_sent_at) {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `We're here when you're ready, ${firstName}`,
