@@ -1119,7 +1119,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       })()}
 
       <main className={`relative overflow-hidden ${drawerMode ? "h-full" : "min-h-screen"}`}>
-        <div className={`grid md:grid-cols-2 ${drawerMode ? "h-full" : "min-h-screen"}`}>
+        <div className={`grid ${!drawerMode ? "md:grid-cols-2" : ""} ${drawerMode ? "h-full" : "min-h-screen"}`}>
 
           {/* ── Left: conversation ── */}
           <div className="relative flex flex-col overflow-hidden" style={{ backgroundColor: FOUND_BLACK, height: drawerMode ? "100%" : "100dvh" }}>
@@ -1193,7 +1193,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                   <button
                     type="button"
                     onClick={advance}
-                    className="relative w-full rounded-full py-5 text-sm font-black uppercase tracking-widest sm:w-auto sm:px-12 md:py-6"
+                    className="relative w-full rounded-full py-5 text-sm font-black uppercase tracking-widest whitespace-nowrap sm:w-auto sm:px-12 md:py-6"
                     style={{
                       backgroundColor: SIGNAL_GREEN,
                       color: FOUND_BLACK,
@@ -1874,11 +1874,13 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
             </div>
           </div>
 
-          {/* ── Right: live preview (desktop only) ── */}
-          <div className="hidden flex-col md:flex"
-            style={{ backgroundColor: "#050705", borderLeft: "1px solid rgba(255,255,255,0.045)" }}>
-            <LivePreview answers={answers} />
-          </div>
+          {/* ── Right: live preview (full-page only, not in drawer) ── */}
+          {!drawerMode && (
+            <div className="hidden flex-col md:flex"
+              style={{ backgroundColor: "#050705", borderLeft: "1px solid rgba(255,255,255,0.045)" }}>
+              <LivePreview answers={answers} />
+            </div>
+          )}
 
         </div>
       </main>
