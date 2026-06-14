@@ -125,7 +125,7 @@ function canAdvance(step: Step, a: Answers): boolean {
     case "description":  return a.description.trim().length > 8
     case "subIndustry":  return !!a.subIndustry
     case "location":     return a.location.trim().length > 2
-    case "contact":      return a.phone.trim().length > 6 && a.email.includes("@")
+    case "contact":      return a.phone.replace(/\D/g, "").length >= 10 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)
     case "different":    return a.different.trim().length > 8
     case "services":     return a.services.length > 0
     case "photos":       return !!a.photoChoice || a.heroImageUrls.length > 0
@@ -358,7 +358,7 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, email, checkoutUrl, onEdit }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; onEdit: () => void }) {
+function RevealScreen({ name, url, primaryColor, email, checkoutUrl }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string }) {
   const [iframeReady, setIframeReady] = useState(false)
 
   return (
@@ -379,16 +379,12 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, onEdit }: {
             <p className="mb-6 text-xs font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>Found it.</p>
             <h1 className="text-5xl font-light leading-[1.05] text-white md:text-7xl">{name}<br />is live.</h1>
             <p className="mt-6 max-w-sm text-base leading-8 text-white/45">Your business now has a place online. Open it, look around, and make it yours.</p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9">
               <a href={`${url}?preview=true`} target="_blank" rel="noreferrer"
                 className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
                 style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                See your site
+                See your site →
               </a>
-              <button type="button" onClick={onEdit}
-                className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/18 px-8 text-sm font-black uppercase tracking-widest text-white transition hover:border-white/35">
-                Make changes
-              </button>
             </div>
             <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>
 
@@ -458,12 +454,21 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, onEdit }: {
                   </div>
                 </div>
 
-                {/* Live site iframe — fades in when loaded */}
+                {/* Live site iframe — rendered at 390px (real mobile viewport) then scaled down */}
                 <iframe
                   src={url}
                   title={`${name} website preview`}
-                  className="absolute inset-0 h-full w-full border-0 transition-opacity duration-700"
-                  style={{ opacity: iframeReady ? 1 : 0, pointerEvents: "none" }}
+                  loading="eager"
+                  sandbox="allow-scripts allow-same-origin"
+                  className="absolute top-0 left-0 border-0 transition-opacity duration-700"
+                  style={{
+                    opacity: iframeReady ? 1 : 0,
+                    pointerEvents: "none",
+                    width: "390px",
+                    height: "844px",
+                    transform: "scale(0.6462)",
+                    transformOrigin: "top left",
+                  }}
                   onLoad={() => setIframeReady(true)}
                 />
               </div>
@@ -1076,7 +1081,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       primaryColor={answers.primaryColor}
       email={answers.email}
       checkoutUrl={result.checkoutUrl}
-      onEdit={() => { setResult(null); setSaving(false); setPhase("questions"); setStepIndex(1) }}
     />
   )
 
@@ -1495,14 +1499,22 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                           <div className="space-y-2">
                             <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: tk.hint }}>Quick adds</p>
                             <div className="flex flex-wrap gap-2">
-                              {DIFFERENTIATOR_CHIPS[answers.industry].map((chip) => (
-                                <button key={chip} type="button"
-                                  onClick={() => set("different", answers.different ? `${answers.different}, ${chip}` : chip)}
-                                  className="rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] transition"
-                                  style={{ borderColor: tk.chipBorder(false), color: tk.muted }}>
-                                  {chip}
-                                </button>
-                              ))}
+                              {DIFFERENTIATOR_CHIPS[answers.industry].map((chip) => {
+                                const selected = answers.different.toLowerCase().includes(chip.toLowerCase())
+                                return (
+                                  <button key={chip} type="button"
+                                    onClick={() => { if (!selected) set("different", answers.different ? `${answers.different}, ${chip}` : chip) }}
+                                    className="rounded-full border px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] transition"
+                                    style={{
+                                      borderColor: selected ? tk.chipBorder(true) : tk.chipBorder(false),
+                                      color: selected ? tk.text : tk.muted,
+                                      opacity: selected ? 0.4 : 1,
+                                      cursor: selected ? "default" : "pointer",
+                                    }}>
+                                    {chip}
+                                  </button>
+                                )
+                              })}
                             </div>
                           </div>
                         )}
