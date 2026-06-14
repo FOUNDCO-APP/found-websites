@@ -2,9 +2,10 @@
 import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
-// Storage bucket + path for photo pools
+// Storage bucket + paths for photo pools
 const BUCKET = "config"
-const POOL_PATH = (industry: string) => `photo-pools/${industry}.json`
+const POOL_PATH         = (industry: string) => `photo-pools/${industry}.json`
+const PENDING_POOL_PATH = (industry: string) => `photo-pools/${industry}.pending.json`
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -16,18 +17,28 @@ function getAdminClient() {
 const PEXELS_KEY = process.env.PEXELS_API_KEY || ""
 
 const industryQueries: Record<string, string> = {
-  home_services: "home renovation remodeling contractor construction worker",
-  food:          "fresh food restaurant meal kitchen cooking ingredients",
-  wellness:      "spa massage wellness relaxation peaceful serene therapy",
-  events:        "event party celebration decoration colorful venue elegant",
-  retail:        "boutique shop retail store product display stylish interior",
-  fitness:       "gym fitness workout exercise training athlete strong",
-  beauty:        "salon beauty hair nail makeup styling transformation",
-  automotive:    "car repair mechanic auto service garage vehicle",
-  pet_services:  "dog cat pet grooming animal cute happy owner",
-  cleaning:      "clean home professional spotless organized service sparkle",
-  landscaping:   "garden landscape lawn outdoor plants nature green yard",
-  real_estate:    "real estate agent professional home neighborhood property",
+  home_services:        "home renovation remodeling contractor construction worker",
+  food:                 "fresh food restaurant meal kitchen cooking ingredients",
+  wellness:             "spa massage wellness relaxation peaceful serene therapy",
+  events:               "event party celebration decoration colorful venue elegant",
+  retail:               "boutique shop retail store product display stylish interior",
+  fitness:              "gym fitness workout exercise training athlete strong",
+  beauty:               "salon beauty hair nail makeup styling transformation",
+  automotive:           "car repair mechanic auto service garage vehicle",
+  pet_services:         "dog cat pet grooming animal cute happy owner",
+  cleaning:             "clean home professional spotless organized service sparkle",
+  landscaping:          "garden landscape lawn outdoor plants nature green yard",
+  real_estate:          "real estate agent professional home neighborhood property",
+  creative_services:    "graphic designer creative studio branding photography workspace",
+  home_based_food:      "homemade baking cottage kitchen food artisan pastry",
+  education:            "tutoring teaching lesson learning classroom student",
+  music_performance:    "live music band performance concert musician stage",
+  professional_services:"professional office consultant business meeting workspace",
+  healthcare:           "physical therapy massage chiropractic wellness clinic care",
+  childcare:            "childcare daycare children kids play learning happy",
+  makers_crafts:        "handmade craft artisan workshop ceramics woodworking jewelry maker",
+  home_property:        "home interior staging property architecture real estate photography",
+  nonprofit:            "community volunteers nonprofit charity giving people together",
 }
 
 export interface PexelsPhoto {
@@ -57,12 +68,10 @@ export async function fetchIndustryPhotos(industry: string, customQuery?: string
   }
 }
 
-async function readPool(industry: string): Promise<{ url: string; desc: string }[]> {
+async function readPoolFromPath(path: string): Promise<{ url: string; desc: string; tag?: string | null }[]> {
   try {
     const supabase = getAdminClient()
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .download(POOL_PATH(industry))
+    const { data, error } = await supabase.storage.from(BUCKET).download(path)
     if (error || !data) return []
     const text = await data.text()
     const parsed = JSON.parse(text)
@@ -72,13 +81,16 @@ async function readPool(industry: string): Promise<{ url: string; desc: string }
   }
 }
 
-async function writePool(industry: string, photos: { url: string; desc: string }[]): Promise<void> {
+async function writePoolToPath(path: string, industry: string, photos: { url: string; desc: string; tag?: string | null }[]): Promise<void> {
   const supabase = getAdminClient()
   const json = JSON.stringify({ industry, photos }, null, 2)
   const blob = new Blob([json], { type: "application/json" })
-  await supabase.storage
-    .from(BUCKET)
-    .upload(POOL_PATH(industry), blob, { upsert: true, contentType: "application/json" })
+  await supabase.storage.from(BUCKET).upload(path, blob, { upsert: true, contentType: "application/json" })
+}
+
+async function readPool(industry: string) { return readPoolFromPath(POOL_PATH(industry)) }
+async function writePool(industry: string, photos: { url: string; desc: string; tag?: string | null }[]) {
+  return writePoolToPath(POOL_PATH(industry), industry, photos)
 }
 
 export async function saveApprovedPhotos(
@@ -100,14 +112,17 @@ export async function saveApprovedPhotos(
   }
 }
 
+const ALL_INDUSTRIES = [
+  "home_services","food","wellness","events","retail",
+  "fitness","beauty","automotive","pet_services","cleaning","landscaping","real_estate",
+  "creative_services","home_based_food","education","music_performance",
+  "professional_services","healthcare","childcare","makers_crafts","home_property","nonprofit",
+]
+
 export async function getApprovedCounts(): Promise<Record<string, number>> {
-  const industries = [
-    "home_services","food","wellness","events","retail",
-    "fitness","beauty","automotive","pet_services","cleaning","landscaping","real_estate",
-  ]
   const counts: Record<string, number> = {}
   await Promise.all(
-    industries.map(async (ind) => {
+    ALL_INDUSTRIES.map(async (ind) => {
       const pool = await readPool(ind)
       if (pool.length > 0) counts[ind] = pool.length
     })
@@ -118,6 +133,67 @@ export async function getApprovedCounts(): Promise<Record<string, number>> {
 export async function getApprovedUrls(industry: string): Promise<string[]> {
   const pool = await readPool(industry)
   return pool.map((p) => p.url)
+}
+
+// Team submits picks for Shawn's review — saves to pending path, does NOT go live
+export async function saveTeamPicks(
+  industry: string,
+  photos: { url: string; desc: string }[],
+  tag?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const existing = await readPoolFromPath(PENDING_POOL_PATH(industry))
+    const existingUrls = new Set(existing.map((p) => p.url))
+    const newPhotos = photos.filter((p) => !existingUrls.has(p.url)).map((p) => ({ ...p, tag: tag || null }))
+    await writePoolToPath(PENDING_POOL_PATH(industry), industry, [...existing, ...newPhotos])
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+// Get URLs the team has submitted so they pre-select in the curator UI
+export async function getTeamPickUrls(industry: string): Promise<string[]> {
+  const pool = await readPoolFromPath(PENDING_POOL_PATH(industry))
+  return pool.map((p) => p.url)
+}
+
+// Get pending counts for all industries (for amber badge in tabs)
+export async function getPendingCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {}
+  await Promise.all(
+    ALL_INDUSTRIES.map(async (ind) => {
+      const pool = await readPoolFromPath(PENDING_POOL_PATH(ind))
+      if (pool.length > 0) counts[ind] = pool.length
+    })
+  )
+  return counts
+}
+
+// Shawn approves: promotes pending picks to live pool, clears pending
+export async function promoteToLive(industry: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const pending = await readPoolFromPath(PENDING_POOL_PATH(industry))
+    if (!pending.length) return { success: false, error: "No pending picks to promote" }
+    await writePool(industry, pending)
+    // Clear pending file
+    const supabase = getAdminClient()
+    await supabase.storage.from(BUCKET).remove([PENDING_POOL_PATH(industry)])
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
+// Delete a live pool (used to clear rogue uploads)
+export async function deletePool(industry: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = getAdminClient()
+    await supabase.storage.from(BUCKET).remove([POOL_PATH(industry)])
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
 }
 
 export async function adminLogin(key: string): Promise<boolean> {

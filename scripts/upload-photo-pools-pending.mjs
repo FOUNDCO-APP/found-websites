@@ -106,10 +106,10 @@ const pools = {
   ]},
 }
 
-async function upload(industry, data) {
+async function upload(path, data) {
   const body = JSON.stringify(data)
   return new Promise((resolve, reject) => {
-    const urlObj = new URL(`${SUPABASE_URL}/storage/v1/object/config/photo-pools/${industry}.json`)
+    const urlObj = new URL(`${SUPABASE_URL}/storage/v1/object/config/${path}`)
     const req = https.request({
       hostname: urlObj.hostname,
       path: urlObj.pathname,
@@ -124,7 +124,7 @@ async function upload(industry, data) {
     }, res => {
       let d = ""
       res.on("data", c => d += c)
-      res.on("end", () => resolve({ industry, status: res.statusCode }))
+      res.on("end", () => resolve({ path, status: res.statusCode }))
     })
     req.on("error", reject)
     req.write(body)
@@ -132,5 +132,11 @@ async function upload(industry, data) {
   })
 }
 
-const results = await Promise.all(Object.entries(pools).map(([k, v]) => upload(k, v)))
-results.forEach(r => console.log(r.status === 200 ? "✅" : "❌", r.industry, r.status))
+// Upload to BOTH live and pending so the panel shows team picks for Shawn to approve
+const uploads = Object.entries(pools).flatMap(([industry, data]) => [
+  upload(`photo-pools/${industry}.json`, data),
+  upload(`photo-pools/${industry}.pending.json`, data),
+])
+
+const results = await Promise.all(uploads)
+results.forEach(r => console.log(r.status === 200 ? "✅" : "❌", r.path, r.status))

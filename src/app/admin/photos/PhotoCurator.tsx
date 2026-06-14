@@ -1,21 +1,41 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
-import { fetchIndustryPhotos, saveApprovedPhotos, getApprovedCounts, getApprovedUrls, type PexelsPhoto } from "./actions"
+import {
+  fetchIndustryPhotos, saveApprovedPhotos, saveTeamPicks, promoteToLive,
+  getApprovedCounts, getPendingCounts, getApprovedUrls, getTeamPickUrls,
+  deletePool, type PexelsPhoto
+} from "./actions"
 
 const INDUSTRIES = [
-  { key: "home_services", label: "Home Services" },
-  { key: "food",          label: "Food" },
-  { key: "wellness",      label: "Wellness" },
-  { key: "events",        label: "Events" },
-  { key: "retail",        label: "Retail" },
-  { key: "fitness",       label: "Fitness" },
-  { key: "beauty",        label: "Beauty" },
-  { key: "automotive",    label: "Automotive" },
-  { key: "pet_services",  label: "Pet Services" },
-  { key: "cleaning",      label: "Cleaning" },
-  { key: "landscaping",   label: "Landscaping" },
-  { key: "real_estate",   label: "Real Estate" },
+  { key: "home_services",        label: "Home Services" },
+  { key: "food",                 label: "Food" },
+  { key: "wellness",             label: "Wellness" },
+  { key: "events",               label: "Events" },
+  { key: "retail",               label: "Retail" },
+  { key: "fitness",              label: "Fitness" },
+  { key: "beauty",               label: "Beauty" },
+  { key: "automotive",           label: "Automotive" },
+  { key: "pet_services",         label: "Pet Services" },
+  { key: "cleaning",             label: "Cleaning" },
+  { key: "landscaping",          label: "Landscaping" },
+  { key: "real_estate",          label: "Real Estate" },
+  { key: "creative_services",    label: "Creative Services",    owner: "Jony" },
+  { key: "home_based_food",      label: "Home-Based Food",      owner: "Angela" },
+  { key: "education",            label: "Education",            owner: "Angela" },
+  { key: "music_performance",    label: "Music & Performance",  owner: "Jony" },
+  { key: "professional_services",label: "Professional Services",owner: "Marcus" },
+  { key: "healthcare",           label: "Healthcare",           owner: "Angela" },
+  { key: "childcare",            label: "Childcare",            owner: "Angela" },
+  { key: "makers_crafts",        label: "Makers & Crafts",      owner: "Jony" },
+  { key: "home_property",        label: "Home & Property",      owner: "Jony" },
+  { key: "nonprofit",            label: "Nonprofit",            owner: "Marcus" },
 ]
+
+// New industries that need the two-step team → Shawn approval flow
+const NEW_INDUSTRIES = new Set([
+  "creative_services","home_based_food","education","music_performance",
+  "professional_services","healthcare","childcare","makers_crafts","home_property","nonprofit",
+])
 
 const DONE_THRESHOLD = 8
 
@@ -24,32 +44,41 @@ export default function PhotoCurator() {
   const [photos, setPhotos] = useState<Record<string, PexelsPhoto[] | "loading">>({})
   const [selected, setSelected] = useState<Record<string, Set<number>>>({})
   const [approvedCounts, setApprovedCounts] = useState<Record<string, number>>({})
+  const [pendingCounts, setPendingCounts] = useState<Record<string, number>>({})
   const [saving, setSaving] = useState(false)
   const [savedIndustry, setSavedIndustry] = useState<string | null>(null)
+  const [saveMode, setSaveMode] = useState<"team" | "live" | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState("")
-  const [activeQuery, setActiveQuery] = useState<string | null>(null)  // null = default industry query
+  const [activeQuery, setActiveQuery] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
+  const [deletingRogue, setDeletingRogue] = useState(false)
 
   const loadCounts = useCallback(async () => {
-    const counts = await getApprovedCounts()
-    setApprovedCounts(counts)
+    const [approved, pending] = await Promise.all([getApprovedCounts(), getPendingCounts()])
+    setApprovedCounts(approved)
+    setPendingCounts(pending)
   }, [])
 
   useEffect(() => { loadCounts() }, [loadCounts])
 
   const loadPhotos = useCallback(async (industry: string, customQuery?: string) => {
     const cacheKey = customQuery ? `${industry}::${customQuery}` : industry
-    if (!customQuery && photos[industry]) return  // use cache for default loads only
+    if (!customQuery && photos[industry]) return
     setPhotos(prev => ({ ...prev, [cacheKey]: "loading" }))
-    const [results, approvedUrls] = await Promise.all([
+
+    // For new industries: pre-select team picks if any; otherwise pre-select live approved
+    const isNew = NEW_INDUSTRIES.has(industry)
+    const [results, preSelectUrls] = await Promise.all([
       fetchIndustryPhotos(industry, customQuery),
-      customQuery ? Promise.resolve([] as string[]) : getApprovedUrls(industry),
+      customQuery ? Promise.resolve([] as string[])
+        : isNew ? getTeamPickUrls(industry)
+        : getApprovedUrls(industry),
     ])
     setPhotos(prev => ({ ...prev, [cacheKey]: results }))
-    if (approvedUrls.length > 0) {
-      const approvedSet = new Set(approvedUrls)
-      const preSelected = new Set(results.filter(p => approvedSet.has(p.url)).map(p => p.id))
+    if (preSelectUrls.length > 0) {
+      const urlSet = new Set(preSelectUrls)
+      const preSelected = new Set(results.filter(p => urlSet.has(p.url)).map(p => p.id))
       if (preSelected.size > 0) {
         setSelected(prev => ({ ...prev, [industry]: new Set([...(prev[industry] || []), ...preSelected]) }))
       }
@@ -59,6 +88,8 @@ export default function PhotoCurator() {
   useEffect(() => {
     setActiveQuery(null)
     setSearchInput("")
+    setSavedIndustry(null)
+    setSaveMode(null)
     loadPhotos(activeIndustry)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndustry])
@@ -94,26 +125,68 @@ export default function PhotoCurator() {
   const currentPhotos = photos[cacheKey]
   const selectedCount = selectedSet.size
   const currentApproved = approvedCounts[activeIndustry] || 0
+  const currentPending  = pendingCounts[activeIndustry]  || 0
+  const isNewIndustry   = NEW_INDUSTRIES.has(activeIndustry)
+  const activeOwner     = INDUSTRIES.find(i => i.key === activeIndustry)?.owner
   const doneCount = INDUSTRIES.filter(i => (approvedCounts[i.key] || 0) >= DONE_THRESHOLD).length
   const justSaved = savedIndustry === activeIndustry
 
+  // Team submits picks for Shawn's review — goes to pending, NOT live
+  async function handleTeamSubmit() {
+    const photoList = currentPhotos && currentPhotos !== "loading" ? currentPhotos : []
+    const toSave = photoList.filter(p => selectedSet.has(p.id)).map(p => ({ url: p.url, desc: p.desc }))
+    if (!toSave.length) return
+    setSaving(true)
+    setSaveError(null)
+    const result = await saveTeamPicks(activeIndustry, toSave, activeQuery || undefined)
+    if (result.success) {
+      setSavedIndustry(activeIndustry)
+      setSaveMode("team")
+      await loadCounts()
+    } else {
+      setSaveError(result.error || "Submit failed")
+    }
+    setSaving(false)
+  }
+
+  // Shawn approves: promote pending picks to live pool
+  async function handlePromoteToLive() {
+    setSaving(true)
+    setSaveError(null)
+    const result = await promoteToLive(activeIndustry)
+    if (result.success) {
+      setSavedIndustry(activeIndustry)
+      setSaveMode("live")
+      await loadCounts()
+    } else {
+      setSaveError(result.error || "Approve failed")
+    }
+    setSaving(false)
+  }
+
+  // Original approve — used for already-live original 12 industries
   async function handleApprove() {
     const photoList = currentPhotos && currentPhotos !== "loading" ? currentPhotos : []
-    const toSave = photoList
-      .filter(p => selectedSet.has(p.id))
-      .map(p => ({ url: p.url, desc: p.desc }))
-
+    const toSave = photoList.filter(p => selectedSet.has(p.id)).map(p => ({ url: p.url, desc: p.desc }))
     if (!toSave.length) return
     setSaving(true)
     setSaveError(null)
     const result = await saveApprovedPhotos(activeIndustry, toSave, activeQuery || undefined)
     if (result.success) {
       setSavedIndustry(activeIndustry)
+      setSaveMode("live")
       await loadCounts()
     } else {
       setSaveError(result.error || "Save failed")
     }
     setSaving(false)
+  }
+
+  async function handleDeleteRogue() {
+    setDeletingRogue(true)
+    await deletePool(activeIndustry)
+    await loadCounts()
+    setDeletingRogue(false)
   }
 
   const showBottomBar = selectedCount > 0 || justSaved
@@ -146,10 +219,12 @@ export default function PhotoCurator() {
       <div className="overflow-x-auto">
         <div className="flex gap-2 px-6 pb-4 min-w-max">
           {INDUSTRIES.map(ind => {
-            const count = approvedCounts[ind.key] || 0
-            const isDone = count >= DONE_THRESHOLD
-            const isActive = activeIndustry === ind.key
-            const hasPhotos = count > 0
+            const liveCount    = approvedCounts[ind.key] || 0
+            const pendingCount = pendingCounts[ind.key]  || 0
+            const isDone       = liveCount >= DONE_THRESHOLD
+            const hasPending   = pendingCount > 0 && !isDone
+            const isActive     = activeIndustry === ind.key
+            const isNew        = NEW_INDUSTRIES.has(ind.key)
 
             return (
               <button
@@ -157,9 +232,9 @@ export default function PhotoCurator() {
                 onClick={() => setActiveIndustry(ind.key)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: isActive ? "#2E7D32" : isDone ? "#1a2e1a" : "#222222",
-                  color: isActive ? "#ffffff" : isDone ? "#4caf50" : hasPhotos ? "#bbbbbb" : "#666666",
-                  border: isActive ? "none" : isDone ? "1px solid #2E7D32" : "1px solid #333",
+                  backgroundColor: isActive ? "#2E7D32" : isDone ? "#1a2e1a" : hasPending ? "#2a2500" : "#222222",
+                  color: isActive ? "#ffffff" : isDone ? "#4caf50" : hasPending ? "#f5c842" : isNew ? "#555" : liveCount > 0 ? "#bbb" : "#555",
+                  border: isActive ? "none" : isDone ? "1px solid #2E7D32" : hasPending ? "1px solid #f5c842" : "1px solid #333",
                 }}
               >
                 {isDone && !isActive && (
@@ -168,15 +243,18 @@ export default function PhotoCurator() {
                   </svg>
                 )}
                 {ind.label}
-                {count > 0 && (
-                  <span
-                    className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
-                    style={{
-                      backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "#2E7D32" : "#333",
-                      color: "#fff",
-                    }}
-                  >
-                    {count}
+                {/* Live count badge */}
+                {liveCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
+                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "#2E7D32" : "#333", color: "#fff" }}>
+                    {liveCount}
+                  </span>
+                )}
+                {/* Pending badge — amber */}
+                {hasPending && !isActive && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
+                    style={{ backgroundColor: "#f5c842", color: "#000" }}>
+                    {pendingCount} pending
                   </span>
                 )}
               </button>
@@ -186,15 +264,40 @@ export default function PhotoCurator() {
       </div>
 
       {/* Current industry status strip */}
-      <div className="px-6 pb-3 flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#444" }}>
-          {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
-        </p>
-        {currentApproved > 0 && (
-          <p className="text-xs font-black" style={{ color: "#2E7D32" }}>
-            ✓ {currentApproved} approved
+      <div className="px-6 pb-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#444" }}>
+            {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
           </p>
-        )}
+          {activeOwner && (
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#333" }}>
+              · {activeOwner}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-4">
+          {currentPending > 0 && (
+            <p className="text-xs font-black" style={{ color: "#f5c842" }}>
+              ⏳ {currentPending} pending Shawn
+            </p>
+          )}
+          {currentApproved > 0 && (
+            <p className="text-xs font-black" style={{ color: "#2E7D32" }}>
+              ✓ {currentApproved} live
+            </p>
+          )}
+          {/* Delete rogue data button — only for new industries with live data but no team approval */}
+          {isNewIndustry && currentApproved > 0 && currentPending === 0 && (
+            <button
+              onClick={handleDeleteRogue}
+              disabled={deletingRogue}
+              className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded disabled:opacity-40"
+              style={{ color: "#ff4444", border: "1px solid #ff4444" }}
+            >
+              {deletingRogue ? "Clearing…" : "Clear Rogue Data"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search bar */}
@@ -295,8 +398,8 @@ export default function PhotoCurator() {
       <div
         className="fixed bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between"
         style={{
-          backgroundColor: justSaved ? "#1a2e1a" : "#1a1a1a",
-          borderTop: justSaved ? "1px solid #2E7D32" : "1px solid #333",
+          backgroundColor: justSaved && saveMode === "live" ? "#1a2e1a" : justSaved && saveMode === "team" ? "#252000" : "#1a1a1a",
+          borderTop: justSaved && saveMode === "live" ? "1px solid #2E7D32" : justSaved && saveMode === "team" ? "1px solid #f5c842" : "1px solid #333",
           transform: showBottomBar ? "translateY(0)" : "translateY(100%)",
           transition: "transform 300ms ease, background-color 300ms ease, border-color 300ms ease",
         }}
@@ -304,28 +407,35 @@ export default function PhotoCurator() {
         {justSaved ? (
           <>
             <div>
-              <p className="font-black text-sm" style={{ color: "#4caf50" }}>
-                ✓ Saved — {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
-                {savedIndustry && activeQuery
-                  ? `Tagged as "${activeQuery}" — search another term or tap Next.`
-                  : "Tagged as general — works for any business in this category."}
-              </p>
+              {saveMode === "live" ? (
+                <>
+                  <p className="font-black text-sm" style={{ color: "#4caf50" }}>
+                    ✓ Live — {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
+                    {activeQuery ? `Tagged as "${activeQuery}" — search another term or tap Next.` : "Tagged as general — works for any business in this category."}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="font-black text-sm" style={{ color: "#f5c842" }}>
+                    ⏳ Submitted for Shawn's review — {currentPending} photos pending
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "#f5c842", opacity: 0.7 }}>
+                    Not live yet. Shawn approves the final picks.
+                  </p>
+                </>
+              )}
             </div>
             <button
               onClick={() => {
                 const idx = INDUSTRIES.findIndex(i => i.key === activeIndustry)
                 const next = INDUSTRIES[idx + 1]
-                if (next) {
-                  setSavedIndustry(null)
-                  setActiveIndustry(next.key)
-                } else {
-                  setSavedIndustry(null)
-                }
+                if (next) { setSavedIndustry(null); setSaveMode(null); setActiveIndustry(next.key) }
+                else       { setSavedIndustry(null); setSaveMode(null) }
               }}
               className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full"
-              style={{ backgroundColor: "#2E7D32", color: "#ffffff" }}
+              style={{ backgroundColor: saveMode === "live" ? "#2E7D32" : "#f5c842", color: saveMode === "live" ? "#fff" : "#000" }}
             >
               {INDUSTRIES.findIndex(i => i.key === activeIndustry) < INDUSTRIES.length - 1 ? "Next →" : "Done"}
             </button>
@@ -336,18 +446,43 @@ export default function PhotoCurator() {
               <p className="font-black text-sm text-white">
                 {selectedCount} photo{selectedCount !== 1 ? "s" : ""} selected
               </p>
-              {saveError && (
-                <p className="text-xs mt-0.5 text-red-400">{saveError}</p>
+              {saveError && <p className="text-xs mt-0.5 text-red-400">{saveError}</p>}
+            </div>
+            <div className="flex items-center gap-3">
+              {/* New industries: team submits for review, Shawn promotes to live */}
+              {isNewIndustry ? (
+                <>
+                  <button
+                    onClick={handleTeamSubmit}
+                    disabled={saving || selectedCount === 0}
+                    className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
+                    style={{ backgroundColor: "#333", color: "#f5c842", border: "1px solid #f5c842" }}
+                  >
+                    {saving ? "Submitting…" : "Submit for Review"}
+                  </button>
+                  {currentPending > 0 && (
+                    <button
+                      onClick={handlePromoteToLive}
+                      disabled={saving}
+                      className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
+                      style={{ backgroundColor: "#2E7D32", color: "#fff" }}
+                    >
+                      {saving ? "Approving…" : `Approve → Go Live (${currentPending})`}
+                    </button>
+                  )}
+                </>
+              ) : (
+                /* Original 12 industries: direct approve */
+                <button
+                  onClick={handleApprove}
+                  disabled={saving || selectedCount === 0}
+                  className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
+                  style={{ backgroundColor: "#2E7D32", color: "#ffffff" }}
+                >
+                  {saving ? "Saving…" : "Approve"}
+                </button>
               )}
             </div>
-            <button
-              onClick={handleApprove}
-              disabled={saving || selectedCount === 0}
-              className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-              style={{ backgroundColor: "#2E7D32", color: "#ffffff" }}
-            >
-              {saving ? "Saving…" : "Approve"}
-            </button>
           </>
         )}
       </div>
