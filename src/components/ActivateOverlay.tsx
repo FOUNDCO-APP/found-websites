@@ -77,16 +77,15 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
   }
 
   return (
-    <div
-      style={{
-        width: "100%",
-        maxWidth: 448,
-        overflow: "hidden",
-        borderRadius: 24,
-        backgroundColor: "#161616",
-        border: "1px solid rgba(255,255,255,0.07)",
-        animation: "ao-dissolve-in 0.7s ease-out both",
-      }}>
+    <div style={{
+      width: "100%",
+      maxWidth: 448,
+      overflow: "hidden",
+      borderRadius: 24,
+      backgroundColor: "#161616",
+      border: "1px solid rgba(255,255,255,0.07)",
+      animation: "ao-fade-up 0.7s ease-out both",
+    }}>
       <div style={{ height: 1, backgroundColor: SIGNAL_GREEN }} />
       <div style={{ padding: "24px 28px 28px" }}>
         <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
@@ -179,7 +178,7 @@ export default function ActivateOverlay({
     })
   }, [slug, setupIntentSecret, companyName])
 
-  // Dissolve: fade splash out over 700ms, then bring form in
+  // Dissolve: fade splash out 700ms, then bring form in
   useEffect(() => {
     if (!minTimeReady || !stripeReady) return
     setSplashExiting(true)
@@ -193,16 +192,12 @@ export default function ActivateOverlay({
       inset: 0,
       zIndex: 99999,
       backgroundColor: FOUND_BLACK,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px 20px 48px",
       overflowY: "auto",
-      animation: "ao-fade-in 0.2s ease-out both",
+      animation: "ao-fade-in 0.7s ease-out both",
     }}>
-      {/* Ambient glow — top-anchored, breathes once over 4s */}
+      {/* Green glow — exact match: absolute, left-1/2, top-0, h-96 w-96, -translate-x-1/2, blur-[120px], SIGNAL_GREEN at 1a opacity */}
       <div style={{
+        pointerEvents: "none",
         position: "absolute",
         left: "50%", top: 0,
         width: 384, height: 384,
@@ -210,121 +205,117 @@ export default function ActivateOverlay({
         backgroundColor: `${SIGNAL_GREEN}1a`,
         filter: "blur(120px)",
         transform: "translateX(-50%)",
-        pointerEvents: "none",
-        animation: "ao-glow-pulse 4s ease-in-out both",
       }} />
 
-      {/* 1px progress bar — bottom edge, advances over MIN_SPLASH_MS */}
+      {/* ── SPLASH — mirrors RevealScreen layout exactly ── */}
       {phase === "splash" && (
         <div style={{
-          position: "absolute", bottom: 0, left: 0,
-          height: 1,
-          backgroundColor: SIGNAL_GREEN,
-          opacity: 0.6,
-          animation: `ao-progress ${MIN_SPLASH_MS}ms linear both`,
-        }} />
-      )}
-
-      {/* FOUND wordmark */}
-      <div style={{ position: "absolute", left: 28, top: 28, animation: "ao-fade-in 0.5s ease-out both" }}>
-        <svg viewBox="0 0 420 72" style={{ height: 24, width: 128, color: "white" }} aria-label="Found">
-          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-        </svg>
-      </div>
-
-      {/* Close — pulled back to 30% so it exists without competing */}
-      <button
-        onClick={onClose}
-        aria-label="Close"
-        style={{
-          position: "absolute", right: 24, top: 24,
-          background: "none", border: "none", cursor: "pointer",
-          color: "rgba(255,255,255,0.30)", fontSize: 28, lineHeight: 1, padding: 4,
-        }}>
-        ×
-      </button>
-
-      {/* SPLASH */}
-      {phase === "splash" && (
-        <div style={{
+          position: "relative",
+          minHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          gap: 24,
-          animation: splashExiting ? "ao-fade-out 0.7s ease-in both" : undefined,
+          maxWidth: 1152,
+          margin: "0 auto",
+          padding: "32px 28px",
+          animation: splashExiting ? "ao-fade-out 0.7s ease-in both" : "ao-fade-up 0.6s ease-out both",
         }}>
-          {companyName && (
-            <>
-              {/* Company name — lands first */}
+          {/* Header — wordmark left, "Going live" badge right */}
+          <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <svg viewBox="0 0 420 72" style={{ height: 28, width: 144, color: "white" }} aria-label="Found">
+              <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+            </svg>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 10px ${SIGNAL_GREEN}` }} />
+              <span style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.2em", color: SIGNAL_GREEN }}>
+                Going live
+              </span>
+            </div>
+          </header>
+
+          {/* Content — vertically centered, left-aligned */}
+          <div style={{ flex: 1, display: "flex", alignItems: "center", paddingTop: 48, paddingBottom: 48 }}>
+            <div>
+              {/* "Found it." label — exact match */}
+              <p style={{
+                fontSize: 12,
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "0.24em",
+                color: SIGNAL_GREEN,
+                marginBottom: 24,
+              }}>
+                Found it.
+              </p>
+
+              {/* Headline — text-5xl md:text-7xl font-light leading-[1.05] */}
               <h1 style={{
-                fontSize: "clamp(3rem, 9vw, 4.5rem)",
+                fontSize: "clamp(3rem, 8vw, 4.5rem)",
                 fontWeight: 300,
                 lineHeight: 1.05,
-                letterSpacing: "-0.02em",
                 color: "white",
-                margin: 0,
-                animation: "ao-fade-up 0.6s 0.1s ease-out both",
-                opacity: 0,
+                margin: "0 0 24px 0",
               }}>
-                {companyName}
+                {companyName}<br />
+                is going live.
               </h1>
 
-              {/* Completion clause — arrives 300ms after the name */}
+              {/* Sub-copy — max-w-sm text-base leading-8 text-white/45 */}
               <p style={{
-                fontSize: "clamp(1.5rem, 5vw, 2.25rem)",
-                fontWeight: 200,
-                lineHeight: 1.05,
-                letterSpacing: "-0.02em",
+                maxWidth: 384,
+                fontSize: 16,
+                lineHeight: "2rem",
                 color: "rgba(255,255,255,0.45)",
                 margin: 0,
-                animation: "ao-fade-up 0.6s 0.4s ease-out both",
-                opacity: 0,
               }}>
-                is going live.
+                Your business now has a place online.
               </p>
-            </>
-          )}
+            </div>
+          </div>
 
-          {/* Sub-copy — Steve: "about them, not the product" */}
-          <p style={{
-            fontSize: 16,
-            fontWeight: 300,
-            letterSpacing: "0.01em",
-            color: "rgba(255,255,255,0.45)",
-            margin: 0,
-            animation: "ao-fade-up 0.6s 0.7s ease-out both",
-            opacity: 0,
-          }}>
-            People will find you now.
-          </p>
+          {/* Close — subtle, bottom-right of header area */}
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              position: "absolute", right: 28, top: 28,
+              background: "none", border: "none", cursor: "pointer",
+              color: "rgba(255,255,255,0.25)", fontSize: 28, lineHeight: 1, padding: 4,
+            }}>
+            ×
+          </button>
         </div>
       )}
 
-      {/* FORM — cross-dissolves in after splash exits */}
+      {/* ── FORM — centered, fades in after splash dissolves ── */}
       {phase === "form" && (
-        loadError ? (
-          <div style={{ textAlign: "center" }}>
-            <p style={{ fontSize: 18, fontWeight: 300, color: "white", marginBottom: 16 }}>{loadError}</p>
-            <button onClick={onClose} style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: SIGNAL_GREEN, background: "none", border: "none", cursor: "pointer" }}>
-              Go back →
-            </button>
-          </div>
-        ) : clientSecret ? (
-          <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-            <CardForm slug={slug} companyName={companyName} />
-          </Elements>
-        ) : null
+        <div style={{
+          minHeight: "100dvh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "20px 20px 48px",
+        }}>
+          {loadError ? (
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 18, fontWeight: 300, color: "white", marginBottom: 16 }}>{loadError}</p>
+              <button onClick={onClose} style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: SIGNAL_GREEN, background: "none", border: "none", cursor: "pointer" }}>
+                Go back →
+              </button>
+            </div>
+          ) : clientSecret ? (
+            <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+              <CardForm slug={slug} companyName={companyName} />
+            </Elements>
+          ) : null}
+        </div>
       )}
 
       <style>{`
-        @keyframes ao-fade-in    { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ao-fade-out   { from { opacity: 1; } to { opacity: 0; } }
-        @keyframes ao-fade-up    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes ao-dissolve-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes ao-glow-pulse  { 0% { transform: translateX(-50%) scale(0.95); opacity: 0.08; } 50% { transform: translateX(-50%) scale(1); opacity: 0.12; } 100% { transform: translateX(-50%) scale(0.97); opacity: 0.10; } }
-        @keyframes ao-progress    { from { width: 0%; } to { width: 100%; } }
-        /* Neutralize Stripe test-mode badge link — goes away in production with live keys */
+        @keyframes ao-fade-in  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes ao-fade-out { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes ao-fade-up  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        /* Neutralize Stripe test-mode badge — goes away in production with live keys */
         a[href*="stripe.com"],
         [class*="StripeElement-badge"],
         [class*="powered-by"],
