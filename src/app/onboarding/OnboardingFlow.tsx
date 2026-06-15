@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
@@ -10,7 +10,6 @@ import { createSetupIntentForCompany } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
-import { US_CITIES } from "@/data/us-cities"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -577,52 +576,77 @@ function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: 
 }
 
 // ── Location input ────────────────────────────────────────────────────────────
+type PlacePrediction = { description: string; place_id: string }
+
+async function fetchPlaces(q: string): Promise<PlacePrediction[]> {
+  if (q.length < 2) return []
+  try {
+    const res = await fetch(`/api/places?q=${encodeURIComponent(q)}`)
+    const data = await res.json()
+    return data.predictions ?? []
+  } catch {
+    return []
+  }
+}
+
+function parsePlace(prediction: PlacePrediction): string {
+  // "Tucson, AZ, USA" → "Tucson, AZ"  |  "London, UK" → "London, UK"
+  const parts = prediction.description.split(",").map((s) => s.trim())
+  if (parts.length >= 3 && parts[parts.length - 1] === "USA") {
+    return `${parts[0]}, ${parts[1]}`
+  }
+  return parts.slice(0, 2).join(", ")
+}
+
 function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, primaryColor }: {
   location: string; serviceAreas: string[]
   onLocation: (v: string) => void; onAreas: (v: string[]) => void
   isLight: boolean; primaryColor: string
 }) {
+  const [citySuggestions, setCitySuggestions] = useState<PlacePrediction[]>([])
   const [showCitySuggestions, setShowCitySuggestions] = useState(false)
   const [areaDraft, setAreaDraft] = useState("")
+  const [areaSuggestions, setAreaSuggestions] = useState<PlacePrediction[]>([])
   const [showAreaSuggestions, setShowAreaSuggestions] = useState(false)
   const cityBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const areaBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cityDebounce  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const areaDebounce  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tk = getTokens(isLight, primaryColor)
 
-  const dropdownBg    = isLight ? "#ffffff" : "#1a1c1b"
+  const dropdownBg     = isLight ? "#ffffff" : "#1a1c1b"
   const dropdownBorder = isLight ? "rgba(8,10,9,0.1)" : "rgba(255,255,255,0.1)"
 
-  const citySuggestions = useMemo(() => {
-    if (location.length < 1) return []
-    const q = location.toLowerCase()
-    return US_CITIES.filter(([city, state]) => {
-      const full = `${city}, ${state}`.toLowerCase()
-      return city.toLowerCase().startsWith(q) || full.startsWith(q)
-    }).slice(0, 6)
-  }, [location])
+  const fetchCityDebounced = useCallback((q: string) => {
+    if (cityDebounce.current) clearTimeout(cityDebounce.current)
+    if (q.length < 2) { setCitySuggestions([]); return }
+    cityDebounce.current = setTimeout(async () => {
+      setCitySuggestions(await fetchPlaces(q))
+    }, 280)
+  }, [])
 
-  const areaSuggestions = useMemo(() => {
-    if (areaDraft.length < 1) return []
-    const q = areaDraft.toLowerCase()
-    return US_CITIES.filter(([city, state]) => {
-      const formatted = `${city}, ${state}`
-      return (
-        city.toLowerCase().startsWith(q) &&
-        formatted !== location &&
-        !serviceAreas.includes(formatted)
-      )
-    }).slice(0, 5)
-  }, [areaDraft, location, serviceAreas])
+  const fetchAreaDebounced = useCallback((q: string) => {
+    if (areaDebounce.current) clearTimeout(areaDebounce.current)
+    if (q.length < 2) { setAreaSuggestions([]); return }
+    areaDebounce.current = setTimeout(async () => {
+      setAreaSuggestions(await fetchPlaces(q))
+    }, 280)
+  }, [])
 
-  function selectCity(city: string, state: string) {
-    onLocation(`${city}, ${state}`)
+  useEffect(() => { fetchCityDebounced(location) }, [location, fetchCityDebounced])
+  useEffect(() => { fetchAreaDebounced(areaDraft) }, [areaDraft, fetchAreaDebounced])
+
+  function selectCity(prediction: PlacePrediction) {
+    onLocation(parsePlace(prediction))
+    setCitySuggestions([])
     setShowCitySuggestions(false)
   }
 
-  function addArea(city: string, state: string) {
-    const formatted = `${city}, ${state}`
+  function addArea(prediction: PlacePrediction) {
+    const formatted = parsePlace(prediction)
     if (!serviceAreas.includes(formatted)) onAreas([...serviceAreas, formatted])
     setAreaDraft("")
+    setAreaSuggestions([])
     setShowAreaSuggestions(false)
   }
 
@@ -651,18 +675,18 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
             className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-xl shadow-xl"
             style={{ backgroundColor: dropdownBg, border: `1px solid ${dropdownBorder}` }}
           >
-            {citySuggestions.map(([city, state]) => (
+            {citySuggestions.map((p) => (
               <button
-                key={`${city}-${state}`}
+                key={p.place_id}
                 type="button"
                 onMouseDown={() => {
                   if (cityBlurTimer.current) clearTimeout(cityBlurTimer.current)
-                  selectCity(city, state)
+                  selectCity(p)
                 }}
                 className="block w-full px-4 py-3 text-left text-sm font-black uppercase tracking-[0.08em] transition hover:opacity-60"
                 style={{ color: tk.text }}
               >
-                {city}, {state}
+                {parsePlace(p)}
               </button>
             ))}
           </div>
@@ -703,18 +727,18 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
                   className="absolute left-0 top-full z-20 mt-1 overflow-hidden rounded-lg shadow-xl"
                   style={{ backgroundColor: dropdownBg, border: `1px solid ${dropdownBorder}`, minWidth: "180px" }}
                 >
-                  {areaSuggestions.map(([city, state]) => (
+                  {areaSuggestions.map((p) => (
                     <button
-                      key={`area-${city}-${state}`}
+                      key={`area-${p.place_id}`}
                       type="button"
                       onMouseDown={() => {
                         if (areaBlurTimer.current) clearTimeout(areaBlurTimer.current)
-                        addArea(city, state)
+                        addArea(p)
                       }}
                       className="block w-full px-3 py-2 text-left text-xs font-black uppercase tracking-[0.08em] transition hover:opacity-60"
                       style={{ color: tk.text }}
                     >
-                      {city}, {state}
+                      {parsePlace(p)}
                     </button>
                   ))}
                 </div>
