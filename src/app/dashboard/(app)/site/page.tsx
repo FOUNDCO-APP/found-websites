@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { getFeatureAccess } from "@/lib/featureAccess"
 import { redirect } from "next/navigation"
@@ -66,8 +66,7 @@ function EditRow({ label, locked, lockedLabel, soon, href }: {
 }
 
 export default async function SitePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect("/login")
 
   const company = await getCompany(user.id, user.email ?? "")

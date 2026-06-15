@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { cookies } from "next/headers"
 
@@ -19,10 +20,10 @@ export type CompanyRow = {
 const SELECT_FIELDS =
   "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, primary_color, user_id, city, state"
 
-export async function getCompany(
+export const getCompany = cache(async (
   userId: string,
   userEmail: string
-): Promise<CompanyRow | null> {
+): Promise<CompanyRow | null> => {
   const cookieStore = await cookies()
   const selectedId = cookieStore.get("found_company_id")?.value
   const admin = createAdminClient()
@@ -46,12 +47,12 @@ export async function getCompany(
     .maybeSingle()
 
   return (data as CompanyRow) ?? null
-}
+})
 
-export async function getAllCompanies(
+export const getAllCompanies = cache(async (
   userId: string,
   userEmail: string
-): Promise<CompanyRow[]> {
+): Promise<CompanyRow[]> => {
   const admin = createAdminClient()
   const { data } = await admin
     .from("companies")
@@ -59,4 +60,4 @@ export async function getAllCompanies(
     .or(`user_id.eq.${userId},email.eq.${userEmail}`)
     .order("created_at", { ascending: false })
   return (data ?? []) as CompanyRow[]
-}
+})

@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 
 const SIGNAL_GREEN = "#32D074"
@@ -25,11 +26,9 @@ function formatDate(iso: string) {
 }
 
 export default async function LeadsPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect("/login")
 
-  const { createAdminClient } = await import("@/lib/supabase/admin")
   const admin = createAdminClient()
 
   const company = await getCompany(user.id, user.email ?? "")

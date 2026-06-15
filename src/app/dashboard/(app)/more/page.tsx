@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
@@ -36,8 +36,7 @@ function ChevronRight() {
 }
 
 export default async function MorePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect("/login")
 
   const company = await getCompany(user.id, user.email ?? "")

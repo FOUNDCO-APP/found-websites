@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, getAllCompanies } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
@@ -8,8 +8,7 @@ const FOUND_BLACK = "#080A09"
 export const metadata = { title: "Found Dashboard" }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect("/login")
 
   const [company, allCompanies] = await Promise.all([
