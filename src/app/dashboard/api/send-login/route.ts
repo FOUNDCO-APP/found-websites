@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 export async function POST(req: NextRequest) {
@@ -12,6 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid email" }, { status: 400 })
     }
 
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const admin = createAdminClient()
 
     const { data, error } = await admin.auth.admin.generateLink({
