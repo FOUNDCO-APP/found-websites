@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
   const url =
     `https://maps.googleapis.com/maps/api/place/autocomplete/json` +
     `?input=${encodeURIComponent(q)}` +
-    `&types=(cities)` +
+    `&types=(regions)` +
+    `&components=country:us` +
     `&key=${key}`
 
   const res = await fetch(url, { next: { revalidate: 60 } })

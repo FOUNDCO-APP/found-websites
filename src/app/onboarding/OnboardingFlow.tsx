@@ -617,24 +617,31 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
   const dropdownBg     = isLight ? "#ffffff" : "#1a1c1b"
   const dropdownBorder = isLight ? "rgba(8,10,9,0.1)" : "rgba(255,255,255,0.1)"
 
-  const fetchCityDebounced = useCallback((q: string) => {
+  function handleCityChange(v: string) {
+    onLocation(v)
+    setShowCitySuggestions(true)
     if (cityDebounce.current) clearTimeout(cityDebounce.current)
-    if (q.length < 2) { setCitySuggestions([]); return }
-    cityDebounce.current = setTimeout(async () => {
-      setCitySuggestions(await fetchPlaces(q))
-    }, 280)
-  }, [])
+    if (v.length >= 2) {
+      cityDebounce.current = setTimeout(async () => {
+        setCitySuggestions(await fetchPlaces(v))
+      }, 280)
+    } else {
+      setCitySuggestions([])
+    }
+  }
 
-  const fetchAreaDebounced = useCallback((q: string) => {
+  function handleAreaChange(v: string) {
+    setAreaDraft(v)
+    setShowAreaSuggestions(true)
     if (areaDebounce.current) clearTimeout(areaDebounce.current)
-    if (q.length < 2) { setAreaSuggestions([]); return }
-    areaDebounce.current = setTimeout(async () => {
-      setAreaSuggestions(await fetchPlaces(q))
-    }, 280)
-  }, [])
-
-  useEffect(() => { fetchCityDebounced(location) }, [location, fetchCityDebounced])
-  useEffect(() => { fetchAreaDebounced(areaDraft) }, [areaDraft, fetchAreaDebounced])
+    if (v.length >= 2) {
+      areaDebounce.current = setTimeout(async () => {
+        setAreaSuggestions(await fetchPlaces(v))
+      }, 280)
+    } else {
+      setAreaSuggestions([])
+    }
+  }
 
   function selectCity(prediction: PlacePrediction) {
     onLocation(parsePlace(prediction))
@@ -663,7 +670,7 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
         <input
           autoFocus
           value={location}
-          onChange={(e) => { onLocation(e.target.value); setShowCitySuggestions(true) }}
+          onChange={(e) => handleCityChange(e.target.value)}
           onFocus={() => setShowCitySuggestions(true)}
           onBlur={() => { cityBlurTimer.current = setTimeout(() => setShowCitySuggestions(false), 150) }}
           placeholder="Tucson, AZ"
@@ -712,7 +719,7 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
             <div className="relative">
               <input
                 value={areaDraft}
-                onChange={(e) => { setAreaDraft(e.target.value); setShowAreaSuggestions(true) }}
+                onChange={(e) => handleAreaChange(e.target.value)}
                 onFocus={() => setShowAreaSuggestions(true)}
                 onBlur={() => { areaBlurTimer.current = setTimeout(() => setShowAreaSuggestions(false), 150) }}
                 onKeyDown={(e) => {
