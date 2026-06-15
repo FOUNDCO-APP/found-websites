@@ -364,13 +364,27 @@ function planDetails(plan?: string) {
   return { price: 29, normal: 39 }
 }
 
-function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; plan?: string }) {
+function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawerMode }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; plan?: string; drawerMode?: boolean }) {
   const [iframeReady, setIframeReady] = useState(false)
 
+  // Compact phone dimensions for drawer (520px panel) vs full-page
+  const phoneW    = drawerMode ? 156 : 272
+  const phoneH    = drawerMode ? 320 : 560
+  const phonePad  = drawerMode ? 7   : 10
+  const phoneR    = drawerMode ? 32  : 44
+  const notchW    = drawerMode ? 60  : 80
+  const notchH    = drawerMode ? 18  : 22
+  const notchTop  = drawerMode ? 14  : 18
+  const screenR   = drawerMode ? 26  : 36
+  const innerW    = phoneW - phonePad * 2 - 2      // subtract padding + border
+  const iframeScale = innerW / 390
+
   return (
-    <main className="relative min-h-screen overflow-hidden" style={{ backgroundColor: FOUND_BLACK, animation: "fade-in 0.7s ease-out both" }}>
+    <main
+      className={`relative ${drawerMode ? "h-full overflow-y-auto" : "min-h-screen overflow-hidden"}`}
+      style={{ backgroundColor: FOUND_BLACK, animation: "fade-in 0.7s ease-out both" }}>
       <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]" style={{ backgroundColor: `${primaryColor}1a` }} />
-      <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col px-7 py-8">
+      <div className={`relative ${drawerMode ? "" : "mx-auto flex min-h-screen max-w-6xl flex-col"} px-7 py-8`}>
         <header className="flex items-center justify-between">
           <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
             <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
@@ -380,22 +394,29 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { n
             <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Live</span>
           </div>
         </header>
-        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_0.88fr]">
+
+        <div className={drawerMode
+          ? "grid grid-cols-[1fr_156px] items-start gap-5 pt-5 pb-6"
+          : "grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_0.88fr]"}>
+
+          {/* ── Text content ── */}
           <div style={{ animation: "fade-up 0.6s ease-out both" }}>
-            <p className="mb-6 text-xs font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>Found it.</p>
-            <h1 className="text-5xl font-light leading-[1.05] text-white md:text-7xl">{name}<br />is live.</h1>
-            <p className="mt-6 max-w-sm text-base leading-8 text-white/45">Your business now has a place online. Open it, look around, and make it yours.</p>
-            <div className="mt-9">
+            <p className={`${drawerMode ? "mb-3" : "mb-6"} text-xs font-black uppercase tracking-[0.24em]`} style={{ color: SIGNAL_GREEN }}>Found it.</p>
+            <h1 className={`${drawerMode ? "text-3xl" : "text-5xl md:text-7xl"} font-light leading-[1.05] text-white`}>{name}<br />is live.</h1>
+            <p className={`${drawerMode ? "mt-3 text-sm" : "mt-6 max-w-sm text-base"} leading-8 text-white/45`}>
+              Your business now has a place online.{!drawerMode && " Open it, look around, and make it yours."}
+            </p>
+            <div className={drawerMode ? "mt-5" : "mt-9"}>
               <a href={`${url}?preview=true`} target="_blank" rel="noreferrer"
-                className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
+                className={`inline-flex ${drawerMode ? "w-full min-h-11" : "min-h-14"} items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90`}
                 style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                 See your site →
               </a>
             </div>
-            <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>
+            {!drawerMode && <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>}
 
             {/* Email nudge — P.S. moment, delayed */}
-            {email && (
+            {email && !drawerMode && (
               <div className="mt-8 flex items-start gap-3" style={{ animation: "fade-up 0.6s 0.9s ease-out both", opacity: 0 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-white/30">
                   <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -412,12 +433,12 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { n
               </div>
             )}
 
-            {/* Billing CTA — appears after email nudge */}
+            {/* Billing CTA */}
             {checkoutUrl && (() => {
               const { price, normal } = planDetails(plan)
               return (
                 <div
-                  className="mt-8 rounded-2xl p-6"
+                  className={`${drawerMode ? "mt-5" : "mt-8"} rounded-2xl p-5`}
                   style={{ animation: "fade-up 0.6s 1.4s ease-out both", opacity: 0, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   <p className="text-xs font-black uppercase tracking-widest" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
@@ -425,7 +446,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { n
                   <p className="mt-0.5 text-xs text-white/35">Locked for 12 months, then ${normal}/month. Cancel anytime.</p>
                   <a
                     href={checkoutUrl}
-                    className="mt-5 flex min-h-12 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
+                    className="mt-4 flex min-h-11 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
                     style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >
                     Lock in my rate →
@@ -435,35 +456,38 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { n
             })()}
           </div>
 
-          {/* Phone mockup with live site preview */}
-          <div className="flex items-center justify-center" style={{ animation: "fade-up 0.85s ease-out both" }}>
-            <div className="relative w-[272px] rounded-[44px] border border-white/10 bg-[#141715] p-[10px]" style={{ height: 560, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
-              <div className="absolute left-1/2 top-[18px] h-[22px] w-[80px] -translate-x-1/2 rounded-full bg-[#0a0c0b]" />
+          {/* ── Phone mockup with live site preview ── */}
+          <div className={drawerMode ? "flex justify-end pt-2" : "flex items-center justify-center"} style={drawerMode ? undefined : { animation: "fade-up 0.85s ease-out both" }}>
+            <div
+              className="relative rounded-[44px] border border-white/10 bg-[#141715]"
+              style={{ width: phoneW, height: phoneH, padding: phonePad, borderRadius: phoneR, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
+              <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#0a0c0b]"
+                style={{ top: notchTop, width: notchW, height: notchH }} />
 
               {/* Screen area */}
-              <div className="relative h-full overflow-hidden rounded-[36px] bg-[#F5F7F4]">
+              <div className="relative h-full overflow-hidden bg-[#F5F7F4]" style={{ borderRadius: screenR }}>
 
-                {/* Placeholder skeleton — fades out when iframe loads */}
+                {/* Placeholder skeleton */}
                 <div
                   className="absolute inset-0 transition-opacity duration-700"
                   style={{ opacity: iframeReady ? 0 : 1, pointerEvents: "none" }}
                 >
-                  <div className="relative flex h-52 flex-col justify-end p-5" style={{ backgroundColor: primaryColor }}>
+                  <div className="relative flex flex-col justify-end p-4" style={{ backgroundColor: primaryColor, height: drawerMode ? "44%" : "52%" }}>
                     <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
                     <div className="relative">
                       <div className="h-3 w-28 rounded-full bg-white" />
                       <div className="mt-2 h-2 w-20 rounded-full bg-white/35" />
                     </div>
                   </div>
-                  <div className="space-y-2.5 p-5">
+                  <div className="space-y-2.5 p-4">
                     <div className="h-2 w-16 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
-                    <div className="h-12 rounded-xl bg-black/[0.05]" />
-                    <div className="h-12 rounded-xl bg-black/[0.05]" />
-                    <div className="h-10 rounded-full" style={{ backgroundColor: primaryColor }} />
+                    <div className="h-10 rounded-xl bg-black/[0.05]" />
+                    <div className="h-10 rounded-xl bg-black/[0.05]" />
+                    <div className="h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
                   </div>
                 </div>
 
-                {/* Live site iframe — rendered at 390px (real mobile viewport) then scaled down */}
+                {/* Live site iframe */}
                 <iframe
                   src={url}
                   title={`${name} website preview`}
@@ -475,7 +499,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan }: { n
                     pointerEvents: "none",
                     width: "390px",
                     height: "844px",
-                    transform: "scale(0.6462)",
+                    transform: `scale(${iframeScale})`,
                     transformOrigin: "top left",
                   }}
                   onLoad={() => setIframeReady(true)}
@@ -1092,6 +1116,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       email={answers.email}
       checkoutUrl={result.checkoutUrl}
       plan={plan}
+      drawerMode={drawerMode}
     />
   )
 
@@ -1338,21 +1363,39 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
                               {slugStatus === "taken" && slugSuggestions.length > 0 && (
                                 <div className="mt-3" style={{ animation: "fade-up 0.3s ease-out both" }}>
                                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: "#f87171" }}>
-                                    That address is taken. Pick one:
+                                    That address is taken. These are available:
                                   </p>
-                                  <div className="flex flex-wrap gap-2">
+                                  <div className="flex flex-wrap gap-2 mb-3">
                                     {slugSuggestions.map((s) => (
                                       <button key={s} type="button"
-                                        onClick={() => setSlugCustom(s)}
+                                        onClick={() => { setSlugCustom(s); setSlugStatus("ok") }}
                                         className="rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] transition"
                                         style={{
-                                          borderColor: slugCustom === s ? SIGNAL_GREEN : "rgba(248,113,113,0.35)",
-                                          backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}14` : "transparent",
-                                          color: slugCustom === s ? SIGNAL_GREEN : "#f87171",
+                                          borderColor: slugCustom === s ? SIGNAL_GREEN : `${SIGNAL_GREEN}55`,
+                                          backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}14` : `${SIGNAL_GREEN}08`,
+                                          color: SIGNAL_GREEN,
                                         }}>
                                         {s}
                                       </button>
                                     ))}
+                                  </div>
+                                  <div className="flex items-center gap-2 rounded-xl border px-4 py-2.5" style={{ borderColor: `${SIGNAL_GREEN}30` }}>
+                                    <input
+                                      type="text"
+                                      value={slugCustom}
+                                      onChange={(e) => {
+                                        const v = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 48)
+                                        setSlugCustom(v)
+                                        setSlugStatus("idle")
+                                      }}
+                                      placeholder="or type your own…"
+                                      autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                                      className="flex-1 bg-transparent text-xs font-black outline-none placeholder:font-normal placeholder:opacity-40"
+                                      style={{ color: FOUND_BLACK, letterSpacing: "0.04em" }}
+                                    />
+                                    <span className="shrink-0 text-[10px] font-black" style={{ color: tk.muted }}>
+                                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"}
+                                    </span>
                                   </div>
                                 </div>
                               )}

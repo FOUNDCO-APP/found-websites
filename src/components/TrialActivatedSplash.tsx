@@ -14,11 +14,11 @@ export default function TrialActivatedSplash({ companyName }: { companyName: str
   useEffect(() => {
     setMounted(true)
     const params = new URLSearchParams(window.location.search)
-    if (params.get("trial") !== "activated") return
+    if (params.get("activated") !== "true") return
 
     // Remove param so refresh doesn't replay
     const url = new URL(window.location.href)
-    url.searchParams.delete("trial")
+    url.searchParams.delete("activated")
     window.history.replaceState({}, "", url.toString())
 
     setVisible(true)

@@ -12,6 +12,12 @@ const FOUND_BLACK = "#080A09"
 // Module-level: Stripe.js starts loading the moment this chunk is prefetched.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
+function planDetails(plan?: string | null) {
+  if (plan === "found_business") return { price: 69, normal: 99 }
+  if (plan === "found_pro")      return { price: 39, normal: 69 }
+  return { price: 29, normal: 39 }
+}
+
 const stripeAppearance = {
   theme: "night" as const,
   variables: {
@@ -50,12 +56,13 @@ const stripeAppearance = {
   },
 }
 
-function CardForm({ slug, companyName }: { slug: string; companyName: string }) {
+function CardForm({ slug, companyName, plan }: { slug: string; companyName: string; plan?: string | null }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+  const { price, normal } = planDetails(plan)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -89,14 +96,14 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
         <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
           <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
-            Your free trial
+            Founding rate
           </span>
         </div>
         <p style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, letterSpacing: "-0.02em", color: "white", marginBottom: 4 }}>
-          14 days free.
+          ${price}/month.
         </p>
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>
-          No charge today. Cancel anytime.
+          Locked in for 12 months, then ${normal}/month. Cancel anytime.
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <PaymentElement options={{ layout: "tabs" }} />
@@ -121,7 +128,7 @@ function CardForm({ slug, companyName }: { slug: string; companyName: string }) 
               opacity: (!stripe || loading) ? 0.4 : 1,
               transition: "opacity 150ms",
             }}>
-            {loading ? "One moment…" : "Activate free trial →"}
+            {loading ? "One moment…" : "Lock in my rate →"}
           </button>
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>
             {companyName} · Powered by Found
@@ -153,6 +160,7 @@ export default function ActivateOverlay({
   const [cinPhase, setCinPhase] = useState<CinPhase>("text")
   const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
   const [companyName, setCompanyName] = useState(initialName)
+  const [plan, setPlan] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -169,6 +177,7 @@ export default function ActivateOverlay({
       } else {
         setClientSecret(result.clientSecret)
         if (!companyName) setCompanyName(result.companyName)
+        if (result.plan) setPlan(result.plan)
       }
     })
   }, [slug, setupIntentSecret, companyName])
@@ -324,7 +333,7 @@ export default function ActivateOverlay({
             </div>
           ) : clientSecret ? (
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-              <CardForm slug={slug} companyName={companyName} />
+              <CardForm slug={slug} companyName={companyName} plan={plan} />
             </Elements>
           ) : null}
         </div>

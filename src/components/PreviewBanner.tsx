@@ -25,8 +25,8 @@ function getBannerState(trialEndsAt: string | null): BannerState {
       accent: SIGNAL_GREEN,
       label: "Live preview",
       headline: "Your site is live.",
-      detail: "14 days free — no charge today.",
-      cta: "Start free trial →",
+      detail: "Founding rate. Lock it in for 12 months.",
+      cta: "Lock in my rate →",
     }
   }
 
@@ -57,8 +57,8 @@ function getBannerState(trialEndsAt: string | null): BannerState {
     accent: SIGNAL_GREEN,
     label: "Live preview",
     headline: "Your site is live.",
-    detail: "14 days free — no charge today.",
-    cta: "Start free trial →",
+    detail: "Founding rate. Lock it in for 12 months.",
+    cta: "Lock in my rate →",
   }
 }
 
