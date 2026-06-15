@@ -56,33 +56,34 @@ export default async function SelectPage() {
   }
 
   return (
-    <main style={{
-      minHeight: "100dvh",
-      backgroundColor: FOUND_BLACK,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px 20px",
-    }}>
-      {/* Wordmark */}
-      <div style={{ position: "absolute", left: 28, top: 28 }}>
-        <svg viewBox="0 0 420 72" style={{ height: 22, width: 120, color: "white" }} aria-label="Found">
+    <div style={{ minHeight: "100dvh", backgroundColor: FOUND_BLACK, display: "flex", flexDirection: "column" }}>
+      {/* Sticky header */}
+      <header style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        backgroundColor: FOUND_BLACK,
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        padding: "18px 24px",
+      }}>
+        <svg viewBox="0 0 420 72" style={{ height: 20, width: 108, color: "white" }} aria-label="Found">
           <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
         </svg>
-      </div>
+      </header>
 
-      <div style={{ width: "100%", maxWidth: 440, animation: "fade-up 0.45s ease-out both" }}>
+      {/* Scrollable body */}
+      <main style={{ flex: 1, overflowY: "auto", padding: "32px 20px 48px" }}>
+      <div style={{ width: "100%", maxWidth: 440, margin: "0 auto", animation: "fade-up 0.45s ease-out both" }}>
         <h1 style={{
           margin: "0 0 6px",
-          fontSize: 28,
+          fontSize: 26,
           fontWeight: 300,
           color: "white",
           letterSpacing: "-0.02em",
         }}>
           Choose a business.
         </h1>
-        <p style={{ margin: "0 0 28px", fontSize: 15, color: "rgba(255,255,255,0.35)" }}>
+        <p style={{ margin: "0 0 24px", fontSize: 15, color: "rgba(255,255,255,0.35)" }}>
           You manage {companies.length} sites on Found.
         </p>
 
@@ -160,6 +161,7 @@ export default async function SelectPage() {
           ))}
         </div>
       </div>
+      </main>
 
       <style>{`
         @keyframes fade-up {
@@ -167,6 +169,6 @@ export default async function SelectPage() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-    </main>
+    </div>
   )
 }

@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { createBrowserClient } from "@supabase/ssr"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -12,29 +11,20 @@ export default function DashboardLoginPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.includes("@")) return
     setLoading(true)
     setError(null)
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `https://my.${rootDomain}/auth/callback`,
-        shouldCreateUser: true,
-      },
+    const res = await fetch("/api/send-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
     })
 
     setLoading(false)
-    if (otpError) {
+    if (!res.ok) {
       setError("Something went wrong. Please try again or reply to your Found welcome email.")
     } else {
       setSent(true)
