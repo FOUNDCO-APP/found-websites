@@ -351,28 +351,25 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   const siteUrl = `https://${slug}.${ROOT_DOMAIN}`
   const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? `https://${ROOT_DOMAIN}`
 
-  // Create Supabase auth user + dashboard magic link
-  let dashboardLink: string | null = null
+  // Create or find the auth user and link them to this company.
+  // generateLink handles both cases: creates the user if they don't exist,
+  // finds them if they do — and returns their user.id either way.
   try {
-    const { data: userData } = await supabase.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    })
-
-    if (userData?.user?.id) {
-      await supabase.from("companies").update({ user_id: userData.user.id }).eq("id", companyId)
-    }
-
-    const { data: linkData } = await supabase.auth.admin.generateLink({
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
       options: { redirectTo: `https://my.${ROOT_DOMAIN}/auth/callback` },
     })
-
-    dashboardLink = linkData?.properties?.action_link ?? null
+    if (linkError) {
+      console.error("[onboarding] generateLink error:", linkError.message)
+    } else if (linkData?.user?.id) {
+      await supabase.from("companies").update({ user_id: linkData.user.id }).eq("id", companyId)
+    }
   } catch (err) {
     console.error("[onboarding] auth setup error:", err)
   }
+
+  const loginUrl = `https://my.${ROOT_DOMAIN}/login`
 
   // Fire-and-forget welcome email — failure doesn't block site creation
   resend.emails.send({
@@ -380,8 +377,8 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     replyTo: "hello@foundco.app",
     to:      email,
     subject: `${name} is live.`,
-    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, dashboardLink }),
-    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n4. View your dashboard.\nhttps://app.${ROOT_DOMAIN}/leads\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
+    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl }),
+    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n4. View your dashboard.\n${loginUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
   }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
@@ -396,13 +393,13 @@ function buildWelcomeEmail({
   siteUrl,
   slug,
   appUrl,
-  dashboardLink,
+  loginUrl,
 }: {
   name: string
   siteUrl: string
   slug: string
   appUrl: string
-  dashboardLink: string | null
+  loginUrl: string
 }) {
   const displayUrl = siteUrl.replace("https://", "")
   const connectUrl = `${appUrl}/connect-domain?slug=${slug}`
@@ -456,11 +453,10 @@ function buildWelcomeEmail({
               style="display:block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;">
               Open your site →
             </a>
-            ${dashboardLink ? `
-            <a href="${dashboardLink}"
+            <a href="${loginUrl}"
               style="display:block;margin-top:10px;background:transparent;color:#32D074;font-size:13px;font-weight:700;padding:14px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;border:1.5px solid #32D07440;">
-              View your dashboard →
-            </a>` : ""}
+              Go to your dashboard →
+            </a>
             <p style="margin:12px 0 0;font-size:12px;color:#aaaaaa;">${displayUrl}</p>
           </td>
         </tr>
