@@ -312,9 +312,9 @@ Exit criteria:
 
 ## NEXT
 
-1. **Wire Google Places API for city autocomplete** — Stub in place. BLOCKED: waiting for Shawn to get API key from Google Cloud Console (Places API, restrict to foundco.app + localhost). Server-side proxy at `/api/places`. See `// TODO` in OnboardingFlow.tsx.
+1. **E2E billing test** — go through onboarding on real device, hit billing card on reveal screen, use Stripe test card `4242 4242 4242 4242`, confirm webhook fires, confirm `subscription_status → trialing` in Supabase companies table, confirm preview banner disappears after.
 2. **Add Vercel env vars for domain API** — `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard → enables automatic domain registration when owner uses /connect-domain.
-3. **Photo pool curation for 10 new industries** — BLOCKED: requires curation session with Shawn at /admin/photos. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
+3. **Photo pool curation for 10 new industries** — requires curation session with Shawn at /admin/photos. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
 4. **"Your copy was auto-generated" nudge** — backlog 1j. `copy_generated` flag exists. Owner sees quiet prompt in app: "Want Claude to write a custom version?" One tap to trigger regenerate.
 5. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
 
@@ -359,8 +359,11 @@ Exit criteria:
 
 ## BLOCKED
 
-- Google Places API city autocomplete — waiting on Shawn to create API key in Google Cloud Console
 - Photo pool curation for 10 new industries — requires curation session with Shawn
+
+## RECENTLY UNBLOCKED
+
+- ✅ **Google Places API city autocomplete** — FIXED June 15, 2026. Root cause: API key had HTTP referrer restriction set in Google Cloud Console, which blocks server-side fetch calls. Shawn changed to "None" restriction. No code changes needed. Works in prod.
 
 ---
 

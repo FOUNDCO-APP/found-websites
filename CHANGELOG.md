@@ -4,6 +4,37 @@
 
 ---
 
+## Session: June 15, 2026 — Google Places Autocomplete Fixed
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Diagnosing broken city autocomplete, fixing Google Places API key restriction
+
+### ✅ Completed This Session
+
+**Google Places city autocomplete — fixed (no code changes needed):**
+- Root cause: API key had "HTTP referrers" restriction set in Google Cloud Console
+- Server-side fetch calls (from `/api/places` route) send no referrer header → Google blocked every request with `REQUEST_DENIED`
+- Fix: Shawn changed Application restrictions to "None" in Google Cloud Console
+- `/api/places/route.ts` and `OnboardingFlow.tsx` are both correct — code was never the problem
+- Confirmed working: `Tucson` → returns `Tucson, AZ, USA` as first result ✅
+- City autocomplete and service area autocomplete both use the same route → both now work
+
+**E2E billing test — walked through (not yet run):**
+- Full test flow documented in session: onboarding → reveal screen billing card → Stripe test checkout (card: 4242 4242 4242 4242) → verify `subscription_status = trialing` in Supabase → verify preview banner disappears
+
+### ⚠️ Still Pending / Carry Forward
+
+- **E2E billing test** — not yet run. Steps: go through onboarding, hit billing card on reveal screen, use Stripe test card 4242 4242 4242 4242, confirm webhook fires, confirm `subscription_status → trialing` in Supabase, confirm preview banner gone
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard** — currently only in `.env.local`; needed for `/connect-domain` auto-registration in prod
+- **Photo pool curation for 10 new industries** — requires session at `/admin/photos` with Shawn (creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit)
+
+### 🔜 Next Session
+
+1. Run E2E billing test end-to-end on real device
+2. Add `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` to Vercel dashboard env vars
+3. Photo pool curation session at `/admin/photos`
+
+---
+
 ## Session: June 13, 2026 — Stripe Billing Activation + 4 UX Fixes
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Completing Phase 3 billing setup, then 4 onboarding UX improvements found during testing
