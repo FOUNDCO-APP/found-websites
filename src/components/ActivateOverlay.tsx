@@ -128,7 +128,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
               opacity: (!stripe || loading) ? 0.4 : 1,
               transition: "opacity 150ms",
             }}>
-            {loading ? "One moment…" : "Lock in my rate →"}
+            {loading ? "One moment…" : "Activate my site →"}
           </button>
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>
             {companyName} · Powered by Found

@@ -26,7 +26,7 @@ function getBannerState(trialEndsAt: string | null): BannerState {
       label: "Live preview",
       headline: "Your site is live.",
       detail: "Founding rate. Lock it in for 12 months.",
-      cta: "Lock in my rate →",
+      cta: "Activate my site →",
     }
   }
 
@@ -58,7 +58,7 @@ function getBannerState(trialEndsAt: string | null): BannerState {
     label: "Live preview",
     headline: "Your site is live.",
     detail: "Founding rate. Lock it in for 12 months.",
-    cta: "Lock in my rate →",
+    cta: "Activate my site →",
   }
 }
 

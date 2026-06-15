@@ -122,7 +122,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
           <button type="submit" disabled={!stripe || loading}
             className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-            {loading ? "One moment…" : "Lock in my rate →"}
+            {loading ? "One moment…" : "Activate my site →"}
           </button>
           <p className="text-center text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
             {companyName} · Powered by Found

@@ -449,7 +449,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawe
                     className="mt-4 flex min-h-11 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
                     style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >
-                    Lock in my rate →
+                    Activate my site →
                   </a>
                 </div>
               )
