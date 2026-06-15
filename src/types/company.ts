@@ -45,6 +45,7 @@ export type Company = {
   id: string
   name: string
   slug: string
+  user_id: string | null
   industry_category: string
   primary_intent: string
   secondary_intent: string | null
