@@ -9,7 +9,7 @@ export async function middleware(req: NextRequest) {
   const hostname = host.split(":")[0]
   const { pathname } = req.nextUrl
 
-  const APP_DOMAIN = `app.${ROOT_DOMAIN}`
+  const APP_DOMAIN = `my.${ROOT_DOMAIN}`
   const isDashboard = hostname === APP_DOMAIN
 
   // ── app.foundco.app ─────────────────────────────────────────────────

@@ -28,7 +28,7 @@ export default function DashboardLoginPage() {
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `https://app.${rootDomain}/auth/callback`,
+        emailRedirectTo: `https://my.${rootDomain}/auth/callback`,
         shouldCreateUser: true,
       },
     })

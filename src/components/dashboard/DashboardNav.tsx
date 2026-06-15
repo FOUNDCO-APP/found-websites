@@ -11,40 +11,45 @@ type Tab = { path: string; label: string }
 
 const TABS: Tab[] = [
   { path: "/leads", label: "Leads" },
+  { path: "/inbox", label: "Inbox" },
   { path: "/site",  label: "Site" },
-  { path: "/plan",  label: "Plan" },
   { path: "/more",  label: "More" },
 ]
 
 function LeadsIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"}
-      strokeWidth={active ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+      stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+      <path d="M16 3.13a4 4 0 010 7.75"/>
+    </svg>
+  )
+}
+
+function InboxIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+      stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
     </svg>
   )
 }
 
 function SiteIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"}
-      strokeWidth={active ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+      stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="10"/>
       <line x1="2" y1="12" x2="22" y2="12"/>
       <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-    </svg>
-  )
-}
-
-function PlanIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-      stroke={active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"}
-      strokeWidth={active ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-      <line x1="1" y1="10" x2="23" y2="10"/>
     </svg>
   )
 }
@@ -62,15 +67,14 @@ function MoreIcon({ active }: { active: boolean }) {
 
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/leads": (a) => <LeadsIcon active={a} />,
+  "/inbox": (a) => <InboxIcon active={a} />,
   "/site":  (a) => <SiteIcon  active={a} />,
-  "/plan":  (a) => <PlanIcon  active={a} />,
   "/more":  (a) => <MoreIcon  active={a} />,
 }
 
 export default function DashboardNav() {
   const pathname = usePathname()
 
-  // Works in both local dev (/dashboard/leads) and production (/leads via rewrite)
   const isDev = pathname.startsWith("/dashboard")
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
   const prefix  = isDev ? "/dashboard" : ""

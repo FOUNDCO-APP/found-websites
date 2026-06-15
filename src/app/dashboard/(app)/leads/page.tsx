@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 
 const SIGNAL_GREEN = "#32D074"
@@ -17,8 +17,7 @@ type LeadRow = {
 
 function formatDate(iso: string) {
   const d = new Date(iso)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
+  const diff = Date.now() - d.getTime()
   const msDay = 86400000
   if (diff < msDay)     return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
   if (diff < 7 * msDay) return d.toLocaleDateString("en-US", { weekday: "short" })
@@ -30,12 +29,10 @@ export default async function LeadsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
+  const { createAdminClient } = await import("@/lib/supabase/admin")
   const admin = createAdminClient()
-  const { data: company } = await admin
-    .from("companies")
-    .select("id")
-    .or(`user_id.eq.${user.id},email.eq.${user.email}`)
-    .maybeSingle()
+
+  const company = await getCompany(user.id, user.email ?? "")
 
   const leads: LeadRow[] = company
     ? (((await admin
@@ -64,18 +61,17 @@ export default async function LeadsPage() {
       {leads.length === 0 ? (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
           <div style={{
-            width: 56,
-            height: 56,
-            borderRadius: 16,
+            width: 56, height: 56, borderRadius: 16,
             backgroundColor: "rgba(255,255,255,0.04)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 20px",
           }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
               stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
           <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 300, color: "white" }}>
@@ -102,17 +98,10 @@ export default async function LeadsPage() {
                 gap: 14,
               }}>
                 <div style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: "50%",
+                  width: 38, height: 38, borderRadius: "50%",
                   backgroundColor: `${SIGNAL_GREEN}18`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: SIGNAL_GREEN,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0, fontSize: 14, fontWeight: 700, color: SIGNAL_GREEN,
                 }}>
                   {initial}
                 </div>
@@ -128,26 +117,12 @@ export default async function LeadsPage() {
                     ) : null}
                   </div>
                   {lead.email ? (
-                    <p style={{
-                      margin: "0 0 3px",
-                      fontSize: 12,
-                      color: "rgba(255,255,255,0.4)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}>
+                    <p style={{ margin: "0 0 3px", fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {lead.email}
                     </p>
                   ) : null}
                   {preview ? (
-                    <p style={{
-                      margin: 0,
-                      fontSize: 13,
-                      color: "rgba(255,255,255,0.45)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {preview}
                     </p>
                   ) : null}
