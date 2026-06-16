@@ -1,37 +1,65 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import Stripe from "stripe"
 
+const FOUNDING_MEMBER_LIMIT = 25
+
+async function getFoundingMemberCount(): Promise<number> {
+  const admin = createAdminClient()
+  const { count } = await admin
+    .from("companies")
+    .select("id", { count: "exact", head: true })
+    .eq("is_founding_member", true)
+  return count ?? 0
+}
+
 export async function getPreviewCheckout(slug: string): Promise<{ url: string } | null> {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) return null
+  if (!process.env.STRIPE_SECRET_KEY) return null
 
   const supabase = await createClient()
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, stripe_customer_id")
+    .select("id, name, email, stripe_customer_id")
     .eq("slug", slug)
     .single()
 
   if (!company) return null
-
-  // stripe_customer_id is only set after checkout completes — already paid, no need to show checkout
   if (company.stripe_customer_id) return null
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  let customerId = company.stripe_customer_id as string | undefined
-  if (!customerId) {
-    const customer = await stripe.customers.create({ name: company.name, metadata: { company_id: company.id } })
-    customerId = customer.id
-    await supabase.from("companies").update({ stripe_customer_id: customerId }).eq("id", company.id)
+  // Determine if this is a founding member slot
+  const foundingCount = await getFoundingMemberCount()
+  const isFoundingMember = foundingCount < FOUNDING_MEMBER_LIMIT
+
+  const priceId = isFoundingMember
+    ? (process.env.STRIPE_PRICE_ID_FOUND_FOUNDING ?? process.env.STRIPE_PRICE_ID_FOUND)
+    : process.env.STRIPE_PRICE_ID_FOUND
+
+  if (!priceId) return null
+
+  const customer = await stripe.customers.create({
+    name: company.name ?? undefined,
+    email: company.email ?? undefined,
+    metadata: { company_id: company.id },
+  })
+
+  await supabase.from("companies").update({ stripe_customer_id: customer.id }).eq("id", company.id)
+
+  if (isFoundingMember) {
+    await supabase.from("companies").update({ is_founding_member: true }).eq("id", company.id)
   }
 
   const session = await stripe.checkout.sessions.create({
-    customer: customerId,
+    customer: customer.id,
     mode: "subscription",
-    line_items: [{ price: process.env.STRIPE_PRICE_ID_FOUND, quantity: 1 }],
-    subscription_data: { trial_period_days: 14 },
+    line_items: [{ price: priceId, quantity: 1 }],
+    subscription_data: {
+      trial_period_days: 14,
+      metadata: { company_id: company.id, is_founding_member: isFoundingMember ? "true" : "false" },
+    },
     payment_method_collection: "always",
     success_url: `https://${slug}.foundco.app?trial=activated`,
     cancel_url: `https://${slug}.foundco.app?preview=true`,

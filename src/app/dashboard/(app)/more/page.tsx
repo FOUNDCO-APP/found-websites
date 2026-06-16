@@ -2,6 +2,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
+import { openBillingPortal, startUpgradeCheckout } from "./actions"
 
 const SIGNAL_GREEN = "#32D074"
 
@@ -11,17 +12,19 @@ const PLAN_META: Record<string, { label: string; founding: number; normal: numbe
   found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
 }
 
-const UPGRADE_TO: Record<string, { plan: string; label: string; founding: number; features: string[] }> = {
+const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
   found: {
     plan: "found_pro",
     label: "Found Pro",
-    founding: 39,
+    foundingPrice: 39,
+    normalPrice: 69,
     features: ["Custom domain", "Lead tracking", "Auto-reply to leads", "Contact database", "Photo uploads"],
   },
   found_pro: {
     plan: "found_business",
     label: "Found Business",
-    founding: 69,
+    foundingPrice: 69,
+    normalPrice: 99,
     features: ["Online booking", "Quote requests", "Review collection", "Priority support"],
   },
 }
@@ -44,7 +47,11 @@ export default async function MorePage() {
   const plan = company?.plan ?? "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
-  const isActive = company?.subscription_status === "active"
+  const isFoundingMember = !!company?.is_founding_member
+  const hasStripe = !!company?.stripe_customer_id
+  const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
+  const displayPrice = isFoundingMember ? meta.founding : meta.normal
+  const upgradePrice = upgrade ? (isFoundingMember ? upgrade.foundingPrice : upgrade.normalPrice) : 0
 
   return (
     <main style={{ padding: "28px 20px" }}>
@@ -85,20 +92,29 @@ export default async function MorePage() {
                 <span style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: meta.color }}>
                   {meta.label}
                 </span>
+                {isFoundingMember && (
+                  <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: SIGNAL_GREEN, backgroundColor: `${SIGNAL_GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
+                    Founding
+                  </span>
+                )}
               </div>
               <span style={{ fontSize: 15, fontWeight: 300, color: "white" }}>
-                ${meta.founding}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>/mo</span>
+                ${displayPrice}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>/mo</span>
               </span>
             </div>
             <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-              {isActive ? `Founding rate locked in. Renews at $${meta.normal}/mo.` : "Activate to lock in your founding rate."}
+              {isActive
+                ? isFoundingMember
+                  ? `Founding rate locked in forever.`
+                  : `Active subscription.`
+                : "Activate to lock in your rate."}
             </p>
           </div>
         </div>
       </section>
 
       {/* Upgrade card */}
-      {upgrade && (
+      {upgrade && company?.id && (
         <section style={{ marginBottom: 20 }}>
           <div style={{
             borderRadius: 14,
@@ -112,23 +128,28 @@ export default async function MorePage() {
                   Upgrade to {upgrade.label}
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-                  ${upgrade.founding}/month founding rate
+                  ${upgradePrice}/month{isFoundingMember ? " founding rate" : ""}
                 </p>
               </div>
-              <a href="https://foundco.app#pricing" target="_blank" rel="noopener noreferrer" style={{
-                flexShrink: 0,
-                borderRadius: 8,
-                padding: "9px 16px",
-                fontSize: 11,
-                fontWeight: 900,
-                textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                backgroundColor: SIGNAL_GREEN,
-                color: "#080A09",
-                textDecoration: "none",
-              }}>
-                Upgrade →
-              </a>
+              <form action={startUpgradeCheckout}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <input type="hidden" name="targetPlan" value={upgrade.plan} />
+                <button type="submit" style={{
+                  flexShrink: 0,
+                  borderRadius: 8,
+                  padding: "9px 16px",
+                  fontSize: 11,
+                  fontWeight: 900,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.12em",
+                  backgroundColor: SIGNAL_GREEN,
+                  color: "#080A09",
+                  border: "none",
+                  cursor: "pointer",
+                }}>
+                  Upgrade →
+                </button>
+              </form>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {upgrade.features.map((f) => (
@@ -158,6 +179,24 @@ export default async function MorePage() {
                 <ChevronRight />
               </div>
             </a>
+          )}
+          {hasStripe && company?.id && (
+            <form action={openBillingPortal}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <button type="submit" style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textAlign: "left",
+              }}>
+                <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 14, color: "white" }}>Manage billing</span>
+                  <ChevronRight />
+                </div>
+              </button>
+            </form>
           )}
           <a href="mailto:hello@foundco.app" style={{ textDecoration: "none" }}>
             <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

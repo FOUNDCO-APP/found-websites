@@ -9,6 +9,18 @@ function getAdminClient() {
   )
 }
 
+function planFromPriceId(priceId: string): string | null {
+  const map: Record<string, string> = {
+    [process.env.STRIPE_PRICE_ID_FOUND || ""]:                "found",
+    [process.env.STRIPE_PRICE_ID_FOUND_FOUNDING || ""]:       "found",
+    [process.env.STRIPE_PRICE_ID_FOUND_PRO || ""]:            "found_pro",
+    [process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING || ""]:   "found_pro",
+    [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS || ""]:       "found_business",
+    [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING || ""]: "found_business",
+  }
+  return map[priceId] ?? null
+}
+
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature")
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
@@ -48,10 +60,22 @@ export async function POST(req: NextRequest) {
     console.log("[Stripe] checkout.session.completed — company:", companyId)
   }
 
-  if (
-    event.type === "customer.subscription.updated" ||
-    event.type === "customer.subscription.deleted"
-  ) {
+  if (event.type === "customer.subscription.updated") {
+    const sub = event.data.object as Stripe.Subscription
+    const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
+    const priceId = sub.items.data[0]?.price?.id
+    const plan = priceId ? planFromPriceId(priceId) : null
+
+    const update: Record<string, string> = { subscription_status: sub.status }
+    if (plan) update.plan = plan
+
+    await supabase
+      .from("companies")
+      .update(update)
+      .eq("stripe_customer_id", customerId)
+  }
+
+  if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
 

@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 13, 2026*
+*Last updated: June 15, 2026*
 
 ---
 
@@ -312,11 +312,10 @@ Exit criteria:
 
 ## NEXT
 
-1. **E2E billing test** — go through onboarding on real device, hit billing card on reveal screen, use Stripe test card `4242 4242 4242 4242`, confirm webhook fires, confirm `subscription_status → trialing` in Supabase companies table, confirm preview banner disappears after.
-2. **Add Vercel env vars for domain API** — `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard → enables automatic domain registration when owner uses /connect-domain.
-3. **Photo pool curation for 10 new industries** — requires curation session with Shawn at /admin/photos. Industries: creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit.
-4. **"Your copy was auto-generated" nudge** — backlog 1j. `copy_generated` flag exists. Owner sees quiet prompt in app: "Want Claude to write a custom version?" One tap to trigger regenerate.
-5. **Differentiator suggestions** — Industry-specific helper chip content review and refinement (foundation built in `DIFFERENTIATOR_CHIPS` in OnboardingFlow.tsx).
+1. **E2E billing test** ⏳ Shawn testing — go through onboarding, hit billing card, use Stripe test card `4242 4242 4242 4242`, confirm `subscription_status → trialing` in Supabase, confirm preview banner disappears.
+2. **Billing portal (3-3)** — Stripe Customer Portal so owner can upgrade / downgrade / cancel from dashboard. One server action + one button.
+3. **Plan gates (3-4)** — gate features by plan: custom domain → Pro+, worker upload → Pro+, booking/quotes → Business. Block in middleware or server action with upgrade prompt.
+4. **Founding Member flow (3-5)** — first 25 clients get $29/mo locked. Coupon code or flagged pricing in Stripe.
 
 ---
 
@@ -359,7 +358,7 @@ Exit criteria:
 
 ## BLOCKED
 
-- Photo pool curation for 10 new industries — requires curation session with Shawn
+*(nothing currently blocked)*
 
 ## RECENTLY UNBLOCKED
 
@@ -371,7 +370,7 @@ Exit criteria:
 
 — **INDUSTRY EXPANSION —**
 ✅ All 22 industries built (June 10, 2026)
-- Photo pools still needed for 10 new industries (requires Shawn curation session)
+✅ Photo pools curated for all industries (June 15, 2026 — Shawn confirmed done)
 
 ---
 

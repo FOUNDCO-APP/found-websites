@@ -1,4 +1,4 @@
-// Upload Fit & Delicious To-Go logo to Supabase Storage + update DB
+﻿// Upload Fit & Delicious To-Go logo to Supabase Storage + update DB
 // Run from project root: node scripts/upload-gotsmoothie-logo.mjs
 
 import { createClient } from "@supabase/supabase-js"
@@ -9,11 +9,11 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-const LOGO_PATH = "C:/Users/SuperShawn/Downloads/FitNDelicious2Go-logo.png"
+const LOGO_PATH = "C:/Users/SuperShawn/Downloads/FitNDelicious2Go-logo2.png"
 const SLUG = "gotsmoothie"
-const PRIMARY_COLOR = "#7B2D8B"   // Purple — "Fit" in the logo
-const ACCENT_1     = "#E5372A"   // Red — "Delicious"
-const ACCENT_2     = "#6AAC2E"   // Green — "2Go"
+const PRIMARY_COLOR = "#7B2D8B"   // Purple â€” "Fit" in the logo
+const ACCENT_1     = "#E5372A"   // Red â€” "Delicious"
+const ACCENT_2     = "#6AAC2E"   // Green â€” "2Go"
 
 async function run() {
   console.log("Reading logo file...")
@@ -50,11 +50,12 @@ async function run() {
     process.exit(1)
   }
 
-  console.log("✓ Logo uploaded and DB updated.")
-  console.log(`✓ Primary color: ${PRIMARY_COLOR} (purple)`)
-  console.log(`✓ Accent 1: ${ACCENT_1} (red)`)
-  console.log(`✓ Accent 2: ${ACCENT_2} (green)`)
-  console.log(`✓ Visit: https://${SLUG}.foundco.app`)
+  console.log("âœ“ Logo uploaded and DB updated.")
+  console.log(`âœ“ Primary color: ${PRIMARY_COLOR} (purple)`)
+  console.log(`âœ“ Accent 1: ${ACCENT_1} (red)`)
+  console.log(`âœ“ Accent 2: ${ACCENT_2} (green)`)
+  console.log(`âœ“ Visit: https://${SLUG}.foundco.app`)
 }
 
 run()
+
