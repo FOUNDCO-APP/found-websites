@@ -357,156 +357,127 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function planDetails(plan?: string) {
-  if (plan === "found_business") return { price: 69, normal: 99 }
-  if (plan === "found_pro")      return { price: 39, normal: 69 }
-  return { price: 29, normal: 39 }
-}
-
-function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawerMode }: { name: string; url: string; primaryColor: string; email: string; checkoutUrl?: string; plan?: string; drawerMode?: boolean }) {
+function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean
+}) {
   const [iframeReady, setIframeReady] = useState(false)
 
-  // Compact phone dimensions for drawer (520px panel) vs full-page
-  const phoneW    = drawerMode ? 156 : 272
-  const phoneH    = drawerMode ? 320 : 560
-  const phonePad  = drawerMode ? 7   : 10
-  const phoneR    = drawerMode ? 32  : 44
-  const notchW    = drawerMode ? 60  : 80
-  const notchH    = drawerMode ? 18  : 22
-  const notchTop  = drawerMode ? 14  : 18
-  const screenR   = drawerMode ? 26  : 36
-  const innerW    = phoneW - phonePad * 2 - 2      // subtract padding + border
+  const phoneW    = drawerMode ? 200 : 290
+  const phoneH    = drawerMode ? 420 : 600
+  const phonePad  = 9
+  const phoneR    = drawerMode ? 38  : 46
+  const notchW    = drawerMode ? 72  : 84
+  const notchH    = drawerMode ? 20  : 22
+  const notchTop  = drawerMode ? 16  : 18
+  const screenR   = drawerMode ? 30  : 38
+  const innerW    = phoneW - phonePad * 2 - 2
   const iframeScale = innerW / 390
 
   return (
     <main
-      className={`relative ${drawerMode ? "h-full overflow-y-auto" : "min-h-screen overflow-hidden"}`}
+      className={`relative flex flex-col items-center ${drawerMode ? "h-full overflow-y-auto" : "min-h-screen"}`}
       style={{ backgroundColor: FOUND_BLACK }}>
-      <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]" style={{ backgroundColor: `${primaryColor}1a` }} />
-      <div className={`relative ${drawerMode ? "" : "mx-auto flex min-h-screen max-w-6xl flex-col"} px-7 py-8`}>
-        <header className="flex items-center justify-between">
-          <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
-            <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-          </svg>
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 10px ${SIGNAL_GREEN}` }} />
-            <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Live</span>
-          </div>
-        </header>
 
-        <div className={drawerMode
-          ? "flex flex-col gap-6 pt-5 pb-6"
-          : "grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_0.88fr]"}>
+      {/* Ambient glow — sits behind the phone */}
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[180px]"
+        style={{ backgroundColor: `${primaryColor}14` }}
+      />
 
-          {/* ── Text content ── */}
-          <div style={{ animation: "fade-up 0.6s ease-out both" }}>
-            <p className={`${drawerMode ? "mb-3" : "mb-6"} text-xs font-black uppercase tracking-[0.24em]`} style={{ color: SIGNAL_GREEN }}>Found it.</p>
-            <h1 className={`${drawerMode ? "text-3xl" : "text-5xl md:text-7xl"} font-light leading-[1.05] text-white`}>{name}<br />is live.</h1>
-            <p className={`${drawerMode ? "mt-3 text-sm" : "mt-6 max-w-sm text-base"} leading-8 text-white/45`}>
-              Your business now has a place online.{!drawerMode && " Open it, look around, and make it yours."}
-            </p>
-            <div className={drawerMode ? "mt-5" : "mt-9"}>
-              <a href={`${url}?preview=true`} target="_blank" rel="noreferrer"
-                className={`inline-flex ${drawerMode ? "w-full min-h-11" : "min-h-14"} items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90`}
-                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                See your site →
-              </a>
-            </div>
-            {!drawerMode && <p className="mt-5 break-all text-xs font-bold text-white/22">{url}</p>}
+      {/* Header */}
+      <header className="relative z-10 flex w-full shrink-0 items-center justify-between px-7 pt-8">
+        <svg viewBox="0 0 420 72" className="h-6 w-32 text-white" aria-label="Found">
+          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+        </svg>
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 10px ${SIGNAL_GREEN}` }} />
+          <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Live</span>
+        </div>
+      </header>
 
-            {/* Email nudge — P.S. moment, delayed */}
-            {email && !drawerMode && (
-              <div className="mt-8 flex items-start gap-3" style={{ animation: "fade-up 0.6s 0.9s ease-out both", opacity: 0 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-white/30">
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="m2 7 10 7 10-7" />
-                </svg>
-                <div>
-                  <p className="text-xs leading-5 text-white/45">
-                    We sent your next steps to <span className="font-black text-white/70">{email}</span>
-                  </p>
-                  <p className="mt-0.5 text-xs text-white/25">
-                    Don&apos;t see it? Check your spam — just this once.
-                  </p>
-                </div>
-              </div>
-            )}
+      {/* Centered column */}
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center w-full px-7 py-10">
 
-            {/* Billing CTA */}
-            {checkoutUrl && (() => {
-              const { price, normal } = planDetails(plan)
-              return (
-                <div
-                  className={`${drawerMode ? "mt-5" : "mt-8"} rounded-2xl p-5`}
-                  style={{ animation: "fade-up 0.6s 1.4s ease-out both", opacity: 0, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
-                  <p className="mt-1.5 text-base font-black text-white">${price}/month.</p>
-                  <p className="mt-0.5 text-xs text-white/35">Locked for 12 months, then ${normal}/month. Cancel anytime.</p>
-                  <a
-                    href={checkoutUrl}
-                    className="mt-4 flex min-h-11 w-full items-center justify-center rounded-full text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-                    style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                  >
-                    Activate my site →
-                  </a>
-                </div>
-              )
-            })()}
-          </div>
+        {/* FOUND IT. */}
+        <p
+          className="mb-8 text-[10px] font-black uppercase tracking-[0.32em]"
+          style={{ color: SIGNAL_GREEN, animation: "fade-up 0.5s ease-out both" }}>
+          Found it.
+        </p>
 
-          {/* ── Phone mockup with live site preview ── */}
-          <div className={drawerMode ? "flex justify-center pb-4" : "flex items-center justify-center"} style={drawerMode ? undefined : { animation: "fade-up 0.85s ease-out both" }}>
+        {/* Phone mockup */}
+        <div style={{ animation: "fade-up 0.65s 0.1s ease-out both" }}>
+          <div
+            className="relative border border-white/10 bg-[#141715]"
+            style={{ width: phoneW, height: phoneH, padding: phonePad, borderRadius: phoneR, boxShadow: "0 48px 120px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05)" }}>
             <div
-              className="relative rounded-[44px] border border-white/10 bg-[#141715]"
-              style={{ width: phoneW, height: phoneH, padding: phonePad, borderRadius: phoneR, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
-              <div className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#0a0c0b]"
-                style={{ top: notchTop, width: notchW, height: notchH }} />
+              className="absolute left-1/2 -translate-x-1/2 rounded-full bg-[#0a0c0b]"
+              style={{ top: notchTop, width: notchW, height: notchH }} />
+            <div className="relative h-full overflow-hidden bg-[#F5F7F4]" style={{ borderRadius: screenR }}>
 
-              {/* Screen area */}
-              <div className="relative h-full overflow-hidden bg-[#F5F7F4]" style={{ borderRadius: screenR }}>
-
-                {/* Placeholder skeleton */}
-                <div
-                  className="absolute inset-0 transition-opacity duration-700"
-                  style={{ opacity: iframeReady ? 0 : 1, pointerEvents: "none" }}
-                >
-                  <div className="relative flex flex-col justify-end p-4" style={{ backgroundColor: primaryColor, height: drawerMode ? "44%" : "52%" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
-                    <div className="relative">
-                      <div className="h-3 w-28 rounded-full bg-white" />
-                      <div className="mt-2 h-2 w-20 rounded-full bg-white/35" />
-                    </div>
-                  </div>
-                  <div className="space-y-2.5 p-4">
-                    <div className="h-2 w-16 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
-                    <div className="h-10 rounded-xl bg-black/[0.05]" />
-                    <div className="h-10 rounded-xl bg-black/[0.05]" />
-                    <div className="h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
+              {/* Skeleton */}
+              <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: iframeReady ? 0 : 1, pointerEvents: "none" }}>
+                <div className="relative flex flex-col justify-end p-4" style={{ backgroundColor: primaryColor, height: "50%" }}>
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/60" />
+                  <div className="relative">
+                    <div className="h-3 w-28 rounded-full bg-white" />
+                    <div className="mt-2 h-2 w-20 rounded-full bg-white/35" />
                   </div>
                 </div>
-
-                {/* Live site iframe */}
-                <iframe
-                  src={url}
-                  title={`${name} website preview`}
-                  loading="eager"
-                  sandbox="allow-scripts allow-same-origin"
-                  className="absolute top-0 left-0 border-0 transition-opacity duration-700"
-                  style={{
-                    opacity: iframeReady ? 1 : 0,
-                    pointerEvents: "none",
-                    width: "390px",
-                    height: "844px",
-                    transform: `scale(${iframeScale})`,
-                    transformOrigin: "top left",
-                  }}
-                  onLoad={() => setIframeReady(true)}
-                />
+                <div className="space-y-2.5 p-4">
+                  <div className="h-2 w-16 rounded-full" style={{ backgroundColor: primaryColor, opacity: 0.7 }} />
+                  <div className="h-10 rounded-xl bg-black/[0.05]" />
+                  <div className="h-10 rounded-xl bg-black/[0.05]" />
+                  <div className="h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
+                </div>
               </div>
+
+              {/* Live iframe */}
+              <iframe
+                src={url}
+                title={`${name} website preview`}
+                loading="eager"
+                sandbox="allow-scripts allow-same-origin"
+                className="absolute top-0 left-0 border-0 transition-opacity duration-700"
+                style={{
+                  opacity: iframeReady ? 1 : 0,
+                  pointerEvents: "none",
+                  width: "390px",
+                  height: "844px",
+                  transform: `scale(${iframeScale})`,
+                  transformOrigin: "top left",
+                }}
+                onLoad={() => setIframeReady(true)}
+              />
             </div>
           </div>
         </div>
+
+        {/* [Name] is live. */}
+        <div className="mt-9 text-center" style={{ animation: "fade-up 0.6s 0.3s ease-out both" }}>
+          <h1 className={`${drawerMode ? "text-[2.2rem]" : "text-5xl md:text-6xl"} font-light leading-[1.05] tracking-tight text-white`}>
+            {name}<br />is live.
+          </h1>
+        </div>
+
+        {/* See your site → */}
+        <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.45s ease-out both" }}>
+          <a
+            href={`${url}?preview=true`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
+            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+            See your site →
+          </a>
+        </div>
+
+        {/* Email nudge — non-drawer only */}
+        {email && !drawerMode && (
+          <p className="mt-8 text-center text-xs leading-6" style={{ color: "rgba(255,255,255,0.28)", animation: "fade-up 0.6s 0.7s ease-out both", opacity: 0 }}>
+            Next steps sent to <span style={{ color: "rgba(255,255,255,0.5)" }}>{email}</span>
+          </p>
+        )}
       </div>
     </main>
   )
@@ -1146,8 +1117,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       url={result.url}
       primaryColor={answers.primaryColor}
       email={answers.email}
-      checkoutUrl={result.checkoutUrl}
-      plan={plan}
       drawerMode={drawerMode}
     />
   )
