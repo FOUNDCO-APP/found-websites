@@ -385,25 +385,14 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
       />
 
       {/* Header */}
-      <header className="relative z-10 flex w-full shrink-0 items-center justify-between px-7 pt-8">
+      <header className="relative z-10 flex w-full shrink-0 items-center justify-center px-7 pt-8">
         <svg viewBox="0 0 420 72" className="h-6 w-32 text-white" aria-label="Found">
           <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
         </svg>
-        <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 10px ${SIGNAL_GREEN}` }} />
-          <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Live</span>
-        </div>
       </header>
 
       {/* Centered column */}
       <div className="relative z-10 flex flex-1 flex-col items-center justify-center w-full px-7 py-10">
-
-        {/* FOUND IT. */}
-        <p
-          className="mb-8 text-[10px] font-black uppercase tracking-[0.32em]"
-          style={{ color: SIGNAL_GREEN, animation: "fade-up 0.5s ease-out both" }}>
-          Found it.
-        </p>
 
         {/* Phone mockup */}
         <div style={{ animation: "fade-up 0.65s 0.1s ease-out both" }}>
@@ -453,15 +442,16 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
           </div>
         </div>
 
-        {/* [Name] is live. */}
-        <div className="mt-9 text-center" style={{ animation: "fade-up 0.6s 0.3s ease-out both" }}>
+        {/* [Name] is live. — two-beat reveal */}
+        <div className="mt-9 text-center">
           <h1 className={`${drawerMode ? "text-[2.2rem]" : "text-5xl md:text-6xl"} font-light leading-[1.05] tracking-tight text-white`}>
-            {name}<br />is live.
+            <span className="block" style={{ animation: "fade-up 0.6s 0.3s ease-out both" }}>{name}</span>
+            <span className="block" style={{ animation: "fade-up 0.6s 0.45s ease-out both" }}>is live.</span>
           </h1>
         </div>
 
         {/* See your site → */}
-        <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.45s ease-out both" }}>
+        <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
           <a
             href={`${url}?preview=true`}
             target="_blank"
