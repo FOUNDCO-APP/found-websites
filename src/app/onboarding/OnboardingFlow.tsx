@@ -381,7 +381,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawe
   return (
     <main
       className={`relative ${drawerMode ? "h-full overflow-y-auto" : "min-h-screen overflow-hidden"}`}
-      style={{ backgroundColor: FOUND_BLACK, animation: "fade-in 0.7s ease-out both" }}>
+      style={{ backgroundColor: FOUND_BLACK }}>
       <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full blur-[120px]" style={{ backgroundColor: `${primaryColor}1a` }} />
       <div className={`relative ${drawerMode ? "" : "mx-auto flex min-h-screen max-w-6xl flex-col"} px-7 py-8`}>
         <header className="flex items-center justify-between">
@@ -940,15 +940,16 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       uiTimeout,
     ])
     if (res.success && res.url && res.slug) {
-      await createSetupIntentForCompany({
+      const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
+      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
+      // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
+      createSetupIntentForCompany({
         companyId: sessionId,
         email: answers.email,
         name: answers.name.trim(),
         slug: res.slug,
         plan,
-      })
-      const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
-      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
+      }).catch(console.error)
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)
