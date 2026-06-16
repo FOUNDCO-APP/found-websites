@@ -15,19 +15,27 @@ export async function createActivationSetup(slug: string): Promise<{
   companyName: string
   plan: string | null
 } | null> {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) return null
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) {
+    console.error("[Activate] Missing env vars — STRIPE_SECRET_KEY or STRIPE_PRICE_ID_FOUND not set")
+    return null
+  }
 
   // Use admin client — owner visiting their own site is not logged into Supabase auth,
   // so the user session client would get null from RLS even on a valid slug.
   const admin = getAdminClient()
-  const { data: company } = await admin
+  const { data: company, error: dbError } = await admin
     .from("companies")
     .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan")
     .eq("slug", slug)
     .single()
 
+  console.log(`[Activate] slug="${slug}" company=${company?.id ?? "NOT FOUND"} stripe_customer_id=${company?.stripe_customer_id ?? "null"} pending_secret=${company?.pending_setup_intent_secret ? "SET" : "null"} dbError=${dbError?.message ?? "none"}`)
+
   if (!company) return null
-  if (company.stripe_customer_id) return null // already activated
+  if (company.stripe_customer_id) {
+    console.error(`[Activate] Already activated — stripe_customer_id is set for slug="${slug}"`)
+    return null
+  }
 
   // Fast path — setup intent was pre-created during onboarding, zero Stripe API calls
   if (company.pending_setup_intent_secret) {
