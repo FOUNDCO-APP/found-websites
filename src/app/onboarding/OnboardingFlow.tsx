@@ -905,7 +905,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
       // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
       createSetupIntentForCompany({
-        companyId: sessionId,
+        companyId: res.companyId,
         email: answers.email,
         name: answers.name.trim(),
         slug: res.slug,

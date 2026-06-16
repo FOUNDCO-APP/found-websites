@@ -40,6 +40,7 @@ type OnboardingResult = {
   success: boolean
   slug?: string
   url?: string
+  companyId?: string
   error?: string
 }
 
@@ -385,6 +386,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     success: true,
     slug,
     url: siteUrl,
+    companyId,
   }
 }
 
