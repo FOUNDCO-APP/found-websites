@@ -900,7 +900,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro"
       }),
       uiTimeout,
     ])
-    if (res.success && res.url && res.slug) {
+    if (res.success && res.url && res.slug && res.companyId) {
       const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
       setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
       // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
