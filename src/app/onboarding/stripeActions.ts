@@ -73,7 +73,7 @@ export async function createSetupIntentForCompany({
 
     await supabase
       .from("companies")
-      .update({ pending_setup_intent_secret: setupIntent.client_secret })
+      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
       .eq("id", companyId)
 
   } catch (err) {
