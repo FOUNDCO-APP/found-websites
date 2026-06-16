@@ -1,7 +1,6 @@
 "use server"
 
 import Stripe from "stripe"
-import { createClient } from "@/lib/supabase/server"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 
 function getAdminClient() {
@@ -18,8 +17,10 @@ export async function createActivationSetup(slug: string): Promise<{
 } | null> {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) return null
 
-  const supabase = await createClient()
-  const { data: company } = await supabase
+  // Use admin client — owner visiting their own site is not logged into Supabase auth,
+  // so the user session client would get null from RLS even on a valid slug.
+  const admin = getAdminClient()
+  const { data: company } = await admin
     .from("companies")
     .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan")
     .eq("slug", slug)
@@ -58,8 +59,7 @@ export async function createActivationSetup(slug: string): Promise<{
   if (!setupIntent?.client_secret) return null
 
   // Store it so any future visit to /activate is instant
-  const admin = getAdminClient()
-  await admin
+  await getAdminClient()
     .from("companies")
     .update({ pending_setup_intent_secret: setupIntent.client_secret })
     .eq("slug", slug)
