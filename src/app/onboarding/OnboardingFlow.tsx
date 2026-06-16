@@ -395,7 +395,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawe
         </header>
 
         <div className={drawerMode
-          ? "grid grid-cols-[1fr_156px] items-start gap-5 pt-5 pb-6"
+          ? "flex flex-col gap-6 pt-5 pb-6"
           : "grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_0.88fr]"}>
 
           {/* ── Text content ── */}
@@ -456,7 +456,7 @@ function RevealScreen({ name, url, primaryColor, email, checkoutUrl, plan, drawe
           </div>
 
           {/* ── Phone mockup with live site preview ── */}
-          <div className={drawerMode ? "flex justify-end pt-2" : "flex items-center justify-center"} style={drawerMode ? undefined : { animation: "fade-up 0.85s ease-out both" }}>
+          <div className={drawerMode ? "flex justify-center pb-4" : "flex items-center justify-center"} style={drawerMode ? undefined : { animation: "fade-up 0.85s ease-out both" }}>
             <div
               className="relative rounded-[44px] border border-white/10 bg-[#141715]"
               style={{ width: phoneW, height: phoneH, padding: phonePad, borderRadius: phoneR, boxShadow: "0 40px 100px rgba(0,0,0,0.7)" }}>
