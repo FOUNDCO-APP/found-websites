@@ -35,36 +35,44 @@ export async function createActivationSetup(slug: string): Promise<{
   }
 
   // Fallback for companies onboarded before this change — create on demand
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  const customer = await stripe.customers.create({
-    name: company.name,
-    email: company.email ?? undefined,
-    metadata: { company_id: company.id, slug },
-  })
+    const customer = await stripe.customers.create({
+      name: company.name,
+      email: company.email ?? undefined,
+      metadata: { company_id: company.id, slug },
+    })
 
-  const subscription = await stripe.subscriptions.create({
-    customer: customer.id,
-    items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
-    payment_behavior: "default_incomplete",
-    payment_settings: {
-      save_default_payment_method: "on_subscription",
-      payment_method_types: ["card", "us_bank_account"],
-    },
-    expand: ["pending_setup_intent"],
-    metadata: { company_id: company.id, slug },
-  })
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
+      payment_behavior: "default_incomplete",
+      payment_settings: {
+        save_default_payment_method: "on_subscription",
+        payment_method_types: ["card", "us_bank_account"],
+      },
+      expand: ["pending_setup_intent"],
+      metadata: { company_id: company.id, slug },
+    })
 
-  const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
-  if (!setupIntent?.client_secret) return null
+    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
+    if (!setupIntent?.client_secret) {
+      console.error("[Activate] Stripe subscription created but no pending_setup_intent client_secret. Sub ID:", subscription.id)
+      return null
+    }
 
-  // Store it so any future visit to /activate is instant
-  await getAdminClient()
-    .from("companies")
-    .update({ pending_setup_intent_secret: setupIntent.client_secret })
-    .eq("slug", slug)
+    // Store it so any future visit to /activate is instant
+    await getAdminClient()
+      .from("companies")
+      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
+      .eq("slug", slug)
 
-  return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: company.plan ?? null }
+    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: company.plan ?? null }
+  } catch (err) {
+    console.error("[Activate] createActivationSetup fallback failed:", err)
+    return null
+  }
 }
 
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
