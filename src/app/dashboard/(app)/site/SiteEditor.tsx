@@ -89,7 +89,7 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
 
   return (
-    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}>
+    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
 
       {/* ══════════════════════════════════════════
           HOME PAGE — full bleed hero preview

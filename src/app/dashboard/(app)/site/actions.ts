@@ -24,18 +24,6 @@ export async function getSiteConfig() {
   return data
 }
 
-export async function getWebsitePhotos() {
-  const ctx = await getContext()
-  if (!ctx) return []
-  const { data } = await ctx.admin
-    .from("company_photos")
-    .select("id, url, for_website, website_section")
-    .eq("company_id", ctx.company.id)
-    .eq("for_website", true)
-    .order("created_at", { ascending: false })
-  return data ?? []
-}
-
 export async function updateSiteField(field: string, value: unknown) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
@@ -46,7 +34,9 @@ export async function updateSiteField(field: string, value: unknown) {
     .eq("company_id", ctx.company.id)
 
   if (error) return { error: error.message }
+
   revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
   return { success: true }
 }
 
@@ -54,7 +44,6 @@ export async function regenerateSection(section: "hero" | "about" | "services" |
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
-  // Get current config and company info
   const { data: config } = await ctx.admin
     .from("website_config")
     .select("*")
@@ -70,16 +59,14 @@ export async function regenerateSection(section: "hero" | "about" | "services" |
   if (!config || !company) return { error: "Could not load site data" }
 
   const sectionPrompts: Record<string, string> = {
-    hero: `You are a professional copywriter for small businesses. Write a hero section for a website.
+    hero: `You are a professional copywriter for small businesses. Write a hero section.
 Business: ${company.name}
 Industry: ${company.industry_category} - ${company.sub_industry || ""}
 Location: ${company.city || ""}, ${company.state || ""}
 Description: ${company.description || ""}
 What makes them different: ${company.different || ""}
 Vibe: ${company.vibe || "bold"}
-
-Return ONLY valid JSON with no markdown:
-{"hero_title": "short punchy headline 4-7 words", "hero_subtitle": "1-2 sentence compelling description under 160 chars"}`,
+Return ONLY valid JSON: {"hero_title": "short punchy headline 4-7 words", "hero_subtitle": "1-2 sentence description under 160 chars"}`,
 
     about: `You are a professional copywriter for small businesses. Write an about section.
 Business: ${company.name}
@@ -87,24 +74,18 @@ Industry: ${company.industry_category} - ${company.sub_industry || ""}
 Location: ${company.city || ""}, ${company.state || ""}
 Description: ${company.description || ""}
 What makes them different: ${company.different || ""}
+Return ONLY valid JSON: {"about_text": "2-3 warm authentic sentences under 300 chars"}`,
 
-Return ONLY valid JSON with no markdown:
-{"about_text": "2-3 warm, authentic sentences about the business. Under 300 chars."}`,
-
-    services: `You are a professional copywriter for small businesses. Rewrite these service descriptions to be more compelling.
+    services: `You are a professional copywriter for small businesses. Rewrite these service descriptions.
 Business: ${company.name}
 Current services: ${JSON.stringify(config.services || [])}
-
-Return ONLY valid JSON with no markdown:
-{"services": [{"name": "service name", "description": "compelling 1-sentence description under 120 chars"}]}`,
+Return ONLY valid JSON: {"services": [{"name": "service name", "description": "compelling 1-sentence description under 120 chars"}]}`,
 
     tagline: `You are a professional copywriter for small businesses. Write a tagline and CTA.
 Business: ${company.name}
 Industry: ${company.industry_category}
 Vibe: ${company.vibe || "bold"}
-
-Return ONLY valid JSON with no markdown:
-{"tagline": "3-6 word memorable tagline", "cta_headline": "3-5 word action-oriented CTA"}`,
+Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline": "3-5 word action CTA"}`,
   }
 
   try {
@@ -124,25 +105,18 @@ Return ONLY valid JSON with no markdown:
 
     const data = await response.json()
     const text = data.content?.[0]?.text ?? ""
-
-    // Parse JSON response
     const clean = text.replace(/```json|```/g, "").trim()
     const parsed = JSON.parse(clean)
 
-    // Update the relevant fields
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
-    if (parsed.hero_title)   updates.hero_title = parsed.hero_title
+    if (parsed.hero_title)    updates.hero_title = parsed.hero_title
     if (parsed.hero_subtitle) updates.hero_subtitle = parsed.hero_subtitle
-    if (parsed.about_text)   updates.about_text = parsed.about_text
-    if (parsed.services)     updates.services = parsed.services
-    if (parsed.tagline)      updates.tagline = parsed.tagline
-    if (parsed.cta_headline) updates.cta_headline = parsed.cta_headline
+    if (parsed.about_text)    updates.about_text = parsed.about_text
+    if (parsed.services)      updates.services = parsed.services
+    if (parsed.tagline)       updates.tagline = parsed.tagline
+    if (parsed.cta_headline)  updates.cta_headline = parsed.cta_headline
 
-    await ctx.admin
-      .from("website_config")
-      .update(updates)
-      .eq("company_id", ctx.company.id)
-
+    await ctx.admin.from("website_config").update(updates).eq("company_id", ctx.company.id)
     revalidatePath(`/${ctx.company.slug}`)
     return { success: true, updates }
   } catch (err) {
@@ -155,12 +129,67 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
+  // Get the photo URL from company_photos
+  const { data: photo } = await ctx.admin
+    .from("company_photos")
+    .select("id, url, storage_path")
+    .eq("id", photoId)
+    .eq("company_id", ctx.company.id)
+    .single()
+
+  if (!photo) return { error: "Photo not found" }
+
+  // Update company_photos section tag
   await ctx.admin
     .from("company_photos")
     .update({ website_section: section })
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
 
+  const isGallery = section === "gallery"
+  const isHero = section === "hero"
+  const isRemoving = section === null
+
+  if (isGallery || isHero) {
+    // Upsert into media table so public site picks it up
+    const { data: existing } = await ctx.admin
+      .from("media")
+      .select("id")
+      .eq("company_id", ctx.company.id)
+      .eq("url", photo.url)
+      .single()
+
+    if (existing) {
+      // Update existing media record
+      await ctx.admin
+        .from("media")
+        .update({ website_flag: true })
+        .eq("id", existing.id)
+    } else {
+      // Insert new media record
+      await ctx.admin
+        .from("media")
+        .insert({
+          company_id: ctx.company.id,
+          url: photo.url,
+          thumbnail_url: photo.url,
+          type: "photo",
+          filename: photo.storage_path?.split("/").pop() ?? "photo.jpg",
+          website_flag: true,
+        })
+    }
+  } else if (isRemoving) {
+    // Remove from media table (unflag)
+    await ctx.admin
+      .from("media")
+      .update({ website_flag: false })
+      .eq("company_id", ctx.company.id)
+      .eq("url", photo.url)
+  }
+
+  // Revalidate both dashboard and public site
   revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/")
   return { success: true }
 }
