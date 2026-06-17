@@ -2,29 +2,45 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 
-// Handles implicit flow — Supabase redirects here with #access_token in the hash
-// Also handles ?token_hash= (email OTP flow)
 export default function AuthConfirmPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = createClient()
 
-    supabase.auth.onAuthStateChange((event, session) => {
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session) {
-        router.replace("/")
+    async function handleAuth() {
+      // Parse hash fragment — Supabase implicit flow sends #access_token=...&refresh_token=...
+      const hash = window.location.hash.substring(1)
+      const params = new URLSearchParams(hash)
+      const accessToken = params.get("access_token")
+      const refreshToken = params.get("refresh_token")
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+        if (!error) {
+          // Small pause to ensure cookies are written before server-side middleware checks
+          await new Promise(r => setTimeout(r, 300))
+          window.location.href = "/"
+          return
+        }
       }
-    })
 
-    // Also try getSession in case already set
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("/")
-    })
+      // Fallback: already have a session
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        window.location.href = "/"
+        return
+      }
+
+      window.location.href = "/login?error=auth_failed"
+    }
+
+    handleAuth()
   }, [router])
 
   return (
@@ -41,8 +57,12 @@ export default function AuthConfirmPage() {
           backgroundColor: "#32D074",
           boxShadow: "0 0 12px #32D074",
           margin: "0 auto 20px",
+          animation: "pulse 1.5s ease-in-out infinite",
         }}/>
-        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 14 }}>Signing you in…</p>
+        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 14, margin: 0 }}>
+          Signing you in…
+        </p>
+        <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
       </div>
     </div>
   )
