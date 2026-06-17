@@ -545,3 +545,72 @@ Not in launch: job assignment, payment tracking, referral partner tracking, subc
 Approved by: Shawn
 Why: Important relationship type but adds complexity. For launch, owners can tag a contact as "Referral" using the custom tag system. A dedicated referral tracking feature (track who sent you which jobs, stay in front of them automatically) is a future Pro feature.
 
+
+---
+
+## PHOTO PIPELINE & REVISED NAVIGATION — INITIAL CONCEPT (June 17, 2026)
+### ⚠️ STATUS: INITIAL CONCEPT — NOT FINAL. Document for discussion. Subject to change after testing.
+
+**[2026-06-17] — CONCEPT: Photos is a core daily tab, not a secondary feature. Nav revised accordingly.**
+Status: Initial concept — Shawn approved for exploration
+Why: A business owner taking photos of their work and turning them into website and social content is a primary daily action equal to checking leads. It cannot live inside More or be a secondary action. It belongs in the main nav.
+
+**[2026-06-17] — CONCEPT: Floating camera button replaces Camera as a bottom nav item.**
+Status: Initial concept
+Proposed: A floating action button (FAB) positioned above the center of the bottom nav — always visible on every screen. Tap it → two choices: Take Photo (→ Photos queue) or Scan Card (→ Leads or Contacts).
+Why: Frees up a nav slot for Photos as a full tab while keeping camera capture always one tap away from anywhere in the app. Similar pattern to Instagram's camera.
+Fallback if FAB feels cluttered: bring Camera back as center nav item and move Photos inside it.
+
+**[2026-06-17] — CONCEPT: Revised bottom nav — Home · Leads · Photos · Contacts · More**
+Status: Initial concept
+Changes from previous nav decision:
+- Camera removed as nav item → becomes floating action button
+- Photos added as dedicated nav tab (was previously only accessible via Home quick action)
+- Everything else unchanged
+
+**[2026-06-17] — CONCEPT: Photos tab has three internal views toggled at top — Queue · Website · Social**
+Status: Initial concept
+
+**Queue view:**
+- Every photo taken through Found's camera, unreviewed
+- One photo at a time, card-style (think Tinder swipe or stacked cards)
+- Three actions: ❤️ Heart (website), ⭐ Star (social), or dismiss
+- Fast. Designed for a 60-second break between jobs.
+- A photo can be both hearted AND starred — independent flags as per original decision
+
+**Website view:**
+- All hearted photos in one place
+- Owner taps a photo → assigns it: Hero image, Gallery, About section, or "Let Found decide"
+- Found auto-suggests placement based on photo composition (portrait vs landscape) and what sections need photos
+- Changes queue to update the live site — owner sees it reflected immediately
+
+**Social view:**
+- All starred photos, already formatted with brand typography and colors
+- Found auto-applies: business name, brand font, brand color overlay — matching their site vibe
+- Owner sees a preview, edits caption if they want, then shares directly or saves to camera roll for posting
+- Before & After: select two photos → Found creates a side-by-side branded graphic automatically. One tap. No design skills needed.
+
+**[2026-06-17] — CONCEPT: Before & After is a one-tap social post type inside the Social view.**
+Status: Initial concept
+Why: Before/after is the highest-performing content type for service businesses (contractors, cleaners, landscapers, beauty, wellness). It would cost $50 on Canva and 30 minutes of work. Found does it in one tap because the owner already captured and starred the photos. This is a genuine differentiator — nothing in this market does this automatically with brand-matched typography.
+
+**[2026-06-17] — CONCEPT: Photos stay inside Found, not in the device camera roll.**
+Status: Initial concept — needs legal/privacy review before shipping
+Why: Camera roll is chaos. Business photos mixed with personal photos. Found's camera captures directly to Found's staging area — the owner's creative content stays organized, branded, and ready to use without digging through hundreds of personal photos.
+Open question: Should owners have the option to also save to camera roll? Probably yes as an opt-in. Needs Angela's input on the opt-in UX.
+Privacy note: Photos stored in Supabase storage bucket per company. Owner owns their photos. Found does not use them for training or any purpose other than displaying on their site and social exports.
+
+**[2026-06-17] — CONCEPT: Social export formats at launch — Instagram (1080×1350 portrait), Facebook (1080×1080 square).**
+Status: Initial concept
+Future formats: Instagram Story (1080×1920), LinkedIn (1200×628), Google Business post
+Why: IG and FB cover the majority of small business social media. Ship those first, add formats based on what owners actually use.
+
+---
+
+### OPEN QUESTIONS FOR TEAM (Photos & Nav concept)
+- Angela: What's the right opt-in UX for "also save to camera roll"?
+- Jony: Does the FAB above the nav feel right or does it create visual clutter on the home screen?
+- Craig/Marcus: Supabase storage bucket structure for per-company photo staging — what's the migration look like?
+- Steve: Does Before & After belong at launch or Phase 2?
+- Shawn: Should social posts be shareable directly from Found (requires social API integrations) or does Found just prepare the image and the owner posts manually? Manual is simpler for launch.
+
