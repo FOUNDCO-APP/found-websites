@@ -2,6 +2,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
+import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout } from "./actions"
 
 const SIGNAL_GREEN = "#32D074"
@@ -58,6 +59,40 @@ export default async function MorePage() {
       <h1 style={{ margin: "0 0 24px", fontSize: 22, fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
         More
       </h1>
+
+      {/* My Site — prominent entry point */}
+      <section style={{ marginBottom: 20 }}>
+        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
+          My Site
+        </p>
+        <Link href="/site" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
+            padding: "16px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                backgroundColor: `${SIGNAL_GREEN}18`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 600, color: "white" }}>Edit My Site</p>
+                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Copy, photos, services · AI rewrite</p>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </Link>
+      </section>
 
       {/* Account */}
       <section style={{ marginBottom: 20 }}>
