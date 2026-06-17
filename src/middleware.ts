@@ -48,7 +48,7 @@ export async function middleware(req: NextRequest) {
     }
 
     const url = req.nextUrl.clone()
-    url.pathname = `/dashboard${pathname}`
+    url.pathname = `/dashboard${pathname === "/" ? "/leads" : pathname}`
     res = NextResponse.rewrite(url)
     return res
   }

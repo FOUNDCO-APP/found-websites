@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (companies.length === 1) {
-          const res = NextResponse.redirect(`${appBase}/`)
+          const res = NextResponse.redirect(`${appBase}/leads`)
           res.cookies.set("found_company_id", companies[0].id, {
             path: "/",
             sameSite: "lax",
