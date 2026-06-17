@@ -471,3 +471,77 @@ Why: Relevant upgrades feel like helpful suggestions. Irrelevant ones feel like 
 - Worker Seats (Pro and Business plans)
 - Contact automation / follow-up sequences (Pro plan)
 
+
+---
+
+## DASHBOARD UX & NAVIGATION (APPROVED — June 17, 2026)
+
+**[2026-06-17] — Mobile is the primary product. Desktop/tablet is the power view. Every feature ships mobile-first.**
+Approved by: Shawn
+Why: Small business owners are on their feet, in the truck, between jobs. The app must work perfectly in a 60-90 second session with one hand. Desktop is for when they have time — it gets more data density and a sidebar layout, but it is never the primary design target.
+
+**[2026-06-17] — Bottom navigation: 5 items. Home · Leads · Camera · Contacts · More**
+Approved by: Shawn
+Why: Five is the Apple standard maximum for bottom nav. Each item represents a distinct daily intent. Site editing lives inside More because owners don't edit their site daily — they check leads, add photos, and talk to customers daily.
+
+Nav item definitions:
+- **Home** — pulse dashboard + quick action shortcuts
+- **Leads** — all leads and conversations (list view + inbox view toggled at top of screen)
+- **Camera** (center, prominent) — daily action button. Opens: Add Photo (→ staging area) or Scan Card (→ leads or contacts). The heartbeat of daily usage.
+- **Contacts** — business phone book. Vendors, subs, suppliers. Tap to call/text/email.
+- **More** — My Site (edit), Plan & Billing, Upgrades, Settings, Help
+
+**[2026-06-17] — Leads and Inbox are one tab with a segmented control toggle, not two separate bottom nav items.**
+Approved by: Shawn
+Why: They are the same system. Splitting them into two nav items wastes a slot and confuses owners. A segmented control at the top of the Leads tab ("Leads · Inbox") gives clean access to both views. Tapping a lead from the list view opens its conversation (inbox view). One tab, two views, zero confusion.
+Backup: If user research shows owners are confused by the toggle, split back into two nav items and move Camera into a floating action button. This is the documented fallback.
+
+**[2026-06-17] — Home screen is a pulse dashboard + launchpad, not just a summary.**
+Approved by: Shawn
+Structure (top to bottom):
+1. **Pulse number** — the one thing that matters most right now. New leads since last open, or site visitors this week if no new leads. One number. Large. Quiet.
+2. **Top unactioned lead** — most recent lead that hasn't been replied to. Name, what they asked, two buttons: Reply and Call. If caught up: "You're caught up." in Signal Green.
+3. **Quick action buttons** — Add Lead, Add Photo, Share My Site, View Site. These are shortcuts to actions, not navigation to tabs.
+4. **Weekly snapshot** — site visitors, leads this week, photos approved. Small visible wins showing Found is working even when the owner isn't looking.
+
+**[2026-06-17] — Camera button is center bottom nav, most prominent position.**
+Approved by: Shawn
+Why: Capturing photos and leads on the go is the daily habit that makes Found irreplaceable. Dead center = most important action. Tap it → two choices only: Add Photo or Scan Card. No other options at that moment.
+Scan Card → one question: "Is this a customer lead or a business contact?" → routes to Leads or Contacts accordingly.
+
+**[2026-06-17] — Three things drive daily habit. Every feature decision must serve at least one of these.**
+Approved by: Shawn
+1. **Notifications that feel personal** — not "You have a new lead" but "Sarah just asked about your pricing." Specificity pulls the owner back in.
+2. **Something completable in under 3 taps** — reply to a lead, add a contact, approve a photo. The app rewards opening it because something always gets done fast.
+3. **Visible progress** — pulse number going up, site visitors increasing, photos on the website updating. Small wins that prove Found is working for them.
+
+**[2026-06-17] — Desktop/tablet layout is a sidebar nav with more data density. Not designed first.**
+Approved by: Shawn
+Desktop differences:
+- Left sidebar replaces bottom nav
+- Leads and Inbox become side-by-side columns (email client style)
+- Home becomes a proper dashboard with more metrics visible
+- Camera button becomes an "Add +" button in top right
+- More whitespace, more information per screen
+Built after mobile is complete and stable.
+
+**[2026-06-17] — Site editing lives in More, not in the main nav.**
+Approved by: Shawn
+Why: Owners do not edit their site daily. It should be accessible but not prominent. More → My Site → tap to edit hero text, about text, services. Non-technical. No CSS, no design tools. Text and photos only. Structure is immutable.
+
+**[2026-06-17] — Contacts tab: self-contained for launch. Tags/categories for filtering. Native OS for calls and texts.**
+Approved by: Shawn
+Features at launch:
+- Name, phone, email, notes
+- Tags: Vendor, Subcontractor, Laborer, Supplier — owner can add custom tags
+- Filter by tag ("show me all my drywall guys")
+- Tap phone → native OS dial
+- Tap text → native OS Messages (pre-filled number)
+- Tap email → native OS Mail (for contacts) / Found inbox (for leads)
+- Business card scan → drops here or into Leads based on owner's one-tap choice at scan time
+Not in launch: job assignment, payment tracking, referral partner tracking, subcontractor scheduling
+
+**[2026-06-17] — Referral partners (realtors, insurance agents who send business) are sidelined for post-launch.**
+Approved by: Shawn
+Why: Important relationship type but adds complexity. For launch, owners can tag a contact as "Referral" using the custom tag system. A dedicated referral tracking feature (track who sent you which jobs, stay in front of them automatically) is a future Pro feature.
+
