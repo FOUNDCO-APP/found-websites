@@ -79,7 +79,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
       </header>
 
-      <div style={{ maxWidth: 680, margin: "0 auto", paddingBottom: 80 }}>
+      <div style={{ maxWidth: 680, margin: "0 auto", paddingBottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}>
         {children}
       </div>
 
