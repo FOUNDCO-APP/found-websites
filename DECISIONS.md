@@ -407,3 +407,67 @@ Approved by: Shawn
 Why: Found Co. billing must be isolated — separate bank account, separate API keys, separate Stripe balance and payout schedule. Two businesses under one Stripe login is the correct approach; mixing keys would create a financial and operational mess.
 Implementation: Stripe login → "New account" → named "Found Co." → own bank → sandbox API keys first → live keys after billing code is tested.
 Vercel env vars: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (browser-safe, publishable key) + `STRIPE_SECRET_KEY` (server-only, secret key). Both added to Vercel project as of June 12, 2026.
+
+---
+
+## LEADS & INBOX SYSTEM (APPROVED — June 17, 2026)
+
+**[2026-06-17] — Leads and Inbox are two views into one unified contact/conversation system.**
+Approved by: Shawn
+Why: They look like two separate features but they share one underlying data model. Leads = the list view (who, when, source, status). Inbox = the conversation view (the thread). Tapping any lead opens its conversation thread. Replying from either view writes to the same thread. Think iPhone Contacts + Messages — two entry points, one system.
+
+**[2026-06-17] — Leads can enter the system from multiple sources. Each lead carries a source tag.**
+Approved by: Shawn
+Sources:
+1. **Website form** — someone fills out the contact/estimate form on the client's Found site. Automatic. Always works.
+2. **Manual entry** — owner is at a networking event, birthday party, family gathering. They open Found, tap "Add Lead", enter a name and number. That's it. Phone book simplicity. No required fields beyond name + one contact method.
+3. **Business card scan** — owner takes a photo of a business card inside Found. System reads the card (OCR) and pre-fills name, phone, email. Owner confirms and saves. One tap to add to leads.
+4. **Abandoned onboarding** — someone went through the Found onboarding flow, saw their site, but didn't activate (no credit card). These are warm leads for Found Co. itself, not for the client's business. They appear in the leads system with source = "onboarding" and status showing what's been sent and what hasn't.
+5. **Future sources** — referral links, social DMs, QR code scans. Not in scope now but the source tag system must be extensible.
+
+**[2026-06-17] — Lead temperature: Hot, Warm, Cold. Owner sets it manually. System suggests it based on recency and activity.**
+Approved by: Shawn
+Why: Owner needs a fast visual read of where to focus energy. Not a scoring algorithm — just a simple signal. Hot = act now. Warm = follow up soon. Cold = not urgent.
+
+**[2026-06-17] — Each lead shows its communication status inline — what's been sent, when, and whether it's been opened or replied to.**
+Approved by: Shawn
+Examples: "Auto-reply sent · 2 hours ago", "Follow-up sent · Yesterday · No reply", "Replied · 3 days ago"
+Why: Owner should never have to wonder "did they hear from me?" The status is right there on the lead card.
+
+**[2026-06-17] — Tapping a lead opens its full conversation thread (Inbox view). The two tabs are UI organization, not separate systems.**
+Approved by: Shawn
+Why: Leads tab = organization and overview. Inbox tab = active working surface. Clean separation for UX, but one data model underneath. A lead without any messages still has a conversation thread — it's just empty, waiting for the owner to start it.
+
+**[2026-06-17] — The lead system is a phone book, not a CRM. Name and one contact method is enough to create a lead.**
+Approved by: Shawn
+Why: Salesforce, HubSpot, GoHighLevel — all too heavy. A small business owner at a party should be able to save a lead in under 10 seconds. Required fields: name + (phone OR email). Everything else is optional. If it feels like paperwork, we've failed. This is the same standard as the onboarding flow — it should feel like talking to a friend, not filling out a form.
+
+**[2026-06-17] — Abandoned onboarding leads (people who saw their site but didn't activate) are a special lead type for Found Co. internal use.**
+Approved by: Shawn
+These appear in the Found admin system (not the client dashboard). They show:
+- What the site looks like
+- What emails/messages have been sent to them
+- A one-tap "Send them their site link again" action
+- Their activation status
+Why: These are warm leads who already saw the product. They need a gentle, automated nudge sequence — not a sales call. The system should handle the follow-up automatically with the owner's (Shawn's) approval.
+
+**[2026-06-17] — Upgrade upsells appear contextually inside the dashboard based on industry.**
+Approved by: Shawn
+Examples:
+- Restaurant owner → sees "Add Online Ordering" in the More/Upgrades section
+- Service business → sees "Add Estimates & Quotes"
+- Any owner → sees "Add Custom Domain", "Add Online Store"
+Upgrades are surfaced based on `company.industry` and `company.sub_industry` — a tutor should never see "Add Online Menu." A food truck should never see "Add Estimates & Quotes."
+Why: Relevant upgrades feel like helpful suggestions. Irrelevant ones feel like spam. The system should know who you are and show you only what makes sense for your business.
+
+**[2026-06-17] — Approved upgrade paths (from prior decisions + this session):**
+- Online Menu / To-Go Ordering (restaurants, food trucks, home bakers)
+- Online Shopping Cart (retail, makers, product businesses)
+- Estimates & Quotes with deposit → invoice → payment → receipt flow (contractors, home services, landscaping, cleaning, automotive)
+- Custom Domain (all plans)
+- Shared Gallery Link (show clients project progress)
+- Booking / Appointments (wellness, beauty, fitness, tutors, pet services)
+- Social Export (photo pipeline → formatted for IG/FB)
+- Worker Seats (Pro and Business plans)
+- Contact automation / follow-up sequences (Pro plan)
+
