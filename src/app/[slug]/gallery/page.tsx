@@ -45,10 +45,11 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
-  // Real photos take priority; fall back to stock
-  const allPhotos: string[] = photos && photos.length > 0
-    ? photos.map(p => p.thumbnail_url || p.url)
-    : imgs
+  // Combine owner's real photos WITH remaining stock images
+  // Owner photos come first, then stock images they haven't removed
+  const ownerPhotos = photos ? photos.map(p => p.thumbnail_url || p.url) : []
+  const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
+  const allPhotos: string[] = [...ownerPhotos, ...stockPhotos.filter(url => !ownerPhotos.includes(url))]
 
   const hasPhotos = allPhotos.length > 0
   const ctaImg = pickImg(imgs, 0)
