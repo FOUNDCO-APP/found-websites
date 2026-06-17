@@ -25,6 +25,7 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   const [newService, setNewService] = useState(false)
   const [newServiceName, setNewServiceName] = useState("")
   const [newServiceDesc, setNewServiceDesc] = useState("")
+  const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
   const [, startTransition] = useTransition()
 
   function startEdit(field: string, value: string) {
@@ -76,12 +77,14 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   }
 
   function handleAssignPhoto(photoId: string, section: string | null) {
+    // Optimistic update — move photo immediately in local state
+    setLocalPhotos(prev => prev.map(p => p.id === photoId ? { ...p, website_section: section } : p))
     startTransition(async () => { await assignPhotoToSection(photoId, section) })
   }
 
-  const heroPhotos = photos.filter(p => p.website_section === "hero")
-  const galleryPhotos = photos.filter(p => p.website_section === "gallery")
-  const unassigned = photos.filter(p => !p.website_section)
+  const heroPhotos = localPhotos.filter(p => p.website_section === "hero")
+  const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
+  const unassigned = localPhotos.filter(p => !p.website_section)
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
 

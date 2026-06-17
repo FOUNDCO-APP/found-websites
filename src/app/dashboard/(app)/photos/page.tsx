@@ -44,13 +44,14 @@ export default function PhotosPage() {
   }
 
   async function flag(id: string, field: "for_website" | "for_social", current: boolean) {
-    const res = await fetch("/api/photos", {
+    // Optimistic update immediately
+    setPhotos(prev => prev.map(p => p.id === id ? { ...p, [field]: !current } : p))
+    // Sync to server in background
+    fetch("/api/photos", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, [field]: !current }),
-    })
-    const data = await res.json()
-    if (data.photo) setPhotos(prev => prev.map(p => p.id === id ? data.photo : p))
+    }).catch(console.error)
   }
 
   async function remove(photo: Photo) {
