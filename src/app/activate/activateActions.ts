@@ -55,7 +55,7 @@ export async function createActivationSetup(slug: string): Promise<{
     const subscription = await stripe.subscriptions.create({
       customer: customer.id,
       items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
-      payment_behavior: "default_incomplete",
+      payment_behavior: "allow_incomplete",
       payment_settings: {
         save_default_payment_method: "on_subscription",
         payment_method_types: ["card", "us_bank_account"],
