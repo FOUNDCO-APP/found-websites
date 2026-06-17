@@ -116,9 +116,11 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
 
       <div style={{ padding: "0 24px" }}>
 
-        {/* ══ FIRST IMPRESSION ══ */}
+        {/* ══ HOME PAGE ══ */}
+        <PageGroup title="Home Page" emoji="🏠" />
+
         <PageSection
-          number="01"
+          number=""
           title="First Impression"
           subtitle="The very first thing people read when they land on your site."
           onRegenerate={() => handleRegenerate("hero")}
@@ -184,9 +186,11 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
           )}
         </PageSection>
 
-        {/* ══ YOUR STORY ══ */}
+        {/* ══ ABOUT PAGE ══ */}
+        <PageGroup title="About Page" emoji="👋" />
+
         <PageSection
-          number="02"
+          number=""
           title="Your Story"
           subtitle="Who you are and why you love what you do. People hire people — not businesses."
           onRegenerate={() => handleRegenerate("about")}
@@ -205,9 +209,11 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
           />
         </PageSection>
 
-        {/* ══ WHAT YOU OFFER ══ */}
+        {/* ══ SERVICES PAGE ══ */}
+        <PageGroup title="Services Page" emoji="⚡" />
+
         <PageSection
-          number="03"
+          number=""
           title="What You Offer"
           subtitle="The services you provide. Add everything — even things you forgot to mention during setup."
           onRegenerate={() => handleRegenerate("services")}
@@ -295,9 +301,9 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
           </div>
         </PageSection>
 
-        {/* ══ YOUR HOOK ══ */}
+        {/* ══ YOUR HOOK — still on home page ══ */}
         <PageSection
-          number="04"
+          number=""
           title="Your Hook"
           subtitle="A short phrase that sticks in people's heads. And the button that gets them to act."
           onRegenerate={() => handleRegenerate("tagline")}
@@ -326,10 +332,12 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
           />
         </PageSection>
 
-        {/* ══ YOUR WORK ══ */}
+        {/* ══ GALLERY PAGE ══ */}
+        {photos.length > 0 && <PageGroup title="Gallery Page" emoji="📸" />}
+
         {photos.length > 0 && (
           <PageSection
-            number="05"
+            number=""
             title="Your Work"
             subtitle="Photos that show what you do. Tap a photo to add it to your gallery. Tap again to remove it."
             onRegenerate={undefined}
@@ -425,10 +433,7 @@ function PageSection({
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 5 }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: accentColor, letterSpacing: "0.15em", opacity: 0.7 }}>
-              {number}
-            </span>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: "white", letterSpacing: "-0.02em" }}>
+            <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.75)", letterSpacing: "-0.01em" }}>
               {title}
             </h2>
           </div>
@@ -669,6 +674,41 @@ function ServiceCard({
           flex: 1, padding: "10px 0", border: "none", backgroundColor: "transparent",
           color: "rgba(255,80,80,0.6)", fontSize: 12, fontWeight: 600, cursor: "pointer",
         }}>Remove</button>
+      </div>
+    </div>
+  )
+}
+
+// ── Page Group Header ──
+function PageGroup({ title, emoji }: { title: string; emoji: string }) {
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 12,
+      marginTop: 40, marginBottom: 4,
+      paddingBottom: 16,
+      borderBottom: "2px solid rgba(255,255,255,0.06)",
+    }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: 12,
+        backgroundColor: "rgba(255,255,255,0.06)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 20,
+      }}>
+        {emoji}
+      </div>
+      <div>
+        <h2 style={{
+          margin: 0,
+          fontSize: 20,
+          fontWeight: 700,
+          color: "white",
+          letterSpacing: "-0.02em",
+        }}>
+          {title}
+        </h2>
+        <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.25)", letterSpacing: "0.04em" }}>
+          Tap any field to edit · Changes go live instantly
+        </p>
       </div>
     </div>
   )
