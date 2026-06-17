@@ -9,7 +9,6 @@ const BLACK = "#080A09"
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
-
 type Props = {
   company: { id: string; name: string; slug: string }
   config: Config | null
@@ -46,9 +45,7 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   async function handleRegenerate(section: Section) {
     setRegenerating(section)
     const result = await regenerateSection(section)
-    if (result.success && result.updates) {
-      setConfig(prev => ({ ...prev, ...result.updates }))
-    }
+    if (result.success && result.updates) setConfig(prev => ({ ...prev, ...result.updates }))
     setRegenerating(null)
   }
 
@@ -86,183 +83,194 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   const galleryPhotos = photos.filter(p => p.website_section === "gallery")
   const unassigned = photos.filter(p => !p.website_section)
   const services = (config.services as Array<{name:string;description:string}>) ?? []
+  const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
 
   return (
-    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: 60 }}>
+    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: 80 }}>
 
-      {/* ── HERO BANNER — gradient, not flat black ── */}
-      <div style={{
-        padding: "36px 24px 32px",
-        background: `radial-gradient(ellipse at 0% 0%, rgba(50,208,116,0.12) 0%, transparent 60%),
-                     radial-gradient(ellipse at 100% 100%, rgba(120,80,255,0.08) 0%, transparent 60%)`,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        position: "relative",
-        overflow: "hidden",
-      }}>
-        {/* Subtle grid texture */}
+      {/* ══════════════════════════════════════════
+          HOME PAGE — full bleed hero preview
+      ══════════════════════════════════════════ */}
+
+      {/* Page tab */}
+      <div style={{ padding: "28px 20px 0" }}>
+        <PageTab label="Home Page" href={`https://${company.slug}.foundco.app`} isLive />
+      </div>
+
+      {/* Hero preview card — looks like their actual site */}
+      <div style={{ margin: "16px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
+        {/* Background */}
+        {heroImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={heroImage} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+        ) : (
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)",
+          }}/>
+        )}
+        {/* Gradient overlay like real site */}
         <div style={{
-          position: "absolute", inset: 0, opacity: 0.03,
-          backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-          pointerEvents: "none",
+          position: "absolute", inset: 0,
+          background: "linear-gradient(180deg, rgba(8,10,9,0.3) 0%, rgba(8,10,9,0.7) 100%)",
         }}/>
 
-        <div style={{ position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <div style={{
-              width: 8, height: 8, borderRadius: "50%",
-              backgroundColor: GREEN,
-              boxShadow: `0 0 12px ${GREEN}`,
-            }}/>
-            <span style={{ fontSize: 11, color: GREEN, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-              Live
-            </span>
+        {/* Content */}
+        <div style={{ position: "relative", padding: "28px 22px 24px" }}>
+          <div style={{ marginBottom: 20 }}>
+            {/* Headline */}
+            <div
+              onClick={() => startEdit("hero_title", String(config.hero_title ?? ""))}
+              style={{ cursor: "pointer", marginBottom: 10 }}
+            >
+              <div style={{ fontSize: 11, color: `${GREEN}cc`, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+                HEADLINE · tap to edit
+              </div>
+              <h2 style={{
+                margin: 0, fontSize: 28, fontWeight: 300,
+                color: config.hero_title ? "white" : "rgba(255,255,255,0.3)",
+                letterSpacing: "-0.03em", lineHeight: 1.1,
+              }}>
+                {String(config.hero_title || "Your headline goes here")}
+              </h2>
+            </div>
+
+            {/* Subtitle */}
+            <div
+              onClick={() => startEdit("hero_subtitle", String(config.hero_subtitle ?? ""))}
+              style={{ cursor: "pointer" }}
+            >
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+                SUPPORTING LINE · tap to edit
+              </div>
+              <p style={{
+                margin: 0, fontSize: 15,
+                color: config.hero_subtitle ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
+                lineHeight: 1.5,
+              }}>
+                {String(config.hero_subtitle || "Your supporting line goes here")}
+              </p>
+            </div>
           </div>
-          <h1 style={{ margin: "0 0 4px", fontSize: 32, fontWeight: 200, color: "white", letterSpacing: "-0.04em" }}>
-            Your Website
-          </h1>
-          <a
-            href={`https://${company.slug}.foundco.app`}
-            target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}
-          >
-            {company.slug}.foundco.app
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round">
-              <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-              <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-            </svg>
-          </a>
+
+          {/* Hero action row */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              onClick={() => handleRegenerate("hero")}
+              disabled={regenerating === "hero"}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "8px 16px", borderRadius: 100,
+                backgroundColor: regenerating === "hero" ? "rgba(255,255,255,0.08)" : `${GREEN}22`,
+                border: `1px solid ${GREEN}44`,
+                color: regenerating === "hero" ? "rgba(255,255,255,0.3)" : GREEN,
+                fontSize: 12, fontWeight: 700, cursor: "pointer",
+              }}
+            >
+              {regenerating === "hero" ? <Spinner color={GREEN}/> : "✨"}
+              {regenerating === "hero" ? "Writing…" : "AI Rewrite"}
+            </button>
+
+            {/* Hero photo swap */}
+            {unassigned.length > 0 && (
+              <div style={{ display: "flex", gap: 5 }}>
+                {unassigned.slice(0, 3).map(p => (
+                  <button key={p.id} onClick={() => handleAssignPhoto(p.id, "hero")} style={{
+                    width: 32, height: 32, borderRadius: 8, padding: 0,
+                    border: "2px dashed rgba(255,255,255,0.2)", overflow: "hidden",
+                    cursor: "pointer", position: "relative", backgroundColor: "transparent",
+                  }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.6 }} />
+                  </button>
+                ))}
+              </div>
+            )}
+            {heroImage && (
+              <button onClick={() => handleAssignPhoto(heroPhotos[0]?.id ?? "", null)} style={{
+                padding: "8px 14px", borderRadius: 100,
+                backgroundColor: "rgba(255,70,70,0.15)", border: "1px solid rgba(255,70,70,0.2)",
+                color: "rgba(255,100,100,0.7)", fontSize: 11, fontWeight: 700, cursor: "pointer",
+              }}>Remove photo</button>
+            )}
+          </div>
         </div>
       </div>
 
-      <div style={{ padding: "0 20px" }}>
-
-        {/* ══════════════════════════════
-            HOME PAGE
-        ══════════════════════════════ */}
-        <PageLabel title="Home Page" description="What people see the moment they arrive" gradient="linear-gradient(135deg, rgba(50,208,116,0.15), rgba(50,208,116,0.03))" />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 8 }}>
-
-          <FieldCard
-            eyebrow="First Impression"
-            label="Your main headline"
-            hint="Short and punchy. What do you do, for who?"
-            field="hero_title"
-            value={String(config.hero_title ?? "")}
-            editing={editing} editValue={editValue} saved={saved}
-            onEdit={startEdit} onSave={saveEdit}
-            onCancel={() => setEditing(null)} onChange={setEditValue}
-            multiline={false}
-            accentColor={GREEN}
-          />
-
-          <FieldCard
-            eyebrow="First Impression"
-            label="Supporting line"
-            hint="One or two sentences that back up your headline."
-            field="hero_subtitle"
-            value={String(config.hero_subtitle ?? "")}
-            editing={editing} editValue={editValue} saved={saved}
-            onEdit={startEdit} onSave={saveEdit}
-            onCancel={() => setEditing(null)} onChange={setEditValue}
-            multiline={true}
-            accentColor={GREEN}
-          />
-
-          <AIRewriteCard
-            label="Not feeling it?"
-            description="Let AI rewrite your headline and supporting line based on your business."
-            buttonLabel="Rewrite First Impression"
-            isLoading={regenerating === "hero"}
-            accentColor={GREEN}
-            onRegenerate={() => handleRegenerate("hero")}
-          />
-
-          {/* Hero photo */}
-          {photos.length > 0 && (
-            <PhotoAssignCard
-              label="Main photo"
-              description="The big image behind your headline"
-              assigned={heroPhotos}
-              unassigned={unassigned}
-              section="hero"
-              onAssign={handleAssignPhoto}
-              accentColor={GREEN}
-            />
-          )}
-
-          <FieldCard
-            eyebrow="Your Hook"
+      {/* Hook section — tagline + CTA */}
+      <div style={{ margin: "12px 20px 0" }}>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10, paddingLeft: 4 }}>
+          Your Hook
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <TapToEdit
             label="Tagline"
-            hint="3–6 words. Something that sticks."
-            field="tagline"
             value={String(config.tagline ?? "")}
-            editing={editing} editValue={editValue} saved={saved}
-            onEdit={startEdit} onSave={saveEdit}
-            onCancel={() => setEditing(null)} onChange={setEditValue}
-            multiline={false}
-            accentColor="#38BDF8"
+            placeholder="Your tagline…"
+            onClick={() => startEdit("tagline", String(config.tagline ?? ""))}
+            isSaved={saved === "tagline"}
+            flex={3}
           />
-
-          <FieldCard
-            eyebrow="Your Hook"
-            label="Button text"
-            hint="What do you want people to tap or click?"
-            field="cta_headline"
+          <TapToEdit
+            label="Button"
             value={String(config.cta_headline ?? "")}
-            editing={editing} editValue={editValue} saved={saved}
-            onEdit={startEdit} onSave={saveEdit}
-            onCancel={() => setEditing(null)} onChange={setEditValue}
-            multiline={false}
-            accentColor="#38BDF8"
-          />
-
-          <AIRewriteCard
-            label="Need help with your hook?"
-            description="AI will write a tagline and button text that matches your brand."
-            buttonLabel="Rewrite Your Hook"
-            isLoading={regenerating === "tagline"}
-            accentColor="#38BDF8"
-            onRegenerate={() => handleRegenerate("tagline")}
+            placeholder="CTA…"
+            onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))}
+            isSaved={saved === "cta_headline"}
+            flex={2}
           />
         </div>
+        <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color="#38BDF8" onTap={() => handleRegenerate("tagline")} />
+      </div>
 
-        {/* ══════════════════════════════
-            ABOUT PAGE
-        ══════════════════════════════ */}
-        <PageLabel title="About Page" description="Your story — who you are and why you do this" gradient="linear-gradient(135deg, rgba(167,139,250,0.15), rgba(167,139,250,0.03))" />
+      {/* Divider */}
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 8 }}>
-          <FieldCard
-            eyebrow="Your Story"
-            label="About your business"
-            hint="Be real. Talk to your customer like a neighbor, not a corporation."
-            field="about_text"
-            value={String(config.about_text ?? "")}
-            editing={editing} editValue={editValue} saved={saved}
-            onEdit={startEdit} onSave={saveEdit}
-            onCancel={() => setEditing(null)} onChange={setEditValue}
-            multiline={true}
-            accentColor="#A78BFA"
-          />
+      {/* ══════════════════════════════════════════
+          ABOUT PAGE
+      ══════════════════════════════════════════ */}
+      <div style={{ padding: "0 20px" }}>
+        <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
+      </div>
 
-          <AIRewriteCard
-            label="Want it to sound better?"
-            description="AI will rewrite your story to feel warm, authentic, and compelling."
-            buttonLabel="Rewrite Your Story"
-            isLoading={regenerating === "about"}
-            accentColor="#A78BFA"
-            onRegenerate={() => handleRegenerate("about")}
-          />
+      <div style={{ margin: "16px 20px 0" }}>
+        {/* Story card — feels like reading the actual about page */}
+        <div
+          onClick={() => !editing && startEdit("about_text", String(config.about_text ?? ""))}
+          style={{
+            borderRadius: 20, padding: "22px 20px",
+            background: "linear-gradient(160deg, rgba(167,139,250,0.1) 0%, rgba(167,139,250,0.03) 100%)",
+            border: "1px solid rgba(167,139,250,0.15)",
+            cursor: editing === "about_text" ? "default" : "pointer",
+            position: "relative",
+          }}
+        >
+          <div style={{ fontSize: 11, color: "#A78BFA", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, opacity: 0.8 }}>
+            Your Story · tap to edit
+          </div>
+          <p style={{
+            margin: 0, fontSize: 16, fontWeight: 300,
+            color: config.about_text ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
+            lineHeight: 1.7, fontStyle: config.about_text ? "normal" : "italic",
+          }}>
+            {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
+          </p>
+          {saved === "about_text" && (
+            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>✓ Live</div>
+          )}
         </div>
+        <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color="#A78BFA" onTap={() => handleRegenerate("about")} />
+      </div>
 
-        {/* ══════════════════════════════
-            SERVICES PAGE
-        ══════════════════════════════ */}
-        <PageLabel title="Services Page" description="Everything you do and offer" gradient="linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.03))" />
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 8 }}>
+      {/* ══════════════════════════════════════════
+          SERVICES PAGE
+      ══════════════════════════════════════════ */}
+      <div style={{ padding: "0 20px" }}>
+        <PageTab label="Services Page" href={`https://${company.slug}.foundco.app/services`} />
+
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           {services.map((svc, i) => (
             <ServiceCard
               key={i} index={i}
@@ -276,29 +284,29 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
           ))}
 
           {newService ? (
-            <div style={{
-              borderRadius: 18, padding: 20,
-              background: "linear-gradient(135deg, rgba(251,146,60,0.08), rgba(251,146,60,0.03))",
-              border: "1px solid rgba(251,146,60,0.25)",
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#FB923C", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
-                New Service
-              </div>
-              <input placeholder="Service name (e.g. AC Installation)" value={newServiceName}
-                onChange={e => setNewServiceName(e.target.value)} autoFocus
+            <div style={{ borderRadius: 20, padding: 20, background: "linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.03))", border: "1px solid rgba(251,146,60,0.25)" }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#FB923C", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>New Service</div>
+              <input placeholder="Service name" value={newServiceName} onChange={e => setNewServiceName(e.target.value)} autoFocus
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }}
               />
-              <textarea placeholder="What's included? (optional)" value={newServiceDesc}
-                onChange={e => setNewServiceDesc(e.target.value)} rows={2}
+              <textarea placeholder="What's included? (optional)" value={newServiceDesc} onChange={e => setNewServiceDesc(e.target.value)} rows={2}
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", marginBottom: 14, fontFamily: "inherit", lineHeight: 1.5 }}
               />
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => { setNewService(false); setNewServiceName(""); setNewServiceDesc("") }} style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button onClick={addService} disabled={!newServiceName.trim()} style={{ flex: 2, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: newServiceName.trim() ? "#FB923C" : "rgba(255,255,255,0.08)", color: newServiceName.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: newServiceName.trim() ? "pointer" : "default" }}>Add Service</button>
+                <button onClick={() => { setNewService(false); setNewServiceName(""); setNewServiceDesc("") }}
+                  style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+                <button onClick={addService} disabled={!newServiceName.trim()}
+                  style={{ flex: 2, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: newServiceName.trim() ? "#FB923C" : "rgba(255,255,255,0.08)", color: newServiceName.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: newServiceName.trim() ? "pointer" : "default" }}>Add Service</button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setNewService(true)} style={{ width: "100%", padding: "16px 0", borderRadius: 16, border: "2px dashed rgba(251,146,60,0.25)", backgroundColor: "rgba(251,146,60,0.04)", color: "rgba(251,146,60,0.6)", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <button onClick={() => setNewService(true)} style={{
+              width: "100%", padding: "16px 0", borderRadius: 16,
+              border: "2px dashed rgba(251,146,60,0.2)",
+              backgroundColor: "transparent",
+              color: "rgba(251,146,60,0.5)", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
@@ -306,246 +314,196 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
             </button>
           )}
 
-          <AIRewriteCard
-            label="Make your services sound better?"
-            description="AI rewrites each service description to be more compelling to customers."
-            buttonLabel="Rewrite All Services"
-            isLoading={regenerating === "services"}
-            accentColor="#FB923C"
-            onRegenerate={() => handleRegenerate("services")}
-          />
+          <AIBar label="AI rewrites all service descriptions" isLoading={regenerating === "services"} color="#FB923C" onTap={() => handleRegenerate("services")} />
         </div>
-
-        {/* ══════════════════════════════
-            GALLERY PAGE
-        ══════════════════════════════ */}
-        <PageLabel title="Gallery Page" description="Photos of your work that build trust" gradient="linear-gradient(135deg, rgba(52,211,153,0.15), rgba(52,211,153,0.03))" />
-
-        {photos.length === 0 ? (
-          <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: "1px dashed rgba(255,255,255,0.08)", marginBottom: 8 }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>📸</div>
-            <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 300, color: "white" }}>No photos yet</p>
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
-              Go to the Photos tab, take some shots of your work,<br/>and heart them to use them here.
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 8 }}>
-            {galleryPhotos.length > 0 && (
-              <div style={{ borderRadius: 18, overflow: "hidden", background: "linear-gradient(135deg, rgba(52,211,153,0.08), rgba(52,211,153,0.02))", border: "1px solid rgba(52,211,153,0.15)" }}>
-                <div style={{ padding: "14px 16px 10px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#34D399", letterSpacing: "0.1em", textTransform: "uppercase" }}>In Your Gallery</span>
-                  <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>{galleryPhotos.length} photo{galleryPhotos.length !== 1 ? "s" : ""}</span>
-                </div>
-                <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
-                  {galleryPhotos.map(p => (
-                    <div key={p.id} style={{ position: "relative", borderRadius: 10, overflow: "hidden", aspectRatio: "1" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      <button onClick={() => handleAssignPhoto(p.id, null)} style={{ position: "absolute", top: 5, right: 5, width: 22, height: 22, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", border: "none", cursor: "pointer", color: "white", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {unassigned.length > 0 && (
-              <div style={{ borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <div style={{ padding: "14px 16px 10px" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" }}>Tap to add to gallery</span>
-                </div>
-                <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 5 }}>
-                  {unassigned.map(p => (
-                    <button key={p.id} onClick={() => handleAssignPhoto(p.id, "gallery")} style={{ padding: 0, border: "2px dashed rgba(52,211,153,0.2)", borderRadius: 10, overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
-                      <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 22, opacity: 0.7 }}>+</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
       </div>
+
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+
+      {/* ══════════════════════════════════════════
+          GALLERY PAGE
+      ══════════════════════════════════════════ */}
+      <div style={{ padding: "0 20px" }}>
+        <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
+
+        <div style={{ marginTop: 16 }}>
+          {photos.length === 0 ? (
+            <div style={{
+              borderRadius: 20, padding: "36px 24px", textAlign: "center",
+              background: "linear-gradient(160deg, rgba(52,211,153,0.08), rgba(52,211,153,0.02))",
+              border: "1px dashed rgba(52,211,153,0.2)",
+            }}>
+              <div style={{ fontSize: 40, marginBottom: 14 }}>📸</div>
+              <p style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 300, color: "white" }}>No photos yet</p>
+              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
+                Head to the Photos tab, take shots<br/>of your work, heart them, and they<br/>show up here.
+              </p>
+            </div>
+          ) : (
+            <>
+              {galleryPhotos.length > 0 && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#34D399", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+                    In your gallery · tap to remove
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                    {galleryPhotos.map(p => (
+                      <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", aspectRatio: "1" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <button onClick={() => handleAssignPhoto(p.id, null)} style={{
+                          position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer",
+                        }}>
+                          <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>✕</div>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {unassigned.length > 0 && (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+                    Tap to add
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                    {unassigned.map(p => (
+                      <button key={p.id} onClick={() => handleAssignPhoto(p.id, "gallery")} style={{
+                        padding: 0, border: "2px dashed rgba(52,211,153,0.25)", borderRadius: 14,
+                        overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent",
+                      }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 24, opacity: 0.6 }}>+</div>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── EDIT SHEET — slides up from bottom ── */}
+      {editing && (
+        <>
+          <div onClick={() => setEditing(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 40, backdropFilter: "blur(4px)" }}/>
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+            backgroundColor: "#111613",
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "24px 24px 0 0",
+            padding: "20px 20px 40px",
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              {{
+                hero_title: "Headline",
+                hero_subtitle: "Supporting Line",
+                about_text: "Your Story",
+                tagline: "Tagline",
+                cta_headline: "Button Text",
+              }[editing] ?? editing}
+            </div>
+            {["about_text", "hero_subtitle"].includes(editing) ? (
+              <textarea
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                autoFocus rows={5}
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", resize: "none", lineHeight: 1.6, boxSizing: "border-box", fontFamily: "inherit" }}
+              />
+            ) : (
+              <input
+                value={editValue}
+                onChange={e => setEditValue(e.target.value)}
+                autoFocus
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", boxSizing: "border-box" }}
+              />
+            )}
+            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+              <button onClick={() => setEditing(null)} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => saveEdit(editing)} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save & Go Live</button>
+            </div>
+          </div>
+        </>
+      )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
 
-// ── Page Label ──
-function PageLabel({ title, description, gradient }: { title: string; description: string; gradient: string }) {
+// ── Page Tab ──
+function PageTab({ label, href, isLive }: { label: string; href: string; isLive?: boolean }) {
   return (
-    <div style={{
-      margin: "32px 0 16px",
-      padding: "18px 20px",
-      borderRadius: 20,
-      background: gradient,
-      border: "1px solid rgba(255,255,255,0.08)",
-    }}>
-      <h2 style={{ margin: "0 0 3px", fontSize: 24, fontWeight: 700, color: "white", letterSpacing: "-0.03em" }}>
-        {title}
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: "white", letterSpacing: "-0.03em" }}>
+        {label}
       </h2>
-      <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.4)" }}>
-        {description}
-      </p>
-    </div>
-  )
-}
-
-// ── Field Card ──
-function FieldCard({
-  eyebrow, label, hint, field, value, editing, editValue, saved,
-  onEdit, onSave, onCancel, onChange, multiline, accentColor,
-}: {
-  eyebrow: string
-  label: string
-  hint: string
-  field: string
-  value: string
-  editing: string | null
-  editValue: string
-  saved: string | null
-  onEdit: (field: string, value: string) => void
-  onSave: (field: string) => void
-  onCancel: () => void
-  onChange: (val: string) => void
-  multiline: boolean
-  accentColor: string
-}) {
-  const isEditing = editing === field
-  const isSaved = saved === field
-
-  return (
-    <div style={{
-      borderRadius: 18,
-      backgroundColor: isEditing ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)",
-      border: isEditing ? `1px solid ${accentColor}44` : "1px solid rgba(255,255,255,0.07)",
-      overflow: "hidden",
-      transition: "all 0.15s ease",
-    }}>
-      <div style={{ padding: isEditing ? "16px 18px 4px" : "16px 18px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <div>
-            <span style={{ fontSize: 10, fontWeight: 700, color: accentColor, letterSpacing: "0.12em", textTransform: "uppercase", opacity: 0.8 }}>
-              {eyebrow}
-            </span>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>
-              {label}
-            </div>
-          </div>
-          {isSaved ? (
-            <span style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 10px", borderRadius: 100 }}>
-              ✓ Live
-            </span>
-          ) : !isEditing && (
-            <button onClick={() => onEdit(field, value)} style={{
-              padding: "6px 14px", borderRadius: 100, border: `1px solid rgba(255,255,255,0.1)`,
-              backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)",
-              fontSize: 12, fontWeight: 600, cursor: "pointer",
-            }}>Edit</button>
-          )}
-        </div>
-
-        {!isEditing && (
-          <div onClick={() => onEdit(field, value)} style={{ cursor: "pointer" }}>
-            <p style={{ margin: 0, fontSize: 15, color: value ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)", lineHeight: 1.6, fontStyle: value ? "normal" : "italic" }}>
-              {value || `Tap to write your ${label.toLowerCase()}…`}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {isEditing && (
-        <div style={{ padding: "8px 18px 18px" }}>
-          <p style={{ margin: "0 0 10px", fontSize: 12, color: "rgba(255,255,255,0.25)", fontStyle: "italic" }}>{hint}</p>
-          {multiline ? (
-            <textarea value={editValue} onChange={e => onChange(e.target.value)} autoFocus rows={4}
-              style={{ width: "100%", padding: "13px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.08)", border: `1.5px solid ${accentColor}44`, color: "white", fontSize: 15, outline: "none", resize: "vertical", lineHeight: 1.6, boxSizing: "border-box", fontFamily: "inherit" }}
-            />
-          ) : (
-            <input value={editValue} onChange={e => onChange(e.target.value)} autoFocus
-              style={{ width: "100%", padding: "13px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.08)", border: `1.5px solid ${accentColor}44`, color: "white", fontSize: 15, outline: "none", boxSizing: "border-box" }}
-            />
-          )}
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button onClick={onCancel} style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-            <button onClick={() => onSave(field)} style={{ flex: 2, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: accentColor, color: BLACK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save & Go Live</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── AI Rewrite Card ──
-function AIRewriteCard({ label, description, buttonLabel, isLoading, accentColor, onRegenerate }: {
-  label: string
-  description: string
-  buttonLabel: string
-  isLoading: boolean
-  accentColor: string
-  onRegenerate: () => void
-}) {
-  return (
-    <div style={{
-      borderRadius: 18, padding: "16px 18px",
-      background: `linear-gradient(135deg, ${accentColor}08, transparent)`,
-      border: `1px solid ${accentColor}22`,
-      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14,
-    }}>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 3 }}>{label}</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", lineHeight: 1.5 }}>{description}</div>
-      </div>
-      <button onClick={onRegenerate} disabled={isLoading} style={{
-        flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
-        padding: "10px 16px", borderRadius: 100, border: "none",
-        backgroundColor: isLoading ? "rgba(255,255,255,0.06)" : `${accentColor}22`,
-        color: isLoading ? "rgba(255,255,255,0.25)" : accentColor,
-        fontSize: 12, fontWeight: 700, cursor: isLoading ? "default" : "pointer", whiteSpace: "nowrap",
+      <a href={href} target="_blank" rel="noopener noreferrer" style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "7px 14px", borderRadius: 100,
+        backgroundColor: isLive ? `${GREEN}18` : "rgba(255,255,255,0.06)",
+        border: `1px solid ${isLive ? GREEN + "33" : "rgba(255,255,255,0.1)"}`,
+        textDecoration: "none",
       }}>
-        {isLoading ? (
-          <><div style={{ width: 10, height: 10, borderRadius: "50%", border: `1.5px solid ${accentColor}33`, borderTopColor: accentColor, animation: "spin 0.7s linear infinite" }}/> Writing…</>
-        ) : <>✨ {buttonLabel}</>}
-      </button>
+        {isLive && <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}` }}/>}
+        <span style={{ fontSize: 11, fontWeight: 700, color: isLive ? GREEN : "rgba(255,255,255,0.4)", letterSpacing: "0.06em" }}>
+          {isLive ? "Live" : "View"}
+        </span>
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={isLive ? GREEN : "rgba(255,255,255,0.3)"} strokeWidth="2.5" strokeLinecap="round">
+          <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+          <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>
     </div>
   )
 }
 
-// ── Photo Assign Card ──
-function PhotoAssignCard({ label, description, assigned, unassigned, section, onAssign, accentColor }: {
-  label: string
-  description: string
-  assigned: Photo[]
-  unassigned: Photo[]
-  section: string
-  onAssign: (id: string, section: string | null) => void
-  accentColor: string
+// ── Tap To Edit pill ──
+function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
+  label: string; value: string; placeholder: string
+  onClick: () => void; isSaved: boolean; flex: number
 }) {
-  if (assigned.length === 0 && unassigned.length === 0) return null
   return (
-    <div style={{ borderRadius: 18, padding: "16px 18px", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 12 }}>{description}</div>
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4 }}>
-        {assigned.map(p => (
-          <div key={p.id} style={{ position: "relative", flexShrink: 0 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.url} alt="" style={{ width: 76, height: 76, borderRadius: 12, objectFit: "cover", border: `2px solid ${accentColor}` }} />
-            <button onClick={() => onAssign(p.id, null)} style={{ position: "absolute", top: -5, right: -5, width: 20, height: 20, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.9)", border: "none", cursor: "pointer", color: "white", fontSize: 9, display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
-          </div>
-        ))}
-        {unassigned.slice(0, 5).map(p => (
-          <button key={p.id} onClick={() => onAssign(p.id, section)} style={{ flexShrink: 0, width: 76, height: 76, borderRadius: 12, padding: 0, border: `2px dashed ${accentColor}33`, overflow: "hidden", cursor: "pointer", position: "relative", backgroundColor: "transparent" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }} />
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 20, opacity: 0.6 }}>+</div>
-          </button>
-        ))}
-      </div>
+    <div onClick={onClick} style={{ flex, cursor: "pointer", borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", position: "relative" }}>
+      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <p style={{ margin: 0, fontSize: 14, color: value ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.2)", fontStyle: value ? "normal" : "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {value || placeholder}
+      </p>
+      {isSaved && <div style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}` }}/>}
     </div>
+  )
+}
+
+// ── AI Bar ──
+function AIBar({ label, isLoading, color, onTap }: { label: string; isLoading: boolean; color: string; onTap: () => void }) {
+  return (
+    <button onClick={onTap} disabled={isLoading} style={{
+      width: "100%", marginTop: 10, padding: "13px 18px",
+      borderRadius: 16, border: `1px solid ${color}22`,
+      background: `linear-gradient(90deg, ${color}0f, transparent)`,
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      cursor: isLoading ? "default" : "pointer",
+    }}>
+      <span style={{ fontSize: 13, color: isLoading ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.55)", fontWeight: 500 }}>
+        {label}
+      </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 100, backgroundColor: isLoading ? "rgba(255,255,255,0.05)" : `${color}18`, border: `1px solid ${color}33` }}>
+        {isLoading ? <Spinner color={color}/> : <span style={{ fontSize: 13 }}>✨</span>}
+        <span style={{ fontSize: 12, fontWeight: 700, color: isLoading ? "rgba(255,255,255,0.25)" : color }}>
+          {isLoading ? "Writing…" : "Rewrite"}
+        </span>
+      </div>
+    </button>
+  )
+}
+
+// ── Spinner ──
+function Spinner({ color }: { color: string }) {
+  return (
+    <div style={{ width: 12, height: 12, borderRadius: "50%", border: `2px solid ${color}33`, borderTopColor: color, animation: "spin 0.7s linear infinite" }}/>
   )
 }
 
@@ -560,12 +518,12 @@ function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRe
 
   if (isEditing) {
     return (
-      <div style={{ borderRadius: 18, padding: 18, background: "linear-gradient(135deg, rgba(251,146,60,0.08), rgba(251,146,60,0.02))", border: "1px solid rgba(251,146,60,0.3)" }}>
+      <div style={{ borderRadius: 20, padding: 18, background: "linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.02))", border: "1px solid rgba(251,146,60,0.3)" }}>
         <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus placeholder="Service name"
-          style={{ width: "100%", padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
+          style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
         />
-        <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Brief description" rows={2}
-          style={{ width: "100%", padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit", lineHeight: 1.5 }}
+        <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} placeholder="Description" rows={2}
+          style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit", lineHeight: 1.5 }}
         />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
@@ -577,13 +535,13 @@ function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRe
 
   return (
     <div style={{ borderRadius: 16, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-      <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginBottom: description ? 4 : 0 }}>{name}</div>
-        {description && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", lineHeight: 1.5 }}>{description}</div>}
+      <div style={{ padding: "16px 18px" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "white", marginBottom: description ? 5 : 0 }}>{name}</div>
+        {description && <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.6 }}>{description}</div>}
       </div>
       <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <button onClick={onEdit} style={{ flex: 1, padding: "10px 0", border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600, cursor: "pointer", borderRight: "1px solid rgba(255,255,255,0.05)" }}>Edit</button>
-        <button onClick={onRemove} style={{ flex: 1, padding: "10px 0", border: "none", backgroundColor: "transparent", color: "rgba(255,80,80,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Remove</button>
+        <button onClick={onEdit} style={{ flex: 1, padding: "11px 0", border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 12, fontWeight: 600, cursor: "pointer", borderRight: "1px solid rgba(255,255,255,0.05)" }}>Edit</button>
+        <button onClick={onRemove} style={{ flex: 1, padding: "11px 0", border: "none", backgroundColor: "transparent", color: "rgba(255,80,80,0.5)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Remove</button>
       </div>
     </div>
   )
