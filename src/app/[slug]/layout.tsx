@@ -195,7 +195,7 @@ export default async function CompanyLayout({
       <PreviewBanner
         slug={company.slug}
         companyName={company.name}
-        stripeCustomerId={company.stripe_customer_id}
+        isActivated={company.subscription_status === 'active'}
         trialEndsAt={company.trial_ends_at}
         setupIntentSecret={company.pending_setup_intent_secret}
       />

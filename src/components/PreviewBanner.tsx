@@ -65,13 +65,13 @@ function getBannerState(trialEndsAt: string | null): BannerState {
 export default function PreviewBanner({
   slug,
   companyName,
-  stripeCustomerId,
+  isActivated,
   trialEndsAt,
   setupIntentSecret,
 }: {
   slug: string
   companyName?: string
-  stripeCustomerId: string | null
+  isActivated: boolean
   trialEndsAt: string | null
   setupIntentSecret?: string | null
 }) {
@@ -81,14 +81,14 @@ export default function PreviewBanner({
 
   useEffect(() => {
     setMounted(true)
-    if (!stripeCustomerId) {
+    if (!isActivated) {
       setVisible(true)
       // Prefetch the overlay chunk now — before the user taps.
       // Also triggers loadStripe() inside the module, so Stripe.js
       // is downloaded from js.stripe.com while they browse.
       import("./ActivateOverlay").catch(() => {})
     }
-  }, [stripeCustomerId])
+  }, [isActivated])
 
   if (!mounted) return null
 
