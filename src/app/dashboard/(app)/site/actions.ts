@@ -176,6 +176,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
           type: "photo",
           filename: photo.storage_path?.split("/").pop() ?? "photo.jpg",
           website_flag: true,
+          size_bytes: 0,
         })
     }
   } else if (isRemoving) {
@@ -191,5 +192,29 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/")
+  return { success: true }
+}
+
+export async function removeStockImage(imageUrl: string) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { data: config } = await ctx.admin
+    .from("website_config")
+    .select("stock_images")
+    .eq("company_id", ctx.company.id)
+    .single()
+
+  if (!config) return { error: "No config" }
+
+  const current = (config.stock_images as string[]) ?? []
+  const updated = current.filter(url => url !== imageUrl)
+
+  await ctx.admin
+    .from("website_config")
+    .update({ stock_images: updated })
+    .eq("company_id", ctx.company.id)
+
+  revalidatePath(`/${ctx.company.slug}/gallery`)
   return { success: true }
 }

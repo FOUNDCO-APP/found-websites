@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { updateSiteField, regenerateSection, assignPhotoToSection } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage } from "./actions"
 
 const GREEN = "#32D074"
 const BLACK = "#080A09"
@@ -13,9 +13,11 @@ type Props = {
   company: { id: string; name: string; slug: string }
   config: Config | null
   photos: Photo[]
+  stockImages: string[]
+  mediaPhotos: { id: string; url: string }[]
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos }: Props) {
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -26,6 +28,7 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
   const [newServiceName, setNewServiceName] = useState("")
   const [newServiceDesc, setNewServiceDesc] = useState("")
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
+  const [stockImages, setStockImages] = useState<string[]>(initialStockImages)
   const [, startTransition] = useTransition()
 
   function startEdit(field: string, value: string) {
@@ -329,62 +332,91 @@ export default function SiteEditor({ company, config: initialConfig, photos }: P
       <div style={{ padding: "0 20px" }}>
         <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
 
-        <div style={{ marginTop: 16 }}>
-          {photos.length === 0 ? (
-            <div style={{
-              borderRadius: 20, padding: "36px 24px", textAlign: "center",
-              background: "linear-gradient(160deg, rgba(52,211,153,0.08), rgba(52,211,153,0.02))",
-              border: "1px dashed rgba(52,211,153,0.2)",
-            }}>
-              <div style={{ fontSize: 40, marginBottom: 14 }}>📸</div>
-              <p style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 300, color: "white" }}>No photos yet</p>
-              <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
-                Head to the Photos tab, take shots<br/>of your work, heart them, and they<br/>show up here.
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* ── Owner's real photos in gallery ── */}
+          {galleryPhotos.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#34D399", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+                Your photos · live on your gallery
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {galleryPhotos.map(p => (
+                  <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", aspectRatio: "1" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <button onClick={() => handleAssignPhoto(p.id, null)} style={{ position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer" }}>
+                      <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>✕</div>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Add more from unassigned hearted photos ── */}
+          {unassigned.length > 0 && (
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+                Add your photos to gallery
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {unassigned.map(p => (
+                  <button key={p.id} onClick={() => handleAssignPhoto(p.id, "gallery")} style={{ padding: 0, border: "2px dashed rgba(52,211,153,0.25)", borderRadius: 14, overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
+                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 24, opacity: 0.6 }}>+</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── No owner photos yet ── */}
+          {photos.length === 0 && (
+            <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: "1px dashed rgba(52,211,153,0.15)", background: "rgba(52,211,153,0.03)" }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📸</div>
+              <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 300, color: "white" }}>No photos yet</p>
+              <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
+                Go to the Photos tab, take shots of your work,<br/>heart them, and they show up here.
               </p>
             </div>
-          ) : (
-            <>
-              {galleryPhotos.length > 0 && (
-                <div style={{ marginBottom: 14 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#34D399", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
-                    In your gallery · tap to remove
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-                    {galleryPhotos.map(p => (
-                      <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", aspectRatio: "1" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <button onClick={() => handleAssignPhoto(p.id, null)} style={{
-                          position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer",
-                        }}>
-                          <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>✕</div>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {unassigned.length > 0 && (
-                <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
-                    Tap to add
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-                    {unassigned.map(p => (
-                      <button key={p.id} onClick={() => handleAssignPhoto(p.id, "gallery")} style={{
-                        padding: 0, border: "2px dashed rgba(52,211,153,0.25)", borderRadius: 14,
-                        overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent",
-                      }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
-                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 24, opacity: 0.6 }}>+</div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
           )}
+
+          {/* ── Stock / placeholder photos ── */}
+          {stockImages.length > 0 && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,150,50,0.7)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  Placeholder photos · tap ✕ to remove
+                </div>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+                  {stockImages.length} stock
+                </div>
+              </div>
+              <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.6 }}>
+                These show until you add your own photos. Remove the ones that don&apos;t fit your business.
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                {stockImages.map((url, i) => (
+                  <div key={i} style={{ position: "relative", borderRadius: 14, overflow: "hidden", aspectRatio: "1" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%)" }}/>
+                    <button
+                      onClick={() => {
+                        setStockImages(prev => prev.filter(u => u !== url))
+                        startTransition(async () => { await removeStockImage(url) })
+                      }}
+                      style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", border: "none", cursor: "pointer", color: "rgba(255,120,120,0.9)", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    >✕</button>
+                    <div style={{ position: "absolute", bottom: 5, left: 7, fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.06em" }}>STOCK</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
 
