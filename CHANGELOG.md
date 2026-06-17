@@ -4,6 +4,108 @@
 
 ---
 
+
+## Session: June 16-17, 2026 — Billing Activation Flow Fixed End-to-End
+**AI:** Claude (Sonnet 4.6) — claude.ai chat interface
+**Worked on:** Diagnosing and fixing the entire activation/billing flow, which was broken in multiple layers
+
+### ✅ Completed This Session
+
+**E2E billing test — RAN and FIXED ✅**
+
+The activation flow had 5 compounding bugs discovered in sequence. Here's the full chain of what was wrong and how it was fixed:
+
+**Bug 1: Wrong companyId passed to createSetupIntentForCompany**
+- `OnboardingFlow.tsx` was passing `sessionId` (a random browser UUID) instead of the real company ID returned from the DB
+- Fix: `actions.ts` now returns `companyId` in the success response; `OnboardingResult` type updated; `OnboardingFlow.tsx` guards `res.companyId` before calling Stripe
+- Commits: `f953a2f`, `dcf592d`
+
+**Bug 2: STRIPE_SECRET_KEY and STRIPE_PRICE_ID_FOUND were blank in Vercel**
+- The env vars existed as keys but had empty values — Vercel's sensitive var API doesn't return decrypted values so this was invisible
+- Root cause: Claude Code from a previous session created the env var shells but values weren't saved
+- Fix: Shawn manually set both values in Vercel dashboard; confirmed via Stripe API that `price_1TijsEIiS1OcukjvTQX4STzJ` (Found Founding, $29/month) is valid and active in test mode
+- Note: Vercel API PATCH on sensitive vars silently accepts but doesn't save — must be set via dashboard UI
+
+**Bug 3: Subscription used pending_setup_intent but got payment_intent instead (no trial)**
+- `payment_behavior: "default_incomplete"` without a trial period causes Stripe to NOT create a `pending_setup_intent` — it creates a `payment_intent` instead
+- Attempted fix: switched to `payment_behavior: "allow_incomplete"` + `expand: ["latest_invoice.payment_intent"]`
+- That also failed: Stripe returned 400 "This customer has no attached payment source or default payment method"
+- `allow_incomplete` requires a payment method already on the customer — which defeats the purpose
+
+**Bug 4: Correct fix — use SetupIntent directly (not via subscription)**
+- The right Stripe flow for "collect card now, charge immediately" is:
+  1. Create a `SetupIntent` directly (not a subscription) to collect and save the card
+  2. After card confirmed → `confirmActivation()` sets the card as default payment method → creates subscription with saved card → charges immediately
+- Both `activateActions.ts` and `stripeActions.ts` now use `stripe.setupIntents.create()` with `usage: "off_session"` and store `price_id` in metadata
+- `confirmActivation()` now: retrieves setup intent → gets payment method ID → sets as customer default → creates subscription with `default_payment_method` → charges immediately
+- Confirm page updated to pass `setup_intent` param (not `payment_intent`)
+- `ActivateOverlay` uses `confirmSetup` (not `confirmPayment`)
+- Commits: `07d2368`
+
+**Bug 5: Banner disappeared after card entry (stripe_customer_id set too early)**
+- `createSetupIntentForCompany` (onboarding fire-and-forget) was saving `stripe_customer_id` to the company record
+- `PreviewBanner` was checking `stripeCustomerId !== null` to decide whether to hide — so it disappeared as soon as onboarding completed, before the user ever saw the activate button
+- Fix: Banner now checks `subscription_status === 'active'` instead of `stripe_customer_id`
+- Layout passes `isActivated={company.subscription_status === 'active'}` to PreviewBanner
+- Commit: `b8f90d3`
+
+**Full activation flow confirmed working ✅**
+- Test company: `igloofrost` (slug)
+- Supabase: `stripe_customer_id: cus_UiZ5YQO4jNUKzg`, `subscription_status: active`, `pending_setup_intent_secret: null`
+- Stripe: `sub_1Tj81DIiS1OcukjvmCKYxhOM`, status `active`, $29/month
+
+**Pricing decision made by Shawn:**
+- No trial period — charge immediately on activation
+- $29/month founding rate (not called a "trial" — terms say 3 days to cancel, but Stripe has no trial days)
+- Rationale: users see their live site before activating — visual proof IS the trust. No trial needed.
+- The founding pricing is the deal: $29 instead of $39 (what Pro will cost), $39 instead of $69 (what Business will cost)
+
+**Debug logging added to activateActions.ts:**
+- `[Activate]` prefix on all console logs for easy filtering in Vercel function logs
+- Logs slug, company ID, stripe_customer_id, pending_secret status, dbError on every call
+- Logs which null-return path was hit
+
+### 🔍 Customer Dashboard Assessment (Shawn requested this review)
+
+The customer dashboard lives at `my.foundco.app` (app subdomain). Current state:
+
+**What's working well:**
+- Magic link login flow — clean, well-built, good email design
+- Multi-company select screen — handles agency/multi-site owners
+- More page — plan display, founding member badge, upgrade card, billing portal link, sign out. Solid.
+- Inbox page — leads with Call/Reply action row, initial avatar, date formatting
+- Auth callback → cookie → redirect flow is clean
+
+**What needs work (priority order):**
+
+1. **Leads and Inbox are duplicates** — Both `/leads` and `/inbox` pull identical data from the same table with the same query. Inbox has the Call/Reply action row (better UX). One should be removed or they need different purposes (e.g. Inbox = unread/new, Leads = full history).
+
+2. **Site page is almost entirely "Coming Soon"** — Edit business info, update services, change colors, add photos, upload logo — all locked with "Coming soon" badge. This is the first tab a client will tap after logging in and it's essentially non-functional. Highest priority to fix.
+
+3. **Upgrade checkout still uses trial_period_days: 14** in `more/actions.ts` `startUpgradeCheckout()` — inconsistent with the team's decision to charge immediately. Should be removed or set to 0.
+
+4. **No home/overview screen** — Dashboard redirects straight to `/leads`. No summary of "here's your site status, your last lead, your plan" — just a raw list. A home tab with site status + lead count + plan would improve orientation for new users.
+
+5. **`more/actions.ts` upgrade flow** creates a NEW subscription via Stripe Checkout (with `trial_period_days: 14`) for users who somehow have no existing subscription — this path is inconsistent with the activation flow and should be audited.
+
+### ⚠️ Still Pending / Carry Forward
+
+- **Photo pool curation for 10 new industries** — `/admin/photos` session needed (creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit)
+- **VERCEL_API_TOKEN + VERCEL_PROJECT_ID in Vercel dashboard** — needed for `/connect-domain` auto-registration in prod. Currently only in `.env.local`.
+- **Remove debug logging** from `activateActions.ts` once billing is confirmed stable in prod
+- **Favicon 404** on all client sites — `/favicon.svg` returns 404, shows warnings in Vercel logs constantly
+
+### 🔜 Next Session Priority
+
+1. Fix Site page — at minimum make "Edit business info" and "Update services" functional (most impactful for clients)
+2. Remove Inbox/Leads duplication — pick one, remove the other
+3. Remove `trial_period_days: 14` from upgrade checkout in `more/actions.ts`
+4. Add a Dashboard home/overview screen
+5. Photo curation session at `/admin/photos`
+
+
+---
+
 ## Session: June 15, 2026 — Google Places Autocomplete Fixed
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Diagnosing broken city autocomplete, fixing Google Places API key restriction
