@@ -75,7 +75,7 @@ export default function ContactsPage() {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
+        <h1 style={{ margin: 0, fontSize: 34, fontWeight: 300, color: "white", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
           Contacts
         </h1>
         <button onClick={() => setShowAdd(true)} style={{
@@ -113,7 +113,7 @@ export default function ContactsPage() {
           backgroundColor: "rgba(255,255,255,0.05)",
           border: `1px solid ${SIGNAL_GREEN}44`,
         }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "white", marginBottom: 16 }}>New Contact</div>
+          <div style={{ fontSize: 10, fontWeight: 900, color: SIGNAL_GREEN, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 16 }}>New Contact</div>
           {[
             { label: "Name *", val: newName, set: setNewName, placeholder: "Full name" },
             { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number" },
@@ -146,7 +146,7 @@ export default function ContactsPage() {
                   borderColor: newTags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
                   backgroundColor: newTags.includes(tag) ? `${SIGNAL_GREEN}18` : "transparent",
                   color: newTags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.4)",
-                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  fontSize: 10, fontWeight: 900, cursor: "pointer", letterSpacing: "0.15em", textTransform: "uppercase",
                 }}>
                   {tag}
                 </button>

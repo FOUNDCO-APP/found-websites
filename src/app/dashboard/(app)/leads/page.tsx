@@ -91,11 +91,11 @@ export default function LeadsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 28, fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>
+          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 300, color: "white", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
             Leads
           </h1>
           {leads.length > 0 && (
-            <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+            <p style={{ margin: "8px 0 0", fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.18em" }}>
               {leads.length} {leads.length === 1 ? "contact" : "contacts"}
             </p>
           )}
@@ -201,7 +201,7 @@ export default function LeadsPage() {
               <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
-          <p style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 300, color: "white" }}>
+          <p style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
             Your first lead is coming.
           </p>
           <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
@@ -214,7 +214,7 @@ export default function LeadsPage() {
           {/* Hot leads — elevated */}
           {hotLeads.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: TEMP_COLORS.hot, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
+              <div style={{ fontSize: 10, fontWeight: 900, color: TEMP_COLORS.hot, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
                 🔥 Hot
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -227,7 +227,7 @@ export default function LeadsPage() {
           {otherLeads.length > 0 && (
             <div>
               {hotLeads.length > 0 && (
-                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.2)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>
+                <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.15)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
                   All Leads
                 </div>
               )}

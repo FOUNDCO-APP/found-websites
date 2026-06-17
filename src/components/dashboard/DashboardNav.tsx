@@ -139,10 +139,10 @@ export default function DashboardNav() {
           }}>
             {ICONS[tab.path](active)}
             <span style={{
-              fontSize: 9,
-              fontWeight: active ? 900 : 500,
-              letterSpacing: "0.1em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
+              fontSize: 8,
+              fontWeight: 900,
+              letterSpacing: "0.2em",
+              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.25)",
               textTransform: "uppercase",
             }}>
               {tab.label}
@@ -175,10 +175,10 @@ export default function DashboardNav() {
           </svg>
         </button>
         <span style={{
-          fontSize: 9,
-          fontWeight: 500,
-          letterSpacing: "0.1em",
-          color: "rgba(255,255,255,0.3)",
+          fontSize: 8,
+          fontWeight: 900,
+          letterSpacing: "0.2em",
+          color: "rgba(255,255,255,0.25)",
           textTransform: "uppercase",
           marginTop: 4,
         }}>
@@ -202,10 +202,10 @@ export default function DashboardNav() {
           }}>
             {ICONS[tab.path](active)}
             <span style={{
-              fontSize: 9,
-              fontWeight: active ? 900 : 500,
-              letterSpacing: "0.1em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
+              fontSize: 8,
+              fontWeight: 900,
+              letterSpacing: "0.2em",
+              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.25)",
               textTransform: "uppercase",
             }}>
               {tab.label}
