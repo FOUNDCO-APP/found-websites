@@ -4,16 +4,16 @@ import { confirmActivation } from "../activateActions"
 export default async function ActivateConfirmPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slug?: string; payment_intent?: string; redirect_status?: string }>
+  searchParams: Promise<{ slug?: string; setup_intent?: string; redirect_status?: string }>
 }) {
-  const { slug, payment_intent, redirect_status } = await searchParams
+  const { slug, setup_intent, redirect_status } = await searchParams
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
-  if (!slug || !payment_intent || redirect_status !== "succeeded") {
+  if (!slug || !setup_intent || redirect_status !== "succeeded") {
     redirect(`/activate?slug=${slug ?? ""}&error=payment_failed`)
   }
 
-  await confirmActivation(slug, payment_intent)
+  await confirmActivation(slug, setup_intent)
 
   redirect(`https://${slug}.${rootDomain}?activated=true`)
 }

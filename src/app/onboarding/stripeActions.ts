@@ -56,26 +56,18 @@ export async function createSetupIntentForCompany({
       metadata: { company_id: companyId, slug },
     })
 
-    const subscription = await stripe.subscriptions.create({
+    const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
-      items: [{ price: priceId }],
-      payment_behavior: "allow_incomplete",
-      payment_settings: {
-        save_default_payment_method: "on_subscription",
-        payment_method_types: ["card", "us_bank_account"],
-      },
-      expand: ["latest_invoice.payment_intent"],
-      metadata: { company_id: companyId, slug },
+      payment_method_types: ["card"],
+      usage: "off_session",
+      metadata: { company_id: companyId, slug, price_id: priceId },
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const invoice = subscription.latest_invoice as any
-    const paymentIntent = (invoice?.payment_intent && typeof invoice.payment_intent === 'object' ? invoice.payment_intent : null) as Stripe.PaymentIntent | null
-    if (!paymentIntent?.client_secret) return
+    if (!setupIntent.client_secret) return
 
     await supabase
       .from("companies")
-      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: paymentIntent.client_secret })
+      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
       .eq("id", companyId)
 
   } catch (err) {
