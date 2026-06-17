@@ -804,7 +804,7 @@ function SlugSheet({
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose, drawerMode, plan = "found_pro" }: { onClose?: () => void; drawerMode?: boolean; plan?: string }) {
+export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: { onClose?: () => void; drawerMode?: boolean; plan?: string }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
