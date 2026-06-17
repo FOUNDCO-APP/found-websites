@@ -60,38 +60,41 @@ export async function createActivationSetup(slug: string): Promise<{
         save_default_payment_method: "on_subscription",
         payment_method_types: ["card", "us_bank_account"],
       },
-      expand: ["pending_setup_intent"],
+      expand: ["latest_invoice.payment_intent"],
       metadata: { company_id: company.id, slug },
     })
 
-    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
-    if (!setupIntent?.client_secret) {
-      console.error("[Activate] Stripe subscription created but no pending_setup_intent client_secret. Sub ID:", subscription.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoice = subscription.latest_invoice as any
+    const paymentIntent = (invoice?.payment_intent && typeof invoice.payment_intent === 'object' ? invoice.payment_intent : null) as Stripe.PaymentIntent | null
+    if (!paymentIntent?.client_secret) {
+      console.error("[Activate] Stripe subscription created but no payment_intent client_secret. Sub ID:", subscription.id)
       return null
     }
+    const clientSecret = paymentIntent.client_secret
 
     // Store it so any future visit to /activate is instant
     await getAdminClient()
       .from("companies")
-      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
+      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: clientSecret })
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: company.plan ?? null }
+    return { clientSecret, companyName: company.name, plan: company.plan ?? null }
   } catch (err) {
     console.error("[Activate] createActivationSetup fallback failed:", err)
     return null
   }
 }
 
-export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
+export async function confirmActivation(slug: string, paymentIntentId: string): Promise<boolean> {
   if (!process.env.STRIPE_SECRET_KEY) return false
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-    const setupIntent = await stripe.setupIntents.retrieve(setupIntentId)
-    const customerId = typeof setupIntent.customer === "string"
-      ? setupIntent.customer
-      : (setupIntent.customer as Stripe.Customer | null)?.id
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
+    const customerId = typeof paymentIntent.customer === "string"
+      ? paymentIntent.customer
+      : (paymentIntent.customer as Stripe.Customer | null)?.id
 
     if (!customerId) return false
 

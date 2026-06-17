@@ -69,7 +69,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
     if (!stripe || !elements) return
     setLoading(true)
     setError(null)
-    const { error: stripeError } = await stripe.confirmSetup({
+    const { error: stripeError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         return_url: `https://${rootDomain}/activate/confirm?slug=${slug}`,

@@ -64,16 +64,18 @@ export async function createSetupIntentForCompany({
         save_default_payment_method: "on_subscription",
         payment_method_types: ["card", "us_bank_account"],
       },
-      expand: ["pending_setup_intent"],
+      expand: ["latest_invoice.payment_intent"],
       metadata: { company_id: companyId, slug },
     })
 
-    const setupIntent = subscription.pending_setup_intent as Stripe.SetupIntent | null
-    if (!setupIntent?.client_secret) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const invoice = subscription.latest_invoice as any
+    const paymentIntent = (invoice?.payment_intent && typeof invoice.payment_intent === 'object' ? invoice.payment_intent : null) as Stripe.PaymentIntent | null
+    if (!paymentIntent?.client_secret) return
 
     await supabase
       .from("companies")
-      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
+      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: paymentIntent.client_secret })
       .eq("id", companyId)
 
   } catch (err) {
