@@ -612,5 +612,5 @@ Why: IG and FB cover the majority of small business social media. Ship those fir
 - Jony: Does the FAB above the nav feel right or does it create visual clutter on the home screen?
 - Craig/Marcus: Supabase storage bucket structure for per-company photo staging — what's the migration look like?
 - Steve: Does Before & After belong at launch or Phase 2?
-- Shawn: Should social posts be shareable directly from Found (requires social API integrations) or does Found just prepare the image and the owner posts manually? Manual is simpler for launch.
+- Shawn: ✅ DECIDED — Found prepares the image and saves to camera roll. Owner posts manually. Direct social API integration (Instagram, Facebook OAuth) is a future Pro upgrade. Keeps launch clean and avoids API compliance overhead.
 
