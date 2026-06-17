@@ -51,9 +51,8 @@ export async function POST(req: NextRequest) {
       .from("companies")
       .update({
         stripe_customer_id: session.customer as string,
-        subscription_status: "trialing",
+        subscription_status: "active",
         plan: "found",
-        trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .eq("id", companyId)
 

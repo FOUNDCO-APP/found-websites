@@ -103,7 +103,7 @@ export async function startUpgradeCheckout(formData: FormData) {
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
-      trial_period_days: 14,
+      // no trial — charge immediately
       metadata: { company_id: companyId, plan: targetPlan },
     },
     payment_method_collection: "always",
