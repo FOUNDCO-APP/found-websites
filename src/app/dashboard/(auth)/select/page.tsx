@@ -20,7 +20,7 @@ async function selectCompany(formData: FormData) {
     secure: true,
     maxAge: 60 * 60 * 24 * 30,
   })
-  redirect("/leads")
+  redirect("/")
 }
 
 function planLabel(plan: string | null) {
