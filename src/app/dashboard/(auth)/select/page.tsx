@@ -44,17 +44,6 @@ export default async function SelectPage() {
     redirect("/login?error=no_company")
   }
 
-  if (companies.length === 1) {
-    const cookieStore = await cookies()
-    cookieStore.set("found_company_id", companies[0].id, {
-      path: "/",
-      sameSite: "lax",
-      secure: true,
-      maxAge: 60 * 60 * 24 * 30,
-    })
-    redirect("/leads")
-  }
-
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: FOUND_BLACK, display: "flex", flexDirection: "column" }}>
       {/* Sticky header */}

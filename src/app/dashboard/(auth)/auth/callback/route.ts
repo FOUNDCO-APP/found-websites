@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
   const appBase = `https://my.${rootDomain}`
 
+  // PKCE flow — has ?code= param
   if (code) {
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -32,26 +33,15 @@ export async function GET(request: NextRequest) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const companies = await getAllCompanies(user.id, user.email ?? "")
-
         if (companies.length === 0) {
           return NextResponse.redirect(`${appBase}/login?error=no_company`)
         }
-
-        if (companies.length === 1) {
-          const res = NextResponse.redirect(`${appBase}/leads`)
-          res.cookies.set("found_company_id", companies[0].id, {
-            path: "/",
-            sameSite: "lax",
-            secure: true,
-            maxAge: 60 * 60 * 24 * 30,
-          })
-          return res
-        }
-
         return NextResponse.redirect(`${appBase}/select`)
       }
     }
   }
 
-  return NextResponse.redirect(`${appBase}/login?error=auth_failed`)
+  // No code — Supabase sent #access_token in hash instead (implicit flow)
+  // Send to client-side handler that can read the hash fragment
+  return NextResponse.redirect(`${appBase}/auth/token`)
 }
