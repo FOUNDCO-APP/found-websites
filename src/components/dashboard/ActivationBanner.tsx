@@ -44,7 +44,7 @@ export default function ActivationBanner({ slug }: { slug: string }) {
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           <Link
-            href={`https://${slug}.foundco.app?preview=true`}
+            href={`https://foundco.app/activate?slug=${slug}`}
             target="_blank"
             style={{
               display: "inline-flex", alignItems: "center",
