@@ -65,11 +65,13 @@ export const TYPE = {
 } as const
 
 // Opacity floor — text meant to be read should never go below this on black backgrounds.
+// Calibrated against iOS system dark-mode label colors: primary is true white,
+// secondary sits noticeably brighter than typical "muted gray" web conventions.
 export const TEXT_OPACITY = {
-  primary: 1,         // headlines, names, important values
-  secondary: 0.7,      // body copy, descriptions
-  tertiary: 0.5,       // metadata, timestamps, placeholders
-  disabled: 0.3,       // truly inactive/disabled state only
+  primary: 1,         // headlines, names, important values — true white, matches iOS .label
+  secondary: 0.78,     // body copy, descriptions — matches iOS .secondaryLabel brightness
+  tertiary: 0.55,      // metadata, timestamps, placeholders — matches iOS .tertiaryLabel
+  disabled: 0.3,        // truly inactive/disabled state only
 }
 
 // Icon sizes — iOS chevrons in list rows render ~17-20px.
