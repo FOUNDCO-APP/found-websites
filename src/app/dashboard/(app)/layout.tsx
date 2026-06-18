@@ -3,6 +3,7 @@ import { getCompany, getAllCompanies } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
 import Link from "next/link"
+import ActivationBanner from "@/components/dashboard/ActivationBanner"
 
 const BLACK = "#080A09"
 const GREEN = "#32D074"
@@ -79,6 +80,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           )}
         </div>
       </header>
+
+      {/* Activation banner — shows if site not yet activated */}
+      {company && !company.subscription_status && (
+        <ActivationBanner slug={company.slug} />
+      )}
 
       <div style={{ maxWidth: 680, margin: "0 auto", paddingBottom: 120 }}>
         {children}
