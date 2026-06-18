@@ -462,10 +462,22 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
           </a>
         </div>
 
+        {/* Set password CTA */}
+        {email && !drawerMode && (
+          <div className="mt-4 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.75s ease-out both" }}>
+            <a
+              href={`https://my.foundco.app/login`}
+              className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
+              style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)", backgroundColor: "transparent" }}>
+              Open my dashboard →
+            </a>
+          </div>
+        )}
+
         {/* Email nudge — non-drawer only */}
         {email && !drawerMode && (
-          <p className="mt-8 text-center text-xs leading-6" style={{ color: "rgba(255,255,255,0.28)", animation: "fade-up 0.6s 0.7s ease-out both", opacity: 0 }}>
-            Next steps sent to <span style={{ color: "rgba(255,255,255,0.5)" }}>{email}</span>
+          <p className="mt-6 text-center text-xs leading-6" style={{ color: "rgba(255,255,255,0.28)", animation: "fade-up 0.6s 0.8s ease-out both", opacity: 0 }}>
+            Dashboard link also sent to <span style={{ color: "rgba(255,255,255,0.5)" }}>{email}</span>
           </p>
         )}
       </div>
