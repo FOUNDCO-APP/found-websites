@@ -3,9 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-
-const FOUND_BLACK = "#080A09"
-const SIGNAL_GREEN = "#32D074"
+import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY } from "@/lib/dashboard/typography"
 
 type Tab = { path: string; label: string }
 
@@ -18,7 +16,7 @@ const TABS: Tab[] = [
 ]
 
 function HomeIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -29,7 +27,7 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 
 function LeadsIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -42,7 +40,7 @@ function LeadsIcon({ active }: { active: boolean }) {
 }
 
 function PhotosIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +52,7 @@ function PhotosIcon({ active }: { active: boolean }) {
 }
 
 function ContactsIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -67,7 +65,7 @@ function ContactsIcon({ active }: { active: boolean }) {
 }
 
 function MoreIcon({ active }: { active: boolean }) {
-  const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.4)"
+  const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="5"  r="1.5" fill={c}/>
@@ -139,10 +137,10 @@ export default function DashboardNav() {
           }}>
             {ICONS[tab.path](active)}
             <span style={{
-              fontSize: 8,
-              fontWeight: 900,
-              letterSpacing: "0.2em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.25)",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
               textTransform: "uppercase",
             }}>
               {tab.label}
@@ -175,10 +173,10 @@ export default function DashboardNav() {
           </svg>
         </button>
         <span style={{
-          fontSize: 8,
-          fontWeight: 900,
-          letterSpacing: "0.2em",
-          color: "rgba(255,255,255,0.25)",
+          fontSize: 10,
+          fontWeight: 800,
+          letterSpacing: "0.08em",
+          color: "rgba(255,255,255,0.5)",
           textTransform: "uppercase",
           marginTop: 4,
         }}>
@@ -202,10 +200,10 @@ export default function DashboardNav() {
           }}>
             {ICONS[tab.path](active)}
             <span style={{
-              fontSize: 8,
-              fontWeight: 900,
-              letterSpacing: "0.2em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.25)",
+              fontSize: 10,
+              fontWeight: 800,
+              letterSpacing: "0.08em",
+              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
               textTransform: "uppercase",
             }}>
               {tab.label}
