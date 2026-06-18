@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useTransition } from "react"
-import { getContacts, addContact, deleteContact } from "./actions"
+import { getContacts, addContact, deleteContact, updateContact } from "./actions"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
@@ -28,6 +28,7 @@ export default function ContactsPage() {
   const [newNotes, setNewNotes] = useState("")
   const [newTags, setNewTags] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [, startTransition] = useTransition()
 
   useEffect(() => {
@@ -209,7 +210,10 @@ export default function ContactsPage() {
               borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
             }}>
-              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+              <div
+                onClick={() => setSelectedContact(contact)}
+                style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}
+              >
                 <div style={{
                   width: 38, height: 38, borderRadius: "50%",
                   backgroundColor: "rgba(255,255,255,0.08)",
@@ -240,48 +244,217 @@ export default function ContactsPage() {
                     </div>
                   )}
                 </div>
-                {/* Actions */}
-                <div style={{ display: "flex", gap: 14, flexShrink: 0, alignItems: "center" }}>
-                  {contact.phone && (
-                    <a href={`tel:${contact.phone.replace(/\D/g, "")}`} style={{ color: "rgba(255,255,255,0.35)", display: "flex" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
-                      </svg>
-                    </a>
-                  )}
-                  {contact.phone && (
-                    <a href={`sms:${contact.phone.replace(/\D/g, "")}`} style={{ color: "rgba(255,255,255,0.35)", display: "flex" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                      </svg>
-                    </a>
-                  )}
-                  {contact.email && (
-                    <a href={`mailto:${contact.email}`} style={{ color: "rgba(255,255,255,0.35)", display: "flex" }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                        <polyline points="22,6 12,13 2,6"/>
-                      </svg>
-                    </a>
-                  )}
-                  <button onClick={() => handleDelete(contact.id)} style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "rgba(255,255,255,0.15)", display: "flex", padding: 0,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                      <polyline points="3 6 5 6 21 6"/>
-                      <path d="M19 6l-1 14H6L5 6"/>
-                      <path d="M10 11v6M14 11v6"/>
-                      <path d="M9 6V4h6v2"/>
-                    </svg>
-                  </button>
-                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
               </div>
             </div>
           ))}
         </div>
       )}
 
+      {selectedContact && (
+        <ContactDetailSheet
+          contact={selectedContact}
+          onClose={() => setSelectedContact(null)}
+          onSaved={(updated) => {
+            setContacts(prev => prev.map(c => c.id === updated.id ? updated : c))
+            setSelectedContact(updated)
+          }}
+          onDelete={() => {
+            handleDelete(selectedContact.id)
+            setSelectedContact(null)
+          }}
+        />
+      )}
+
     </main>
+  )
+}
+
+function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
+  contact: Contact
+  onClose: () => void
+  onSaved: (c: Contact) => void
+  onDelete: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(contact.name)
+  const [phone, setPhone] = useState(contact.phone ?? "")
+  const [email, setEmail] = useState(contact.email ?? "")
+  const [notes, setNotes] = useState(contact.notes ?? "")
+  const [tags, setTags] = useState<string[]>(contact.tags)
+  const [saving, setSaving] = useState(false)
+
+  function toggleTag(tag: string) {
+    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    const result = await updateContact({ id: contact.id, name, phone, email, notes, tags })
+    setSaving(false)
+    if (result.contact) {
+      onSaved(result.contact as Contact)
+      setEditing(false)
+    }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+        backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "28px 28px 0 0", padding: "14px 22px 36px",
+        maxHeight: "88dvh", overflowY: "auto",
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+
+        {!editing ? (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+              <div style={{
+                width: 60, height: 60, borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.08)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.6)", flexShrink: 0,
+              }}>
+                {contact.name[0].toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>
+                  {contact.name}
+                </h2>
+                {contact.tags.length > 0 && (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {contact.tags.map(tag => (
+                      <span key={tag} style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", color: SIGNAL_GREEN, textTransform: "uppercase", backgroundColor: `${SIGNAL_GREEN}15`, padding: "3px 9px", borderRadius: 100 }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button onClick={() => setEditing(true)} style={{
+                padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.12)",
+                backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)",
+                fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0,
+              }}>Edit</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+              {contact.phone && (
+                <a href={`tel:${contact.phone.replace(/\D/g, "")}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
+                </a>
+              )}
+              {contact.phone && (
+                <a href={`sms:${contact.phone.replace(/\D/g, "")}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
+                </a>
+              )}
+              {contact.email && (
+                <a href={`mailto:${contact.email}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
+                </a>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
+              {contact.phone && <DetailRow label="Phone" value={contact.phone} />}
+              {contact.email && <DetailRow label="Email" value={contact.email} />}
+              {contact.notes && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
+                    Notes
+                  </div>
+                  <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                    {contact.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <button onClick={onDelete} style={{
+              width: "100%", padding: "14px 0", borderRadius: 14,
+              border: "1px solid rgba(255,80,80,0.2)", backgroundColor: "rgba(255,80,80,0.06)",
+              color: "rgba(255,110,110,0.8)", fontSize: 13, fontWeight: 700, cursor: "pointer",
+            }}>
+              Delete Contact
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 900, color: SIGNAL_GREEN, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 18 }}>
+              Edit Contact
+            </div>
+
+            {[
+              { label: "Name", val: name, set: setName, placeholder: "Full name" },
+              { label: "Phone", val: phone, set: setPhone, placeholder: "Phone number" },
+              { label: "Email", val: email, set: setEmail, placeholder: "Email address" },
+            ].map(f => (
+              <div key={f.label} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{f.label}</div>
+                <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
+                  style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>Tags</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {DEFAULT_TAGS.map(tag => (
+                  <button key={tag} onClick={() => toggleTag(tag)} style={{
+                    padding: "8px 14px", borderRadius: 100,
+                    border: `1px solid ${tags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.12)"}`,
+                    backgroundColor: tags.includes(tag) ? `${SIGNAL_GREEN}18` : "transparent",
+                    color: tags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer",
+                  }}>{tag}</button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Notes</div>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Add notes…" rows={4}
+                style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.6, fontFamily: "inherit" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setEditing(false)} style={{
+                flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Cancel</button>
+              <button onClick={handleSave} disabled={saving || !name.trim()} style={{
+                flex: 2, padding: "14px 0", borderRadius: 14, border: "none",
+                backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 700,
+                cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1,
+              }}>{saving ? "Saving…" : "Save Changes"}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>
+        {label}
+      </div>
+      <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)" }}>
+        {value}
+      </p>
+    </div>
   )
 }

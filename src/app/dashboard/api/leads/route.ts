@@ -53,3 +53,34 @@ export async function POST(req: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ lead: data })
 }
+
+export async function PATCH(req: Request) {
+  const user = await getAuthUser()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+
+  const body = await req.json()
+  const { id, name, phone, email, message, temperature } = body
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
+
+  const updates: Record<string, unknown> = {}
+  if (name !== undefined)        updates.name = name?.trim() || null
+  if (phone !== undefined)       updates.phone = phone?.trim() || null
+  if (email !== undefined)       updates.email = email?.trim() || null
+  if (message !== undefined)     updates.message = message?.trim() || null
+  if (temperature !== undefined) updates.temperature = temperature
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("leads")
+    .update(updates)
+    .eq("id", id)
+    .eq("company_id", company.id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ lead: data })
+}

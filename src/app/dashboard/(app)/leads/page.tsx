@@ -47,6 +47,7 @@ export default function LeadsPage() {
   const [newEmail, setNewEmail] = useState("")
   const [newNotes, setNewNotes] = useState("")
   const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold">("warm")
+  const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -218,7 +219,7 @@ export default function LeadsPage() {
                 🔥 Hot
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {hotLeads.map(lead => <LeadCard key={lead.id} lead={lead} />)}
+                {hotLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} />)}
               </div>
             </div>
           )}
@@ -232,18 +233,29 @@ export default function LeadsPage() {
                 </div>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {otherLeads.map(lead => <LeadCard key={lead.id} lead={lead} />)}
+                {otherLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} />)}
               </div>
             </div>
           )}
 
         </div>
       )}
+
+      {selectedLead && (
+        <LeadDetailSheet
+          lead={selectedLead}
+          onClose={() => setSelectedLead(null)}
+          onSaved={(updated) => {
+            setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))
+            setSelectedLead(updated)
+          }}
+        />
+      )}
     </main>
   )
 }
 
-function LeadCard({ lead }: { lead: LeadRow }) {
+function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow) => void }) {
   const pa = lead.partial_answers
   const preview = lead.message || pa?.message || pa?.services || pa?.description || ""
   const emailHref = lead.email
@@ -260,7 +272,10 @@ function LeadCard({ lead }: { lead: LeadRow }) {
       border: "1px solid rgba(255,255,255,0.07)",
       overflow: "hidden",
     }}>
-      <div style={{ padding: "18px 18px 14px", display: "flex", alignItems: "flex-start", gap: 14 }}>
+      <div
+        onClick={() => onSelect(lead)}
+        style={{ padding: "18px 18px 14px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer" }}
+      >
         {/* Avatar with temp color ring */}
         <div style={{
           width: 44, height: 44, borderRadius: "50%",
@@ -296,6 +311,10 @@ function LeadCard({ lead }: { lead: LeadRow }) {
             <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.2)" }}>Reached out from your site</p>
           )}
         </div>
+
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 6 }}>
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
       </div>
 
       {/* Inline actions */}
@@ -337,6 +356,207 @@ function LeadCard({ lead }: { lead: LeadRow }) {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function LeadDetailSheet({ lead, onClose, onSaved }: {
+  lead: LeadRow
+  onClose: () => void
+  onSaved: (lead: LeadRow) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(lead.name ?? "")
+  const [phone, setPhone] = useState(lead.phone ?? "")
+  const [email, setEmail] = useState(lead.email ?? "")
+  const [message, setMessage] = useState(lead.message ?? "")
+  const [temp, setTemp] = useState<"hot" | "warm" | "cold">((lead.temperature as "hot"|"warm"|"cold") ?? "warm")
+  const [saving, setSaving] = useState(false)
+
+  const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\D/g, "")}` : null
+  const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
+  const emailHref = lead.email ? `mailto:${lead.email}` : null
+  const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
+
+  async function handleSave() {
+    setSaving(true)
+    const res = await fetch("/api/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: lead.id, name, phone, email, message, temperature: temp }),
+    })
+    const data = await res.json()
+    setSaving(false)
+    if (data.lead) {
+      onSaved(data.lead)
+      setEditing(false)
+    }
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+        backgroundColor: "#101411",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "28px 28px 0 0",
+        padding: "14px 22px 36px",
+        maxHeight: "88dvh",
+        overflowY: "auto",
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+
+        {!editing ? (
+          <>
+            {/* Header — avatar, name, temp */}
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
+              <div style={{
+                width: 60, height: 60, borderRadius: "50%",
+                background: `radial-gradient(circle, ${tempColor}25, ${tempColor}08)`,
+                border: `2px solid ${tempColor}44`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 22, fontWeight: 700, color: tempColor, flexShrink: 0,
+              }}>
+                {(lead.name || "?")[0].toUpperCase()}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>
+                  {lead.name || "Unknown"}
+                </h2>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 100, backgroundColor: `${tempColor}18` }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: tempColor }}/>
+                  <span style={{ fontSize: 10, fontWeight: 900, color: tempColor, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    {lead.temperature ?? "warm"}
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setEditing(true)} style={{
+                padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.12)",
+                backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)",
+                fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0,
+              }}>
+                Edit
+              </button>
+            </div>
+
+            {/* Action row */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+              {phoneHref && (
+                <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
+                </a>
+              )}
+              {smsHref && (
+                <a href={smsHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
+                </a>
+              )}
+              {emailHref && (
+                <a href={emailHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
+                </a>
+              )}
+            </div>
+
+            {/* Details */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {lead.phone && (
+                <DetailRow label="Phone" value={lead.phone} />
+              )}
+              {lead.email && (
+                <DetailRow label="Email" value={lead.email} />
+              )}
+              {lead.created_at && (
+                <DetailRow label="Received" value={new Date(lead.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} />
+              )}
+              {lead.source && (
+                <DetailRow label="Source" value={lead.source === "manual" ? "Added manually" : lead.source === "website" ? "Website form" : lead.source} />
+              )}
+              {lead.message && (
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
+                    Notes
+                  </div>
+                  <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                    {lead.message}
+                  </p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 900, color: SIGNAL_GREEN, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 18 }}>
+              Edit Lead
+            </div>
+
+            {/* Temperature picker */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>Temperature</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                {(["hot","warm","cold"] as const).map(t => (
+                  <button key={t} onClick={() => setTemp(t)} style={{
+                    flex: 1, padding: "10px 0", borderRadius: 12,
+                    border: `1.5px solid ${temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.1)"}`,
+                    backgroundColor: temp === t ? `${TEMP_COLORS[t]}18` : "transparent",
+                    color: temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.4)",
+                    fontSize: 12, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
+                  }}>{t}</button>
+                ))}
+              </div>
+            </div>
+
+            {[
+              { label: "Name", val: name, set: setName, placeholder: "Full name" },
+              { label: "Phone", val: phone, set: setPhone, placeholder: "Phone number" },
+              { label: "Email", val: email, set: setEmail, placeholder: "Email address" },
+            ].map(f => (
+              <div key={f.label} style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{f.label}</div>
+                <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
+                  style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+            ))}
+
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Notes</div>
+              <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Add notes about this lead…" rows={4}
+                style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.6, fontFamily: "inherit" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setEditing(false)} style={{
+                flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)",
+                backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Cancel</button>
+              <button onClick={handleSave} disabled={saving || !name.trim()} style={{
+                flex: 2, padding: "14px 0", borderRadius: 14, border: "none",
+                backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 700,
+                cursor: saving ? "default" : "pointer", opacity: saving ? 0.6 : 1,
+              }}>{saving ? "Saving…" : "Save Changes"}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  )
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>
+        {label}
+      </div>
+      <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)" }}>
+        {value}
+      </p>
     </div>
   )
 }
