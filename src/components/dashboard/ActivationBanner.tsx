@@ -51,7 +51,6 @@ export default function ActivationBanner({
                 boxShadow: `0 2px 8px rgba(50,208,116,0.3)`,
                 textTransform: "uppercase",
                 whiteSpace: "nowrap",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
               }}
             >
               Activate →
