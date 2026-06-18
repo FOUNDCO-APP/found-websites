@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -17,6 +17,13 @@ function timeAgo(iso: string) {
   if (h < 24) return `${h}h ago`
   if (d === 1) return "yesterday"
   return `${d}d ago`
+}
+
+// Ambient glow tuned to time of day — morning warm, afternoon neutral, evening cool
+const AMBIENT: Record<string, string> = {
+  morning:   "radial-gradient(ellipse 600px 400px at 15% -5%, rgba(255,184,107,0.10), transparent 60%), radial-gradient(ellipse 500px 400px at 100% 10%, rgba(50,208,116,0.08), transparent 55%)",
+  afternoon: "radial-gradient(ellipse 600px 400px at 15% -5%, rgba(50,208,116,0.10), transparent 60%), radial-gradient(ellipse 500px 400px at 100% 10%, rgba(255,255,255,0.04), transparent 55%)",
+  evening:   "radial-gradient(ellipse 600px 400px at 15% -5%, rgba(120,130,255,0.10), transparent 60%), radial-gradient(ellipse 500px 400px at 100% 10%, rgba(50,208,116,0.07), transparent 55%)",
 }
 
 type Props = {
@@ -37,7 +44,14 @@ export default function HomeClient({
   topName, topEmail, topPhone, topMessage, topCreatedAt, siteSlug,
 }: Props) {
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    // Trigger entrance animations one frame after mount
+    const t = setTimeout(() => setMounted(true), 50)
+    return () => clearTimeout(t)
+  }, [])
 
   async function handleShare() {
     const url = `https://${siteSlug}.foundco.app`
@@ -55,116 +69,125 @@ export default function HomeClient({
     ? `mailto:${topEmail}?subject=Re%3A%20Your%20inquiry&body=Hi%20${encodeURIComponent(topName ?? "there")}%2C%0A%0A`
     : null
 
-  return (
-    <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column", backgroundColor: BLACK }}>
+  const ambient = AMBIENT[greeting] ?? AMBIENT.afternoon
 
-      {/* ── GREETING — Found voice: direct, light ── */}
-      <div style={{ padding: "44px 24px 0" }}>
-        {/* Eyebrow — matches marketing site eyebrow style */}
+  return (
+    <main style={{
+      minHeight: "100dvh",
+      display: "flex",
+      flexDirection: "column",
+      backgroundColor: BLACK,
+      backgroundImage: ambient,
+      position: "relative",
+      overflow: "hidden",
+    }}>
+
+      {/* Subtle noise texture for depth — barely visible, adds material quality */}
+      <div style={{
+        position: "absolute", inset: 0, opacity: 0.025, pointerEvents: "none",
+        backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)'/%3E%3C/svg%3E\")",
+      }}/>
+
+      {/* ── ZONE 1: GREETING + PULSE ── */}
+      <div style={{
+        padding: "44px 28px 0",
+        position: "relative",
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(8px)",
+        transition: "opacity 0.6s ease, transform 0.6s ease",
+      }}>
         <p style={{
-          margin: "0 0 8px",
+          margin: "0 0 6px",
           fontSize: 10, fontWeight: 900,
-          color: "rgba(255,255,255,0.3)",
+          color: "rgba(255,255,255,0.32)",
           textTransform: "uppercase",
-          letterSpacing: "0.22em",
+          letterSpacing: "0.24em",
         }}>
-          {greeting}
+          Good {greeting}
         </p>
-        {/* Headline — light weight, tight leading, like the hero */}
         <h1 style={{
-          margin: 0,
-          fontSize: 42,
-          fontWeight: 300,
-          color: "white",
-          letterSpacing: "-0.04em",
-          lineHeight: 0.95,
+          margin: 0, fontSize: 38, fontWeight: 300, color: "white",
+          letterSpacing: "-0.04em", lineHeight: 0.95,
         }}>
           {firstName}.
         </h1>
-      </div>
 
-      {/* ── PULSE — the number that matters ── */}
-      <div style={{ padding: "36px 24px 0" }}>
-        <div style={{
-          fontSize: 108,
-          fontWeight: 300,
-          lineHeight: 1,
-          letterSpacing: "-0.06em",
-          color: newCount > 0 ? "white" : "rgba(255,255,255,0.06)",
-          userSelect: "none",
-        }}>
-          {newCount}
+        {/* Pulse number — breathes if there's something new */}
+        <div style={{ marginTop: 40, marginBottom: 8 }}>
+          <div style={{
+            fontSize: 116, fontWeight: 200, lineHeight: 1,
+            letterSpacing: "-0.06em",
+            color: newCount > 0 ? "white" : "rgba(255,255,255,0.05)",
+            userSelect: "none",
+            animation: newCount > 0 ? "breathe 3.2s ease-in-out infinite" : "none",
+            display: "inline-block",
+          }}>
+            {newCount}
+          </div>
         </div>
-        {/* Green eyebrow under the number */}
         <p style={{
-          margin: "10px 0 0",
-          fontSize: 10, fontWeight: 900,
-          textTransform: "uppercase",
+          margin: 0, fontSize: 11, fontWeight: 900, textTransform: "uppercase",
           letterSpacing: "0.22em",
-          color: newCount > 0 ? GREEN : "rgba(255,255,255,0.15)",
+          color: newCount > 0 ? GREEN : "rgba(255,255,255,0.16)",
         }}>
           {newCount === 1 ? "new lead this week" : "new leads this week"}
           {totalCount > 0 && (
-            <span style={{ color: "rgba(255,255,255,0.15)", marginLeft: 12 }}>
+            <span style={{ color: "rgba(255,255,255,0.16)", marginLeft: 12 }}>
               · {totalCount} total
             </span>
           )}
         </p>
       </div>
 
-      {/* ── RULE ── */}
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.06)", margin: "32px 24px" }}/>
+      {/* ── ZONE 2: LATEST LEAD — the developing-photo reveal ── */}
+      <div style={{
+        padding: "0 28px",
+        marginTop: 56,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0) scale(1)" : "translateY(10px) scale(0.99)",
+        filter: mounted ? "blur(0px)" : "blur(4px)",
+        transition: "opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s, filter 0.7s ease 0.15s",
+      }}>
+        {/* Hairline divider that fades in from center */}
+        <div style={{
+          height: 1, margin: "0 0 28px",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent)",
+        }}/>
 
-      {/* ── TOP LEAD — pure type, no card ── */}
-      <div style={{ padding: "0 24px" }}>
         {topName ? (
           <>
             <p style={{
-              margin: "0 0 6px",
-              fontSize: 24,
-              fontWeight: 300,
-              color: "white",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.2,
+              margin: "0 0 4px", fontSize: 25, fontWeight: 300, color: "white",
+              letterSpacing: "-0.03em", lineHeight: 1.25,
             }}>
               <span style={{ fontWeight: 700 }}>{topName}</span>
-              <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 300 }}> reached out</span>
+              <span style={{ color: "rgba(255,255,255,0.38)", fontWeight: 300 }}> reached out</span>
             </p>
             {topCreatedAt && (
               <p style={{
-                margin: "0 0 14px",
-                fontSize: 10, fontWeight: 900,
-                textTransform: "uppercase",
-                letterSpacing: "0.18em",
-                color: "rgba(255,255,255,0.2)",
+                margin: "0 0 16px", fontSize: 10, fontWeight: 900, textTransform: "uppercase",
+                letterSpacing: "0.18em", color: "rgba(255,255,255,0.2)",
               }}>
                 {timeAgo(topCreatedAt)}
               </p>
             )}
             {topMessage && (
               <p style={{
-                margin: "0 0 22px",
-                fontSize: 15,
-                color: "rgba(255,255,255,0.4)",
-                lineHeight: 1.65,
-                fontStyle: "italic",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
+                margin: "0 0 24px", fontSize: 15, color: "rgba(255,255,255,0.42)",
+                lineHeight: 1.65, fontStyle: "italic",
+                display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
               } as React.CSSProperties}>
                 &ldquo;{topMessage}&rdquo;
               </p>
             )}
 
-            {/* Action pills — Found button style: rounded-full, font-black, uppercase, tracking-widest */}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {phoneHref && (
                 <a href={phoneHref} style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "12px 22px", borderRadius: 100,
                   backgroundColor: GREEN, textDecoration: "none",
-                  boxShadow: `0 0 28px rgba(50,208,116,0.25)`,
+                  boxShadow: `0 0 28px rgba(50,208,116,0.28)`,
                 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
@@ -176,8 +199,7 @@ export default function HomeClient({
                 <a href={emailHref} style={{
                   display: "inline-flex", alignItems: "center", gap: 7,
                   padding: "12px 22px", borderRadius: 100,
-                  backgroundColor: "transparent",
-                  border: "1px solid rgba(255,255,255,0.15)",
+                  backgroundColor: "transparent", border: "1px solid rgba(255,255,255,0.15)",
                   textDecoration: "none",
                 }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -190,8 +212,7 @@ export default function HomeClient({
               <Link href="/leads" style={{
                 display: "inline-flex", alignItems: "center",
                 padding: "12px 18px", borderRadius: 100,
-                border: "1px solid rgba(255,255,255,0.08)",
-                textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none",
               }}>
                 <span style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.18em", textTransform: "uppercase" }}>All leads</span>
               </Link>
@@ -200,44 +221,53 @@ export default function HomeClient({
         ) : (
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 12px ${GREEN}` }}/>
+              <div style={{
+                width: 8, height: 8, borderRadius: "50%", backgroundColor: GREEN,
+                boxShadow: `0 0 12px ${GREEN}`,
+                animation: "breathe 2.4s ease-in-out infinite",
+              }}/>
               <span style={{ fontSize: 18, fontWeight: 300, color: "white", letterSpacing: "-0.01em" }}>
                 You&apos;re all caught up.
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.25)", lineHeight: 1.7, letterSpacing: "0.01em" }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.25)", lineHeight: 1.7 }}>
               Your site is live and collecting leads.<br/>New ones will appear here.
             </p>
           </div>
         )}
       </div>
 
-      {/* ── RULE ── */}
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.06)", margin: "32px 24px" }}/>
+      {/* ── ZONE 3: QUICK ACTIONS ── */}
+      <div style={{
+        padding: "0 28px", marginTop: 56,
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? "translateY(0)" : "translateY(10px)",
+        transition: "opacity 0.7s ease 0.3s, transform 0.7s ease 0.3s",
+      }}>
+        <div style={{
+          height: 1, margin: "0 0 28px",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent)",
+        }}/>
 
-      {/* ── QUICK ACTIONS — Found button language ── */}
-      <div style={{ padding: "0 24px" }}>
         <p style={{
-          margin: "0 0 16px",
-          fontSize: 10, fontWeight: 900,
-          color: "rgba(255,255,255,0.15)",
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
+          margin: "0 0 16px", fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.16)",
+          letterSpacing: "0.24em", textTransform: "uppercase",
         }}>
           Quick Actions
         </p>
 
-        {/* Primary CTA — green, full width, glow */}
         <button
           onClick={() => router.push("/leads?add=1")}
           style={{
-            width: "100%", padding: "18px 22px",
-            borderRadius: 100, border: "none", cursor: "pointer",
+            width: "100%", padding: "19px 22px", borderRadius: 100, border: "none", cursor: "pointer",
             backgroundColor: GREEN,
             display: "flex", alignItems: "center", justifyContent: "space-between",
             marginBottom: 10,
-            boxShadow: `0 0 34px rgba(50,208,116,0.22)`,
+            boxShadow: `0 0 36px rgba(50,208,116,0.24)`,
+            transition: "transform 0.15s ease",
           }}
+          onTouchStart={e => (e.currentTarget.style.transform = "scale(0.98)")}
+          onTouchEnd={e => (e.currentTarget.style.transform = "scale(1)")}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -255,14 +285,14 @@ export default function HomeClient({
           </svg>
         </button>
 
-        {/* Secondary tiles */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <Link href="/photos" style={{
-            padding: "18px 16px", borderRadius: 24,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            padding: "20px 18px", borderRadius: 26,
+            backgroundColor: "rgba(255,255,255,0.045)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255,255,255,0.08)",
             textDecoration: "none",
-            display: "flex", flexDirection: "column", gap: 16,
+            display: "flex", flexDirection: "column", gap: 18,
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
@@ -275,11 +305,12 @@ export default function HomeClient({
           </Link>
 
           <button onClick={handleShare} style={{
-            padding: "18px 16px", borderRadius: 24,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            padding: "20px 18px", borderRadius: 26,
+            backgroundColor: "rgba(255,255,255,0.045)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255,255,255,0.08)",
             cursor: "pointer", textAlign: "left",
-            display: "flex", flexDirection: "column", gap: 16,
+            display: "flex", flexDirection: "column", gap: 18,
           }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -290,14 +321,16 @@ export default function HomeClient({
               <div style={{ fontSize: 11, fontWeight: 900, color: "white", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 3 }}>
                 {copied ? "Copied!" : "Share Site"}
               </div>
-              <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.25)", letterSpacing: "0.06em" }}>Copy link</div>
+              <div style={{ fontSize: 10, fontWeight: 500, color: "rgba(255,255,255,0.25)", letterSpacing: "0.06em" }}>
+                {copied ? "Link copied" : "Copy link"}
+              </div>
             </div>
           </button>
         </div>
       </div>
 
-      {/* ── SITE STATUS ── */}
-      <div style={{ marginTop: "auto", padding: "32px 24px 8px" }}>
+      {/* ── SITE STATUS — bottom anchor ── */}
+      <div style={{ marginTop: "auto", padding: "40px 28px 8px", position: "relative" }}>
         <a
           href={`https://${siteSlug}.foundco.app`}
           target="_blank" rel="noopener noreferrer"
@@ -313,6 +346,13 @@ export default function HomeClient({
           </svg>
         </a>
       </div>
+
+      <style>{`
+        @keyframes breathe {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.015); opacity: 0.92; }
+        }
+      `}</style>
 
     </main>
   )
