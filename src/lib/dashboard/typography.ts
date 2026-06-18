@@ -83,3 +83,32 @@ export const ICON = {
 
 export const GREEN = "#32D074"
 export const BLACK = "#080A09"
+
+// ─────────────────────────────────────────────────────────────
+// Avatar colors — Apple Contacts/Messages style.
+// A small rotation of muted, desaturated colors assigned per-person
+// by name (deterministic — same person always gets the same color).
+// This is identity, not status — temperature/state should never
+// be communicated through avatar color, only through its own badge.
+// ─────────────────────────────────────────────────────────────
+const AVATAR_PALETTE = [
+  "#8E97C5", // muted blue-violet (Apple's default contact blue)
+  "#9B8AC4", // soft lavender
+  "#7FA8C9", // dusty blue
+  "#8FB89A", // sage green
+  "#C49B7C", // warm tan
+  "#B58A9E", // muted mauve
+  "#7C9CAE", // slate blue
+  "#A89368", // soft gold
+]
+
+export function avatarColorFor(name: string | null | undefined): string {
+  const str = (name || "?").trim()
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0
+  }
+  const index = Math.abs(hash) % AVATAR_PALETTE.length
+  return AVATAR_PALETTE[index]
+}

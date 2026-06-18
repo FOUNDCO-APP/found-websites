@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor } from "@/lib/dashboard/typography"
 
 type LeadRow = {
   id: string
@@ -262,6 +262,7 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
   const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\D/g, "")}` : null
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
+  const avColor = avatarColorFor(lead.name)
 
   return (
     <div style={{
@@ -274,13 +275,12 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
         onClick={() => onSelect(lead)}
         style={{ padding: "18px 18px 14px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer" }}
       >
-        {/* Avatar with temp color ring */}
+        {/* Avatar — identity color, not status color */}
         <div style={{
           width: 44, height: 44, borderRadius: "50%",
-          background: `radial-gradient(circle, ${tempColor}22, ${tempColor}08)`,
-          border: `1.5px solid ${tempColor}33`,
+          backgroundColor: `${avColor}26`,
           display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0, fontSize: 16, fontWeight: 700, color: tempColor,
+          flexShrink: 0, fontSize: 16, fontWeight: 700, color: avColor,
         }}>
           {(lead.name || "?")[0].toUpperCase()}
         </div>
@@ -376,6 +376,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const emailHref = lead.email ? `mailto:${lead.email}` : null
   const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
+  const avColor = avatarColorFor(lead.name)
 
   async function handleSave() {
     setSaving(true)
@@ -412,10 +413,9 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
-                background: `radial-gradient(circle, ${tempColor}25, ${tempColor}08)`,
-                border: `2px solid ${tempColor}44`,
+                backgroundColor: `${avColor}26`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, fontWeight: 700, color: tempColor, flexShrink: 0,
+                fontSize: 22, fontWeight: 700, color: avColor, flexShrink: 0,
               }}>
                 {(lead.name || "?")[0].toUpperCase()}
               </div>

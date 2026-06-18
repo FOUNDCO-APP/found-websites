@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react"
 import { getContacts, addContact, deleteContact, updateContact } from "./actions"
-import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor } from "@/lib/dashboard/typography"
 
 type Contact = {
   id: string
@@ -214,9 +214,9 @@ export default function ContactsPage() {
               >
                 <div style={{
                   width: 38, height: 38, borderRadius: "50%",
-                  backgroundColor: "rgba(255,255,255,0.08)",
+                  backgroundColor: `${avatarColorFor(contact.name)}26`,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0, fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.6)",
+                  flexShrink: 0, fontSize: 14, fontWeight: 700, color: avatarColorFor(contact.name),
                 }}>
                   {contact.name[0].toUpperCase()}
                 </div>
@@ -313,9 +313,9 @@ function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
               <div style={{
                 width: 60, height: 60, borderRadius: "50%",
-                backgroundColor: "rgba(255,255,255,0.08)",
+                backgroundColor: `${avatarColorFor(contact.name)}26`,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, fontWeight: 700, color: "rgba(255,255,255,0.6)", flexShrink: 0,
+                fontSize: 22, fontWeight: 700, color: avatarColorFor(contact.name), flexShrink: 0,
               }}>
                 {contact.name[0].toUpperCase()}
               </div>
