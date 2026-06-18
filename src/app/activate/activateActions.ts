@@ -23,14 +23,15 @@ export async function createActivationSetup(slug: string): Promise<{
   const admin = getAdminClient()
   const { data: company, error: dbError } = await admin
     .from("companies")
-    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan")
+    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status")
     .eq("slug", slug)
     .single()
 
   console.log(`[Activate] slug="${slug}" company=${company?.id ?? "NOT FOUND"} stripe_customer_id=${company?.stripe_customer_id ?? "null"} pending_secret=${company?.pending_setup_intent_secret ? "SET" : "null"} dbError=${dbError?.message ?? "none"}`)
 
   if (!company) return null
-  if (company.stripe_customer_id) {
+  // Only block if truly active — customer_id alone doesn't mean they completed payment
+  if ((company as Record<string,unknown>).subscription_status === "active") {
     console.error(`[Activate] Already activated for slug="${slug}"`)
     return null
   }
@@ -40,15 +41,20 @@ export async function createActivationSetup(slug: string): Promise<{
     return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: company.plan ?? null }
   }
 
+  // If they already have a Stripe customer but no active sub, reuse the customer
+  const existingCustomerId = company.stripe_customer_id as string | null
+
   // Fallback — create SetupIntent directly (collect card first, subscribe after confirmation)
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-    const customer = await stripe.customers.create({
-      name: company.name,
-      email: company.email ?? undefined,
-      metadata: { company_id: company.id, slug },
-    })
+    const customer = existingCustomerId
+      ? { id: existingCustomerId }
+      : await stripe.customers.create({
+          name: company.name,
+          email: company.email ?? undefined,
+          metadata: { company_id: company.id, slug },
+        })
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,

@@ -25,7 +25,7 @@ export default function ActivationBanner({
   return (
     <>
       {/* Banner */}
-      <div style={{ backgroundColor: GREEN, padding: "0 20px" }}>
+      <div style={{ backgroundColor: "white", padding: "0 20px" }}>
         <div style={{
           maxWidth: 680, margin: "0 auto",
           display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -44,10 +44,11 @@ export default function ActivationBanner({
               style={{
                 display: "inline-flex", alignItems: "center",
                 padding: "7px 16px", borderRadius: 100,
-                backgroundColor: "white",
+                backgroundColor: GREEN,
                 border: "none", cursor: "pointer",
                 fontSize: 10, fontWeight: 900,
-                color: BLACK, letterSpacing: "0.14em",
+                color: "#080A09", letterSpacing: "0.14em",
+                boxShadow: `0 2px 8px rgba(50,208,116,0.3)`,
                 textTransform: "uppercase",
                 whiteSpace: "nowrap",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
@@ -60,7 +61,7 @@ export default function ActivationBanner({
               onClick={() => setDismissed(true)}
               style={{
                 background: "none", border: "none", cursor: "pointer",
-                color: BLACK, opacity: 0.35, padding: 4,
+                color: "#333", opacity: 0.4, padding: 4,
                 display: "flex", alignItems: "center",
               }}
             >
