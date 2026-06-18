@@ -355,22 +355,28 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   // Create or find the auth user and link them to this company.
   // generateLink handles both cases: creates the user if they don't exist,
   // finds them if they do — and returns their user.id either way.
+  // Generate magic link — creates auth user if needed, links to company, AND gives us a one-tap dashboard URL
+  let dashboardUrl = `https://my.${ROOT_DOMAIN}/login`
   try {
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
-      options: { redirectTo: `https://my.${ROOT_DOMAIN}/auth/callback` },
+      options: { redirectTo: `https://my.${ROOT_DOMAIN}/auth/token` },
     })
     if (linkError) {
       console.error("[onboarding] generateLink error:", linkError.message)
-    } else if (linkData?.user?.id) {
-      await supabase.from("companies").update({ user_id: linkData.user.id }).eq("id", companyId)
+    } else {
+      if (linkData?.user?.id) {
+        await supabase.from("companies").update({ user_id: linkData.user.id }).eq("id", companyId)
+      }
+      // Use the actual magic link so the welcome email is one-tap into the dashboard
+      if (linkData?.properties?.action_link) {
+        dashboardUrl = linkData.properties.action_link
+      }
     }
   } catch (err) {
     console.error("[onboarding] auth setup error:", err)
   }
-
-  const loginUrl = `https://my.${ROOT_DOMAIN}/login`
 
   // Fire-and-forget welcome email — failure doesn't block site creation
   resend.emails.send({
@@ -378,8 +384,8 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     replyTo: "hello@foundco.app",
     to:      email,
     subject: `${name} is live.`,
-    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl }),
-    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n4. View your dashboard.\n${loginUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
+    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl: dashboardUrl }),
+    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n4. Open your dashboard — one tap, no login needed.\n${dashboardUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
   }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
@@ -457,7 +463,7 @@ function buildWelcomeEmail({
             </a>
             <a href="${loginUrl}"
               style="display:block;margin-top:10px;background:transparent;color:#32D074;font-size:13px;font-weight:700;padding:14px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;border:1.5px solid #32D07440;">
-              Go to your dashboard →
+              Open My Dashboard →
             </a>
             <p style="margin:12px 0 0;font-size:12px;color:#aaaaaa;">${displayUrl}</p>
           </td>
