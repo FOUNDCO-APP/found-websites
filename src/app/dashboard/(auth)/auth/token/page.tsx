@@ -21,7 +21,7 @@ export default function AuthTokenPage() {
         if (!error) {
           // Hard redirect so middleware sees fresh cookie
           await new Promise(r => setTimeout(r, 200))
-          window.location.href = "/select"
+          window.location.href = "/auth/set-password"
           return
         }
       }
@@ -29,7 +29,7 @@ export default function AuthTokenPage() {
       // Already have a session
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
-        window.location.href = "/select"
+        window.location.href = "/auth/set-password"
         return
       }
 

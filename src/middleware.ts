@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
   // ── app.foundco.app ─────────────────────────────────────────────────
   if (isDashboard) {
     // Login, auth callback, and API routes never need a session
-    if (pathname === "/login" || pathname.startsWith("/auth/") || pathname.startsWith("/api/")) {
+    if (pathname === "/login" || pathname === "/select" || pathname.startsWith("/auth/") || pathname.startsWith("/api/")) {
       const url = req.nextUrl.clone()
       url.pathname = `/dashboard${pathname}`
       return NextResponse.rewrite(url)
