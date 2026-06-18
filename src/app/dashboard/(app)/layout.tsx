@@ -83,7 +83,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Activation banner — shows if site not yet activated */}
       {company && !company.subscription_status && (
-        <ActivationBanner slug={company.slug} />
+        <ActivationBanner
+          slug={company.slug}
+          setupIntentSecret={(company as Record<string, unknown>).pending_setup_intent_secret as string | null}
+          companyName={company.name}
+        />
       )}
 
       <div style={{ maxWidth: 680, margin: "0 auto", paddingBottom: 120 }}>
