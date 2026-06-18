@@ -75,7 +75,10 @@ export default function SetPasswordPage() {
           You&apos;re already<br/>a Found member.
         </h1>
         <p style={{ margin: "0 0 36px", fontSize: 15, color: "rgba(255,255,255,0.4)", lineHeight: 1.7 }}>
-          You have <strong style={{ color: "white" }}>{companyCount} {companyCount === 1 ? "business" : "businesses"}</strong> on Found. Your password is already set — use it to access all of them from any device.
+          {companyCount > 1
+            ? <>{companyCount} businesses on Found. Use the same password.</>
+            : <>You already do business with Found. Your password is set.</>
+          }
         </p>
         <button onClick={() => router.replace("/select")} style={{
           width: "100%", padding: "17px 0", borderRadius: 100, border: "none",
