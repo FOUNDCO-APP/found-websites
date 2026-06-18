@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react"
 import { getContacts, addContact, deleteContact, updateContact } from "./actions"
-
-const SIGNAL_GREEN = "#32D074"
-const FOUND_BLACK = "#080A09"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 
 type Contact = {
   id: string
@@ -76,7 +74,7 @@ export default function ContactsPage() {
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-        <h1 style={{ margin: 0, fontSize: 34, fontWeight: 300, color: "white", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
+        <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
           Contacts
         </h1>
         <button onClick={() => setShowAdd(true)} style={{
@@ -223,11 +221,11 @@ export default function ContactsPage() {
                   {contact.name[0].toUpperCase()}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginBottom: 3 }}>
+                  <div style={{ color: "white", marginBottom: 3, ...TYPE.headline }}>
                     {contact.name}
                   </div>
                   {contact.notes && (
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", ...TYPE.subhead }}>
                       {contact.notes}
                     </div>
                   )}
@@ -235,8 +233,7 @@ export default function ContactsPage() {
                     <div style={{ display: "flex", gap: 5, marginTop: 5, flexWrap: "wrap" }}>
                       {contact.tags.map(tag => (
                         <span key={tag} style={{
-                          fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
-                          color: SIGNAL_GREEN, textTransform: "uppercase",
+                          color: SIGNAL_GREEN, ...TYPE.caption,
                         }}>
                           {tag}
                         </span>
@@ -244,7 +241,7 @@ export default function ContactsPage() {
                     </div>
                   )}
                 </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               </div>
@@ -323,13 +320,13 @@ function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
                 {contact.name[0].toUpperCase()}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{ margin: "0 0 6px", fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>
+                <h2 style={{ margin: "0 0 6px", color: "white", ...TYPE.title }}>
                   {contact.name}
                 </h2>
                 {contact.tags.length > 0 && (
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     {contact.tags.map(tag => (
-                      <span key={tag} style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", color: SIGNAL_GREEN, textTransform: "uppercase", backgroundColor: `${SIGNAL_GREEN}15`, padding: "3px 9px", borderRadius: 100 }}>
+                      <span key={tag} style={{ color: SIGNAL_GREEN, backgroundColor: `${SIGNAL_GREEN}15`, padding: "4px 11px", borderRadius: 100, ...TYPE.caption }}>
                         {tag}
                       </span>
                     ))}

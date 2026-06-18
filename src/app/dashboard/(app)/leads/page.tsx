@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-
-const SIGNAL_GREEN = "#32D074"
-const FOUND_BLACK = "#080A09"
+import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 
 type LeadRow = {
   id: string
@@ -92,11 +90,11 @@ export default function LeadsPage() {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 300, color: "white", letterSpacing: "-0.04em", lineHeight: 0.95 }}>
+          <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
             Leads
           </h1>
           {leads.length > 0 && (
-            <p style={{ margin: "8px 0 0", fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: "0.18em" }}>
+            <p style={{ margin: "8px 0 0", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.caption }}>
               {leads.length} {leads.length === 1 ? "contact" : "contacts"}
             </p>
           )}
@@ -125,7 +123,7 @@ export default function LeadsPage() {
 
           {/* Temperature first — sets the tone */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 10, letterSpacing: "0.1em", textTransform: "uppercase" }}>How hot is this lead?</div>
+            <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>How hot is this lead?</div>
             <div style={{ display: "flex", gap: 8 }}>
               {(["hot", "warm", "cold"] as const).map(t => {
                 const active = newTemp === t
@@ -137,7 +135,7 @@ export default function LeadsPage() {
                     borderColor: active ? color : "rgba(255,255,255,0.08)",
                     backgroundColor: active ? `${color}18` : "transparent",
                     color: active ? color : "rgba(255,255,255,0.3)",
-                    fontSize: 13, fontWeight: 700, cursor: "pointer",
+                    fontSize: 16, fontWeight: 700, cursor: "pointer",
                   }}>{labels[t]}</button>
                 )
               })}
@@ -151,7 +149,7 @@ export default function LeadsPage() {
             { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "What are they looking for?", type: "text", required: false },
           ].map(({ label, val, set, placeholder, type }) => (
             <div key={label} style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</div>
+              <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 6, ...TYPE.caption }}>{label}</div>
               <input
                 type={type}
                 value={val}
@@ -183,7 +181,7 @@ export default function LeadsPage() {
       )}
 
       {loading ? (
-        <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 13 }}>
+        <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>
           Loading…
         </div>
       ) : leads.length === 0 ? (
@@ -215,7 +213,7 @@ export default function LeadsPage() {
           {/* Hot leads — elevated */}
           {hotLeads.length > 0 && (
             <div>
-              <div style={{ fontSize: 10, fontWeight: 900, color: TEMP_COLORS.hot, letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
+              <div style={{ color: TEMP_COLORS.hot, marginBottom: 12, ...TYPE.caption }}>
                 🔥 Hot
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
@@ -228,7 +226,7 @@ export default function LeadsPage() {
           {otherLeads.length > 0 && (
             <div>
               {hotLeads.length > 0 && (
-                <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.15)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 12 }}>
+                <div style={{ color: "white", opacity: TEXT_OPACITY.disabled, marginBottom: 12, ...TYPE.caption }}>
                   All Leads
                 </div>
               )}
@@ -289,30 +287,31 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "white" }}>
+            <span style={{ color: "white", ...TYPE.headline }}>
               {lead.name || "Unknown"}
             </span>
             {lead.created_at && (
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", flexShrink: 0 }}>
+              <span style={{ color: "white", opacity: TEXT_OPACITY.tertiary, flexShrink: 0, ...TYPE.footnote }}>
                 {formatTimeAgo(lead.created_at)}
               </span>
             )}
           </div>
           {preview ? (
             <p style={{
-              margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", lineHeight: 1.5,
+              margin: 0, color: "white", opacity: TEXT_OPACITY.secondary,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              ...TYPE.subhead,
             }}>
               {preview}
             </p>
           ) : lead.source === "manual" ? (
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.2)" }}>Added manually</p>
+            <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>Added manually</p>
           ) : (
-            <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.2)" }}>Reached out from your site</p>
+            <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>Reached out from your site</p>
           )}
         </div>
 
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 6 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 10 }}>
           <polyline points="9 18 15 12 9 6"/>
         </svg>
       </div>
@@ -328,7 +327,7 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 700, color: SIGNAL_GREEN, letterSpacing: "0.04em" }}>Call</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: SIGNAL_GREEN, letterSpacing: "0.04em" }}>Call</span>
             </a>
           )}
           {smsHref && (
@@ -339,7 +338,7 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Text</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Text</span>
             </a>
           )}
           {emailHref && (
@@ -351,7 +350,7 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Email</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Email</span>
             </a>
           )}
         </div>
@@ -421,12 +420,12 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
                 {(lead.name || "?")[0].toUpperCase()}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>
+                <h2 style={{ margin: "0 0 4px", color: "white", ...TYPE.title }}>
                   {lead.name || "Unknown"}
                 </h2>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 100, backgroundColor: `${tempColor}18` }}>
                   <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: tempColor }}/>
-                  <span style={{ fontSize: 10, fontWeight: 900, color: tempColor, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <span style={{ color: tempColor, ...TYPE.caption }}>
                     {lead.temperature ?? "warm"}
                   </span>
                 </div>
@@ -434,7 +433,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               <button onClick={() => setEditing(true)} style={{
                 padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.12)",
                 backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)",
-                fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0,
+                fontSize: 14, fontWeight: 700, cursor: "pointer", flexShrink: 0,
               }}>
                 Edit
               </button>
@@ -445,19 +444,19 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               {phoneHref && (
                 <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
                 </a>
               )}
               {smsHref && (
                 <a href={smsHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
                 </a>
               )}
               {emailHref && (
                 <a href={emailHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
                 </a>
               )}
             </div>
@@ -478,10 +477,10 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               )}
               {lead.message && (
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 8 }}>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.tertiary, marginBottom: 8, ...TYPE.caption }}>
                     Notes
                   </div>
-                  <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
+                  <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.secondary, whiteSpace: "pre-wrap", ...TYPE.body }}>
                     {lead.message}
                   </p>
                 </div>
@@ -490,13 +489,13 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
           </>
         ) : (
           <>
-            <div style={{ fontSize: 10, fontWeight: 900, color: SIGNAL_GREEN, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 18 }}>
+            <div style={{ color: SIGNAL_GREEN, marginBottom: 18, ...TYPE.caption }}>
               Edit Lead
             </div>
 
             {/* Temperature picker */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 8, letterSpacing: "0.08em", textTransform: "uppercase" }}>Temperature</div>
+              <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 8, ...TYPE.caption }}>Temperature</div>
               <div style={{ display: "flex", gap: 8 }}>
                 {(["hot","warm","cold"] as const).map(t => (
                   <button key={t} onClick={() => setTemp(t)} style={{
@@ -504,7 +503,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
                     border: `1.5px solid ${temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.1)"}`,
                     backgroundColor: temp === t ? `${TEMP_COLORS[t]}18` : "transparent",
                     color: temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.4)",
-                    fontSize: 12, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
+                    fontSize: 14, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
                   }}>{t}</button>
                 ))}
               </div>
@@ -516,7 +515,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               { label: "Email", val: email, set: setEmail, placeholder: "Email address" },
             ].map(f => (
               <div key={f.label} style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{f.label}</div>
+                <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>{f.label}</div>
                 <input value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.placeholder}
                   style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box" }}
                 />
@@ -524,7 +523,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
             ))}
 
             <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Notes</div>
+              <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Notes</div>
               <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Add notes about this lead…" rows={4}
                 style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.6, fontFamily: "inherit" }}
               />
@@ -551,7 +550,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.25)", letterSpacing: "0.14em", textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ fontSize: 16, fontWeight: 800, color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
         {label}
       </div>
       <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)" }}>

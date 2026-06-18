@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-const GREEN = "#32D074"
-const BLACK = "#080A09"
+import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -83,7 +81,7 @@ export default function HomeClient({
         transition: "opacity 0.4s ease",
       }}>
         <p style={{
-          margin: 0, fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.45)",
+          margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead,
         }}>
           Good {greeting}, {firstName}
         </p>
@@ -109,7 +107,7 @@ export default function HomeClient({
                 width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN,
                 boxShadow: `0 0 10px ${GREEN}`, animation: "breathe 2s ease-in-out infinite",
               }}/>
-              <span style={{ fontSize: 11, fontWeight: 900, color: GREEN, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+              <span style={{ color: GREEN, ...TYPE.caption }}>
                 {newCount === 1 ? "New lead" : `${newCount} new leads`} {topCreatedAt && `· ${timeAgo(topCreatedAt)}`}
               </span>
             </div>
