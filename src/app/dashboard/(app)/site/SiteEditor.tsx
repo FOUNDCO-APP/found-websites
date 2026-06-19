@@ -2,9 +2,7 @@
 
 import React, { useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage } from "./actions"
-
-const GREEN = "#32D074"
-const BLACK = "#080A09"
+import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null }
@@ -129,7 +127,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               onClick={() => startEdit("hero_title", String(config.hero_title ?? ""))}
               style={{ cursor: "pointer", marginBottom: 10 }}
             >
-              <div style={{ fontSize: 11, color: `${GREEN}cc`, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 5 }}>
                 HEADLINE · tap to edit
               </div>
               <h2 style={{
@@ -146,7 +144,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               onClick={() => startEdit("hero_subtitle", String(config.hero_subtitle ?? ""))}
               style={{ cursor: "pointer" }}
             >
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>
+              <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 5 }}>
                 SUPPORTING LINE · tap to edit
               </div>
               <p style={{
@@ -205,7 +203,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {/* Hook section — tagline + CTA */}
       <div style={{ margin: "12px 20px 0" }}>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10, paddingLeft: 4 }}>
+        <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10, paddingLeft: 4 }}>
           Your Hook
         </div>
         <div style={{ display: "flex", gap: 10 }}>
@@ -251,7 +249,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             position: "relative",
           }}
         >
-          <div style={{ fontSize: 11, color: "#A78BFA", fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 12, opacity: 0.8 }}>
+          <div style={{ ...TYPE.caption, color: "#A78BFA", marginBottom: 12, opacity: 0.8 }}>
             Your Story · tap to edit
           </div>
           <p style={{
@@ -291,7 +289,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
           {newService ? (
             <div style={{ borderRadius: 20, padding: 20, background: "linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.03))", border: "1px solid rgba(251,146,60,0.25)" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#FB923C", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>New Service</div>
+              <div style={{ ...TYPE.caption, color: "#FB923C", marginBottom: 14 }}>New Service</div>
               <input placeholder="Service name" value={newServiceName} onChange={e => setNewServiceName(e.target.value)} autoFocus
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }}
               />
@@ -337,7 +335,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           {/* ── Owner's real photos in gallery ── */}
           {galleryPhotos.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#34D399", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+              <div style={{ ...TYPE.caption, color: "#34D399", marginBottom: 10 }}>
                 Your photos · live on your gallery
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
@@ -357,7 +355,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           {/* ── Add more from unassigned hearted photos ── */}
           {unassigned.length > 0 && (
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.25)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10 }}>
+              <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>
                 Add your photos to gallery
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
@@ -387,7 +385,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           {stockImages.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,150,50,0.7)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <div style={{ ...TYPE.caption, color: "rgba(255,150,50,0.7)" }}>
                   Placeholder photos · tap ✕ to remove
                 </div>
                 <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
@@ -473,7 +471,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 function PageTab({ label, href, isLive }: { label: string; href: string; isLive?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-      <h2 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: "white", letterSpacing: "-0.03em" }}>
+      <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>
         {label}
       </h2>
       <a href={href} target="_blank" rel="noopener noreferrer" style={{
@@ -503,7 +501,7 @@ function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
 }) {
   return (
     <div onClick={onClick} style={{ flex, cursor: "pointer", borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", position: "relative" }}>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+      <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 4 }}>{label}</div>
       <p style={{ margin: 0, fontSize: 14, color: value ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.2)", fontStyle: value ? "normal" : "italic", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
         {value || placeholder}
       </p>

@@ -4,12 +4,11 @@ import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout } from "./actions"
-
-const SIGNAL_GREEN = "#32D074"
+import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
   found:          { label: "Found",          founding: 29, normal: 39,  color: "#6B7280" },
-  found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: SIGNAL_GREEN },
+  found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: GREEN },
   found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
 }
 
@@ -32,8 +31,8 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: n
 
 function ChevronRight() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none"
+      stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="9 18 15 12 9 6"/>
     </svg>
   )
@@ -56,13 +55,13 @@ export default async function MorePage() {
 
   return (
     <main style={{ padding: "28px 20px" }}>
-      <h1 style={{ margin: "0 0 24px", fontSize: 22, fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
+      <h1 style={{ margin: "0 0 24px", ...TYPE.largeTitle, color: "white" }}>
         More
       </h1>
 
-      {/* My Site — prominent entry point */}
+      {/* My Site */}
       <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           My Site
         </p>
         <Link href="/site" style={{ textDecoration: "none", display: "block" }}>
@@ -75,31 +74,29 @@ export default async function MorePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 12,
-                backgroundColor: `${SIGNAL_GREEN}18`,
+                backgroundColor: `${GREEN}18`,
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
                 </svg>
               </div>
               <div>
-                <p style={{ margin: "0 0 2px", fontSize: 14, fontWeight: 600, color: "white" }}>Edit My Site</p>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>Copy, photos, services · AI rewrite</p>
+                <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Edit My Site</p>
+                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Copy, photos, services · AI rewrite</p>
               </div>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
+            <ChevronRight />
           </div>
         </Link>
       </section>
 
       {/* Account */}
       <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           Account
         </p>
-        <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block", marginBottom: 8 }}>
+        <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
           <div style={{
             borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.06)",
@@ -107,41 +104,39 @@ export default async function MorePage() {
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                 <path d="M7 11V7a5 5 0 0110 0v4"/>
               </svg>
-              <span style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>Change Password</span>
+              <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Change Password</span>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
+            <ChevronRight />
           </div>
         </Link>
       </section>
 
-      {/* Billing */}
+      {/* Billing details */}
       <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
-          Account
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Billing
         </p>
         <div style={{ borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
           {company?.name && (
             <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <p style={{ margin: "0 0 2px", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Business</p>
-              <p style={{ margin: 0, fontSize: 14, color: "white" }}>{company.name}</p>
+              <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Business</p>
+              <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{company.name}</p>
             </div>
           )}
           <div style={{ padding: "14px 18px" }}>
-            <p style={{ margin: "0 0 2px", fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Email</p>
-            <p style={{ margin: 0, fontSize: 14, color: "white" }}>{user.email}</p>
+            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Email</p>
+            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
           </div>
         </div>
       </section>
 
       {/* Current plan */}
       <section style={{ marginBottom: upgrade ? 10 : 20 }}>
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           Your Plan
         </p>
         <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -150,20 +145,20 @@ export default async function MorePage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 6px ${meta.color}`, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: meta.color }}>
+                <span style={{ ...TYPE.caption, color: meta.color }}>
                   {meta.label}
                 </span>
                 {isFoundingMember && (
-                  <span style={{ fontSize: 9, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: SIGNAL_GREEN, backgroundColor: `${SIGNAL_GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
+                  <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
                     Founding
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: 15, fontWeight: 300, color: "white" }}>
-                ${displayPrice}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>/mo</span>
+              <span style={{ ...TYPE.subhead, fontWeight: 300, color: "white" }}>
+                ${displayPrice}<span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/mo</span>
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
               {isActive
                 ? isFoundingMember
                   ? `Founding rate locked in forever.`
@@ -180,15 +175,15 @@ export default async function MorePage() {
           <div style={{
             borderRadius: 14,
             padding: "18px 20px",
-            backgroundColor: `${SIGNAL_GREEN}08`,
-            border: `1px solid ${SIGNAL_GREEN}22`,
+            backgroundColor: `${GREEN}08`,
+            border: `1px solid ${GREEN}22`,
           }}>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
               <div>
-                <p style={{ margin: "0 0 3px", fontSize: 14, fontWeight: 600, color: "white" }}>
+                <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
                   Upgrade to {upgrade.label}
                 </p>
-                <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
+                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                   ${upgradePrice}/month{isFoundingMember ? " founding rate" : ""}
                 </p>
               </div>
@@ -199,12 +194,9 @@ export default async function MorePage() {
                   flexShrink: 0,
                   borderRadius: 8,
                   padding: "9px 16px",
-                  fontSize: 11,
-                  fontWeight: 900,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  backgroundColor: SIGNAL_GREEN,
-                  color: "#080A09",
+                  ...TYPE.caption,
+                  backgroundColor: GREEN,
+                  color: BLACK,
                   border: "none",
                   cursor: "pointer",
                 }}>
@@ -216,10 +208,10 @@ export default async function MorePage() {
               {upgrade.features.map((f) => (
                 <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                    stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
-                  <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)" }}>{f}</span>
+                  <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
                 </div>
               ))}
             </div>
@@ -229,14 +221,14 @@ export default async function MorePage() {
 
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.18em", color: "rgba(255,255,255,0.28)" }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           Settings
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {company?.slug && (
             <a href={`/connect-domain?slug=${company.slug}`} style={{ textDecoration: "none" }}>
               <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 14, color: "white" }}>Connect your domain</span>
+                <span style={{ ...TYPE.subhead, color: "white" }}>Connect your domain</span>
                 <ChevronRight />
               </div>
             </a>
@@ -253,7 +245,7 @@ export default async function MorePage() {
                 textAlign: "left",
               }}>
                 <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ fontSize: 14, color: "white" }}>Manage billing</span>
+                  <span style={{ ...TYPE.subhead, color: "white" }}>Manage billing</span>
                   <ChevronRight />
                 </div>
               </button>
@@ -261,7 +253,7 @@ export default async function MorePage() {
           )}
           <a href="mailto:hello@foundco.app" style={{ textDecoration: "none" }}>
             <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 14, color: "white" }}>Get help</span>
+              <span style={{ ...TYPE.subhead, color: "white" }}>Get help</span>
               <ChevronRight />
             </div>
           </a>

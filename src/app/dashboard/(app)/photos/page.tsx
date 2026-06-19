@@ -1,9 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
-
-const SIGNAL_GREEN = "#32D074"
-const FOUND_BLACK = "#080A09"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 
 type Photo = {
   id: string
@@ -75,10 +73,10 @@ export default function PhotosPage() {
       {/* Header */}
       <div style={{ padding: "32px 24px 20px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 34, fontWeight: 200, color: "white", letterSpacing: "-0.04em" }}>
+          <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>
             Photos
           </h1>
-          <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(255,255,255,0.25)" }}>
+          <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
             {photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length === 1 ? "" : "s"}`}
           </p>
         </div>
@@ -260,10 +258,10 @@ function EmptyState({ view, onAdd }: { view: View; onAdd: () => void }) {
   return (
     <div style={{ paddingTop: 60, textAlign: "center" }}>
       <div style={{ fontSize: 48, marginBottom: 20 }}>{content.emoji}</div>
-      <p style={{ margin: "0 0 10px", fontSize: 20, fontWeight: 200, color: "white", letterSpacing: "-0.03em" }}>
+      <p style={{ margin: "0 0 10px", fontSize: "1.25rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>
         {content.title}
       </p>
-      <p style={{ margin: "0 0 32px", fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
+      <p style={{ margin: "0 0 32px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.7 }}>
         {content.sub}
       </p>
       {content.cta && (
