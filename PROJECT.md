@@ -1,6 +1,6 @@
 # PROJECT.md — Found Co. / found-websites
 ### Read this every session. Every AI. Every time.
-*Last updated: June 6, 2026*
+*Last updated: June 18, 2026*
 
 ---
 
@@ -194,26 +194,23 @@ Layout files: `src/components/layouts/`
 
 ---
 
-## CURRENT PHASE — Phase 2: Onboarding Flow
+## CURRENT PHASE — Phase 4: Customer Dashboard
 
-**What's still missing for onboarding:**
-- Location intelligence: city autocomplete and nearby service area chips
-- Differentiator suggestions by industry
-- Real file uploads for logo, hero photo/video, and gallery photos
-- Logo color extraction from uploaded logos
-- Shawn approval of the full flow end-to-end
+Phase 2 (Onboarding Flow) and Phase 3 are substantially complete — all 4 layouts ship, onboarding generates real sites end-to-end, billing/activation works. See `TASKS.md` for the live NOW/BACKLOG list and `CHANGELOG.md` for full session-by-session history; this section is a snapshot, those two files are the source of truth.
 
-**What's ready for onboarding:**
-- All 4 layouts ✅
-- 11 original photo pools curated with descriptions + keywords ✅
-- All 12 industry manifests approved ✅
-- `src/lib/industryManifests.ts` config foundation ✅
-- Full onboarding spec in `ONBOARDING.md` ✅
-- Claude API content generation from onboarding answers with fallback copy ✅
+**What's built and working (customer dashboard, `/dashboard`):**
+- Auth: magic link + password login, company select for multi-business owners, PWA install support
+- Home, Leads, Contacts, Site editor, Photos, More tabs — all functional
+- Billing/activation: Stripe SetupIntent flow, in-dashboard activation banner (white bar/green button, opens the same `ActivateOverlay` used on public client sites — no separate navigation)
+- Leads & Contacts: full Apple-Contacts-style detail sheets with edit capability (added June 18, 2026 — previously no way to edit an existing lead or contact at all)
+- Shared `rem`-based typography system at `src/lib/dashboard/typography.ts` — applied to Leads, Contacts, Home, bottom tab bar; NOT yet applied to Site editor, More, Photos (next task)
+- Identity-based avatar colors (Apple Contacts style) across Leads/Contacts
 
-**Current onboarding implementation note:** `/onboarding` now saves `companies` and `website_config`, consumes the approved industry manifests and Q2.5 sub-industry, and generates homepage/service copy through Claude API when `ANTHROPIC_API_KEY` is set. If Claude is unavailable, Found saves deterministic fallback copy so the owner can still launch.
+**Known gap:** Leads never convert to a separate customer entity — by design (see `DECISIONS.md`, June 18, 2026). Temperature (hot/warm/cold) is the permanent mechanism for tracking lead status.
 
-**Current Found homepage note:** `/` now establishes the approved Found identity: Pure Studio with a Signal Green heartbeat, a refined `FOUND` wordmark, a cinematic device-stage hero, and a direct CTA into onboarding.
+**Current onboarding implementation note:** `/onboarding` saves `companies` and `website_config`, consumes the approved industry manifests and Q2.5 sub-industry, and generates homepage/service copy through Claude API when `ANTHROPIC_API_KEY` is set. If Claude is unavailable, Found saves deterministic fallback copy so the owner can still launch.
+
+**Current Found homepage note:** `/` establishes the approved Found identity: Pure Studio with a Signal Green heartbeat, a refined `FOUND` wordmark, a cinematic device-stage hero, and a direct CTA into onboarding.
 
 ---
 

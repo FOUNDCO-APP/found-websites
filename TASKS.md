@@ -24,11 +24,23 @@ What shipped today:
 
 ## NOW (MAX 3)
 
-1. **Remove trial from upgrade checkout** — `more/actions.ts` `startUpgradeCheckout()` still has `trial_period_days: 14`. Must be removed before launch.
+1. **Apply shared typography system to Site editor, More tab, Photos tab** — `src/lib/dashboard/typography.ts` (rem-based, Dynamic-Type-style scale) was built and applied to Leads, Contacts, Home, and DashboardNav this session. Still needs to be applied to `SiteEditor.tsx`, `more/page.tsx`, and the Photos tab, which all still have original hardcoded px values.
 
-2. **Favicon 404** — all client sites throw a 404 for `/favicon.svg`. Noisy in logs, bad for SEO.
+2. **Decide rebrand/naming direction (or table it)** — Shawn is weighing whether to rename for App Store launch. Explored "FoundBizz" / "FoundBuzz", neither landed. No decision made. Out of scope for AI to push toward a legal/business answer — only weigh in on brand-fit if asked.
 
-3. **Stripe webhook** — `STRIPE_WEBHOOK_SECRET` needs to be verified in Vercel. The webhook at `/api/stripe/webhook` handles subscription status updates. If it's not working, `subscription_status` won't update after billing events.
+3. **Desktop end-to-end test of this session's changes** — activation banner, Home redesign, lead/contact detail sheets, and typography fixes were all built and tested on mobile only. Needs a desktop pass before considered fully verified.
+
+---
+
+## RECENTLY COMPLETED (moved out of NOW — June 18, 2026 session)
+- ~~Remove trial from upgrade checkout~~ — confirmed no `trial_period_days` remains in `more/actions.ts`
+- ~~Stripe webhook secret verification~~ — confirmed `STRIPE_WEBHOOK_SECRET` wired up and webhook handler functioning
+- In-dashboard activation banner (white bar, green button, inline overlay — no black screen)
+- Lead/Contact detail sheets with full edit capability (PATCH /api/leads, updateContact action)
+- Home screen redesign (single decisive status card)
+- Shared typography system (Leads, Contacts, Home, DashboardNav)
+- Identity-based avatar colors (Apple Contacts style)
+- Bulk-fixed 14 companies with stale `plan: "found_pro"` → `plan: "found"`
 
 ---
 
@@ -50,6 +62,7 @@ What shipped today:
 - Logo upload
 
 ### Platform
+- Favicon 404 — all client sites throw a 404 for `/favicon.svg`. Noisy in logs, bad for SEO. Not urgent enough for NOW slot but still unresolved.
 - Photo curation for 10 new industries at `/admin/photos`
 - Remove debug `[Activate]` console logs
 - `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` for connect-domain feature

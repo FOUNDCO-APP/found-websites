@@ -597,3 +597,19 @@ Approved by: Shawn + Jony Ive + Angela Ahrendts
 Why: The reveal moment is about the site — the URL is the climax. The email nudge should not compete with it. Delaying it 0.9s makes it feel like a postscript, not a system message. It acknowledges that email can go to spam without panicking the owner.
 Copy: `We sent your next steps to [email]` (white/70, small) + `Don't see it? Check your spam — just this once.` (white/25, smaller).
 Implementation: `animation: fade-up 0.6s 0.9s ease-out both; opacity: 0` — starts invisible, plays at 0.9s delay. Envelope icon (white/30) left-aligned with the text block. `email` prop passed from `answers.email` at the call site.
+
+**[2026-06-18] — Dashboard typography system: rem-based, Dynamic-Type-style scale. Preserves Found's existing light/heavy voice. Never goes below 13px / 0.55 opacity for anything meant to be read.**
+Approved by: Shawn
+Why: Shawn compared the dashboard directly against native iOS system screenshots (Settings, Messages, Calls, Contacts, Clock) and found Found's text sizes, chevron sizes, and contrast dramatically smaller/fainter across the board — worst offender was the bottom tab bar at 8px / 0.25 opacity, smaller than anything else in the app. Root cause wasn't a single bad value, it was that every screen had been hand-tuned with its own one-off pixel guesses with no shared scale.
+
+Solution: one shared file, `src/lib/dashboard/typography.ts`, modeled on Apple's Dynamic Type — a small named set of text styles (largeTitle/title/headline/body/subhead/footnote/caption) that every screen pulls from instead of inventing new pixel values. Built in `rem`, not `px`, specifically so it respects browser zoom and OS-level accessibility text-size settings across iOS/Android/desktop — `rem` is relative to root font-size (confirmed nowhere overridden in this codebase, so it resolves to the standard 16px and scales correctly with accessibility settings); `px` is frozen forever regardless of user settings.
+
+Critically, this is a contrast/size fix, NOT a restyle. `largeTitle` stays light-300 weight, `caption` stays heavy-800 uppercase tracked-out — Found's existing signature voice is untouched. An early draft mistakenly bolded all titles "to match Apple's contrast" and was corrected immediately; weight personality and legibility are separate problems and should be solved separately (see DECISIONS.md June 18 entry).
+
+Scale: largeTitle 2.125rem/300, title 1.5rem/700, headline 1.0625rem/700, body 1.0625rem/400, subhead 0.9375rem/500, footnote 0.8125rem/700, caption 0.8125rem/800-uppercase. Opacity tiers: primary 1 (true white), secondary 0.78, tertiary 0.55 (floor for anything readable), disabled 0.3. Chevrons fixed at 20px (were 14px — visibly smaller than iOS's ~17-20pt list disclosure indicators).
+
+Applied to: Leads, Contacts, Home, DashboardNav (bottom tab bar). NOT yet applied: Site editor, More tab, Photos tab — still have original hardcoded values, next typography task.
+
+**[2026-06-18] — Avatar identity color: deterministic hash-based palette, Apple Contacts/Messages style. Never tied to status fields.**
+Approved by: Shawn
+Why: see DECISIONS.md June 18 entry for full reasoning. Design rule going forward: avatar/identity color and status color (temperature, in this case) are two separate visual systems and must never share the same UI element. Identity color lives in `avatarColorFor(name)` in typography.ts — 8-color muted/desaturated palette, hashed per name, used consistently across Leads and Contacts avatar circles.

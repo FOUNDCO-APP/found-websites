@@ -5,6 +5,70 @@
 ---
 
 
+## Session: June 18, 2026 — Activation Banner, Dashboard Home Redesign, Lead/Contact Detail Sheets, Dynamic-Type Typography System
+**AI:** Claude (Sonnet 4.6) — claude.ai mobile chat interface
+**Worked on:** In-dashboard activation reminder, full Home screen redesign (two iterations), Apple-Contacts-style detail sheets for Leads and Contacts with edit capability, a shared rem-based typography system applied across the dashboard, and identity-based avatar colors.
+
+### ✅ Completed This Session
+
+**1. In-dashboard activation banner**
+- New component `src/components/dashboard/ActivationBanner.tsx`, rendered in dashboard layout when `!company.subscription_status`
+- Final state: white bar background, green "Activate →" button (high contrast — earlier green-on-green and white-on-white passes were rejected by Shawn for poor contrast), dismissable X
+- Critically: button opens `ActivateOverlay` (the same component used on the public client-site banner) directly inline via local state — NOT a navigation to `/activate?slug=`. The navigation approach caused a black-screen flash; the overlay approach matches the existing working flow exactly with zero navigation.
+- `activateActions.ts` `createActivationSetup()` guard bug fixed: was blocking re-activation if `stripe_customer_id` existed at all (even for unpaid accounts) — now only blocks if `subscription_status === "active"`. Reuses existing Stripe customer ID if present instead of erroring.
+
+**2. Stale plan data bulk-fixed**
+- Discovered `molcas` test company had `plan: "found_pro"` in DB (stale data from before an earlier-session fix to the onboarding default), causing the activate overlay to show Pro pricing instead of Found pricing
+- Searched for all companies with `plan = "found_pro"` — found 14, including `sayit` (a real customer, paying the correct $29 Found Founding price in Stripe despite the DB label saying Pro) and `molcas-mexican` (Shawn's actual current test company — distinct from `molcas`, different company ID)
+- Bulk-corrected all 14 to `plan: "found"` via single PATCH
+- **Process note:** Claude initially over-scoped by checking and fixing companies beyond the one in question without asking first — flagged by Shawn as scope creep. Going forward: fix only what's explicitly in scope unless given permission to expand.
+
+**3. Home screen — full redesign, two passes**
+- First pass: added ambient time-of-day gradient lighting (warm/neutral/cool depending on morning/afternoon/evening), a breathing-pulse animation on the lead-count number, staggered fade-up + blur-to-sharp reveal animations, subtle noise texture overlay
+- Shawn's feedback on first pass: still looked generic/template-like, text too faint to read at a glance, wasted vertical space (giant ghost "0" numeral), busy job-site users need instant readability not slow ambient mood
+- **Second pass (current/final structure):** collapsed the stacked-zones layout into ONE decisive status card. New-lead state = full glowing green card at the top of the screen (lead name 30px/800 weight, message preview, Call/Reply buttons inline, no scrolling needed to act). Caught-up state = single calm high-contrast card. Quick actions (Add Lead / Add Photo / Share Site) sit immediately below with no dead air between sections. Ambient time-of-day gradient kept from pass one. Body text contrast raised significantly (old: 0.25–0.45 opacity faint gray; new: uses shared TEXT_OPACITY scale, minimum 0.55).
+- File: `src/components/dashboard/HomeClient.tsx`
+
+**4. Lead & Contact detail sheets (Apple Contacts style) — net-new feature**
+- **Root cause investigation:** Shawn reported notes entered when adding a lead were invisible. Found: `leads` table has NO `notes` column. Notes were actually being saved correctly into the existing `message` field the whole time — the bug was purely UI: the leads list only ever showed a one-line truncated preview with zero way to view the rest. Data was never lost.
+- Built full detail-sheet solution for both Leads and Contacts:
+  - Every row now has a chevron and `onClick` → opens a bottom sheet (iOS pattern): avatar, name, temperature badge (leads) or tags (contacts), Call/Text/Email action buttons, full field list, notes/message shown in full (not truncated), and an Edit mode
+  - Added `PATCH` handler to `src/app/dashboard/api/leads/route.ts` (previously only GET/POST existed — there was no way to edit an existing lead at all)
+  - Added `updateContact()` server action to `src/app/dashboard/(app)/contacts/actions.ts` (same gap — no edit capability existed)
+  - Files: `src/app/dashboard/(app)/leads/page.tsx` (LeadDetailSheet component), `src/app/dashboard/(app)/contacts/page.tsx` (ContactDetailSheet component)
+
+**5. Shared Dynamic-Type-style typography system — net-new, applied dashboard-wide**
+- Shawn compared the dashboard against native iOS screenshots (Settings, Messages, Calls, Contacts, Clock app) and correctly identified that Found's text sizes, chevron sizes, and contrast were dramatically smaller/fainter than Apple's system UI (e.g. iOS section headers render 34-40pt bold vs. Found's 10-14px labels; iOS list chevrons ~17-20pt vs. Found's 14px)
+- Key methodological question Shawn raised before any changes: does this need to respect OS/browser accessibility text-size settings (Dynamic Type) across iOS/Android/desktop/mobile-web, not just look bigger on one screenshot? Answer: yes — solved by using `rem` instead of raw `px`. `rem` is relative to root font-size and respects browser zoom + OS-level accessibility text scaling; `px` never adapts. Confirmed no `html { font-size }` override exists anywhere in the codebase, so `rem` correctly resolves to the browser default (16px) and will scale with accessibility settings exactly like iOS Dynamic Type does.
+- **New file: `src/lib/dashboard/typography.ts`** — exports:
+  - `TYPE` object: `largeTitle` (2.125rem/34px, weight 300 — Found's signature light page-header style, NOT bolded), `title` (1.5rem/24px, weight 700), `headline` (1.0625rem/17px, weight 700 — iOS list-row standard), `body` (1.0625rem/17px, weight 400), `subhead` (0.9375rem/15px, weight 500), `footnote` (0.8125rem/13px, weight 700 — true floor), `caption` (0.8125rem/13px, weight 800, uppercase, tracked — Found's existing eyebrow/label style, same floor as footnote)
+  - `TEXT_OPACITY`: `primary: 1` (true white), `secondary: 0.78`, `tertiary: 0.55`, `disabled: 0.3` — calibrated to match iOS system dark-mode label brightness tiers after Shawn compared directly against iOS screenshots; nothing meant to be read should ever go below `tertiary`
+  - `ICON`: `chevron: 20` (was hardcoded 14px everywhere — too small vs iOS ~17-20pt), `action: 18`, `large: 24`
+  - `avatarColorFor(name)`: Apple Contacts/Messages-style deterministic identity color — hashes the name to pick one of 8 muted/desaturated palette colors, so the same person always renders the same avatar color everywhere. Replaces the old system where avatar color was tied to lead temperature (hot/warm/cold), which made nearly every avatar the same orange since most leads default to "warm" — Shawn flagged this as the visual inconsistency to fix. Temperature retains its own separate colored badge/pill, unchanged.
+- **Important correction mid-session:** first draft of `typography.ts` made `largeTitle` bold (700). Shawn stopped this immediately — Found's existing brand voice (light-300 large headlines + heavy-800/900 uppercase tracked-out labels) is a deliberate, already-approved design signature, not something to "fix." Rebuilt with `largeTitle` correctly at weight 300. **Rule going forward: typography/contrast fixes must preserve Found's existing visual voice, not flatten it toward generic system-UI conventions.**
+- Applied to: `src/app/dashboard/(app)/leads/page.tsx`, `src/app/dashboard/(app)/contacts/page.tsx`, `src/components/dashboard/HomeClient.tsx`, `src/components/dashboard/DashboardNav.tsx` (the bottom tab bar was the worst offender in the whole app — labels were 8px at 0.25 opacity, smaller/fainter than anything that had been fixed on any page; raised to 10px/0.5 opacity)
+- **NOT yet applied:** Site editor (`SiteEditor.tsx`) and the More tab still have all original hardcoded pixel values from earlier build rounds. This is the next typography task.
+
+**6. Product decision — lead lifecycle (no code change)**
+- Shawn asked whether the system has any way to know a lead became a customer. Discussed at length: Found currently has no invoicing/payments/job-tracking, so there is no real signal that could ever automatically detect "this lead is now a paying customer" — it would always require manual input from the owner.
+- **Decision: leads never convert to a separate entity/table.** A lead stays a lead permanently (it just records how someone found you); temperature (hot/warm/cold — already editable per-lead via the new detail sheet) is the mechanism for tracking where things stand, including closed/won relationships. No conversion-to-contact feature, no new `status` field, no `customers` table. Locked unless reopened.
+
+### ⏳ Still Pending
+| Item | Status | Notes |
+|---|---|---|
+| Apply typography system to Site editor | Not started | `SiteEditor.tsx` still has all original hardcoded px values |
+| Apply typography system to More tab | Not started | `more/page.tsx` untouched this session |
+| Apply typography system to Photos tab | Not started | Untouched this session |
+| Rebrand/rename exploration for App Store launch | Open thread, no decision | Shawn explored "FoundBizz" / "FoundBuzz" as possible marketing names/domains. Claude advised against both (dilutes existing Found brand equity; "Buzz" tonally conflicts with the calm minimalist dark-green identity) and suggested either keeping "Found" as root with a stronger tagline, or exploring outcome-based naming instead. Nothing decided — revisit when Shawn wants to continue. NOT a Claude call to make (trademark/domain/entity decisions are outside what Claude should weigh in on) — keep any future input scoped to naming *feel*/brand fit, not legal/business advice. |
+
+### 🔜 What To Work On Next (In Order)
+1. Finish typography system rollout — Site editor, More tab, Photos tab
+2. Verify `ActivationBanner.tsx` end-to-end on a fresh test company once Shawn has tested on desktop
+3. Revisit rebrand/naming thread if Shawn brings it back up — stay in brand-fit lane only
+
+---
+
+
 ## Session: June 16-17, 2026 — Billing Activation Flow Fixed End-to-End
 **AI:** Claude (Sonnet 4.6) — claude.ai chat interface
 **Worked on:** Diagnosing and fixing the entire activation/billing flow, which was broken in multiple layers
