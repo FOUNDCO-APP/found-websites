@@ -3,7 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY } from "@/lib/dashboard/typography"
+import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE } from "@/lib/dashboard/typography"
 
 type Tab = { path: string; label: string }
 
@@ -98,119 +98,205 @@ export default function DashboardNav() {
 
   function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
-    // Future: open camera modal/sheet. For now route to photos queue.
     router.push(`${prefix}/photos`)
   }
 
-  // Split into left 2, center (camera), right 2
   const leftTabs  = TABS.slice(0, 2)
   const rightTabs = TABS.slice(3, 5)
 
   return (
-    <nav style={{
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      backgroundColor: "#080A09",
-      backdropFilter: "blur(20px)",
-      WebkitBackdropFilter: "blur(20px)",
-      borderTop: "1px solid rgba(255,255,255,0.1)",
-      display: "flex",
-      alignItems: "flex-end",
-      paddingBottom: "env(safe-area-inset-bottom, 0px)",
-      zIndex: 50,
-    }}>
-      {/* Left tabs */}
-      {leftTabs.map((tab) => {
-        const active = isActive(tab.path)
-        return (
-          <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            textDecoration: "none",
-            padding: "12px 0 14px",
-          }}>
-            {ICONS[tab.path](active)}
-            <span style={{
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-              textTransform: "uppercase",
+    <>
+      {/* ── Mobile: bottom tab bar ── */}
+      <nav className="found-mobile-nav" style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: "#080A09",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        display: "flex",
+        alignItems: "flex-end",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        zIndex: 50,
+      }}>
+        {/* Left tabs */}
+        {leftTabs.map((tab) => {
+          const active = isActive(tab.path)
+          return (
+            <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              textDecoration: "none",
+              padding: "12px 0 14px",
             }}>
-              {tab.label}
-            </span>
-          </Link>
-        )
-      })}
+              {ICONS[tab.path](active)}
+              <span style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+              }}>
+                {tab.label}
+              </span>
+            </Link>
+          )
+        })}
 
-      {/* Center camera FAB */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 10 }}>
-        <button
-          onClick={handleCamera}
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: "50%",
-            backgroundColor: SIGNAL_GREEN,
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: `0 0 20px ${SIGNAL_GREEN}55`,
-            marginTop: -20,
+        {/* Center camera FAB */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 10 }}>
+          <button
+            onClick={handleCamera}
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: "50%",
+              backgroundColor: SIGNAL_GREEN,
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: `0 0 20px ${SIGNAL_GREEN}55`,
+              marginTop: -20,
+            }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+              stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+          <span style={{
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            color: "rgba(255,255,255,0.5)",
+            textTransform: "uppercase",
+            marginTop: 4,
           }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-            <circle cx="12" cy="13" r="4"/>
+            Camera
+          </span>
+        </div>
+
+        {/* Right tabs */}
+        {rightTabs.map((tab) => {
+          const active = isActive(tab.path)
+          return (
+            <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              textDecoration: "none",
+              padding: "12px 0 14px",
+            }}>
+              {ICONS[tab.path](active)}
+              <span style={{
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.08em",
+                color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
+                textTransform: "uppercase",
+              }}>
+                {tab.label}
+              </span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* ── Desktop: left sidebar ── */}
+      <aside className="found-sidebar" style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: 220,
+        backgroundColor: "#080A09",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
+        flexDirection: "column",
+        zIndex: 50,
+        display: "none", // shown via media query
+      }}>
+        {/* Wordmark */}
+        <div style={{ padding: "24px 20px 20px" }}>
+          <svg viewBox="0 0 420 72" style={{ height: 16, width: 88, color: "white", display: "block" }} aria-label="Found">
+            <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
           </svg>
-        </button>
-        <span style={{
-          fontSize: 10,
-          fontWeight: 800,
-          letterSpacing: "0.08em",
-          color: "rgba(255,255,255,0.5)",
-          textTransform: "uppercase",
-          marginTop: 4,
-        }}>
-          Camera
-        </span>
-      </div>
+        </div>
 
-      {/* Right tabs */}
-      {rightTabs.map((tab) => {
-        const active = isActive(tab.path)
-        return (
-          <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 4,
-            textDecoration: "none",
-            padding: "12px 0 14px",
-          }}>
-            {ICONS[tab.path](active)}
-            <span style={{
-              fontSize: 10,
-              fontWeight: 800,
-              letterSpacing: "0.08em",
-              color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-              textTransform: "uppercase",
+        {/* Signal Green accent line */}
+        <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30`, margin: "0 0 16px" }} />
+
+        {/* Nav items */}
+        <div style={{ flex: 1, padding: "4px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
+          {TABS.map((tab) => {
+            const active = isActive(tab.path)
+            return (
+              <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 12px 10px 13px",
+                borderRadius: 10,
+                backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent",
+                borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}`,
+              }}>
+                {ICONS[tab.path](active)}
+                <span style={{
+                  ...TYPE.subhead,
+                  color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
+                  fontWeight: active ? 600 : 400,
+                }}>
+                  {tab.label}
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Camera button at bottom — quick add shortcut */}
+        <div style={{ padding: "16px 12px 28px" }}>
+          <button
+            onClick={handleCamera}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "11px 16px",
+              borderRadius: 10,
+              backgroundColor: `${SIGNAL_GREEN}18`,
+              border: `1px solid ${SIGNAL_GREEN}33`,
+              cursor: "pointer",
             }}>
-              {tab.label}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <span style={{ ...TYPE.subhead, fontWeight: 600, color: SIGNAL_GREEN }}>
+              Add Photo
             </span>
-          </Link>
-        )
-      })}
-    </nav>
+          </button>
+        </div>
+      </aside>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .found-mobile-nav { display: none !important; }
+          .found-sidebar    { display: flex !important; }
+        }
+      `}</style>
+    </>
   )
 }
