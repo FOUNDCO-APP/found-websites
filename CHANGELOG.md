@@ -5,6 +5,51 @@
 ---
 
 
+## Session: June 19, 2026 — Typography Rollout Complete + Desktop Sidebar Layout
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Applied shared typography system to the 3 remaining dashboard pages; built responsive desktop sidebar layout
+
+### ✅ Completed This Session
+
+**Typography system — fully rolled out across all dashboard pages:**
+- `more/page.tsx` — full rewrite: section headers 10px→`TYPE.caption` (13px), h1 22px→`TYPE.largeTitle` (34px), all row text uses `TYPE.subhead`/`TYPE.footnote`, opacities standardized to `TEXT_OPACITY` tiers, chevrons use `ICON.action` (18px), duplicate "Account" section label corrected to "Billing", `const SIGNAL_GREEN` replaced with import from typography
+- `photos/page.tsx` — h1 weight 200→300 (matches `TYPE.largeTitle`), subtitle opacity 0.25→`TEXT_OPACITY.tertiary` (0.55), empty state body opacity 0.3→0.55, empty state title weight 200→300
+- `SiteEditor.tsx` — all 8 caption labels 11px→`TYPE.caption` (13px), `TapToEdit` label 10px→13px, `PageTab` h2 26px→`TYPE.title` (24px), `const GREEN`/`const BLACK` replaced with imports from typography
+- Typography system now applied to every dashboard page ✅ (Leads, Contacts, Home, DashboardNav, More, Photos, SiteEditor)
+- Commits: `f87c359`
+
+**Desktop sidebar layout — responsive nav:**
+- Mobile (< 768px): existing bottom tab bar + camera FAB — completely unchanged
+- Desktop (≥ 768px): fixed 220px left sidebar replaces bottom nav
+  - FOUND wordmark at top of sidebar (weight 300, same as marketing)
+  - Signal Green accent line below wordmark
+  - All 5 nav items (Home / Leads / Photos / Contacts / More) as vertical rows: icon + label, active state = green left border + `${GREEN}12` fill + green text
+  - "Add Photo" button at sidebar bottom — same route as mobile camera FAB (`/photos`)
+  - Header FOUND wordmark hidden on desktop (sidebar has it)
+  - Content wrapper shifts right via `margin-left: 220px` CSS class
+  - Content max-width expanded 680px → 760px on desktop
+  - Bottom padding drops 120px → 48px when no bottom bar
+- Files: `src/components/dashboard/DashboardNav.tsx`, `src/app/dashboard/(app)/layout.tsx`
+- Commits: `94d7db4`
+
+### ⏳ Still Pending / Carry Forward
+
+- **Desktop E2E test** — activation banner, Home redesign, lead/contact detail sheets, typography, and sidebar all need a desktop browser pass to verify visuals and layout at 1280px+ width
+- **Rebrand/naming** — "FoundBizz"/"FoundBuzz" both tabled. No decision. Only weigh in on brand-fit when Shawn brings it back up. Do not push.
+- **Favicon 404** — all client sites throw 404 for `/favicon.svg`. Noisy in Vercel logs. Low priority.
+- **Remove `[Activate]` debug logs** from `activateActions.ts`
+- **Photo curation for 10 new industries** — `/admin/photos` session needed
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in Vercel dashboard** — needed for `/connect-domain` auto-registration in prod
+
+### 🔜 Next Session Priority
+
+1. Desktop E2E test — open `my.foundco.app` on desktop, verify sidebar, all tabs, activation banner, Home screen, lead/contact sheets
+2. Favicon 404 fix (quick)
+3. Remove debug logs from `activateActions.ts` (quick)
+4. Photo curation session at `/admin/photos`
+
+---
+
 ## Session: June 18, 2026 — Activation Banner, Dashboard Home Redesign, Lead/Contact Detail Sheets, Dynamic-Type Typography System
 **AI:** Claude (Sonnet 4.6) — claude.ai mobile chat interface
 **Worked on:** In-dashboard activation reminder, full Home screen redesign (two iterations), Apple-Contacts-style detail sheets for Leads and Contacts with edit capability, a shared rem-based typography system applied across the dashboard, and identity-based avatar colors.

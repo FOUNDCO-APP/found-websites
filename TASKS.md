@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 17, 2026 — end of session*
+*Last updated: June 19, 2026 — end of session*
 
 ---
 
@@ -24,23 +24,26 @@ What shipped today:
 
 ## NOW (MAX 3)
 
-1. **Apply shared typography system to Site editor, More tab, Photos tab** — `src/lib/dashboard/typography.ts` (rem-based, Dynamic-Type-style scale) was built and applied to Leads, Contacts, Home, and DashboardNav this session. Still needs to be applied to `SiteEditor.tsx`, `more/page.tsx`, and the Photos tab, which all still have original hardcoded px values.
+1. **Desktop E2E test** — open `my.foundco.app` on a desktop browser (1280px+) and verify: sidebar renders, all 5 tabs navigate correctly, activation banner shows for unactivated company, Home screen layout, lead/contact detail sheets, typography across all pages. Mobile should be unchanged.
 
-2. **Decide rebrand/naming direction (or table it)** — Shawn is weighing whether to rename for App Store launch. Explored "FoundBizz" / "FoundBuzz", neither landed. No decision made. Out of scope for AI to push toward a legal/business answer — only weigh in on brand-fit if asked.
+2. **Quick cleanup** — (a) remove `[Activate]` debug console logs from `activateActions.ts`; (b) fix favicon 404 on all client sites (`/favicon.svg` returns 404, noisy in Vercel logs)
 
-3. **Desktop end-to-end test of this session's changes** — activation banner, Home redesign, lead/contact detail sheets, and typography fixes were all built and tested on mobile only. Needs a desktop pass before considered fully verified.
+3. **Rebrand/naming — tabled** — "FoundBizz"/"FoundBuzz" explored, neither landed. No decision. Do not raise unless Shawn brings it up. Only weigh in on brand-feel, never legal/domain/entity.
 
 ---
 
-## RECENTLY COMPLETED (moved out of NOW — June 18, 2026 session)
-- ~~Remove trial from upgrade checkout~~ — confirmed no `trial_period_days` remains in `more/actions.ts`
-- ~~Stripe webhook secret verification~~ — confirmed `STRIPE_WEBHOOK_SECRET` wired up and webhook handler functioning
-- In-dashboard activation banner (white bar, green button, inline overlay — no black screen)
-- Lead/Contact detail sheets with full edit capability (PATCH /api/leads, updateContact action)
-- Home screen redesign (single decisive status card)
-- Shared typography system (Leads, Contacts, Home, DashboardNav)
-- Identity-based avatar colors (Apple Contacts style)
-- Bulk-fixed 14 companies with stale `plan: "found_pro"` → `plan: "found"`
+## RECENTLY COMPLETED (June 19, 2026 session)
+- ✅ Typography system rolled out to all remaining dashboard pages — `SiteEditor.tsx`, `more/page.tsx`, `photos/page.tsx`. Every dashboard page now uses `TYPE`, `TEXT_OPACITY`, `ICON` from `typography.ts`. Commits: `f87c359`
+- ✅ Desktop sidebar layout — responsive: mobile keeps bottom tab bar + FAB, desktop (≥ 768px) shows fixed 220px sidebar with wordmark, Signal Green accent, 5 vertical nav items, "Add Photo" button. Content shifts right, header wordmark hides, max-width 760px. Commits: `94d7db4`
+
+## RECENTLY COMPLETED (June 18, 2026 session)
+- ✅ Remove trial from upgrade checkout — confirmed no `trial_period_days` in `more/actions.ts`
+- ✅ In-dashboard activation banner (white bar, green button, inline overlay — no black screen)
+- ✅ Lead/Contact detail sheets with full edit capability (PATCH /api/leads, updateContact action)
+- ✅ Home screen redesign (single decisive status card)
+- ✅ Shared typography system (Leads, Contacts, Home, DashboardNav)
+- ✅ Identity-based avatar colors (Apple Contacts style)
+- ✅ Bulk-fixed 14 companies with stale `plan: "found_pro"` → `plan: "found"`
 
 ---
 
@@ -50,7 +53,7 @@ What shipped today:
 - Auto-reply message — owner writes it once during onboarding/settings, Found sends it to every new lead via Resend
 - Manual lead follow-up sequence — one toggle: "Follow up automatically if I don't reply in 24 hours"
 - Business card scanner — camera → OCR → pre-fill lead or contact form
-- Dashboard home/overview for desktop (sidebar nav, two-column leads/inbox)
+- ~~Dashboard home/overview for desktop (sidebar nav, two-column leads/inbox)~~ — sidebar shipped June 19
 - Real-time lead notifications (push notification when new lead arrives)
 - Contacts tags — allow custom tags beyond the preset 5
 - Photo Before & After social post creator
