@@ -7,7 +7,7 @@ import { openBillingPortal, startUpgradeCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
-  found:          { label: "Found",          founding: 29, normal: 39,  color: "#6B7280" },
+  found:          { label: "Found",          founding: 29, normal: 39,  color: GREEN },
   found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: GREEN },
   found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
 }
@@ -18,7 +18,7 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: n
     label: "Found Pro",
     foundingPrice: 39,
     normalPrice: 69,
-    features: ["Custom domain", "Lead tracking", "Auto-reply to leads", "Contact database", "Photo uploads"],
+    features: ["Custom domain", "Auto-reply to new leads", "Branded social exports", "Priority support"],
   },
   found_pro: {
     plan: "found_business",
@@ -115,24 +115,6 @@ export default async function MorePage() {
         </Link>
       </section>
 
-      {/* Billing details */}
-      <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Billing
-        </p>
-        <div style={{ borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
-          {company?.name && (
-            <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Business</p>
-              <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{company.name}</p>
-            </div>
-          )}
-          <div style={{ padding: "14px 18px" }}>
-            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Email</p>
-            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
-          </div>
-        </div>
-      </section>
 
       {/* Current plan */}
       <section style={{ marginBottom: upgrade ? 10 : 20 }}>
@@ -225,14 +207,6 @@ export default async function MorePage() {
           Settings
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {company?.slug && (
-            <a href={`/connect-domain?slug=${company.slug}`} style={{ textDecoration: "none" }}>
-              <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ ...TYPE.subhead, color: "white" }}>Connect your domain</span>
-                <ChevronRight />
-              </div>
-            </a>
-          )}
           {hasStripe && company?.id && (
             <form action={openBillingPortal}>
               <input type="hidden" name="companyId" value={company.id} />

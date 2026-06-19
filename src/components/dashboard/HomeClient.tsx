@@ -34,11 +34,12 @@ type Props = {
   topMessage: string | null
   topCreatedAt: string | null
   siteSlug: string
+  isActive: boolean
 }
 
 export default function HomeClient({
   firstName, greeting, newCount, totalCount,
-  topName, topEmail, topPhone, topMessage, topCreatedAt, siteSlug,
+  topName, topEmail, topPhone, topMessage, topCreatedAt, siteSlug, isActive,
 }: Props) {
   const [copied, setCopied] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -65,6 +66,7 @@ export default function HomeClient({
     ? `mailto:${topEmail}?subject=Re%3A%20Your%20inquiry&body=Hi%20${encodeURIComponent(topName ?? "there")}%2C%0A%0A`
     : null
   const hasNewLead = newCount > 0 && topName
+  const isWelcome = isActive && totalCount === 0 && !hasNewLead
 
   return (
     <main style={{
@@ -113,7 +115,7 @@ export default function HomeClient({
             </div>
 
             <h1 style={{
-              margin: "0 0 10px", fontSize: 30, fontWeight: 800, color: "white",
+              margin: "0 0 10px", fontSize: "1.875rem", fontWeight: 800, color: "white",
               letterSpacing: "-0.02em", lineHeight: 1.05,
             }}>
               {topName}
@@ -121,7 +123,7 @@ export default function HomeClient({
 
             {topMessage && (
               <p style={{
-                margin: "0 0 22px", fontSize: 15, color: "rgba(255,255,255,0.65)",
+                margin: "0 0 22px", fontSize: "0.9375rem", color: "rgba(255,255,255,0.65)",
                 lineHeight: 1.55,
                 display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
               } as React.CSSProperties}>
@@ -140,7 +142,7 @@ export default function HomeClient({
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
                   </svg>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: BLACK }}>Call</span>
+                  <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: BLACK }}>Call</span>
                 </a>
               )}
               {emailHref && (
@@ -153,10 +155,47 @@ export default function HomeClient({
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                     <polyline points="22,6 12,13 2,6"/>
                   </svg>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: "white" }}>Reply</span>
+                  <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: "white" }}>Reply</span>
                 </a>
               )}
             </div>
+          </div>
+        ) : isWelcome ? (
+          // ── STATE: JUST WENT LIVE — share the site ──
+          <div style={{
+            borderRadius: 28,
+            padding: "26px 24px",
+            background: "linear-gradient(160deg, rgba(50,208,116,0.10), rgba(50,208,116,0.03))",
+            border: `1px solid rgba(50,208,116,0.18)`,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+              <div style={{
+                width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN,
+                boxShadow: `0 0 10px ${GREEN}`, animation: "breathe 2s ease-in-out infinite",
+              }}/>
+              <span style={{ color: GREEN, ...TYPE.caption }}>You&apos;re live</span>
+            </div>
+            <h1 style={{
+              margin: "0 0 8px", fontSize: "1.875rem", fontWeight: 300, color: "white",
+              letterSpacing: "-0.03em", lineHeight: 1.05,
+            }}>
+              Share your site.
+            </h1>
+            <p style={{
+              margin: "0 0 22px", ...TYPE.subhead, fontWeight: 400,
+              color: `rgba(255,255,255,0.55)`, lineHeight: 1.6,
+            }}>
+              Your first lead could come from the next person you talk to. Send them your link.
+            </p>
+            <button onClick={handleShare} style={{
+              width: "100%", padding: "15px 0", borderRadius: 100,
+              backgroundColor: GREEN, border: "none", cursor: "pointer",
+              fontSize: "0.8125rem", fontWeight: 900, color: BLACK,
+              letterSpacing: "0.1em", textTransform: "uppercase" as const,
+              boxShadow: `0 0 24px rgba(50,208,116,0.3)`,
+            }}>
+              {copied ? "Link Copied ✓" : "Share My Site →"}
+            </button>
           </div>
         ) : (
           // ── STATE: CAUGHT UP — short, high-contrast, confident ──
@@ -171,14 +210,14 @@ export default function HomeClient({
                 width: 9, height: 9, borderRadius: "50%", backgroundColor: GREEN,
                 boxShadow: `0 0 12px ${GREEN}`, animation: "breathe 2.4s ease-in-out infinite",
               }}/>
-              <span style={{ fontSize: 22, fontWeight: 700, color: "white", letterSpacing: "-0.01em" }}>
+              <span style={{ ...TYPE.title, color: "white" }}>
                 All caught up
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: 14, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
+            <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
               {totalCount > 0
                 ? `${totalCount} ${totalCount === 1 ? "lead" : "leads"} so far. New ones land right here.`
-                : "Your site is live. New leads will land right here."}
+                : "New leads land right here."}
             </p>
           </div>
         )}
@@ -205,7 +244,7 @@ export default function HomeClient({
               <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 900, color: BLACK }}>Add Lead</span>
+            <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: BLACK }}>Add Lead</span>
           </button>
 
           <Link href="/photos" style={{
@@ -217,7 +256,7 @@ export default function HomeClient({
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            <span style={{ fontSize: 13, fontWeight: 900, color: "white" }}>Add Photo</span>
+            <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: "white" }}>Add Photo</span>
           </Link>
         </div>
 
@@ -226,7 +265,7 @@ export default function HomeClient({
           backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
           cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
+          <span style={{ fontSize: "0.8125rem", fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
             {copied ? "Link copied ✓" : "Share your site"}
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -249,10 +288,10 @@ export default function HomeClient({
             backgroundColor: "rgba(255,255,255,0.025)",
             textDecoration: "none",
           }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>
+            <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>
               <strong style={{ color: "white", fontWeight: 800 }}>{totalCount}</strong> total {totalCount === 1 ? "lead" : "leads"}
             </span>
-            <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, letterSpacing: "0.04em" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: 900, color: GREEN, letterSpacing: "0.04em" }}>
               View all →
             </span>
           </Link>
@@ -264,7 +303,7 @@ export default function HomeClient({
         <a href={`https://${siteSlug}.foundco.app`} target="_blank" rel="noopener noreferrer"
           style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
           <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}`, flexShrink: 0 }}/>
-          <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>
             {siteSlug}.foundco.app
           </span>
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 
 type Photo = {
@@ -20,6 +21,15 @@ export default function PhotosPage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (searchParams.get("upload") === "1") {
+      fileRef.current?.click()
+      router.replace("/photos")
+    }
+  }, [searchParams, router])
 
   useEffect(() => {
     fetch("/api/photos")

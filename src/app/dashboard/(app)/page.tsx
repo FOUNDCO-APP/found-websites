@@ -34,6 +34,7 @@ export default async function HomePage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
   const firstName = (company.name ?? "").split(" ")[0] || "there"
+  const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
 
   return (
     <HomeClient
@@ -47,6 +48,7 @@ export default async function HomePage() {
       topMessage={topMessage}
       topCreatedAt={top?.created_at ?? null}
       siteSlug={company.slug}
+      isActive={isActive}
     />
   )
 }

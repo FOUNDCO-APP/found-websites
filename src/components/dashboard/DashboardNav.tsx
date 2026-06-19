@@ -83,7 +83,7 @@ const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/more":     (a) => <MoreIcon     active={a} />,
 }
 
-export default function DashboardNav() {
+export default function DashboardNav({ companyName }: { companyName?: string | null }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -98,7 +98,7 @@ export default function DashboardNav() {
 
   function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
-    router.push(`${prefix}/photos`)
+    router.push(`${prefix}/photos?upload=1`)
   }
 
   const leftTabs  = TABS.slice(0, 2)
@@ -234,7 +234,20 @@ export default function DashboardNav() {
         </div>
 
         {/* Signal Green accent line */}
-        <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30`, margin: "0 0 16px" }} />
+        <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30`, margin: "0 0 0" }} />
+
+        {/* Company name — below accent, above nav */}
+        {companyName && (
+          <div style={{ padding: "12px 20px 12px" }}>
+            <span style={{
+              fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.12em",
+              textTransform: "uppercase", color: `rgba(255,255,255,0.3)`,
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
+            }}>
+              {companyName}
+            </span>
+          </div>
+        )}
 
         {/* Nav items */}
         <div style={{ flex: 1, padding: "4px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
@@ -255,7 +268,7 @@ export default function DashboardNav() {
                 <span style={{
                   ...TYPE.subhead,
                   color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
-                  fontWeight: active ? 600 : 400,
+                  fontWeight: active ? 600 : 500,
                 }}>
                   {tab.label}
                 </span>

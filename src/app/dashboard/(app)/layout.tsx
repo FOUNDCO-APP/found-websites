@@ -5,8 +5,7 @@ import DashboardNav from "@/components/dashboard/DashboardNav"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
 
-const BLACK = "#080A09"
-const GREEN = "#32D074"
+import { BLACK } from "@/lib/dashboard/typography"
 
 export const metadata = { title: "Found" }
 
@@ -27,8 +26,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main content — shifts right of sidebar on desktop */}
       <div className="found-dashboard-main">
 
-        {/* ── Header ── */}
-        <header style={{
+        {/* ── Header — hidden on desktop (sidebar carries wordmark + company name) ── */}
+        <header className="found-dashboard-header" style={{
           position: "sticky", top: 0, zIndex: 40,
           backgroundColor: "rgba(8,10,9,0.92)",
           backdropFilter: "blur(16px)",
@@ -84,7 +83,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </header>
 
         {/* Activation banner */}
-        {company && !company.subscription_status && (
+        {company && company.subscription_status !== "active" && company.subscription_status !== "trialing" && (
           <ActivationBanner
             slug={company.slug}
             setupIntentSecret={(company as Record<string, unknown>).pending_setup_intent_secret as string | null}
@@ -98,18 +97,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       </div>
 
-      <DashboardNav />
+      <DashboardNav companyName={company?.name ?? null} />
 
       <style>{`
         @media (min-width: 768px) {
           .found-dashboard-main {
             margin-left: 220px;
           }
-          .found-dashboard-content {
-            padding-bottom: 48px !important;
+          .found-dashboard-header {
+            display: none !important;
           }
-          .found-header-wordmark {
-            display: none;
+          .found-dashboard-content {
+            padding-top: 28px;
+            padding-bottom: 48px !important;
           }
         }
       `}</style>

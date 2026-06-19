@@ -27,12 +27,9 @@ export async function createActivationSetup(slug: string): Promise<{
     .eq("slug", slug)
     .single()
 
-  console.log(`[Activate] slug="${slug}" company=${company?.id ?? "NOT FOUND"} stripe_customer_id=${company?.stripe_customer_id ?? "null"} pending_secret=${company?.pending_setup_intent_secret ? "SET" : "null"} dbError=${dbError?.message ?? "none"}`)
-
   if (!company) return null
   // Only block if truly active — customer_id alone doesn't mean they completed payment
   if ((company as Record<string,unknown>).subscription_status === "active") {
-    console.error(`[Activate] Already activated for slug="${slug}"`)
     return null
   }
 
