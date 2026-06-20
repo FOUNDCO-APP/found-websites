@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 
 type Photo = {
   id: string
@@ -55,12 +55,19 @@ export default function PhotosPage() {
   const [shareAlbum, setShareAlbum] = useState<Album | null>(null)
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
+  const [industry, setIndustry] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
 
+  const albumLabel = albumLabelFor(industry)
+
   useEffect(() => {
-    if (searchParams.get("upload") === "1") {
+    const albumId = searchParams.get("album")
+    const upload = searchParams.get("upload")
+    if (upload === "1") {
+      if (albumId) pendingAlbumIdRef.current = albumId
       fileRef.current?.click()
       router.replace("/photos")
     }
@@ -70,11 +77,12 @@ export default function PhotosPage() {
     Promise.all([
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
-      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "" })),
+      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null })),
     ]).then(([pd, ad, sd]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
+      setIndustry(sd.industry ?? null)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -87,7 +95,25 @@ export default function PhotosPage() {
     form.append("file", file)
     const res = await fetch("/api/photos", { method: "POST", body: form })
     const data = await res.json()
-    if (data.photo) setPhotos(prev => [{ ...data.photo, album_id: null }, ...prev])
+    if (data.photo) {
+      const albumId = pendingAlbumIdRef.current
+      const newPhoto = { ...data.photo, album_id: albumId ?? null }
+      setPhotos(prev => [newPhoto, ...prev])
+      if (albumId) {
+        fetch("/api/photos", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
+        }).catch(console.error)
+        // Navigate into the album
+        const target = albums.find(a => a.id === albumId)
+        if (target) {
+          setView("projects")
+          setActiveAlbum(target)
+        }
+      }
+      pendingAlbumIdRef.current = null
+    }
     setUploading(false)
     if (fileRef.current) fileRef.current.value = ""
   }
@@ -98,15 +124,6 @@ export default function PhotosPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, [field]: !current }),
-    }).catch(console.error)
-  }
-
-  async function assignAlbum(photoId: string, albumId: string | null) {
-    setPhotos(prev => prev.map(p => p.id === photoId ? { ...p, album_id: albumId } : p))
-    fetch("/api/photos", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: photoId, album_id: albumId }),
     }).catch(console.error)
   }
 
@@ -155,7 +172,12 @@ export default function PhotosPage() {
     setShareAlbum(null)
   }
 
-  const queue   = photos.filter(p => !p.for_website && !p.for_social && !p.album_id)
+  function openCamera() {
+    if (activeAlbum) pendingAlbumIdRef.current = activeAlbum.id
+    fileRef.current?.click()
+  }
+
+  const unsorted  = photos.filter(p => !p.for_website && !p.for_social && !p.album_id)
   const website = photos.filter(p => p.for_website)
   const social  = photos.filter(p => p.for_social)
 
@@ -164,12 +186,12 @@ export default function PhotosPage() {
     : []
 
   const currentPhotos =
-    view === "queue"   ? queue :
+    view === "queue"   ? unsorted :
     view === "website" ? website :
     view === "social"  ? social : []
 
-  const TAB_COUNTS = { queue: queue.length, website: website.length, social: social.length, projects: albums.length }
-  const TAB_LABELS = { queue: "New", website: "Website", social: "Social", projects: "Projects" }
+  const TAB_COUNTS = { queue: unsorted.length, website: website.length, social: social.length, projects: albums.length }
+  const TAB_LABELS = { queue: "Unsorted", website: "Website", social: "Social", projects: albumLabel.plural }
 
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
@@ -181,7 +203,7 @@ export default function PhotosPage() {
             <>
               <button onClick={() => setActiveAlbum(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Projects</span>
+                <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
               </button>
               <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{activeAlbum.name}</h1>
               <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
@@ -214,7 +236,7 @@ export default function PhotosPage() {
               </svg>
             </button>
           )}
-          <button onClick={() => fileRef.current?.click()} disabled={uploading} style={{
+          <button onClick={openCamera} disabled={uploading} style={{
             width: 44, height: 44, borderRadius: "50%",
             backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -275,9 +297,9 @@ export default function PhotosPage() {
             photos={albumPhotos}
             onFlag={flag}
             onRemove={remove}
-            emptyTitle="No photos in this project yet."
-            emptySub="Tap + to take a photo, then assign it here."
-            onAdd={() => fileRef.current?.click()}
+            emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
+            emptySub="Tap the camera button to add photos."
+            onAdd={openCamera}
             showAddCta
           />
         ) : view === "projects" ? (
@@ -285,6 +307,7 @@ export default function PhotosPage() {
           <ProjectsTab
             albums={albums}
             photos={photos}
+            albumLabel={albumLabel}
             showNew={showNewAlbum}
             newName={newAlbumName}
             saving={savingAlbum}
@@ -297,7 +320,7 @@ export default function PhotosPage() {
             onDelete={deleteAlbum}
           />
         ) : (
-          /* ── NEW / WEBSITE / SOCIAL TABS — date-grouped ── */
+          /* ── UNSORTED / WEBSITE / SOCIAL TABS — date-grouped ── */
           <DateGroupedGrid
             photos={currentPhotos}
             onFlag={flag}
@@ -309,15 +332,15 @@ export default function PhotosPage() {
             }
             emptySub={
               view === "queue"   ? "Tap the camera button. Photos stay here — not in your camera roll." :
-              view === "website" ? "Heart any photo in the New tab and it'll appear here ready for your site." :
-              "Star any photo in the New tab and Found will format it with your branding."
+              view === "website" ? "Heart any photo and it'll appear here, ready for your site." :
+              "Star any photo and Found will format it with your branding."
             }
             emptyIcon={
               view === "queue" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> :
               view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             }
-            onAdd={view === "queue" ? () => fileRef.current?.click() : undefined}
+            onAdd={view === "queue" ? openCamera : undefined}
             showAddCta={view === "queue"}
           />
         )}
@@ -396,11 +419,12 @@ function DateGroupedGrid({
 
 // ── Projects tab ──
 function ProjectsTab({
-  albums, photos, showNew, newName, saving,
+  albums, photos, albumLabel, showNew, newName, saving,
   onShowNew, onHideNew, onNameChange, onCreate, onOpen, onShare, onDelete,
 }: {
   albums: Album[]
   photos: Photo[]
+  albumLabel: { singular: string; plural: string; create: string }
   showNew: boolean
   newName: string
   saving: boolean
@@ -417,19 +441,19 @@ function ProjectsTab({
       {/* New album form */}
       {showNew ? (
         <div style={{ borderRadius: 20, padding: 20, backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}22`, marginBottom: 6 }}>
-          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN, marginBottom: 14 }}>New Project</div>
+          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN, marginBottom: 14 }}>{albumLabel.create}</div>
           <input
             autoFocus
             value={newName}
             onChange={e => onNameChange(e.target.value)}
             onKeyDown={e => e.key === "Enter" && onCreate()}
-            placeholder="Project name (e.g. Kitchen Remodel, June 2026)"
+            placeholder={`${albumLabel.singular} name…`}
             style={{ width: "100%", padding: "13px 16px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "0.9375rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 12 }}
           />
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onHideNew} style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
             <button onClick={onCreate} disabled={!newName.trim() || saving} style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.3)", fontSize: "0.8125rem", fontWeight: 700, cursor: newName.trim() ? "pointer" : "default" }}>
-              {saving ? "Creating…" : "Create Project"}
+              {saving ? "Creating…" : `Create ${albumLabel.singular}`}
             </button>
           </div>
         </div>
@@ -444,7 +468,7 @@ function ProjectsTab({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>
-          New Project
+          {albumLabel.create}
         </button>
       )}
 
@@ -455,7 +479,7 @@ function ProjectsTab({
               <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
             </svg>
           </div>
-          <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>Create your first project.</p>
+          <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>Create your first {albumLabel.singular.toLowerCase()}.</p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
             Group photos by job, client, or event.<br/>Share a branded link with any client.
           </p>

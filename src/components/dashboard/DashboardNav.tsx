@@ -1,9 +1,9 @@
 "use client"
 
-import React from "react"
+import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE } from "@/lib/dashboard/typography"
+import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor } from "@/lib/dashboard/typography"
 
 type Tab = { path: string; label: string }
 
@@ -83,7 +83,15 @@ const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/more":     (a) => <MoreIcon     active={a} />,
 }
 
-export default function DashboardNav({ companyName, newLeadCount = 0 }: { companyName?: string | null; newLeadCount?: number }) {
+export default function DashboardNav({
+  companyName,
+  newLeadCount = 0,
+  industry = null,
+}: {
+  companyName?: string | null
+  newLeadCount?: number
+  industry?: string | null
+}) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -91,14 +99,34 @@ export default function DashboardNav({ companyName, newLeadCount = 0 }: { compan
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
   const prefix  = isDev ? "/dashboard" : ""
 
+  const albumLabel = albumLabelFor(industry)
+
+  const [showPicker, setShowPicker] = useState(false)
+  const [pickerAlbums, setPickerAlbums] = useState<{ id: string; name: string }[]>([])
+  const [pickerLoading, setPickerLoading] = useState(false)
+
   function isActive(tabPath: string) {
     if (tabPath === "/") return segment === "/"
     return segment === tabPath || segment.startsWith(tabPath + "/")
   }
 
-  function handleCamera(e: React.MouseEvent) {
+  async function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
-    router.push(`${prefix}/photos?upload=1`)
+    // If already on photos page, route directly — photos page handles album context
+    if (segment === "/photos" || segment.startsWith("/photos/")) {
+      router.push(`${prefix}/photos?upload=1`)
+      return
+    }
+    // From any other page: show project picker first
+    setPickerLoading(true)
+    setShowPicker(true)
+    try {
+      const res = await fetch(`${prefix}/api/albums`)
+      const data = await res.json()
+      setPickerAlbums(data.albums ?? [])
+    } finally {
+      setPickerLoading(false)
+    }
   }
 
   const leftTabs  = TABS.slice(0, 2)
@@ -314,6 +342,69 @@ export default function DashboardNav({ companyName, newLeadCount = 0 }: { compan
           </button>
         </div>
       </aside>
+
+      {/* ── Camera pre-flight: project picker ── */}
+      {showPicker && (
+        <>
+          <div
+            onClick={() => setShowPicker(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+            backgroundColor: "#101411",
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "28px 28px 0 0",
+            padding: "14px 24px 40px",
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+            <p style={{ margin: "0 0 16px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+              Add to a {albumLabel.singular.toLowerCase()}?
+            </p>
+
+            {pickerLoading ? (
+              <div style={{ padding: "20px 0", textAlign: "center", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                Loading…
+              </div>
+            ) : (
+              <>
+                {pickerAlbums.slice(0, 5).map(album => (
+                  <button
+                    key={album.id}
+                    onClick={() => {
+                      setShowPicker(false)
+                      router.push(`${prefix}/photos?upload=1&album=${album.id}`)
+                    }}
+                    style={{
+                      width: "100%", padding: "15px 18px", marginBottom: 8, borderRadius: 14,
+                      border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)",
+                      color: "white", textAlign: "left", cursor: "pointer",
+                      ...TYPE.subhead, fontWeight: 600,
+                    }}
+                  >
+                    {album.name}
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setShowPicker(false)
+                    router.push(`${prefix}/photos?upload=1`)
+                  }}
+                  style={{
+                    width: "100%", padding: "15px 18px", marginTop: pickerAlbums.length > 0 ? 4 : 0,
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,255,255,0.05)", backgroundColor: "transparent",
+                    color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textAlign: "left", cursor: "pointer",
+                    ...TYPE.subhead, fontWeight: 400,
+                  }}
+                >
+                  No {albumLabel.singular.toLowerCase()} — sort later
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
 
       <style>{`
         @media (min-width: 768px) {

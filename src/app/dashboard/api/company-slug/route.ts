@@ -6,5 +6,5 @@ export async function GET() {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ slug: null }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
-  return NextResponse.json({ slug: company?.slug ?? null })
+  return NextResponse.json({ slug: company?.slug ?? null, industry: company?.industry_category ?? null })
 }

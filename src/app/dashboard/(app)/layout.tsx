@@ -110,7 +110,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       </div>
 
-      <DashboardNav companyName={company?.name ?? null} newLeadCount={newLeadCount} />
+      <DashboardNav companyName={company?.name ?? null} newLeadCount={newLeadCount} industry={company?.industry_category ?? null} />
 
       <style>{`
         @media (min-width: 768px) {

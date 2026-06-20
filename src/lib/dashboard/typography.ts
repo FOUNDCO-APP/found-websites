@@ -102,6 +102,33 @@ const AVATAR_PALETTE = [
   "#A89368", // soft gold
 ]
 
+export type AlbumLabel = { singular: string; plural: string; create: string }
+
+const ALBUM_LABEL_MAP: Record<string, AlbumLabel> = {
+  restaurant:            { singular: "Event",      plural: "Events",       create: "New Event" },
+  food_beverage:         { singular: "Event",      plural: "Events",       create: "New Event" },
+  home_based_food:       { singular: "Item",       plural: "Items",        create: "New Item" },
+  salon:                 { singular: "Look",       plural: "Looks",        create: "New Look" },
+  beauty:                { singular: "Look",       plural: "Looks",        create: "New Look" },
+  spa:                   { singular: "Treatment",  plural: "Treatments",   create: "New Treatment" },
+  retail:                { singular: "Collection", plural: "Collections",  create: "New Collection" },
+  makers_crafts:         { singular: "Collection", plural: "Collections",  create: "New Collection" },
+  music_performance:     { singular: "Show",       plural: "Shows",        create: "New Show" },
+  music:                 { singular: "Show",       plural: "Shows",        create: "New Show" },
+  childcare:             { singular: "Memory",     plural: "Memories",     create: "New Memory" },
+  education:             { singular: "Moment",     plural: "Moments",      create: "New Moment" },
+  real_estate:           { singular: "Listing",    plural: "Listings",     create: "New Listing" },
+  home_property:         { singular: "Property",   plural: "Properties",   create: "New Property" },
+  photography:           { singular: "Shoot",      plural: "Shoots",       create: "New Shoot" },
+  healthcare:            { singular: "Visit",      plural: "Visits",       create: "New Visit" },
+  nonprofit:             { singular: "Story",      plural: "Stories",      create: "New Story" },
+  professional_services: { singular: "Case",       plural: "Cases",        create: "New Case" },
+}
+
+export function albumLabelFor(industry: string | null | undefined): AlbumLabel {
+  return ALBUM_LABEL_MAP[industry ?? ""] ?? { singular: "Project", plural: "Projects", create: "New Project" }
+}
+
 export function avatarColorFor(name: string | null | undefined): string {
   const str = (name || "?").trim()
   let hash = 0

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
 import GalleryLightbox from "@/components/GalleryLightbox"
@@ -26,14 +27,24 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   if (!company) notFound()
 
   const supabase = await createClient()
-  const { data: photos } = await supabase
-    .from("media")
-    .select("id, url, thumbnail_url, type")
-    .eq("company_id", company.id)
-    .eq("website_flag", true)
-    .eq("type", "photo")
-    .order("gallery_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false })
+  const admin = createAdminClient()
+
+  const [mediaResult, dashboardResult] = await Promise.all([
+    supabase
+      .from("media")
+      .select("id, url, thumbnail_url, type")
+      .eq("company_id", company.id)
+      .eq("website_flag", true)
+      .eq("type", "photo")
+      .order("gallery_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false }),
+    admin
+      .from("company_photos")
+      .select("id, url")
+      .eq("company_id", company.id)
+      .eq("for_website", true)
+      .order("created_at", { ascending: false }),
+  ])
 
   const primary = company.primary_color
   const imgs = await getStockImages(company)
@@ -45,9 +56,11 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
-  // Combine owner's real photos WITH remaining stock images
-  // Owner photos come first, then stock images they haven't removed
-  const ownerPhotos = photos ? photos.map(p => p.thumbnail_url || p.url) : []
+  // Dashboard photos (hearted) are primary; legacy media photos fill in unique URLs
+  const dashUrls = (dashboardResult.data ?? []).map(p => p.url)
+  const mediaUrls = (mediaResult.data ?? []).map(p => p.thumbnail_url || p.url).filter(u => !dashUrls.includes(u))
+  const ownerPhotos = [...dashUrls, ...mediaUrls]
+
   const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: string[] = [...ownerPhotos, ...stockPhotos.filter(url => !ownerPhotos.includes(url))]
 
