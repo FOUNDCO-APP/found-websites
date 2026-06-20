@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor } from "@/lib/dashboard/typography"
@@ -95,37 +95,69 @@ export default function DashboardNav({
   const pathname = usePathname()
   const router = useRouter()
 
-  const isDev = pathname.startsWith("/dashboard")
+  const isDev  = pathname.startsWith("/dashboard")
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
   const prefix  = isDev ? "/dashboard" : ""
 
   const albumLabel = albumLabelFor(industry)
 
+  // Pre-fetched so the sheet opens with zero delay
+  const [albums, setAlbums] = useState<{ id: string; name: string }[]>([])
   const [showPicker, setShowPicker] = useState(false)
-  const [pickerAlbums, setPickerAlbums] = useState<{ id: string; name: string }[]>([])
-  const [pickerLoading, setPickerLoading] = useState(false)
+  const [showNewAlbum, setShowNewAlbum] = useState(false)
+  const [newAlbumName, setNewAlbumName] = useState("")
+  const [creating, setCreating] = useState(false)
+  const newAlbumInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch(`${prefix}/api/albums`)
+      .then(r => r.json())
+      .then(d => setAlbums(d.albums ?? []))
+      .catch(() => {})
+  }, [prefix])
 
   function isActive(tabPath: string) {
     if (tabPath === "/") return segment === "/"
     return segment === tabPath || segment.startsWith(tabPath + "/")
   }
 
-  async function handleCamera(e: React.MouseEvent) {
+  function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
-    // If already on photos page, route directly — photos page handles album context
     if (segment === "/photos" || segment.startsWith("/photos/")) {
       router.push(`${prefix}/photos?upload=1`)
       return
     }
-    // From any other page: show project picker first
-    setPickerLoading(true)
     setShowPicker(true)
+  }
+
+  function closePicker() {
+    setShowPicker(false)
+    setShowNewAlbum(false)
+    setNewAlbumName("")
+  }
+
+  function shoot(albumId?: string) {
+    closePicker()
+    const q = albumId ? `?upload=1&album=${albumId}` : "?upload=1"
+    router.push(`${prefix}/photos${q}`)
+  }
+
+  async function handleCreate() {
+    if (!newAlbumName.trim() || creating) return
+    setCreating(true)
     try {
-      const res = await fetch(`${prefix}/api/albums`)
+      const res = await fetch(`${prefix}/api/albums`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newAlbumName.trim() }),
+      })
       const data = await res.json()
-      setPickerAlbums(data.albums ?? [])
+      if (data.album) {
+        setAlbums(prev => [data.album, ...prev])
+        shoot(data.album.id)
+      }
     } finally {
-      setPickerLoading(false)
+      setCreating(false)
     }
   }
 
@@ -136,33 +168,23 @@ export default function DashboardNav({
     <>
       {/* ── Mobile: bottom tab bar ── */}
       <nav className="found-mobile-nav" style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
+        position: "fixed", bottom: 0, left: 0, right: 0,
         backgroundColor: "#080A09",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderTop: "1px solid rgba(255,255,255,0.1)",
-        display: "flex",
-        alignItems: "flex-end",
+        display: "flex", alignItems: "flex-end",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         zIndex: 50,
       }}>
-        {/* Left tabs */}
-        {leftTabs.map((tab) => {
+        {leftTabs.map(tab => {
           const active = isActive(tab.path)
           const showBadge = tab.path === "/leads" && newLeadCount > 0 && !active
           return (
             <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              textDecoration: "none",
-              padding: "12px 0 14px",
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              gap: 4, textDecoration: "none", padding: "12px 0 14px",
             }}>
               <div style={{ position: "relative" }}>
                 {ICONS[tab.path](active)}
@@ -170,71 +192,42 @@ export default function DashboardNav({
                   <div style={{
                     position: "absolute", top: -2, right: -2,
                     width: 8, height: 8, borderRadius: "50%",
-                    backgroundColor: "#FF3B30",
-                    border: "1.5px solid #080A09",
+                    backgroundColor: "#FF3B30", border: "1.5px solid #080A09",
                   }}/>
                 )}
               </div>
-              <span style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: "0.08em",
-                color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-                textTransform: "uppercase",
-              }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
                 {tab.label}
               </span>
             </Link>
           )
         })}
 
-        {/* Center camera FAB */}
+        {/* Camera FAB */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 10 }}>
-          <button
-            onClick={handleCamera}
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              backgroundColor: SIGNAL_GREEN,
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: `0 0 20px ${SIGNAL_GREEN}55`,
-              marginTop: -20,
-            }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-              stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={handleCamera} style={{
+            width: 52, height: 52, borderRadius: "50%",
+            backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 0 20px ${SIGNAL_GREEN}55`, marginTop: -20,
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
           </button>
         </div>
 
-        {/* Right tabs */}
-        {rightTabs.map((tab) => {
+        {rightTabs.map(tab => {
           const active = isActive(tab.path)
           return (
             <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-              textDecoration: "none",
-              padding: "12px 0 14px",
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center",
+              gap: 4, textDecoration: "none", padding: "12px 0 14px",
             }}>
               {ICONS[tab.path](active)}
-              <span style={{
-                fontSize: 10,
-                fontWeight: 800,
-                letterSpacing: "0.08em",
-                color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-                textTransform: "uppercase",
-              }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>
                 {tab.label}
               </span>
             </Link>
@@ -244,164 +237,193 @@ export default function DashboardNav({
 
       {/* ── Desktop: left sidebar ── */}
       <aside className="found-sidebar" style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        bottom: 0,
-        width: 220,
+        position: "fixed", top: 0, left: 0, bottom: 0, width: 220,
         backgroundColor: "#080A09",
         borderRight: "1px solid rgba(255,255,255,0.07)",
-        flexDirection: "column",
-        zIndex: 50,
-        display: "none", // shown via media query
+        flexDirection: "column", zIndex: 50, display: "none",
       }}>
-        {/* Wordmark */}
         <div style={{ padding: "24px 20px 20px" }}>
           <svg viewBox="0 0 420 72" style={{ height: 16, width: 88, color: "white", display: "block" }} aria-label="Found">
             <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
           </svg>
         </div>
-
-        {/* Signal Green accent line */}
-        <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30`, margin: "0 0 0" }} />
-
-        {/* Company name — below accent, above nav */}
+        <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30` }} />
         {companyName && (
-          <div style={{ padding: "12px 20px 12px" }}>
-            <span style={{
-              ...TYPE.caption, fontWeight: 600, letterSpacing: "0.02em", textTransform: "none",
-              color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
-            }}>
+          <div style={{ padding: "12px 20px" }}>
+            <span style={{ ...TYPE.caption, fontWeight: 600, letterSpacing: "0.02em", textTransform: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>
               {companyName}
             </span>
           </div>
         )}
-
-        {/* Nav items */}
         <div style={{ flex: 1, padding: "4px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {TABS.map((tab) => {
+          {TABS.map(tab => {
             const active = isActive(tab.path)
             return (
               <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
-                textDecoration: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "10px 12px 10px 13px",
-                borderRadius: 10,
+                textDecoration: "none", display: "flex", alignItems: "center", gap: 12,
+                padding: "10px 12px 10px 13px", borderRadius: 10,
                 backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent",
                 borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}`,
               }}>
                 <div style={{ position: "relative" }}>
                   {ICONS[tab.path](active)}
                   {tab.path === "/leads" && newLeadCount > 0 && !active && (
-                    <div style={{
-                      position: "absolute", top: -2, right: -2,
-                      width: 8, height: 8, borderRadius: "50%",
-                      backgroundColor: "#FF3B30",
-                      border: "1.5px solid #080A09",
-                    }}/>
+                    <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>
                   )}
                 </div>
-                <span style={{
-                  ...TYPE.subhead,
-                  color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
-                  fontWeight: active ? 600 : 500,
-                }}>
+                <span style={{ ...TYPE.subhead, color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, fontWeight: active ? 600 : 500 }}>
                   {tab.label}
                 </span>
               </Link>
             )
           })}
         </div>
-
-        {/* Camera button at bottom — quick add shortcut */}
         <div style={{ padding: "16px 12px 28px" }}>
-          <button
-            onClick={handleCamera}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: "11px 16px",
-              borderRadius: 10,
-              backgroundColor: `${SIGNAL_GREEN}18`,
-              border: `1px solid ${SIGNAL_GREEN}33`,
-              cursor: "pointer",
-            }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <button onClick={handleCamera} style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            padding: "11px 16px", borderRadius: 10,
+            backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, cursor: "pointer",
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
-            <span style={{ ...TYPE.subhead, fontWeight: 600, color: SIGNAL_GREEN }}>
-              Add Photo
-            </span>
+            <span style={{ ...TYPE.subhead, fontWeight: 600, color: SIGNAL_GREEN }}>Add Photo</span>
           </button>
         </div>
       </aside>
 
-      {/* ── Camera pre-flight: project picker ── */}
+      {/* ── Camera picker ── */}
       {showPicker && (
         <>
+          {/* Backdrop */}
           <div
-            onClick={() => setShowPicker(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+            onClick={closePicker}
+            style={{
+              position: "fixed", inset: 0, zIndex: 60,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(3px)",
+              WebkitBackdropFilter: "blur(3px)",
+              animation: "pickerFade 0.15s ease",
+            }}
           />
+
+          {/* Sheet */}
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
-            backgroundColor: "#101411",
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "28px 28px 0 0",
-            padding: "14px 24px 40px",
+            backgroundColor: "#0E1210",
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: "20px 20px 0 0",
+            padding: "8px 16px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+            animation: "sheetUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)",
           }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
-            <p style={{ margin: "0 0 16px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-              Add to a {albumLabel.singular.toLowerCase()}?
-            </p>
+            {/* Handle */}
+            <div style={{ width: 32, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", margin: "4px auto 16px" }}/>
 
-            {pickerLoading ? (
-              <div style={{ padding: "20px 0", textAlign: "center", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-                Loading…
-              </div>
-            ) : (
+            {/* Primary: open camera now */}
+            <button
+              onClick={() => shoot()}
+              style={{
+                width: "100%", padding: "15px 20px", borderRadius: 14,
+                backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 12,
+                boxShadow: `0 0 24px ${SIGNAL_GREEN}30`,
+                marginBottom: 10,
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span style={{ ...TYPE.subhead, fontWeight: 700, color: FOUND_BLACK }}>Take a Photo</span>
+            </button>
+
+            {/* Albums list */}
+            {albums.length > 0 && (
               <>
-                {pickerAlbums.slice(0, 5).map(album => (
-                  <button
-                    key={album.id}
-                    onClick={() => {
-                      setShowPicker(false)
-                      router.push(`${prefix}/photos?upload=1&album=${album.id}`)
-                    }}
-                    style={{
-                      width: "100%", padding: "15px 18px", marginBottom: 8, borderRadius: 14,
-                      border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)",
-                      color: "white", textAlign: "left", cursor: "pointer",
-                      ...TYPE.subhead, fontWeight: 600,
-                    }}
-                  >
-                    {album.name}
-                  </button>
-                ))}
-                <button
-                  onClick={() => {
-                    setShowPicker(false)
-                    router.push(`${prefix}/photos?upload=1`)
-                  }}
-                  style={{
-                    width: "100%", padding: "15px 18px", marginTop: pickerAlbums.length > 0 ? 4 : 0,
-                    borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.05)", backgroundColor: "transparent",
-                    color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textAlign: "left", cursor: "pointer",
-                    ...TYPE.subhead, fontWeight: 400,
-                  }}
-                >
-                  No {albumLabel.singular.toLowerCase()} — sort later
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 4px 10px" }}>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }}/>
+                  <span style={{ fontSize: "0.625rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                    or file under
+                  </span>
+                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }}/>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {albums.slice(0, 5).map(album => (
+                    <button
+                      key={album.id}
+                      onClick={() => shoot(album.id)}
+                      style={{
+                        width: "100%", padding: "13px 16px", borderRadius: 12,
+                        border: "none", backgroundColor: "rgba(255,255,255,0.05)",
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ ...TYPE.subhead, color: "white", fontWeight: 500 }}>{album.name}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  ))}
+                </div>
               </>
             )}
+
+            {/* New album */}
+            <div style={{ marginTop: albums.length > 0 ? 6 : 0 }}>
+              {!showNewAlbum ? (
+                <button
+                  onClick={() => {
+                    setShowNewAlbum(true)
+                    setTimeout(() => newAlbumInputRef.current?.focus(), 50)
+                  }}
+                  style={{
+                    width: "100%", padding: "13px 16px", borderRadius: 12,
+                    border: "1px dashed rgba(255,255,255,0.1)", backgroundColor: "transparent",
+                    display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span style={{ ...TYPE.subhead, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    New {albumLabel.singular}
+                  </span>
+                </button>
+              ) : (
+                <div style={{ borderRadius: 12, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}25` }}>
+                  <input
+                    ref={newAlbumInputRef}
+                    value={newAlbumName}
+                    onChange={e => setNewAlbumName(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowNewAlbum(false); setNewAlbumName("") } }}
+                    placeholder={`${albumLabel.singular} name…`}
+                    style={{
+                      width: "100%", background: "none", border: "none", outline: "none",
+                      color: "white", fontSize: "0.9375rem", fontFamily: "inherit",
+                      marginBottom: 10, boxSizing: "border-box",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => { setShowNewAlbum(false); setNewAlbumName("") }}
+                      style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreate}
+                      disabled={!newAlbumName.trim() || creating}
+                      style={{ flex: 2, padding: "10px 0", borderRadius: 10, border: "none", backgroundColor: newAlbumName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.07)", color: newAlbumName.trim() ? FOUND_BLACK : `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontSize: "0.8125rem", fontWeight: 700, cursor: newAlbumName.trim() ? "pointer" : "default" }}
+                    >
+                      {creating ? "Creating…" : "Create & Shoot"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
@@ -411,6 +433,8 @@ export default function DashboardNav({
           .found-mobile-nav { display: none !important; }
           .found-sidebar    { display: flex !important; }
         }
+        @keyframes sheetUp   { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes pickerFade { from { opacity: 0; }               to { opacity: 1; }               }
       `}</style>
     </>
   )
