@@ -15,11 +15,9 @@ Core dashboard complete. Photo organization (albums/projects), industry vocab, c
 
 ## NOW (MAX 3)
 
-1. **Photo curation** — 10 new industries have empty pools; curation session at `/admin/photos` required with Shawn approving. Industries: `creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit`.
+1. **Plan gating — "Share with Client"** — the Share sheet on album cards currently shows for all users. Base plan users should see an upgrade prompt instead of the live share link. Check `subscription_status`/`plan` and gate accordingly.
 
-2. **Plan gating — "Share with Client"** — the Share sheet on album cards currently shows for all users. Base plan users should see an upgrade prompt instead of the live share link. Check `subscription_status`/`plan` and gate accordingly.
-
-3. **Desktop E2E test** — open `my.foundco.app` on 1280px+ and verify: sidebar, 5 tabs, Home 3-state (new lead / caught up / welcome), camera picker sheet, Photos tabs (Unsorted/Website/Social/Projects).
+2. **Desktop E2E test** — open `my.foundco.app` on 1280px+ and verify: sidebar, 5 tabs, Home 3-state (new lead / caught up / welcome), camera picker sheet, Photos tabs (Unsorted/Website/Social/Projects).
 
 ---
 
@@ -37,6 +35,7 @@ Core dashboard complete. Photo organization (albums/projects), industry vocab, c
 - ✅ "New" tab renamed "Unsorted"
 - ✅ Gallery integration — `company_photos.for_website` now appears on public `/[slug]/gallery` (dashboard photos → site, gap closed)
 - ✅ Home redesign — 3 pure states (new lead hero / caught up momentum / welcome share), all stat chips + quick-action buttons removed
+- ✅ Photo curation — all 10 new industries approved by Shawn at `/admin/photos` (June 20, 2026)
 
 ---
 

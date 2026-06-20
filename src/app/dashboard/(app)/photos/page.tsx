@@ -56,6 +56,8 @@ export default function PhotosPage() {
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
   const [industry, setIndustry] = useState<string | null>(null)
+  const [isPro, setIsPro] = useState(false)
+  const [showUpgrade, setShowUpgrade] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
@@ -77,12 +79,13 @@ export default function PhotosPage() {
     Promise.all([
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
-      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null })),
+      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
     ]).then(([pd, ad, sd]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
+      setIsPro(sd.isPro ?? false)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -222,18 +225,26 @@ export default function PhotosPage() {
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           {activeAlbum && (
-            <button onClick={() => setShareAlbum(activeAlbum)} style={{
+            <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "10px 16px", borderRadius: 100,
-              backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`,
-              color: SIGNAL_GREEN, cursor: "pointer",
-              ...TYPE.footnote, fontWeight: 700,
+              backgroundColor: isPro ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.06)",
+              border: `1px solid ${isPro ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.1)"}`,
+              color: isPro ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
+              cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
             }}>
+              {!isPro && (
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+              )}
               Share
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-              </svg>
+              {isPro && (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              )}
             </button>
           )}
           <button onClick={openCamera} disabled={uploading} style={{
@@ -308,6 +319,7 @@ export default function PhotosPage() {
             albums={albums}
             photos={photos}
             albumLabel={albumLabel}
+            isPro={isPro}
             showNew={showNewAlbum}
             newName={newAlbumName}
             saving={savingAlbum}
@@ -317,6 +329,7 @@ export default function PhotosPage() {
             onCreate={createAlbum}
             onOpen={setActiveAlbum}
             onShare={setShareAlbum}
+            onUpgrade={() => setShowUpgrade(true)}
             onDelete={deleteAlbum}
           />
         ) : (
@@ -355,6 +368,11 @@ export default function PhotosPage() {
           onShare={handleShare}
           onClose={() => setShareAlbum(null)}
         />
+      )}
+
+      {/* Upgrade sheet */}
+      {showUpgrade && (
+        <UpgradeSheet onClose={() => setShowUpgrade(false)} />
       )}
     </main>
   )
@@ -419,12 +437,13 @@ function DateGroupedGrid({
 
 // ── Projects tab ──
 function ProjectsTab({
-  albums, photos, albumLabel, showNew, newName, saving,
-  onShowNew, onHideNew, onNameChange, onCreate, onOpen, onShare, onDelete,
+  albums, photos, albumLabel, isPro, showNew, newName, saving,
+  onShowNew, onHideNew, onNameChange, onCreate, onOpen, onShare, onUpgrade, onDelete,
 }: {
   albums: Album[]
   photos: Photo[]
   albumLabel: { singular: string; plural: string; create: string }
+  isPro: boolean
   showNew: boolean
   newName: string
   saving: boolean
@@ -434,6 +453,7 @@ function ProjectsTab({
   onCreate: () => void
   onOpen: (a: Album) => void
   onShare: (a: Album) => void
+  onUpgrade: () => void
   onDelete: (a: Album) => void
 }) {
   return (
@@ -514,16 +534,23 @@ function ProjectsTab({
               </div>
               {/* Album actions */}
               <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                <button onClick={() => onShare(album)} style={{
+                <button onClick={() => isPro ? onShare(album) : onUpgrade()} style={{
                   flex: 1, padding: "11px 0", border: "none", backgroundColor: "transparent",
-                  color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer",
+                  color: isPro ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})`,
+                  ...TYPE.caption, cursor: "pointer",
                   borderRight: "1px solid rgba(255,255,255,0.05)",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                  </svg>
+                  {isPro ? (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                    </svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                    </svg>
+                  )}
                   Share with Client
                 </button>
                 <button onClick={() => onDelete(album)} style={{
@@ -585,6 +612,58 @@ function PhotoCard({ photo, onFlag, onRemove }: {
         </div>
       )}
     </div>
+  )
+}
+
+// ── Upgrade sheet ──
+function UpgradeSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px 40px" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+
+        {/* Lock icon */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: `${SIGNAL_GREEN}12`, border: `1px solid ${SIGNAL_GREEN}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+        </div>
+
+        <h3 style={{ margin: "0 0 8px", ...TYPE.title, color: "white", textAlign: "center" }}>Found Pro</h3>
+        <p style={{ margin: "0 0 24px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.6, textAlign: "center" }}>
+          Share organized project galleries with clients. Upgrade to unlock client sharing.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+          {["Share project galleries with clients", "Branded gallery link — your colors", "Client sees only the photos you choose"].map(f => (
+            <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <span style={{ ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
+            </div>
+          ))}
+        </div>
+
+        <a href="/more" onClick={onClose} style={{
+          display: "block", width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
+          backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, textDecoration: "none",
+          ...TYPE.subhead, fontWeight: 700, cursor: "pointer", textAlign: "center",
+          boxShadow: `0 0 28px ${SIGNAL_GREEN}33`,
+        }}>
+          Upgrade to Pro →
+        </a>
+
+        <button onClick={onClose} style={{ display: "block", width: "100%", marginTop: 12, padding: "13px 0", background: "none", border: "none", cursor: "pointer", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+          Maybe later
+        </button>
+      </div>
+    </>
   )
 }
 
