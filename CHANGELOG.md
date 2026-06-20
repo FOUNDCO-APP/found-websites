@@ -5,6 +5,54 @@
 ---
 
 
+## Session: June 19, 2026 — Jony's Touch: Full Dashboard Design Pass (Launch Day)
+**AI:** Claude Code (Sonnet 4.6) — desktop session
+**Worked on:** Full design audit + implementation of all Jony Ive / Steve Jobs team recommendations across every dashboard screen. Typography system completed on all pages. Contacts page fully rewritten. Build clean, committed, launch-ready.
+
+### ✅ Completed This Session
+
+**Full team audit (TEXT ONLY) — Steve Jobs + Jony Ive co-led:**
+- Identified P0, P1, P2 issues across all 8 dashboard files
+- User approved all items: "I like it all. We're gonna fix all of them today because we're gonna launch this this evening."
+
+**P0/P1/P2 fixes — commit `d0c5324`:**
+- Greeting elevated to `TYPE.largeTitle h1` (was subhead at 55% opacity)
+- New lead Call button: full-width green pill, `padding: 18px 0`, glow shadow, `fontWeight: 900`
+- Email reply demoted to text link `"or reply by email →"` at 38% opacity
+- Welcome state added (isActive + 0 leads): green gradient card, "Share your site." at 1.875rem/300
+- Caught-up state: "View all →" link when totalCount > 0
+- Quick actions: context-aware grid — 1-col (photo only) when new lead showing, 2-col otherwise
+- Stat strip and site URL footer both removed from Home
+- Unread badge: 8px `#FF3B30` dot on Leads tab icon (mobile + desktop) when `newLeadCount > 0 && !active`
+- Lead count query in `layout.tsx` (7-day window, COUNT only, server-side, passed as prop)
+- Emoji temperature (🔥⚡❄️) → geometric dot system (6px colored dot + TYPE.caption label)
+- SVG heart + star replace emoji flags (❤️⭐) in photo action overlay
+- Camera FAB label "Camera" removed (icon only)
+- Inactive sidebar nav items: fontWeight 400 → 500
+- Company name in sidebar: 10px uppercase → `TYPE.caption` fontWeight 600
+- "Add Photo" sidebar button now routes to `/photos?upload=1`
+- Photos page: `useSearchParams` → auto-click file input on `?upload=1`, then `router.replace("/photos")`
+- More page: Found plan color `#6B7280` → `GREEN`; Billing section removed; email row added to Account; upgrade feature list rewritten
+- Banner condition: `!company.subscription_status` → `!== "active" && !== "trialing"` (fixes canceled accounts)
+- SignOutButton: `fontSize: 14` → `0.9375rem`; icon opacity wrapper removed
+- Middleware: `favicon.svg|icons|images|dashboard-manifest` added to matcher negative lookahead (fixes favicon 404 on client sites)
+- Activation guard already correct (only blocks `=== "active"`); removed verbose debug console.log
+
+**Jony's touch — full design pass — commit `09f502b`:**
+- Contacts: complete rewrite from scratch — all 20+ typography violations fixed; FAB 36→44px; TYPE.caption labels, TYPE.body inputs, SVG empty state icon; detail sheet action buttons with proper gap/padding
+- All remaining px sizes → rem throughout every file
+- iOS HIG Dynamic Type ramp enforced sitewide: `TYPE.largeTitle` / `title` / `headline` / `body` / `subhead` / `footnote` / `caption` — no raw px values remain
+- TypeScript check: ✅ clean (no output)
+- Production build: ✅ clean (39 routes, no errors)
+
+### ⏳ Still Pending / Carry Forward
+
+- **Desktop E2E test** — verify sidebar, activation banner, Home redesign, all 5 tabs at 1280px+
+- **Photo curation** for 10 new industries at `/admin/photos` (team curation session required)
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID`** — connect-domain feature, currently hidden
+
+---
+
 ## Session: June 19, 2026 — Typography Rollout Complete + Desktop Sidebar Layout
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Applied shared typography system to the 3 remaining dashboard pages; built responsive desktop sidebar layout

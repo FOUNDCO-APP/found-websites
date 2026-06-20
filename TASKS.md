@@ -24,17 +24,31 @@ What shipped today:
 
 ## NOW (MAX 3)
 
-1. **Desktop E2E test** — open `my.foundco.app` on a desktop browser (1280px+) and verify: sidebar renders, all 5 tabs navigate correctly, activation banner shows for unactivated company, Home screen layout, lead/contact detail sheets, typography across all pages. Mobile should be unchanged.
+1. **Desktop E2E test** — open `my.foundco.app` on a desktop browser (1280px+) and verify: sidebar renders, company name shows, all 5 tabs navigate, activation banner for unactivated, Home greeting as h1, new lead card with full-width Call button, caught-up state with "View all →", welcome state for zero-lead active accounts, unread badge on Leads icon, no site URL footer, Photos auto-opens upload from sidebar Add Photo button.
 
-2. **Quick cleanup** — (a) remove `[Activate]` debug console logs from `activateActions.ts`; (b) fix favicon 404 on all client sites (`/favicon.svg` returns 404, noisy in Vercel logs)
+2. **Photo curation** — 10 new industries have empty pools; need a curation session at `/admin/photos` with Shawn approving. Industries: `creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit`.
 
-3. **Rebrand/naming — tabled** — "FoundBizz"/"FoundBuzz" explored, neither landed. No decision. Do not raise unless Shawn brings it up. Only weigh in on brand-feel, never legal/domain/entity.
+3. **Rebrand/naming — tabled** — "FoundBizz"/"FoundBuzz" explored, neither landed. No decision. Do not raise unless Shawn brings it up.
 
 ---
 
-## RECENTLY COMPLETED (June 19, 2026 session)
-- ✅ Typography system rolled out to all remaining dashboard pages — `SiteEditor.tsx`, `more/page.tsx`, `photos/page.tsx`. Every dashboard page now uses `TYPE`, `TEXT_OPACITY`, `ICON` from `typography.ts`. Commits: `f87c359`
-- ✅ Desktop sidebar layout — responsive: mobile keeps bottom tab bar + FAB, desktop (≥ 768px) shows fixed 220px sidebar with wordmark, Signal Green accent, 5 vertical nav items, "Add Photo" button. Content shifts right, header wordmark hides, max-width 760px. Commits: `94d7db4`
+## RECENTLY COMPLETED (June 19, 2026 — launch day session)
+- ✅ Full team audit (Jony + Steve co-lead) — P0/P1/P2 items identified and all approved by Shawn
+- ✅ Greeting → `TYPE.largeTitle h1`; new lead Call button full-width green pill with glow
+- ✅ Welcome state added (isActive + 0 leads); caught-up state "View all →" link
+- ✅ Emoji temperature (🔥⚡❄️) → geometric dot system; emoji photo flags → SVG heart/star
+- ✅ Unread badge: 8px red dot on Leads tab (mobile + desktop) when newLeadCount > 0
+- ✅ Context-aware quick actions: 1-col (photo only) when new lead showing
+- ✅ `?upload=1` param → auto-opens file input on Photos page (from sidebar Add Photo button)
+- ✅ Contacts page complete rewrite — all 20+ px violations fixed, FAB 44px, SVG empty state
+- ✅ More page: Found plan green, billing section removed, email row added, upgrade features rewritten
+- ✅ Banner condition fixed for canceled accounts; favicon 404 fixed in middleware
+- ✅ All px sizes → rem; iOS HIG Dynamic Type ramp enforced sitewide
+- ✅ TypeScript ✅ build ✅ — committed `09f502b`
+
+## RECENTLY COMPLETED (June 19, 2026 — typography session)
+- ✅ Typography system rolled out to all remaining dashboard pages — `SiteEditor.tsx`, `more/page.tsx`, `photos/page.tsx`. Commits: `f87c359`
+- ✅ Desktop sidebar layout — responsive 220px sidebar on ≥ 768px, mobile bottom nav unchanged. Commits: `94d7db4`
 
 ## RECENTLY COMPLETED (June 18, 2026 session)
 - ✅ Remove trial from upgrade checkout — confirmed no `trial_period_days` in `more/actions.ts`
