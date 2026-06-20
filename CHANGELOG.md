@@ -5,6 +5,31 @@
 ---
 
 
+## Session: June 20, 2026 — Pro Album Gallery (new session)
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Pro album-organized public gallery, lead auto-reply audit
+
+### ✅ Completed This Session
+
+**Pro album-organized website gallery:**
+- `/[slug]/gallery/page.tsx` now branches on `isPro` (plan + status check — no extra fetch, already on Company type)
+- Pro path: 4 parallel queries — albums, all album photos, unsorted hearted photos, legacy media
+- Album cover grid: 280px-wide cards with cover photo, gradient overlay, album name + photo count, links to `/[slug]/gallery/[album]`
+- Unsorted hearted photos (album_id=null, for_website=true) + legacy media shown as flat "More Photos" section below albums
+- Base plan: unchanged flat grid (existing behavior preserved)
+- TypeScript clean ✅
+
+**Lead auto-reply audit:**
+- Confirmed `src/app/actions/leads.ts` already sends a branded auto-reply to the customer when email is provided
+- No new work needed — this feature was already live
+
+### ⏳ Still Pending / Carry Forward
+
+- **Marketing site** — foundco.app + per-plan pages (`/plans/found`, `/plans/found-pro`, `/plans/found-business`), autonomous sales engine
+- **More plan gating** — custom domain, lead sequence, contact DB all need upgrade prompts wired
+
+---
+
 ## Session: June 20, 2026 — Plan Gating, Photo Curation Complete, Session Wrap
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Plan gating for "Share with Client", confirmed photo curation complete, session memory + docs wrapped
