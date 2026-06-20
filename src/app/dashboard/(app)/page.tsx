@@ -13,22 +13,15 @@ export default async function HomePage() {
 
   const admin = createAdminClient()
 
-  const [leadsResult, photosResult] = await Promise.all([
-    admin
-      .from("leads")
-      .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
-      .eq("company_id", company.id)
-      .neq("type", "onboarding_abandoned")
-      .order("created_at", { ascending: false })
-      .limit(20),
-    admin
-      .from("company_photos")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", company.id),
-  ])
+  const { data: allLeadsRaw } = await admin
+    .from("leads")
+    .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
+    .eq("company_id", company.id)
+    .neq("type", "onboarding_abandoned")
+    .order("created_at", { ascending: false })
+    .limit(20)
 
-  const allLeads = leadsResult.data ?? []
-  const photoCount = photosResult.count ?? 0
+  const allLeads = allLeadsRaw ?? []
 
   const newCount = allLeads.filter(l => {
     if (!l.created_at) return false
@@ -65,7 +58,6 @@ export default async function HomePage() {
       topCreatedAt={top?.created_at ?? null}
       siteSlug={company.slug}
       isActive={isActive}
-      photoCount={photoCount}
       recentLeads={recentLeads}
     />
   )
