@@ -32,10 +32,9 @@ export default function SignOutButton() {
         justifyContent: "space-between",
         fontFamily: "inherit",
       }}>
-      <span style={{ fontSize: 14, color: "#F43F5E", fontWeight: 500 }}>Sign out</span>
+      <span style={{ fontSize: "0.9375rem", color: "#F43F5E", fontWeight: 500 }}>Sign out</span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-        stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-        style={{ opacity: 0.6 }}>
+        stroke="#F43F5E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
         <polyline points="16 17 21 12 16 7"/>
         <line x1="21" y1="12" x2="9" y2="12"/>

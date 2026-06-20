@@ -96,6 +96,12 @@ export default async function MorePage() {
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           Account
         </p>
+        <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 2 }}>
+          <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
+            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
+            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
+          </div>
+        </div>
         <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
           <div style={{
             borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",

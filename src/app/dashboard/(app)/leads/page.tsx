@@ -128,15 +128,19 @@ export default function LeadsPage() {
               {(["hot", "warm", "cold"] as const).map(t => {
                 const active = newTemp === t
                 const color = TEMP_COLORS[t]
-                const labels = { hot: "🔥 Hot", warm: "⚡ Warm", cold: "❄️ Cold" }
                 return (
                   <button key={t} onClick={() => setNewTemp(t)} style={{
                     flex: 1, padding: "10px 0", borderRadius: 14, border: "1px solid",
                     borderColor: active ? color : "rgba(255,255,255,0.08)",
                     backgroundColor: active ? `${color}18` : "transparent",
-                    color: active ? color : "rgba(255,255,255,0.3)",
-                    fontSize: 16, fontWeight: 700, cursor: "pointer",
-                  }}>{labels[t]}</button>
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: active ? color : "rgba(255,255,255,0.25)", flexShrink: 0 }}/>
+                    <span style={{ ...TYPE.subhead, fontWeight: 700, color: active ? color : "rgba(255,255,255,0.3)" }}>
+                      {t === "hot" ? "Hot" : t === "warm" ? "Warm" : "Cold"}
+                    </span>
+                  </button>
                 )
               })}
             </div>
@@ -200,10 +204,10 @@ export default function LeadsPage() {
               <path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
           </div>
-          <p style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
             Your first lead is coming.
           </p>
-          <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
+          <p style={{ margin: "0 0 28px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
             Add one manually from a networking<br/>event, or wait for your site to bring one in.
           </p>
         </div>
@@ -213,8 +217,9 @@ export default function LeadsPage() {
           {/* Hot leads — elevated */}
           {hotLeads.length > 0 && (
             <div>
-              <div style={{ color: TEMP_COLORS.hot, marginBottom: 12, ...TYPE.caption }}>
-                🔥 Hot
+              <div style={{ display: "flex", alignItems: "center", gap: 6, color: TEMP_COLORS.hot, marginBottom: 12, ...TYPE.caption }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: TEMP_COLORS.hot, flexShrink: 0 }}/>
+                Hot
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} />)}
@@ -502,9 +507,14 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
                     flex: 1, padding: "10px 0", borderRadius: 12,
                     border: `1.5px solid ${temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.1)"}`,
                     backgroundColor: temp === t ? `${TEMP_COLORS[t]}18` : "transparent",
-                    color: temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.4)",
-                    fontSize: 14, fontWeight: 700, cursor: "pointer", textTransform: "capitalize",
-                  }}>{t}</button>
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.25)", flexShrink: 0 }}/>
+                    <span style={{ ...TYPE.subhead, fontWeight: 700, color: temp === t ? TEMP_COLORS[t] : "rgba(255,255,255,0.4)" }}>
+                      {t === "hot" ? "Hot" : t === "warm" ? "Warm" : "Cold"}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -550,10 +560,10 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
+      <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, marginBottom: 4 }}>
         {label}
       </div>
-      <p style={{ margin: 0, fontSize: 15, color: "rgba(255,255,255,0.75)" }}>
+      <p style={{ margin: 0, ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
         {value}
       </p>
     </div>

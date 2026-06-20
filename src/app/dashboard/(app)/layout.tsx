@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, getAllCompanies } from "@/lib/dashboard/getCompany"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
 import Link from "next/link"
@@ -19,6 +20,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ])
 
   const hasMultiple = allCompanies.length > 1
+
+  let newLeadCount = 0
+  if (company?.id) {
+    const admin = createAdminClient()
+    const { count } = await admin
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id)
+      .neq("type", "onboarding_abandoned")
+      .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString())
+    newLeadCount = count ?? 0
+  }
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
@@ -97,7 +110,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       </div>
 
-      <DashboardNav companyName={company?.name ?? null} />
+      <DashboardNav companyName={company?.name ?? null} newLeadCount={newLeadCount} />
 
       <style>{`
         @media (min-width: 768px) {

@@ -83,7 +83,7 @@ const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/more":     (a) => <MoreIcon     active={a} />,
 }
 
-export default function DashboardNav({ companyName }: { companyName?: string | null }) {
+export default function DashboardNav({ companyName, newLeadCount = 0 }: { companyName?: string | null; newLeadCount?: number }) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -124,6 +124,7 @@ export default function DashboardNav({ companyName }: { companyName?: string | n
         {/* Left tabs */}
         {leftTabs.map((tab) => {
           const active = isActive(tab.path)
+          const showBadge = tab.path === "/leads" && newLeadCount > 0 && !active
           return (
             <Link key={tab.path} href={`${prefix}${tab.path}`} style={{
               flex: 1,
@@ -135,7 +136,17 @@ export default function DashboardNav({ companyName }: { companyName?: string | n
               textDecoration: "none",
               padding: "12px 0 14px",
             }}>
-              {ICONS[tab.path](active)}
+              <div style={{ position: "relative" }}>
+                {ICONS[tab.path](active)}
+                {showBadge && (
+                  <div style={{
+                    position: "absolute", top: -2, right: -2,
+                    width: 8, height: 8, borderRadius: "50%",
+                    backgroundColor: "#FF3B30",
+                    border: "1.5px solid #080A09",
+                  }}/>
+                )}
+              </div>
               <span style={{
                 fontSize: 10,
                 fontWeight: 800,
@@ -172,16 +183,6 @@ export default function DashboardNav({ companyName }: { companyName?: string | n
               <circle cx="12" cy="13" r="4"/>
             </svg>
           </button>
-          <span style={{
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: "0.08em",
-            color: "rgba(255,255,255,0.5)",
-            textTransform: "uppercase",
-            marginTop: 4,
-          }}>
-            Camera
-          </span>
         </div>
 
         {/* Right tabs */}
@@ -240,8 +241,8 @@ export default function DashboardNav({ companyName }: { companyName?: string | n
         {companyName && (
           <div style={{ padding: "12px 20px 12px" }}>
             <span style={{
-              fontSize: "0.625rem", fontWeight: 700, letterSpacing: "0.12em",
-              textTransform: "uppercase", color: `rgba(255,255,255,0.3)`,
+              ...TYPE.caption, fontWeight: 600, letterSpacing: "0.02em", textTransform: "none",
+              color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`,
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block",
             }}>
               {companyName}
@@ -264,7 +265,17 @@ export default function DashboardNav({ companyName }: { companyName?: string | n
                 backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent",
                 borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}`,
               }}>
-                {ICONS[tab.path](active)}
+                <div style={{ position: "relative" }}>
+                  {ICONS[tab.path](active)}
+                  {tab.path === "/leads" && newLeadCount > 0 && !active && (
+                    <div style={{
+                      position: "absolute", top: -2, right: -2,
+                      width: 8, height: 8, borderRadius: "50%",
+                      backgroundColor: "#FF3B30",
+                      border: "1.5px solid #080A09",
+                    }}/>
+                  )}
+                </div>
                 <span style={{
                   ...TYPE.subhead,
                   color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,

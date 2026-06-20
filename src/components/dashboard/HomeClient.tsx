@@ -76,17 +76,15 @@ export default function HomeClient({
       position: "relative",
     }}>
 
-      {/* ── HEADER: greeting, small and out of the way ── */}
+      {/* ── HEADER: greeting as the page title ── */}
       <div style={{
-        padding: "20px 24px 0",
+        padding: "28px 24px 0",
         opacity: mounted ? 1 : 0,
         transition: "opacity 0.4s ease",
       }}>
-        <p style={{
-          margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead,
-        }}>
-          Good {greeting}, {firstName}
-        </p>
+        <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
+          Good {greeting},<br/>{firstName}.
+        </h1>
       </div>
 
       {/* ── THE ONE THING THAT MATTERS ── */}
@@ -131,31 +129,27 @@ export default function HomeClient({
               </p>
             )}
 
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {phoneHref && (
                 <a href={phoneHref} style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "15px 0", borderRadius: 100,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  padding: "18px 0", borderRadius: 100,
                   backgroundColor: GREEN, textDecoration: "none",
-                  boxShadow: `0 0 24px rgba(50,208,116,0.3)`,
+                  boxShadow: `0 0 32px rgba(50,208,116,0.4)`,
                 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
                   </svg>
-                  <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: BLACK }}>Call</span>
+                  <span style={{ fontSize: "0.9375rem", fontWeight: 900, color: BLACK, letterSpacing: "0.02em" }}>
+                    Call {topName?.split(" ")[0]}
+                  </span>
                 </a>
               )}
               {emailHref && (
-                <a href={emailHref} style={{
-                  flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  padding: "15px 0", borderRadius: 100,
-                  backgroundColor: "rgba(255,255,255,0.1)", textDecoration: "none",
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
-                  <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: "white" }}>Reply</span>
+                <a href={emailHref} style={{ display: "flex", justifyContent: "center", textDecoration: "none" }}>
+                  <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.38)", letterSpacing: "0.02em" }}>
+                    or reply by email →
+                  </span>
                 </a>
               )}
             </div>
@@ -216,36 +210,45 @@ export default function HomeClient({
             </div>
             <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
               {totalCount > 0
-                ? `${totalCount} ${totalCount === 1 ? "lead" : "leads"} so far. New ones land right here.`
+                ? `${totalCount} ${totalCount === 1 ? "lead" : "leads"} so far. New ones land here.`
                 : "New leads land right here."}
             </p>
+            {totalCount > 0 && (
+              <Link href="/leads" style={{ display: "inline-flex", alignItems: "center", gap: 4, marginTop: 14, textDecoration: "none" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: 900, color: GREEN, letterSpacing: "0.04em" }}>
+                  View all →
+                </span>
+              </Link>
+            )}
           </div>
         )}
       </div>
 
-      {/* ── QUICK ACTIONS — immediately below, no dead air ── */}
+      {/* ── QUICK ACTIONS — context-aware: Lead card showing = photo only ── */}
       <div style={{
         padding: "16px 20px 0",
         opacity: mounted ? 1 : 0,
         transform: mounted ? "translateY(0)" : "translateY(6px)",
         transition: "opacity 0.5s ease 0.12s, transform 0.5s ease 0.12s",
       }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <button
-            onClick={() => router.push("/leads?add=1")}
-            style={{
-              padding: "16px 14px", borderRadius: 20, border: "none", cursor: "pointer",
-              backgroundColor: GREEN, textAlign: "left",
-              display: "flex", flexDirection: "column", gap: 14,
-              boxShadow: `0 0 22px rgba(50,208,116,0.2)`,
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-            </svg>
-            <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: BLACK }}>Add Lead</span>
-          </button>
+        <div style={{ display: "grid", gridTemplateColumns: hasNewLead ? "1fr" : "1fr 1fr", gap: 8 }}>
+          {!hasNewLead && (
+            <button
+              onClick={() => router.push("/leads?add=1")}
+              style={{
+                padding: "16px 14px", borderRadius: 20, border: "none", cursor: "pointer",
+                backgroundColor: GREEN, textAlign: "left",
+                display: "flex", flexDirection: "column", gap: 14,
+                boxShadow: `0 0 22px rgba(50,208,116,0.2)`,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+              </svg>
+              <span style={{ fontSize: "0.8125rem", fontWeight: 900, color: BLACK }}>Add Lead</span>
+            </button>
+          )}
 
           <Link href="/photos" style={{
             padding: "16px 14px", borderRadius: 20,
@@ -275,43 +278,6 @@ export default function HomeClient({
         </button>
       </div>
 
-      {/* ── STAT STRIP — compact, scannable, not decorative ── */}
-      {totalCount > 0 && (
-        <div style={{
-          padding: "20px 20px 0",
-          opacity: mounted ? 1 : 0,
-          transition: "opacity 0.5s ease 0.18s",
-        }}>
-          <Link href="/leads" style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "14px 18px", borderRadius: 18,
-            backgroundColor: "rgba(255,255,255,0.025)",
-            textDecoration: "none",
-          }}>
-            <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.45)" }}>
-              <strong style={{ color: "white", fontWeight: 800 }}>{totalCount}</strong> total {totalCount === 1 ? "lead" : "leads"}
-            </span>
-            <span style={{ fontSize: "0.75rem", fontWeight: 900, color: GREEN, letterSpacing: "0.04em" }}>
-              View all →
-            </span>
-          </Link>
-        </div>
-      )}
-
-      {/* ── SITE LINK — bottom anchor ── */}
-      <div style={{ marginTop: "auto", padding: "32px 20px 8px" }}>
-        <a href={`https://${siteSlug}.foundco.app`} target="_blank" rel="noopener noreferrer"
-          style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}`, flexShrink: 0 }}/>
-          <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "rgba(255,255,255,0.3)" }}>
-            {siteSlug}.foundco.app
-          </span>
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" style={{ marginLeft: "auto" }}>
-            <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-            <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
-          </svg>
-        </a>
-      </div>
 
       <style>{`
         @keyframes breathe {

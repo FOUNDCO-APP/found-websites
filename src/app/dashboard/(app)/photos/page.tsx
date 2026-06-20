@@ -130,7 +130,7 @@ export default function PhotosPage() {
               backgroundColor: "transparent",
               borderBottom: `2px solid ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.08)"}`,
               color: active ? "white" : "rgba(255,255,255,0.3)",
-              fontSize: 13, fontWeight: active ? 700 : 500,
+              ...TYPE.footnote, fontWeight: active ? 700 : 400,
               transition: "all 0.15s ease",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
             }}>
@@ -222,21 +222,35 @@ function PhotoCard({ photo, onFlag, onRemove }: {
         }} onClick={() => setShowActions(false)}>
           <div style={{ display: "flex", gap: 10, width: "100%" }}>
             <button onClick={e => { e.stopPropagation(); onFlag(photo.id, "for_website", photo.for_website) }} style={{
-              flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer",
-              backgroundColor: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.15)",
-              fontSize: 18,
-            }}>❤️</button>
+              flex: 1, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer",
+              backgroundColor: photo.for_website ? "rgba(255,75,139,0.25)" : "rgba(255,255,255,0.12)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24"
+                fill={photo.for_website ? "#FF4B8B" : "none"}
+                stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.7)"}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+              </svg>
+            </button>
             <button onClick={e => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }} style={{
-              flex: 1, padding: "10px 0", borderRadius: 12, border: "none", cursor: "pointer",
-              backgroundColor: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.15)",
-              fontSize: 18,
-            }}>⭐</button>
+              flex: 1, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer",
+              backgroundColor: photo.for_social ? "rgba(255,184,0,0.2)" : "rgba(255,255,255,0.12)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="20" height="20" viewBox="0 0 24 24"
+                fill={photo.for_social ? "#FFB800" : "none"}
+                stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.7)"}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </button>
           </div>
           <button onClick={e => { e.stopPropagation(); onRemove(photo) }} style={{
             width: "100%", padding: "8px 0", borderRadius: 12, border: "none",
             cursor: "pointer", backgroundColor: "rgba(255,70,70,0.2)",
-            color: "#FF4646", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em",
-          }}>REMOVE</button>
+            color: "#FF4646", ...TYPE.caption,
+          }}>Remove</button>
         </div>
       )}
     </div>
@@ -268,7 +282,7 @@ function EmptyState({ view, onAdd }: { view: View; onAdd: () => void }) {
   return (
     <div style={{ paddingTop: 60, textAlign: "center" }}>
       <div style={{ fontSize: 48, marginBottom: 20 }}>{content.emoji}</div>
-      <p style={{ margin: "0 0 10px", fontSize: "1.25rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>
+      <p style={{ margin: "0 0 10px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>
         {content.title}
       </p>
       <p style={{ margin: "0 0 32px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.7 }}>
