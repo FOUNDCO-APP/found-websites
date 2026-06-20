@@ -95,7 +95,7 @@ export default function LeadsPage() {
           </h1>
           {leads.length > 0 && (
             <p style={{ margin: "8px 0 0", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.caption }}>
-              {leads.length} {leads.length === 1 ? "contact" : "contacts"}
+              {leads.length} {leads.length === 1 ? "lead" : "leads"}
             </p>
           )}
         </div>

@@ -224,7 +224,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             flex={2}
           />
         </div>
-        <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color="#38BDF8" onTap={() => handleRegenerate("tagline")} />
+        <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color={GREEN} onTap={() => handleRegenerate("tagline")} />
       </div>
 
       {/* Divider */}
@@ -243,13 +243,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           onClick={() => !editing && startEdit("about_text", String(config.about_text ?? ""))}
           style={{
             borderRadius: 20, padding: "22px 20px",
-            background: "linear-gradient(160deg, rgba(167,139,250,0.1) 0%, rgba(167,139,250,0.03) 100%)",
-            border: "1px solid rgba(167,139,250,0.15)",
+            background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
+            border: `1px solid ${GREEN}22`,
             cursor: editing === "about_text" ? "default" : "pointer",
             position: "relative",
           }}
         >
-          <div style={{ ...TYPE.caption, color: "#A78BFA", marginBottom: 12, opacity: 0.8 }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>
             Your Story · tap to edit
           </div>
           <p style={{
@@ -263,7 +263,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>✓ Live</div>
           )}
         </div>
-        <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color="#A78BFA" onTap={() => handleRegenerate("about")} />
+        <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color={GREEN} onTap={() => handleRegenerate("about")} />
       </div>
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
@@ -288,8 +288,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           ))}
 
           {newService ? (
-            <div style={{ borderRadius: 20, padding: 20, background: "linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.03))", border: "1px solid rgba(251,146,60,0.25)" }}>
-              <div style={{ ...TYPE.caption, color: "#FB923C", marginBottom: 14 }}>New Service</div>
+            <div style={{ borderRadius: 20, padding: 20, background: `linear-gradient(135deg, ${GREEN}0a, ${GREEN}03)`, border: `1px solid ${GREEN}22` }}>
+              <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 14 }}>New Service</div>
               <input placeholder="Service name" value={newServiceName} onChange={e => setNewServiceName(e.target.value)} autoFocus
                 style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 10, fontFamily: "inherit" }}
               />
@@ -300,15 +300,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <button onClick={() => { setNewService(false); setNewServiceName(""); setNewServiceDesc("") }}
                   style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                 <button onClick={addService} disabled={!newServiceName.trim()}
-                  style={{ flex: 2, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: newServiceName.trim() ? "#FB923C" : "rgba(255,255,255,0.08)", color: newServiceName.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: newServiceName.trim() ? "pointer" : "default" }}>Add Service</button>
+                  style={{ flex: 2, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: newServiceName.trim() ? GREEN : "rgba(255,255,255,0.08)", color: newServiceName.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: newServiceName.trim() ? "pointer" : "default" }}>Add Service</button>
               </div>
             </div>
           ) : (
             <button onClick={() => setNewService(true)} style={{
               width: "100%", padding: "16px 0", borderRadius: 16,
-              border: "2px dashed rgba(251,146,60,0.2)",
+              border: `2px dashed ${GREEN}33`,
               backgroundColor: "transparent",
-              color: "rgba(251,146,60,0.5)", fontSize: 13, fontWeight: 700,
+              color: `${GREEN}88`, fontSize: 13, fontWeight: 700,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -318,7 +318,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
           )}
 
-          <AIBar label="AI rewrites all service descriptions" isLoading={regenerating === "services"} color="#FB923C" onTap={() => handleRegenerate("services")} />
+          <AIBar label="AI rewrites all service descriptions" isLoading={regenerating === "services"} color={GREEN} onTap={() => handleRegenerate("services")} />
         </div>
       </div>
 
@@ -372,10 +372,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
           {/* ── No owner photos yet ── */}
           {photos.length === 0 && (
-            <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: "1px dashed rgba(52,211,153,0.15)", background: "rgba(52,211,153,0.03)" }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📸</div>
-              <p style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 300, color: "white" }}>No photos yet</p>
-              <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: 1.7 }}>
+            <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: `1px dashed ${GREEN}22`, background: `${GREEN}05` }}>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={`${GREEN}66`} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+              <p style={{ margin: "0 0 6px", fontSize: "1.0625rem", fontWeight: 300, color: "white" }}>No photos yet</p>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
                 Go to the Photos tab, take shots of your work,<br/>heart them, and they show up here.
               </p>
             </div>
@@ -385,14 +390,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           {stockImages.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ ...TYPE.caption, color: "rgba(255,150,50,0.7)" }}>
+                <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
                   Placeholder photos · tap ✕ to remove
                 </div>
-                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)" }}>
+                <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
                   {stockImages.length} stock
                 </div>
               </div>
-              <p style={{ margin: "0 0 12px", fontSize: 12, color: "rgba(255,255,255,0.25)", lineHeight: 1.6 }}>
+              <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
                 These show until you add your own photos. Remove the ones that don&apos;t fit your business.
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
@@ -551,7 +556,7 @@ function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRe
 
   if (isEditing) {
     return (
-      <div style={{ borderRadius: 20, padding: 18, background: "linear-gradient(135deg, rgba(251,146,60,0.1), rgba(251,146,60,0.02))", border: "1px solid rgba(251,146,60,0.3)" }}>
+      <div style={{ borderRadius: 20, padding: 18, background: `linear-gradient(135deg, ${GREEN}0a, ${GREEN}03)`, border: `1px solid ${GREEN}22` }}>
         <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus placeholder="Service name"
           style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box", marginBottom: 8, fontFamily: "inherit" }}
         />
@@ -560,7 +565,7 @@ function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRe
         />
         <div style={{ display: "flex", gap: 8 }}>
           <button onClick={onCancel} style={{ flex: 1, padding: "11px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-          <button onClick={() => onSave(index, editName, editDesc)} style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", backgroundColor: "#FB923C", color: BLACK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save</button>
+          <button onClick={() => onSave(index, editName, editDesc)} style={{ flex: 2, padding: "11px 0", borderRadius: 12, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Save</button>
         </div>
       </div>
     )

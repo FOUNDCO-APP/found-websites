@@ -128,7 +128,6 @@ export default async function MorePage() {
           Your Plan
         </p>
         <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ height: 2, backgroundColor: meta.color }} />
           <div style={{ padding: "16px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

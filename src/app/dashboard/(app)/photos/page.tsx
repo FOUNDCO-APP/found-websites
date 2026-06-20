@@ -260,19 +260,32 @@ function PhotoCard({ photo, onFlag, onRemove }: {
 function EmptyState({ view, onAdd }: { view: View; onAdd: () => void }) {
   const content = {
     queue: {
-      emoji: "📸",
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      ),
       title: "Take your first photo.",
       sub: "Tap the camera button above. Photos stay here — not in your camera roll.",
       cta: "Add a Photo",
     },
     website: {
-      emoji: "❤️",
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      ),
       title: "No website photos yet.",
       sub: "Heart any photo in the New tab and it'll appear here ready for your site.",
       cta: null,
     },
     social: {
-      emoji: "⭐",
+      icon: (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      ),
       title: "No social photos yet.",
       sub: "Star any photo in the New tab and Found will format it with your branding.",
       cta: null,
@@ -281,7 +294,7 @@ function EmptyState({ view, onAdd }: { view: View; onAdd: () => void }) {
 
   return (
     <div style={{ paddingTop: 60, textAlign: "center" }}>
-      <div style={{ fontSize: 48, marginBottom: 20 }}>{content.emoji}</div>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>{content.icon}</div>
       <p style={{ margin: "0 0 10px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>
         {content.title}
       </p>
