@@ -5,6 +5,33 @@
 ---
 
 
+## Session: June 20, 2026 — Plan Gating, Photo Curation Complete, Session Wrap
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Plan gating for "Share with Client", confirmed photo curation complete, session memory + docs wrapped
+
+### ✅ Completed This Session
+
+**Photo curation — COMPLETE:**
+- Shawn confirmed all 10 new industries approved at `/admin/photos` (June 20, 2026)
+- All 22 industries now have curated Pexels pools live ✅
+
+**Plan gating — "Share with Client" — commit `dd45143`:**
+- `/api/company-slug` now returns `isPro` (`found_pro` or `found_business` + `active`/`trialing`)
+- Photos page reads `isPro` on mount via existing fetch — zero extra requests
+- Share button in album header: lock icon + muted when base plan; Signal Green share icon when Pro
+- Share with Client on album cards: same gate — lock icon + muted when base
+- `UpgradeSheet` bottom sheet: lock icon, 3 feature bullets, "Upgrade to Pro →" → `/more`, "Maybe later" dismiss
+
+### ⏳ Still Pending / Carry Forward
+
+- **Pro album-organized website gallery** — website gallery shows albums as cover-grid sections for Pro users
+- **Lead auto-reply** — base plan feature gap; auto-send branded reply to every new lead via Resend
+- **More plan gating** — custom domain, lead sequence, contact DB all need upgrade prompts wired
+- **Marketing site** — foundco.app + per-plan pages, autonomous sales engine
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID`** — connect-domain feature still hidden
+
+---
+
 ## Session: June 19–20, 2026 — Photo System, Albums, Home Redesign, Camera Picker
 **AI:** Claude Code (Sonnet 4.6) — continuous session (PowerShell never closed)
 **Worked on:** Full photo organization system (albums/projects), context-aware camera pre-flight, industry vocab, gallery integration, Home page state-aware redesign, camera picker visual overhaul
