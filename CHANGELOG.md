@@ -5,6 +5,58 @@
 ---
 
 
+## Session: June 19–20, 2026 — Photo System, Albums, Home Redesign, Camera Picker
+**AI:** Claude Code (Sonnet 4.6) — continuous session (PowerShell never closed)
+**Worked on:** Full photo organization system (albums/projects), context-aware camera pre-flight, industry vocab, gallery integration, Home page state-aware redesign, camera picker visual overhaul
+
+### ✅ Completed This Session
+
+**SiteEditor color unification — commit `2412739`:**
+- All non-green accent colors (purple About, orange Services/Gallery, blue Hook AI bar) → Signal GREEN
+- Empty state 📸 emoji → SVG camera icon
+- Leads subtitle "contact/contacts" → "lead/leads"
+- More page: progress bar removed from plan card
+
+**Photo system — albums/projects — commit `eacb118`:**
+- `photo_albums` table + `company_photos.album_id` column — migration-035 run live via Supabase Management API ✅
+- `photos/page.tsx` full rewrite: date grouping headers (This week / Last week / Month Year), albums/projects tab, album detail view, share-with-client sheet, upload via camera FAB
+- `/api/albums` route — GET/POST/DELETE with unique slug generation
+- `/api/company-slug` — micro-endpoint returning `{ slug, industry }` for client-side use
+- `/api/photos` PATCH — `album_id` support added
+- `src/app/[slug]/gallery/[album]/page.tsx` — new public client gallery page (white, branded, photo grid, "Shared via FOUND" footer)
+- Home page: stats row (this week/total/photos chips) + recent leads strip added — parallel fetch for photoCount + recentLeads
+
+**Industry vocab + camera pre-flight + gallery integration — commit `8e3de81`:**
+- `albumLabelFor(industry)` in `typography.ts` — 18-industry mapping (Contractors→Projects, Restaurant→Events, Salon/Beauty→Looks, Spa→Treatments, Retail/Crafts→Collections, Music→Shows, Childcare→Memories, etc.)
+- `getCompany.ts` + SELECT — `industry_category` added to `CompanyRow` type
+- `DashboardNav.tsx` — camera FAB tapped off /photos → bottom sheet with pre-fetched album list + "No project — sort later"; tapped on /photos → direct upload
+- `photos/page.tsx` — `?upload=1&album=ID` param handled via `pendingAlbumIdRef`; in-album camera auto-assigns; "New" tab renamed "Unsorted"; all labels use `albumLabelFor`
+- `gallery/page.tsx` — now fetches BOTH `media` (legacy) AND `company_photos` (dashboard, `for_website=true`) via admin client; dashboard-hearted photos appear first on public gallery; gap closed ✅
+
+**Home page redesign — commit `d497856`:**
+- Removed: stat chip row (this week/total/photos), Add Photo button, Add Lead shortcut, Share Your Site strip, `photoCount` query
+- Three pure states:
+  - State 1 (new lead): hero card — name, message, Call (green full-width) + Text (green outline) + email ghost link; "+ N more →" if multiple
+  - State 2 (caught up): 5rem/300 total leads number + recent leads in a single rounded container with hairline separators
+  - State 3 (welcome/no leads): one card, one "Share My Site →" button, nothing else
+
+**Camera picker visual overhaul — commits `de855b7`, `b921d34`:**
+- Albums pre-fetched on mount → zero delay when camera tapped
+- Sheet opens at 0.22s with Apple spring easing `cubic-bezier(0.32, 0.72, 0, 1)`
+- 84px glowing camera circle as hero (shoot now, no album)
+- Horizontal scroll strip of 72×72 album tiles with `avatarColorFor` colors
+- Dashed "New" tile at end of strip → expands to inline name input with "Create & Shoot" CTA
+
+### ⏳ Still Pending / Carry Forward
+
+- **Pro album-organized gallery** — website gallery shows albums as sections with covers for Pro users ("Kitchen Remodel — 14 photos")
+- **Plan gating for "Share with Client"** — base plan should show upgrade prompt instead of share link
+- **Photo curation** — 10 new industries have empty pools at `/admin/photos`
+- **Desktop E2E test** — verify sidebar, activation banner, Home 3-state redesign at 1280px+
+- **`VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID`** — connect-domain feature still hidden
+
+---
+
 ## Session: June 19, 2026 — Jony's Touch: Full Dashboard Design Pass (Launch Day)
 **AI:** Claude Code (Sonnet 4.6) — desktop session
 **Worked on:** Full design audit + implementation of all Jony Ive / Steve Jobs team recommendations across every dashboard screen. Typography system completed on all pages. Contacts page fully rewritten. Build clean, committed, launch-ready.

@@ -1,34 +1,42 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 19, 2026 — end of session*
+*Last updated: June 20, 2026 — continuous session*
 
 ---
 
 ## CURRENT PHASE
 
 **Phase 4: Customer Dashboard — SUBSTANTIALLY COMPLETE**
+**Phase 3 (Photo System): SHIPPED**
 
-What shipped today:
-- ✅ Login flow fixed — magic link → /auth/token → /select → home
-- ✅ Home screen — greeting, pulse number, latest lead, quick actions
-- ✅ Leads tab — manual add, temperature (Hot/Warm/Cold), hot leads elevated
-- ✅ Contacts tab — Supabase wired, add/tag/filter, native call/text/email
-- ✅ Photos tab — upload, heart/star, grid view, optimistic updates
-- ✅ Site tab — edit all sections, AI rewrite per section, gallery management
-- ✅ Gallery — owner photos + stock images combined, remove stock photos
-- ✅ More tab — Edit My Site entry, billing, upgrade
-- ✅ Found design language applied — green accent bar, font-black eyebrows, font-light headlines, glow buttons
-- ✅ Nav fixed — backdrop blur, 120px bottom padding, no floating
+Core dashboard complete. Photo organization (albums/projects), industry vocab, camera pre-flight, public gallery integration, and Home 3-state redesign all shipped.
 
 ---
 
 ## NOW (MAX 3)
 
-1. **Desktop E2E test** — open `my.foundco.app` on a desktop browser (1280px+) and verify: sidebar renders, company name shows, all 5 tabs navigate, activation banner for unactivated, Home greeting as h1, new lead card with full-width Call button, caught-up state with "View all →", welcome state for zero-lead active accounts, unread badge on Leads icon, no site URL footer, Photos auto-opens upload from sidebar Add Photo button.
+1. **Photo curation** — 10 new industries have empty pools; curation session at `/admin/photos` required with Shawn approving. Industries: `creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit`.
 
-2. **Photo curation** — 10 new industries have empty pools; need a curation session at `/admin/photos` with Shawn approving. Industries: `creative_services, home_based_food, education, music_performance, professional_services, healthcare, childcare, makers_crafts, home_property, nonprofit`.
+2. **Plan gating — "Share with Client"** — the Share sheet on album cards currently shows for all users. Base plan users should see an upgrade prompt instead of the live share link. Check `subscription_status`/`plan` and gate accordingly.
 
-3. **Rebrand/naming — tabled** — "FoundBizz"/"FoundBuzz" explored, neither landed. No decision. Do not raise unless Shawn brings it up.
+3. **Desktop E2E test** — open `my.foundco.app` on 1280px+ and verify: sidebar, 5 tabs, Home 3-state (new lead / caught up / welcome), camera picker sheet, Photos tabs (Unsorted/Website/Social/Projects).
+
+---
+
+## RECENTLY COMPLETED (June 19–20, 2026 — continuous session)
+- ✅ SiteEditor: all accent colors unified to Signal Green; progress bar removed from More plan card; "contact" → "lead" on Leads
+- ✅ Migration-035 live — `photo_albums` table + `company_photos.album_id` column
+- ✅ Photos page full rewrite — date grouping headers, albums/projects tab, album detail view, share sheet
+- ✅ `/api/albums` route (GET/POST/DELETE with slug dedup)
+- ✅ `/api/company-slug` returns `{ slug, industry }`
+- ✅ Public album gallery page — `/[slug]/gallery/[album]/page.tsx`
+- ✅ `albumLabelFor(industry)` — 18-industry vocab map in `typography.ts`
+- ✅ `getCompany` — `industry_category` added to type + SELECT
+- ✅ Camera pre-flight — pre-fetched albums, instant sheet, project picker with horizontal tile scroll
+- ✅ Camera picker visual overhaul — 84px glowing hero circle, 72×72 color album tiles, Apple spring easing
+- ✅ "New" tab renamed "Unsorted"
+- ✅ Gallery integration — `company_photos.for_website` now appears on public `/[slug]/gallery` (dashboard photos → site, gap closed)
+- ✅ Home redesign — 3 pure states (new lead hero / caught up momentum / welcome share), all stat chips + quick-action buttons removed
 
 ---
 
