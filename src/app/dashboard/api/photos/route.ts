@@ -60,7 +60,7 @@ export async function PATCH(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { id, for_website, for_social, website_section } = await req.json()
+  const { id, for_website, for_social, website_section, album_id } = await req.json()
   if (!id) return NextResponse.json({ error: "No id" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -68,6 +68,7 @@ export async function PATCH(req: Request) {
   if (for_website !== undefined) update.for_website = for_website
   if (for_social !== undefined) update.for_social = for_social
   if (website_section !== undefined) update.website_section = website_section
+  if (album_id !== undefined) update.album_id = album_id
 
   const { data, error } = await admin
     .from("company_photos")

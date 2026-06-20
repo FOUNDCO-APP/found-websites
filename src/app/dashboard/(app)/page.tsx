@@ -12,15 +12,24 @@ export default async function HomePage() {
   if (!company) redirect("/login")
 
   const admin = createAdminClient()
-  const { data: leads } = await admin
-    .from("leads")
-    .select("id, name, email, phone, message, created_at, partial_answers, temperature")
-    .eq("company_id", company.id)
-    .neq("type", "onboarding_abandoned")
-    .order("created_at", { ascending: false })
-    .limit(50)
 
-  const allLeads = leads ?? []
+  const [leadsResult, photosResult] = await Promise.all([
+    admin
+      .from("leads")
+      .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
+      .eq("company_id", company.id)
+      .neq("type", "onboarding_abandoned")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    admin
+      .from("company_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("company_id", company.id),
+  ])
+
+  const allLeads = leadsResult.data ?? []
+  const photoCount = photosResult.count ?? 0
+
   const newCount = allLeads.filter(l => {
     if (!l.created_at) return false
     return Date.now() - new Date(l.created_at).getTime() < 7 * 86400000
@@ -30,6 +39,13 @@ export default async function HomePage() {
   const topMessage = top
     ? (top.message || top.partial_answers?.message || top.partial_answers?.services || top.partial_answers?.description || null)
     : null
+
+  const recentLeads = allLeads.slice(0, 5).map(l => ({
+    id: l.id,
+    name: l.name ?? null,
+    created_at: l.created_at ?? null,
+    source: l.source ?? l.type ?? null,
+  }))
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
@@ -49,6 +65,8 @@ export default async function HomePage() {
       topCreatedAt={top?.created_at ?? null}
       siteSlug={company.slug}
       isActive={isActive}
+      photoCount={photoCount}
+      recentLeads={recentLeads}
     />
   )
 }
