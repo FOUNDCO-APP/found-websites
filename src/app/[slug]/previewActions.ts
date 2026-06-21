@@ -5,6 +5,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import Stripe from "stripe"
 
 const FOUNDING_MEMBER_LIMIT = 25
+// July 15 midnight Arizona time (UTC-7, no DST)
+const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 async function getFoundingMemberCount(): Promise<number> {
   const admin = createAdminClient()
@@ -30,9 +32,9 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  // Determine if this is a founding member slot
+  // Founding member = before July 15 AND under the slot limit
   const foundingCount = await getFoundingMemberCount()
-  const isFoundingMember = foundingCount < FOUNDING_MEMBER_LIMIT
+  const isFoundingMember = new Date() < FOUNDING_CUTOFF && foundingCount < FOUNDING_MEMBER_LIMIT
 
   const priceId = isFoundingMember
     ? (process.env.STRIPE_PRICE_ID_FOUND_FOUNDING ?? process.env.STRIPE_PRICE_ID_FOUND)

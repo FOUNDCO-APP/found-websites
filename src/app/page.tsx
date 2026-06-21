@@ -4,14 +4,17 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
+import SiteFooter from "@/components/SiteFooter"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
+  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
 
   useEffect(() => {
     document.documentElement.style.backgroundColor = FOUND_BLACK
@@ -81,10 +84,10 @@ export default function Home() {
                   Get found.<br />Get hired.
                 </h1>
                 <p className="found-hero-mobile-copy mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden">
-                  Answer a few questions.<br />Found builds the site.
+                  Found builds your site.<br />You get the calls.
                 </p>
                 <p className="found-hero-desktop-copy mt-7 hidden max-w-md text-base font-medium leading-8 text-white/70 md:block md:text-lg">
-                  Answer a few questions. Found turns your work, voice, and location into a website that feels made for you.
+                  Found writes your copy, picks your photos, and builds your pages — around your trade, your town, and your voice. Most owners are live before they finish their second cup of coffee.
                 </p>
                 <div className="found-hero-actions absolute inset-x-6 bottom-8 flex flex-col gap-3 sm:flex-row md:static md:inset-auto md:mt-9">
                   <button
@@ -122,22 +125,22 @@ export default function Home() {
             <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
               <div>
                 <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-                  How Found Works
+                  Three minutes.
                 </p>
                 <h2 className="max-w-xl text-4xl font-light leading-tight md:text-6xl">
-                  No templates. No builder. Just a conversation.
+                  Your whole business, ready to meet the world.
                 </h2>
               </div>
               <div className="grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
                 {[
-                  ["01", "Tell Found what you do.", "Business name, services, location, voice, photos, and the feeling of the brand."],
-                  ["02", "Found builds your site.", "Your industry, your location, your voice. Copy written, photos picked, pages assembled — done before you finish reading this."],
-                  ["03", "Your business goes live.", "The reveal gives the owner a real site they can open, share, and improve."],
+                  ["01", "You talk. We listen.", "A few questions about your work, your town, and what makes you different. That's the whole conversation."],
+                  ["02", "Your site writes itself.", "Found picks your photos, writes your copy, and builds every page — tuned to your industry and your neighborhood."],
+                  ["03", "Go live today.", "A real site. Your web address. Ready to share and start booking clients — today."],
                 ].map(([step, title, body]) => (
                   <div key={step} className="bg-[#0B0E0C] p-7" style={{ borderTop: `2px solid ${SIGNAL_GREEN}` }}>
                     <div className="mb-6 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
-                    <h3 className="text-2xl font-light leading-tight">{title}</h3>
-                    <p className="mt-4 text-sm font-medium leading-7 text-white/55">{body}</p>
+                    <h3 className="text-xl font-normal leading-tight">{title}</h3>
+                    <p className="mt-4 text-sm font-medium leading-7 text-white/60">{body}</p>
                   </div>
                 ))}
               </div>
@@ -150,47 +153,49 @@ export default function Home() {
               >
                 Get my site
               </button>
-              <p className="mt-4 text-xs text-white/30 font-medium">Your site goes live in minutes.</p>
+              <p className="mt-4 text-xs text-white/30 font-medium">Most sites are ready the same day.</p>
             </div>
           </div>
         </section>
 
-        {/* ── Promo banner ── */}
-        <section style={{ backgroundColor: SIGNAL_GREEN }}>
-          <div className="px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
-            <div className="md:grid md:grid-cols-2 md:gap-20 md:items-center">
+        {/* ── Promo banner — only visible during founding period ── */}
+        {isFoundingPeriod && (
+          <section style={{ backgroundColor: SIGNAL_GREEN }}>
+            <div className="px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
+              <div className="md:grid md:grid-cols-2 md:gap-20 md:items-center">
 
-              {/* Left: headline */}
-              <div className="mb-10 md:mb-0">
-                <h2
-                  className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
-                  style={{ color: FOUND_BLACK }}
-                >
-                  Lock in your rate<br />before July 15.
-                </h2>
-              </div>
+                {/* Left: headline */}
+                <div className="mb-10 md:mb-0">
+                  <h2
+                    className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
+                    style={{ color: FOUND_BLACK }}
+                  >
+                    Lock in your rate<br />before July 15.
+                  </h2>
+                </div>
 
-              {/* Right: subtext + CTA */}
-              <div>
-                <p
-                  className="text-lg font-medium leading-relaxed mb-10 md:text-xl"
-                  style={{ color: "rgba(8,10,9,0.58)" }}
-                >
-                  Start today at $29, $39, or $69/month —<br className="hidden md:block" />
-                  your price, locked in for a full year.
-                </p>
-                <button
-                  type="button"
-                  onClick={openDrawer}
-                  className="inline-flex min-h-14 items-center justify-center rounded-full px-10 text-sm font-black uppercase tracking-widest transition hover:opacity-80"
-                  style={{ backgroundColor: FOUND_BLACK, color: "white" }}
-                >
-                  Get my site
-                </button>
+                {/* Right: subtext + CTA */}
+                <div>
+                  <p
+                    className="text-lg font-medium leading-relaxed mb-10 md:text-xl"
+                    style={{ color: "rgba(8,10,9,0.58)" }}
+                  >
+                    Start today at $29, $39, or $69/month —<br className="hidden md:block" />
+                    your price, locked in for a full year.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openDrawer}
+                    className="inline-flex min-h-14 items-center justify-center rounded-full px-10 text-sm font-black uppercase tracking-widest transition hover:opacity-80"
+                    style={{ backgroundColor: FOUND_BLACK, color: "white" }}
+                  >
+                    Get my site
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* ── Pricing ── */}
         <section id="pricing" className="bg-[#080A09] px-6 py-24 md:px-10">
@@ -198,7 +203,9 @@ export default function Home() {
             <div className="text-center mb-16">
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
-              <p className="mt-5 text-base text-white/50 font-medium">Founding rates expire July 15 — locked in for your first year.</p>
+              <p className="mt-5 text-base text-white/50 font-medium">
+            {isFoundingPeriod ? "Founding rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+          </p>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 max-w-5xl mx-auto">
@@ -207,7 +214,7 @@ export default function Home() {
                   key: "found",
                   tagline: "Get online today.",
                   name: "Found",
-                  price: "$29",
+                  price: isFoundingPeriod ? "$29" : "$39",
                   normalPrice: "$39",
                   features: [
                     "Complete website, five pages",
@@ -215,15 +222,15 @@ export default function Home() {
                     "Professional copy, written for you",
                     "Beautiful industry photos, built in",
                     "Leads come straight to you",
-                    "Every inquiry answered instantly",
+                    "Inquiries get an automatic reply the moment they arrive",
                     "Take a photo. It's on your site.",
                   ],
                 },
                 {
                   key: "found_pro",
-                  tagline: "Never lose a lead again.",
+                  tagline: "Follow up with every lead. Automatically.",
                   name: "Found Pro",
-                  price: "$39",
+                  price: isFoundingPeriod ? "$39" : "$69",
                   normalPrice: "$69",
                   featured: true,
                   features: [
@@ -240,7 +247,7 @@ export default function Home() {
                   key: "found_business",
                   tagline: "Run your whole business.",
                   name: "Found Business",
-                  price: "$69",
+                  price: isFoundingPeriod ? "$69" : "$99",
                   normalPrice: "$99",
                   features: [
                     "Everything in Found Pro",
@@ -274,7 +281,7 @@ export default function Home() {
                         className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
                         style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                       >
-                        Most Popular
+                        Recommended
                       </span>
                     </div>
                   )}
@@ -283,12 +290,16 @@ export default function Home() {
                   </p>
                   <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
                   <div className="mb-8">
-                    <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.normalPrice}/month</p>
+                    {isFoundingPeriod && (
+                      <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.normalPrice}/month</p>
+                    )}
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-light text-white">{plan.price}</span>
                       <span className="text-sm text-white/40 font-medium">/month</span>
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                    {isFoundingPeriod && (
+                      <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                    )}
                   </div>
                   <ul className="space-y-3 mb-10">
                     {plan.features.map((f) => (
@@ -312,13 +323,17 @@ export default function Home() {
             </div>
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
-              Founding rates expire July 15 · locked for 12 months, then regular price ·{" "}
-              <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a>
+              {isFoundingPeriod
+                ? <>Founding rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
+                : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
+              }
             </p>
           </div>
         </section>
 
       </main>
+
+      <SiteFooter />
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} />
 

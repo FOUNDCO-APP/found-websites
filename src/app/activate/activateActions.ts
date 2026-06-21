@@ -99,10 +99,11 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       invoice_settings: { default_payment_method: paymentMethodId },
     })
 
-    // Now create the subscription — customer has a payment method so it charges immediately
+    // Use the price_id stored in the SetupIntent metadata (set at signup with correct date-based pricing)
+    const priceId = setupIntent.metadata?.price_id ?? process.env.STRIPE_PRICE_ID_FOUND!
     await stripe.subscriptions.create({
       customer: customerId,
-      items: [{ price: process.env.STRIPE_PRICE_ID_FOUND }],
+      items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
       metadata: { slug },
     })

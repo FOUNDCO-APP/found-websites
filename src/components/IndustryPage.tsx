@@ -4,9 +4,11 @@ import { useState } from "react"
 import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
+import SiteFooter from "./SiteFooter"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -25,6 +27,7 @@ interface Props {
 export default function IndustryPage({ industry, eyebrow, headline, subheadline, description, features, faqs, closingLine }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -59,16 +62,18 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             >
               Get my site — today
             </button>
-            <div className="flex items-center gap-3 pt-2">
-              <div>
-                <p className="text-xs line-through" style={{ color: "rgba(255,255,255,0.3)" }}>$39/month</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-black text-white">$29</span>
-                  <span className="text-sm text-white/40">/mo</span>
+            {isFoundingPeriod && (
+              <div className="flex items-center gap-3 pt-2">
+                <div>
+                  <p className="text-xs line-through" style={{ color: "rgba(255,255,255,0.3)" }}>$39/month</p>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-2xl font-black text-white">$29</span>
+                    <span className="text-sm text-white/40">/mo</span>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
               </div>
-            </div>
+            )}
           </div>
         </section>
 
@@ -98,19 +103,21 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
         <section className="px-6 py-16 md:px-10 max-w-4xl mx-auto text-center">
           <div
             className="rounded-2xl px-8 py-12"
-            style={{ backgroundColor: "rgba(50,208,116,0.06)", border: "2px solid rgba(50,208,116,0.2)" }}
+            style={{ backgroundColor: "rgba(50,208,116,0.06)", border: "2px solid rgba(50,208,116,0.3)" }}
           >
-            <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
-              Founding rate — expires July 15
-            </p>
-            <h2 className="text-3xl font-normal text-white mb-3 md:text-4xl">Your site. Live tonight.</h2>
-            <p className="text-white/50 mb-8 font-medium">Under 10 minutes. No technical skills required.</p>
+            {isFoundingPeriod && (
+              <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
+                Founding rate — expires July 15
+              </p>
+            )}
+            <h2 className="text-3xl font-normal text-white mb-3 md:text-4xl">Your site. Live today.</h2>
+            <p className="text-white/50 mb-8 font-medium">A few questions. Done before you know it.</p>
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Get my site — $29/mo
+              {isFoundingPeriod ? "Get my site — $29/mo" : "Get my site"}
             </button>
           </div>
         </section>
@@ -150,7 +157,9 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
         <section className="px-6 pb-24 md:px-10 text-center">
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine}</h2>
-            <p className="text-white/45 mb-8 font-medium">Your site goes live today. Founding rate locked for 12 months.</p>
+            <p className="text-white/45 mb-8 font-medium">
+              {isFoundingPeriod ? "Your site goes live today. Founding rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+            </p>
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
@@ -159,14 +168,19 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               Get my site — today
             </button>
             <p className="mt-6 text-xs text-white/25">
-              Founding rate expires July 15 · locked for 12 months, then $39/month.{" "}
-              <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Compare all plans
-              </Link>
+              {isFoundingPeriod
+                ? <>Founding rate expires July 15 · locked for 12 months, then $39/month.{" "}
+                    <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      Compare all plans
+                    </Link></>
+                : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans →</Link>
+              }
             </p>
           </div>
         </section>
       </div>
+
+      <SiteFooter />
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan="found" />
     </>

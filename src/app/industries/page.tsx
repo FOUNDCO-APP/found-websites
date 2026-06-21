@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
+import SiteFooter from "@/components/SiteFooter"
 
 export const metadata: Metadata = {
   title: "Industries | Found — Websites Built for Your Type of Business",
@@ -87,6 +88,7 @@ export default function IndustriesPage() {
           </Link>
         </div>
       </section>
+      <SiteFooter />
     </div>
   )
 }

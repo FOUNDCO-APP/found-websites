@@ -21,8 +21,8 @@ export default function FoundProPlanPage() {
       normalPrice={69}
       closingLine="Never let another lead slip."
       featured
-      tagline="Your business runs itself while you work."
-      description="Most businesses lose clients not because of bad work, but because they forgot to follow up. Found Pro fixes that — every inquiry gets answered, followed up, and tracked automatically. You stay focused on the job. Found handles the rest."
+      tagline="Stay focused on the job. Found helps you follow up."
+      description="Most businesses lose clients not because of bad work, but because they forgot to follow up. Found Pro fixes that — every inquiry gets answered, followed up, and tracked automatically. You stay focused on the job. Found helps with the rest."
       features={[
         { label: "Everything in Found", desc: "Complete website, your own web address, industry photos, lead capture, and the photo system that keeps your site fresh." },
         { label: "Every lead followed up — automatically", desc: "When someone contacts you, Found sends them a confirmation right away. Then checks in three days later. Then one final message a week after that. All sent on your behalf, all sounding like you. Every single time." },
@@ -33,7 +33,7 @@ export default function FoundProPlanPage() {
         { label: "Rewrite any page on your site, anytime", desc: "Added a new service? Moved to a new city? Want a different tone? Found rewrites any section of your website in seconds — no designer, no developer." },
       ]}
       faqs={[
-        { q: "What makes Pro worth the extra $10/month over Found?", a: "The follow-up sequence. Businesses that follow up within the first few days are far more likely to close a lead. Found Pro does it automatically, for every single inquiry, forever. Most Pro customers recover the cost on their first extra closed job." },
+        { q: "What makes Pro worth the extra $10/month over Found?", a: "The follow-up sequence. Businesses that follow up within the first few days are far more likely to close a lead. Found Pro does it automatically, for every single inquiry, forever — so no lead ever gets forgotten because you were busy." },
         { q: "How does the automatic follow-up work?", a: "When someone fills out your contact form, they get an immediate reply. Three days later, Found sends a check-in on your behalf. Seven days later, one final message. All of them look like they came from you — your business name, your phone number, your tone." },
         { q: "What does 'your crew contributes from the field' mean?", a: "You give your employees or subcontractors a simple upload link. They take photos at a job site and send them through. Those photos appear in Found for you to review. You heart them to go on the website, star them for social — the crew never sees your contacts, your leads, or your business data." },
         { q: "Can I downgrade to Found if I don't need all of this?", a: "Yes, anytime. Your website stays live and your domain stays connected. You'd lose the automatic follow-up and contact history, but nothing is deleted." },

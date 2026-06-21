@@ -4,9 +4,11 @@ import { useState } from "react"
 import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
+import SiteFooter from "./SiteFooter"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -28,6 +30,7 @@ interface Props {
 export default function PlanPage({ plan, name, identity, price, normalPrice, featured, tagline, description, features, faqs, closingLine }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
 
   // FAQ schema for AEO/GEO
   const faqSchema = {
@@ -64,12 +67,16 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
               Get started — {name}
             </button>
             <div className="text-center">
-              <p className="text-sm line-through text-white/25">${normalPrice}/month</p>
+              {isFoundingPeriod && (
+                <p className="text-sm line-through text-white/25">${normalPrice}/month</p>
+              )}
               <div className="flex items-baseline gap-1 justify-center">
-                <span className="text-3xl font-black text-white">${price}</span>
+                <span className="text-3xl font-black text-white">${isFoundingPeriod ? price : normalPrice}</span>
                 <span className="text-sm text-white/40 font-medium">/month</span>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+              {isFoundingPeriod && (
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+              )}
             </div>
           </div>
         </section>
@@ -131,7 +138,9 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
         <section className="px-6 pb-24 md:px-10 text-center">
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine ?? "Your business is live tonight."}</h2>
-            <p className="text-white/45 mb-8 font-medium">Your site goes live today. Founding rate locked for 12 months.</p>
+            <p className="text-white/45 mb-8 font-medium">
+              {isFoundingPeriod ? "Your site goes live today. Founding rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+            </p>
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
@@ -140,15 +149,20 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
               Get started — {name}
             </button>
             <p className="mt-6 text-xs text-white/25">
-              Founding rate expires July 15 · locked for 12 months, then ${normalPrice}/month.{" "}
-              <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Compare all plans
-              </Link>
+              {isFoundingPeriod
+                ? <>Founding rate expires July 15 · locked for 12 months, then ${normalPrice}/month.{" "}
+                    <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      Compare all plans
+                    </Link></>
+                : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans →</Link>
+              }
             </p>
           </div>
         </section>
 
       </div>
+
+      <SiteFooter />
 
       <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={plan} />
     </>

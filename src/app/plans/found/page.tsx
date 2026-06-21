@@ -27,7 +27,7 @@ export default function FoundPlanPage() {
         { label: "Your own web address", desc: "Connect yourbusiness.com and show up professionally everywhere — Google, text messages, business cards, everywhere." },
         { label: "Beautiful photos for your industry", desc: "Curated, professional photos matched to your type of business. Not random stock images — photos that look like your work." },
         { label: "Leads come straight to you", desc: "Every inquiry from your website is saved and forwarded to you the moment it comes in. Nothing falls through the cracks." },
-        { label: "Every inquiry answered instantly", desc: "When someone fills out your form, they automatically get a professional reply — making your business look responsive 24 hours a day, even when you're on a job." },
+        { label: "Inquiries get an automatic reply right away", desc: "When someone fills out your form, they automatically get a professional reply — making your business look responsive around the clock, even when you're on a job." },
         { label: "Take a photo. It's on your site.", desc: "Finish a job, take a photo. Heart it in Found and it appears on your website gallery. Star it and it's sized and ready to post on Instagram and Facebook — no resizing, no editing app." },
       ]}
       faqs={[

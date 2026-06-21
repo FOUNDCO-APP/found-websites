@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
+import SiteFooter from "@/components/SiteFooter"
 
 export const metadata: Metadata = {
   title: "Compare Plans | Found — $29, $39, $69/month",
@@ -14,11 +15,14 @@ export const metadata: Metadata = {
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+
+const IS_FOUNDING_PERIOD = new Date() < FOUNDING_CUTOFF
 
 const PLANS = [
-  { key: "found",          name: "Found",          href: "/plans/found",          price: 29,  normalPrice: 39, tagline: "Start here." },
-  { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: 39,  normalPrice: 69, tagline: "Never lose a lead.", featured: true },
-  { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: 69,  normalPrice: 99, tagline: "Run your whole business." },
+  { key: "found",          name: "Found",          href: "/plans/found",          price: IS_FOUNDING_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
+  { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: IS_FOUNDING_PERIOD ? 39 : 69,  normalPrice: 69, tagline: "Follow up with every lead. Automatically.", featured: true },
+  { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: IS_FOUNDING_PERIOD ? 69 : 99,  normalPrice: 99, tagline: "Run your whole business." },
 ]
 
 const ROWS: { label: string; values: (boolean | string)[] }[] = [
@@ -27,7 +31,7 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Professional copy, written for you",      values: [true, true, true] },
   { label: "Beautiful industry photos, built in",     values: [true, true, true] },
   { label: "Leads come straight to you",              values: [true, true, true] },
-  { label: "Every inquiry answered instantly",        values: [true, true, true] },
+  { label: "Inquiries get an automatic reply right away",  values: [true, true, true] },
   { label: "Take a photo. It's on your site.",        values: [true, true, true] },
   { label: "Every lead followed up — automatically",  values: [false, true, true] },
   { label: "See who's interested and ready to hire",  values: [false, true, true] },
@@ -70,7 +74,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          Founding rates expire July 15. Locked in for your first year.
+          {IS_FOUNDING_PERIOD ? "Founding rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
         </p>
       </section>
 
@@ -79,10 +83,10 @@ export default function PlansPage() {
         {PLANS.map((plan) => (
           <div
             key={plan.key}
-            className="rounded-2xl p-8 relative"
+            className="rounded-2xl p-10 relative"
             style={{
               backgroundColor: plan.featured ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
-              border: plan.featured ? "2px solid rgba(50,208,116,0.35)" : "2px solid rgba(255,255,255,0.07)",
+              border: plan.featured ? "2px solid rgba(50,208,116,0.3)" : "2px solid rgba(255,255,255,0.07)",
               transform: plan.featured ? "scale(1.02)" : "scale(1)",
               boxShadow: plan.featured ? "inset 0 0 80px rgba(50,208,116,0.05)" : "none",
             }}
@@ -91,32 +95,31 @@ export default function PlansPage() {
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                 <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
                   style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                  Most Popular
+                  Recommended
                 </span>
               </div>
             )}
             <p className="text-base font-black text-white mb-1">{plan.tagline}</p>
             <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
-            <p className="text-xs line-through" style={{ color: "rgba(255,255,255,0.25)" }}>${plan.normalPrice}/month</p>
+            {IS_FOUNDING_PERIOD && (
+              <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>${plan.normalPrice}/month</p>
+            )}
             <div className="flex items-baseline gap-1 mb-0.5">
-              <span className="text-3xl font-black text-white">${plan.price}</span>
+              <span className="text-4xl font-light text-white">${plan.price}</span>
               <span className="text-sm font-medium text-white/40">/mo</span>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
-            <Link
-              href={`/?start=1&plan=${plan.key}`}
-              className="block py-3 rounded-full text-xs font-black uppercase tracking-widest transition text-center mb-3"
-              style={{ backgroundColor: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.1)", color: plan.featured ? FOUND_BLACK : "white" }}
-            >
-              Get my site
-            </Link>
-            <Link
-              href={plan.href}
-              className="block text-center text-xs font-medium transition"
-              style={{ color: "rgba(255,255,255,0.35)" }}
-            >
-              Learn more →
-            </Link>
+            {IS_FOUNDING_PERIOD && (
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+            )}
+            <div className={IS_FOUNDING_PERIOD ? "" : "mt-6"}>
+              <Link
+                href={`/?start=1&plan=${plan.key}`}
+                className="block py-4 rounded-full text-xs font-black uppercase tracking-widest transition text-center"
+                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+              >
+                Get my site
+              </Link>
+            </div>
           </div>
         ))}
       </div>
@@ -174,12 +177,15 @@ export default function PlansPage() {
       </div>
 
       {/* Bottom note */}
-      <div className="px-6 pb-20 text-center">
+      <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
-          Founding rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price.
+          {IS_FOUNDING_PERIOD
+            ? <>Founding rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
+            : "Cancel anytime. Results vary by market and business type."}
         </p>
       </div>
 
+      <SiteFooter />
     </div>
   )
 }
