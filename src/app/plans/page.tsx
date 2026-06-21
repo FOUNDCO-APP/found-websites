@@ -66,8 +66,8 @@ export default function PlansPage() {
         <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
           Plans
         </p>
-        <h1 className="text-4xl font-light leading-tight md:text-6xl text-white mb-5">
-          Find your plan.
+        <h1 className="text-4xl font-normal leading-tight md:text-6xl text-white mb-5">
+          The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
           Founding rates expire July 15. Locked in for your first year.
@@ -79,36 +79,43 @@ export default function PlansPage() {
         {PLANS.map((plan) => (
           <div
             key={plan.key}
-            className="rounded-2xl p-6 text-center relative"
+            className="rounded-2xl p-8 relative"
             style={{
-              backgroundColor: plan.featured ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.03)",
+              backgroundColor: plan.featured ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
               border: plan.featured ? "2px solid rgba(50,208,116,0.35)" : "2px solid rgba(255,255,255,0.07)",
+              transform: plan.featured ? "scale(1.02)" : "scale(1)",
+              boxShadow: plan.featured ? "inset 0 0 80px rgba(50,208,116,0.05)" : "none",
             }}
           >
             {plan.featured && (
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
+                <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
                   style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                   Most Popular
                 </span>
               </div>
             )}
-            <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}>
-              {plan.tagline}
-            </p>
-            <p className="text-lg font-black text-white mb-2">{plan.name}</p>
-            <p className="text-xs line-through text-white/25">${plan.normalPrice}/month</p>
-            <p className="text-3xl font-black text-white">${plan.price}<span className="text-sm font-medium text-white/40">/mo</span></p>
-            <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-4 mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+            <p className="text-base font-black text-white mb-1">{plan.tagline}</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
+            <p className="text-xs line-through" style={{ color: "rgba(255,255,255,0.25)" }}>${plan.normalPrice}/month</p>
+            <div className="flex items-baseline gap-1 mb-0.5">
+              <span className="text-3xl font-black text-white">${plan.price}</span>
+              <span className="text-sm font-medium text-white/40">/mo</span>
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+            <Link
+              href={`/?start=1&plan=${plan.key}`}
+              className="block py-3 rounded-full text-xs font-black uppercase tracking-widest transition text-center mb-3"
+              style={{ backgroundColor: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.1)", color: plan.featured ? FOUND_BLACK : "white" }}
+            >
+              Get my site
+            </Link>
             <Link
               href={plan.href}
-              className="block py-3 rounded-full text-xs font-black uppercase tracking-widest transition"
-              style={{
-                backgroundColor: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.07)",
-                color: plan.featured ? FOUND_BLACK : "rgba(255,255,255,0.7)",
-              }}
+              className="block text-center text-xs font-medium transition"
+              style={{ color: "rgba(255,255,255,0.35)" }}
             >
-              Learn more
+              Learn more →
             </Link>
           </div>
         ))}
@@ -130,14 +137,37 @@ export default function PlansPage() {
           </thead>
           <tbody>
             {ROWS.map((row, i) => (
-              <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                <td className="py-4 pr-8 text-white/65 font-medium">{row.label}</td>
-                {row.values.map((val, j) => (
-                  <td key={j} className="py-4 px-4 text-center">
-                    {val === true ? <span className="flex justify-center"><Check /></span> : <span className="flex justify-center"><Dash /></span>}
-                  </td>
-                ))}
-              </tr>
+              <>
+                {i === 0 && (
+                  <tr key="divider-all">
+                    <td colSpan={4} className="pt-6 pb-2 pr-8">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Included in all plans</p>
+                    </td>
+                  </tr>
+                )}
+                {i === 7 && (
+                  <tr key="divider-pro">
+                    <td colSpan={4} className="pt-8 pb-2 pr-8">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Added in Found Pro</p>
+                    </td>
+                  </tr>
+                )}
+                {i === 13 && (
+                  <tr key="divider-biz">
+                    <td colSpan={4} className="pt-8 pb-2 pr-8">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Added in Found Business</p>
+                    </td>
+                  </tr>
+                )}
+                <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <td className="py-4 pr-8 text-white/65 font-medium">{row.label}</td>
+                  {row.values.map((val, j) => (
+                    <td key={j} className="py-4 px-4 text-center">
+                      {val === true ? <span className="flex justify-center"><Check /></span> : <span className="flex justify-center"><Dash /></span>}
+                    </td>
+                  ))}
+                </tr>
+              </>
             ))}
           </tbody>
         </table>

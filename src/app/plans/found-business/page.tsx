@@ -19,6 +19,7 @@ export default function FoundBusinessPlanPage() {
       identity="Run your whole business."
       price={69}
       normalPrice={99}
+      closingLine="You just became the most professional business on the block."
       tagline="Run your entire business from your phone."
       description="Found Business is everything a growing local business needs — from the first website visit to the final invoice and the five-star review that follows. One platform. One monthly fee. No other software to pay for, learn, or switch between."
       features={[

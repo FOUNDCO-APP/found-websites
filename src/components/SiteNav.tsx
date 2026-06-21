@@ -9,7 +9,7 @@ const SIGNAL_GREEN = "#32D074"
 const NAV_LINKS = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "Plans",        href: "/plans" },
-  { label: "Industries",   href: "#" },
+  { label: "Industries",   href: "/industries" },
 ]
 
 interface Props {
@@ -59,11 +59,11 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
     const base = `${fullWidth ? "w-full min-h-[60px]" : "px-5 py-2.5"} rounded-full text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-90`
     return onCta ? (
       <button onClick={handleCta} className={base} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-        Get Started
+        Get my site
       </button>
     ) : (
       <Link href="/?start=1" onClick={closeMenu} className={`inline-flex items-center justify-center ${base}`} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-        Get Started
+        Get my site
       </Link>
     )
   }
@@ -184,7 +184,7 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
           >
             <CtaEl fullWidth />
             <p className="text-center text-xs text-white/25 mt-5 font-medium tracking-wide">
-              Your business, beautifully online.
+              Get found. Get hired.
             </p>
           </div>
         </div>

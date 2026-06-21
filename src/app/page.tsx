@@ -24,6 +24,9 @@ export default function Home() {
 
   useEffect(() => {
     if (window.location.search.includes("start=1")) {
+      const params = new URLSearchParams(window.location.search)
+      const planParam = params.get("plan")
+      if (planParam) setSelectedPlan(planParam)
       setDrawerOpen(true)
       window.history.replaceState({}, "", "/")
     }
@@ -74,8 +77,8 @@ export default function Home() {
 
             <div className="found-hero-content flex flex-1 items-start pt-8 md:items-center md:pt-0">
               <div className="found-hero-copy max-w-[350px] md:max-w-[590px]">
-                <h1 className="found-hero-title text-[2.65rem] font-light leading-[0.98] tracking-normal text-white md:text-7xl">
-                  Your business beautifully online.
+                <h1 className="found-hero-title text-[2.65rem] font-normal leading-[0.98] tracking-normal text-white md:text-7xl">
+                  Get found.<br />Get hired.
                 </h1>
                 <p className="found-hero-mobile-copy mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden">
                   Answer a few questions.<br />Found builds the site.
@@ -89,7 +92,7 @@ export default function Home() {
                     onClick={openDrawer}
                     className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-7 text-xs font-black uppercase tracking-widest text-[#080A09] shadow-[0_0_34px_rgba(50,208,116,0.22)] transition hover:bg-[#5DE894] md:min-h-14 md:px-8 md:text-sm"
                   >
-                    Build my site
+                    Get my site
                   </button>
                   <a
                     href="#how-it-works"
@@ -128,13 +131,13 @@ export default function Home() {
               <div className="grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
                 {[
                   ["01", "Tell Found what you do.", "Business name, services, location, voice, photos, and the feeling of the brand."],
-                  ["02", "Found shapes the site.", "Industry, imagery, layout, color, copy, and calls to action come together quietly."],
+                  ["02", "Found builds your site.", "Your industry, your location, your voice. Copy written, photos picked, pages assembled — done before you finish reading this."],
                   ["03", "Your business goes live.", "The reveal gives the owner a real site they can open, share, and improve."],
                 ].map(([step, title, body]) => (
                   <div key={step} className="bg-[#0B0E0C] p-7" style={{ borderTop: `2px solid ${SIGNAL_GREEN}` }}>
-                    <div className="mb-12 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
+                    <div className="mb-6 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>{step}</div>
                     <h3 className="text-2xl font-light leading-tight">{title}</h3>
-                    <p className="mt-4 text-sm font-bold leading-7 text-white/48">{body}</p>
+                    <p className="mt-4 text-sm font-medium leading-7 text-white/55">{body}</p>
                   </div>
                 ))}
               </div>
@@ -145,7 +148,7 @@ export default function Home() {
                 onClick={openDrawer}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-8 text-sm font-black uppercase tracking-widest text-[#080A09] transition hover:bg-[#5DE894] md:min-h-14"
               >
-                Build my site
+                Get my site
               </button>
               <p className="mt-4 text-xs text-white/30 font-medium">Your site goes live in minutes.</p>
             </div>
@@ -163,7 +166,7 @@ export default function Home() {
                   className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
                   style={{ color: FOUND_BLACK }}
                 >
-                  Prices go up<br />July 15.
+                  Lock in your rate<br />before July 15.
                 </h2>
               </div>
 
@@ -182,7 +185,7 @@ export default function Home() {
                   className="inline-flex min-h-14 items-center justify-center rounded-full px-10 text-sm font-black uppercase tracking-widest transition hover:opacity-80"
                   style={{ backgroundColor: FOUND_BLACK, color: "white" }}
                 >
-                  Build my site
+                  Get my site
                 </button>
               </div>
             </div>
@@ -275,12 +278,12 @@ export default function Home() {
                       </span>
                     </div>
                   )}
-                  <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>
+                  <p className="text-base font-black text-white mb-1">
                     {plan.tagline}
                   </p>
-                  <h3 className="text-2xl font-black text-white mb-1">{plan.name}</h3>
+                  <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
                   <div className="mb-8">
-                    <p className="text-sm font-medium line-through" style={{ color: "#C4763A" }}>{plan.normalPrice}/month</p>
+                    <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.normalPrice}/month</p>
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-light text-white">{plan.price}</span>
                       <span className="text-sm text-white/40 font-medium">/month</span>

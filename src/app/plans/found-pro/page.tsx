@@ -19,6 +19,7 @@ export default function FoundProPlanPage() {
       identity="Never lose a lead again."
       price={39}
       normalPrice={69}
+      closingLine="Never let another lead slip."
       featured
       tagline="Your business runs itself while you work."
       description="Most businesses lose clients not because of bad work, but because they forgot to follow up. Found Pro fixes that — every inquiry gets answered, followed up, and tracked automatically. You stay focused on the job. Found handles the rest."

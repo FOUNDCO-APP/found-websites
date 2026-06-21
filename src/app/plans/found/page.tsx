@@ -19,6 +19,7 @@ export default function FoundPlanPage() {
       identity="Start here."
       price={29}
       normalPrice={39}
+      closingLine="Your business is live tonight."
       tagline="Your business, professionally online — today."
       description="You do great work. Found makes sure people can find you, contact you, and trust you before they even pick up the phone. A complete website, your own domain, and a photo system that keeps your site looking fresh — set up in minutes."
       features={[
