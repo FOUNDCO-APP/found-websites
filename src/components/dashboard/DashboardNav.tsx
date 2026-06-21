@@ -94,13 +94,15 @@ export default function DashboardNav({
   industry?: string | null
 }) {
   const pathname = usePathname()
-  const router   = useRouter()
 
   const isDev   = pathname.startsWith("/dashboard")
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
   const prefix  = isDev ? "/dashboard" : ""
 
   const albumLabel = albumLabelFor(industry)
+
+  // Hide the floating FAB on the Photos page — header camera handles it there
+  const onPhotosPage = segment === "/photos" || segment.startsWith("/photos/")
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
@@ -134,11 +136,6 @@ export default function DashboardNav({
 
   function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
-    if (segment === "/photos" || segment.startsWith("/photos/")) {
-      // Already on photos page — let the page handle upload with album context
-      router.push(`${prefix}/photos?upload=1`)
-      return
-    }
     setShowPicker(true)
   }
 
@@ -177,7 +174,6 @@ export default function DashboardNav({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
           }).catch(console.error)
-          // Update local cover_url if album had none
           setAlbums(prev => prev.map(a =>
             a.id === albumId && !a.cover_url ? { ...a, cover_url: data.photo.url } : a
           ))
@@ -218,12 +214,9 @@ export default function DashboardNav({
     }
   }
 
-  const leftTabs  = TABS.slice(0, 2)
-  const rightTabs = TABS.slice(3, 5)
-
   return (
     <>
-      {/* ── Mobile bottom tab bar ── */}
+      {/* ── Mobile bottom tab bar — 5 equal tabs ── */}
       <nav className="found-mobile-nav" style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
         backgroundColor: "#080A09",
@@ -233,7 +226,7 @@ export default function DashboardNav({
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         zIndex: 50,
       }}>
-        {leftTabs.map(tab => {
+        {TABS.map(tab => {
           const active    = isActive(tab.path)
           const showBadge = tab.path === "/leads" && newLeadCount > 0 && !active
           return (
@@ -251,40 +244,40 @@ export default function DashboardNav({
             </Link>
           )
         })}
-
-        {/* Camera FAB */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 10 }}>
-          <button
-            onClick={handleCamera}
-            disabled={uploading}
-            style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${SIGNAL_GREEN}55`, marginTop: -20, opacity: uploading ? 0.7 : 1, transition: "opacity 0.2s" }}
-          >
-            {uploading ? (
-              <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2.5px solid ${FOUND_BLACK}55`, borderTopColor: FOUND_BLACK, animation: "nav-spin 0.8s linear infinite" }} />
-            ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            )}
-          </button>
-        </div>
-
-        {rightTabs.map(tab => {
-          const active = isActive(tab.path)
-          return (
-            <Link
-              key={tab.path}
-              href={`${prefix}${tab.path}`}
-              onClick={() => setPendingSegment(tab.path)}
-              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}
-            >
-              {ICONS[tab.path](active)}
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{tab.label}</span>
-            </Link>
-          )
-        })}
       </nav>
+
+      {/* ── Floating camera FAB — hidden on Photos page ── */}
+      {!onPhotosPage && (
+        <button
+          className="found-camera-fab"
+          onClick={handleCamera}
+          disabled={uploading}
+          aria-label="Take a photo"
+          style={{
+            position: "fixed",
+            bottom: 88,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 48, height: 48, borderRadius: "50%",
+            backgroundColor: SIGNAL_GREEN,
+            border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: `0 4px 20px ${SIGNAL_GREEN}66`,
+            zIndex: 49,
+            opacity: uploading ? 0.7 : 1,
+            transition: "opacity 0.2s",
+          }}
+        >
+          {uploading ? (
+            <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2.5px solid ${FOUND_BLACK}55`, borderTopColor: FOUND_BLACK, animation: "nav-spin 0.8s linear infinite" }} />
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          )}
+        </button>
+      )}
 
       {/* ── Desktop sidebar ── */}
       <aside className="found-sidebar" style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 220, backgroundColor: "#080A09", borderRight: "1px solid rgba(255,255,255,0.07)", flexDirection: "column", zIndex: 50, display: "none" }}>
@@ -329,7 +322,7 @@ export default function DashboardNav({
         </div>
       </aside>
 
-      {/* ── Hidden file input — nav handles upload when not on photos page ── */}
+      {/* ── Hidden file input ── */}
       <input
         ref={fileRef}
         type="file"
@@ -378,17 +371,14 @@ export default function DashboardNav({
             animation: "sheetUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)",
           }}>
 
-            {/* Handle */}
             <div style={{ width: 32, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }} />
 
-            {/* Header */}
             <div style={{ padding: "0 20px 16px" }}>
               <p style={{ margin: 0, fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
                 Where does this go?
               </p>
             </div>
 
-            {/* Album tiles */}
             {albums.length > 0 && (
               <div
                 className="picker-scroll"
@@ -410,6 +400,7 @@ export default function DashboardNav({
                         flexShrink: 0,
                       }}>
                         {album.cover_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={album.cover_url} alt={album.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         ) : (
                           <span style={{ fontSize: "1.625rem", fontWeight: 300, color, lineHeight: 1 }}>
@@ -424,7 +415,6 @@ export default function DashboardNav({
                   )
                 })}
 
-                {/* New album tile */}
                 {!showNewAlbum && (
                   <button
                     onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
@@ -441,7 +431,6 @@ export default function DashboardNav({
               </div>
             )}
 
-            {/* No albums yet — show new tile inline */}
             {albums.length === 0 && !showNewAlbum && (
               <div style={{ padding: "0 20px 12px" }}>
                 <button
@@ -458,7 +447,6 @@ export default function DashboardNav({
               </div>
             )}
 
-            {/* New album input */}
             {showNewAlbum && (
               <div style={{ padding: "4px 20px 12px", animation: "pickerFade 0.15s ease" }}>
                 <div style={{ borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}20` }}>
@@ -492,7 +480,6 @@ export default function DashboardNav({
               </div>
             )}
 
-            {/* Just shoot — real tappable button */}
             <div style={{ padding: "8px 20px 0" }}>
               <button
                 onClick={() => shoot()}
@@ -503,7 +490,6 @@ export default function DashboardNav({
                   color: "white", fontSize: "0.9375rem", fontWeight: 600,
                   cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  transition: "background-color 0.15s ease",
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -519,8 +505,9 @@ export default function DashboardNav({
 
       <style>{`
         @media (min-width: 768px) {
-          .found-mobile-nav { display: none !important; }
-          .found-sidebar    { display: flex !important; }
+          .found-mobile-nav  { display: none !important; }
+          .found-sidebar     { display: flex !important; }
+          .found-camera-fab  { display: none !important; }
         }
         @keyframes sheetUp    { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes pickerFade { from { opacity: 0; }                 to { opacity: 1; }               }
