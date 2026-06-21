@@ -75,6 +75,16 @@ export default function PhotosPage() {
     }
   }, [searchParams, router])
 
+  // Receive photos uploaded from the nav camera (when not on this page)
+  useEffect(() => {
+    function onNavUpload(e: Event) {
+      const photo = (e as CustomEvent).detail?.photo
+      if (photo) setPhotos(prev => [photo, ...prev])
+    }
+    window.addEventListener("found:photo-uploaded", onNavUpload)
+    return () => window.removeEventListener("found:photo-uploaded", onNavUpload)
+  }, [])
+
   useEffect(() => {
     Promise.all([
       fetch("/api/photos").then(r => r.json()),
@@ -180,7 +190,7 @@ export default function PhotosPage() {
     fileRef.current?.click()
   }
 
-  const unsorted  = photos.filter(p => !p.for_website && !p.for_social && !p.album_id)
+  const unsorted  = photos.filter(p => !p.for_website && !p.for_social)
   const website = photos.filter(p => p.for_website)
   const social  = photos.filter(p => p.for_social)
 
@@ -344,7 +354,7 @@ export default function PhotosPage() {
               "No social photos yet."
             }
             emptySub={
-              view === "queue"   ? "Tap the camera button. Photos stay here — not in your camera roll." :
+              view === "queue"   ? "Tap the camera icon at the bottom of your screen to take your first photo." :
               view === "website" ? "Heart any photo and it'll appear here, ready for your site." :
               "Star any photo and Found will format it with your branding."
             }
@@ -353,8 +363,8 @@ export default function PhotosPage() {
               view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             }
-            onAdd={view === "queue" ? openCamera : undefined}
-            showAddCta={view === "queue"}
+            onAdd={undefined}
+            showAddCta={false}
           />
         )}
       </div>

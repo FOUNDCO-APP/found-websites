@@ -6,17 +6,18 @@ import { usePathname, useRouter } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor } from "@/lib/dashboard/typography"
 
 type Tab = { path: string; label: string }
+type Album = { id: string; name: string; cover_url: string | null }
 
 const TABS: Tab[] = [
-  { path: "/",        label: "Home" },
-  { path: "/leads",   label: "Leads" },
-  { path: "/photos",  label: "Photos" },
-  { path: "/contacts",label: "Contacts" },
-  { path: "/more",    label: "More" },
+  { path: "/",         label: "Home" },
+  { path: "/leads",    label: "Leads" },
+  { path: "/photos",   label: "Photos" },
+  { path: "/contacts", label: "Contacts" },
+  { path: "/more",     label: "More" },
 ]
 
 function HomeIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -27,7 +28,7 @@ function HomeIcon({ active }: { active: boolean }) {
 }
 
 function LeadsIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -40,7 +41,7 @@ function LeadsIcon({ active }: { active: boolean }) {
 }
 
 function PhotosIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -52,7 +53,7 @@ function PhotosIcon({ active }: { active: boolean }) {
 }
 
 function ContactsIcon({ active }: { active: boolean }) {
-  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
@@ -65,7 +66,7 @@ function ContactsIcon({ active }: { active: boolean }) {
 }
 
 function MoreIcon({ active }: { active: boolean }) {
-  const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"
+  const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <circle cx="12" cy="5"  r="1.5" fill={c}/>
@@ -101,14 +102,20 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
 
-  const [albums, setAlbums]             = useState<{ id: string; name: string }[]>([])
-  const [showPicker, setShowPicker]     = useState(false)
-  const [showNewAlbum, setShowNewAlbum] = useState(false)
-  const [newAlbumName, setNewAlbumName] = useState("")
-  const [creating, setCreating]         = useState(false)
-  const newAlbumInputRef = useRef<HTMLInputElement>(null)
+  const [albums, setAlbums]                 = useState<Album[]>([])
+  const [showPicker, setShowPicker]         = useState(false)
+  const [showNewAlbum, setShowNewAlbum]     = useState(false)
+  const [newAlbumName, setNewAlbumName]     = useState("")
+  const [creating, setCreating]             = useState(false)
+  const [uploading, setUploading]           = useState(false)
+  const [toast, setToast]                   = useState<string | null>(null)
+  const [pendingSegment, setPendingSegment] = useState<string | null>(null)
 
-  // Pre-fetch so the sheet opens with zero delay
+  const newAlbumInputRef = useRef<HTMLInputElement>(null)
+  const fileRef          = useRef<HTMLInputElement>(null)
+  const pendingAlbumRef  = useRef<string | null>(null)
+  const toastTimer       = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     fetch(`${prefix}/api/albums`)
       .then(r => r.json())
@@ -116,14 +123,19 @@ export default function DashboardNav({
       .catch(() => {})
   }, [prefix])
 
+  // Instant visual feedback — clear when route actually settles
+  useEffect(() => { setPendingSegment(null) }, [pathname])
+
   function isActive(tabPath: string) {
-    if (tabPath === "/") return segment === "/"
-    return segment === tabPath || segment.startsWith(tabPath + "/")
+    const effective = pendingSegment ?? segment
+    if (tabPath === "/") return effective === "/"
+    return effective === tabPath || effective.startsWith(tabPath + "/")
   }
 
   function handleCamera(e: React.MouseEvent) {
     e.preventDefault()
     if (segment === "/photos" || segment.startsWith("/photos/")) {
+      // Already on photos page — let the page handle upload with album context
       router.push(`${prefix}/photos?upload=1`)
       return
     }
@@ -138,21 +150,67 @@ export default function DashboardNav({
 
   function shoot(albumId?: string) {
     closePicker()
-    router.push(`${prefix}/photos${albumId ? `?upload=1&album=${albumId}` : "?upload=1"}`)
+    pendingAlbumRef.current = albumId ?? null
+    fileRef.current?.click()
+  }
+
+  function showToastMsg(msg: string) {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToast(msg)
+    toastTimer.current = setTimeout(() => setToast(null), 3000)
+  }
+
+  async function handleNavUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) { e.target.value = ""; return }
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append("file", file)
+      const res  = await fetch(`${prefix}/api/photos`, { method: "POST", body: form })
+      const data = await res.json()
+      if (data.photo) {
+        const albumId = pendingAlbumRef.current
+        if (albumId) {
+          fetch(`${prefix}/api/photos`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
+          }).catch(console.error)
+          // Update local cover_url if album had none
+          setAlbums(prev => prev.map(a =>
+            a.id === albumId && !a.cover_url ? { ...a, cover_url: data.photo.url } : a
+          ))
+        }
+        window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
+          detail: { photo: { ...data.photo, album_id: albumId ?? null } },
+        }))
+        const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
+        showToastMsg(albumName ? `Saved to ${albumName}` : "Photo saved")
+      } else {
+        showToastMsg("Upload failed — try again")
+      }
+    } catch {
+      showToastMsg("Upload failed — try again")
+    } finally {
+      pendingAlbumRef.current = null
+      e.target.value = ""
+      setUploading(false)
+    }
   }
 
   async function handleCreate() {
     if (!newAlbumName.trim() || creating) return
     setCreating(true)
     try {
-      const res = await fetch(`${prefix}/api/albums`, {
+      const res  = await fetch(`${prefix}/api/albums`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newAlbumName.trim() }),
       })
       const data = await res.json()
       if (data.album) {
-        setAlbums(prev => [data.album, ...prev])
+        setAlbums(prev => [{ ...data.album, cover_url: null }, ...prev])
         shoot(data.album.id)
       }
     } finally {
@@ -179,32 +237,50 @@ export default function DashboardNav({
           const active    = isActive(tab.path)
           const showBadge = tab.path === "/leads" && newLeadCount > 0 && !active
           return (
-            <Link key={tab.path} href={`${prefix}${tab.path}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}>
+            <Link
+              key={tab.path}
+              href={`${prefix}${tab.path}`}
+              onClick={() => setPendingSegment(tab.path)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}
+            >
               <div style={{ position: "relative" }}>
                 {ICONS[tab.path](active)}
                 {showBadge && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
               </div>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>{tab.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{tab.label}</span>
             </Link>
           )
         })}
 
         {/* Camera FAB */}
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 10 }}>
-          <button onClick={handleCamera} style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${SIGNAL_GREEN}55`, marginTop: -20 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
+          <button
+            onClick={handleCamera}
+            disabled={uploading}
+            style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 20px ${SIGNAL_GREEN}55`, marginTop: -20, opacity: uploading ? 0.7 : 1, transition: "opacity 0.2s" }}
+          >
+            {uploading ? (
+              <div style={{ width: 20, height: 20, borderRadius: "50%", border: `2.5px solid ${FOUND_BLACK}55`, borderTopColor: FOUND_BLACK, animation: "nav-spin 0.8s linear infinite" }} />
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            )}
           </button>
         </div>
 
         {rightTabs.map(tab => {
           const active = isActive(tab.path)
           return (
-            <Link key={tab.path} href={`${prefix}${tab.path}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}>
+            <Link
+              key={tab.path}
+              href={`${prefix}${tab.path}`}
+              onClick={() => setPendingSegment(tab.path)}
+              style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}
+            >
               {ICONS[tab.path](active)}
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", textTransform: "uppercase" }}>{tab.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{tab.label}</span>
             </Link>
           )
         })}
@@ -227,7 +303,12 @@ export default function DashboardNav({
           {TABS.map(tab => {
             const active = isActive(tab.path)
             return (
-              <Link key={tab.path} href={`${prefix}${tab.path}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 13px", borderRadius: 10, backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent", borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}` }}>
+              <Link
+                key={tab.path}
+                href={`${prefix}${tab.path}`}
+                onClick={() => setPendingSegment(tab.path)}
+                style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 13px", borderRadius: 10, backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent", borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}` }}
+              >
                 <div style={{ position: "relative" }}>
                   {ICONS[tab.path](active)}
                   {tab.path === "/leads" && newLeadCount > 0 && !active && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
@@ -248,97 +329,138 @@ export default function DashboardNav({
         </div>
       </aside>
 
+      {/* ── Hidden file input — nav handles upload when not on photos page ── */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*,video/*"
+        capture="environment"
+        style={{ display: "none" }}
+        onChange={handleNavUpload}
+      />
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div style={{
+          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+          zIndex: 200,
+          backgroundColor: "rgba(8,10,9,0.92)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 100,
+          padding: "10px 20px",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          display: "flex", alignItems: "center", gap: 8,
+          animation: "pickerFade 0.2s ease",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>{toast}</span>
+        </div>
+      )}
+
       {/* ── Camera picker sheet ── */}
       {showPicker && (
         <>
-          <div onClick={closePicker} style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", animation: "pickerFade 0.18s ease" }} />
+          <div
+            onClick={closePicker}
+            style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", animation: "pickerFade 0.18s ease" }}
+          />
 
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#0D100E", borderRadius: "24px 24px 0 0", borderTop: "1px solid rgba(255,255,255,0.06)", padding: `16px 0 calc(env(safe-area-inset-bottom, 0px) + 28px)`, animation: "sheetUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)" }}>
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+            backgroundColor: "#0D100E",
+            borderRadius: "24px 24px 0 0",
+            borderTop: "1px solid rgba(255,255,255,0.06)",
+            padding: `20px 0 calc(env(safe-area-inset-bottom, 0px) + 28px)`,
+            animation: "sheetUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)",
+          }}>
 
             {/* Handle */}
-            <div style={{ width: 32, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", margin: "0 auto 20px" }} />
+            <div style={{ width: 32, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }} />
 
-            {/* Camera hero */}
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 24 }}>
-              <button
-                onClick={() => shoot()}
-                style={{
-                  width: 84, height: 84, borderRadius: "50%",
-                  backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: `0 0 0 12px ${SIGNAL_GREEN}14, 0 0 40px ${SIGNAL_GREEN}35`,
-                  marginBottom: 12,
-                  transition: "transform 0.1s ease",
-                }}
-              >
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-              </button>
-              <span style={{ ...TYPE.subhead, color: "white", fontWeight: 600 }}>Take a Photo</span>
-              <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, marginTop: 3 }}>skip sorting — add to album later</span>
+            {/* Header */}
+            <div style={{ padding: "0 20px 16px" }}>
+              <p style={{ margin: 0, fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                Where does this go?
+              </p>
             </div>
 
             {/* Album tiles */}
-            {(albums.length > 0 || true) && (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px", marginBottom: 14 }}>
-                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }} />
-                  <span style={{ fontSize: "0.6rem", fontWeight: 900, letterSpacing: "0.15em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>or file under</span>
-                  <div style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.06)" }} />
-                </div>
-
-                <div
-                  className="picker-scroll"
-                  style={{ display: "flex", gap: 10, overflowX: "auto", padding: "2px 20px 8px", scrollbarWidth: "none" }}
-                >
-                  {albums.map(album => {
-                    const color = avatarColorFor(album.name)
-                    return (
-                      <button
-                        key={album.id}
-                        onClick={() => shoot(album.id)}
-                        style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                      >
-                        <div style={{
-                          width: 72, height: 72, borderRadius: 18,
-                          backgroundColor: `${color}15`,
-                          border: `1.5px solid ${color}28`,
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}>
+            {albums.length > 0 && (
+              <div
+                className="picker-scroll"
+                style={{ display: "flex", gap: 10, overflowX: "auto", padding: "2px 20px 8px", scrollbarWidth: "none" }}
+              >
+                {albums.map(album => {
+                  const color = avatarColorFor(album.name)
+                  return (
+                    <button
+                      key={album.id}
+                      onClick={() => shoot(album.id)}
+                      style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    >
+                      <div style={{
+                        width: 72, height: 72, borderRadius: 18, overflow: "hidden",
+                        border: `1.5px solid ${album.cover_url ? "rgba(255,255,255,0.12)" : `${color}28`}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        backgroundColor: album.cover_url ? "#111" : `${color}15`,
+                        flexShrink: 0,
+                      }}>
+                        {album.cover_url ? (
+                          <img src={album.cover_url} alt={album.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        ) : (
                           <span style={{ fontSize: "1.625rem", fontWeight: 300, color, lineHeight: 1 }}>
                             {album.name[0].toUpperCase()}
                           </span>
-                        </div>
-                        <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: `rgba(255,255,255,0.65)`, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
-                          {album.name}
-                        </span>
-                      </button>
-                    )
-                  })}
-
-                  {/* New album tile */}
-                  {!showNewAlbum && (
-                    <button
-                      onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
-                      style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                    >
-                      <div style={{ width: 72, height: 72, borderRadius: 18, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
-                          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
+                        )}
                       </div>
-                      <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, textAlign: "center" }}>New</span>
+                      <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: `rgba(255,255,255,0.65)`, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+                        {album.name}
+                      </span>
                     </button>
-                  )}
-                </div>
-              </>
+                  )
+                })}
+
+                {/* New album tile */}
+                {!showNewAlbum && (
+                  <button
+                    onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
+                    style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    <div style={{ width: 72, height: 72, borderRadius: 18, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, textAlign: "center" }}>New</span>
+                  </button>
+                )}
+              </div>
             )}
 
-            {/* New album input — expands below tiles */}
+            {/* No albums yet — show new tile inline */}
+            {albums.length === 0 && !showNewAlbum && (
+              <div style={{ padding: "0 20px 12px" }}>
+                <button
+                  onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
+                  style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "1.5px dashed rgba(255,255,255,0.15)", borderRadius: 14, padding: "12px 16px", cursor: "pointer", width: "100%" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                    Create your first {albumLabel.singular.toLowerCase()}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {/* New album input */}
             {showNewAlbum && (
-              <div style={{ padding: "10px 20px 0", animation: "pickerFade 0.15s ease" }}>
+              <div style={{ padding: "4px 20px 12px", animation: "pickerFade 0.15s ease" }}>
                 <div style={{ borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}20` }}>
                   <input
                     ref={newAlbumInputRef}
@@ -369,6 +491,28 @@ export default function DashboardNav({
                 </div>
               </div>
             )}
+
+            {/* Just shoot — real tappable button */}
+            <div style={{ padding: "8px 20px 0" }}>
+              <button
+                onClick={() => shoot()}
+                style={{
+                  width: "100%", padding: "15px 0", borderRadius: 16,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  color: "white", fontSize: "0.9375rem", fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  transition: "background-color 0.15s ease",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                Just shoot
+              </button>
+            </div>
           </div>
         </>
       )}
@@ -380,6 +524,7 @@ export default function DashboardNav({
         }
         @keyframes sheetUp    { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes pickerFade { from { opacity: 0; }                 to { opacity: 1; }               }
+        @keyframes nav-spin   { to   { transform: rotate(360deg); }                                   }
         .picker-scroll::-webkit-scrollbar { display: none; }
       `}</style>
     </>

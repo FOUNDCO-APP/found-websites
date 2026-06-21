@@ -25,7 +25,26 @@ export async function GET() {
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
-  return NextResponse.json({ albums: data ?? [] })
+  const albumIds = (data ?? []).map((a: { id: string }) => a.id)
+  let coverMap: Record<string, string> = {}
+  if (albumIds.length > 0) {
+    const { data: covers } = await admin
+      .from("company_photos")
+      .select("album_id, url")
+      .eq("company_id", company.id)
+      .in("album_id", albumIds)
+      .order("created_at", { ascending: false })
+    for (const c of (covers ?? [])) {
+      if (c.album_id && !coverMap[c.album_id]) coverMap[c.album_id] = c.url
+    }
+  }
+
+  const albums = (data ?? []).map((a: { id: string; name: string; slug: string; created_at: string }) => ({
+    ...a,
+    cover_url: coverMap[a.id] ?? null,
+  }))
+
+  return NextResponse.json({ albums })
 }
 
 export async function POST(req: Request) {
