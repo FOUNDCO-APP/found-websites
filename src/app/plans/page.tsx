@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "Compare Found, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
   openGraph: {
     title: "Compare Found Plans — $29, $39, $69/month",
-    description: "Found, Found Pro, Found Business. Side-by-side feature comparison. Founding rates expire July 15.",
+    description: "Found, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire July 15.",
     url: "https://foundco.app/plans",
   },
 }
@@ -74,7 +74,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          {IS_FOUNDING_PERIOD ? "Founding rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+          {IS_FOUNDING_PERIOD ? "Intro rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
         </p>
       </section>
 
@@ -109,7 +109,7 @@ export default function PlansPage() {
               <span className="text-sm font-medium text-white/40">/mo</span>
             </div>
             {IS_FOUNDING_PERIOD && (
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
             )}
             <div className={IS_FOUNDING_PERIOD ? "" : "mt-6"}>
               <Link
@@ -180,7 +180,7 @@ export default function PlansPage() {
       <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
           {IS_FOUNDING_PERIOD
-            ? <>Founding rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
+            ? <>Intro rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
             : "Cancel anytime. Results vary by market and business type."}
         </p>
       </div>

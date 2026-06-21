@@ -105,7 +105,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
             style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
           <span className="text-[10px] font-black uppercase tracking-[0.22em]"
             style={{ color: SIGNAL_GREEN }}>
-            Founding rate
+            Intro rate
           </span>
         </div>
         <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">

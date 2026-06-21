@@ -70,7 +70,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                     <span className="text-2xl font-black text-white">$29</span>
                     <span className="text-sm text-white/40">/mo</span>
                   </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
                 </div>
               </div>
             )}
@@ -107,7 +107,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           >
             {isFoundingPeriod && (
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
-                Founding rate — expires July 15
+                Intro rate — expires July 15
               </p>
             )}
             <h2 className="text-3xl font-normal text-white mb-3 md:text-4xl">Your site. Live today.</h2>
@@ -158,7 +158,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine}</h2>
             <p className="text-white/45 mb-8 font-medium">
-              {isFoundingPeriod ? "Your site goes live today. Founding rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+              {isFoundingPeriod ? "Your site goes live today. Intro rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
             </p>
             <button
               onClick={() => setDrawerOpen(true)}
@@ -169,7 +169,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isFoundingPeriod
-                ? <>Founding rate expires July 15 · locked for 12 months, then $39/month.{" "}
+                ? <>Intro rate expires July 15 · locked for 12 months, then $39/month.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans
                     </Link></>

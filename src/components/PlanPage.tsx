@@ -75,7 +75,7 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
                 <span className="text-sm text-white/40 font-medium">/month</span>
               </div>
               {isFoundingPeriod && (
-                <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
               )}
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine ?? "Your business is live tonight."}</h2>
             <p className="text-white/45 mb-8 font-medium">
-              {isFoundingPeriod ? "Your site goes live today. Founding rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+              {isFoundingPeriod ? "Your site goes live today. Intro rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
             </p>
             <button
               onClick={() => setDrawerOpen(true)}
@@ -150,7 +150,7 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isFoundingPeriod
-                ? <>Founding rate expires July 15 · locked for 12 months, then ${normalPrice}/month.{" "}
+                ? <>Intro rate expires July 15 · locked for 12 months, then ${normalPrice}/month.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans
                     </Link></>

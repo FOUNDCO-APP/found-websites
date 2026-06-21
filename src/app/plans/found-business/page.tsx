@@ -36,7 +36,7 @@ export default function FoundBusinessPlanPage() {
         { q: "How does the estimate system work?", a: "You build a quote in Found, attach photos from previous jobs to show your quality, set your line items and pricing, and send it. The client receives a professional estimate page on their phone or computer, approves it, and you collect a deposit. When the job is done, Found sends the invoice." },
         { q: "How does the review request work?", a: "When you mark a job complete in Found, the client automatically gets a text and email asking them to leave a review. You can customize the timing and the message. Happy clients get asked, and they leave reviews — without you having to do it yourself." },
         { q: "Can my team members see client information?", a: "You control that completely. A crew member on upload-only access can submit photos and nothing else — they can't see your leads, contacts, financials, or any business data. Managers can see more. You decide." },
-        { q: "What if I want to start on Pro and upgrade to Business later?", a: "Upgrade anytime from your dashboard. Your subscription updates immediately and you're only billed the difference for the rest of the billing period. Your founding rate stays locked in — upgrading doesn't reset the clock." },
+        { q: "What if I want to start on Pro and upgrade to Business later?", a: "Upgrade anytime from your dashboard. Your subscription updates immediately and you're only billed the difference for the rest of the billing period. Your intro rate stays locked in — upgrading doesn't reset the clock." },
       ]}
     />
   )

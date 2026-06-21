@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Website for Contractors | Found — Get Online Today",
-  description: "A professional contractor website built for your trade. Your services, your photos, leads coming straight to your phone. Starting at $29/month — founding rate expires July 15.",
+  description: "A professional contractor website built for your trade. Your services, your photos, leads coming straight to your phone. Starting at $29/month — intro rate expires July 15.",
   openGraph: {
     title: "Website for Contractors | Found",
     description: "A professional website for your contracting business. Leads come straight to your phone.",

@@ -137,7 +137,7 @@ export default async function MorePage() {
                 </span>
                 {isFoundingMember && (
                   <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
-                    Founding
+                    Intro
                   </span>
                 )}
               </div>
@@ -148,7 +148,7 @@ export default async function MorePage() {
             <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
               {isActive
                 ? isFoundingMember
-                  ? `Founding rate locked in forever.`
+                  ? `Intro rate locked in forever.`
                   : `Active subscription.`
                 : "Activate to lock in your rate."}
             </p>
@@ -171,7 +171,7 @@ export default async function MorePage() {
                   Upgrade to {upgrade.label}
                 </p>
                 <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                  ${upgradePrice}/month{isFoundingMember ? " founding rate" : ""}
+                  ${upgradePrice}/month{isFoundingMember ? " intro rate" : ""}
                 </p>
               </div>
               <form action={startUpgradeCheckout}>

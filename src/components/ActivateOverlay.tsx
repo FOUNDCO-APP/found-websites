@@ -96,7 +96,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
         <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
           <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
-            Founding rate
+            Intro rate
           </span>
         </div>
         <p style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, letterSpacing: "-0.02em", color: "white", marginBottom: 4 }}>

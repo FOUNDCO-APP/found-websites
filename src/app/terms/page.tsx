@@ -121,7 +121,7 @@ export default function TermsPage() {
             <SectionHeading number={3} title="Subscription Plans, Billing, and Cancellation" />
             <Subheading>Plans and Pricing</Subheading>
             <Body>
-              Found offers three subscription tiers: Found ($39/month), Found Pro ($69/month), and Found Business ($99/month). Prices shown at signup are the prices you pay. Promotional rates (such as our founding member pricing) are locked for the period stated at the time of purchase, then revert to the then-current standard price.
+              Found offers three subscription tiers: Found ($39/month), Found Pro ($69/month), and Found Business ($99/month). Prices shown at signup are the prices you pay. Promotional rates (such as our introductory pricing) are locked for the period stated at the time of purchase, then revert to the then-current standard price.
             </Body>
             <Subheading>Billing</Subheading>
             <Body>

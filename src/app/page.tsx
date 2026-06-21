@@ -204,7 +204,7 @@ export default function Home() {
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
               <p className="mt-5 text-base text-white/50 font-medium">
-            {isFoundingPeriod ? "Founding rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+            {isFoundingPeriod ? "Intro rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
           </p>
             </div>
 
@@ -298,7 +298,7 @@ export default function Home() {
                       <span className="text-sm text-white/40 font-medium">/month</span>
                     </div>
                     {isFoundingPeriod && (
-                      <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Founding rate</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
                     )}
                   </div>
                   <ul className="space-y-3 mb-10">
@@ -324,7 +324,7 @@ export default function Home() {
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
               {isFoundingPeriod
-                ? <>Founding rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
+                ? <>Intro rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
                 : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
               }
             </p>
