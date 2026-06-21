@@ -16,7 +16,7 @@ const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 
 const PLANS = [
-  { key: "found",          name: "Found",          href: "/plans/found",          price: 29,  normalPrice: 99, tagline: "Start here." },
+  { key: "found",          name: "Found",          href: "/plans/found",          price: 29,  normalPrice: 39, tagline: "Start here." },
   { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: 39,  normalPrice: 69, tagline: "Never lose a lead.", featured: true },
   { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: 69,  normalPrice: 99, tagline: "Run your whole business." },
 ]
