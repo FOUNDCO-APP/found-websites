@@ -20,7 +20,7 @@ const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 const IS_FOUNDING_PERIOD = new Date() < FOUNDING_CUTOFF
 
 const PLANS = [
-  { key: "found",          name: "Found",          href: "/plans/found",          price: IS_FOUNDING_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
+  { key: "found",          name: "Found Starter",  href: "/plans/found",          price: IS_FOUNDING_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
   { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: IS_FOUNDING_PERIOD ? 39 : 69,  normalPrice: 69, tagline: "Follow up with every lead. Automatically.", featured: true },
   { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: IS_FOUNDING_PERIOD ? 69 : 99,  normalPrice: 99, tagline: "Run your whole business." },
 ]

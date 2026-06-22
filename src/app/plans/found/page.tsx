@@ -2,10 +2,10 @@ import type { Metadata } from "next"
 import PlanPage from "@/components/PlanPage"
 
 export const metadata: Metadata = {
-  title: "Found — $29/month | Get Your Business Online Today",
+  title: "Found Starter — $29/month | Get Your Business Online Today",
   description: "A complete professional website, your own web address, and a photo pipeline that keeps your site fresh — built in minutes for $29/month.",
   openGraph: {
-    title: "Found — $29/month | Get Your Business Online Today",
+    title: "Found Starter — $29/month | Get Your Business Online Today",
     description: "A complete website, your own web address, beautiful industry photos, and leads coming straight to you. Built in minutes.",
     url: "https://foundco.app/plans/found",
   },
@@ -15,7 +15,7 @@ export default function FoundPlanPage() {
   return (
     <PlanPage
       plan="found"
-      name="Found"
+      name="Found Starter"
       identity="Start here."
       price={29}
       normalPrice={39}

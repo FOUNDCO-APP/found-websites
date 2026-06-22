@@ -74,7 +74,7 @@ export type Company = {
   website_config: WebsiteConfig | null
 }
 
-export type Intent = 'call' | 'visit' | 'book' | 'quote' | 'shop' | 'contact'
+export type Intent = 'call' | 'visit' | 'book' | 'quote' | 'shop' | 'contact' | 'reserve'
 
 export const intentLabel: Record<string, string> = {
   call: 'Call Us',
@@ -83,6 +83,7 @@ export const intentLabel: Record<string, string> = {
   quote: 'Get a Free Estimate',
   shop: 'Shop Now',
   contact: 'Contact Us',
+  reserve: 'Reserve a Table',
 }
 
 export const intentHref: Record<string, string> = {
@@ -92,4 +93,5 @@ export const intentHref: Record<string, string> = {
   quote: '/estimate',
   shop: '/shop',
   contact: '/contact',
+  reserve: '/reserve',
 }

@@ -53,7 +53,7 @@ export const industryManifests: Record<string, IndustryManifest> = {
     requiredFields: ["menu_categories", "best_sellers", "hours", "address_or_service_area", "service_style"],
     subIndustries: ["smoothie shop", "restaurant", "bakery", "food truck", "coffee shop", "meal prep", "catering"],
     preferredPhotoTags: ["general", "food truck"],
-    primaryIntent: "visit",
+    primaryIntent: "reserve",
     secondaryIntent: "call",
     likelyUpgrades: ["online_menu", "simple_ordering", "shopping_cart", "catering_inquiry", "custom_domain"],
     jonyNote: "Do not bury the menu. For food, the product is the proof.",

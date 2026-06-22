@@ -5,9 +5,11 @@ import SignOutButton from "@/components/dashboard/SignOutButton"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
+import { getRelevantAddons } from "@/lib/featureAccess"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
-  found:          { label: "Found",          founding: 29, normal: 39,  color: GREEN },
+  found:          { label: "Found Starter",  founding: 29, normal: 39,  color: GREEN },
   found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: GREEN },
   found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
 }
@@ -52,6 +54,22 @@ export default async function MorePage() {
   const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
   const displayPrice = isFoundingMember ? meta.founding : meta.normal
   const upgradePrice = upgrade ? (isFoundingMember ? upgrade.foundingPrice : upgrade.normalPrice) : 0
+
+  const industryCategory = company?.industry_category ?? ""
+  const relevantAddons = getRelevantAddons(industryCategory)
+
+  let activeAddonSlugs: string[] = []
+  if (company?.id) {
+    const admin = createAdminClient()
+    const { data: addonRows } = await admin
+      .from("addon_subscriptions")
+      .select("addon_slug")
+      .eq("company_id", company.id)
+      .eq("active", true)
+    activeAddonSlugs = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
+  }
+
+  const availableAddons = relevantAddons.filter((a) => !activeAddonSlugs.includes(a.slug))
 
   return (
     <main style={{ padding: "28px 20px" }}>
@@ -238,6 +256,89 @@ export default async function MorePage() {
           </a>
         </div>
       </section>
+
+      {/* Add Features */}
+      {availableAddons.length > 0 && (
+        <section style={{ marginBottom: 20 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Add Features
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {availableAddons.map((addon) => (
+              <div key={addon.slug} style={{
+                borderRadius: 14,
+                backgroundColor: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                padding: "16px 18px",
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
+                      {addon.label}
+                    </p>
+                    <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                      {addon.description}
+                    </p>
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                    <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+                      +${addon.price}/mo
+                    </p>
+                    <a href={`mailto:hello@foundco.app?subject=Add ${addon.label}&body=I'd like to add ${addon.label} to my Found account.`}
+                      style={{
+                        display: "inline-block",
+                        borderRadius: 8,
+                        padding: "6px 12px",
+                        ...TYPE.caption,
+                        backgroundColor: `${GREEN}18`,
+                        color: GREEN,
+                        border: `1px solid ${GREEN}30`,
+                        textDecoration: "none",
+                        fontSize: 12,
+                      }}>
+                      Add →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Active Add-ons */}
+      {activeAddonSlugs.length > 0 && (
+        <section style={{ marginBottom: 20 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Active Add-ons
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {activeAddonSlugs.map((slug) => {
+              const def = relevantAddons.find((a) => a.slug === slug)
+              if (!def) return null
+              return (
+                <div key={slug} style={{
+                  borderRadius: 14,
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  padding: "14px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
+                    <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
+                  </div>
+                  <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    Active · ${def.price}/mo
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <SignOutButton />
     </main>
