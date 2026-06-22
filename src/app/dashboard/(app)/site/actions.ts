@@ -195,6 +195,23 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   return { success: true }
 }
 
+export async function updatePrimaryIntent(intent: string) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ primary_intent: intent })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/reserve`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  return { success: true }
+}
+
 export async function removeStockImage(imageUrl: string) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }

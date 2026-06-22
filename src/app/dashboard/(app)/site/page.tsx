@@ -27,6 +27,8 @@ export default async function SitePage() {
       photos={photos ?? []}
       stockImages={stockImages}
       mediaPhotos={mediaPhotos ?? []}
+      primaryIntent={company.primary_intent ?? 'visit'}
+      industryCategory={company.industry_category ?? ''}
     />
   )
 }

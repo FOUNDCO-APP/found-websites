@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage, updatePrimaryIntent } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type Config = Record<string, unknown>
@@ -13,9 +13,11 @@ type Props = {
   photos: Photo[]
   stockImages: string[]
   mediaPhotos: { id: string; url: string }[]
+  primaryIntent: string
+  industryCategory: string
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory }: Props) {
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -27,6 +29,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [newServiceDesc, setNewServiceDesc] = useState("")
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
   const [stockImages, setStockImages] = useState<string[]>(initialStockImages)
+  const [activeIntent, setActiveIntent] = useState(initialIntent)
+  const [savingIntent, setSavingIntent] = useState(false)
+  const [intentSaved, setIntentSaved] = useState(false)
   const [, startTransition] = useTransition()
 
   function startEdit(field: string, value: string) {
@@ -75,6 +80,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setNewServiceName("")
     setNewServiceDesc("")
     startTransition(async () => { await updateSiteField("services", services) })
+  }
+
+  async function saveIntent(intent: string) {
+    if (intent === activeIntent) return
+    setActiveIntent(intent)
+    setSavingIntent(true)
+    await updatePrimaryIntent(intent)
+    setSavingIntent(false)
+    setIntentSaved(true)
+    setTimeout(() => setIntentSaved(false), 2500)
   }
 
   function handleAssignPhoto(photoId: string, section: string | null) {
@@ -226,6 +241,84 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
         <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color={GREEN} onTap={() => handleRegenerate("tagline")} />
       </div>
+
+      {/* ══════════════════════════════════════════
+          PRIMARY CTA PICKER
+      ══════════════════════════════════════════ */}
+      {(() => {
+        const ctaOptions: { intent: string; label: string; desc: string }[] = industryCategory === 'food'
+          ? [
+              { intent: 'reserve', label: 'Reserve a Table', desc: 'Lets guests request a reservation' },
+              { intent: 'menu',    label: 'View Our Menu',   desc: 'Takes visitors straight to your menu' },
+              { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
+              { intent: 'visit',   label: 'Visit Us',        desc: 'Shows your address & hours' },
+            ]
+          : industryCategory === 'wellness' || industryCategory === 'beauty' || industryCategory === 'fitness' || industryCategory === 'healthcare' || industryCategory === 'pet'
+          ? [
+              { intent: 'book',    label: 'Book Now',        desc: 'Sends booking requests to your inbox' },
+              { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
+              { intent: 'contact', label: 'Contact Us',      desc: 'General contact form' },
+            ]
+          : null
+
+        if (!ctaOptions) return null
+
+        return (
+          <>
+            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+            <div style={{ padding: "0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Main Button</h2>
+                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    What do you want visitors to do first?
+                  </p>
+                </div>
+                {intentSaved && (
+                  <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
+                    ✓ Live
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {ctaOptions.map(opt => {
+                  const isActive = activeIntent === opt.intent
+                  return (
+                    <button
+                      key={opt.intent}
+                      onClick={() => saveIntent(opt.intent)}
+                      disabled={savingIntent}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "14px 18px", borderRadius: 16, cursor: savingIntent ? "default" : "pointer",
+                        backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                        border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                        textAlign: "left",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
+                          {opt.label}
+                        </div>
+                        <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                          {opt.desc}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )
+      })()}
 
       {/* Divider */}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
