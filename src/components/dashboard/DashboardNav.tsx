@@ -101,8 +101,8 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
 
-  // Hide the floating FAB on the Photos page — header camera handles it there
-  const onPhotosPage = segment === "/photos" || segment.startsWith("/photos/")
+  // Hide the floating FAB on Photos (header camera handles it) and More (settings page)
+  const hideFab = segment === "/photos" || segment.startsWith("/photos/") || segment === "/more"
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
@@ -253,8 +253,8 @@ export default function DashboardNav({
         })}
       </nav>
 
-      {/* ── Floating camera FAB — hidden on Photos page ── */}
-      {!onPhotosPage && (
+      {/* ── Floating camera FAB — hidden on Photos + More pages ── */}
+      {!hideFab && (
         <button
           className="found-camera-fab"
           onClick={handleCamera}

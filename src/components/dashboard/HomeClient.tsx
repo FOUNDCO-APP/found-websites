@@ -291,58 +291,82 @@ export default function HomeClient({
       )}
 
       {/* ── QUICK ACTIONS ── */}
-      <div style={{ padding: "24px 20px 0", ...fade(0.12) }}>
-        <p style={{ margin: "0 0 12px", fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+      <div style={{ padding: "28px 20px 0", ...fade(0.12) }}>
+        <p style={{ margin: "0 0 14px", fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           Quick actions
         </p>
 
-        {/* Row 1: Camera + View Site */}
+        {/* Row 1: Camera + View Site — tall tiles */}
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+
+          {/* Camera */}
           <button
             onClick={openCamera}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "18px 18px", borderRadius: 20, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", cursor: "pointer" }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+              background: `linear-gradient(150deg, ${GREEN}20 0%, ${GREEN}06 100%)`,
+              border: `1px solid ${GREEN}30`,
+              cursor: "pointer", textAlign: "left",
+            }}
           >
-            <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: `${GREEN}18`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Camera</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)`, lineHeight: 1.4 }}>Shoot &amp; sort later</div>
             </div>
-            <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Camera</span>
           </button>
 
+          {/* View Site */}
           <a
             href={`https://${siteSlug}.foundco.app`}
             target="_blank"
             rel="noopener noreferrer"
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 8, padding: "18px 18px", borderRadius: 20, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", textDecoration: "none" }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+              background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              textDecoration: "none",
+            }}
           >
-            <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-              </svg>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>View Site</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)`, lineHeight: 1.4 }}>Your live website</div>
             </div>
-            <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>View Site</span>
           </a>
         </div>
 
-        {/* Row 2: Edit My Site (full width) */}
+        {/* Edit My Site — full-width row */}
         <Link
           href="/site"
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 20px", borderRadius: 20, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", textDecoration: "none" }}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "18px 20px", borderRadius: 20,
+            background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            textDecoration: "none",
+          }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 2 }}>Edit My Site</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)` }}>Copy, photos, services · AI rewrite</div>
             </div>
-            <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Edit My Site</span>
           </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </Link>
       </div>
 

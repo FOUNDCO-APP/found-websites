@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor, leadLabelFor } from "@/lib/dashboard/typography"
 
 type LeadRow = {
   id: string
@@ -46,6 +46,9 @@ export default function LeadsPage() {
   const [newNotes, setNewNotes] = useState("")
   const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold">("warm")
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
+  const [industry, setIndustry] = useState<string | null>(null)
+
+  const leadLabel = leadLabelFor(industry)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -58,10 +61,14 @@ export default function LeadsPage() {
   }, [searchParams, router])
 
   useEffect(() => {
-    fetch("/api/leads")
-      .then(r => r.json())
-      .then(d => { setLeads(d.leads ?? []); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch("/api/leads").then(r => r.json()),
+      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ industry: null })),
+    ]).then(([ld, sd]) => {
+      setLeads(ld.leads ?? [])
+      setIndustry(sd.industry ?? null)
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   async function handleSaveLead() {
@@ -91,11 +98,11 @@ export default function LeadsPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
-            Leads
+            {leadLabel.plural}
           </h1>
           {leads.length > 0 && (
             <p style={{ margin: "8px 0 0", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.caption }}>
-              {leads.length} {leads.length === 1 ? "lead" : "leads"}
+              {leads.length} {leads.length === 1 ? leadLabel.singular.toLowerCase() : leadLabel.plural.toLowerCase()}
             </p>
           )}
         </div>
@@ -119,7 +126,7 @@ export default function LeadsPage() {
           backgroundColor: "rgba(255,255,255,0.05)",
           border: `1px solid ${SIGNAL_GREEN}33`,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>New Lead</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{leadLabel.new}</div>
 
           {/* Temperature first — sets the tone */}
           <div style={{ marginBottom: 20 }}>
@@ -179,7 +186,7 @@ export default function LeadsPage() {
               backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
               color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
               fontSize: 14, fontWeight: 700, cursor: newName.trim() ? "pointer" : "default",
-            }}>{saving ? "Saving…" : "Save Lead"}</button>
+            }}>{saving ? "Saving…" : `Save ${leadLabel.singular}`}</button>
           </div>
         </div>
       )}
@@ -205,10 +212,10 @@ export default function LeadsPage() {
             </svg>
           </div>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
-            Your first lead is coming.
+            Your first {leadLabel.singular.toLowerCase()} is coming.
           </p>
           <p style={{ margin: "0 0 28px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            Add one manually from a networking<br/>event, or wait for your site to bring one in.
+            Add one manually or wait for your site to bring one in.
           </p>
         </div>
       ) : (
