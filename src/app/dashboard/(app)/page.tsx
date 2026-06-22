@@ -29,13 +29,13 @@ export default async function HomePage() {
   }).length
 
   const top = allLeads[0] ?? null
-  const topMessage = top
-    ? (top.message || top.partial_answers?.message || top.partial_answers?.services || top.partial_answers?.description || null)
-    : null
 
-  const recentLeads = allLeads.slice(0, 5).map(l => ({
+  const recentLeads = allLeads.slice(0, 8).map(l => ({
     id: l.id,
     name: l.name ?? null,
+    email: l.email ?? null,
+    phone: l.phone ?? null,
+    message: l.message || l.partial_answers?.message || l.partial_answers?.services || l.partial_answers?.description || null,
     created_at: l.created_at ?? null,
     source: l.source ?? l.type ?? null,
   }))
@@ -52,9 +52,6 @@ export default async function HomePage() {
       newCount={newCount}
       totalCount={allLeads.length}
       topName={top?.name ?? null}
-      topEmail={top?.email ?? null}
-      topPhone={top?.phone ?? null}
-      topMessage={topMessage}
       topCreatedAt={top?.created_at ?? null}
       siteSlug={company.slug}
       isActive={isActive}

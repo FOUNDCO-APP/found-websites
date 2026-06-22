@@ -125,6 +125,13 @@ export default function DashboardNav({
       .catch(() => {})
   }, [prefix])
 
+  // Home page quick-action "Camera" button opens this sheet
+  useEffect(() => {
+    function onOpenCamera() { setShowPicker(true) }
+    window.addEventListener("found:open-camera", onOpenCamera)
+    return () => window.removeEventListener("found:open-camera", onOpenCamera)
+  }, [])
+
   // Instant visual feedback — clear when route actually settles
   useEffect(() => { setPendingSegment(null) }, [pathname])
 
