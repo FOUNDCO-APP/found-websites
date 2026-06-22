@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor, leadLabelFor } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, leadLabelFor } from "@/lib/dashboard/typography"
 
 type LeadRow = {
   id: string
@@ -32,7 +32,7 @@ function formatTimeAgo(iso: string) {
 const TEMP_COLORS: Record<string, string> = {
   hot: "#FF4B4B",
   warm: "#FF9500",
-  cold: "rgba(255,255,255,0.2)",
+  cold: "rgba(255,255,255,0.25)",
 }
 
 export default function LeadsPage() {
@@ -89,15 +89,24 @@ export default function LeadsPage() {
     setSaving(false)
   }
 
+  async function updateTemp(id: string, temp: "hot" | "warm" | "cold") {
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, temperature: temp } : l))
+    fetch("/api/leads", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, temperature: temp }),
+    }).catch(console.error)
+  }
+
   const filteredLeads = filterTemp === "all" ? leads : leads.filter(l => (l.temperature ?? "warm") === filterTemp)
-  const hotLeads = filterTemp === "all" ? leads.filter(l => l.temperature === "hot") : []
+  const hotLeads   = filterTemp === "all" ? leads.filter(l => l.temperature === "hot") : []
   const otherLeads = filterTemp === "all" ? leads.filter(l => l.temperature !== "hot") : filteredLeads
 
   const FILTER_PILLS: { key: "all" | "hot" | "warm" | "cold"; label: string; color?: string }[] = [
     { key: "all",  label: "All" },
     { key: "hot",  label: "Hot",  color: TEMP_COLORS.hot },
     { key: "warm", label: "Warm", color: TEMP_COLORS.warm },
-    { key: "cold", label: "Cold", color: "rgba(255,255,255,0.35)" },
+    { key: "cold", label: "Cold", color: "rgba(255,255,255,0.4)" },
   ]
 
   return (
@@ -133,16 +142,16 @@ export default function LeadsPage() {
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
           {FILTER_PILLS.map(pill => {
             const active = filterTemp === pill.key
-            const dotColor = pill.color ?? "rgba(255,255,255,0.5)"
+            const dotColor = pill.color ?? SIGNAL_GREEN
             return (
               <button key={pill.key} onClick={() => setFilterTemp(pill.key)} style={{
                 flexShrink: 0,
                 display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 16px", borderRadius: 100,
-                border: `1px solid ${active ? (pill.color ?? "rgba(255,255,255,0.35)") : "rgba(255,255,255,0.1)"}`,
-                backgroundColor: active ? `${pill.color ?? "rgba(255,255,255,0.35)"}1A` : "transparent",
-                color: active ? (pill.color ?? "white") : "rgba(255,255,255,0.35)",
-                fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.02em",
+                border: `1px solid ${active ? dotColor : "rgba(255,255,255,0.1)"}`,
+                backgroundColor: active ? `${dotColor}1A` : "transparent",
+                color: active ? dotColor : "rgba(255,255,255,0.35)",
+                fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer",
               }}>
                 {pill.key !== "all" && (
                   <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: active ? dotColor : "rgba(255,255,255,0.2)", flexShrink: 0 }}/>
@@ -159,7 +168,7 @@ export default function LeadsPage() {
         </div>
       )}
 
-      {/* Add Lead sheet */}
+      {/* Add Lead form */}
       {showAdd && (
         <div style={{
           borderRadius: 24, padding: 24, marginBottom: 24,
@@ -168,9 +177,8 @@ export default function LeadsPage() {
         }}>
           <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{leadLabel.new}</div>
 
-          {/* Temperature first — sets the tone */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>How hot is this lead?</div>
+            <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>Temperature</div>
             <div style={{ display: "flex", gap: 8 }}>
               {(["hot", "warm", "cold"] as const).map(t => {
                 const active = newTemp === t
@@ -241,7 +249,7 @@ export default function LeadsPage() {
             No {filterTemp} {leadLabel.plural.toLowerCase()}.
           </p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            Tap a lead to change its temperature.
+            Tap the temperature dots on any {leadLabel.singular.toLowerCase()} to tag it.
           </p>
         </div>
       ) : leads.length === 0 ? (
@@ -270,7 +278,6 @@ export default function LeadsPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-          {/* Hot leads — elevated */}
           {hotLeads.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, color: TEMP_COLORS.hot, marginBottom: 12, ...TYPE.caption }}>
@@ -278,21 +285,20 @@ export default function LeadsPage() {
                 Hot
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {hotLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} />)}
+                {hotLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} onTempChange={updateTemp} />)}
               </div>
             </div>
           )}
 
-          {/* All other leads */}
           {otherLeads.length > 0 && (
             <div>
               {hotLeads.length > 0 && (
                 <div style={{ color: "white", opacity: TEXT_OPACITY.disabled, marginBottom: 12, ...TYPE.caption }}>
-                  All Leads
+                  All {leadLabel.plural}
                 </div>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {otherLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} />)}
+                {otherLeads.map(lead => <LeadCard key={lead.id} lead={lead} onSelect={setSelectedLead} onTempChange={updateTemp} />)}
               </div>
             </div>
           )}
@@ -314,7 +320,14 @@ export default function LeadsPage() {
   )
 }
 
-function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow) => void }) {
+function LeadCard({
+  lead, onSelect, onTempChange,
+}: {
+  lead: LeadRow
+  onSelect: (lead: LeadRow) => void
+  onTempChange: (id: string, temp: "hot" | "warm" | "cold") => void
+}) {
+  const [pickingTemp, setPickingTemp] = useState(false)
   const pa = lead.partial_answers
   const preview = lead.message || pa?.message || pa?.services || pa?.description || ""
   const emailHref = lead.email
@@ -322,8 +335,9 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
     : null
   const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\D/g, "")}` : null
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
-  const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
-  const avColor = avatarColorFor(lead.name)
+  const currentTemp = (lead.temperature ?? null) as "hot" | "warm" | "cold" | null
+  const tempColor = currentTemp ? TEMP_COLORS[currentTemp] : "rgba(255,255,255,0.18)"
+  const tempLabel = currentTemp ? (currentTemp.charAt(0).toUpperCase() + currentTemp.slice(1)) : "—"
 
   return (
     <div style={{
@@ -333,51 +347,69 @@ function LeadCard({ lead, onSelect }: { lead: LeadRow; onSelect: (lead: LeadRow)
       overflow: "hidden",
     }}>
       <div
-        onClick={() => onSelect(lead)}
-        style={{ padding: "18px 18px 14px", display: "flex", alignItems: "flex-start", gap: 14, cursor: "pointer" }}
+        onClick={() => { if (!pickingTemp) onSelect(lead) }}
+        style={{ padding: "16px 16px 12px", cursor: "pointer" }}
       >
-        {/* Avatar — identity color, not status color */}
-        <div style={{
-          width: 44, height: 44, borderRadius: "50%",
-          backgroundColor: `${avColor}26`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0, fontSize: 16, fontWeight: 700, color: avColor,
-        }}>
-          {(lead.name || "?")[0].toUpperCase()}
-        </div>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
-            <span style={{ color: "white", ...TYPE.headline }}>
-              {lead.name || "Unknown"}
-            </span>
+        {/* Name row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: preview ? 6 : 0 }}>
+          <span style={{ color: "white", ...TYPE.headline, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {lead.name || "Unknown"}
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {/* Temperature pill — tap to open inline selector */}
+            {pickingTemp ? (
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }} onClick={e => e.stopPropagation()}>
+                {(["hot", "warm", "cold"] as const).map(t => (
+                  <button key={t} onClick={() => { onTempChange(lead.id, t); setPickingTemp(false) }} style={{
+                    padding: "3px 9px", borderRadius: 100, border: "none", cursor: "pointer",
+                    backgroundColor: TEMP_COLORS[t],
+                    color: "white", fontSize: "0.75rem", fontWeight: 700,
+                  }}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+                <button onClick={e => { e.stopPropagation(); setPickingTemp(false) }} style={{
+                  border: "none", background: "none", color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", cursor: "pointer", padding: "3px 4px",
+                }}>✕</button>
+              </div>
+            ) : (
+              <button onClick={e => { e.stopPropagation(); setPickingTemp(true) }} style={{
+                padding: "3px 10px", borderRadius: 100, border: `1px solid ${currentTemp ? `${tempColor}55` : "rgba(255,255,255,0.12)"}`,
+                backgroundColor: currentTemp ? `${tempColor}18` : "transparent",
+                color: currentTemp ? tempColor : "rgba(255,255,255,0.3)",
+                fontSize: "0.75rem", fontWeight: 700, cursor: "pointer",
+              }}>
+                {tempLabel}
+              </button>
+            )}
             {lead.created_at && (
-              <span style={{ color: "white", opacity: TEXT_OPACITY.tertiary, flexShrink: 0, ...TYPE.footnote }}>
+              <span style={{ color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.footnote }}>
                 {formatTimeAgo(lead.created_at)}
               </span>
             )}
+            <svg width={ICON.chevron} height={ICON.chevron} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
           </div>
-          {preview ? (
-            <p style={{
-              margin: 0, color: "white", opacity: TEXT_OPACITY.secondary,
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              ...TYPE.subhead,
-            }}>
-              {preview}
-            </p>
-          ) : lead.source === "manual" ? (
-            <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>Added manually</p>
-          ) : (
-            <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>Reached out from your site</p>
-          )}
         </div>
 
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 10 }}>
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
+        {preview && (
+          <p style={{
+            margin: 0, color: "white", opacity: TEXT_OPACITY.secondary,
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            ...TYPE.subhead,
+          }}>
+            {preview}
+          </p>
+        )}
+        {!preview && (
+          <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>
+            {lead.source === "manual" ? "Added manually" : "Reached out from your site"}
+          </p>
+        )}
       </div>
 
-      {/* Inline actions */}
+      {/* Inline contact actions */}
       {(phoneHref || emailHref) && (
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "0 4px 4px" }}>
           {phoneHref && (
@@ -437,7 +469,6 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const emailHref = lead.email ? `mailto:${lead.email}` : null
   const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
-  const avColor = avatarColorFor(lead.name)
 
   async function handleSave() {
     setSaving(true)
@@ -470,18 +501,9 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
 
         {!editing ? (
           <>
-            {/* Header — avatar, name, temp */}
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-              <div style={{
-                width: 60, height: 60, borderRadius: "50%",
-                backgroundColor: `${avColor}26`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 22, fontWeight: 700, color: avColor, flexShrink: 0,
-              }}>
-                {(lead.name || "?")[0].toUpperCase()}
-              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h2 style={{ margin: "0 0 4px", color: "white", ...TYPE.title }}>
+                <h2 style={{ margin: "0 0 8px", color: "white", ...TYPE.title }}>
                   {lead.name || "Unknown"}
                 </h2>
                 <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 100, backgroundColor: `${tempColor}18` }}>
@@ -500,7 +522,6 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               </button>
             </div>
 
-            {/* Action row */}
             <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
               {phoneHref && (
                 <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
@@ -522,14 +543,9 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               )}
             </div>
 
-            {/* Details */}
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {lead.phone && (
-                <DetailRow label="Phone" value={lead.phone} />
-              )}
-              {lead.email && (
-                <DetailRow label="Email" value={lead.email} />
-              )}
+              {lead.phone && <DetailRow label="Phone" value={lead.phone} />}
+              {lead.email && <DetailRow label="Email" value={lead.email} />}
               {lead.created_at && (
                 <DetailRow label="Received" value={new Date(lead.created_at).toLocaleString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })} />
               )}
@@ -538,9 +554,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
               )}
               {lead.message && (
                 <div>
-                  <div style={{ color: "white", opacity: TEXT_OPACITY.tertiary, marginBottom: 8, ...TYPE.caption }}>
-                    Notes
-                  </div>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.tertiary, marginBottom: 8, ...TYPE.caption }}>Notes</div>
                   <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.secondary, whiteSpace: "pre-wrap", ...TYPE.body }}>
                     {lead.message}
                   </p>
@@ -550,11 +564,8 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
           </>
         ) : (
           <>
-            <div style={{ color: SIGNAL_GREEN, marginBottom: 18, ...TYPE.caption }}>
-              Edit Lead
-            </div>
+            <div style={{ color: SIGNAL_GREEN, marginBottom: 18, ...TYPE.caption }}>Edit Lead</div>
 
-            {/* Temperature picker */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 8, ...TYPE.caption }}>Temperature</div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -590,7 +601,7 @@ function LeadDetailSheet({ lead, onClose, onSaved }: {
 
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", marginBottom: 6, letterSpacing: "0.08em", textTransform: "uppercase" }}>Notes</div>
-              <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Add notes about this lead…" rows={4}
+              <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Add notes…" rows={4}
                 style={{ width: "100%", padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", resize: "none", boxSizing: "border-box", lineHeight: 1.6, fontFamily: "inherit" }}
               />
             </div>

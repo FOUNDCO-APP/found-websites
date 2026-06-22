@@ -305,18 +305,19 @@ export default function HomeClient({
             style={{
               flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
               padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
-              background: `linear-gradient(150deg, ${GREEN}20 0%, ${GREEN}06 100%)`,
-              border: `1px solid ${GREEN}30`,
+              background: GREEN,
+              border: "none",
               cursor: "pointer", textAlign: "left",
+              boxShadow: `0 4px 24px ${GREEN}55`,
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
               <circle cx="12" cy="13" r="4"/>
             </svg>
             <div>
-              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Camera</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)`, lineHeight: 1.4 }}>Shoot &amp; sort later</div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 800, color: BLACK, marginBottom: 3 }}>Camera</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "rgba(0,0,0,0.5)", lineHeight: 1.4 }}>Shoot &amp; sort later</div>
             </div>
           </button>
 

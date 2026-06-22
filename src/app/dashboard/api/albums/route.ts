@@ -80,6 +80,28 @@ export async function POST(req: Request) {
   return NextResponse.json({ album: data })
 }
 
+export async function PATCH(req: Request) {
+  const user = await getAuthUser()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+
+  const { id, name } = await req.json()
+  if (!id || !name?.trim()) return NextResponse.json({ error: "Missing fields" }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("photo_albums")
+    .update({ name: name.trim() })
+    .eq("id", id)
+    .eq("company_id", company.id)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ album: data })
+}
+
 export async function DELETE(req: Request) {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

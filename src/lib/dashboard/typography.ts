@@ -107,41 +107,52 @@ const AVATAR_PALETTE = [
 export type AlbumLabel = { singular: string; plural: string; create: string }
 
 const ALBUM_LABEL_MAP: Record<string, AlbumLabel> = {
-  restaurant:            { singular: "Event",      plural: "Events",       create: "New Event" },
-  food_beverage:         { singular: "Event",      plural: "Events",       create: "New Event" },
-  home_based_food:       { singular: "Item",       plural: "Items",        create: "New Item" },
-  salon:                 { singular: "Look",       plural: "Looks",        create: "New Look" },
-  beauty:                { singular: "Look",       plural: "Looks",        create: "New Look" },
-  spa:                   { singular: "Treatment",  plural: "Treatments",   create: "New Treatment" },
-  retail:                { singular: "Collection", plural: "Collections",  create: "New Collection" },
-  makers_crafts:         { singular: "Collection", plural: "Collections",  create: "New Collection" },
-  music_performance:     { singular: "Show",       plural: "Shows",        create: "New Show" },
-  music:                 { singular: "Show",       plural: "Shows",        create: "New Show" },
-  childcare:             { singular: "Memory",     plural: "Memories",     create: "New Memory" },
-  education:             { singular: "Moment",     plural: "Moments",      create: "New Moment" },
-  real_estate:           { singular: "Listing",    plural: "Listings",     create: "New Listing" },
-  home_property:         { singular: "Property",   plural: "Properties",   create: "New Property" },
-  photography:           { singular: "Shoot",      plural: "Shoots",       create: "New Shoot" },
-  healthcare:            { singular: "Visit",      plural: "Visits",       create: "New Visit" },
-  nonprofit:             { singular: "Story",      plural: "Stories",      create: "New Story" },
-  professional_services: { singular: "Case",       plural: "Cases",        create: "New Case" },
-  contractors:           { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  home_services:         { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  cleaning:              { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  landscaping:           { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  plumbing:              { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  electrician:           { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  construction:          { singular: "Job",        plural: "Jobs",         create: "New Job" },
-  events:                { singular: "Event",      plural: "Events",       create: "New Event" },
-  event_planning:        { singular: "Event",      plural: "Events",       create: "New Event" },
-  balloon_decor:         { singular: "Event",      plural: "Events",       create: "New Event" },
-  fitness:               { singular: "Session",    plural: "Sessions",     create: "New Session" },
-  pet_services:          { singular: "Session",    plural: "Sessions",     create: "New Session" },
-  auto:                  { singular: "Job",        plural: "Jobs",         create: "New Job" },
+  // ── DB values (from industryDetection.ts) ─────────────────────────
+  food:                  { singular: "Event",       plural: "Events",       create: "New Event" },
+  wellness:              { singular: "Treatment",   plural: "Treatments",   create: "New Treatment" },
+  beauty:                { singular: "Look",        plural: "Looks",        create: "New Look" },
+  fitness:               { singular: "Session",     plural: "Sessions",     create: "New Session" },
+  healthcare:            { singular: "Visit",       plural: "Visits",       create: "New Visit" },
+  home_services:         { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  cleaning:              { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  landscaping:           { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  automotive:            { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  home_property:         { singular: "Project",     plural: "Projects",     create: "New Project" },
+  real_estate:           { singular: "Listing",     plural: "Listings",     create: "New Listing" },
+  retail:                { singular: "Collection",  plural: "Collections",  create: "New Collection" },
+  home_based_food:       { singular: "Item",        plural: "Items",        create: "New Item" },
+  events:                { singular: "Event",       plural: "Events",       create: "New Event" },
+  creative_services:     { singular: "Shoot",       plural: "Shoots",       create: "New Shoot" },
+  education:             { singular: "Session",     plural: "Sessions",     create: "New Session" },
+  music_performance:     { singular: "Show",        plural: "Shows",        create: "New Show" },
+  professional_services: { singular: "Case",        plural: "Cases",        create: "New Case" },
+  childcare:             { singular: "Memory",      plural: "Memories",     create: "New Memory" },
+  makers_crafts:         { singular: "Collection",  plural: "Collections",  create: "New Collection" },
+  pet_services:          { singular: "Session",     plural: "Sessions",     create: "New Session" },
+  nonprofit:             { singular: "Story",       plural: "Stories",      create: "New Story" },
+  // ── Legacy keys (kept for safety) ────────────────────────────────
+  restaurant:            { singular: "Event",       plural: "Events",       create: "New Event" },
+  food_beverage:         { singular: "Event",       plural: "Events",       create: "New Event" },
+  salon:                 { singular: "Look",        plural: "Looks",        create: "New Look" },
+  spa:                   { singular: "Treatment",   plural: "Treatments",   create: "New Treatment" },
+  contractors:           { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  construction:          { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  plumbing:              { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  electrician:           { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  auto:                  { singular: "Job",         plural: "Jobs",         create: "New Job" },
+  music:                 { singular: "Show",        plural: "Shows",        create: "New Show" },
+  event_planning:        { singular: "Event",       plural: "Events",       create: "New Event" },
+  balloon_decor:         { singular: "Event",       plural: "Events",       create: "New Event" },
+  photography:           { singular: "Shoot",       plural: "Shoots",       create: "New Shoot" },
+}
+
+// Normalize industry values from DB (may be any case/format)
+function normalizeIndustry(industry: string | null | undefined): string {
+  return (industry ?? "").toLowerCase().trim().replace(/[\s-]+/g, "_")
 }
 
 export function albumLabelFor(industry: string | null | undefined): AlbumLabel {
-  return ALBUM_LABEL_MAP[industry ?? ""] ?? { singular: "Project", plural: "Projects", create: "New Project" }
+  return ALBUM_LABEL_MAP[normalizeIndustry(industry)] ?? { singular: "Project", plural: "Projects", create: "New Project" }
 }
 
 // ── Lead labels (what "Leads" is called per industry) ────────────────────────
@@ -149,76 +160,93 @@ export function albumLabelFor(industry: string | null | undefined): AlbumLabel {
 export type LeadLabel = { singular: string; plural: string; new: string }
 
 const LEAD_LABEL_MAP: Record<string, LeadLabel> = {
-  restaurant:            { singular: "Reservation", plural: "Reservations", new: "New Reservation" },
-  food_beverage:         { singular: "Order",        plural: "Orders",        new: "New Order" },
-  home_based_food:       { singular: "Order",        plural: "Orders",        new: "New Order" },
-  salon:                 { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  beauty:                { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  spa:                   { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  fitness:               { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  healthcare:            { singular: "Appointment",  plural: "Appointments",  new: "New Appointment" },
-  retail:                { singular: "Order",        plural: "Orders",        new: "New Order" },
-  makers_crafts:         { singular: "Order",        plural: "Orders",        new: "New Order" },
-  contractors:           { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  home_services:         { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  cleaning:              { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  landscaping:           { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  plumbing:              { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  electrician:           { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  construction:          { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  auto:                  { singular: "Estimate",     plural: "Estimates",     new: "New Estimate" },
-  real_estate:           { singular: "Lead",         plural: "Leads",         new: "New Lead" },
-  photography:           { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  events:                { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  event_planning:        { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  balloon_decor:         { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  childcare:             { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  education:             { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  nonprofit:             { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
-  music:                 { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  music_performance:     { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  pet_services:          { singular: "Booking",      plural: "Bookings",      new: "New Booking" },
-  professional_services: { singular: "Inquiry",      plural: "Inquiries",     new: "New Inquiry" },
+  // ── DB values (from industryDetection.ts) ─────────────────────────
+  food:                  { singular: "Reservation",  plural: "Reservations",  new: "New Reservation" },
+  wellness:              { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  beauty:                { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  fitness:               { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  healthcare:            { singular: "Appointment",   plural: "Appointments",   new: "New Appointment" },
+  home_services:         { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  cleaning:              { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  landscaping:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  automotive:            { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  home_property:         { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  real_estate:           { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  retail:                { singular: "Order",         plural: "Orders",         new: "New Order" },
+  home_based_food:       { singular: "Order",         plural: "Orders",         new: "New Order" },
+  events:                { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  creative_services:     { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  education:             { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  music_performance:     { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  professional_services: { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  childcare:             { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  makers_crafts:         { singular: "Order",         plural: "Orders",         new: "New Order" },
+  pet_services:          { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  nonprofit:             { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  // ── Legacy keys (kept for safety) ─────────────────────────────────
+  restaurant:            { singular: "Reservation",  plural: "Reservations",  new: "New Reservation" },
+  food_beverage:         { singular: "Order",         plural: "Orders",         new: "New Order" },
+  salon:                 { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  spa:                   { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  contractors:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  construction:          { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  plumbing:              { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  electrician:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  auto:                  { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  music:                 { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
+  event_planning:        { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  balloon_decor:         { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  photography:           { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
 }
 
 export function leadLabelFor(industry: string | null | undefined): LeadLabel {
-  return LEAD_LABEL_MAP[industry ?? ""] ?? { singular: "Lead", plural: "Leads", new: "New Lead" }
+  return LEAD_LABEL_MAP[normalizeIndustry(industry)] ?? { singular: "Lead", plural: "Leads", new: "New Lead" }
 }
 
 // ── Contact default categories per industry ───────────────────────────────────
 
 const CONTACT_CATEGORIES_MAP: Record<string, string[]> = {
-  contractors:           ["Client", "Subcontractor", "Vendor", "Supplier", "Inspector"],
+  // ── DB values (from industryDetection.ts) ─────────────────────────
+  food:                  ["Staff", "Vendor", "Supplier", "Event Client"],
+  wellness:              ["Client", "Staff", "Vendor", "Supplier"],
+  beauty:                ["Client", "Staff", "Vendor", "Supplier"],
+  fitness:               ["Client", "Staff", "Vendor"],
+  healthcare:            ["Patient", "Staff", "Vendor", "Referral"],
   home_services:         ["Client", "Subcontractor", "Vendor", "Supplier"],
   cleaning:              ["Client", "Staff", "Vendor", "Supplier"],
   landscaping:           ["Client", "Subcontractor", "Vendor", "Supplier"],
-  construction:          ["Client", "Subcontractor", "Vendor", "Supplier", "Inspector"],
+  automotive:            ["Client", "Parts Vendor", "Subcontractor", "Fleet"],
+  home_property:         ["Client", "Vendor", "Subcontractor", "Partner"],
+  real_estate:           ["Client", "Lender", "Inspector", "Other Agent"],
+  retail:                ["Vendor", "Supplier", "Staff", "Wholesale"],
+  home_based_food:       ["Vendor", "Supplier", "Wholesale", "Collaborator"],
+  events:                ["Client", "Vendor", "Staff", "Venue"],
+  creative_services:     ["Client", "Vendor", "Collaborator", "Second Shooter"],
+  education:             ["Student", "Staff", "Vendor", "Partner"],
+  music_performance:     ["Venue", "Promoter", "Collaborator", "Vendor"],
+  professional_services: ["Client", "Vendor", "Referral", "Partner"],
+  childcare:             ["Family", "Staff", "Vendor"],
+  makers_crafts:         ["Vendor", "Supplier", "Wholesale", "Collaborator"],
+  pet_services:          ["Client", "Staff", "Vendor", "Vet"],
+  nonprofit:             ["Donor", "Volunteer", "Partner", "Vendor"],
+  // ── Legacy keys (kept for safety) ─────────────────────────────────
   restaurant:            ["Staff", "Vendor", "Supplier", "Event Client"],
   food_beverage:         ["Staff", "Vendor", "Supplier"],
   salon:                 ["Client", "Staff", "Vendor", "Supplier"],
-  beauty:                ["Client", "Staff", "Vendor", "Supplier"],
   spa:                   ["Client", "Staff", "Vendor", "Supplier"],
-  retail:                ["Vendor", "Supplier", "Staff", "Wholesale"],
-  makers_crafts:         ["Vendor", "Supplier", "Wholesale", "Collaborator"],
-  photography:           ["Client", "Vendor", "Second Shooter", "Model"],
-  events:                ["Client", "Vendor", "Staff", "Venue"],
+  contractors:           ["Client", "Subcontractor", "Vendor", "Supplier", "Inspector"],
+  construction:          ["Client", "Subcontractor", "Vendor", "Supplier", "Inspector"],
+  plumbing:              ["Client", "Subcontractor", "Vendor", "Supplier"],
+  electrician:           ["Client", "Subcontractor", "Vendor", "Supplier"],
+  auto:                  ["Client", "Parts Vendor", "Subcontractor", "Fleet"],
+  music:                 ["Venue", "Promoter", "Collaborator", "Vendor"],
   event_planning:        ["Client", "Vendor", "Staff", "Venue"],
   balloon_decor:         ["Client", "Vendor", "Staff", "Collaborator"],
-  real_estate:           ["Client", "Lender", "Inspector", "Other Agent"],
-  healthcare:            ["Patient", "Staff", "Vendor", "Referral"],
-  fitness:               ["Client", "Staff", "Vendor"],
-  music:                 ["Venue", "Promoter", "Collaborator", "Vendor"],
-  music_performance:     ["Venue", "Promoter", "Collaborator", "Vendor"],
-  professional_services: ["Client", "Vendor", "Referral", "Partner"],
-  nonprofit:             ["Donor", "Volunteer", "Partner", "Vendor"],
-  childcare:             ["Family", "Staff", "Vendor"],
-  education:             ["Student", "Staff", "Vendor", "Partner"],
-  pet_services:          ["Client", "Staff", "Vendor", "Vet"],
-  auto:                  ["Client", "Parts Vendor", "Subcontractor", "Fleet"],
+  photography:           ["Client", "Vendor", "Second Shooter", "Model"],
 }
 
 export function contactCategoriesFor(industry: string | null | undefined): string[] {
-  return CONTACT_CATEGORIES_MAP[industry ?? ""] ?? ["Vendor", "Subcontractor", "Supplier", "Client"]
+  return CONTACT_CATEGORIES_MAP[normalizeIndustry(industry)] ?? ["Vendor", "Subcontractor", "Supplier", "Client"]
 }
 
 export function avatarColorFor(name: string | null | undefined): string {

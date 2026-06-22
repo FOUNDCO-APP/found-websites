@@ -173,6 +173,21 @@ export default function PhotosPage() {
     if (activeAlbum?.id === album.id) setActiveAlbum(null)
   }
 
+  async function renameAlbum(album: Album, name: string) {
+    const trimmed = name.trim()
+    if (!trimmed || trimmed === album.name) return
+    const res = await fetch("/api/albums", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: album.id, name: trimmed }),
+    })
+    const data = await res.json()
+    if (data.album) {
+      setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, name: data.album.name } : a))
+      if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, name: data.album.name } : prev)
+    }
+  }
+
   async function handleShare(album: Album) {
     const url = `https://${siteSlug}.foundco.app/gallery/${album.slug}`
     if (navigator.share) {
@@ -227,7 +242,7 @@ export default function PhotosPage() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                 <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
               </button>
-              <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{activeAlbum.name}</h1>
+              <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
               <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
               </p>
@@ -356,12 +371,12 @@ export default function PhotosPage() {
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
             emptyTitle={
-              view === "queue"   ? "Take your first photo." :
+              view === "queue"   ? "Take a photo or video." :
               view === "website" ? "No website photos yet." :
               "No social photos yet."
             }
             emptySub={
-              view === "queue"   ? "Tap the camera icon at the top to take your first photo." :
+              view === "queue"   ? "Tap the camera icon at the top to take photos and video." :
               view === "website" ? "Heart any photo and it'll appear here, ready for your site." :
               "Star any photo and Found will format it with your branding."
             }
@@ -465,19 +480,25 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
       {/* Top bar */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, zIndex: 101,
-        padding: "max(env(safe-area-inset-top, 0px), 16px) 20px 56px",
-        background: "linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)",
+        padding: "max(env(safe-area-inset-top, 0px), 20px) 20px 0",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>
-          {index + 1} / {photos.length}
-        </span>
+        <div style={{
+          backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+          backgroundColor: "rgba(0,0,0,0.38)", borderRadius: 100,
+          padding: "5px 13px",
+        }}>
+          <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
+            {index + 1} of {photos.length}
+          </span>
+        </div>
         <button onClick={onClose} style={{
-          width: 36, height: 36, borderRadius: "50%",
-          backgroundColor: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer",
+          width: 34, height: 34, borderRadius: "50%",
+          backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+          backgroundColor: "rgba(0,0,0,0.38)", border: "none", cursor: "pointer",
           display: "flex", alignItems: "center", justifyContent: "center",
         }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
@@ -502,73 +523,76 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
       {/* Bottom action bar */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
-        paddingTop: 56,
+        background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
+        paddingTop: 72,
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 32px)",
-        background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
         display: "flex", alignItems: "flex-end", justifyContent: "space-around",
-        padding: `56px 24px max(env(safe-area-inset-bottom, 0px), 32px)`,
+        padding: `72px 32px max(env(safe-area-inset-bottom, 0px), 36px)`,
       }}>
         {/* Heart — Website */}
         <button onClick={() => onFlag(photo.id, "for_website", photo.for_website)} style={{
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
         }}>
           <div style={{
-            width: 56, height: 56, borderRadius: 18,
-            backgroundColor: photo.for_website ? "rgba(255,75,139,0.22)" : "rgba(255,255,255,0.08)",
-            border: `1.5px solid ${photo.for_website ? "rgba(255,75,139,0.4)" : "rgba(255,255,255,0.1)"}`,
+            width: 64, height: 64, borderRadius: "50%",
+            backgroundColor: photo.for_website ? "rgba(255,75,139,0.28)" : "rgba(255,255,255,0.1)",
+            border: `2px solid ${photo.for_website ? "rgba(255,75,139,0.55)" : "rgba(255,255,255,0.14)"}`,
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s ease",
+            transition: "all 0.18s ease",
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24"
+            <svg width="25" height="25" viewBox="0 0 24 24"
               fill={photo.for_website ? "#FF4B8B" : "none"}
-              stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.65)"}
+              stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.75)"}
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
           </div>
-          <span style={{ ...TYPE.caption, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.45)" }}>Website</span>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Website</span>
         </button>
 
         {/* Star — Social */}
         <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
         }}>
           <div style={{
-            width: 56, height: 56, borderRadius: 18,
-            backgroundColor: photo.for_social ? "rgba(255,184,0,0.18)" : "rgba(255,255,255,0.08)",
-            border: `1.5px solid ${photo.for_social ? "rgba(255,184,0,0.4)" : "rgba(255,255,255,0.1)"}`,
+            width: 64, height: 64, borderRadius: "50%",
+            backgroundColor: photo.for_social ? "rgba(255,184,0,0.22)" : "rgba(255,255,255,0.1)",
+            border: `2px solid ${photo.for_social ? "rgba(255,184,0,0.5)" : "rgba(255,255,255,0.14)"}`,
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s ease",
+            transition: "all 0.18s ease",
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24"
+            <svg width="24" height="24" viewBox="0 0 24 24"
               fill={photo.for_social ? "#FFB800" : "none"}
-              stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.65)"}
+              stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.75)"}
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
           </div>
-          <span style={{ ...TYPE.caption, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.45)" }}>Social</span>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Social</span>
         </button>
 
         {/* Trash — Delete */}
         <button onClick={handleDelete} style={{
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
         }}>
           <div style={{
-            width: 56, height: 56, borderRadius: 18,
+            width: 64, height: 64, borderRadius: "50%",
             backgroundColor: "rgba(255,70,70,0.1)",
-            border: "1.5px solid rgba(255,70,70,0.2)",
+            border: "2px solid rgba(255,70,70,0.22)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,90,90,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,100,100,0.9)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
             </svg>
           </div>
-          <span style={{ ...TYPE.caption, color: "rgba(255,100,100,0.75)" }}>Delete</span>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "rgba(255,100,100,0.75)", letterSpacing: "0.02em" }}>Delete</span>
         </button>
       </div>
     </div>
@@ -632,6 +656,51 @@ function DateGroupedGrid({
 }
 
 // ── Projects tab ──
+// ── Album title editor (inside album detail header) ──
+function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Album, name: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [name, setName] = useState(album.name)
+
+  useEffect(() => { setName(album.name) }, [album.name])
+
+  function save() {
+    onRename(album, name)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+        <input
+          autoFocus
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") setEditing(false) }}
+          style={{
+            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
+            borderRadius: 10, padding: "6px 12px", color: "white",
+            fontSize: "1.5rem", fontWeight: 300, letterSpacing: "-0.03em",
+            outline: "none", width: "100%",
+          }}
+        />
+        <button onClick={save} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", flexShrink: 0 }}>Save</button>
+        <button onClick={() => setEditing(false)} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", flexShrink: 0 }}>Cancel</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{album.name}</h1>
+      <button onClick={() => setEditing(true)} style={{ border: "none", background: "none", padding: "4px", cursor: "pointer", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, display: "flex", alignItems: "center", flexShrink: 0, marginTop: 2 }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 function ProjectsTab({
   albums, photos, albumLabel, isPro, showNew, newName, saving,
   onShowNew, onHideNew, onNameChange, onCreate, onOpen, onShare, onUpgrade, onDelete,
