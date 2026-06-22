@@ -203,6 +203,40 @@ export function leadLabelFor(industry: string | null | undefined): LeadLabel {
   return LEAD_LABEL_MAP[normalizeIndustry(industry)] ?? { singular: "Lead", plural: "Leads", new: "New Lead" }
 }
 
+// ── Form intent system ────────────────────────────────────────────────────────
+
+export type FormIntentLabel = {
+  singular: string
+  plural: string
+  new: string
+  hasTemperature: boolean
+}
+
+const FORM_INTENT_LABEL_MAP: Record<string, FormIntentLabel> = {
+  lead:        { singular: "Lead",        plural: "Leads",        new: "New Lead",        hasTemperature: true  },
+  estimate:    { singular: "Estimate",    plural: "Estimates",    new: "New Estimate",    hasTemperature: true  },
+  inquiry:     { singular: "Inquiry",     plural: "Inquiries",    new: "New Inquiry",     hasTemperature: true  },
+  booking:     { singular: "Booking",     plural: "Bookings",     new: "New Booking",     hasTemperature: false },
+  reservation: { singular: "Reservation", plural: "Reservations", new: "New Reservation", hasTemperature: false },
+  order:       { singular: "Order",       plural: "Orders",       new: "New Order",       hasTemperature: false },
+  appointment: { singular: "Appointment", plural: "Appointments", new: "New Appointment", hasTemperature: false },
+}
+
+export function formIntentLabelFor(formIntent: string | null | undefined): FormIntentLabel {
+  return FORM_INTENT_LABEL_MAP[(formIntent ?? "").toLowerCase()] ?? FORM_INTENT_LABEL_MAP.lead
+}
+
+export function defaultFormIntentFor(industry: string | null | undefined): string {
+  const n = normalizeIndustry(industry)
+  if (["food", "restaurant", "food_beverage"].includes(n)) return "reservation"
+  if (["wellness", "beauty", "salon", "spa", "fitness", "music_performance", "music", "pet_services"].includes(n)) return "booking"
+  if (["healthcare"].includes(n)) return "appointment"
+  if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "contractors", "construction", "plumbing", "electrician"].includes(n)) return "estimate"
+  if (["retail", "home_based_food", "makers_crafts"].includes(n)) return "order"
+  if (["real_estate", "events", "event_planning", "balloon_decor", "creative_services", "photography", "education", "professional_services", "childcare", "nonprofit"].includes(n)) return "inquiry"
+  return "lead"
+}
+
 // ── Contact default categories per industry ───────────────────────────────────
 
 const CONTACT_CATEGORIES_MAP: Record<string, string[]> = {

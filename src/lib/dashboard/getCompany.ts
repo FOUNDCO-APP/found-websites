@@ -17,10 +17,11 @@ export type CompanyRow = {
   city: string | null
   state: string | null
   industry_category: string | null
+  form_intent: string | null
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, is_founding_member, primary_color, user_id, city, state, industry_category"
+  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, is_founding_member, primary_color, user_id, city, state, industry_category, form_intent"
 
 export const getCompany = cache(async (
   userId: string,

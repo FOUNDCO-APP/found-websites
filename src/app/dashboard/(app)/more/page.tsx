@@ -83,7 +83,7 @@ export default async function MorePage() {
               </div>
               <div>
                 <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Edit My Site</p>
-                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Copy, photos, services · AI rewrite</p>
+                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Words, photos, services · Rewrite for me</p>
               </div>
             </div>
             <ChevronRight />

@@ -30,10 +30,8 @@ export default function ContactsPage() {
   const [industry, setIndustry] = useState<string | null>(null)
   const [companySlug, setCompanySlug] = useState<string>("")
   const [customTags, setCustomTags] = useState<string[]>([])
-  const [showAddTag, setShowAddTag] = useState(false)
-  const [newTagName, setNewTagName] = useState("")
-
   const [removedDefaults, setRemovedDefaults] = useState<string[]>([])
+  const [showManageSheet, setShowManageSheet] = useState(false)
   const defaultCats = contactCategoriesFor(industry)
   const availableTags = [
     ...defaultCats.filter(t => !removedDefaults.includes(t)),
@@ -68,18 +66,6 @@ export default function ContactsPage() {
 
   function toggleTag(tag: string) {
     setNewTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
-  }
-
-  function addCustomTag() {
-    const trimmed = newTagName.trim()
-    if (!trimmed || availableTags.includes(trimmed)) return
-    const updated = [...customTags, trimmed]
-    setCustomTags(updated)
-    if (companySlug) {
-      try { localStorage.setItem(`found_contact_cats_${companySlug}`, JSON.stringify(updated)) } catch {}
-    }
-    setNewTagName("")
-    setShowAddTag(false)
   }
 
   function removeTag(tag: string) {
@@ -145,76 +131,41 @@ export default function ContactsPage() {
         </button>
       </div>
 
-      {/* Category filter pills + manage */}
+      {/* Category filter pills */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, alignItems: "center" }}>
           {[null, ...availableTags].map(tag => {
             const isActive = filterTag === tag
             return (
-              <div key={tag ?? "all"} style={{ flexShrink: 0, display: "flex", alignItems: "center", borderRadius: 20, border: "1px solid", borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.12)", backgroundColor: isActive ? `${SIGNAL_GREEN}18` : "transparent" }}>
-                <button onClick={() => setFilterTag(tag)} style={{
-                  padding: tag !== null ? "6px 8px 6px 14px" : "6px 14px",
-                  border: "none", background: "none",
-                  color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
-                  fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer",
-                }}>
-                  {tag ?? "All"}
-                </button>
-                {tag !== null && (
-                  <button onClick={e => { e.stopPropagation(); removeTag(tag) }} style={{
-                    border: "none", background: "none", padding: "0 10px 0 2px", cursor: "pointer",
-                    color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
-                    display: "flex", alignItems: "center", lineHeight: 1,
-                  }} title="Remove category">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
+              <button key={tag ?? "all"} onClick={() => setFilterTag(tag)} style={{
+                flexShrink: 0, padding: "6px 16px", borderRadius: 20,
+                border: "1px solid",
+                borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
+                backgroundColor: isActive ? `${SIGNAL_GREEN}18` : "transparent",
+                color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
+                fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer",
+              }}>
+                {tag ?? "All"}
+              </button>
             )
           })}
           <button
-            onClick={() => { setShowAddTag(v => !v); setNewTagName("") }}
-            title="Add category"
+            onClick={() => setShowManageSheet(true)}
+            title="Manage categories"
             style={{
-              flexShrink: 0, width: 30, height: 30, borderRadius: "50%",
+              flexShrink: 0, padding: "5px 12px", borderRadius: 20,
               border: "1px dashed rgba(255,255,255,0.18)",
               backgroundColor: "transparent", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "rgba(255,255,255,0.3)",
+              color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", fontWeight: 600,
+              display: "flex", alignItems: "center", gap: 5,
             }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
+            Edit
           </button>
         </div>
-
-        {/* Inline new category input */}
-        {showAddTag && (
-          <div style={{ display: "flex", gap: 8, marginTop: 10, animation: "fadeIn 0.15s ease" }}>
-            <input
-              autoFocus
-              value={newTagName}
-              onChange={e => setNewTagName(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") addCustomTag(); if (e.key === "Escape") { setShowAddTag(false); setNewTagName("") } }}
-              placeholder="Category name…"
-              style={{
-                flex: 1, padding: "9px 14px", borderRadius: 12,
-                backgroundColor: "rgba(255,255,255,0.06)",
-                border: `1px solid ${SIGNAL_GREEN}33`,
-                color: "white", fontSize: "0.875rem", outline: "none",
-              }}
-            />
-            <button onClick={addCustomTag} disabled={!newTagName.trim()} style={{
-              padding: "9px 16px", borderRadius: 12, border: "none",
-              backgroundColor: newTagName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-              color: newTagName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
-              fontSize: "0.8125rem", fontWeight: 700, cursor: newTagName.trim() ? "pointer" : "default",
-            }}>Add</button>
-          </div>
-        )}
       </div>
 
       {/* Add contact form */}
@@ -326,14 +277,6 @@ export default function ContactsPage() {
                 onClick={() => setSelectedContact(contact)}
                 style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}
               >
-                <div style={{
-                  width: 42, height: 42, borderRadius: "50%",
-                  backgroundColor: `${avatarColorFor(contact.name)}26`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0, fontSize: "0.875rem", fontWeight: 700, color: avatarColorFor(contact.name),
-                }}>
-                  {contact.name[0].toUpperCase()}
-                </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ color: "white", marginBottom: 3, ...TYPE.headline }}>
                     {contact.name}
@@ -378,7 +321,22 @@ export default function ContactsPage() {
         />
       )}
 
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      {showManageSheet && (
+        <CategoryManagementSheet
+          availableTags={availableTags}
+          onAdd={(tag) => {
+            const trimmed = tag.trim()
+            if (!trimmed || availableTags.includes(trimmed)) return
+            const updated = [...customTags, trimmed]
+            setCustomTags(updated)
+            if (companySlug) {
+              try { localStorage.setItem(`found_contact_cats_${companySlug}`, JSON.stringify(updated)) } catch {}
+            }
+          }}
+          onRemove={(tag) => removeTag(tag)}
+          onClose={() => setShowManageSheet(false)}
+        />
+      )}
     </main>
   )
 }
@@ -553,6 +511,92 @@ function ContactDetailSheet({ contact, availableTags, onClose, onSaved, onDelete
             </div>
           </>
         )}
+      </div>
+    </>
+  )
+}
+
+function CategoryManagementSheet({ availableTags, onAdd, onRemove, onClose }: {
+  availableTags: string[]
+  onAdd: (tag: string) => void
+  onRemove: (tag: string) => void
+  onClose: () => void
+}) {
+  const [newTagName, setNewTagName] = useState("")
+
+  function handleAdd() {
+    const trimmed = newTagName.trim()
+    if (!trimmed || availableTags.includes(trimmed)) return
+    onAdd(trimmed)
+    setNewTagName("")
+  }
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
+      <div style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+        backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "28px 28px 0 0", padding: "14px 22px 40px",
+        maxHeight: "80dvh", overflowY: "auto",
+      }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Categories</h2>
+          <button onClick={onClose} style={{ border: "none", background: "none", color: SIGNAL_GREEN, fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "4px 0" }}>Done</button>
+        </div>
+
+        {availableTags.length === 0 && (
+          <p style={{ margin: "0 0 20px", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>
+            No categories yet. Add one below.
+          </p>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          {availableTags.map((tag, i) => (
+            <div key={tag} style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "14px 0",
+              borderBottom: i < availableTags.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+            }}>
+              <span style={{ color: "white", ...TYPE.body }}>{tag}</span>
+              <button onClick={() => onRemove(tag)} style={{
+                border: "none", background: "none", padding: "6px 8px", cursor: "pointer",
+                color: "rgba(255,80,80,0.5)", display: "flex", alignItems: "center",
+                borderRadius: 8,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6l-1 14H6L5 6"/>
+                  <path d="M10 11v6M14 11v6"/>
+                  <path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 24 }}>
+          <input
+            value={newTagName}
+            onChange={e => setNewTagName(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") handleAdd() }}
+            placeholder="Add a category…"
+            style={{
+              flex: 1, padding: "12px 14px", borderRadius: 12,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              border: `1px solid ${newTagName.trim() ? `${SIGNAL_GREEN}44` : "rgba(255,255,255,0.1)"}`,
+              color: "white", fontSize: "0.9375rem", outline: "none",
+            }}
+          />
+          <button onClick={handleAdd} disabled={!newTagName.trim() || availableTags.includes(newTagName.trim())} style={{
+            padding: "12px 18px", borderRadius: 12, border: "none",
+            backgroundColor: newTagName.trim() && !availableTags.includes(newTagName.trim()) ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+            color: newTagName.trim() && !availableTags.includes(newTagName.trim()) ? FOUND_BLACK : "rgba(255,255,255,0.2)",
+            fontSize: "0.8125rem", fontWeight: 700,
+            cursor: newTagName.trim() && !availableTags.includes(newTagName.trim()) ? "pointer" : "default",
+          }}>Add</button>
+        </div>
       </div>
     </>
   )

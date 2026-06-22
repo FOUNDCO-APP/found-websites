@@ -13,7 +13,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("leads")
-    .select("id, name, email, phone, message, type, source, temperature, created_at, partial_answers")
+    .select("id, name, email, phone, message, type, source, temperature, status, created_at, partial_answers")
     .eq("company_id", company.id)
     .neq("type", "onboarding_abandoned")
     .order("created_at", { ascending: false })
@@ -62,7 +62,7 @@ export async function PATCH(req: Request) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { id, name, phone, email, message, temperature } = body
+  const { id, name, phone, email, message, temperature, status } = body
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 })
 
   const updates: Record<string, unknown> = {}
@@ -71,6 +71,7 @@ export async function PATCH(req: Request) {
   if (email !== undefined)       updates.email = email?.trim() || null
   if (message !== undefined)     updates.message = message?.trim() || null
   if (temperature !== undefined) updates.temperature = temperature
+  if (status !== undefined)      updates.status = status
 
   const admin = createAdminClient()
   const { data, error } = await admin

@@ -10,7 +10,7 @@ type Album = { id: string; name: string; cover_url: string | null }
 
 const TABS: Tab[] = [
   { path: "/",         label: "Home" },
-  { path: "/leads",    label: "Leads" },
+  { path: "/leads",    label: "Inbox" },
   { path: "/photos",   label: "Photos" },
   { path: "/contacts", label: "Contacts" },
   { path: "/more",     label: "More" },
