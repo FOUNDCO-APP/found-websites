@@ -6,6 +6,65 @@ import { redirect } from "next/navigation"
 
 const ROOT = "https://foundco.app"
 
+export async function startAddonCheckout(formData: FormData) {
+  const companyId = formData.get("companyId") as string
+  const addonSlug = formData.get("addonSlug") as string
+  const stripe = getStripe()
+  if (!stripe || !companyId || !addonSlug) return
+
+  const admin = createAdminClient()
+
+  const [{ data: company }, { data: priceRow }] = await Promise.all([
+    admin.from("companies").select("stripe_customer_id, name, email").eq("id", companyId).single(),
+    admin.from("addon_stripe_prices").select("stripe_price_id").eq("addon_slug", addonSlug).single(),
+  ])
+
+  if (!company || !priceRow?.stripe_price_id) return
+
+  let customerId = company.stripe_customer_id as string | undefined
+
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      name: company.name ?? undefined,
+      email: company.email ?? undefined,
+      metadata: { company_id: companyId },
+    })
+    customerId = customer.id
+    await admin.from("companies").update({ stripe_customer_id: customerId }).eq("id", companyId)
+  }
+
+  // Add item to existing subscription if one exists
+  const subs = await stripe.subscriptions.list({ customer: customerId, limit: 1 })
+  if (subs.data.length > 0) {
+    const sub = subs.data[0]
+    const item = await stripe.subscriptionItems.create({
+      subscription: sub.id,
+      price: priceRow.stripe_price_id,
+      quantity: 1,
+    })
+    await admin.from("addon_subscriptions").upsert({
+      company_id: companyId,
+      addon_slug: addonSlug,
+      stripe_subscription_item_id: item.id,
+      active: true,
+    }, { onConflict: "company_id,addon_slug" })
+    redirect(`${ROOT}/dashboard/more?addon_added=${addonSlug}`)
+    return
+  }
+
+  // No subscription yet — checkout for the add-on standalone
+  const session = await stripe.checkout.sessions.create({
+    customer: customerId,
+    mode: "subscription",
+    line_items: [{ price: priceRow.stripe_price_id, quantity: 1 }],
+    subscription_data: { metadata: { company_id: companyId, addon_slug: addonSlug } },
+    success_url: `${ROOT}/dashboard/more?addon_added=${addonSlug}`,
+    cancel_url: `${ROOT}/dashboard/more`,
+  })
+
+  redirect(session.url!)
+}
+
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null
   return new Stripe(process.env.STRIPE_SECRET_KEY)

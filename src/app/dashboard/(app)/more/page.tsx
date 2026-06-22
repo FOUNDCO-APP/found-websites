@@ -3,7 +3,7 @@ import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import Link from "next/link"
-import { openBillingPortal, startUpgradeCheckout } from "./actions"
+import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getRelevantAddons } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -284,20 +284,24 @@ export default async function MorePage() {
                     <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
                       +${addon.price}/mo
                     </p>
-                    <a href={`mailto:hello@foundco.app?subject=Add ${addon.label}&body=I'd like to add ${addon.label} to my Found account.`}
-                      style={{
-                        display: "inline-block",
-                        borderRadius: 8,
-                        padding: "6px 12px",
-                        ...TYPE.caption,
-                        backgroundColor: `${GREEN}18`,
-                        color: GREEN,
-                        border: `1px solid ${GREEN}30`,
-                        textDecoration: "none",
-                        fontSize: 12,
-                      }}>
-                      Add →
-                    </a>
+                    {company?.id && (
+                      <form action={startAddonCheckout}>
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <input type="hidden" name="addonSlug" value={addon.slug} />
+                        <button type="submit" style={{
+                          borderRadius: 8,
+                          padding: "6px 12px",
+                          ...TYPE.caption,
+                          backgroundColor: `${GREEN}18`,
+                          color: GREEN,
+                          border: `1px solid ${GREEN}30`,
+                          cursor: "pointer",
+                          fontSize: 12,
+                        }}>
+                          Add →
+                        </button>
+                      </form>
+                    )}
                   </div>
                 </div>
               </div>
