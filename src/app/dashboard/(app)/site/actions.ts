@@ -195,6 +195,47 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   return { success: true }
 }
 
+export async function updateMenuItems(categories: { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null }[] }[]) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("website_config")
+    .update({ menu_items: categories, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}`)
+  return { success: true }
+}
+
+export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: string } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const file = formData.get("file") as File | null
+  if (!file) return { error: "No file" }
+
+  const ext = file.name.split(".").pop() ?? "jpg"
+  const path = `${ctx.company.id}/menu/${Date.now()}.${ext}`
+  const arrayBuffer = await file.arrayBuffer()
+
+  const { error } = await ctx.admin.storage
+    .from("company-assets")
+    .upload(path, arrayBuffer, { contentType: file.type, upsert: false })
+
+  if (error) return { error: error.message }
+
+  const { data: { publicUrl } } = ctx.admin.storage
+    .from("company-assets")
+    .getPublicUrl(path)
+
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  return { url: publicUrl }
+}
+
 export async function updatePrimaryIntent(intent: string) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }

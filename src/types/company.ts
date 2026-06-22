@@ -13,6 +13,7 @@ export type MenuItem = {
   name: string
   description: string
   price: string | null
+  photo_url?: string | null
 }
 
 export type MenuCategory = {

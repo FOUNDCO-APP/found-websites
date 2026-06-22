@@ -5,7 +5,7 @@ import SignOutButton from "@/components/dashboard/SignOutButton"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
-import { getRelevantAddons } from "@/lib/featureAccess"
+import { getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
@@ -70,6 +70,13 @@ export default async function MorePage() {
   }
 
   const availableAddons = relevantAddons.filter((a) => !activeAddonSlugs.includes(a.slug))
+
+  const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
+    const def = ALL_ADDONS.find(a => a.slug === slug)
+    return sum + (def?.price ?? 0)
+  }, 0)
+  const totalMonthly = displayPrice + activeAddonSum
+  const showUpsellBanner = upgrade && activeAddonSum > 0 && totalMonthly >= (upgradePrice - 15)
 
   return (
     <main style={{ padding: "28px 20px" }}>
@@ -173,6 +180,46 @@ export default async function MorePage() {
           </div>
         </div>
       </section>
+
+      {/* Smart upsell banner — fires when add-ons push total within $15 of next tier */}
+      {showUpsellBanner && upgrade && company?.id && (
+        <section style={{ marginBottom: 10 }}>
+          <div style={{
+            borderRadius: 14,
+            padding: "16px 18px",
+            background: `linear-gradient(135deg, ${GREEN}12 0%, ${GREEN}06 100%)`,
+            border: `1px solid ${GREEN}30`,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: `${GREEN}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+                  Better value available
+                </p>
+                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                  You&apos;re paying <strong style={{ color: "white" }}>${totalMonthly}/month</strong> total.{" "}
+                  {upgrade.label} is <strong style={{ color: "white" }}>${upgradePrice}/month</strong> and includes everything you have plus more.
+                </p>
+              </div>
+            </div>
+            <form action={startUpgradeCheckout}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <input type="hidden" name="targetPlan" value={upgrade.plan} />
+              <button type="submit" style={{
+                width: "100%", padding: "12px 0", borderRadius: 10,
+                backgroundColor: GREEN, color: BLACK, border: "none",
+                ...TYPE.subhead, fontWeight: 700, cursor: "pointer",
+              }}>
+                Switch to {upgrade.label} — save the complexity
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
 
       {/* Upgrade card */}
       {upgrade && company?.id && (

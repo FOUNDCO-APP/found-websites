@@ -42,7 +42,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const menuCategories = config?.menu_items && config.menu_items.length > 0
     ? config.menu_items
     : config?.services && config.services.length > 0
-      ? [{ category: vocab.servicesLabel, items: config.services.map(s => ({ name: s.name, description: s.description, price: null })) }]
+      ? [{ category: vocab.servicesLabel, items: config.services.map(s => ({ name: s.name, description: s.description, price: null, photo_url: null })) }]
       : null
 
   return (
@@ -93,26 +93,34 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
                   {cat.items.map((item, i) => (
                     <div
                       key={item.name}
-                      className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 py-7"
+                      className="flex items-start gap-5 py-7"
                       style={{ borderTop: i === 0 ? `2px solid ${primary}` : "1px solid #f0f0f0" }}
                     >
-                      <div className="flex-1 pr-8">
-                        <h3 className="text-xl font-black mb-1.5"
-                          style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                          {item.name}
-                        </h3>
+                      {item.photo_url && (
+                        <div className="shrink-0 w-20 h-20 rounded-xl overflow-hidden">
+                          <img src={item.photo_url} alt={item.name}
+                            className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-1">
+                          <h3 className="text-xl font-black leading-tight"
+                            style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                            {item.name}
+                          </h3>
+                          {item.price && (
+                            <p className="text-lg font-black shrink-0"
+                              style={{ color: primary }}>
+                              {item.price}
+                            </p>
+                          )}
+                        </div>
                         {item.description && (
                           <p className="text-base leading-relaxed" style={{ color: "#666666" }}>
                             {item.description}
                           </p>
                         )}
                       </div>
-                      {item.price && (
-                        <p className="text-lg font-black shrink-0 mt-0.5"
-                          style={{ color: primary }}>
-                          {item.price}
-                        </p>
-                      )}
                     </div>
                   ))}
                 </div>
