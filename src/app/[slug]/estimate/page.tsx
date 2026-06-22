@@ -8,7 +8,6 @@ import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const { getCompanyBySlug, getCompanyByDomain } = await import("@/lib/company")
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
@@ -25,6 +24,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   const primary = company.primary_color
   const gradient = heroGradient(primary)
   const services = company.website_config?.services || []
+  const testimonials = (company.website_config?.testimonials ?? []).slice(0, 2)
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
 
@@ -41,34 +41,54 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
         )}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>No Obligation</p>
-          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{intentLabel[company.primary_intent] || "Get in Touch"}</h1>
-          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>Tell us about your project and we&apos;ll be in touch within one business day.</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>
+            {intentLabel[company.primary_intent] || "Get in Touch"}
+          </h1>
+          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
+            Tell us about your project and we&apos;ll be in touch within one business day.
+          </p>
         </div>
       </section>
 
       <section className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
+
+            {/* Form */}
             <div className="lg:col-span-2 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
               <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>Tell us about your project</h2>
-              <EstimateForm companyId={company.id} services={services} primaryColor={primary} />
+              <EstimateForm
+                companyId={company.id}
+                services={services}
+                primaryColor={primary}
+                industryCategory={company.industry_category ?? ""}
+              />
             </div>
 
+            {/* Sidebar */}
             <div className="space-y-8">
+              {/* Phone */}
               {company.phone && (
                 <div>
                   <h3 className="text-base font-bold mb-2" style={{ color: "#111111" }}>Prefer to call?</h3>
-                  <a href={`tel:${company.phone.replace(/\D/g, "")}`} className="text-2xl font-black hover:underline block mb-1" style={{ color: primary }}>
+                  <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                    className="text-2xl font-black hover:underline block mb-1" style={{ color: primary }}>
                     {company.phone}
                   </a>
                 </div>
               )}
+
+              {/* What to expect */}
               <div className="p-6" style={{ backgroundColor: "#f9f9f9", borderRadius: "var(--card-radius, 10px)" }}>
-                <p className="text-sm font-semibold mb-1" style={{ color: primary }}>What to expect</p>
-                <ul className="mt-3 space-y-2">
-                  {["We respond within 1 business day", "No obligation, no pressure", "Free consultation"].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-sm text-gray-600">
-                      <svg className="w-4 h-4 shrink-0" fill="none" stroke={primary} viewBox="0 0 24 24">
+                <p className="text-sm font-semibold mb-3" style={{ color: primary }}>What to expect</p>
+                <ul className="space-y-2">
+                  {[
+                    "Response within 1 business day — usually same day",
+                    "Free estimate, no obligation",
+                    "No pressure, no sales tactics",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2 text-sm text-gray-600">
+                      <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke={primary} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                       {item}
@@ -76,7 +96,39 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
                   ))}
                 </ul>
               </div>
+
+              {/* Testimonials — only if they exist */}
+              {testimonials.length > 0 && (
+                <div className="space-y-4">
+                  <p className="text-xs font-black tracking-widest uppercase" style={{ color: primary }}>
+                    What customers say
+                  </p>
+                  {testimonials.map((t, i) => (
+                    <div key={i} className="p-5" style={{ backgroundColor: "#fafafa", borderRadius: "var(--card-radius, 10px)", borderLeft: `3px solid ${primary}` }}>
+                      <p className="text-sm text-gray-700 leading-relaxed mb-3">&ldquo;{t.quote}&rdquo;</p>
+                      <p className="text-xs font-bold" style={{ color: "#111111" }}>{t.name}</p>
+                      {t.role && <p className="text-xs text-gray-400">{t.role}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Trust badge — shown when no testimonials */}
+              {testimonials.length === 0 && (
+                <div className="flex items-center gap-3 p-4" style={{ backgroundColor: "#f9f9f9", borderRadius: "var(--card-radius, 10px)" }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ backgroundColor: `${primary}18` }}>
+                    <svg className="w-5 h-5" fill="none" stroke={primary} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold" style={{ color: "#111111" }}>{company.name}</p>
+                    <p className="text-xs text-gray-500">Locally owned &amp; operated</p>
+                  </div>
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       </section>

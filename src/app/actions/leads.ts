@@ -229,6 +229,17 @@ export async function submitLead(_: unknown, formData: FormData) {
   if (!companyId || !name || !phone) {
     return { success: false, error: "Name and phone number are required." }
   }
+  if (!email) {
+    return { success: false, error: "Email is required so we can send you a confirmation." }
+  }
+
+  // Collect industry-specific fields into partial_answers
+  const extraKeys = ["job_address", "timeline", "budget", "home_type", "sq_footage", "frequency", "event_date", "guest_count", "project_type", "vehicle_info", "urgency"]
+  const partialAnswers: Record<string, string> = {}
+  for (const key of extraKeys) {
+    const val = (formData.get(key) as string)?.trim()
+    if (val) partialAnswers[key] = val
+  }
 
   const supabase = await createClient()
   const replyToken = crypto.randomUUID()
@@ -243,6 +254,7 @@ export async function submitLead(_: unknown, formData: FormData) {
       service: service || null,
       message: message || null,
       reply_token: replyToken,
+      partial_answers: Object.keys(partialAnswers).length > 0 ? partialAnswers : null,
     })
     .select("id")
 
@@ -381,11 +393,9 @@ function buildLeadEmail({
 }) {
   const cleanPhone = phone.replace(/\D/g, "")
   const firstName = name.split(" ")[0]
-  const receivedAt = new Date().toLocaleString("en-US", {
-    weekday: "short", month: "short", day: "numeric",
-    hour: "numeric", minute: "2-digit", hour12: true,
-    timeZone: "UTC",
-  }) + " UTC"
+  const receivedAt = new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  })
 
   return `<!DOCTYPE html>
 <html>
@@ -442,11 +452,14 @@ function buildLeadEmail({
             <!-- CTA buttons -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="padding-right:8px;">
-                  <a href="tel:${cleanPhone}" style="display:block;text-align:center;background:#111111;color:#ffffff;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Call ${name.split(" ")[0]}</a>
+                <td style="padding-right:6px;">
+                  <a href="tel:${cleanPhone}" style="display:block;text-align:center;background:#111111;color:#ffffff;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Call ${firstName}</a>
                 </td>
-                ${email ? `<td style="padding-left:8px;">
-                  <a href="${replyUrl}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
+                <td style="padding-right:6px;padding-left:2px;">
+                  <a href="sms:${cleanPhone}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Text ${firstName}</a>
+                </td>
+                ${email ? `<td style="padding-left:2px;">
+                  <a href="${replyUrl}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
                 </td>` : ""}
               </tr>
             </table>

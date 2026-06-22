@@ -26,10 +26,27 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
   const firstName = lead.name.split(" ")[0]
   const websiteUrl = `https://${company.slug}.foundco.app`
 
-  const defaultSubject = `Re: Your estimate request — ${company.name}`
-  const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out! I'd love to help${lead.service ? ` with your ${lead.service.toLowerCase()} project` : ""} and will be in touch soon.`
+  const defaultSubject = `Re: Your inquiry — ${company.name}`
+  const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}${lead.service ? ` about ${lead.service.toLowerCase()}` : ""}. I'd love to learn more about your project.\n\nWhat's a good time for a quick call this week? I'm usually available mornings and afternoons. You can also call me directly${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to connecting!`
 
   const alreadyReplied = !!lead.replied_at
+  const pa = (lead.partial_answers ?? {}) as Record<string, string>
+
+  // Build a list of lead detail rows to display
+  const detailRows: { label: string; value: string }[] = []
+  if (lead.phone)                detailRows.push({ label: "Phone", value: lead.phone })
+  if (lead.email)                detailRows.push({ label: "Email", value: lead.email })
+  if (lead.service)              detailRows.push({ label: "Service", value: lead.service })
+  if (pa.job_address)            detailRows.push({ label: "Address", value: pa.job_address })
+  if (pa.home_type)              detailRows.push({ label: "Property", value: pa.home_type })
+  if (pa.sq_footage)             detailRows.push({ label: "Size", value: pa.sq_footage })
+  if (pa.frequency)              detailRows.push({ label: "Frequency", value: pa.frequency })
+  if (pa.event_date)             detailRows.push({ label: "Date", value: pa.event_date })
+  if (pa.guest_count)            detailRows.push({ label: "Guests", value: pa.guest_count })
+  if (pa.vehicle_info)           detailRows.push({ label: "Vehicle", value: pa.vehicle_info })
+  if (pa.timeline)               detailRows.push({ label: "Timeline", value: pa.timeline })
+  if (pa.budget)                 detailRows.push({ label: "Budget", value: pa.budget })
+  if (lead.message)              detailRows.push({ label: "Notes", value: lead.message })
 
   return (
     <div style={{
@@ -58,6 +75,23 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
             }
           </p>
         </div>
+
+        {/* Lead details card */}
+        {!alreadyReplied && detailRows.length > 0 && (
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "20px 24px", marginBottom: "16px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <p style={{ margin: "0 0 14px", fontSize: "11px", fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", color: "#bbbbbb" }}>
+              Their Request
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 16px" }}>
+              {detailRows.map(({ label, value }) => (
+                <>
+                  <span key={label + "-l"} style={{ fontSize: "12px", fontWeight: 700, color: "#aaaaaa", whiteSpace: "nowrap", paddingTop: "1px" }}>{label}</span>
+                  <span key={label + "-v"} style={{ fontSize: "13px", color: "#333333", lineHeight: "1.5" }}>{value}</span>
+                </>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Card */}
         <div style={{ background: "#ffffff", borderRadius: "16px", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>

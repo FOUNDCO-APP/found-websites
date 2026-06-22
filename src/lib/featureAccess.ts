@@ -44,6 +44,7 @@ export function getFeatureAccess(
     case "industry_form":
     case "reservation_form":
     case "photo_pipeline":
+    case "lead_reply":
       return true
 
     // Pro+
@@ -52,7 +53,6 @@ export function getFeatureAccess(
     case "contact_database":
     case "lead_sequence":
     case "lead_tracking":
-    case "lead_reply":
       return p === "found_pro" || p === "found_business"
 
     // Business only (plan-gated)
