@@ -20,11 +20,13 @@ export async function submitReservation(_: unknown, formData: FormData) {
   }
 
   const supabase = await createClient()
+  const leadId = crypto.randomUUID()
   const replyToken = crypto.randomUUID()
 
-  const { data: leadRows, error } = await supabase
+  const { error } = await supabase
     .from("leads")
     .insert({
+      id: leadId,
       company_id: companyId,
       name,
       phone,
@@ -34,14 +36,11 @@ export async function submitReservation(_: unknown, formData: FormData) {
       reply_token: replyToken,
       partial_answers: { date, time, party_size: partySize || null },
     })
-    .select("id")
 
   if (error) {
     console.error("Reservation insert error:", error.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
-
-  const leadId = leadRows?.[0]?.id ?? null
 
   const { data: company } = await supabase
     .from("companies")
@@ -242,11 +241,13 @@ export async function submitLead(_: unknown, formData: FormData) {
   }
 
   const supabase = await createClient()
+  const leadId = crypto.randomUUID()
   const replyToken = crypto.randomUUID()
 
-  const { data: leadRows, error } = await supabase
+  const { error } = await supabase
     .from("leads")
     .insert({
+      id: leadId,
       company_id: companyId,
       name,
       phone,
@@ -256,14 +257,11 @@ export async function submitLead(_: unknown, formData: FormData) {
       reply_token: replyToken,
       partial_answers: Object.keys(partialAnswers).length > 0 ? partialAnswers : null,
     })
-    .select("id")
 
   if (error) {
     console.error("Lead insert error:", error.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
-
-  const leadId = leadRows?.[0]?.id ?? null
 
   // Look up company to get owner email, name, and plan
   const { data: company } = await supabase
