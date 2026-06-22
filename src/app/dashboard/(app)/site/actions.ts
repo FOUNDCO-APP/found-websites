@@ -236,6 +236,86 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
   return { url: publicUrl }
 }
 
+export async function connectCustomDomain(rawDomain: string): Promise<{
+  success: boolean; domain?: string; verified?: boolean
+  verificationRecords?: { type: string; host: string; value: string }[]
+  error?: string
+}> {
+  const ctx = await getContext()
+  if (!ctx) return { success: false, error: "Not authenticated" }
+
+  const domain = rawDomain.trim().toLowerCase()
+    .replace(/^https?:\/\//, "").replace(/\/$/, "").replace(/^www\./, "")
+
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]{2,})+$/.test(domain)) {
+    return { success: false, error: "Enter a valid domain (e.g. mybusiness.com)" }
+  }
+
+  const token = process.env.VERCEL_API_TOKEN
+  const projectId = process.env.VERCEL_PROJECT_ID
+  if (!token || !projectId) return { success: false, error: "Domain connection not configured" }
+
+  const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: domain }),
+  })
+  const data = await res.json()
+
+  if (!res.ok && res.status !== 409) {
+    return { success: false, error: data.error?.message ?? "Failed to register domain" }
+  }
+
+  await ctx.admin.from("website_config")
+    .update({ custom_domain: domain, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+
+  revalidatePath(`/${ctx.company.slug}`)
+
+  return {
+    success: true,
+    domain,
+    verified: data.verified ?? false,
+    verificationRecords: (data.verification ?? []) as { type: string; host: string; value: string }[],
+  }
+}
+
+export async function checkDomainStatus(domain: string): Promise<{ verified: boolean; error?: string }> {
+  const token = process.env.VERCEL_API_TOKEN
+  const projectId = process.env.VERCEL_PROJECT_ID
+  if (!token || !projectId) return { verified: false, error: "Not configured" }
+
+  const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${domain}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  })
+  const data = await res.json()
+  if (!res.ok) return { verified: false, error: data.error?.message }
+  return { verified: data.verified ?? false }
+}
+
+export async function disconnectDomain(domain: string): Promise<{ success: boolean; error?: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { success: false, error: "Not authenticated" }
+
+  const token = process.env.VERCEL_API_TOKEN
+  const projectId = process.env.VERCEL_PROJECT_ID
+
+  if (token && projectId) {
+    await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${domain}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    })
+  }
+
+  await ctx.admin.from("website_config")
+    .update({ custom_domain: null, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+
+  revalidatePath(`/${ctx.company.slug}`)
+  return { success: true }
+}
+
 export async function updatePrimaryIntent(intent: string) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }

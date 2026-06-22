@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
+import DomainConnector from "./DomainConnector"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null }
@@ -15,9 +16,11 @@ type Props = {
   mediaPhotos: { id: string; url: string }[]
   primaryIntent: string
   industryCategory: string
+  plan: string | null
+  subscriptionStatus: string | null
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, plan, subscriptionStatus }: Props) {
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -816,6 +819,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </>
       )}
+
+      {/* ══════════════════════════════════════════
+          CUSTOM DOMAIN
+      ══════════════════════════════════════════ */}
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+      <div style={{ padding: "0 20px" }}>
+        <div style={{ marginBottom: 16 }}>
+          <h2 style={{ margin: "0 0 4px", ...TYPE.title, color: "white" }}>Custom Domain</h2>
+          <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Replace foundco.app with your own domain name
+          </p>
+        </div>
+        <DomainConnector
+          initialDomain={(initialConfig?.custom_domain as string | null) ?? null}
+          plan={plan}
+          subscriptionStatus={subscriptionStatus}
+          companySlug={company.slug}
+        />
+      </div>
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>

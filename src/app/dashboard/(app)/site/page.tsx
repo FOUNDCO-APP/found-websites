@@ -29,6 +29,8 @@ export default async function SitePage() {
       mediaPhotos={mediaPhotos ?? []}
       primaryIntent={company.primary_intent ?? 'visit'}
       industryCategory={company.industry_category ?? ''}
+      plan={company.plan}
+      subscriptionStatus={company.subscription_status}
     />
   )
 }
