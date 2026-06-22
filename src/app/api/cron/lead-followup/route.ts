@@ -22,12 +22,11 @@ export async function GET(req: NextRequest) {
   const supabase = getAdminClient()
   const now = new Date()
 
-  // Find leads with email that need day-3 or day-7 follow-up
   const { data: leads, error } = await supabase
     .from("leads")
     .select(`
       id, name, email, service, created_at,
-      follow_up_3_sent_at, follow_up_7_sent_at,
+      follow_up_1_sent_at, follow_up_3_sent_at, follow_up_7_sent_at,
       companies ( name, phone, plan, email )
     `)
     .not("email", "is", null)
@@ -43,13 +42,26 @@ export async function GET(req: NextRequest) {
     const companyRaw = lead.companies
     const company = (Array.isArray(companyRaw) ? companyRaw[0] : companyRaw) as
       { name: string; phone: string | null; plan: string; email: string | null } | null
-    // Only run sequences for Pro and Business plans
     if (!company || !["found_pro", "found_business"].includes(company.plan)) continue
     if (!lead.email) continue
 
     const createdAt = new Date(lead.created_at)
     const daysSince = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
     const firstName = lead.name.split(" ")[0]
+
+    // Day 1 follow-up
+    if (daysSince >= 1 && !lead.follow_up_1_sent_at) {
+      await getResend().emails.send({
+        from: `${company.name} <hello@foundco.app>`,
+        to: lead.email,
+        subject: `Hi ${firstName}, just checking in`,
+        html: buildFollowUpEmail({ company, name: lead.name, day: 1, service: lead.service }),
+        text: `Hi ${firstName},\n\nWe wanted to make sure we got everything you need. If you have any questions about${lead.service ? ` ${lead.service}` : " our services"}, we're happy to help.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n— ${company.name}`,
+      }).catch(err => console.error("[Resend] Day-1 follow-up error:", err))
+
+      await supabase.from("leads").update({ follow_up_1_sent_at: now.toISOString() }).eq("id", lead.id)
+      sent++
+    }
 
     // Day 3 follow-up
     if (daysSince >= 3 && !lead.follow_up_3_sent_at) {
@@ -91,21 +103,19 @@ function buildFollowUpEmail({
 }: {
   company: { name: string; phone: string | null }
   name: string
-  day: 3 | 7
+  day: 1 | 3 | 7
   service: string | null
 }) {
   const firstName = name.split(" ")[0]
-  const isDay3 = day === 3
 
-  const subject = isDay3
-    ? `Still thinking about it?`
-    : `We're here when you're ready`
+  const body =
+    day === 1
+      ? `We wanted to make sure we got everything you need. If you have any questions about${service ? ` <strong>${service}</strong>` : " our services"}, we're here and happy to help.`
+      : day === 3
+      ? `Just following up to see if you're still looking for help${service ? ` with <strong>${service}</strong>` : ""}. We'd love the opportunity to work with you.`
+      : `We wanted to reach out one last time. No pressure — whenever you're ready to move forward, we're here for you.`
 
-  const body = isDay3
-    ? `Just following up to see if you're still looking for help${service ? ` with <strong>${service}</strong>` : ""}. We'd love the opportunity to work with you.`
-    : `We wanted to reach out one last time. No pressure — whenever you're ready to move forward, we're here for you.`
-
-  const ctaText = isDay3 ? `Let's Talk` : `Get in Touch`
+  const ctaText = day === 7 ? `Get in Touch` : `Let's Talk`
 
   return `<!DOCTYPE html>
 <html>

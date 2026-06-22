@@ -22,7 +22,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const supabase = await createClient()
   const replyToken = crypto.randomUUID()
 
-  const { error } = await supabase
+  const { data: leadRows, error } = await supabase
     .from("leads")
     .insert({
       company_id: companyId,
@@ -34,15 +34,18 @@ export async function submitReservation(_: unknown, formData: FormData) {
       reply_token: replyToken,
       partial_answers: { date, time, party_size: partySize || null },
     })
+    .select("id")
 
   if (error) {
     console.error("Reservation insert error:", error.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
+  const leadId = leadRows?.[0]?.id ?? null
+
   const { data: company } = await supabase
     .from("companies")
-    .select("name, email, phone")
+    .select("name, email, phone, plan")
     .eq("id", companyId)
     .single()
 
@@ -70,6 +73,24 @@ export async function submitReservation(_: unknown, formData: FormData) {
       subject: `Reservation request received, ${firstName}`,
       html: buildReservationAutoReply({ company, name, date: displayDate, time: displayTime, partySize, phone: company.phone }),
     }).catch((err) => console.error("[Resend] Reservation auto-reply error:", err))
+  }
+
+  // Pro/Business: auto-save reservation as contact
+  if (leadId && company && ["found_pro", "found_business"].includes(company.plan ?? "")) {
+    const query = supabase.from("contacts").select("id").eq("company_id", companyId)
+    const { data: existing } = await (email ? query.eq("email", email) : query.eq("phone", phone)).maybeSingle()
+    if (!existing) {
+      await supabase.from("contacts").insert({
+        company_id: companyId,
+        name,
+        phone: phone || null,
+        email: email || null,
+        notes: notes || null,
+        tags: ["Lead"],
+        source: "reservation",
+        lead_id: leadId,
+      }).then(({ error: e }) => { if (e) console.error("[contacts] auto-create reservation contact error:", e.message) })
+    }
   }
 
   return { success: true }
@@ -212,7 +233,7 @@ export async function submitLead(_: unknown, formData: FormData) {
   const supabase = await createClient()
   const replyToken = crypto.randomUUID()
 
-  const { error } = await supabase
+  const { data: leadRows, error } = await supabase
     .from("leads")
     .insert({
       company_id: companyId,
@@ -223,16 +244,19 @@ export async function submitLead(_: unknown, formData: FormData) {
       message: message || null,
       reply_token: replyToken,
     })
+    .select("id")
 
   if (error) {
     console.error("Lead insert error:", error.message)
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
-  // Look up company to get owner email and name
+  const leadId = leadRows?.[0]?.id ?? null
+
+  // Look up company to get owner email, name, and plan
   const { data: company } = await supabase
     .from("companies")
-    .select("name, email, phone")
+    .select("name, email, phone, plan")
     .eq("id", companyId)
     .single()
 
@@ -258,6 +282,24 @@ export async function submitLead(_: unknown, formData: FormData) {
       html: buildAutoReplyEmail({ company, name, phone: company.phone }),
       text: `Hi ${firstName},\n\nThank you for reaching out to ${company.name}. We received your message and someone will be in touch with you as soon as possible.\n\nIf you need to reach us right away, call us at ${company.phone || "the number on our website"}.\n\n— ${company.name}`,
     }).catch((err) => console.error("[Resend] Auto-reply error:", err))
+  }
+
+  // Pro/Business: auto-save lead as contact (skip if phone/email already exists)
+  if (leadId && company && ["found_pro", "found_business"].includes(company.plan ?? "")) {
+    const query = supabase.from("contacts").select("id").eq("company_id", companyId)
+    const { data: existing } = await (email ? query.eq("email", email) : query.eq("phone", phone)).maybeSingle()
+    if (!existing) {
+      await supabase.from("contacts").insert({
+        company_id: companyId,
+        name,
+        phone: phone || null,
+        email: email || null,
+        notes: message || null,
+        tags: ["Lead"],
+        source: "website",
+        lead_id: leadId,
+      }).then(({ error: e }) => { if (e) console.error("[contacts] auto-create error:", e.message) })
+    }
   }
 
   return { success: true }

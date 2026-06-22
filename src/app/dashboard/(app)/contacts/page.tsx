@@ -11,6 +11,7 @@ type Contact = {
   email: string | null
   notes: string | null
   tags: string[]
+  source: string | null
 }
 
 export default function ContactsPage() {
@@ -281,7 +282,12 @@ export default function ContactsPage() {
                   <div style={{ color: "white", marginBottom: 3, ...TYPE.headline }}>
                     {contact.name}
                   </div>
-                  {contact.notes && (
+                  {contact.source && (
+                    <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.3)", marginBottom: 3 }}>
+                      {contact.source === "reservation" ? "Reservation request" : "From your website"}
+                    </div>
+                  )}
+                  {contact.notes && !contact.source && (
                     <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", ...TYPE.subhead }}>
                       {contact.notes}
                     </div>
