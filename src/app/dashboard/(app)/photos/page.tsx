@@ -58,6 +58,8 @@ export default function PhotosPage() {
   const [industry, setIndustry] = useState<string | null>(null)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
+  const [lightroomSource, setLightroomSource] = useState<"current" | "album">("current")
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
@@ -75,7 +77,6 @@ export default function PhotosPage() {
     }
   }, [searchParams, router])
 
-  // Receive photos uploaded from the nav camera (when not on this page)
   useEffect(() => {
     function onNavUpload(e: Event) {
       const photo = (e as CustomEvent).detail?.photo
@@ -118,7 +119,6 @@ export default function PhotosPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
         }).catch(console.error)
-        // Navigate into the album
         const target = albums.find(a => a.id === albumId)
         if (target) {
           setView("projects")
@@ -203,8 +203,17 @@ export default function PhotosPage() {
     view === "website" ? website :
     view === "social"  ? social : []
 
+  const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
+
   const TAB_COUNTS = { queue: unsorted.length, website: website.length, social: social.length, projects: albums.length }
   const TAB_LABELS = { queue: "Unsorted", website: "Website", social: "Social", projects: albumLabel.plural }
+
+  function openLightroom(photo: Photo, source: Photo[]) {
+    const index = source.findIndex(p => p.id === photo.id)
+    if (index === -1) return
+    setLightroomSource(source === albumPhotos ? "album" : "current")
+    setLightroomIndex(index)
+  }
 
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
@@ -306,25 +315,25 @@ export default function PhotosPage() {
         </div>
       )}
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes lrFadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
 
       {/* Content */}
       <div style={{ flex: 1, padding: "0 24px 32px" }}>
         {loading ? (
           <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", ...TYPE.footnote }}>Loading…</div>
         ) : activeAlbum ? (
-          /* ── ALBUM DETAIL VIEW ── */
           <DateGroupedGrid
             photos={albumPhotos}
-            onFlag={flag}
-            onRemove={remove}
+            onView={p => openLightroom(p, albumPhotos)}
             emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
             emptySub="Tap the camera button to add photos."
             onAdd={openCamera}
             showAddCta
           />
         ) : view === "projects" ? (
-          /* ── PROJECTS TAB ── */
           <ProjectsTab
             albums={albums}
             photos={photos}
@@ -343,18 +352,16 @@ export default function PhotosPage() {
             onDelete={deleteAlbum}
           />
         ) : (
-          /* ── UNSORTED / WEBSITE / SOCIAL TABS — date-grouped ── */
           <DateGroupedGrid
             photos={currentPhotos}
-            onFlag={flag}
-            onRemove={remove}
+            onView={p => openLightroom(p, currentPhotos)}
             emptyTitle={
               view === "queue"   ? "Take your first photo." :
               view === "website" ? "No website photos yet." :
               "No social photos yet."
             }
             emptySub={
-              view === "queue"   ? "Tap the camera icon at the bottom of your screen to take your first photo." :
+              view === "queue"   ? "Tap the camera icon at the top to take your first photo." :
               view === "website" ? "Heart any photo and it'll appear here, ready for your site." :
               "Star any photo and Found will format it with your branding."
             }
@@ -368,6 +375,17 @@ export default function PhotosPage() {
           />
         )}
       </div>
+
+      {/* Lightroom viewer */}
+      {lightroomIndex !== null && lightroomPhotos.length > 0 && (
+        <PhotoLightroom
+          photos={lightroomPhotos}
+          initialIndex={lightroomIndex}
+          onClose={() => setLightroomIndex(null)}
+          onFlag={flag}
+          onRemove={remove}
+        />
+      )}
 
       {/* Share album sheet */}
       {shareAlbum && (
@@ -388,13 +406,181 @@ export default function PhotosPage() {
   )
 }
 
-// ── Date-grouped photo grid ──
-function DateGroupedGrid({
-  photos, onFlag, onRemove, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
-}: {
+// ── Lightroom viewer ──
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
   photos: Photo[]
+  initialIndex: number
+  onClose: () => void
   onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onRemove: (photo: Photo) => void
+}) {
+  const [index, setIndex] = useState(initialIndex)
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
+  const photo = photos[Math.min(index, photos.length - 1)]
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft")  setIndex(i => Math.max(0, i - 1))
+      else if (e.key === "ArrowRight") setIndex(i => Math.min(photos.length - 1, i + 1))
+      else if (e.key === "Escape") onCloseRef.current()
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [photos.length])
+
+  function onTouchStart(e: React.TouchEvent) {
+    setTouchStart(e.touches[0].clientX)
+  }
+  function onTouchEnd(e: React.TouchEvent) {
+    if (touchStart === null) return
+    const diff = touchStart - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 48) {
+      if (diff > 0) setIndex(i => Math.min(photos.length - 1, i + 1))
+      else setIndex(i => Math.max(0, i - 1))
+    }
+    setTouchStart(null)
+  }
+
+  function handleDelete() {
+    const remaining = photos.length
+    onRemove(photo)
+    if (remaining === 1) {
+      onClose()
+    } else {
+      setIndex(i => Math.min(i, remaining - 2))
+    }
+  }
+
+  if (!photo) return null
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 100, backgroundColor: "#000", display: "flex", flexDirection: "column", animation: "lrFadeIn 0.18s ease" }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Top bar */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, zIndex: 101,
+        padding: "max(env(safe-area-inset-top, 0px), 16px) 20px 56px",
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
+        <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>
+          {index + 1} / {photos.length}
+        </span>
+        <button onClick={onClose} style={{
+          width: 36, height: 36, borderRadius: "50%",
+          backgroundColor: "rgba(0,0,0,0.5)", border: "none", cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Image */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={photo.url} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", userSelect: "none", pointerEvents: "none" }} />
+
+        {/* Invisible tap zones */}
+        {index > 0 && (
+          <button onClick={() => setIndex(i => i - 1)} aria-label="Previous"
+            style={{ position: "absolute", left: 0, top: "10%", bottom: "25%", width: "28%", background: "none", border: "none", cursor: "pointer" }} />
+        )}
+        {index < photos.length - 1 && (
+          <button onClick={() => setIndex(i => i + 1)} aria-label="Next"
+            style={{ position: "absolute", right: 0, top: "10%", bottom: "25%", width: "28%", background: "none", border: "none", cursor: "pointer" }} />
+        )}
+      </div>
+
+      {/* Bottom action bar */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        paddingTop: 56,
+        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 32px)",
+        background: "linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%)",
+        display: "flex", alignItems: "flex-end", justifyContent: "space-around",
+        padding: `56px 24px max(env(safe-area-inset-bottom, 0px), 32px)`,
+      }}>
+        {/* Heart — Website */}
+        <button onClick={() => onFlag(photo.id, "for_website", photo.for_website)} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 18,
+            backgroundColor: photo.for_website ? "rgba(255,75,139,0.22)" : "rgba(255,255,255,0.08)",
+            border: `1.5px solid ${photo.for_website ? "rgba(255,75,139,0.4)" : "rgba(255,255,255,0.1)"}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s ease",
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24"
+              fill={photo.for_website ? "#FF4B8B" : "none"}
+              stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.65)"}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </div>
+          <span style={{ ...TYPE.caption, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.45)" }}>Website</span>
+        </button>
+
+        {/* Star — Social */}
+        <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 18,
+            backgroundColor: photo.for_social ? "rgba(255,184,0,0.18)" : "rgba(255,255,255,0.08)",
+            border: `1.5px solid ${photo.for_social ? "rgba(255,184,0,0.4)" : "rgba(255,255,255,0.1)"}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s ease",
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24"
+              fill={photo.for_social ? "#FFB800" : "none"}
+              stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.65)"}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <span style={{ ...TYPE.caption, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.45)" }}>Social</span>
+        </button>
+
+        {/* Trash — Delete */}
+        <button onClick={handleDelete} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: 18,
+            backgroundColor: "rgba(255,70,70,0.1)",
+            border: "1.5px solid rgba(255,70,70,0.2)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,90,90,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </div>
+          <span style={{ ...TYPE.caption, color: "rgba(255,100,100,0.75)" }}>Delete</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Date-grouped photo grid ──
+function DateGroupedGrid({
+  photos, onView, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+}: {
+  photos: Photo[]
+  onView: (photo: Photo) => void
   emptyTitle: string
   emptySub: string
   emptyIcon?: React.ReactNode
@@ -436,7 +622,7 @@ function DateGroupedGrid({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
             {group.photos.map(photo => (
-              <PhotoCard key={photo.id} photo={photo} onFlag={onFlag} onRemove={onRemove} />
+              <PhotoCard key={photo.id} photo={photo} onView={onView} />
             ))}
           </div>
         </div>
@@ -468,7 +654,6 @@ function ProjectsTab({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* New album form */}
       {showNew ? (
         <div style={{ borderRadius: 20, padding: 20, backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}22`, marginBottom: 6 }}>
           <div style={{ ...TYPE.caption, color: SIGNAL_GREEN, marginBottom: 14 }}>{albumLabel.create}</div>
@@ -521,7 +706,6 @@ function ProjectsTab({
           return (
             <div key={album.id} style={{ borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div onClick={() => onOpen(album)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", cursor: "pointer" }}>
-                {/* Thumbnail */}
                 <div style={{ width: 52, height: 52, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
                   {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -542,7 +726,6 @@ function ProjectsTab({
                 </div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
-              {/* Album actions */}
               <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 <button onClick={() => isPro ? onShare(album) : onUpgrade()} style={{
                   flex: 1, padding: "11px 0", border: "none", backgroundColor: "transparent",
@@ -576,21 +759,22 @@ function ProjectsTab({
   )
 }
 
-// ── Photo card ──
-function PhotoCard({ photo, onFlag, onRemove }: {
+// ── Photo card — tap to open lightroom ──
+function PhotoCard({ photo, onView }: {
   photo: Photo
-  onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
-  onRemove: (photo: Photo) => void
+  onView: (photo: Photo) => void
 }) {
-  const [showActions, setShowActions] = useState(false)
-
   return (
     <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={photo.url} alt="Business photo" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} onClick={() => setShowActions(v => !v)} />
-
+      <img
+        src={photo.url}
+        alt="Business photo"
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", cursor: "pointer" }}
+        onClick={() => onView(photo)}
+      />
       {/* Flag badges */}
-      <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4 }}>
+      <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, pointerEvents: "none" }}>
         {photo.for_website && (
           <div style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF4B8B" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
@@ -602,25 +786,6 @@ function PhotoCard({ photo, onFlag, onRemove }: {
           </div>
         )}
       </div>
-
-      {/* Action overlay */}
-      {showActions && (
-        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, padding: 16 }} onClick={() => setShowActions(false)}>
-          <div style={{ display: "flex", gap: 10, width: "100%" }}>
-            <button onClick={e => { e.stopPropagation(); onFlag(photo.id, "for_website", photo.for_website) }} style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: photo.for_website ? "rgba(255,75,139,0.25)" : "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={photo.for_website ? "#FF4B8B" : "none"} stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-              </svg>
-            </button>
-            <button onClick={e => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }} style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: photo.for_social ? "rgba(255,184,0,0.2)" : "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={photo.for_social ? "#FFB800" : "none"} stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-              </svg>
-            </button>
-          </div>
-          <button onClick={e => { e.stopPropagation(); onRemove(photo) }} style={{ width: "100%", padding: "8px 0", borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: "rgba(255,70,70,0.2)", color: "#FF4646", ...TYPE.caption }}>Remove</button>
-        </div>
-      )}
     </div>
   )
 }
@@ -632,8 +797,6 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
       <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px 40px" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
-
-        {/* Lock icon */}
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: `${SIGNAL_GREEN}12`, border: `1px solid ${SIGNAL_GREEN}22`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -641,25 +804,20 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
             </svg>
           </div>
         </div>
-
         <h3 style={{ margin: "0 0 8px", ...TYPE.title, color: "white", textAlign: "center" }}>Found Pro</h3>
         <p style={{ margin: "0 0 24px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.6, textAlign: "center" }}>
           Share organized project galleries with clients. Upgrade to unlock client sharing.
         </p>
-
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {["Share project galleries with clients", "Branded gallery link — your colors", "Client sees only the photos you choose"].map(f => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <span style={{ ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
             </div>
           ))}
         </div>
-
         <a href="/more" onClick={onClose} style={{
           display: "block", width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
           backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, textDecoration: "none",
@@ -668,7 +826,6 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
         }}>
           Upgrade to Pro →
         </a>
-
         <button onClick={onClose} style={{ display: "block", width: "100%", marginTop: 12, padding: "13px 0", background: "none", border: "none", cursor: "pointer", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
           Maybe later
         </button>

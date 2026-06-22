@@ -47,6 +47,7 @@ export default function LeadsPage() {
   const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold">("warm")
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
   const [industry, setIndustry] = useState<string | null>(null)
+  const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
 
   const leadLabel = leadLabelFor(industry)
 
@@ -88,14 +89,22 @@ export default function LeadsPage() {
     setSaving(false)
   }
 
-  const hotLeads = leads.filter(l => l.temperature === "hot")
-  const otherLeads = leads.filter(l => l.temperature !== "hot")
+  const filteredLeads = filterTemp === "all" ? leads : leads.filter(l => (l.temperature ?? "warm") === filterTemp)
+  const hotLeads = filterTemp === "all" ? leads.filter(l => l.temperature === "hot") : []
+  const otherLeads = filterTemp === "all" ? leads.filter(l => l.temperature !== "hot") : filteredLeads
+
+  const FILTER_PILLS: { key: "all" | "hot" | "warm" | "cold"; label: string; color?: string }[] = [
+    { key: "all",  label: "All" },
+    { key: "hot",  label: "Hot",  color: TEMP_COLORS.hot },
+    { key: "warm", label: "Warm", color: TEMP_COLORS.warm },
+    { key: "cold", label: "Cold", color: "rgba(255,255,255,0.35)" },
+  ]
 
   return (
     <main style={{ padding: "32px 24px" }}>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
             {leadLabel.plural}
@@ -118,6 +127,37 @@ export default function LeadsPage() {
           </svg>
         </button>
       </div>
+
+      {/* Temperature filter pills */}
+      {leads.length > 0 && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
+          {FILTER_PILLS.map(pill => {
+            const active = filterTemp === pill.key
+            const dotColor = pill.color ?? "rgba(255,255,255,0.5)"
+            return (
+              <button key={pill.key} onClick={() => setFilterTemp(pill.key)} style={{
+                flexShrink: 0,
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 16px", borderRadius: 100,
+                border: `1px solid ${active ? (pill.color ?? "rgba(255,255,255,0.35)") : "rgba(255,255,255,0.1)"}`,
+                backgroundColor: active ? `${pill.color ?? "rgba(255,255,255,0.35)"}1A` : "transparent",
+                color: active ? (pill.color ?? "white") : "rgba(255,255,255,0.35)",
+                fontSize: "0.8125rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.02em",
+              }}>
+                {pill.key !== "all" && (
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: active ? dotColor : "rgba(255,255,255,0.2)", flexShrink: 0 }}/>
+                )}
+                {pill.label}
+                {pill.key !== "all" && (
+                  <span style={{ fontSize: "0.6875rem", fontWeight: 700, opacity: 0.7 }}>
+                    {leads.filter(l => (l.temperature ?? "warm") === pill.key).length}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
 
       {/* Add Lead sheet */}
       {showAdd && (
@@ -194,6 +234,15 @@ export default function LeadsPage() {
       {loading ? (
         <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>
           Loading…
+        </div>
+      ) : filteredLeads.length === 0 && filterTemp !== "all" ? (
+        <div style={{ paddingTop: 60, textAlign: "center" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
+            No {filterTemp} {leadLabel.plural.toLowerCase()}.
+          </p>
+          <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
+            Tap a lead to change its temperature.
+          </p>
         </div>
       ) : leads.length === 0 ? (
         <div style={{ paddingTop: 80, textAlign: "center" }}>

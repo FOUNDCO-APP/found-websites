@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react"
 import { getContacts, addContact, deleteContact, updateContact } from "./actions"
-import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor, contactCategoriesFor } from "@/lib/dashboard/typography"
 
 type Contact = {
   id: string
@@ -12,8 +12,6 @@ type Contact = {
   notes: string | null
   tags: string[]
 }
-
-const DEFAULT_TAGS = ["Vendor", "Subcontractor", "Laborer", "Supplier", "Referral"]
 
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([])
@@ -29,12 +27,34 @@ export default function ContactsPage() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [, startTransition] = useTransition()
 
+  const [industry, setIndustry] = useState<string | null>(null)
+  const [companySlug, setCompanySlug] = useState<string>("")
+  const [customTags, setCustomTags] = useState<string[]>([])
+  const [showAddTag, setShowAddTag] = useState(false)
+  const [newTagName, setNewTagName] = useState("")
+
+  const defaultCats = contactCategoriesFor(industry)
+  const availableTags = [...defaultCats, ...customTags.filter(t => !defaultCats.includes(t))]
+
   useEffect(() => {
-    getContacts().then(data => {
+    Promise.all([
+      getContacts(),
+      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ industry: null, slug: "" })),
+    ]).then(([data, sd]) => {
       setContacts(data as Contact[])
+      setIndustry(sd.industry ?? null)
+      setCompanySlug(sd.slug ?? "")
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!companySlug) return
+    try {
+      const stored = localStorage.getItem(`found_contact_cats_${companySlug}`)
+      if (stored) setCustomTags(JSON.parse(stored))
+    } catch {}
+  }, [companySlug])
 
   const filtered = filterTag
     ? contacts.filter(c => c.tags.includes(filterTag))
@@ -42,6 +62,18 @@ export default function ContactsPage() {
 
   function toggleTag(tag: string) {
     setNewTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+  }
+
+  function addCustomTag() {
+    const trimmed = newTagName.trim()
+    if (!trimmed || availableTags.includes(trimmed)) return
+    const updated = [...customTags, trimmed]
+    setCustomTags(updated)
+    if (companySlug) {
+      try { localStorage.setItem(`found_contact_cats_${companySlug}`, JSON.stringify(updated)) } catch {}
+    }
+    setNewTagName("")
+    setShowAddTag(false)
   }
 
   async function handleSave() {
@@ -90,20 +122,62 @@ export default function ContactsPage() {
         </button>
       </div>
 
-      {/* Tag filters */}
-      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 20 }}>
-        {[null, ...DEFAULT_TAGS].map(tag => (
-          <button key={tag ?? "all"} onClick={() => setFilterTag(tag)} style={{
-            flexShrink: 0, padding: "6px 14px", borderRadius: 20,
-            border: "1px solid",
-            borderColor: filterTag === tag ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-            backgroundColor: filterTag === tag ? `${SIGNAL_GREEN}18` : "transparent",
-            color: filterTag === tag ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
-            fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer",
-          }}>
-            {tag ?? "All"}
+      {/* Category filter pills + manage */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, alignItems: "center" }}>
+          {[null, ...availableTags].map(tag => (
+            <button key={tag ?? "all"} onClick={() => setFilterTag(tag)} style={{
+              flexShrink: 0, padding: "6px 14px", borderRadius: 20,
+              border: "1px solid",
+              borderColor: filterTag === tag ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
+              backgroundColor: filterTag === tag ? `${SIGNAL_GREEN}18` : "transparent",
+              color: filterTag === tag ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
+              fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer",
+            }}>
+              {tag ?? "All"}
+            </button>
+          ))}
+          <button
+            onClick={() => { setShowAddTag(v => !v); setNewTagName("") }}
+            title="Add category"
+            style={{
+              flexShrink: 0, width: 30, height: 30, borderRadius: "50%",
+              border: "1px dashed rgba(255,255,255,0.18)",
+              backgroundColor: "transparent", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(255,255,255,0.3)",
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
           </button>
-        ))}
+        </div>
+
+        {/* Inline new category input */}
+        {showAddTag && (
+          <div style={{ display: "flex", gap: 8, marginTop: 10, animation: "fadeIn 0.15s ease" }}>
+            <input
+              autoFocus
+              value={newTagName}
+              onChange={e => setNewTagName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addCustomTag(); if (e.key === "Escape") { setShowAddTag(false); setNewTagName("") } }}
+              placeholder="Category name…"
+              style={{
+                flex: 1, padding: "9px 14px", borderRadius: 12,
+                backgroundColor: "rgba(255,255,255,0.06)",
+                border: `1px solid ${SIGNAL_GREEN}33`,
+                color: "white", fontSize: "0.875rem", outline: "none",
+              }}
+            />
+            <button onClick={addCustomTag} disabled={!newTagName.trim()} style={{
+              padding: "9px 16px", borderRadius: 12, border: "none",
+              backgroundColor: newTagName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+              color: newTagName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
+              fontSize: "0.8125rem", fontWeight: 700, cursor: newTagName.trim() ? "pointer" : "default",
+            }}>Add</button>
+          </div>
+        )}
       </div>
 
       {/* Add contact form */}
@@ -118,7 +192,7 @@ export default function ContactsPage() {
             { label: "Name *", val: newName, set: setNewName, placeholder: "Full name", type: "text" },
             { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number", type: "tel" },
             { label: "Email", val: newEmail, set: setNewEmail, placeholder: "Email address", type: "email" },
-            { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "e.g. great drywall work, call before noon", type: "text" },
+            { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "e.g. great work, call before noon", type: "text" },
           ].map(({ label, val, set, placeholder, type }) => (
             <div key={label} style={{ marginBottom: 14 }}>
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 6 }}>{label}</div>
@@ -136,11 +210,11 @@ export default function ContactsPage() {
               />
             </div>
           ))}
-          {/* Tags */}
+          {/* Category tags */}
           <div style={{ marginBottom: 20 }}>
-            <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>Tags</div>
+            <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>Category</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {DEFAULT_TAGS.map(tag => (
+              {availableTags.map(tag => (
                 <button key={tag} onClick={() => toggleTag(tag)} style={{
                   padding: "6px 14px", borderRadius: 20, border: "1px solid",
                   borderColor: newTags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
@@ -195,10 +269,10 @@ export default function ContactsPage() {
             </svg>
           </div>
           <p style={{ margin: "0 0 6px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
-            Your business network lives here.
+            {filterTag ? `No ${filterTag} contacts yet.` : "Your business network lives here."}
           </p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            Add vendors, subs, and suppliers.<br/>Tap + to get started.
+            {filterTag ? "Try a different category or add a new contact." : "Add vendors, subs, and suppliers.\nTap + to get started."}
           </p>
         </div>
       )}
@@ -254,6 +328,7 @@ export default function ContactsPage() {
       {selectedContact && (
         <ContactDetailSheet
           contact={selectedContact}
+          availableTags={availableTags}
           onClose={() => setSelectedContact(null)}
           onSaved={(updated) => {
             setContacts(prev => prev.map(c => c.id === updated.id ? updated : c))
@@ -266,12 +341,14 @@ export default function ContactsPage() {
         />
       )}
 
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     </main>
   )
 }
 
-function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
+function ContactDetailSheet({ contact, availableTags, onClose, onSaved, onDelete }: {
   contact: Contact
+  availableTags: string[]
   onClose: () => void
   onSaved: (c: Contact) => void
   onDelete: () => void
@@ -367,9 +444,7 @@ function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
               {contact.email && <DetailRow label="Email" value={contact.email} />}
               {contact.notes && (
                 <div>
-                  <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, marginBottom: 8 }}>
-                    Notes
-                  </div>
+                  <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, marginBottom: 8 }}>Notes</div>
                   <p style={{ margin: 0, ...TYPE.body, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>
                     {contact.notes}
                   </p>
@@ -405,9 +480,9 @@ function ContactDetailSheet({ contact, onClose, onSaved, onDelete }: {
             ))}
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 8 }}>Tags</div>
+              <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 8 }}>Category</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {DEFAULT_TAGS.map(tag => (
+                {availableTags.map(tag => (
                   <button key={tag} onClick={() => toggleTag(tag)} style={{
                     padding: "8px 14px", borderRadius: 100,
                     border: `1px solid ${tags.includes(tag) ? SIGNAL_GREEN : "rgba(255,255,255,0.12)"}`,

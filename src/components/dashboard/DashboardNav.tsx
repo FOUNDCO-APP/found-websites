@@ -101,8 +101,6 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
 
-  // Hide the floating FAB on Photos (header camera handles it) and More (settings page)
-  const hideFab = segment === "/photos" || segment.startsWith("/photos/") || segment === "/more"
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
@@ -252,39 +250,6 @@ export default function DashboardNav({
           )
         })}
       </nav>
-
-      {/* ── Floating camera FAB — hidden on Photos + More pages ── */}
-      {!hideFab && (
-        <button
-          className="found-camera-fab"
-          onClick={handleCamera}
-          disabled={uploading}
-          aria-label="Take a photo"
-          style={{
-            position: "fixed",
-            bottom: 88,
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: 48, height: 48, borderRadius: "50%",
-            backgroundColor: SIGNAL_GREEN,
-            border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: `0 4px 20px ${SIGNAL_GREEN}66`,
-            zIndex: 49,
-            opacity: uploading ? 0.7 : 1,
-            transition: "opacity 0.2s",
-          }}
-        >
-          {uploading ? (
-            <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2.5px solid ${FOUND_BLACK}55`, borderTopColor: FOUND_BLACK, animation: "nav-spin 0.8s linear infinite" }} />
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          )}
-        </button>
-      )}
 
       {/* ── Desktop sidebar ── */}
       <aside className="found-sidebar" style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 220, backgroundColor: "#080A09", borderRight: "1px solid rgba(255,255,255,0.07)", flexDirection: "column", zIndex: 50, display: "none" }}>
@@ -514,7 +479,6 @@ export default function DashboardNav({
         @media (min-width: 768px) {
           .found-mobile-nav  { display: none !important; }
           .found-sidebar     { display: flex !important; }
-          .found-camera-fab  { display: none !important; }
         }
         @keyframes sheetUp    { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes pickerFade { from { opacity: 0; }                 to { opacity: 1; }               }
