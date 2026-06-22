@@ -246,7 +246,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           PRIMARY CTA PICKER
       ══════════════════════════════════════════ */}
       {(() => {
-        const ctaOptions: { intent: string; label: string; desc: string }[] = industryCategory === 'food'
+        const ctaOptions: { intent: string; label: string; desc: string }[] | null = industryCategory === 'food'
           ? [
               { intent: 'reserve', label: 'Reserve a Table', desc: 'Lets guests request a reservation' },
               { intent: 'menu',    label: 'View Our Menu',   desc: 'Takes visitors straight to your menu' },
