@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany, getAllCompanies } from "@/lib/dashboard/getCompany"
+import { getCompany, hasMultipleCompanies } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
@@ -14,24 +14,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getAuthUser()
   if (!user) redirect("/login")
 
-  const [company, allCompanies] = await Promise.all([
+  const admin = createAdminClient()
+  const since = new Date(Date.now() - 7 * 86400000).toISOString()
+
+  const [company, hasMultiple] = await Promise.all([
     getCompany(user.id, user.email ?? ""),
-    getAllCompanies(user.id, user.email ?? ""),
+    hasMultipleCompanies(user.id, user.email ?? ""),
   ])
 
-  const hasMultiple = allCompanies.length > 1
-
-  let newLeadCount = 0
-  if (company?.id) {
-    const admin = createAdminClient()
-    const { count } = await admin
-      .from("leads")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", company.id)
-      .neq("type", "onboarding_abandoned")
-      .gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString())
-    newLeadCount = count ?? 0
-  }
+  const newLeadCount = company?.id
+    ? await admin
+        .from("leads")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", company.id)
+        .neq("type", "onboarding_abandoned")
+        .gte("created_at", since)
+        .then(({ count }) => count ?? 0)
+    : 0
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>

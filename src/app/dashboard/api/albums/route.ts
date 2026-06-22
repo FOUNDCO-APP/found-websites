@@ -34,6 +34,7 @@ export async function GET() {
       .eq("company_id", company.id)
       .in("album_id", albumIds)
       .order("created_at", { ascending: false })
+      .limit(albumIds.length * 2)
     for (const c of (covers ?? [])) {
       if (c.album_id && !coverMap[c.album_id]) coverMap[c.album_id] = c.url
     }

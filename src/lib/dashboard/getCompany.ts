@@ -64,3 +64,15 @@ export const getAllCompanies = cache(async (
     .order("created_at", { ascending: false })
   return (data ?? []) as CompanyRow[]
 })
+
+export const hasMultipleCompanies = cache(async (
+  userId: string,
+  userEmail: string
+): Promise<boolean> => {
+  const admin = createAdminClient()
+  const { count } = await admin
+    .from("companies")
+    .select("id", { count: "exact", head: true })
+    .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+  return (count ?? 0) > 1
+})
