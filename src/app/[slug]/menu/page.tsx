@@ -38,12 +38,9 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
   const heroImage = uploadedImgs[1] ?? uploadedImgs[0] ?? img(0)
 
-  // Menu data: prefer structured menu_items, fall back to services displayed as menu items
   const menuCategories = config?.menu_items && config.menu_items.length > 0
     ? config.menu_items
-    : config?.services && config.services.length > 0
-      ? [{ category: vocab.servicesLabel, items: config.services.map(s => ({ name: s.name, description: s.description, price: null, photo_url: null })) }]
-      : null
+    : null
 
   return (
     <>
@@ -131,7 +128,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
       ) : (
         <section className="py-20 bg-white">
           <div className="max-w-4xl mx-auto px-8 text-center">
-            <p className="text-lg" style={{ color: "#999999" }}>Menu coming soon — check back or call us directly.</p>
+            <p className="text-lg font-semibold mb-3" style={{ color: "#333333" }}>Menu coming soon</p>
+            <p className="text-base" style={{ color: "#999999" }}>Check back soon or give us a call — we&apos;d love to help.</p>
           </div>
         </section>
       )}
