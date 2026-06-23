@@ -134,6 +134,38 @@ export default async function MorePage() {
       <h1 style={{ margin: "0 0 24px", ...TYPE.largeTitle, color: "white" }}>
         More
       </h1>
+      {/* My Site */}
+      <section style={{ marginBottom: 20 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          My Site
+        </p>
+        <Link href="/site" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
+            padding: "16px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12,
+                backgroundColor: `${GREEN}18`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                </svg>
+              </div>
+              <div>
+                <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Edit My Site</p>
+                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Words, photos, services · Rewrite for me</p>
+              </div>
+            </div>
+            <ChevronRight />
+          </div>
+        </Link>
+      </section>
+
       {/* Plan */}
       <section style={{ marginBottom: 24 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
@@ -326,101 +358,6 @@ export default async function MorePage() {
         </Link>
       </div>
 
-      {/* My Site */}
-      <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          My Site
-        </p>
-        <Link href="/site" style={{ textDecoration: "none", display: "block" }}>
-          <div style={{
-            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden",
-            padding: "16px 18px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 12,
-                backgroundColor: `${GREEN}18`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-                </svg>
-              </div>
-              <div>
-                <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Edit My Site</p>
-                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Words, photos, services · Rewrite for me</p>
-              </div>
-            </div>
-            <ChevronRight />
-          </div>
-        </Link>
-      </section>
-
-      {/* Account */}
-      <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Account
-        </p>
-        <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 2 }}>
-          <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
-            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
-            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
-          </div>
-        </div>
-        <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
-          <div style={{
-            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: "14px 18px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-              <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Change Password</span>
-            </div>
-            <ChevronRight />
-          </div>
-        </Link>
-      </section>
-
-      {/* Settings */}
-      <section style={{ marginBottom: 20 }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Settings
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {hasStripe && company?.id && (
-            <form action={openBillingPortal}>
-              <input type="hidden" name="companyId" value={company.id} />
-              <button type="submit" style={{
-                width: "100%",
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                textAlign: "left",
-              }}>
-                <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span style={{ ...TYPE.subhead, color: "white" }}>Manage billing</span>
-                  <ChevronRight />
-                </div>
-              </button>
-            </form>
-          )}
-          <a href="mailto:hello@foundco.app" style={{ textDecoration: "none" }}>
-            <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ ...TYPE.subhead, color: "white" }}>Get help</span>
-              <ChevronRight />
-            </div>
-          </a>
-        </div>
-      </section>
-
       {/* Add Features */}
       {availableAddons.length > 0 && (
         <section style={{ marginBottom: 20 }}>
@@ -507,6 +444,69 @@ export default async function MorePage() {
           </div>
         </section>
       )}
+
+      {/* Account */}
+      <section style={{ marginBottom: 20 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Account
+        </p>
+        <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 2 }}>
+          <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
+            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
+            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
+          </div>
+        </div>
+        <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            padding: "14px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+              <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Change Password</span>
+            </div>
+            <ChevronRight />
+          </div>
+        </Link>
+      </section>
+
+      {/* Settings */}
+      <section style={{ marginBottom: 20 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Settings
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {hasStripe && company?.id && (
+            <form action={openBillingPortal}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <button type="submit" style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                textAlign: "left",
+              }}>
+                <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ ...TYPE.subhead, color: "white" }}>Manage billing</span>
+                  <ChevronRight />
+                </div>
+              </button>
+            </form>
+          )}
+          <a href="mailto:hello@foundco.app" style={{ textDecoration: "none" }}>
+            <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ ...TYPE.subhead, color: "white" }}>Get help</span>
+              <ChevronRight />
+            </div>
+          </a>
+        </div>
+      </section>
 
       <SignOutButton />
     </main>
