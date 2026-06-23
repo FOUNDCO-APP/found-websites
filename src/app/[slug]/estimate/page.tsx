@@ -6,6 +6,23 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
+const formHeadlineMap: Record<string, string> = {
+  estimates: "Tell us about your project",
+  bookings: "Tell us about your booking",
+  appointments: "Tell us about your appointment",
+  orders: "Tell us about your order",
+  inquiries: "Tell us about your needs",
+  leads: "Tell us about your needs",
+}
+
+const heroSubMap: Record<string, string> = {
+  estimates: "Tell us about your project and we'll be in touch within one business day.",
+  bookings: "Fill out the form and we'll confirm your booking within one business day.",
+  appointments: "Fill out the form and we'll confirm your appointment within one business day.",
+  orders: "Fill out the form and we'll follow up within one business day.",
+  inquiries: "Tell us about your needs and we'll be in touch within one business day.",
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const company = slug.startsWith("__domain__")
@@ -45,7 +62,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
             {intentLabel[company.primary_intent] || "Get in Touch"}
           </h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
-            Tell us about your project and we&apos;ll be in touch within one business day.
+            {heroSubMap[company.primary_intent] ?? "Tell us about your needs and we'll be in touch within one business day."}
           </p>
         </div>
       </section>
@@ -56,7 +73,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
 
             {/* Form */}
             <div className="lg:col-span-2 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
-              <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>Tell us about your project</h2>
+              <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>{formHeadlineMap[company.primary_intent] ?? "Tell us about your needs"}</h2>
               <EstimateForm
                 companyId={company.id}
                 services={services}

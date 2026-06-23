@@ -31,11 +31,41 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
     ? "Reservation request"
     : getSiteCopy(company.primary_intent, { name: company.name }).leadTypeLabel
 
-  const defaultSubject = `Re: Your inquiry — ${company.name}`
-  const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}${lead.service ? ` about ${lead.service.toLowerCase()}` : ""}. I'd love to learn more about your project.\n\nWhat's a good time for a quick call this week? I'm usually available mornings and afternoons. You can also call me directly${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to connecting!`
+  const isReservation = lead.type === "reservation_request"
+  const pa = (lead.partial_answers ?? {}) as Record<string, string>
+
+  const subjectWordMap: Record<string, string> = {
+    reservations: "reservation",
+    bookings: "booking",
+    appointments: "appointment",
+    estimates: "estimate request",
+    orders: "order",
+  }
+  const subjectWord = isReservation
+    ? "reservation"
+    : subjectWordMap[company.primary_intent] ?? "inquiry"
+  const defaultSubject = `Re: Your ${subjectWord} — ${company.name}`
+
+  const bodyVerbMap: Record<string, string> = {
+    reservations: "confirm your reservation",
+    bookings: "get you on the schedule",
+    appointments: "get you on the schedule",
+    estimates: "put together an estimate for you",
+    orders: "process your order",
+  }
+  const bodyVerb = bodyVerbMap[company.primary_intent] ?? "help you out"
+
+  let defaultMessage: string
+  if (isReservation) {
+    const reservationLine = pa.date && pa.time
+      ? ` for ${pa.date} at ${pa.time}`
+      : ""
+    defaultMessage = `Hi ${firstName},\n\nThank you for your reservation request${reservationLine}. We're confirming your reservation and will make sure everything is ready for you.\n\nIf you need to make any changes or have questions, reply here or give us a call${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to seeing you!`
+  } else {
+    defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}${lead.service ? ` about ${lead.service.toLowerCase()}` : ""}. I'd love to ${bodyVerb}.\n\nWhat's a good time for a quick call this week? I'm usually available mornings and afternoons. You can also call me directly${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to connecting!`
+  }
 
   const alreadyReplied = !!lead.replied_at
-  const pa = (lead.partial_answers ?? {}) as Record<string, string>
 
   // Build a list of lead detail rows to display
   const detailRows: { label: string; value: string }[] = []

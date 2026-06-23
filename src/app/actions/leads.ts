@@ -269,7 +269,7 @@ export async function submitLead(_: unknown, formData: FormData) {
   // Look up company to get owner email, name, and plan
   const { data: company } = await supabase
     .from("companies")
-    .select("name, email, phone, plan")
+    .select("name, email, phone, plan, primary_intent")
     .eq("id", companyId)
     .single()
 
@@ -375,6 +375,15 @@ function buildAutoReplyEmail({
 </html>`
 }
 
+const leadTypeLineMap: Record<string, string> = {
+  estimates: "estimate request",
+  bookings: "booking request",
+  appointments: "appointment request",
+  orders: "order",
+  reservations: "reservation request",
+  inquiries: "inquiry",
+}
+
 function buildLeadEmail({
   company,
   name,
@@ -384,7 +393,7 @@ function buildLeadEmail({
   message,
   replyUrl,
 }: {
-  company: { name: string; email: string; phone: string | null }
+  company: { name: string; email: string; phone: string | null; primary_intent?: string | null }
   name: string
   phone: string
   email: string
@@ -397,6 +406,7 @@ function buildLeadEmail({
   const receivedAt = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
   })
+  const leadTypeLine = leadTypeLineMap[company.primary_intent ?? ""] ?? "new request"
 
   return `<!DOCTYPE html>
 <html>
@@ -417,7 +427,7 @@ function buildLeadEmail({
         <!-- Body -->
         <tr>
           <td style="padding:36px 32px;">
-            <p style="margin:0 0 24px;font-size:16px;color:#444444;">Someone submitted an estimate request on your website.</p>
+            <p style="margin:0 0 24px;font-size:16px;color:#444444;">You have a new ${leadTypeLine} from your website.</p>
 
             <!-- Lead details -->
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
@@ -448,7 +458,7 @@ function buildLeadEmail({
             </table>
 
             <!-- Response nudge -->
-            <p style="margin:0 0 20px;font-size:13px;color:#888888;font-style:italic;">Responding within the hour increases your chance of winning this job by 3x.</p>
+            <p style="margin:0 0 20px;font-size:13px;color:#888888;font-style:italic;">The first to respond usually wins the business. Reach out now while they&apos;re still looking.</p>
 
             <!-- CTA buttons -->
             <table width="100%" cellpadding="0" cellspacing="0">
