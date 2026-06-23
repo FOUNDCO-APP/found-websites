@@ -43,7 +43,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
   const ctaImg = pickImg(imgs, 0)
-  const galleryCta = getSiteCopy(company.primary_intent).galleryCta
+  const config = company.website_config
+  const siteCopy = getSiteCopy(company.primary_intent, {
+    name: company.name,
+    city: company.city ?? undefined,
+    subIndustry: company.sub_industry,
+    industryCategory: company.industry_category,
+    services: config?.services,
+  })
+  const galleryCta = siteCopy.galleryCta
+  const galleryCtaHeading = config?.cta_headline || siteCopy.galleryCtaHeading
 
   // ── Pro: album-organized gallery ─────────────────────────────────────────
   if (isPro) {
@@ -153,7 +162,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
               <div className="relative z-10 px-8">
                 <div className="w-10 h-1 mx-auto mb-8" style={{ backgroundColor: primary }} />
                 <h2 className="text-3xl md:text-4xl font-black text-white mb-4" style={{ fontFamily: "var(--font-heading, inherit)" }}>
-                  Ready to get started?
+                  {galleryCtaHeading}
                 </h2>
                 <p className="mb-10 text-base" style={{ color: "#cccccc" }}>{galleryCta}</p>
                 <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
@@ -239,9 +248,9 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             <div className="relative z-10 px-8">
               <div className="w-10 h-1 mx-auto mb-8" style={{ backgroundColor: primary }} />
               <h2 className="text-3xl md:text-4xl font-black text-white mb-4" style={{ fontFamily: "var(--font-heading, inherit)" }}>
-                Ready to get started?
+                {galleryCtaHeading}
               </h2>
-              <p className="mb-10 text-base" style={{ color: "#cccccc" }}>Let&apos;s talk about your project.</p>
+              <p className="mb-10 text-base" style={{ color: "#cccccc" }}>{galleryCta}</p>
               <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
             </div>
           </section>

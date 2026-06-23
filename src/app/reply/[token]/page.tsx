@@ -29,7 +29,7 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
   const websiteUrl = `https://${company.slug}.foundco.app`
   const leadTypeLabel = lead.type === "reservation_request"
     ? "Reservation request"
-    : getSiteCopy(company.primary_intent).leadTypeLabel
+    : getSiteCopy(company.primary_intent, { name: company.name }).leadTypeLabel
 
   const defaultSubject = `Re: Your inquiry — ${company.name}`
   const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}${lead.service ? ` about ${lead.service.toLowerCase()}` : ""}. I'd love to learn more about your project.\n\nWhat's a good time for a quick call this week? I'm usually available mornings and afternoons. You can also call me directly${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to connecting!`

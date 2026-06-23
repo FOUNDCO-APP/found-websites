@@ -9,6 +9,7 @@ import TrialActivatedSplash from "@/components/TrialActivatedSplash"
 import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
 import { getSiteCopy } from "@/lib/siteCopy"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 
 export const dynamic = 'force-dynamic'
 
@@ -25,10 +26,15 @@ export async function generateMetadata(
 
   const config = company.website_config
   const serviceList = config?.services?.map(s => s.name).join(", ") || ""
-  const locationStr = company.city ? `${company.city}${company.state ? `, ${company.state}` : ""}` : ""
+  const city = company.city
+  const state = company.state
+  const locationStr = city ? `${city}${state ? `, ${state}` : ""}` : ""
   const homeTitle = [company.name, locationStr, serviceList].filter(Boolean).join(" — ")
-  const description = config?.hero_subtitle
-    || `${company.name}${locationStr ? ` — serving ${locationStr}` : ""}. Contact us today.`
+  const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
+  const descFallback = city
+    ? `${vocab.servicesLabel} in ${city}${state ? `, ${state}` : ""} — ${company.name}. ${vocab.ctaBodyText.charAt(0).toUpperCase() + vocab.ctaBodyText.slice(1)}.`
+    : `${company.name} — ${vocab.ctaBodyText}.`
+  const description = config?.hero_subtitle || descFallback
   const url = `https://${company.slug}.foundco.app`
   const image = company.logo_url || undefined
 
@@ -111,23 +117,28 @@ function buildJsonLd(company: Company) {
     }),
   }
 
-  const copy = getSiteCopy(company.primary_intent)
+  const copy = getSiteCopy(company.primary_intent, {
+    name: company.name,
+    city: company.city ?? undefined,
+    subIndustry: company.sub_industry,
+    industryCategory: company.industry_category,
+    services: config?.services,
+  })
+  const aiFaqs = config?.faq_items ?? []
   const faqs = [
-    {
-      q: copy.faqQ,
-      a: copy.faqA(company.name),
-    },
+    ...aiFaqs.map(item => ({ q: item.q, a: item.a })),
+    ...(aiFaqs.length === 0 ? [{ q: copy.faqQ, a: copy.faqA(company.name, company.city) }] : []),
     {
       q: `Where is ${company.name} located?`,
-      a: `We are based in ${company.city || "your area"}${company.state ? `, ${company.state}` : ""} and serve the surrounding region.`,
+      a: `${company.name} is based in ${company.city || "your area"}${company.state ? `, ${company.state}` : ""} and serves the surrounding region.`,
     },
     {
       q: `How do I contact ${company.name}?`,
-      a: `You can reach us by phone at ${company.phone || "the number on our website"} or by ${copy.faqContactA}.`,
+      a: `You can reach ${company.name} by phone at ${company.phone || "the number on our website"} or by ${copy.faqContactA}.`,
     },
     ...(services.length > 0 ? [{
       q: `What services does ${company.name} offer?`,
-      a: `We offer ${services.map(s => s.name).join(", ")}.`,
+      a: `${company.name} offers ${services.map(s => s.name).join(", ")}${company.city ? ` in ${company.city}` : ""}.`,
     }] : []),
   ]
 

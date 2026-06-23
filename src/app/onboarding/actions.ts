@@ -342,6 +342,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       custom_domain: null,
       published: true,
       copy_generated: generatedContent.copy_generated,
+      faq_items: generatedContent.faq_items,
     })
 
   if (configError) {

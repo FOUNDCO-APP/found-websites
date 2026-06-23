@@ -40,6 +40,7 @@ export type WebsiteConfig = {
   custom_domain: string | null
   published: boolean
   copy_generated: boolean
+  faq_items: { q: string; a: string }[] | null
 }
 
 export type Company = {

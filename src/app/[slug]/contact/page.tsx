@@ -26,7 +26,13 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
   const gradient = heroGradient(primary)
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
-  const copy = getSiteCopy(company.primary_intent)
+  const copy = getSiteCopy(company.primary_intent, {
+    name: company.name,
+    city: company.city ?? undefined,
+    subIndustry: company.sub_industry,
+    industryCategory: company.industry_category,
+    services: company.website_config?.services,
+  })
 
   return (
     <>
