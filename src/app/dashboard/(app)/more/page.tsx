@@ -11,56 +11,73 @@ import { createAdminClient } from "@/lib/supabase/admin"
 const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
   found:          { label: "Found Starter",  founding: 29, normal: 39,  color: GREEN },
   found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: GREEN },
-  found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
+  found_business: { label: "Found Business", founding: 69, normal: 99,  color: GREEN },
 }
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  found:          [
-    "Your own professional website",
-    "New customers contact you directly. No middleman.",
-    "Take a photo. It's on your site.",
-    "See every lead in one place",
-    "Instant reply to every inquiry",
+  found: [
+    "Complete five-page website",
+    "Your own web address",
+    "Professional copy written for you",
+    "Every inquiry saved and sent to you",
+    "Automatic reply to every new lead",
+    "Heart a photo and it appears on your site",
   ],
-  found_pro:      [
-    "Everything in Starter",
-    "Follow up automatically, so no lead goes cold",
-    "Remember every customer, every job",
-    "Your crew can upload photos too",
-    "Reply to leads without leaving the app",
+  found_pro: [
+    "Everything in Found Starter",
+    "Every lead followed up automatically",
+    "See who's interested and ready to hire",
+    "Your contact list organizes itself",
+    "Your crew can upload job photos",
+    "Rewrite any page on your site",
   ],
   found_business: [
-    "Everything in Pro",
-    "Book appointments without the back-and-forth",
-    "Send professional quotes in minutes",
-    "Get more five-star reviews",
-    "Stay in front of your customers with email",
+    "Everything in Found Pro",
+    "Clients book themselves",
+    "Send estimates and collect deposits",
+    "Review requests go out for you",
+    "Reach your full client list",
+    "Show clients their finished job",
   ],
 }
 
-const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
+const PLAN_PROMISE: Record<string, string> = {
+  found: "Your business is online, trusted, and ready to get calls.",
+  found_pro: "Found helps every lead get answered, followed up, and remembered.",
+  found_business: "Found helps run the job from first booking to final review.",
+}
+
+const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string; headline: string; body: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
   found: {
     plan: "found_pro",
     label: "Found Pro",
+    eyebrow: "Recommended next",
+    headline: "Stop losing leads when the day gets busy.",
+    body: "Starter gets you found. Pro keeps every inquiry warm after it arrives, even when you're on a job, driving, or done for the day.",
     foundingPrice: 39,
     normalPrice: 69,
     features: [
-      "Follow up automatically, so no lead goes cold",
-      "Remember every customer, every job",
-      "Your crew can upload photos too",
-      "Reply to leads without leaving the app",
+      "Every new lead gets followed up automatically",
+      "See who's interested and ready to hire",
+      "Every lead becomes an organized contact",
+      "Your crew can upload photos from the field",
+      "Rewrite your site copy whenever your business changes",
     ],
   },
   found_pro: {
     plan: "found_business",
     label: "Found Business",
+    eyebrow: "For growing crews",
+    headline: "Run the job, not just the website.",
+    body: "Pro helps with leads. Business helps with the work after the lead says yes: bookings, estimates, deposits, reviews, and client galleries.",
     foundingPrice: 69,
     normalPrice: 99,
     features: [
-      "Book appointments without the back-and-forth",
-      "Send professional quotes in minutes",
-      "Get more five-star reviews",
-      "Stay in front of your customers with email",
+      "Clients book themselves without back-and-forth texts",
+      "Send professional estimates and collect deposits",
+      "Review requests go out after finished jobs",
+      "Reach past clients with one clean message",
+      "Share finished project galleries clients remember",
     ],
   },
 }
@@ -117,6 +134,197 @@ export default async function MorePage() {
       <h1 style={{ margin: "0 0 24px", ...TYPE.largeTitle, color: "white" }}>
         More
       </h1>
+      {/* Plan */}
+      <section style={{ marginBottom: 24 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Your Plan
+        </p>
+        <div style={{
+          borderRadius: 22,
+          overflow: "hidden",
+          border: `1px solid ${GREEN}24`,
+          background: "linear-gradient(180deg, rgba(50,208,116,0.10) 0%, rgba(255,255,255,0.035) 52%, rgba(255,255,255,0.025) 100%)",
+          boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+        }}>
+          <div style={{ padding: "22px 20px 20px" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
+              <div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 10px ${meta.color}`, flexShrink: 0 }} />
+                  <span style={{ ...TYPE.caption, color: meta.color }}>{meta.label}</span>
+                  {isFoundingMember && (
+                    <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
+                      Intro
+                    </span>
+                  )}
+                </div>
+                <h2 style={{ margin: 0, ...TYPE.title, fontWeight: 300, color: "white", letterSpacing: 0 }}>
+                  {PLAN_PROMISE[plan] ?? PLAN_PROMISE.found}
+                </h2>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                <p style={{ margin: 0, ...TYPE.largeTitle, fontSize: "1.85rem", color: "white" }}>${displayPrice}</p>
+                <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
+              </div>
+            </div>
+
+            <p style={{ margin: "0 0 16px", ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              {isActive
+                ? isFoundingMember
+                  ? `Your intro rate is locked in. You save $${meta.normal - meta.founding}/month compared with the regular $${meta.normal}/month price.`
+                  : "Your subscription is active."
+                : `Activate today to lock in $${meta.founding}/month before the regular $${meta.normal}/month price.`}
+            </p>
+
+            <div style={{ display: "grid", gap: 8 }}>
+              {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 3 }}
+                    stroke={meta.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span style={{ ...TYPE.footnote, fontWeight: 500, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
+                </div>
+              ))}
+            </div>
+
+            {!isActive && company?.id && (
+              <form action={startUpgradeCheckout} style={{ marginTop: 18 }}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <input type="hidden" name="targetPlan" value={plan} />
+                <button type="submit" style={{
+                  width: "100%", padding: "15px 0", borderRadius: 999,
+                  backgroundColor: GREEN, color: BLACK, border: "none",
+                  ...TYPE.subhead, fontWeight: 900, cursor: "pointer",
+                  letterSpacing: "0.01em",
+                  boxShadow: `0 0 34px ${GREEN}26`,
+                }}>
+                  Lock In My Rate - ${displayPrice}/mo
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Upgrade */}
+      {upgrade && company?.id && (
+        <section style={{ marginBottom: 24 }}>
+          <div style={{
+            borderRadius: 22,
+            padding: "22px 20px",
+            backgroundColor: GREEN,
+            color: BLACK,
+            boxShadow: `0 22px 80px ${GREEN}1F`,
+          }}>
+            <p style={{ margin: "0 0 8px", ...TYPE.caption, color: "rgba(8,10,9,0.58)" }}>
+              {upgrade.eyebrow}
+            </p>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 10 }}>
+              <h2 style={{ margin: 0, ...TYPE.title, fontWeight: 300, lineHeight: 1.12, color: BLACK }}>
+                {upgrade.headline}
+              </h2>
+              <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                <p style={{ margin: 0, ...TYPE.largeTitle, fontSize: "1.85rem", color: BLACK }}>${upgradePrice}</p>
+                <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 700, color: "rgba(8,10,9,0.54)" }}>/month</p>
+              </div>
+            </div>
+            <p style={{ margin: "0 0 16px", ...TYPE.subhead, fontWeight: 500, lineHeight: 1.55, color: "rgba(8,10,9,0.68)" }}>
+              {upgrade.body}
+            </p>
+            <div style={{ display: "grid", gap: 9, marginBottom: 18 }}>
+              {upgrade.features.map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 3 }}
+                    stroke={BLACK} strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span style={{ ...TYPE.footnote, fontWeight: 800, lineHeight: 1.45, color: "rgba(8,10,9,0.78)" }}>{f}</span>
+                </div>
+              ))}
+            </div>
+            <form action={startUpgradeCheckout}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <input type="hidden" name="targetPlan" value={upgrade.plan} />
+              <button type="submit" style={{
+                width: "100%",
+                minHeight: 52,
+                borderRadius: 999,
+                padding: "0 18px",
+                ...TYPE.subhead,
+                fontWeight: 900,
+                backgroundColor: BLACK,
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 12px 34px rgba(8,10,9,0.22)",
+              }}>
+                Upgrade to {upgrade.label} - +${Math.max(upgradePrice - displayPrice, 0)}/mo
+              </button>
+            </form>
+            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 700, textAlign: "center" as const, color: "rgba(8,10,9,0.46)" }}>
+              {isFoundingMember
+                ? `Intro price locked. Regular price is $${upgrade.normalPrice}/month.`
+                : "Upgrade anytime. Your site, leads, and photos stay with you."}
+            </p>
+          </div>
+        </section>
+      )}
+
+      {!upgrade && (
+        <section style={{ marginBottom: 24 }}>
+          <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}24`, backgroundColor: `${GREEN}08` }}>
+            <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>You have the top plan.</p>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              Found Business includes every core upgrade: booking, estimates, review requests, client messaging, team access, and project galleries.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Smart upsell banner - fires when add-ons push total within $15 of next tier */}
+      {showUpsellBanner && upgrade && company?.id && (
+        <section style={{ marginBottom: 24 }}>
+          <div style={{
+            borderRadius: 18,
+            padding: "16px 18px",
+            background: `linear-gradient(135deg, ${GREEN}12 0%, ${GREEN}06 100%)`,
+            border: `1px solid ${GREEN}30`,
+          }}>
+            <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+              Better value available
+            </p>
+            <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              You're paying <strong style={{ color: "white" }}>${totalMonthly}/month</strong> with add-ons. {upgrade.label} is <strong style={{ color: "white" }}>${upgradePrice}/month</strong> and keeps it all in one plan.
+            </p>
+            <form action={startUpgradeCheckout}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <input type="hidden" name="targetPlan" value={upgrade.plan} />
+              <button type="submit" style={{
+                width: "100%", padding: "12px 0", borderRadius: 999,
+                backgroundColor: GREEN, color: BLACK, border: "none",
+                ...TYPE.subhead, fontWeight: 800, cursor: "pointer",
+              }}>
+                Switch to {upgrade.label}
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
+
+      <div style={{ marginBottom: 24 }}>
+        <Link href="https://foundco.app/plans" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            padding: "15px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Compare all plans</span>
+            <ChevronRight />
+          </div>
+        </Link>
+      </div>
 
       {/* My Site */}
       <section style={{ marginBottom: 20 }}>
@@ -179,173 +387,6 @@ export default async function MorePage() {
           </div>
         </Link>
       </section>
-
-
-      {/* Current plan */}
-      <section style={{ marginBottom: upgrade ? 10 : 20 }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Your Plan
-        </p>
-        <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-          <div style={{ padding: "16px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 6px ${meta.color}`, flexShrink: 0 }} />
-                <span style={{ ...TYPE.caption, color: meta.color }}>
-                  {meta.label}
-                </span>
-                {isFoundingMember && (
-                  <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
-                    Intro
-                  </span>
-                )}
-              </div>
-              <span style={{ ...TYPE.subhead, fontWeight: 300, color: "white" }}>
-                ${displayPrice}<span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/mo</span>
-              </span>
-            </div>
-            <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              {isActive
-                ? isFoundingMember
-                  ? `Intro rate locked in forever — you save $${meta.normal - meta.founding}/mo vs the regular $${meta.normal}/mo price.`
-                  : `Active subscription.`
-                : `Activate to lock in $${meta.founding}/mo — regular price is $${meta.normal}/mo.`}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-              {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke={meta.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
-                </div>
-              ))}
-            </div>
-            {!isActive && company?.id && (
-              <form action={startUpgradeCheckout} style={{ marginTop: 16 }}>
-                <input type="hidden" name="companyId" value={company.id} />
-                <input type="hidden" name="targetPlan" value={plan} />
-                <button type="submit" style={{
-                  width: "100%", padding: "14px 0", borderRadius: 12,
-                  backgroundColor: GREEN, color: BLACK, border: "none",
-                  ...TYPE.subhead, fontWeight: 800, cursor: "pointer",
-                  letterSpacing: "0.01em",
-                }}>
-                  Lock In My Rate — ${displayPrice}/mo
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Smart upsell banner — fires when add-ons push total within $15 of next tier */}
-      {showUpsellBanner && upgrade && company?.id && (
-        <section style={{ marginBottom: 10 }}>
-          <div style={{
-            borderRadius: 14,
-            padding: "16px 18px",
-            background: `linear-gradient(135deg, ${GREEN}12 0%, ${GREEN}06 100%)`,
-            border: `1px solid ${GREEN}30`,
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: `${GREEN}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-              </div>
-              <div>
-                <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
-                  Better value available
-                </p>
-                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                  You&apos;re paying <strong style={{ color: "white" }}>${totalMonthly}/month</strong> total.{" "}
-                  {upgrade.label} is <strong style={{ color: "white" }}>${upgradePrice}/month</strong> and includes everything you have plus more.
-                </p>
-              </div>
-            </div>
-            <form action={startUpgradeCheckout}>
-              <input type="hidden" name="companyId" value={company.id} />
-              <input type="hidden" name="targetPlan" value={upgrade.plan} />
-              <button type="submit" style={{
-                width: "100%", padding: "12px 0", borderRadius: 10,
-                backgroundColor: GREEN, color: BLACK, border: "none",
-                ...TYPE.subhead, fontWeight: 700, cursor: "pointer",
-              }}>
-                Switch to {upgrade.label} — save the complexity
-              </button>
-            </form>
-          </div>
-        </section>
-      )}
-
-      {/* Upgrade card */}
-      {upgrade && company?.id && (
-        <section style={{ marginBottom: 20 }}>
-          <div style={{
-            borderRadius: 14,
-            padding: "18px 20px",
-            backgroundColor: `${GREEN}08`,
-            border: `1px solid ${GREEN}22`,
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-              <div>
-                <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
-                  Upgrade to {upgrade.label}
-                </p>
-                <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                  {isFoundingMember
-                    ? `$${upgradePrice}/mo intro · reg. $${upgrade.normalPrice}/mo — you save $${upgrade.normalPrice - upgradePrice}/mo`
-                    : `$${upgradePrice}/month`}
-                </p>
-              </div>
-              <form action={startUpgradeCheckout}>
-                <input type="hidden" name="companyId" value={company.id} />
-                <input type="hidden" name="targetPlan" value={upgrade.plan} />
-                <button type="submit" style={{
-                  flexShrink: 0,
-                  borderRadius: 8,
-                  padding: "9px 16px",
-                  ...TYPE.caption,
-                  backgroundColor: GREEN,
-                  color: BLACK,
-                  border: "none",
-                  cursor: "pointer",
-                }}>
-                  Upgrade →
-                </button>
-              </form>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {upgrade.features.map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                    stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* See all plan options */}
-      <div style={{ marginBottom: 20 }}>
-        <Link href="https://foundco.app/plans" style={{ textDecoration: "none", display: "block" }}>
-          <div style={{
-            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: "15px 18px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>See what&apos;s included in every plan →</span>
-            <ChevronRight />
-          </div>
-        </Link>
-      </div>
 
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>
