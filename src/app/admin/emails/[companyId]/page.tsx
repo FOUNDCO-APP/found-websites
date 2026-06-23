@@ -51,6 +51,11 @@ export default async function AdminEmailPreviewPage({
   const config = company.website_config as { services?: { name: string }[] } | null
   const firstService = (Array.isArray(config?.services) ? config.services[0]?.name : null) ?? ""
 
+  const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
+  const usesReservations =
+    company.primary_intent === "reservations" ||
+    FOOD_INDUSTRIES.has(company.industry_category ?? "")
+
   const ownerCompany = {
     name: company.name,
     email: company.email ?? "owner@example.com",
@@ -83,35 +88,37 @@ export default async function AdminEmailPreviewPage({
         phone: company.phone,
       }),
     },
-    {
-      key: "owner_reservation",
-      label: "Owner",
-      sublabel: "Reservation",
-      html: buildReservationEmail({
-        company: ownerCompany,
-        name: MOCK_NAME,
-        phone: MOCK_PHONE,
-        email: MOCK_EMAIL,
-        date: MOCK_DATE,
-        time: MOCK_TIME,
-        partySize: MOCK_PARTY_SIZE,
-        notes: MOCK_NOTES,
-        replyUrl: MOCK_REPLY_URL,
-      }),
-    },
-    {
-      key: "customer_reservation",
-      label: "Customer",
-      sublabel: "Res. confirmation",
-      html: buildReservationAutoReply({
-        company: { name: company.name, phone: company.phone },
-        name: MOCK_NAME,
-        date: MOCK_DATE,
-        time: MOCK_TIME,
-        partySize: MOCK_PARTY_SIZE,
-        phone: company.phone,
-      }),
-    },
+    ...(usesReservations ? [
+      {
+        key: "owner_reservation",
+        label: "Owner",
+        sublabel: "Reservation",
+        html: buildReservationEmail({
+          company: ownerCompany,
+          name: MOCK_NAME,
+          phone: MOCK_PHONE,
+          email: MOCK_EMAIL,
+          date: MOCK_DATE,
+          time: MOCK_TIME,
+          partySize: MOCK_PARTY_SIZE,
+          notes: MOCK_NOTES,
+          replyUrl: MOCK_REPLY_URL,
+        }),
+      },
+      {
+        key: "customer_reservation",
+        label: "Customer",
+        sublabel: "Res. confirmation",
+        html: buildReservationAutoReply({
+          company: { name: company.name, phone: company.phone },
+          name: MOCK_NAME,
+          date: MOCK_DATE,
+          time: MOCK_TIME,
+          partySize: MOCK_PARTY_SIZE,
+          phone: company.phone,
+        }),
+      },
+    ] : []),
   ]
 
   return (
