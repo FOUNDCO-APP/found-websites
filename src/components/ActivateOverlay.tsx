@@ -99,13 +99,16 @@ function CardForm({
       width: "100%",
       maxWidth: 448,
       overflow: "hidden",
+      maxHeight: "min(760px, calc(100dvh - 112px))",
+      display: "flex",
+      flexDirection: "column",
       borderRadius: 24,
       backgroundColor: "#161616",
       border: "1px solid rgba(255,255,255,0.07)",
       animation: "cinematic-word-in 600ms ease-out both",
     }}>
       <div style={{ height: 1, backgroundColor: SIGNAL_GREEN }} />
-      <div style={{ padding: "24px 28px 28px" }}>
+      <div style={{ padding: "24px 28px 28px", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
           <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
@@ -140,6 +143,10 @@ function CardForm({
               cursor: loading ? "default" : "pointer",
               opacity: (!stripe || loading) ? 0.4 : 1,
               transition: "opacity 150ms",
+              position: "sticky",
+              bottom: 0,
+              zIndex: 1,
+              boxShadow: "0 -14px 26px rgba(22,22,22,0.92)",
             }}>
             {loading ? "One moment..." : hasAddon ? `Activate ${addonLabel} ->` : "Activate my site ->"}
           </button>
@@ -323,9 +330,10 @@ export default function ActivateOverlay({
           position: "absolute", inset: 0,
           backgroundColor: FOUND_BLACK,
           display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center",
-          padding: "20px 20px 48px",
+          alignItems: "center", justifyContent: "flex-start",
+          padding: "88px 20px 24px",
           overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
           animation: "cinematic-word-in 600ms ease-out both",
         }}>
           {/* FOUND wordmark */}

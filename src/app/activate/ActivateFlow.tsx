@@ -92,14 +92,15 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
 
   return (
     <div
-      className="w-full max-w-md overflow-hidden rounded-3xl"
+      className="flex w-full max-w-md flex-col overflow-hidden rounded-3xl"
       style={{
         backgroundColor: "#161616",
+        maxHeight: "min(760px, calc(100dvh - 112px))",
         border: "1px solid rgba(255,255,255,0.07)",
         animation: "fade-up 0.7s ease-out both",
       }}>
       <div className="h-px w-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-      <div className="px-7 pb-7 pt-6">
+      <div className="overflow-y-auto px-7 pb-7 pt-6" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="mb-5 flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full"
             style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
@@ -120,7 +121,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
             <p className="text-xs font-black" style={{ color: "#F43F5E" }}>{error}</p>
           )}
           <button type="submit" disabled={!stripe || loading}
-            className="w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+            className="sticky bottom-0 z-10 w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] shadow-[0_-14px_26px_rgba(22,22,22,0.92)] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
             {loading ? "One moment…" : "Activate my site →"}
           </button>
@@ -187,8 +188,8 @@ export default function ActivateFlow({
 
   return (
     <main
-      className="relative flex min-h-screen flex-col items-center justify-center px-5 py-12"
-      style={{ backgroundColor: FOUND_BLACK }}>
+      className="relative flex min-h-screen flex-col items-center justify-start overflow-y-auto px-5 pb-8 pt-24 md:justify-center md:py-12"
+      style={{ minHeight: "100dvh", backgroundColor: FOUND_BLACK }}>
 
       <div className="pointer-events-none absolute left-1/2 top-1/3 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[140px]"
         style={{ backgroundColor: `${SIGNAL_GREEN}12` }} />
