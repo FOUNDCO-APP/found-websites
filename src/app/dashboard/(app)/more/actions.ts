@@ -51,18 +51,8 @@ export async function startAddonCheckout(formData: FormData) {
     redirect(`${ROOT}/dashboard/more?addon_added=${addonSlug}`)
     return
   }
-
-  // No subscription yet — checkout for the add-on standalone
-  const session = await stripe.checkout.sessions.create({
-    customer: customerId,
-    mode: "subscription",
-    line_items: [{ price: priceRow.stripe_price_id, quantity: 1 }],
-    subscription_data: { metadata: { company_id: companyId, addon_slug: addonSlug } },
-    success_url: `${ROOT}/dashboard/more?addon_added=${addonSlug}`,
-    cancel_url: `${ROOT}/dashboard/more`,
-  })
-
-  redirect(session.url!)
+  // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
+  redirect(`${ROOT}/dashboard/more?activate_required=1`)
 }
 
 function getStripe() {
@@ -144,31 +134,6 @@ export async function startUpgradeCheckout(formData: FormData) {
       return
     }
   }
-
-  // No subscription yet — create checkout
-  let customerId = company.stripe_customer_id as string | undefined
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      name: company.name ?? undefined,
-      email: company.email ?? undefined,
-      metadata: { company_id: companyId },
-    })
-    customerId = customer.id
-    await admin.from("companies").update({ stripe_customer_id: customerId }).eq("id", companyId)
-  }
-
-  const session = await stripe.checkout.sessions.create({
-    customer: customerId,
-    mode: "subscription",
-    line_items: [{ price: priceId, quantity: 1 }],
-    subscription_data: {
-      // no trial — charge immediately
-      metadata: { company_id: companyId, plan: targetPlan },
-    },
-    payment_method_collection: "always",
-    success_url: `${ROOT}/dashboard/more?upgraded=1`,
-    cancel_url: `${ROOT}/dashboard/more`,
-  })
-
-  redirect(session.url!)
+  // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
+  redirect(`${ROOT}/dashboard/more?activate_required=1`)
 }

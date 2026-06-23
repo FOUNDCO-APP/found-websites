@@ -150,17 +150,19 @@ export default function ActivateOverlay({
   slug,
   companyName: initialName,
   setupIntentSecret,
+  targetPlan,
   onClose,
 }: {
   slug: string
   companyName: string
   setupIntentSecret?: string | null
+  targetPlan?: string | null
   onClose: () => void
 }) {
   const [cinPhase, setCinPhase] = useState<CinPhase>("text")
   const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
   const [companyName, setCompanyName] = useState(initialName)
-  const [plan, setPlan] = useState<string | null>(null)
+  const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
   const [loadError, setLoadError] = useState<string | null>(null)
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -171,7 +173,7 @@ export default function ActivateOverlay({
   // Fetch Stripe secret if not pre-created — runs in parallel with cinematic
   useEffect(() => {
     if (setupIntentSecret) return
-    createActivationSetup(slug).then((result) => {
+    createActivationSetup(slug, targetPlan).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
       } else {
@@ -180,7 +182,7 @@ export default function ActivateOverlay({
         if (result.plan) setPlan(result.plan)
       }
     })
-  }, [slug, setupIntentSecret, companyName])
+  }, [slug, setupIntentSecret, companyName, targetPlan])
 
   // Mirror page.tsx timing exactly: iris 3000ms, fading 3300ms, done 4000ms
   useEffect(() => {

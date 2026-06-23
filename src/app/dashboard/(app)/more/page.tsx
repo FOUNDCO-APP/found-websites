@@ -2,6 +2,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
+import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -220,20 +221,17 @@ export default async function MorePage() {
               ))}
             </div>
 
-            {!isActive && company?.id && (
-              <form action={startUpgradeCheckout} style={{ marginTop: 18 }}>
-                <input type="hidden" name="companyId" value={company.id} />
-                <input type="hidden" name="targetPlan" value={plan} />
-                <button type="submit" style={{
-                  width: "100%", padding: "15px 0", borderRadius: 999,
-                  backgroundColor: GREEN, color: BLACK, border: "none",
-                  ...TYPE.subhead, fontWeight: 900, cursor: "pointer",
-                  letterSpacing: "0.01em",
-                  boxShadow: `0 0 34px ${GREEN}26`,
-                }}>
+            {!isActive && company?.slug && (
+              <div style={{ marginTop: 18 }}>
+                <MoreActivateButton
+                  slug={company.slug}
+                  companyName={company.name}
+                  setupIntentSecret={company.pending_setup_intent_secret}
+                  targetPlan={plan}
+                >
                   Lock In My Rate - ${displayPrice}/mo
-                </button>
-              </form>
+                </MoreActivateButton>
+              </div>
             )}
           </div>
         </div>
@@ -275,25 +273,36 @@ export default async function MorePage() {
                 </div>
               ))}
             </div>
-            <form action={startUpgradeCheckout}>
-              <input type="hidden" name="companyId" value={company.id} />
-              <input type="hidden" name="targetPlan" value={upgrade.plan} />
-              <button type="submit" style={{
-                width: "100%",
-                minHeight: 52,
-                borderRadius: 999,
-                padding: "0 18px",
-                ...TYPE.subhead,
-                fontWeight: 900,
-                backgroundColor: BLACK,
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-                boxShadow: "0 12px 34px rgba(8,10,9,0.22)",
-              }}>
+            {isActive ? (
+              <form action={startUpgradeCheckout}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <input type="hidden" name="targetPlan" value={upgrade.plan} />
+                <button type="submit" style={{
+                  width: "100%",
+                  minHeight: 52,
+                  borderRadius: 999,
+                  padding: "0 18px",
+                  ...TYPE.subhead,
+                  fontWeight: 900,
+                  backgroundColor: BLACK,
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 12px 34px rgba(8,10,9,0.22)",
+                }}>
+                  Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
+                </button>
+              </form>
+            ) : company?.slug ? (
+              <MoreActivateButton
+                slug={company.slug}
+                companyName={company.name}
+                targetPlan={upgrade.plan}
+                variant="black"
+              >
                 Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
-              </button>
-            </form>
+              </MoreActivateButton>
+            ) : null}
             <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 700, textAlign: "center" as const, color: "rgba(8,10,9,0.46)" }}>
               {isFoundingMember
                 ? `Intro price locked. Regular price is $${upgrade.normalPrice}/month.`
@@ -315,7 +324,7 @@ export default async function MorePage() {
       )}
 
       {/* Smart upsell banner - fires when add-ons push total within $15 of next tier */}
-      {showUpsellBanner && upgrade && company?.id && (
+      {isActive && showUpsellBanner && upgrade && company?.id && (
         <section style={{ marginBottom: 24 }}>
           <div style={{
             borderRadius: 18,
@@ -385,23 +394,37 @@ export default async function MorePage() {
                     <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
                       +${addon.price}/mo
                     </p>
-                    {company?.id && (
+                    {company?.id && isActive && (
                       <form action={startAddonCheckout}>
                         <input type="hidden" name="companyId" value={company.id} />
                         <input type="hidden" name="addonSlug" value={addon.slug} />
                         <button type="submit" style={{
-                          borderRadius: 8,
-                          padding: "6px 12px",
+                          minHeight: 34,
+                          borderRadius: 999,
+                          padding: "0 15px",
                           ...TYPE.caption,
                           backgroundColor: `${GREEN}18`,
                           color: GREEN,
-                          border: `1px solid ${GREEN}30`,
+                          border: `1px solid ${GREEN}35`,
                           cursor: "pointer",
-                          fontSize: 12,
+                          boxShadow: `0 0 18px ${GREEN}10`,
                         }}>
-                          Add →
+                          Add
                         </button>
                       </form>
+                    )}
+                    {company?.slug && !isActive && (
+                      <div style={{ width: 112 }}>
+                        <MoreActivateButton
+                          slug={company.slug}
+                          companyName={company.name}
+                          setupIntentSecret={company.pending_setup_intent_secret}
+                          targetPlan={plan}
+                                                  size="compact"
+                        >
+                          Activate
+                        </MoreActivateButton>
+                      </div>
                     )}
                   </div>
                 </div>

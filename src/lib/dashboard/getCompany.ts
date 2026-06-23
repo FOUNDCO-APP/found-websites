@@ -11,6 +11,7 @@ export type CompanyRow = {
   plan: string | null
   subscription_status: string | null
   stripe_customer_id: string | null
+  pending_setup_intent_secret: string | null
   is_founding_member: boolean | null
   primary_color: string
   user_id: string | null
@@ -22,7 +23,7 @@ export type CompanyRow = {
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, is_founding_member, primary_color, user_id, city, state, industry_category, form_intent, primary_intent"
+  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, industry_category, form_intent, primary_intent"
 
 export const getCompany = cache(async (
   userId: string,

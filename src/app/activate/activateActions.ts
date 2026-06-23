@@ -10,38 +10,46 @@ function getAdminClient() {
   )
 }
 
-export async function createActivationSetup(slug: string): Promise<{
+function priceIdForPlan(plan: string, founding: boolean): string | undefined {
+  if (plan === "found_business") return founding ? process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_BUSINESS
+  if (plan === "found_pro") return founding ? process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_PRO
+  return founding ? process.env.STRIPE_PRICE_ID_FOUND_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND
+}
+
+export async function createActivationSetup(slug: string, targetPlan?: string | null): Promise<{
   clientSecret: string
   companyName: string
   plan: string | null
 } | null> {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) {
-    console.error("[Activate] Missing env vars")
+  if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("[Activate] Missing STRIPE_SECRET_KEY")
     return null
   }
 
   const admin = getAdminClient()
-  const { data: company, error: dbError } = await admin
+  const { data: company } = await admin
     .from("companies")
-    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status")
+    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status, is_founding_member")
     .eq("slug", slug)
     .single()
 
   if (!company) return null
-  // Only block if truly active — customer_id alone doesn't mean they completed payment
-  if ((company as Record<string,unknown>).subscription_status === "active") {
+  if ((company as Record<string, unknown>).subscription_status === "active") return null
+
+  const requestedPlan = targetPlan || company.plan || "found"
+  const priceId = priceIdForPlan(requestedPlan, !!company.is_founding_member)
+  if (!priceId) {
+    console.error("[Activate] Missing Stripe price for plan", requestedPlan)
     return null
   }
 
-  // Fast path — setup intent was pre-created during onboarding
-  if (company.pending_setup_intent_secret) {
-    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: company.plan ?? null }
+  // Reuse a pre-created setup intent only if it already belongs to the requested plan.
+  if (company.pending_setup_intent_secret && (!targetPlan || company.plan === requestedPlan)) {
+    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
   }
 
-  // If they already have a Stripe customer but no active sub, reuse the customer
   const existingCustomerId = company.stripe_customer_id as string | null
 
-  // Fallback — create SetupIntent directly (collect card first, subscribe after confirmation)
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
@@ -57,7 +65,7 @@ export async function createActivationSetup(slug: string): Promise<{
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: company.id, slug, price_id: process.env.STRIPE_PRICE_ID_FOUND! },
+      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId },
     })
 
     if (!setupIntent.client_secret) {
@@ -67,10 +75,14 @@ export async function createActivationSetup(slug: string): Promise<{
 
     await admin
       .from("companies")
-      .update({ stripe_customer_id: customer.id, pending_setup_intent_secret: setupIntent.client_secret })
+      .update({
+        stripe_customer_id: customer.id,
+        pending_setup_intent_secret: setupIntent.client_secret,
+        plan: requestedPlan,
+      })
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: company.plan ?? null }
+    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan }
   } catch (err) {
     console.error("[Activate] createActivationSetup failed:", err)
     return null
@@ -78,7 +90,7 @@ export async function createActivationSetup(slug: string): Promise<{
 }
 
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRICE_ID_FOUND) return false
+  if (!process.env.STRIPE_SECRET_KEY) return false
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -94,18 +106,19 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     if (!customerId || !paymentMethodId) return false
 
-    // Set as default payment method on customer
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId },
     })
 
-    // Use the price_id stored in the SetupIntent metadata (set at signup with correct date-based pricing)
-    const priceId = setupIntent.metadata?.price_id ?? process.env.STRIPE_PRICE_ID_FOUND!
+    const plan = setupIntent.metadata?.plan ?? "found"
+    const priceId = setupIntent.metadata?.price_id ?? priceIdForPlan(plan, true)
+    if (!priceId) return false
+
     await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
-      metadata: { slug },
+      metadata: { slug, plan },
     })
 
     const admin = getAdminClient()
@@ -114,6 +127,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       .update({
         subscription_status: "active",
         pending_setup_intent_secret: null,
+        plan,
       })
       .eq("slug", slug)
 

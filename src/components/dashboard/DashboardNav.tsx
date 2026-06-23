@@ -221,6 +221,24 @@ export default function DashboardNav({
 
   return (
     <>
+      {pendingSegment && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 2,
+            zIndex: 120,
+            overflow: "hidden",
+            backgroundColor: `${SIGNAL_GREEN}18`,
+          }}
+        >
+          <div style={{ width: "42%", height: "100%", borderRadius: 999, backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 18px ${SIGNAL_GREEN}`, animation: "nav-loading-slide 900ms ease-in-out infinite" }} />
+        </div>
+      )}
+
       {/* ── Mobile bottom tab bar — 5 equal tabs ── */}
       <nav className="found-mobile-nav" style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
@@ -238,7 +256,7 @@ export default function DashboardNav({
             <Link
               key={tab.path}
               href={`${prefix}${tab.path}`}
-              onClick={() => setPendingSegment(tab.path)}
+              onClick={() => { if (!isActive(tab.path)) setPendingSegment(tab.path) }}
               style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}
             >
               <div style={{ position: "relative" }}>
@@ -271,7 +289,7 @@ export default function DashboardNav({
               <Link
                 key={tab.path}
                 href={`${prefix}${tab.path}`}
-                onClick={() => setPendingSegment(tab.path)}
+                onClick={() => { if (!isActive(tab.path)) setPendingSegment(tab.path) }}
                 style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 13px", borderRadius: 10, backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent", borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}` }}
               >
                 <div style={{ position: "relative" }}>
@@ -483,6 +501,7 @@ export default function DashboardNav({
         @keyframes sheetUp    { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes pickerFade { from { opacity: 0; }                 to { opacity: 1; }               }
         @keyframes nav-spin   { to   { transform: rotate(360deg); }                                   }
+        @keyframes nav-loading-slide { 0% { transform: translateX(-110%); } 55% { transform: translateX(125%); } 100% { transform: translateX(260%); } }
         .picker-scroll::-webkit-scrollbar { display: none; }
       `}</style>
     </>
