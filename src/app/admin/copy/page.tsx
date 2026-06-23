@@ -28,6 +28,12 @@ export default async function AdminCopyPage() {
                 style={{ color: "rgba(255,255,255,0.35)" }}>
                 ← Admin
               </Link>
+              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
+              <Link href="/admin/emails"
+                className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
+                style={{ color: "rgba(255,255,255,0.35)" }}>
+                Email Preview
+              </Link>
             </div>
             <h1 className="text-3xl font-black" style={{ color: "#ffffff" }}>Copy Review</h1>
             <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
