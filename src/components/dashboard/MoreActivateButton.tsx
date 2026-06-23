@@ -1,10 +1,14 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import dynamic from "next/dynamic"
 import { TYPE, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 const ActivateOverlay = dynamic(() => import("@/components/ActivateOverlay"), { ssr: false })
+
+function preloadOverlay() {
+  import("@/components/ActivateOverlay").catch(() => {})
+}
 
 export default function MoreActivateButton({
   slug,
@@ -33,11 +37,17 @@ export default function MoreActivateButton({
   const isBlack = variant === "black"
   const isCompact = size === "compact"
 
+  useEffect(() => {
+    preloadOverlay()
+  }, [])
+
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onPointerEnter={preloadOverlay}
+        onFocus={preloadOverlay}
+        onClick={() => { preloadOverlay(); setOpen(true) }}
         style={{
           width: "100%",
           minHeight: isCompact ? 34 : 52,

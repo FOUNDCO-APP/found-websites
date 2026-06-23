@@ -98,12 +98,12 @@ export default async function MorePage() {
 
   const company = await getCompany(user.id, user.email ?? "")
 
-  const plan = company?.plan ?? "found"
+  const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
+  const plan = isActive ? (company?.plan ?? "found") : "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
   const isFoundingMember = !!company?.is_founding_member
   const hasStripe = !!company?.stripe_customer_id
-  const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
   const displayPrice = isFoundingMember ? meta.founding : meta.normal
   const upgradePrice = upgrade ? (isFoundingMember ? upgrade.foundingPrice : upgrade.normalPrice) : 0
 

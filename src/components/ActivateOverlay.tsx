@@ -122,7 +122,7 @@ function CardForm({
           {hasAddon ? `+${addonPrice}/month added to your Found plan. Cancel anytime.` : `Locked in for 12 months, then ${normal}/month. Cancel anytime.`}
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          <PaymentElement options={{ layout: "tabs" }} />
+          <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
           {error && (
             <p style={{ fontSize: 12, fontWeight: 900, color: "#F43F5E", margin: 0 }}>{error}</p>
           )}
@@ -366,7 +366,11 @@ export default function ActivateOverlay({
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
               <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} />
             </Elements>
-          ) : null}
+          ) : (
+            <div style={{ width: "100%", maxWidth: 448, padding: "28px", borderRadius: 24, border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "#161616", color: "rgba(255,255,255,0.52)", textAlign: "center", fontSize: 14 }}>
+              Preparing secure card form...
+            </div>
+          )}
         </div>
       )}
 

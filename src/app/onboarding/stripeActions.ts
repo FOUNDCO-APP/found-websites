@@ -69,7 +69,7 @@ export async function createSetupIntentForCompany({
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: companyId, slug, price_id: priceId },
+      metadata: { company_id: companyId, slug, plan: plan ?? "found", price_id: priceId, addon_slug: "" },
     })
 
     if (!setupIntent.client_secret) return

@@ -10,6 +10,10 @@ function getAdminClient() {
   )
 }
 
+function setupIntentIdFromSecret(secret: string): string | null {
+  return secret.split("_secret_")[0] || null
+}
+
 function priceIdForPlan(plan: string, founding: boolean): string | undefined {
   if (plan === "found_business") return founding ? process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_BUSINESS
   if (plan === "found_pro") return founding ? process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_PRO
@@ -43,15 +47,21 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     return null
   }
 
-  // Reuse a pre-created setup intent only if it already belongs to the requested plan.
-  if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan)) {
-    return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
-  }
-
   const existingCustomerId = company.stripe_customer_id as string | null
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+    // Reuse a pre-created setup intent only if Stripe metadata still matches this exact base plan.
+    if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan)) {
+      const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
+      const existingIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null
+      const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
+      const hasNoAddon = !existingIntent?.metadata?.addon_slug
+      if (existingIntent?.status === "requires_payment_method" && matchesPlan && hasNoAddon) {
+        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
+      }
+    }
 
     const customer = existingCustomerId
       ? { id: existingCustomerId }

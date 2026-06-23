@@ -116,7 +116,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
           Locked in for 12 months, then ${normal}/month. Cancel anytime.
         </p>
         <form onSubmit={handleSubmit} className="space-y-5">
-          <PaymentElement options={{ layout: "tabs" }} />
+          <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
           {error && (
             <p className="text-xs font-black" style={{ color: "#F43F5E" }}>{error}</p>
           )}
