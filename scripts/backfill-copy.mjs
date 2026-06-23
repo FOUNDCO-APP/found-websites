@@ -184,7 +184,6 @@ async function main() {
   const { data: companies, error } = await supabase
     .from("companies")
     .select("id, name, industry_category, sub_industry, city, state, website_config(id, copy_generated, faq_items, services, hero_title, hero_subtitle, about_text, tagline, cta_headline)")
-    .or("website_config.copy_generated.is.false,website_config.faq_items.is.null,website_config.is.null")
     .order("created_at", { ascending: false })
 
   if (error) {

@@ -124,6 +124,7 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
       tagline: result.tagline,
       cta_headline: result.ctaHeadline,
       services: result.services,
+      faq_items: result.faq_items ?? null,
       copy_generated: result.copy_generated,
     })
     .eq("company_id", companyId)

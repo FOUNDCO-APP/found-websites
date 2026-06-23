@@ -32,14 +32,44 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
   }
 
   const fallbackCount = sites.filter((s) => !s.copy_generated).length
+  const [allRunning, setAllRunning] = useState(false)
+
+  async function handleRegenerateAll() {
+    setAllRunning(true)
+    for (const site of sites) {
+      if (states[site.company_id] === "done") continue
+      setStatus(site.company_id, "pending")
+      const result = await regenerateSiteCopy(site.company_id)
+      setStatus(site.company_id, result.success ? "done" : "error")
+      await new Promise(r => setTimeout(r, 400))
+    }
+    setAllRunning(false)
+  }
 
   return (
     <div>
-      <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
-        {fallbackCount > 0
-          ? `${fallbackCount} site${fallbackCount !== 1 ? "s" : ""} used fallback copy — tap Regenerate to have Claude rewrite them.`
-          : "All sites have Claude-written copy. Regenerate any time to refresh."}
-      </p>
+      <div className="flex items-center justify-between mb-8 gap-4 flex-wrap">
+        <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+          {fallbackCount > 0
+            ? `${fallbackCount} site${fallbackCount !== 1 ? "s" : ""} used fallback copy — regenerate to have Claude rewrite them with FAQs.`
+            : "All sites have Claude-written copy. Regenerate any time to add FAQs or refresh."}
+        </p>
+        <button
+          onClick={handleRegenerateAll}
+          disabled={allRunning || isPending}
+          className="flex items-center gap-2 text-sm font-black px-5 py-2.5 rounded-lg transition-all hover:opacity-90 disabled:opacity-50 shrink-0"
+          style={{ backgroundColor: "#ffffff", color: "#111111" }}>
+          {allRunning ? (
+            <>
+              <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Running...
+            </>
+          ) : "Regenerate All"}
+        </button>
+      </div>
 
       <div className="flex flex-col gap-3">
         {sites.map((site) => {
