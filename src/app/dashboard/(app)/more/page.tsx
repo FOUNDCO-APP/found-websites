@@ -207,9 +207,9 @@ export default async function MorePage() {
             <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
               {isActive
                 ? isFoundingMember
-                  ? `Intro rate locked in forever.`
+                  ? `Intro rate locked in forever — you save $${meta.normal - meta.founding}/mo vs the regular $${meta.normal}/mo price.`
                   : `Active subscription.`
-                : "Activate to lock in your rate."}
+                : `Activate to lock in $${meta.founding}/mo — regular price is $${meta.normal}/mo.`}
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
               {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
@@ -295,7 +295,9 @@ export default async function MorePage() {
                   Upgrade to {upgrade.label}
                 </p>
                 <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                  ${upgradePrice}/month{isFoundingMember ? " intro rate" : ""}
+                  {isFoundingMember
+                    ? `$${upgradePrice}/mo intro · reg. $${upgrade.normalPrice}/mo — you save $${upgrade.normalPrice - upgradePrice}/mo`
+                    : `$${upgradePrice}/month`}
                 </p>
               </div>
               <form action={startUpgradeCheckout}>
@@ -332,14 +334,14 @@ export default async function MorePage() {
 
       {/* See all plan options */}
       <div style={{ marginBottom: 20 }}>
-        <Link href="/plans" style={{ textDecoration: "none", display: "block" }}>
+        <Link href="https://foundco.app/plans" style={{ textDecoration: "none", display: "block" }}>
           <div style={{
             borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.06)",
             padding: "15px 18px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
-            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>See what&apos;s included in every plan</span>
+            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>See what&apos;s included in every plan →</span>
             <ChevronRight />
           </div>
         </Link>
