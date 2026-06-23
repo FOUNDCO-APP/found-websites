@@ -8,6 +8,7 @@ import PreviewBanner from "@/components/PreviewBanner"
 import TrialActivatedSplash from "@/components/TrialActivatedSplash"
 import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
+import { getSiteCopy } from "@/lib/siteCopy"
 
 export const dynamic = 'force-dynamic'
 
@@ -110,11 +111,11 @@ function buildJsonLd(company: Company) {
     }),
   }
 
-  // Auto-generate FAQ from business data
+  const copy = getSiteCopy(company.primary_intent)
   const faqs = [
     {
-      q: `Do you offer free estimates?`,
-      a: `Yes, ${company.name} offers free, no-obligation estimates. Contact us today to get started.`,
+      q: copy.faqQ,
+      a: copy.faqA(company.name),
     },
     {
       q: `Where is ${company.name} located?`,
@@ -122,7 +123,7 @@ function buildJsonLd(company: Company) {
     },
     {
       q: `How do I contact ${company.name}?`,
-      a: `You can reach us by phone at ${company.phone || "the number on our website"} or by filling out our online estimate form.`,
+      a: `You can reach us by phone at ${company.phone || "the number on our website"} or by ${copy.faqContactA}.`,
     },
     ...(services.length > 0 ? [{
       q: `What services does ${company.name} offer?`,

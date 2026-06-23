@@ -7,6 +7,7 @@ import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
 import GalleryLightbox from "@/components/GalleryLightbox"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getSiteCopy } from "@/lib/siteCopy"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -42,6 +43,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
   const ctaImg = pickImg(imgs, 0)
+  const galleryCta = getSiteCopy(company.primary_intent).galleryCta
 
   // ── Pro: album-organized gallery ─────────────────────────────────────────
   if (isPro) {
@@ -153,7 +155,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
                 <h2 className="text-3xl md:text-4xl font-black text-white mb-4" style={{ fontFamily: "var(--font-heading, inherit)" }}>
                   Ready to get started?
                 </h2>
-                <p className="mb-10 text-base" style={{ color: "#cccccc" }}>Let&apos;s talk about your project.</p>
+                <p className="mb-10 text-base" style={{ color: "#cccccc" }}>{galleryCta}</p>
                 <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
               </div>
             </section>

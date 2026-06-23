@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import ReplyForm from "./ReplyForm"
+import { getSiteCopy } from "@/lib/siteCopy"
 
 export default async function ReplyPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -8,7 +9,7 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
 
   const { data: lead } = await supabase
     .from("leads")
-    .select("*, companies(name, phone, logo_url, primary_color, slug)")
+    .select("*, companies(name, phone, logo_url, primary_color, slug, primary_intent)")
     .eq("reply_token", token)
     .single()
 
@@ -20,11 +21,15 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
     logo_url: string | null
     primary_color: string
     slug: string
+    primary_intent: string
   }
 
   const primary = company.primary_color || "#111111"
   const firstName = lead.name.split(" ")[0]
   const websiteUrl = `https://${company.slug}.foundco.app`
+  const leadTypeLabel = lead.type === "reservation_request"
+    ? "Reservation request"
+    : getSiteCopy(company.primary_intent).leadTypeLabel
 
   const defaultSubject = `Re: Your inquiry — ${company.name}`
   const defaultMessage = `Hi ${firstName},\n\nThank you for reaching out to ${company.name}${lead.service ? ` about ${lead.service.toLowerCase()}` : ""}. I'd love to learn more about your project.\n\nWhat's a good time for a quick call this week? I'm usually available mornings and afternoons. You can also call me directly${company.phone ? ` at ${company.phone}` : ""}.\n\nLooking forward to connecting!`
@@ -71,7 +76,7 @@ export default async function ReplyPage({ params }: { params: Promise<{ token: s
           <p style={{ margin: 0, fontSize: "14px", color: "#888888" }}>
             {alreadyReplied
               ? `You've already sent a reply to this request from ${lead.name}.`
-              : `Estimate request${lead.service ? ` · ${lead.service}` : ""}`
+              : `${leadTypeLabel}${lead.service ? ` · ${lead.service}` : ""}`
             }
           </p>
         </div>

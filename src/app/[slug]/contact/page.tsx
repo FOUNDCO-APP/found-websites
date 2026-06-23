@@ -3,6 +3,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import ContactForm from "./ContactForm"
+import { getSiteCopy } from "@/lib/siteCopy"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -25,6 +26,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
   const gradient = heroGradient(primary)
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
+  const copy = getSiteCopy(company.primary_intent)
 
   return (
     <>
@@ -102,20 +104,20 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
-              {/* Divider + nudge toward estimate for high-intent visitors */}
-              <div className="pt-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500 mb-3">
-                  Need a price? Get a detailed estimate instead.
-                </p>
-                <a href="/estimate"
-                  className="inline-flex items-center gap-2 text-sm font-bold hover:underline"
-                  style={{ color: primary }}>
-                  Get a Free Estimate
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
+              {/* Nudge toward primary action — only shown when intent has a dedicated page */}
+              {copy.nudgeText && copy.nudgeLabel && copy.nudgeHref && (
+                <div className="pt-4 border-t border-gray-100">
+                  <p className="text-sm text-gray-500 mb-3">{copy.nudgeText}</p>
+                  <a href={copy.nudgeHref}
+                    className="inline-flex items-center gap-2 text-sm font-bold hover:underline"
+                    style={{ color: primary }}>
+                    {copy.nudgeLabel}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Right — contact form */}
