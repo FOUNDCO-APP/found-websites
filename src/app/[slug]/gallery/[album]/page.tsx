@@ -3,13 +3,14 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 import type { Metadata } from "next"
+import { albumLabelFor } from "@/lib/dashboard/typography"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; album: string }> }): Promise<Metadata> {
   const { slug, album: albumSlug } = await params
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
-  if (!company) return { title: "Project Gallery" }
+  if (!company) return { title: "Gallery" }
 
   const admin = createAdminClient()
   const { data: album } = await admin
@@ -20,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .single()
 
   return {
-    title: album ? `${album.name} — ${company.name}` : `Project Gallery — ${company.name}`,
+    title: album ? `${album.name} — ${company.name}` : `${albumLabelFor(company.industry_category).plural} — ${company.name}`,
   }
 }
 
@@ -53,6 +54,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
   const allPhotos = photos ?? []
   const primary = company.primary_color ?? "#32D074"
   const albumDate = new Date(album.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+  const albumLabel = albumLabelFor(company.industry_category)
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -91,7 +93,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
         {allPhotos.length === 0 ? (
           <div style={{ textAlign: "center", paddingTop: 80 }}>
             <p style={{ fontSize: 20, fontWeight: 300, color: "#333", marginBottom: 8 }}>Photos coming soon.</p>
-            <p style={{ fontSize: 14, color: "#aaa" }}>Check back shortly as we add photos to this project.</p>
+            <p style={{ fontSize: 14, color: "#aaa" }}>Check back shortly as we add photos to this {albumLabel.singular.toLowerCase()}.</p>
           </div>
         ) : (
           <div style={{

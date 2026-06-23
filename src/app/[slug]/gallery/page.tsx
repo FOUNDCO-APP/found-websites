@@ -8,6 +8,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import GalleryLightbox from "@/components/GalleryLightbox"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSiteCopy } from "@/lib/siteCopy"
+import { albumLabelFor } from "@/lib/dashboard/typography"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -38,6 +39,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const imgs = await getStockImages(company)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const galleryLabel = vocab.galleryLabel
+  const albumLabel = albumLabelFor(company.industry_category)
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
@@ -97,7 +99,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             {hasContent && (
               <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>
                 {albums.length > 0
-                  ? `${albums.length} ${albums.length === 1 ? "project" : "projects"}`
+                  ? `${albums.length} ${albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()}`
                   : `${flatPhotos.length} ${flatPhotos.length === 1 ? "photo" : "photos"}`}
               </span>
             )}
@@ -176,7 +178,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
               <h2 className="text-4xl font-black mb-5" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                 Our work speaks for itself.
               </h2>
-              <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>We&apos;re documenting our latest projects.</p>
+              <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>We&apos;re adding our latest {albumLabel.plural.toLowerCase()}.</p>
               <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>Check back soon — or reach out to see examples directly.</p>
               <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
             </div>
