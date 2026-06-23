@@ -291,7 +291,7 @@ export default async function MorePage() {
                 cursor: "pointer",
                 boxShadow: "0 12px 34px rgba(8,10,9,0.22)",
               }}>
-                Upgrade to {upgrade.label} - +${Math.max(upgradePrice - displayPrice, 0)}/mo
+                Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
               </button>
             </form>
             <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 700, textAlign: "center" as const, color: "rgba(8,10,9,0.46)" }}>
