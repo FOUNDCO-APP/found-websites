@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation"
-import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { intentLabel } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import ContactForm from "./ContactForm"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -48,6 +47,8 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
       <section className="py-24 bg-white">
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+
+            {/* Left — contact info */}
             <div className="space-y-8">
               {company.phone && company.phone_visible !== false && (
                 <div className="flex items-start gap-4">
@@ -100,20 +101,30 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                   </div>
                 </div>
               )}
+
+              {/* Divider + nudge toward estimate for high-intent visitors */}
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-sm text-gray-500 mb-3">
+                  Need a price? Get a detailed estimate instead.
+                </p>
+                <a href="/estimate"
+                  className="inline-flex items-center gap-2 text-sm font-bold hover:underline"
+                  style={{ color: primary }}>
+                  Get a Free Estimate
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </a>
+              </div>
             </div>
 
-            <div className="p-10 text-white" style={{ backgroundColor: primary, borderRadius: "var(--card-radius, 10px)" }}>
-              <h2 className="text-2xl font-black mb-3" style={{ fontFamily: "var(--font-heading, inherit)" }}>
-                {intentLabel[company.primary_intent] || "Get in Touch"}
-              </h2>
-              <p className="mb-8 leading-relaxed text-sm" style={{ opacity: 0.85 }}>
-                Fill out our quick form and we&apos;ll be in touch within one business day.
-              </p>
-              <Link href="/estimate" className="btn bg-white"
-                style={{ color: primary, borderColor: "white" }}>
-                {intentLabel[company.primary_intent] || "Send a Message"}
-              </Link>
+            {/* Right — contact form */}
+            <div className="border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
+              <h2 className="text-xl font-black mb-1" style={{ color: "#111111" }}>Send us a message</h2>
+              <p className="text-sm text-gray-400 mb-6">We&apos;ll get back to you as soon as possible.</p>
+              <ContactForm companyId={company.id} primaryColor={primary} />
             </div>
+
           </div>
         </div>
       </section>
