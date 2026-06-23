@@ -4,6 +4,8 @@ import { intentLabel, intentHref } from "@/types/company"
 import { logoColor } from "@/lib/color"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 
+const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
+
 function BrandMark({ name, primary }: { name: string; primary: string }) {
   return (
     <span
@@ -97,7 +99,13 @@ export default function Footer({ company }: { company: Company }) {
           <div>
             <h3 className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#555555" }}>Quick Links</h3>
             <ul className="space-y-3 text-sm" style={{ color: "#888888" }}>
-              {([["Home", "/"], ["About Us", "/about"], ["Services", "/services"], ["Gallery", "/gallery"], ["Contact", "/contact"]] as [string, string][]).map(([label, href]) => (
+              {([
+                ["Home", "/"],
+                ["About Us", "/about"],
+                FOOD_INDUSTRIES.has(company.industry_category) ? ["Menu", "/menu"] : ["Services", "/services"],
+                ["Gallery", "/gallery"],
+                ["Contact", "/contact"],
+              ] as [string, string][]).map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="hover:text-white transition-colors">
                     {label}
@@ -111,14 +119,18 @@ export default function Footer({ company }: { company: Company }) {
           <div>
             <h3 className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#555555" }}>Contact</h3>
             <ul className="space-y-3 text-sm" style={{ color: "#888888" }}>
-              {company.phone && (
+              {company.phone && company.phone_visible !== false && (
                 <li>
-                  <a href={`tel:${company.phone.replace(/\D/g, "")}`} className="hover:text-white transition-colors">
-                    {company.phone}
+                  <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                    className="flex items-center gap-2 hover:text-white transition-colors font-semibold">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    Call Us
                   </a>
                 </li>
               )}
-              {company.email && (
+              {company.email && company.email_visible !== false && (
                 <li>
                   <a href={`mailto:${company.email}`} className="hover:text-white transition-colors">
                     {company.email}
