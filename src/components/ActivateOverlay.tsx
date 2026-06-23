@@ -56,13 +56,26 @@ const stripeAppearance = {
   },
 }
 
-function CardForm({ slug, companyName, plan }: { slug: string; companyName: string; plan?: string | null }) {
+function CardForm({
+  slug,
+  companyName,
+  plan,
+  addonLabel,
+  addonPrice,
+}: {
+  slug: string
+  companyName: string
+  plan?: string | null
+  addonLabel?: string | null
+  addonPrice?: number | null
+}) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
   const { price, normal } = planDetails(plan)
+  const hasAddon = !!addonLabel && typeof addonPrice === "number"
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -76,7 +89,7 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
       },
     })
     if (stripeError) {
-      setError(stripeError.message ?? "Something went wrong — please try again.")
+      setError(stripeError.message ?? "Something went wrong - please try again.")
       setLoading(false)
     }
   }
@@ -96,14 +109,14 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
         <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
           <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
-            Intro rate
+            {hasAddon ? "Add feature" : "Intro rate"}
           </span>
         </div>
         <p style={{ fontSize: 24, fontWeight: 300, lineHeight: 1.2, letterSpacing: "-0.02em", color: "white", marginBottom: 4 }}>
-          ${price}/month.
+          {hasAddon ? addonLabel : `${price}/month.`}
         </p>
         <p style={{ fontSize: 14, color: "rgba(255,255,255,0.35)", marginBottom: 24 }}>
-          Locked in for 12 months, then ${normal}/month. Cancel anytime.
+          {hasAddon ? `+${addonPrice}/month added to your Found plan. Cancel anytime.` : `Locked in for 12 months, then ${normal}/month. Cancel anytime.`}
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <PaymentElement options={{ layout: "tabs" }} />
@@ -128,17 +141,16 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
               opacity: (!stripe || loading) ? 0.4 : 1,
               transition: "opacity 150ms",
             }}>
-            {loading ? "One moment…" : "Activate my site →"}
+            {loading ? "One moment..." : hasAddon ? `Activate ${addonLabel} ->` : "Activate my site ->"}
           </button>
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.22)", margin: 0 }}>
-            {companyName} · Powered by Found
+            {companyName} - Powered by Found
           </p>
         </form>
       </div>
     </div>
   )
 }
-
 // Cinematic phases mirror page.tsx exactly:
 // "text" → glow + FINALLY + name fades in
 // "iris" → green circle expands from center (250ms)
@@ -151,16 +163,24 @@ export default function ActivateOverlay({
   companyName: initialName,
   setupIntentSecret,
   targetPlan,
+  targetAddonSlug,
+  targetAddonLabel,
+  targetAddonPrice,
+  skipIntro = false,
   onClose,
 }: {
   slug: string
   companyName: string
   setupIntentSecret?: string | null
   targetPlan?: string | null
+  targetAddonSlug?: string | null
+  targetAddonLabel?: string | null
+  targetAddonPrice?: number | null
+  skipIntro?: boolean
   onClose: () => void
 }) {
-  const [cinPhase, setCinPhase] = useState<CinPhase>("text")
-  const [clientSecret, setClientSecret] = useState<string | null>(setupIntentSecret ?? null)
+  const [cinPhase, setCinPhase] = useState<CinPhase>(skipIntro ? "done" : "text")
+  const [clientSecret, setClientSecret] = useState<string | null>(targetAddonSlug ? null : (setupIntentSecret ?? null))
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -168,12 +188,12 @@ export default function ActivateOverlay({
     const prev = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => { document.body.style.overflow = prev }
-  }, [])
+  }, [skipIntro])
 
   // Fetch Stripe secret if not pre-created — runs in parallel with cinematic
   useEffect(() => {
-    if (setupIntentSecret) return
-    createActivationSetup(slug, targetPlan).then((result) => {
+    if (setupIntentSecret && !targetAddonSlug) return
+    createActivationSetup(slug, targetPlan, targetAddonSlug).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
       } else {
@@ -182,15 +202,16 @@ export default function ActivateOverlay({
         if (result.plan) setPlan(result.plan)
       }
     })
-  }, [slug, setupIntentSecret, companyName, targetPlan])
+  }, [slug, setupIntentSecret, companyName, targetPlan, targetAddonSlug])
 
   // Mirror page.tsx timing exactly: iris 3000ms, fading 3300ms, done 4000ms
   useEffect(() => {
+    if (skipIntro) return
     const t1 = setTimeout(() => setCinPhase("iris"),   3000)
     const t2 = setTimeout(() => setCinPhase("fading"), 3300)
     const t3 = setTimeout(() => setCinPhase("done"),   4000)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
-  }, [])
+  }, [skipIntro])
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 99999, backgroundColor: FOUND_BLACK }}>
@@ -335,7 +356,7 @@ export default function ActivateOverlay({
             </div>
           ) : clientSecret ? (
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-              <CardForm slug={slug} companyName={companyName} plan={plan} />
+              <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} />
             </Elements>
           ) : null}
         </div>

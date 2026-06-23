@@ -418,9 +418,11 @@ export default async function MorePage() {
                         <MoreActivateButton
                           slug={company.slug}
                           companyName={company.name}
-                          setupIntentSecret={company.pending_setup_intent_secret}
                           targetPlan={plan}
-                                                  size="compact"
+                          targetAddonSlug={addon.slug}
+                          targetAddonLabel={addon.label}
+                          targetAddonPrice={addon.price}
+                          size="compact"
                         >
                           Activate
                         </MoreActivateButton>

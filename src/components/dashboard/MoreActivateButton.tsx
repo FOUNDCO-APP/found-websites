@@ -11,6 +11,9 @@ export default function MoreActivateButton({
   companyName,
   setupIntentSecret,
   targetPlan,
+  targetAddonSlug,
+  targetAddonLabel,
+  targetAddonPrice,
   children,
   variant = "green",
   size = "regular",
@@ -19,6 +22,9 @@ export default function MoreActivateButton({
   companyName: string
   setupIntentSecret?: string | null
   targetPlan: string
+  targetAddonSlug?: string
+  targetAddonLabel?: string
+  targetAddonPrice?: number
   children: ReactNode
   variant?: "green" | "black"
   size?: "regular" | "compact"
@@ -56,6 +62,10 @@ export default function MoreActivateButton({
           companyName={companyName}
           setupIntentSecret={setupIntentSecret ?? undefined}
           targetPlan={targetPlan}
+          targetAddonSlug={targetAddonSlug}
+          targetAddonLabel={targetAddonLabel}
+          targetAddonPrice={targetAddonPrice}
+          skipIntro
           onClose={() => setOpen(false)}
         />
       )}

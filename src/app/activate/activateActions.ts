@@ -16,7 +16,7 @@ function priceIdForPlan(plan: string, founding: boolean): string | undefined {
   return founding ? process.env.STRIPE_PRICE_ID_FOUND_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND
 }
 
-export async function createActivationSetup(slug: string, targetPlan?: string | null): Promise<{
+export async function createActivationSetup(slug: string, targetPlan?: string | null, targetAddonSlug?: string | null): Promise<{
   clientSecret: string
   companyName: string
   plan: string | null
@@ -44,7 +44,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   }
 
   // Reuse a pre-created setup intent only if it already belongs to the requested plan.
-  if (company.pending_setup_intent_secret && (!targetPlan || company.plan === requestedPlan)) {
+  if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan)) {
     return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
   }
 
@@ -65,7 +65,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId },
+      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, addon_slug: targetAddonSlug ?? "" },
     })
 
     if (!setupIntent.client_secret) {
@@ -114,7 +114,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     const priceId = setupIntent.metadata?.price_id ?? priceIdForPlan(plan, true)
     if (!priceId) return false
 
-    await stripe.subscriptions.create({
+    const subscription = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
@@ -122,6 +122,31 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     })
 
     const admin = getAdminClient()
+    const addonSlug = setupIntent.metadata?.addon_slug
+    const companyId = setupIntent.metadata?.company_id
+
+    if (addonSlug && companyId) {
+      const { data: priceRow } = await admin
+        .from("addon_stripe_prices")
+        .select("stripe_price_id")
+        .eq("addon_slug", addonSlug)
+        .single()
+
+      if (priceRow?.stripe_price_id) {
+        const item = await stripe.subscriptionItems.create({
+          subscription: subscription.id,
+          price: priceRow.stripe_price_id,
+          quantity: 1,
+        })
+        await admin.from("addon_subscriptions").upsert({
+          company_id: companyId,
+          addon_slug: addonSlug,
+          stripe_subscription_item_id: item.id,
+          active: true,
+        }, { onConflict: "company_id,addon_slug" })
+      }
+    }
+
     await admin
       .from("companies")
       .update({
