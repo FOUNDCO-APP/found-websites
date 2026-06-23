@@ -92,15 +92,15 @@ export type AddonDef = {
 export const ALL_ADDONS: AddonDef[] = [
   {
     slug: "menu_display",
-    label: "Online Menu",
+    label: "Menu Page",
     description: "Show a beautiful, organized menu on your website — categories, descriptions, and prices.",
     price: 10,
     relevantIndustries: ["food", "home_based_food"],
   },
   {
     slug: "online_ordering",
-    label: "Online Ordering",
-    description: "Let customers order directly from your site. Payments processed securely through Stripe.",
+    label: "Order Online",
+    description: "Let customers place orders and pay directly from your site. No third-party apps, no commission.",
     price: 20,
     relevantIndustries: ["food", "home_based_food", "retail"],
   },

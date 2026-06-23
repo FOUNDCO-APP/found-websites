@@ -126,10 +126,25 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
           </div>
         </section>
       ) : (
-        <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-8 text-center">
-            <p className="text-lg font-semibold mb-3" style={{ color: "#333333" }}>Menu coming soon</p>
-            <p className="text-base" style={{ color: "#999999" }}>Check back soon or give us a call — we&apos;d love to help.</p>
+        <section className="py-24 bg-white">
+          <div className="max-w-md mx-auto px-8 text-center">
+            <div className="w-10 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
+            <p className="text-2xl font-black mb-4" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+              We&apos;re still setting up our menu online.
+            </p>
+            <p className="text-base mb-10 leading-relaxed" style={{ color: "#666666" }}>
+              In the meantime, give us a call — we&apos;d love to tell you what we&apos;re serving.
+            </p>
+            {company.phone && (
+              <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+                className="btn text-white inline-flex items-center gap-2"
+                style={{ backgroundColor: primary, borderColor: primary }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                Call Us
+              </a>
+            )}
           </div>
         </section>
       )}

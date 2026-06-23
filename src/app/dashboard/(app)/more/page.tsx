@@ -15,9 +15,27 @@ const PLAN_META: Record<string, { label: string; founding: number; normal: numbe
 }
 
 const PLAN_FEATURES: Record<string, string[]> = {
-  found:          ["Professional website", "Industry lead form", "Photo pipeline", "Leads dashboard", "Email auto-reply to customers"],
-  found_pro:      ["Everything in Starter", "Lead follow-up sequence (days 1, 3, 7)", "Contact database", "Worker photo uploads", "Reply to leads from dashboard"],
-  found_business: ["Everything in Pro", "Online booking & scheduling", "Quote & estimate system", "Review collection", "Email marketing to your list"],
+  found:          [
+    "Your own professional website",
+    "New customers contact you directly. No middleman.",
+    "Take a photo. It's on your site.",
+    "See every lead in one place",
+    "Instant reply to every inquiry",
+  ],
+  found_pro:      [
+    "Everything in Starter",
+    "Follow up automatically, so no lead goes cold",
+    "Remember every customer, every job",
+    "Your crew can upload photos too",
+    "Reply to leads without leaving the app",
+  ],
+  found_business: [
+    "Everything in Pro",
+    "Book appointments without the back-and-forth",
+    "Send professional quotes in minutes",
+    "Get more five-star reviews",
+    "Stay in front of your customers with email",
+  ],
 }
 
 const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
@@ -26,14 +44,24 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: n
     label: "Found Pro",
     foundingPrice: 39,
     normalPrice: 69,
-    features: ["Lead follow-up sequence (days 1, 3, 7)", "Contact database", "Worker photo uploads", "Reply to leads from dashboard"],
+    features: [
+      "Follow up automatically, so no lead goes cold",
+      "Remember every customer, every job",
+      "Your crew can upload photos too",
+      "Reply to leads without leaving the app",
+    ],
   },
   found_pro: {
     plan: "found_business",
     label: "Found Business",
     foundingPrice: 69,
     normalPrice: 99,
-    features: ["Online booking & scheduling", "Quote & estimate system", "Review collection", "Email marketing to your list"],
+    features: [
+      "Book appointments without the back-and-forth",
+      "Send professional quotes in minutes",
+      "Get more five-star reviews",
+      "Stay in front of your customers with email",
+    ],
   },
 }
 
@@ -194,6 +222,20 @@ export default async function MorePage() {
                 </div>
               ))}
             </div>
+            {!isActive && company?.id && (
+              <form action={startUpgradeCheckout} style={{ marginTop: 16 }}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <input type="hidden" name="targetPlan" value={plan} />
+                <button type="submit" style={{
+                  width: "100%", padding: "14px 0", borderRadius: 12,
+                  backgroundColor: GREEN, color: BLACK, border: "none",
+                  ...TYPE.subhead, fontWeight: 800, cursor: "pointer",
+                  letterSpacing: "0.01em",
+                }}>
+                  Lock In My Rate — ${displayPrice}/mo
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>
@@ -288,14 +330,20 @@ export default async function MorePage() {
         </section>
       )}
 
-      {/* Compare all plans link */}
-      {upgrade && (
-        <div style={{ textAlign: "center", marginBottom: 20, marginTop: -8 }}>
-          <Link href="/plans" style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textDecoration: "none", borderBottom: `1px solid rgba(255,255,255,0.1)`, paddingBottom: 1 }}>
-            Compare all plans →
-          </Link>
-        </div>
-      )}
+      {/* See all plan options */}
+      <div style={{ marginBottom: 20 }}>
+        <Link href="/plans" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{
+            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            padding: "15px 18px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>See what&apos;s included in every plan</span>
+            <ChevronRight />
+          </div>
+        </Link>
+      </div>
 
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>
