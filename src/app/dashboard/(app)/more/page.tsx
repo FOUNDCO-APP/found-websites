@@ -14,20 +14,26 @@ const PLAN_META: Record<string, { label: string; founding: number; normal: numbe
   found_business: { label: "Found Business", founding: 69, normal: 99,  color: "#8B5CF6" },
 }
 
+const PLAN_FEATURES: Record<string, string[]> = {
+  found:          ["Professional website", "Industry lead form", "Photo pipeline", "Leads dashboard", "Email auto-reply to customers"],
+  found_pro:      ["Everything in Starter", "Lead follow-up sequence (days 1, 3, 7)", "Contact database", "Worker photo uploads", "Reply to leads from dashboard"],
+  found_business: ["Everything in Pro", "Online booking & scheduling", "Quote & estimate system", "Review collection", "Email marketing to your list"],
+}
+
 const UPGRADE_TO: Record<string, { plan: string; label: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
   found: {
     plan: "found_pro",
     label: "Found Pro",
     foundingPrice: 39,
     normalPrice: 69,
-    features: ["Custom domain", "Auto-reply to new leads", "Branded social exports", "Priority support"],
+    features: ["Lead follow-up sequence (days 1, 3, 7)", "Contact database", "Worker photo uploads", "Reply to leads from dashboard"],
   },
   found_pro: {
     plan: "found_business",
     label: "Found Business",
     foundingPrice: 69,
     normalPrice: 99,
-    features: ["Online booking", "Quote requests", "Review collection", "Priority support"],
+    features: ["Online booking & scheduling", "Quote & estimate system", "Review collection", "Email marketing to your list"],
   },
 }
 
@@ -170,13 +176,24 @@ export default async function MorePage() {
                 ${displayPrice}<span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/mo</span>
               </span>
             </div>
-            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
               {isActive
                 ? isFoundingMember
                   ? `Intro rate locked in forever.`
                   : `Active subscription.`
                 : "Activate to lock in your rate."}
             </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke={meta.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -269,6 +286,15 @@ export default async function MorePage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Compare all plans link */}
+      {upgrade && (
+        <div style={{ textAlign: "center", marginBottom: 20, marginTop: -8 }}>
+          <Link href="/plans" style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textDecoration: "none", borderBottom: `1px solid rgba(255,255,255,0.1)`, paddingBottom: 1 }}>
+            Compare all plans →
+          </Link>
+        </div>
       )}
 
       {/* Settings */}

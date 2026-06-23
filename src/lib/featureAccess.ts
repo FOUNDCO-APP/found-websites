@@ -45,10 +45,10 @@ export function getFeatureAccess(
     case "reservation_form":
     case "photo_pipeline":
     case "lead_reply":
+    case "custom_domain":
       return true
 
     // Pro+
-    case "custom_domain":
     case "worker_uploads":
     case "contact_database":
     case "lead_sequence":
