@@ -42,14 +42,14 @@ export default async function AdminEmailPreviewPage({
   const supabase = getAdminClient()
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, slug, email, phone, industry_category, primary_intent, website_config")
+    .select("id, name, slug, email, phone, industry_category, primary_intent, website_config(*)")
     .eq("id", companyId)
     .single()
 
   if (!company) notFound()
 
-  const services = (company.website_config?.services as { name: string }[] | null) ?? []
-  const firstService = services[0]?.name ?? ""
+  const config = company.website_config as { services?: { name: string }[] } | null
+  const firstService = (Array.isArray(config?.services) ? config.services[0]?.name : null) ?? ""
 
   const ownerCompany = {
     name: company.name,
