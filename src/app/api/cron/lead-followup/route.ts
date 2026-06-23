@@ -25,11 +25,12 @@ export async function GET(req: NextRequest) {
   const { data: leads, error } = await supabase
     .from("leads")
     .select(`
-      id, name, email, service, created_at,
+      id, name, email, service, created_at, type,
       follow_up_1_sent_at, follow_up_3_sent_at, follow_up_7_sent_at,
       companies ( name, phone, plan, email )
     `)
     .not("email", "is", null)
+    .or("type.is.null,type.neq.reservation_request")
 
   if (error) {
     console.error("[cron/lead-followup] query error:", error.message)

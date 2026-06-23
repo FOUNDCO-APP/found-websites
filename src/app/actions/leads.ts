@@ -151,11 +151,14 @@ function buildReservationEmail({
             </table>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td style="padding-right:8px;">
-                  <a href="tel:${cleanPhone}" style="display:block;text-align:center;background:#111111;color:#ffffff;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Call ${firstName}</a>
+                <td style="padding-right:6px;">
+                  <a href="tel:${cleanPhone}" style="display:block;text-align:center;background:#111111;color:#ffffff;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Call ${firstName}</a>
                 </td>
-                ${email ? `<td style="padding-left:8px;">
-                  <a href="${replyUrl}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:14px;font-weight:800;padding:16px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
+                <td style="padding-left:6px;padding-right:6px;">
+                  <a href="sms:${cleanPhone}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Text ${firstName}</a>
+                </td>
+                ${email ? `<td style="padding-left:6px;">
+                  <a href="${replyUrl}" style="display:block;text-align:center;background:#f0f0f0;color:#111111;font-size:13px;font-weight:800;padding:14px 10px;border-radius:50px;text-decoration:none;">Email ${firstName}</a>
                 </td>` : ""}
               </tr>
             </table>
