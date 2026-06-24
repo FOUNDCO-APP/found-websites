@@ -8,7 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
 
-export default function EditorialLayout({ company, imgs, gradient, heroImage }: LayoutProps) {
+export default function EditorialLayout({ company, activeAddons, imgs, gradient, heroImage }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -23,6 +23,15 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
   const secondaryHref = company.secondary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : company.secondary_intent ? intentHref[company.secondary_intent] : null
+
+  const coveredIntents = new Set([company.primary_intent, company.secondary_intent].filter(Boolean))
+  const addonCtAs: { label: string; href: string }[] = []
+  if (company.industry_category === "food" && !coveredIntents.has("reserve")) {
+    addonCtAs.push({ label: "Reserve a Table", href: "/reserve" })
+  }
+  if (activeAddons.includes("online_ordering") && !coveredIntents.has("menu") && !coveredIntents.has("shop")) {
+    addonCtAs.push({ label: "Order Online", href: "/order" })
+  }
 
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
@@ -82,6 +91,12 @@ export default function EditorialLayout({ company, imgs, gradient, heroImage }: 
                 {secondaryLabel}
               </Link>
             )}
+            {addonCtAs.map(cta => (
+              <Link key={cta.href} href={cta.href} className="btn"
+                style={{ borderColor: primary, color: primary }}>
+                {cta.label}
+              </Link>
+            ))}
           </div>
         </div>
 

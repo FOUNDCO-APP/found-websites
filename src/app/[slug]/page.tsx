@@ -3,6 +3,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
 import { getStockImages } from "@/lib/stockImages"
+import { createAdminClient } from "@/lib/supabase/admin"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
 import PortraitLayout from "@/components/layouts/PortraitLayout"
@@ -23,12 +24,19 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const gradient = heroGradient(company.primary_color)
   const heroVideo = config?.hero_video_url ?? null
 
-  // Use curated industry photo pools → Pexels fallback → gradient (priority handled in getStockImages)
   const imgs = await getStockImages(company)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
   const heroImage = uploadedImgs[0] ?? imgs[0] ?? null
 
-  const props: LayoutProps = { company, imgs, gradient, heroImage, heroVideo, uploadedImgs }
+  const admin = createAdminClient()
+  const { data: addonRows } = await admin
+    .from("addon_subscriptions")
+    .select("addon_slug")
+    .eq("company_id", company.id)
+    .eq("active", true)
+  const activeAddons = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
+
+  const props: LayoutProps = { company, activeAddons, imgs, gradient, heroImage, heroVideo, uploadedImgs }
 
   // Route to the correct layout — falls back to Impact for unbuilt layouts
   switch (layout) {
