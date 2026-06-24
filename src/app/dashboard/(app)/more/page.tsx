@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardTabsManager from "@/components/dashboard/DashboardTabsManager"
+import DashboardPageLinks from "@/components/dashboard/DashboardPageLinks"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -505,6 +506,20 @@ export default async function MorePage() {
         industry={industryCategory}
         activeAddons={activeAddonSlugs}
       />
+
+      {/* Pages — always accessible even if not in bottom nav */}
+      <section style={{ marginBottom: 20 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Pages
+        </p>
+        <DashboardPageLinks pages={[
+          { label: "Home", path: "/" },
+          { label: industryCategory === "food" ? "Reservations" : "Inbox", path: "/leads" },
+          ...(activeAddonSlugs.includes("online_ordering") ? [{ label: "Orders", path: "/leads?view=orders" }] : []),
+          { label: "Photos", path: "/photos" },
+          { label: "Contacts", path: "/contacts" },
+        ]} />
+      </section>
 
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>

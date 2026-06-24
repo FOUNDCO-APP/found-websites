@@ -19,16 +19,26 @@ const BASE_TABS: Tab[] = [
 function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
   if (industry !== "food") return BASE_TABS
   const hasOrders = activeAddons.includes("online_ordering")
-  const hasReservations = activeAddons.includes("reservation_calendar")
-  const tabs = [
-    { id: "home", path: "/", label: "Home" },
+  const hasCalendar = activeAddons.includes("reservation_calendar")
+
+  // Restaurants always have a reservations tab — basic list or calendar upgrade
+  const reservationsTab = hasCalendar
+    ? { id: "reservations", path: "/leads?view=reservations", label: "Reserve" }
+    : { id: "inbox", path: "/leads", label: "Reservations" }
+
+  // Fill 3 middle slots (Home and More are always locked at start/end)
+  const middle = [
     ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
-    ...(hasReservations ? [{ id: "reservations", path: "/leads?view=reservations", label: "Reserve" }] : []),
+    reservationsTab,
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
+  ].slice(0, 3)
+
+  return [
+    { id: "home", path: "/", label: "Home" },
+    ...middle,
     { id: "more", path: "/more", label: "More" },
   ]
-  return tabs.slice(0, 5)
 }
 function HomeIcon({ active }: { active: boolean }) {
   const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"

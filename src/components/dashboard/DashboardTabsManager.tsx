@@ -7,10 +7,14 @@ type TabOption = { id: string; label: string }
 
 function optionsFor(industry: string | null | undefined, activeAddons: string[]) {
   if (industry === "food") {
+    const hasCalendar = activeAddons.includes("reservation_calendar")
     return [
       { id: "home", label: "Home" },
       ...(activeAddons.includes("online_ordering") ? [{ id: "orders", label: "Orders" }] : []),
-      ...(activeAddons.includes("reservation_calendar") ? [{ id: "reservations", label: "Reserve" }] : []),
+      // Always include a reservations tab — basic list or calendar upgrade
+      hasCalendar
+        ? { id: "reservations", label: "Reserve" }
+        : { id: "inbox", label: "Reservations" },
       { id: "photos", label: "Photos" },
       { id: "contacts", label: "Contacts" },
       { id: "more", label: "More" },
@@ -128,43 +132,43 @@ export default function DashboardTabsManager({
                   {locked && <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, textTransform: "uppercase", letterSpacing: "0.06em" }}>locked</span>}
                 </span>
 
-                {/* Move buttons — icon only */}
+                {/* Move buttons — icon only, larger tap targets */}
                 {!locked && (
-                  <div style={{ display: "flex", gap: 4 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
                     <button
                       onClick={() => move(tab.id, -1)}
                       disabled={!canMoveUp}
-                      style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", cursor: canMoveUp ? "pointer" : "default", opacity: canMoveUp ? 1 : 0.2 }}
+                      style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", cursor: canMoveUp ? "pointer" : "default", opacity: canMoveUp ? 1 : 0.2 }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="18 15 12 9 6 15"/>
                       </svg>
                     </button>
                     <button
                       onClick={() => move(tab.id, 1)}
                       disabled={!canMoveDown}
-                      style={{ width: 30, height: 30, borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", cursor: canMoveDown ? "pointer" : "default", opacity: canMoveDown ? 1 : 0.2 }}
+                      style={{ width: 40, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", alignItems: "center", justifyContent: "center", cursor: canMoveDown ? "pointer" : "default", opacity: canMoveDown ? 1 : 0.2 }}
                     >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="6 9 12 15 18 9"/>
                       </svg>
                     </button>
                   </div>
                 )}
-                {locked && <div style={{ width: 64, flexShrink: 0 }} />}
+                {locked && <div style={{ width: 88, flexShrink: 0 }} />}
 
-                {/* Remove button */}
+                {/* Remove button — larger tap target */}
                 {!locked ? (
                   <button
                     onClick={() => remove(tab.id)}
-                    style={{ width: 26, height: 26, borderRadius: "50%", border: "none", backgroundColor: "rgba(255,59,48,0.14)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                    style={{ width: 36, height: 36, borderRadius: "50%", border: "none", backgroundColor: "rgba(255,59,48,0.14)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
                   >
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="3" strokeLinecap="round">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.5" strokeLinecap="round">
                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                     </svg>
                   </button>
                 ) : (
-                  <div style={{ width: 26, flexShrink: 0 }} />
+                  <div style={{ width: 36, flexShrink: 0 }} />
                 )}
               </div>
             )
