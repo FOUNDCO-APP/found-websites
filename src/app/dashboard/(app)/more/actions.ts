@@ -4,7 +4,8 @@ import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 
-const ROOT = "https://foundco.app"
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+const APP_BASE = `https://my.${ROOT_DOMAIN}`
 
 export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
@@ -48,11 +49,11 @@ export async function startAddonCheckout(formData: FormData) {
       stripe_subscription_item_id: item.id,
       active: true,
     }, { onConflict: "company_id,addon_slug" })
-    redirect(`${ROOT}/dashboard/more?addon_added=${addonSlug}`)
+    redirect(`/more?addon_added=${addonSlug}`)
     return
   }
   // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
-  redirect(`${ROOT}/dashboard/more?activate_required=1`)
+  redirect("/more?activate_required=1")
 }
 
 function getStripe() {
@@ -89,7 +90,7 @@ export async function openBillingPortal(formData: FormData) {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: data.stripe_customer_id,
-    return_url: `${ROOT}/dashboard/more`,
+    return_url: `${APP_BASE}/more`,
   })
 
   redirect(session.url)
@@ -130,10 +131,10 @@ export async function startUpgradeCheckout(formData: FormData) {
         metadata: { company_id: companyId, plan: targetPlan },
       })
       await admin.from("companies").update({ plan: targetPlan }).eq("id", companyId)
-      redirect(`${ROOT}/dashboard/more?upgraded=1`)
+      redirect("/more?upgraded=1")
       return
     }
   }
   // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
-  redirect(`${ROOT}/dashboard/more?activate_required=1`)
+  redirect("/more?activate_required=1")
 }
