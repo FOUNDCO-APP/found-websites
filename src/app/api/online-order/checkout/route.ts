@@ -21,9 +21,6 @@ function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
 
-function appUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL || "https://foundco.app"
-}
 
 export async function POST(req: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -64,7 +61,6 @@ export async function POST(req: NextRequest) {
   }
 
   const menuItems = ((company.website_config as { menu_items?: MenuCategory[] } | null)?.menu_items ?? [])
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
   const orderSummary: { name: string; quantity: number; unit_amount: number; price: string }[] = []
 
   for (const input of requestedItems.slice(0, 30)) {
@@ -73,18 +69,7 @@ export async function POST(req: NextRequest) {
     const unitAmount = parsePriceCents(menuItem?.price)
     if (!menuItem || !unitAmount || quantity <= 0) continue
 
-    lineItems.push({
-      quantity,
-      price_data: {
-        currency: "usd",
-        unit_amount: unitAmount,
-        product_data: {
-          name: menuItem.name.slice(0, 120),
-          description: menuItem.description?.slice(0, 500) || undefined,
-          images: menuItem.photo_url ? [menuItem.photo_url] : undefined,
-        },
-      },
-    })
+
     orderSummary.push({
       name: menuItem.name,
       quantity,
@@ -93,7 +78,7 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  if (lineItems.length === 0) {
+  if (orderSummary.length === 0) {
     return NextResponse.json({ error: "No priced menu items were selected." }, { status: 400 })
   }
 
@@ -131,28 +116,18 @@ export async function POST(req: NextRequest) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
-  const baseUrl = appUrl()
-  const cleanSlug = encodeURIComponent(slug)
-
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: email,
-    line_items: lineItems,
-    payment_intent_data: {
-      application_fee_amount: Math.round(subtotal * 0.03),
-      metadata: {
-        kind: "online_order",
-        company_id: company.id,
-        lead_id: leadId,
-      },
-    },
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: subtotal,
+    currency: "usd",
+    receipt_email: email,
+    description: `${company.name || "Found"} online order`,
+    payment_method_types: ["card"],
+    application_fee_amount: Math.round(subtotal * 0.03),
     metadata: {
       kind: "online_order",
       company_id: company.id,
       lead_id: leadId,
     },
-    success_url: `${baseUrl}/${cleanSlug}/order?ordered=1`,
-    cancel_url: `${baseUrl}/${cleanSlug}/order?canceled=1`,
   }, {
     stripeAccount: connectAccountId,
   })
@@ -162,10 +137,19 @@ export async function POST(req: NextRequest) {
     .update({
       partial_answers: {
         ...partialAnswers,
-        stripe_session_id: session.id,
+        stripe_payment_intent_id: paymentIntent.id,
       },
     })
     .eq("id", leadId)
 
-  return NextResponse.json({ url: session.url })
+  if (!paymentIntent.client_secret) {
+    return NextResponse.json({ error: "Unable to prepare the payment form. Please try again." }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+    leadId,
+    stripeAccountId: connectAccountId,
+  })
 }
