@@ -67,13 +67,11 @@ export default function PreviewBanner({
   companyName,
   isActivated,
   trialEndsAt,
-  setupIntentSecret,
 }: {
   slug: string
   companyName?: string
   isActivated: boolean
   trialEndsAt: string | null
-  setupIntentSecret?: string | null
 }) {
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -132,7 +130,6 @@ export default function PreviewBanner({
         <ActivateOverlay
           slug={slug}
           companyName={companyName ?? slug}
-          setupIntentSecret={setupIntentSecret}
           onClose={() => { setActivating(false); setVisible(true) }}
         />
       )}

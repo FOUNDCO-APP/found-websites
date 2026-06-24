@@ -13,7 +13,6 @@ function preloadOverlay() {
 export default function MoreActivateButton({
   slug,
   companyName,
-  setupIntentSecret,
   targetPlan,
   targetAddonSlug,
   targetAddonLabel,
@@ -24,7 +23,6 @@ export default function MoreActivateButton({
 }: {
   slug: string
   companyName: string
-  setupIntentSecret?: string | null
   targetPlan: string
   targetAddonSlug?: string
   targetAddonLabel?: string
@@ -70,7 +68,6 @@ export default function MoreActivateButton({
         <ActivateOverlay
           slug={slug}
           companyName={companyName}
-          setupIntentSecret={setupIntentSecret ?? undefined}
           targetPlan={targetPlan}
           targetAddonSlug={targetAddonSlug}
           targetAddonLabel={targetAddonLabel}

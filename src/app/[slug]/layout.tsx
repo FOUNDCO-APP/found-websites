@@ -211,7 +211,6 @@ export default async function CompanyLayout({
         companyName={company.name}
         isActivated={company.subscription_status === 'active'}
         trialEndsAt={company.trial_ends_at}
-        setupIntentSecret={company.pending_setup_intent_secret}
       />
       <TrialActivatedSplash companyName={company.name} />
     </div>

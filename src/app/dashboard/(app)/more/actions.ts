@@ -6,6 +6,14 @@ import { redirect } from "next/navigation"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
+const PLAN_PRICE_IDS = new Set([
+  process.env.STRIPE_PRICE_ID_FOUND,
+  process.env.STRIPE_PRICE_ID_FOUND_FOUNDING,
+  process.env.STRIPE_PRICE_ID_FOUND_PRO,
+  process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING,
+  process.env.STRIPE_PRICE_ID_FOUND_BUSINESS,
+  process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
+].filter(Boolean) as string[])
 
 export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
@@ -125,8 +133,11 @@ export async function startUpgradeCheckout(formData: FormData) {
 
     if (subs.data.length > 0) {
       const sub = subs.data[0]
+      const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
+      if (!baseItem) return
+
       await stripe.subscriptions.update(sub.id, {
-        items: [{ id: sub.items.data[0].id, price: priceId }],
+        items: [{ id: baseItem.id, price: priceId }],
         proration_behavior: sub.status === "trialing" ? "none" : "create_prorations",
         metadata: { company_id: companyId, plan: targetPlan },
       })

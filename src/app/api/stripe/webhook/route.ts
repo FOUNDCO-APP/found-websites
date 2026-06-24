@@ -9,16 +9,99 @@ function getAdminClient() {
   )
 }
 
+const PLAN_PRICE_IDS = new Set([
+  process.env.STRIPE_PRICE_ID_FOUND,
+  process.env.STRIPE_PRICE_ID_FOUND_FOUNDING,
+  process.env.STRIPE_PRICE_ID_FOUND_PRO,
+  process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING,
+  process.env.STRIPE_PRICE_ID_FOUND_BUSINESS,
+  process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
+].filter(Boolean) as string[])
+
 function planFromPriceId(priceId: string): string | null {
   const map: Record<string, string> = {
-    [process.env.STRIPE_PRICE_ID_FOUND || ""]:                "found",
-    [process.env.STRIPE_PRICE_ID_FOUND_FOUNDING || ""]:       "found",
-    [process.env.STRIPE_PRICE_ID_FOUND_PRO || ""]:            "found_pro",
-    [process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING || ""]:   "found_pro",
-    [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS || ""]:       "found_business",
+    [process.env.STRIPE_PRICE_ID_FOUND || ""]: "found",
+    [process.env.STRIPE_PRICE_ID_FOUND_FOUNDING || ""]: "found",
+    [process.env.STRIPE_PRICE_ID_FOUND_PRO || ""]: "found_pro",
+    [process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING || ""]: "found_pro",
+    [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS || ""]: "found_business",
     [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING || ""]: "found_business",
   }
   return map[priceId] ?? null
+}
+
+function addonSlugForItem(item: Stripe.SubscriptionItem): string | null {
+  return item.price.metadata?.addon_slug || item.plan?.metadata?.addon_slug || null
+}
+
+async function companyIdForSubscription(
+  supabase: ReturnType<typeof getAdminClient>,
+  sub: Stripe.Subscription,
+  customerId: string,
+): Promise<string | null> {
+  if (sub.metadata?.company_id) return sub.metadata.company_id
+
+  const { data } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle()
+
+  return data?.id ?? null
+}
+
+async function syncSubscriptionToSupabase(
+  supabase: ReturnType<typeof getAdminClient>,
+  sub: Stripe.Subscription,
+) {
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
+  const companyId = await companyIdForSubscription(supabase, sub, customerId)
+  const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
+  const plan = baseItem ? planFromPriceId(baseItem.price.id) : null
+
+  const update: Record<string, string> = { subscription_status: sub.status }
+  if (plan) update.plan = plan
+
+  let companyQuery = supabase.from("companies").update(update)
+  if (companyId) {
+    companyQuery = companyQuery.eq("id", companyId)
+  } else {
+    companyQuery = companyQuery.eq("stripe_customer_id", customerId)
+  }
+  await companyQuery
+
+  if (!companyId) return
+
+  const activeAddonRows = sub.items.data
+    .map((item) => ({ item, addonSlug: addonSlugForItem(item) }))
+    .filter((row): row is { item: Stripe.SubscriptionItem; addonSlug: string } => Boolean(row.addonSlug))
+
+  if (activeAddonRows.length > 0) {
+    await supabase.from("addon_subscriptions").upsert(
+      activeAddonRows.map(({ item, addonSlug }) => ({
+        company_id: companyId,
+        addon_slug: addonSlug,
+        stripe_subscription_item_id: item.id,
+        active: true,
+      })),
+      { onConflict: "company_id,addon_slug" },
+    )
+  }
+
+  const { data: existingRows } = await supabase
+    .from("addon_subscriptions")
+    .select("addon_slug")
+    .eq("company_id", companyId)
+    .eq("active", true)
+
+  const activeSlugs = new Set(activeAddonRows.map((row) => row.addonSlug))
+  await Promise.all((existingRows ?? [])
+    .filter((row: { addon_slug: string }) => !activeSlugs.has(row.addon_slug))
+    .map((row: { addon_slug: string }) => supabase
+      .from("addon_subscriptions")
+      .update({ active: false })
+      .eq("company_id", companyId)
+      .eq("addon_slug", row.addon_slug)))
 }
 
 export async function POST(req: NextRequest) {
@@ -56,32 +139,32 @@ export async function POST(req: NextRequest) {
       })
       .eq("id", companyId)
 
-    console.log("[Stripe] checkout.session.completed — company:", companyId)
+    console.log("[Stripe] checkout.session.completed - company:", companyId)
   }
 
-  if (event.type === "customer.subscription.updated") {
-    const sub = event.data.object as Stripe.Subscription
-    const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
-    const priceId = sub.items.data[0]?.price?.id
-    const plan = priceId ? planFromPriceId(priceId) : null
-
-    const update: Record<string, string> = { subscription_status: sub.status }
-    if (plan) update.plan = plan
-
-    await supabase
-      .from("companies")
-      .update(update)
-      .eq("stripe_customer_id", customerId)
+  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
+    await syncSubscriptionToSupabase(supabase, event.data.object as Stripe.Subscription)
   }
 
   if (event.type === "customer.subscription.deleted") {
     const sub = event.data.object as Stripe.Subscription
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
+    const companyId = await companyIdForSubscription(supabase, sub, customerId)
 
-    await supabase
-      .from("companies")
-      .update({ subscription_status: sub.status })
-      .eq("stripe_customer_id", customerId)
+    let companyQuery = supabase.from("companies").update({ subscription_status: sub.status })
+    if (companyId) {
+      companyQuery = companyQuery.eq("id", companyId)
+    } else {
+      companyQuery = companyQuery.eq("stripe_customer_id", customerId)
+    }
+    await companyQuery
+
+    if (companyId) {
+      await supabase
+        .from("addon_subscriptions")
+        .update({ active: false })
+        .eq("company_id", companyId)
+    }
   }
 
   return NextResponse.json({ received: true })

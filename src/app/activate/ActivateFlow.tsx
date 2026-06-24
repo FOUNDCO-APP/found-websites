@@ -137,21 +137,19 @@ function CardForm({ slug, companyName, plan }: { slug: string; companyName: stri
 export default function ActivateFlow({
   slug,
   error,
-  preloadedSecret,
   preloadedName,
 }: {
   slug: string
   error?: string
-  preloadedSecret?: string
   preloadedName?: string
 }) {
   const [phase, setPhase] = useState<"splash" | "form">("splash")
   const [lineIdx, setLineIdx] = useState(0)
-  const [clientSecret, setClientSecret] = useState<string | null>(preloadedSecret ?? null)
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState<string>(preloadedName ?? "")
   const [plan, setPlan] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(error ?? null)
-  const [stripeReady, setStripeReady] = useState(!!preloadedSecret)
+  const [stripeReady, setStripeReady] = useState(false)
   const [minTimeReady, setMinTimeReady] = useState(false)
 
   useEffect(() => {
@@ -165,9 +163,6 @@ export default function ActivateFlow({
   }, [])
 
   useEffect(() => {
-    // Fast path: secret arrived from banner via sessionStorage — no server call needed
-    if (preloadedSecret) return
-
     // Fallback: call server action (direct URL navigation, or companies without pre-created intent)
     createActivationSetup(slug).then((result) => {
       if (!result) {
@@ -180,7 +175,7 @@ export default function ActivateFlow({
       }
       setStripeReady(true)
     })
-  }, [slug, preloadedSecret, companyName])
+  }, [slug, companyName])
 
   useEffect(() => {
     if (minTimeReady && stripeReady) setPhase("form")

@@ -168,7 +168,6 @@ type CinPhase = "text" | "iris" | "fading" | "done"
 export default function ActivateOverlay({
   slug,
   companyName: initialName,
-  setupIntentSecret,
   targetPlan,
   targetAddonSlug,
   targetAddonLabel,
@@ -178,7 +177,6 @@ export default function ActivateOverlay({
 }: {
   slug: string
   companyName: string
-  setupIntentSecret?: string | null
   targetPlan?: string | null
   targetAddonSlug?: string | null
   targetAddonLabel?: string | null
@@ -187,7 +185,7 @@ export default function ActivateOverlay({
   onClose: () => void
 }) {
   const [cinPhase, setCinPhase] = useState<CinPhase>(skipIntro ? "done" : "text")
-  const [clientSecret, setClientSecret] = useState<string | null>(targetAddonSlug ? null : (setupIntentSecret ?? null))
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -199,7 +197,6 @@ export default function ActivateOverlay({
 
   // Fetch Stripe secret if not pre-created — runs in parallel with cinematic
   useEffect(() => {
-    if (setupIntentSecret && !targetAddonSlug) return
     createActivationSetup(slug, targetPlan, targetAddonSlug).then((result) => {
       if (!result) {
         setLoadError("This site is already activated or could not be found.")
@@ -209,7 +206,7 @@ export default function ActivateOverlay({
         if (result.plan) setPlan(result.plan)
       }
     })
-  }, [slug, setupIntentSecret, companyName, targetPlan, targetAddonSlug])
+  }, [slug, companyName, targetPlan, targetAddonSlug])
 
   // Mirror page.tsx timing exactly: iris 3000ms, fading 3300ms, done 4000ms
   useEffect(() => {

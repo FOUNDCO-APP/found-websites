@@ -83,13 +83,18 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       return null
     }
 
+    const companyUpdate: Record<string, string | null> = {
+      stripe_customer_id: customer.id,
+    }
+
+    if (!targetAddonSlug) {
+      companyUpdate.pending_setup_intent_secret = setupIntent.client_secret
+      companyUpdate.plan = requestedPlan
+    }
+
     await admin
       .from("companies")
-      .update({
-        stripe_customer_id: customer.id,
-        pending_setup_intent_secret: setupIntent.client_secret,
-        plan: requestedPlan,
-      })
+      .update(companyUpdate)
       .eq("slug", slug)
 
     return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan }
@@ -128,7 +133,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
-      metadata: { slug, plan },
+      metadata: { company_id: setupIntent.metadata?.company_id ?? "", slug, plan },
     })
 
     const admin = getAdminClient()

@@ -13,7 +13,6 @@ const FOUND_BLACK = "#111111"
 export default function ActivateLoader() {
   const [slug, setSlug] = useState<string | null>(null)
   const [error, setError] = useState<string | undefined>()
-  const [preloadedSecret, setPreloadedSecret] = useState<string | undefined>()
   const [preloadedName, setPreloadedName] = useState<string | undefined>()
 
   useEffect(() => {
@@ -21,7 +20,6 @@ export default function ActivateLoader() {
 
     // Prefer sessionStorage (set by banner on click) — zero server calls needed
     const slug = params.get("slug") ?? sessionStorage.getItem("activate_slug") ?? null
-    const secret = sessionStorage.getItem("activate_secret") ?? undefined
     const name = sessionStorage.getItem("activate_name") ?? undefined
     const err = params.get("error") ?? undefined
 
@@ -31,8 +29,6 @@ export default function ActivateLoader() {
     sessionStorage.removeItem("activate_name")
 
     if (!slug) { window.location.href = "/"; return }
-
-    setPreloadedSecret(secret)
     setPreloadedName(name)
     setError(err)
     setSlug(slug)
@@ -46,7 +42,6 @@ export default function ActivateLoader() {
     <ActivateFlow
       slug={slug}
       error={error}
-      preloadedSecret={preloadedSecret}
       preloadedName={preloadedName}
     />
   )

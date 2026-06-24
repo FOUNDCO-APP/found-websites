@@ -10,11 +10,9 @@ const BLACK = "#080A09"
 
 export default function ActivationBanner({
   slug,
-  setupIntentSecret,
   companyName,
 }: {
   slug: string
-  setupIntentSecret?: string | null
   companyName?: string
 }) {
   const [dismissed, setDismissed] = useState(false)
@@ -77,7 +75,6 @@ export default function ActivationBanner({
       {activating && (
         <ActivateOverlay
           slug={slug}
-          setupIntentSecret={setupIntentSecret ?? undefined}
           companyName={companyName ?? ""}
           onClose={() => setActivating(false)}
         />

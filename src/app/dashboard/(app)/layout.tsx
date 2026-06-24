@@ -98,7 +98,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {company && company.subscription_status !== "active" && company.subscription_status !== "trialing" && (
           <ActivationBanner
             slug={company.slug}
-            setupIntentSecret={(company as Record<string, unknown>).pending_setup_intent_secret as string | null}
             companyName={company.name}
           />
         )}

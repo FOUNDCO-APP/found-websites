@@ -226,7 +226,6 @@ export default async function MorePage() {
                 <MoreActivateButton
                   slug={company.slug}
                   companyName={company.name}
-                  setupIntentSecret={company.pending_setup_intent_secret}
                   targetPlan={plan}
                 >
                   Lock In My Rate - ${displayPrice}/mo
