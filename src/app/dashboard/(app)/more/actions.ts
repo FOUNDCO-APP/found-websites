@@ -6,6 +6,35 @@ import { redirect } from "next/navigation"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
+async function markAddonActive(
+  admin: ReturnType<typeof createAdminClient>,
+  companyId: string,
+  addonSlug: string,
+  stripeSubscriptionItemId: string,
+) {
+  const { data: existing } = await admin
+    .from("addon_subscriptions")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("addon_slug", addonSlug)
+    .eq("active", true)
+    .maybeSingle()
+
+  if (existing?.id) {
+    await admin
+      .from("addon_subscriptions")
+      .update({ stripe_subscription_item_id: stripeSubscriptionItemId, active: true })
+      .eq("id", existing.id)
+    return
+  }
+
+  await admin.from("addon_subscriptions").insert({
+    company_id: companyId,
+    addon_slug: addonSlug,
+    stripe_subscription_item_id: stripeSubscriptionItemId,
+    active: true,
+  })
+}
 const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND,
   process.env.STRIPE_PRICE_ID_FOUND_FOUNDING,
@@ -42,28 +71,40 @@ export async function startAddonCheckout(formData: FormData) {
     await admin.from("companies").update({ stripe_customer_id: customerId }).eq("id", companyId)
   }
 
-  // Add item to existing subscription if one exists
-  const subs = await stripe.subscriptions.list({ customer: customerId, limit: 1 })
-  if (subs.data.length > 0) {
-    const sub = subs.data[0]
+  const subs = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 10,
+    expand: ["data.items.data.price"],
+  })
+  const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing")
+  if (!sub) redirect("/more?activate_required=1")
+
+  const existingItem = sub.items.data.find((item) =>
+    item.price.id === priceRow.stripe_price_id ||
+    item.price.metadata?.addon_slug === addonSlug ||
+    item.plan?.metadata?.addon_slug === addonSlug
+  )
+
+  if (existingItem) {
+    await markAddonActive(admin, companyId, addonSlug, existingItem.id)
+    redirect(`/more?addon_added=${addonSlug}`)
+  }
+
+  try {
     const item = await stripe.subscriptionItems.create({
       subscription: sub.id,
       price: priceRow.stripe_price_id,
       quantity: 1,
     })
-    await admin.from("addon_subscriptions").upsert({
-      company_id: companyId,
-      addon_slug: addonSlug,
-      stripe_subscription_item_id: item.id,
-      active: true,
-    }, { onConflict: "company_id,addon_slug" })
-    redirect(`/more?addon_added=${addonSlug}`)
-    return
+    await markAddonActive(admin, companyId, addonSlug, item.id)
+  } catch (err) {
+    console.error("[more] add-on subscription item error:", err)
+    redirect("/more?addon_unavailable=1")
   }
-  // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
-  redirect("/more?activate_required=1")
-}
 
+  redirect(`/more?addon_added=${addonSlug}`)
+}
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null
   return new Stripe(process.env.STRIPE_SECRET_KEY)
