@@ -54,6 +54,10 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── foundco.app / localhost → marketing site ──────────────────────
+  // Public API routes should never be rewritten into a customer site.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
   if (
     hostname === ROOT_DOMAIN ||
     hostname === `www.${ROOT_DOMAIN}` ||

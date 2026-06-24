@@ -7,6 +7,7 @@ import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import OnlineOrderClient from "../order/OnlineOrderClient"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -79,7 +80,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
             <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>{config.tagline}</p>
           )}
           {onlineOrderingActive && menuCategories && (
-            <Link href={`/${slug}/order`} className="btn text-white inline-flex mt-8"
+            <Link href="#order" className="btn text-white inline-flex mt-8"
               style={{ backgroundColor: primary, borderColor: primary }}>
               Start Order
             </Link>
@@ -87,6 +88,21 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         </div>
       </section>
 
+      {/* Online ordering turns the display menu into a cart. */}
+      {onlineOrderingActive && menuCategories ? (
+        <section id="order" className="py-20 bg-white">
+          <OnlineOrderClient
+            companyId={company.id}
+            companyName={company.name}
+            slug={slug}
+            primary={primary}
+            categories={menuCategories}
+            paymentsReady={Boolean(company.stripe_connect_account_id)}
+            mode="embedded"
+          />
+        </section>
+      ) : (
+        <>
       {/* ── MENU CONTENT ── */}
       {menuCategories ? (
         <section className="py-20 bg-white">
@@ -166,6 +182,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         </section>
       )}
 
+        </>
+      )}
       {/* ── ABOUT STRIP (if they have about text) ── */}
       {config?.about_text && (
         <section className="py-20" style={{ backgroundColor: "#F9F8F6" }}>

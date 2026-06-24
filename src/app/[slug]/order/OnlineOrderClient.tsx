@@ -36,6 +36,7 @@ export default function OnlineOrderClient({
   primary,
   categories,
   paymentsReady,
+  mode = "page",
 }: {
   companyId: string
   companyName: string
@@ -43,6 +44,7 @@ export default function OnlineOrderClient({
   primary: string
   categories: MenuCategory[]
   paymentsReady: boolean
+  mode?: "page" | "embedded"
 }) {
   const items = useMemo(() => {
     const rows: OrderableItem[] = []
@@ -74,6 +76,7 @@ export default function OnlineOrderClient({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const isEmbedded = mode === "embedded"
   const cartItems = Object.values(cart)
   const subtotal = cartItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0)
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
@@ -120,20 +123,22 @@ export default function OnlineOrderClient({
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <section className="px-6 pt-12 pb-8" style={{ backgroundColor: "#0D0F0E" }}>
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs font-black tracking-[0.22em] uppercase mb-4" style={{ color: primary }}>
-            Order Online
-          </p>
-          <h1 className="text-4xl md:text-6xl font-black text-white leading-none mb-4">
-            Order from {companyName}
-          </h1>
-          <p className="text-base md:text-lg max-w-xl" style={{ color: "rgba(255,255,255,0.68)" }}>
-            Pick what you want, pay securely, and the order goes straight to the business.
-          </p>
-        </div>
-      </section>
+    <div className={isEmbedded ? "bg-white" : "min-h-screen bg-white"}>
+      {!isEmbedded && (
+        <section className="px-6 pt-12 pb-8" style={{ backgroundColor: "#0D0F0E" }}>
+          <div className="max-w-5xl mx-auto">
+            <p className="text-xs font-black tracking-[0.22em] uppercase mb-4" style={{ color: primary }}>
+              Order Online
+            </p>
+            <h1 className="text-4xl md:text-6xl font-black text-white leading-none mb-4">
+              Order from {companyName}
+            </h1>
+            <p className="text-base md:text-lg max-w-xl" style={{ color: "rgba(255,255,255,0.68)" }}>
+              Pick what you want, pay securely, and the order goes straight to the business.
+            </p>
+          </div>
+        </section>
+      )}
 
       {!paymentsReady && (
         <section className="px-6 py-8" style={{ backgroundColor: "#FFF7E8" }}>
@@ -145,7 +150,7 @@ export default function OnlineOrderClient({
         </section>
       )}
 
-      <main className="max-w-5xl mx-auto px-6 py-10 grid lg:grid-cols-[1fr_360px] gap-8 items-start">
+      <main className={`max-w-5xl mx-auto px-6 ${isEmbedded ? "py-0" : "py-10"} grid lg:grid-cols-[1fr_360px] gap-8 items-start`}>
         <section>
           {items.length === 0 ? (
             <div className="py-20 text-center">
@@ -244,7 +249,7 @@ export default function OnlineOrderClient({
             className="w-full mt-5 py-4 font-black text-base disabled:opacity-40"
             style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
           >
-            {loading ? "Opening secure checkout..." : `Pay ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
+            {!paymentsReady ? "Payment setup needed" : loading ? "Opening secure checkout..." : `Pay ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
           </button>
         </aside>
       </main>
