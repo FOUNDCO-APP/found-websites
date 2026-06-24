@@ -29,6 +29,20 @@ function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
 }
 
+function pickupTimeOptions() {
+  const options: { value: string; label: string }[] = []
+  for (let hour = 10; hour <= 21; hour++) {
+    for (const minute of [0, 15, 30, 45]) {
+      if (hour === 21 && minute > 0) continue
+      const value = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+      const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
+      const ampm = hour >= 12 ? "PM" : "AM"
+      options.push({ value, label: `${hour12}:${String(minute).padStart(2, "0")} ${ampm}` })
+    }
+  }
+  return options
+}
+
 export default function OnlineOrderClient({
   companyId,
   companyName,
@@ -75,6 +89,7 @@ export default function OnlineOrderClient({
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const pickupOptions = useMemo(() => pickupTimeOptions(), [])
 
   const isEmbedded = mode === "embedded"
   const cartItems = Object.values(cart)
@@ -247,7 +262,12 @@ export default function OnlineOrderClient({
             </label>
             <label className="block">
               <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Pickup time</span>
-              <input value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} type="time" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+              <select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="w-full px-4 py-3 border border-neutral-200 text-base bg-white" style={{ borderRadius: 8, color: pickupTime ? "#111" : "#777", appearance: "auto" }}>
+                <option value="">Select pickup time</option>
+                {pickupOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </label>
             <label className="block">
               <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Notes</span>
