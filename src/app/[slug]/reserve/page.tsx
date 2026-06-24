@@ -33,6 +33,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
     .select("id")
     .eq("company_id", company.id)
     .eq("addon_slug", "reservation_calendar")
+    .eq("active", true)
     .maybeSingle()
 
   const hasCalendar = !!addon
