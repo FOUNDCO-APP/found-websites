@@ -5,6 +5,95 @@
 ---
 
 
+## Session: June 24, 2026 — Online Ordering + Dashboard Tab Customization
+**AI:** Codex (prior) + Claude Code Sonnet 4.6 (this session)
+**Worked on:** Online ordering add-on (Codex), dashboard tab customization (Codex + Claude), commit + push, session docs
+
+### ✅ Completed This Session
+
+**Online Ordering System (Codex — 10 commits pushed):**
+- Public `/[slug]/menu` page: inline ordering controls — customers add items, pick a pickup time, and pay via Stripe
+- Full Stripe payment flow: Found-branded checkout, payment captured server-side
+- `/api/online-order/complete/route.ts` — webhook/completion handler: marks lead paid, sends owner + customer emails
+- Owner email: itemized order table, pickup time block (bold bordered), notes block, customer contact
+- Customer email: order confirmation with item list and business branding
+- Email refinement (Claude — local change): pickup time now in subject line, cleaner HTML layout
+
+**Dashboard Tab Customization (Codex + Claude — local, pushed this session):**
+- `DashboardTabsManager.tsx` — NEW component in More tab: owners choose which tabs appear at the bottom and reorder them (up to 5 slots, Home + More always locked)
+- `DashboardNav.tsx` — fully rewired from static `TABS` array to dynamic tabs driven by industry + active add-ons:
+  - Food industry: **Orders** tab appears when `online_ordering` add-on is active; **Reserve** tab appears when `reservation_calendar` is active
+  - Tab preferences persisted in `localStorage` per company name — survive page reloads
+  - `found:dashboard-tabs-updated` custom event syncs nav instantly when More tab saves changes
+  - Two new tab icons: receipt/list icon (Orders), calendar icon (Reserve)
+  - `isActive()` logic updated for `?view=orders` / `?view=reservations` query params
+- `leads/page.tsx` — `?view=orders` shows only online_order leads; `?view=reservations` shows only reservation leads; regular view hides both; temperature filters hidden for order/reservation views
+- `dashboard/layout.tsx` — fetches `activeAddonSlugs` from `addon_subscriptions` table server-side, passes to DashboardNav
+- `more/page.tsx` — DashboardTabsManager rendered in More tab with industry + activeAddons
+
+### ⏳ Still Pending / Carry Forward
+
+- **Test pass needed** — verify online ordering E2E on food company, tab customization in More, Orders tab routing on dashboard
+- **Plan card savings display** — UNRESOLVED from June 22 (no "Founding rate" label — just show discount cleanly)
+- **Menu add-on gating** — `SiteEditor.tsx` has zero check for `menu_display`; food companies get menu editor free (pending decision on what $10 unlocks)
+- **Stripe custom payment form** — Option B approved (in-app Stripe Elements), not yet built
+- **Food CTA picker bug** — "View Our Menu" CTA shows even when `menu_display` add-on isn't active
+- **Upsell banner** — not built
+- **Stripe subscriber audit** — check if any Pro/Business subscribers were charged wrong price before activateActions.ts fix
+- **Contact database UI** — plan-gated at Pro+ but owner-facing UI doesn't exist
+- **DNS automation** — `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` in .env.local only, not in Vercel env
+
+### 🔜 What's Next (In Priority Order)
+
+1. **Test online ordering + tab customization** — open a food company in dev, verify Orders tab, ordering flow, emails
+2. **Fix anything found during testing** — bugs, copy, UX issues
+3. **Plan card savings display** — clean mockup options for Shawn to approve
+4. **Upsell banner** — next after savings display resolved
+
+---
+
+
+## Session: June 22-23, 2026 — Add-On System, Reservation System, More Page, Menu Fallback
+**AI:** Claude Code (Sonnet 4.6)
+**Worked on:** Add-on system live in Stripe, reservation system, More page rewrite, menu fallback copy, gallery vocab, admin email reservation tabs
+
+### ✅ Completed This Session
+
+**Add-On System (7 add-ons — all live in Stripe):**
+- `more/page.tsx` — "Add Features" section + "Active Add-ons" section
+- `more/actions.ts` — `startAddonCheckout`: looks up price from `addon_stripe_prices` table, adds subscription item, writes `addon_subscriptions` row
+- Migration-036 ✅ — `addon_subscriptions` table + `stripe_connect_account_id` on companies
+- `addon_stripe_prices` table ✅ — 7 rows with live Stripe price IDs
+- `featureAccess.ts` — add-on label renames: "Online Menu" → "Menu Page", "Online Ordering" → "Order Online"
+- `custom_domain` ungated (was accidentally Pro+ only — now always-on)
+
+**Reservation System:**
+- `/[slug]/reserve/page.tsx` — server component: hero + sidebar + form
+- `/[slug]/reserve/ReservationForm.tsx` — fields: name*, phone*, email (optional), date*, time*, party_size, notes
+- `src/app/actions/leads.ts` — `submitReservation`: inserts lead type "reservation_request", sends owner + customer auto-reply
+- "Reserve a Table" CTA intent wired
+
+**More Page Rewrite:**
+- `PLAN_FEATURES` constant — Apple-style bullets for all 3 plans
+- "Lock In My Rate — $X/mo" green full-width button when not active
+- "See what's included in every plan →" always visible → `https://foundco.app/plans`
+- Plan card savings display attempted and reverted (run-on sentence, broke mobile layout)
+
+**Menu Page Fallback:**
+- Warm copy + Call Us button (with company primary color) when no menu is set up
+
+**Admin Email Preview:**
+- Reservation tabs now conditional — only show for food industries or `primary_intent === "reservations"`
+
+**Gallery + Vocab:**
+- Gallery pages use `albumLabelFor` from typography — no more hardcoded "projects"
+
+### ⏳ Still Pending
+(See June 24 session above)
+
+---
+
+
 ## Session: June 20, 2026 — Pro Album Gallery (new session)
 **AI:** Claude Code (Sonnet 4.6)
 **Worked on:** Pro album-organized public gallery, lead auto-reply audit

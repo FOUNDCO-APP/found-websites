@@ -16,9 +16,33 @@ type LeadRow = {
   temperature: string | null
   status: string | null
   created_at: string | null
-  partial_answers: Record<string, string> | null
+  partial_answers: Record<string, unknown> | null
 }
 
+
+function isOnlineOrder(lead: LeadRow) {
+  return lead.type === "online_order" || lead.source === "online_ordering"
+}
+
+function isReservationLead(lead: LeadRow) {
+  return lead.type === "reservation_request" || lead.source === "reservation" || lead.source === "reservations"
+}
+
+function orderItems(lead: LeadRow) {
+  const items = lead.partial_answers?.items
+  return Array.isArray(items) ? items as { name?: string; quantity?: number; unit_amount?: number }[] : []
+}
+
+function formatCents(cents: unknown) {
+  const amount = typeof cents === "number" ? cents : Number(cents || 0)
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount / 100)
+}
+
+function orderSummary(lead: LeadRow) {
+  const items = orderItems(lead)
+  if (items.length === 0) return lead.message || "Online order"
+  return items.map(item => `${item.quantity || 1}x ${item.name || "Item"}`).join(", ")
+}
 function formatTimeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -69,6 +93,14 @@ export default function LeadsPage() {
 
   const searchParams = useSearchParams()
   const router = useRouter()
+  const view = searchParams.get("view")
+  const isOrdersView = view === "orders"
+  const isReservationsView = view === "reservations"
+  const pageLabel = isOrdersView
+    ? { singular: "Order", plural: "Orders", new: "New Order", hasTemperature: false }
+    : isReservationsView
+      ? { singular: "Reservation", plural: "Reservations", new: "New Reservation", hasTemperature: false }
+      : intentLabel
 
   useEffect(() => {
     if (searchParams.get("add") === "1") {
@@ -93,7 +125,7 @@ export default function LeadsPage() {
     if (!newName.trim()) return
     setSaving(true)
     const body: Record<string, unknown> = { name: newName, phone: newPhone, email: newEmail, notes: newNotes }
-    if (intentLabel.hasTemperature) body.temperature = newTemp
+    if (pageLabel.hasTemperature) body.temperature = newTemp
     const res = await fetch("/api/leads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -136,15 +168,21 @@ export default function LeadsPage() {
     }).catch(console.error)
   }
 
-  const openLeads = leads.filter(l => !l.status || l.status === "open")
-  const closedLeads = leads.filter(l => l.status === "closed")
+  const visibleLeads = leads.filter(l => {
+    if (isOrdersView) return isOnlineOrder(l)
+    if (isReservationsView) return isReservationLead(l)
+    return !isOnlineOrder(l) && !isReservationLead(l)
+  })
+  const openLeads = visibleLeads.filter(l => !l.status || l.status === "open")
+  const closedLeads = visibleLeads.filter(l => l.status === "closed")
 
   const filteredOpen = filterTemp === "all"
     ? openLeads
     : openLeads.filter(l => (l.temperature ?? "warm") === filterTemp)
 
-  const hotLeads   = filterTemp === "all" ? openLeads.filter(l => l.temperature === "hot") : []
-  const otherLeads = filterTemp === "all" ? openLeads.filter(l => l.temperature !== "hot") : filteredOpen
+  const usesTemperature = pageLabel.hasTemperature
+  const hotLeads   = usesTemperature && filterTemp === "all" ? openLeads.filter(l => l.temperature === "hot") : []
+  const otherLeads = usesTemperature && filterTemp === "all" ? openLeads.filter(l => l.temperature !== "hot") : filteredOpen
 
   const FILTER_PILLS: { key: "all" | "hot" | "warm" | "cold"; label: string; color?: string }[] = [
     { key: "all",  label: "All" },
@@ -161,7 +199,7 @@ export default function LeadsPage() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
-              {intentLabel.plural}
+              {pageLabel.plural}
             </h1>
             <button onClick={() => setShowIntentPicker(true)} style={{
               border: "none", background: "none", padding: "4px", cursor: "pointer",
@@ -193,7 +231,7 @@ export default function LeadsPage() {
       </div>
 
       {/* Temperature filter pills — only for temp-based intents */}
-      {intentLabel.hasTemperature && openLeads.length > 0 && (
+      {pageLabel.hasTemperature && openLeads.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
           {FILTER_PILLS.map(pill => {
             const active = filterTemp === pill.key
@@ -230,9 +268,9 @@ export default function LeadsPage() {
           backgroundColor: "rgba(255,255,255,0.05)",
           border: `1px solid ${SIGNAL_GREEN}33`,
         }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{intentLabel.new}</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{pageLabel.new}</div>
 
-          {intentLabel.hasTemperature && (
+          {pageLabel.hasTemperature && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>Temperature</div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -291,7 +329,7 @@ export default function LeadsPage() {
               backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
               color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
               fontSize: 14, fontWeight: 700, cursor: newName.trim() ? "pointer" : "default",
-            }}>{saving ? "Saving…" : `Save ${intentLabel.singular}`}</button>
+            }}>{saving ? "Saving…" : `Save ${pageLabel.singular}`}</button>
           </div>
         </div>
       )}
@@ -304,10 +342,10 @@ export default function LeadsPage() {
       ) : filteredOpen.length === 0 && filterTemp !== "all" ? (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
-            No {filterTemp} {intentLabel.plural.toLowerCase()}.
+            No {filterTemp} {pageLabel.plural.toLowerCase()}.
           </p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            Tap the temperature pill on any {intentLabel.singular.toLowerCase()} to tag it.
+            Tap the temperature pill on any {pageLabel.singular.toLowerCase()} to tag it.
           </p>
         </div>
       ) : openLeads.length === 0 && closedLeads.length === 0 ? (
@@ -327,7 +365,7 @@ export default function LeadsPage() {
             </svg>
           </div>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
-            Your first {intentLabel.singular.toLowerCase()} is coming.
+            Your first {pageLabel.singular.toLowerCase()} is coming.
           </p>
           <p style={{ margin: "0 0 28px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
             Add one manually or wait for your site to bring one in.
@@ -336,7 +374,7 @@ export default function LeadsPage() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
-          {intentLabel.hasTemperature && hotLeads.length > 0 && (
+          {pageLabel.hasTemperature && hotLeads.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, color: TEMP_COLORS.hot, marginBottom: 12, ...TYPE.caption }}>
                 <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: TEMP_COLORS.hot, flexShrink: 0 }}/>
@@ -344,7 +382,7 @@ export default function LeadsPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={intentLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
                 ))}
               </div>
             </div>
@@ -352,14 +390,14 @@ export default function LeadsPage() {
 
           {otherLeads.length > 0 && (
             <div>
-              {intentLabel.hasTemperature && hotLeads.length > 0 && filterTemp === "all" && (
+              {pageLabel.hasTemperature && hotLeads.length > 0 && filterTemp === "all" && (
                 <div style={{ color: "white", opacity: TEXT_OPACITY.disabled, marginBottom: 12, ...TYPE.caption }}>
-                  All {intentLabel.plural}
+                  All {pageLabel.plural}
                 </div>
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {otherLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={intentLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
                 ))}
               </div>
             </div>
@@ -406,7 +444,7 @@ export default function LeadsPage() {
       {selectedLead && (
         <LeadDetailSheet
           lead={selectedLead}
-          intentLabel={intentLabel}
+          intentLabel={pageLabel as FormIntentLabel}
           onClose={() => setSelectedLead(null)}
           onSaved={(updated) => {
             setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))
@@ -444,7 +482,10 @@ function LeadCard({
 }) {
   const [pickingTemp, setPickingTemp] = useState(false)
   const pa = lead.partial_answers
-  const preview = lead.message || pa?.message || pa?.services || pa?.description || ""
+  const textAnswer = (value: unknown) => typeof value === "string" ? value : ""
+  const preview = isOnlineOrder(lead)
+    ? orderSummary(lead)
+    : lead.message || textAnswer(pa?.message) || textAnswer(pa?.services) || textAnswer(pa?.description) || ""
   const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\D/g, "")}` : null
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const emailHref = lead.email
@@ -580,6 +621,27 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const emailHref = lead.email ? `mailto:${lead.email}` : null
   const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
+  const onlineOrder = isOnlineOrder(lead)
+  const items = orderItems(lead)
+  const pickupTime = typeof lead.partial_answers?.pickup_time === "string" ? lead.partial_answers.pickup_time : ""
+  const orderNotes = typeof lead.partial_answers?.notes === "string" ? lead.partial_answers.notes : ""
+  const orderTotal = formatCents(lead.partial_answers?.subtotal_cents)
+
+  function printKitchenTicket() {
+    const htmlEscape = (value: unknown) => String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;")
+    const itemRows = items.map(item => `<tr><td>${Number(item.quantity || 1)}x</td><td>${htmlEscape(item.name || "Item")}</td><td>${formatCents(Number(item.unit_amount || 0) * Number(item.quantity || 1))}</td></tr>`).join("")
+    const ticket = window.open("", "_blank", "width=420,height=680")
+    if (!ticket) return
+    ticket.document.write(`<!doctype html><html><head><title>Order Ticket</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111}.ticket{max-width:360px;margin:0 auto}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.name{font-size:26px;font-weight:900;margin:8px 0 4px}.meta{font-size:14px;margin:0 0 18px}.pickup{border:2px solid #111;padding:14px;margin:16px 0;font-size:22px;font-weight:900;text-align:center}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:10px 0;border-bottom:1px solid #ddd;font-size:16px}td:first-child{width:48px;font-weight:900}td:last-child{text-align:right}.total{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin-top:14px}.notes{margin-top:18px;padding:12px;border:1px solid #111;font-size:15px;white-space:pre-wrap}.small{font-size:12px;margin-top:18px;color:#555}@media print{button{display:none}body{padding:0}.ticket{max-width:none}}</style></head><body><div class="ticket"><div class="eyebrow">Online Order</div><div class="name">${htmlEscape(lead.name || "Customer")}</div><p class="meta">${htmlEscape(lead.phone || "")}${lead.email ? ` | ${htmlEscape(lead.email)}` : ""}</p>${pickupTime ? `<div class="pickup">Pickup ${htmlEscape(pickupTime)}</div>` : ""}<table>${itemRows}</table><div class="total"><span>Total paid</span><span>${orderTotal}</span></div>${orderNotes ? `<div class="notes"><strong>Notes</strong><br>${htmlEscape(orderNotes)}</div>` : ""}<p class="small">Order ${htmlEscape(lead.id.slice(0, 8))}${lead.created_at ? ` | ${htmlEscape(new Date(lead.created_at).toLocaleString())}` : ""}</p><button onclick="window.print()" style="width:100%;margin-top:18px;padding:14px;border:0;background:#111;color:#fff;font-weight:800;border-radius:10px;">Print ticket</button></div></body></html>`)
+    ticket.document.close()
+    ticket.focus()
+    setTimeout(() => ticket.print(), 250)
+  }
 
   async function handleSave() {
     setSaving(true)
@@ -706,6 +768,33 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
               )}
             </div>
 
+            {onlineOrder && (
+              <div style={{ marginBottom: 22, padding: 18, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+                  <div>
+                    <div style={{ color: SIGNAL_GREEN, marginBottom: 4, ...TYPE.caption }}>Kitchen Ticket</div>
+                    <div style={{ color: "white", ...TYPE.title }}>{orderTotal}</div>
+                  </div>
+                  <button onClick={printKitchenTicket} style={{ padding: "10px 14px", borderRadius: 12, border: "none", backgroundColor: "white", color: FOUND_BLACK, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                    Print
+                  </button>
+                </div>
+                {pickupTime && <div style={{ marginBottom: 12, color: "white", ...TYPE.subhead }}><strong>Pickup:</strong> {pickupTime}</div>}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {items.map((item, index) => (
+                    <div key={`${item.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, color: "white", opacity: TEXT_OPACITY.secondary, ...TYPE.body }}>
+                      <span>{item.quantity || 1}x {item.name || "Item"}</span>
+                      <span>{formatCents(Number(item.unit_amount || 0) * Number(item.quantity || 1))}</span>
+                    </div>
+                  ))}
+                </div>
+                {orderNotes && (
+                  <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)", color: "white", opacity: TEXT_OPACITY.secondary, whiteSpace: "pre-wrap", ...TYPE.body }}>
+                    {orderNotes}
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
               {phoneHref && (
                 <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
@@ -906,3 +995,10 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+
+
+
+
+
+

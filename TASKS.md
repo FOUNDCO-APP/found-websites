@@ -6,18 +6,40 @@
 
 ## CURRENT PHASE
 
-**Phase 4: Customer Dashboard — SUBSTANTIALLY COMPLETE**
-**Phase 3 (Photo System): SHIPPED**
+**Phase 4: Customer Dashboard — ACTIVE**
+**Add-On System: SHIPPED**
+**Online Ordering Add-On: SHIPPED (Codex)**
 
-Core dashboard complete. Photo organization (albums/projects), industry vocab, camera pre-flight, public gallery integration, and Home 3-state redesign all shipped.
+Online ordering flow live. Dashboard tab customization shipped. Next: test pass, then upsell banner + plan card savings.
 
 ---
 
 ## NOW (MAX 3)
 
-1. **Marketing site** — foundco.app redesign + `/plans/found`, `/plans/found-pro`, `/plans/found-business` pages. Autonomous sales engine. Each ranks independently.
+1. **Test pass** — verify online ordering E2E on a food company, Orders tab routing, DashboardTabsManager in More, email delivery
+2. **Fix issues found in testing** — bugs, copy, UX gaps surfaced during test
+3. **Plan card savings display** — clean mockup for Shawn to approve (no "Founding rate" label)
 
 ---
+
+## RECENTLY COMPLETED (June 24, 2026 — Codex + Claude session)
+- ✅ Online ordering system — inline add-to-cart on public menu, Stripe checkout, paid order handler
+- ✅ Owner order email — itemized table, pickup time block, notes, customer contact
+- ✅ Customer confirmation email — order summary + business branding
+- ✅ `DashboardTabsManager.tsx` — owners reorder/choose bottom tabs from More tab
+- ✅ `DashboardNav.tsx` — dynamic tabs per industry + active add-ons (Orders, Reserve auto-appear)
+- ✅ Leads page `?view=orders` / `?view=reservations` filtering
+- ✅ `dashboard/layout.tsx` — fetches activeAddonSlugs server-side, passes to DashboardNav
+- ✅ CHANGELOG + TASKS updated
+
+## RECENTLY COMPLETED (June 22-23, 2026 — add-on session)
+- ✅ 7 add-ons all live in Stripe — `addon_subscriptions` table, `addon_stripe_prices` table
+- ✅ Reservation system — `/[slug]/reserve` page + form + server action + emails
+- ✅ More page rewrite — plan features, Lock In My Rate button, plans link
+- ✅ Menu fallback — warm copy + Call Us button
+- ✅ Admin email preview — reservation tabs conditional on industry
+- ✅ Gallery vocab — `albumLabelFor` used everywhere
+- ✅ `custom_domain` ungated (was accidentally Pro+ only)
 
 ## RECENTLY COMPLETED (June 19–20, 2026 — continuous session)
 - ✅ SiteEditor: all accent colors unified to Signal Green; progress bar removed from More plan card; "contact" → "lead" on Leads
@@ -70,6 +92,14 @@ Core dashboard complete. Photo organization (albums/projects), industry vocab, c
 ---
 
 ## BACKLOG
+
+### Add-Ons & Monetization
+- Plan card savings display — show founding discount cleanly (no "Founding rate" label — Shawn rejected that)
+- Upsell banner — not built; planned as next after June 22
+- Stripe custom payment form — Option B approved (in-app Stripe Elements), not built
+- Menu add-on gating — `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks
+- Food CTA bug — "View Our Menu" still appears when `menu_display` add-on isn't active
+- Stripe subscriber audit — verify no Pro/Business subscribers charged wrong price before activateActions.ts fix
 
 ### Dashboard
 - Auto-reply message — owner writes it once during onboarding/settings, Found sends it to every new lead via Resend

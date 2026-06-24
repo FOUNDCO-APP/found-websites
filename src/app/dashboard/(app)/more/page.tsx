@@ -3,6 +3,7 @@ import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
+import DashboardTabsManager from "@/components/dashboard/DashboardTabsManager"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -499,6 +500,12 @@ export default async function MorePage() {
         </Link>
       </section>
 
+      <DashboardTabsManager
+        companyName={company?.name ?? null}
+        industry={industryCategory}
+        activeAddons={activeAddonSlugs}
+      />
+
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
@@ -536,3 +543,5 @@ export default async function MorePage() {
     </main>
   )
 }
+
+

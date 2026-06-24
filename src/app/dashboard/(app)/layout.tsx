@@ -32,6 +32,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .then(({ count }) => count ?? 0)
     : 0
 
+  const activeAddonSlugs = company?.id
+    ? await admin
+        .from("addon_subscriptions")
+        .select("addon_slug")
+        .eq("company_id", company.id)
+        .eq("active", true)
+        .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug))
+    : []
+
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
 
@@ -108,7 +117,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       </div>
 
-      <DashboardNav companyName={company?.name ?? null} newLeadCount={newLeadCount} industry={company?.industry_category ?? null} />
+      <DashboardNav
+        companyName={company?.name ?? null}
+        newLeadCount={newLeadCount}
+        industry={company?.industry_category ?? null}
+        activeAddons={activeAddonSlugs}
+      />
 
       <style>{`
         @media (min-width: 768px) {
@@ -127,3 +141,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
     </div>
   )
 }
+
+

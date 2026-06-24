@@ -2,20 +2,34 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor } from "@/lib/dashboard/typography"
 
-type Tab = { path: string; label: string }
+type Tab = { path: string; label: string; id: string }
 type Album = { id: string; name: string; cover_url: string | null }
 
-const TABS: Tab[] = [
-  { path: "/",         label: "Home" },
-  { path: "/leads",    label: "Inbox" },
-  { path: "/photos",   label: "Photos" },
-  { path: "/contacts", label: "Contacts" },
-  { path: "/more",     label: "More" },
+const BASE_TABS: Tab[] = [
+  { id: "home", path: "/", label: "Home" },
+  { id: "inbox", path: "/leads", label: "Inbox" },
+  { id: "photos", path: "/photos", label: "Photos" },
+  { id: "contacts", path: "/contacts", label: "Contacts" },
+  { id: "more", path: "/more", label: "More" },
 ]
 
+function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
+  if (industry !== "food") return BASE_TABS
+  const hasOrders = activeAddons.includes("online_ordering")
+  const hasReservations = activeAddons.includes("reservation_calendar")
+  const tabs = [
+    { id: "home", path: "/", label: "Home" },
+    ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
+    ...(hasReservations ? [{ id: "reservations", path: "/leads?view=reservations", label: "Reserve" }] : []),
+    { id: "photos", path: "/photos", label: "Photos" },
+    { id: "contacts", path: "/contacts", label: "Contacts" },
+    { id: "more", path: "/more", label: "More" },
+  ]
+  return tabs.slice(0, 5)
+}
 function HomeIcon({ active }: { active: boolean }) {
   const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
@@ -65,6 +79,31 @@ function ContactsIcon({ active }: { active: boolean }) {
   )
 }
 
+function OrdersIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2l1.5 3L10 2l2 3 2-3 2.5 3L18 2v20l-2-1-2 1-2-1-2 1-2-1-2 1V2z"/>
+      <path d="M8 10h8"/>
+      <path d="M8 14h6"/>
+    </svg>
+  )
+}
+
+function ReservationsIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <path d="M16 2v4"/>
+      <path d="M8 2v4"/>
+      <path d="M3 10h18"/>
+      <path d="M8 15h4"/>
+    </svg>
+  )
+}
 function MoreIcon({ active }: { active: boolean }) {
   const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   return (
@@ -79,6 +118,8 @@ function MoreIcon({ active }: { active: boolean }) {
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/":         (a) => <HomeIcon     active={a} />,
   "/leads":    (a) => <LeadsIcon    active={a} />,
+  "orders":    (a) => <OrdersIcon   active={a} />,
+  "reservations": (a) => <ReservationsIcon active={a} />,
   "/photos":   (a) => <PhotosIcon   active={a} />,
   "/contacts": (a) => <ContactsIcon active={a} />,
   "/more":     (a) => <MoreIcon     active={a} />,
@@ -88,19 +129,25 @@ export default function DashboardNav({
   companyName,
   newLeadCount = 0,
   industry = null,
+  activeAddons = [],
 }: {
   companyName?: string | null
   newLeadCount?: number
   industry?: string | null
+  activeAddons?: string[]
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   const isDev   = pathname.startsWith("/dashboard")
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
   const prefix  = isDev ? "/dashboard" : ""
 
   const albumLabel = albumLabelFor(industry)
-
+  const addonKey = activeAddons.join("|")
+  const defaultTabs = defaultTabsFor(industry, activeAddons)
+  const storageKey = `found_dashboard_tabs_${companyName || "default"}`
+  const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
@@ -123,6 +170,34 @@ export default function DashboardNav({
       .catch(() => {})
   }, [prefix])
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey)
+      if (!saved) { setTabs(defaultTabs); return }
+      const ids = JSON.parse(saved) as string[]
+      const byId = new Map(defaultTabs.map(tab => [tab.id, tab]))
+      const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
+      const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
+      setTabs([...ordered, ...missing].slice(0, 5))
+    } catch { setTabs(defaultTabs) }
+  }, [storageKey, industry, addonKey])
+
+  useEffect(() => {
+    function onNavChanged() {
+      try {
+        const saved = window.localStorage.getItem(storageKey)
+        if (!saved) { setTabs(defaultTabs); return }
+        const ids = JSON.parse(saved) as string[]
+        const byId = new Map(defaultTabs.map(tab => [tab.id, tab]))
+        const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
+        const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
+        setTabs([...ordered, ...missing].slice(0, 5))
+      } catch {}
+    }
+    window.addEventListener("found:dashboard-tabs-updated", onNavChanged)
+    return () => window.removeEventListener("found:dashboard-tabs-updated", onNavChanged)
+  }, [storageKey, industry, addonKey])
+
   // Home page quick-action "Camera" button opens this sheet
   useEffect(() => {
     function onOpenCamera() { setShowPicker(true) }
@@ -133,10 +208,17 @@ export default function DashboardNav({
   // Instant visual feedback — clear when route actually settles
   useEffect(() => { setPendingSegment(null) }, [pathname])
 
+  function pathOnly(tabPath: string) { return tabPath.split("?")[0] }
+
   function isActive(tabPath: string) {
+    const cleanPath = pathOnly(tabPath)
     const effective = pendingSegment ?? segment
-    if (tabPath === "/") return effective === "/"
-    return effective === tabPath || effective.startsWith(tabPath + "/")
+    const view = searchParams.get("view")
+    if (tabPath.includes("view=orders")) return effective.startsWith("/leads") && view === "orders"
+    if (tabPath.includes("view=reservations")) return effective.startsWith("/leads") && view === "reservations"
+    if (cleanPath === "/") return effective === "/"
+    if (cleanPath === "/leads") return effective.startsWith("/leads") && !view
+    return effective === cleanPath || effective.startsWith(cleanPath + "/")
   }
 
   function handleCamera(e: React.MouseEvent) {
@@ -249,18 +331,18 @@ export default function DashboardNav({
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
         zIndex: 50,
       }}>
-        {TABS.map(tab => {
+        {tabs.map(tab => {
           const active    = isActive(tab.path)
-          const showBadge = tab.path === "/leads" && newLeadCount > 0 && !active
+          const showBadge = pathOnly(tab.path) === "/leads" && newLeadCount > 0 && !active
           return (
             <Link
               key={tab.path}
               href={`${prefix}${tab.path}`}
-              onClick={() => { if (!isActive(tab.path)) setPendingSegment(tab.path) }}
+              onClick={() => { if (!isActive(tab.path)) setPendingSegment(pathOnly(tab.path)) }}
               style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, textDecoration: "none", padding: "12px 0 14px" }}
             >
               <div style={{ position: "relative" }}>
-                {ICONS[tab.path](active)}
+                {(ICONS[tab.path] || ICONS[tab.id] || ICONS[pathOnly(tab.path)])(active)}
                 {showBadge && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
               </div>
               <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{tab.label}</span>
@@ -283,18 +365,18 @@ export default function DashboardNav({
           </div>
         )}
         <div style={{ flex: 1, padding: "4px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
-          {TABS.map(tab => {
+          {tabs.map(tab => {
             const active = isActive(tab.path)
             return (
               <Link
                 key={tab.path}
                 href={`${prefix}${tab.path}`}
-                onClick={() => { if (!isActive(tab.path)) setPendingSegment(tab.path) }}
+                onClick={() => { if (!isActive(tab.path)) setPendingSegment(pathOnly(tab.path)) }}
                 style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12, padding: "10px 12px 10px 13px", borderRadius: 10, backgroundColor: active ? `${SIGNAL_GREEN}12` : "transparent", borderLeft: `3px solid ${active ? SIGNAL_GREEN : "transparent"}` }}
               >
                 <div style={{ position: "relative" }}>
-                  {ICONS[tab.path](active)}
-                  {tab.path === "/leads" && newLeadCount > 0 && !active && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
+                  {(ICONS[tab.path] || ICONS[tab.id] || ICONS[pathOnly(tab.path)])(active)}
+                  {pathOnly(tab.path) === "/leads" && newLeadCount > 0 && !active && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
                 </div>
                 <span style={{ ...TYPE.subhead, color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, fontWeight: active ? 600 : 500 }}>{tab.label}</span>
               </Link>
@@ -507,3 +589,6 @@ export default function DashboardNav({
     </>
   )
 }
+
+
+
