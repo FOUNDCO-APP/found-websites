@@ -232,12 +232,27 @@ export default function OnlineOrderClient({
             </div>
           )}
 
-          <div className="flex flex-col gap-3">
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-            <input value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} aria-label="Pickup time" type="time" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: pickupTime ? "#111" : "#666" }} />
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" rows={3} className="w-full px-4 py-3 border border-neutral-200 text-base resize-none" style={{ borderRadius: 8, color: "#111" }} />
+          <div className="flex flex-col gap-4">
+            <label className="block">
+              <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Name</span>
+              <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Phone</span>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Email</span>
+              <input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Pickup time</span>
+              <input value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} type="time" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+            </label>
+            <label className="block">
+              <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Notes</span>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full px-4 py-3 border border-neutral-200 text-base resize-none" style={{ borderRadius: 8, color: "#111" }} />
+            </label>
           </div>
 
           {error && <p className="mt-4 text-sm font-bold" style={{ color: "#B42318" }}>{error}</p>}
