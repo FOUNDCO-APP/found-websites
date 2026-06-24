@@ -120,18 +120,12 @@ export default function DashboardPages({
     const viewablePages = allPages.filter(p => p.id !== "more")
     return (
       <section style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <p style={{ margin: 0, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Pages</p>
-          <button
-            onClick={() => setMode("edit")}
-            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Customize</span>
-          </button>
+          <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 5px ${GREEN}80`, flexShrink: 0 }} />
+            <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>= active in bottom bar</span>
+          </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {viewablePages.map(page => {
@@ -149,7 +143,6 @@ export default function DashboardPages({
                       width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
                       backgroundColor: pinned ? GREEN : "rgba(255,255,255,0.1)",
                       boxShadow: pinned ? `0 0 5px ${GREEN}80` : "none",
-                      transition: "background-color 0.2s",
                     }} />
                     <span style={{ ...TYPE.subhead, color: "white" }}>{page.label}</span>
                   </div>
@@ -161,9 +154,18 @@ export default function DashboardPages({
             )
           })}
         </div>
-        <p style={{ margin: "8px 0 0 6px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-          Green dot = pinned to your bottom bar
-        </p>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+          <button
+            onClick={() => setMode("edit")}
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Organize my bottom bar</span>
+          </button>
+        </div>
       </section>
     )
   }

@@ -4,6 +4,7 @@ import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
 import { getStockImages } from "@/lib/stockImages"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getIndustryCTAs } from "@/lib/industryCTAs"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
 import PortraitLayout from "@/components/layouts/PortraitLayout"
@@ -35,8 +36,9 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     .eq("company_id", company.id)
     .eq("active", true)
   const activeAddons = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
+  const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
 
-  const props: LayoutProps = { company, activeAddons, imgs, gradient, heroImage, heroVideo, uploadedImgs }
+  const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs }
 
   // Route to the correct layout — falls back to Impact for unbuilt layouts
   switch (layout) {

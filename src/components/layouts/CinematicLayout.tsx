@@ -6,7 +6,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import type { LayoutProps } from "@/types/layout"
 
-export default function CinematicLayout({ company, activeAddons, imgs, gradient, heroImage, heroVideo }: LayoutProps) {
+export default function CinematicLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -17,19 +17,7 @@ export default function CinematicLayout({ company, activeAddons, imgs, gradient,
   const primaryHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
-  const secondaryLabel = company.secondary_intent ? intentLabel[company.secondary_intent] : null
-  const secondaryHref = company.secondary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : company.secondary_intent ? intentHref[company.secondary_intent] : null
 
-  const coveredIntents = new Set([company.primary_intent, company.secondary_intent].filter(Boolean))
-  const addonCtAs: { label: string; href: string }[] = []
-  if (company.industry_category === "food" && !coveredIntents.has("reserve")) {
-    addonCtAs.push({ label: "Reserve a Table", href: "/reserve" })
-  }
-  if (activeAddons.includes("online_ordering") && !coveredIntents.has("menu") && !coveredIntents.has("shop")) {
-    addonCtAs.push({ label: "Order Online", href: "/order" })
-  }
 
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
@@ -102,18 +90,12 @@ export default function CinematicLayout({ company, activeAddons, imgs, gradient,
               style={{ backgroundColor: primary, borderColor: primary }}>
               {primaryLabel}
             </Link>
-            {secondaryLabel && secondaryHref && (
-              <Link href={secondaryHref} className="btn text-white"
+            {supportingCTA && (
+              <Link href={supportingCTA.href} className="btn text-white"
                 style={{ borderColor: "rgba(255,255,255,0.4)" }}>
-                {secondaryLabel}
+                {supportingCTA.label}
               </Link>
             )}
-            {addonCtAs.map(cta => (
-              <Link key={cta.href} href={cta.href} className="btn text-white"
-                style={{ borderColor: "rgba(255,255,255,0.4)" }}>
-                {cta.label}
-              </Link>
-            ))}
           </div>
         </div>
 

@@ -10,6 +10,8 @@ import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
 import { getSiteCopy } from "@/lib/siteCopy"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { intentLabel, intentHref } from "@/types/company"
+import StickyCtaBar from "@/components/public/StickyCtaBar"
 
 export const dynamic = 'force-dynamic'
 
@@ -204,8 +206,18 @@ export default async function CompanyLayout({
         />
       ))}
       <Navbar company={company} transparent={layout === "cinematic"} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <Footer company={company} />
+      <StickyCtaBar
+        label={intentLabel[company.primary_intent] || "Contact Us"}
+        href={
+          company.primary_intent === "call"
+            ? `tel:${company.phone?.replace(/\D/g, "") ?? ""}`
+            : intentHref[company.primary_intent] || "/contact"
+        }
+        matchPath={company.primary_intent === "call" ? null : intentHref[company.primary_intent] || "/contact"}
+        color={company.primary_color}
+      />
       <PreviewBanner
         slug={company.slug}
         companyName={company.name}
