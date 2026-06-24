@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import { getBookingNoun, getServiceField, capitalize } from "@/lib/bookings/bookingVocab"
 
 type Slot = { start: string; end: string; display: string }
 type Step = "date" | "time" | "details" | "confirmed"
@@ -34,12 +35,16 @@ export default function BookingCalendar({
   workingDays,
   companyName,
   pageTitle,
+  industry,
+  companyServices,
 }: {
   companyId: string
   primaryColor: string
-  workingDays: number[]   // [1,2,3,4,5] = Mon-Fri
+  workingDays: number[]
   companyName: string
   pageTitle: string
+  industry: string | null
+  companyServices: string[]
 }) {
   const today = todayLocal()
   const [viewYear, setViewYear]     = useState(today.year)
@@ -60,6 +65,9 @@ export default function BookingCalendar({
   const [formError, setFormError]   = useState("")
   const [confirmCode, setConfirmCode] = useState("")
 
+  const vocab = getBookingNoun(industry)
+  const serviceField = getServiceField(industry, companyServices)
+  const isOccasion = serviceField?.isOccasion ?? false
   const workingSet = new Set(workingDays)
 
   function prevMonth() {
@@ -156,6 +164,11 @@ export default function BookingCalendar({
 
   // ── Confirmed screen ──
   if (step === "confirmed") {
+    const nounCap = capitalize(vocab.noun)
+    const bodyText = vocab.confirmMode === "instant"
+      ? `Your ${vocab.noun} is confirmed. We look forward to seeing you!`
+      : `Your ${vocab.noun} is scheduled. We’ll reach out shortly to confirm the details.`
+
     return (
       <div className="text-center py-16 px-8">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
@@ -164,8 +177,8 @@ export default function BookingCalendar({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-2xl font-black mb-2" style={{ color: "#111111" }}>You&apos;re booked!</h2>
-        <p className="text-gray-500 text-lg mb-6">
+        <h2 className="text-2xl font-black mb-2" style={{ color: "#111111" }}>{nounCap} {vocab.pastTense}!</h2>
+        <p className="text-gray-500 text-lg mb-2">
           {selectedDate && formatSelectedDate(selectedDate)} at {selectedSlot?.display}
         </p>
         {confirmCode && (
@@ -174,6 +187,7 @@ export default function BookingCalendar({
             <p className="text-2xl font-black" style={{ color: "#111111" }}>{confirmCode}</p>
           </div>
         )}
+        <p className="text-gray-500 text-sm mb-2">{bodyText}</p>
         <p className="text-gray-400 text-sm">
           {email ? "A confirmation was sent to your email." : "Save your confirmation number for your records."}
         </p>
@@ -197,7 +211,7 @@ export default function BookingCalendar({
         </button>
 
         <div className="rounded-2xl p-4 mb-6" style={{ backgroundColor: `${primaryColor}10`, border: `1px solid ${primaryColor}25` }}>
-          <p className="text-sm font-black uppercase tracking-widest mb-1" style={{ color: primaryColor }}>Your Appointment</p>
+          <p className="text-sm font-black uppercase tracking-widest mb-1" style={{ color: primaryColor }}>Your {capitalize(vocab.noun)}</p>
           <p className="font-black text-lg" style={{ color: "#111111" }}>
             {selectedDate && formatSelectedDate(selectedDate)}
           </p>
@@ -239,27 +253,42 @@ export default function BookingCalendar({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>
-              Service or reason <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="text" value={service} onChange={e => setService(e.target.value)}
-              placeholder="What are you coming in for?"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2"
-            />
-          </div>
+          {/* Industry-aware service / occasion field */}
+          {serviceField && (
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>
+                {serviceField.label} <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <select
+                value={service}
+                onChange={e => {
+                  setService(e.target.value)
+                  if (e.target.value !== "Other") setNotes("")
+                }}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2"
+              >
+                <option value="">— Select one —</option>
+                {serviceField.options.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-          <div>
-            <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>
-              Notes <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <textarea
-              value={notes} onChange={e => setNotes(e.target.value)}
-              rows={3} placeholder="Anything we should know?"
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none"
-            />
-          </div>
+          {/* Notes: always visible for non-occasion fields; only appears when "Other" selected for occasion fields */}
+          {(!isOccasion || service === "Other") && (
+            <div>
+              <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>
+                {isOccasion ? "Tell us more" : "Notes"} <span className="text-gray-400 font-normal">(optional)</span>
+              </label>
+              <textarea
+                value={notes} onChange={e => setNotes(e.target.value)}
+                rows={3}
+                placeholder={isOccasion ? "Describe the occasion…" : "Anything we should know?"}
+                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 resize-none"
+              />
+            </div>
+          )}
 
           {formError && (
             <p className="text-sm font-medium text-red-600 bg-red-50 rounded-xl px-4 py-3">{formError}</p>

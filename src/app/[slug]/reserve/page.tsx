@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { SCHEDULING_CTA } from "@/lib/industryCTAs"
+import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 import ReservationForm from "./ReservationForm"
 import BookingCalendar from "@/components/public/BookingCalendar"
 import type { Metadata } from "next"
@@ -53,9 +54,12 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
   const img = (i: number) => pickImg(imgs, i)
 
   const pageTitle = SCHEDULING_CTA[company.industry_category ?? ""]?.label ?? "Book Now"
+  const bookingNoun = getBookingNoun(company.industry_category)
   const pageSubtitle = hasCalendar
-    ? "Pick a date and time that works for you — your booking is confirmed instantly."
-    : "Submit your request and we’ll confirm your reservation as soon as possible."
+    ? bookingNoun.confirmMode === "instant"
+      ? `Pick a date and time that works for you — your ${bookingNoun.noun} is confirmed instantly.`
+      : `Pick a date and time that works for you — we’ll reach out shortly to confirm the details.`
+    : "Submit your request and we’ll confirm as soon as possible."
 
   return (
     <>
@@ -94,6 +98,8 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
                   workingDays={workingDays}
                   companyName={company.name}
                   pageTitle={pageTitle}
+                  industry={company.industry_category ?? null}
+                  companyServices={(company.website_config?.services ?? []).map((s: { name: string }) => s.name)}
                 />
               ) : (
                 <>
@@ -122,11 +128,15 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
               <div className="p-6" style={{ backgroundColor: "#f9f9f9", borderRadius: "var(--card-radius, 10px)" }}>
                 <p className="text-sm font-semibold mb-1" style={{ color: primary }}>What to expect</p>
                 <ul className="mt-3 space-y-2">
-                  {(hasCalendar ? [
+                  {(hasCalendar ? (bookingNoun.confirmMode === "instant" ? [
                     "Pick any available date and time",
                     "Instant confirmation — no waiting",
                     "You’ll receive an email confirmation",
                   ] : [
+                    "Pick any available date and time",
+                    "We’ll reach out shortly to confirm",
+                    "You’ll receive an email with your details",
+                  ]) : [
                     "We’ll confirm as soon as possible",
                     "You’ll receive an email confirmation",
                     "Call us for immediate availability",

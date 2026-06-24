@@ -288,6 +288,7 @@ export function buildBookingNotification({
   notes,
   confirmationCode,
   replyUrl,
+  bookingNoun = "booking",
 }: {
   company: { name: string }
   name: string
@@ -299,7 +300,9 @@ export function buildBookingNotification({
   notes: string
   confirmationCode: string
   replyUrl: string
+  bookingNoun?: string
 }) {
+  const nounCap = bookingNoun.charAt(0).toUpperCase() + bookingNoun.slice(1)
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -309,13 +312,13 @@ export function buildBookingNotification({
       <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
         <tr>
           <td style="background:#111111;padding:32px;text-align:center;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">Booking Confirmed</p>
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">New ${nounCap}</p>
             <h1 style="margin:0;font-size:22px;font-weight:900;color:#ffffff;">${company.name}</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:36px 32px;">
-            <p style="margin:0 0 24px;font-size:16px;color:#444444;">You have a new booking from your website.</p>
+            <p style="margin:0 0 24px;font-size:16px;color:#444444;">You have a new ${bookingNoun} from your website.</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
               <tr><td style="padding-bottom:16px;">
                 <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Date</p>
@@ -342,7 +345,7 @@ export function buildBookingNotification({
                 <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${email}</p>
               </td></tr>` : ""}
               ${service ? `<tr><td style="padding-bottom:16px;">
-                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Service</p>
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Details</p>
                 <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${service}</p>
               </td></tr>` : ""}
               ${notes ? `<tr><td>
@@ -373,6 +376,8 @@ export function buildBookingConfirmation({
   displayTime,
   service,
   confirmationCode,
+  bookingNoun = "booking",
+  confirmMode = "instant",
 }: {
   company: { name: string; phone: string | null }
   name: string
@@ -380,8 +385,16 @@ export function buildBookingConfirmation({
   displayTime: string
   service: string
   confirmationCode: string
+  bookingNoun?: string
+  confirmMode?: "instant" | "soft"
 }) {
   const firstName = name.split(" ")[0]
+  const nounCap = bookingNoun.charAt(0).toUpperCase() + bookingNoun.slice(1)
+  const headerLabel = confirmMode === "instant" ? `${nounCap} confirmed` : `${nounCap} scheduled`
+  const bodyText = confirmMode === "instant"
+    ? `Hi ${firstName}, your ${bookingNoun} is confirmed!`
+    : `Hi ${firstName}, your ${bookingNoun} is scheduled for ${displayDate} at ${displayTime}. We'll reach out shortly to confirm the details.`
+
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -391,13 +404,13 @@ export function buildBookingConfirmation({
       <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
         <tr>
           <td style="background:#111111;padding:32px;text-align:center;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">You're booked</p>
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">${headerLabel}</p>
             <h1 style="margin:0;font-size:22px;font-weight:900;color:#ffffff;">${company.name}</h1>
           </td>
         </tr>
         <tr>
           <td style="padding:36px 32px;">
-            <p style="margin:0 0 24px;font-size:16px;color:#444444;">Hi ${firstName}, your booking is confirmed!</p>
+            <p style="margin:0 0 24px;font-size:16px;color:#444444;">${bodyText}</p>
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
               <tr><td style="padding-bottom:16px;">
                 <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Date</p>
@@ -408,7 +421,7 @@ export function buildBookingConfirmation({
                 <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${displayTime}</p>
               </td></tr>
               ${service ? `<tr><td style="padding-bottom:16px;">
-                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Service</p>
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Details</p>
                 <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${service}</p>
               </td></tr>` : ""}
               ${confirmationCode ? `<tr><td>

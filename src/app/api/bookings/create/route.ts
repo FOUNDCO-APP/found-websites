@@ -3,6 +3,7 @@ import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import { buildBookingNotification, buildBookingConfirmation } from "@/lib/emailBuilders"
+import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   // Fetch company for emails
   const { data: company } = await admin
     .from("companies")
-    .select("name, email, phone, plan")
+    .select("name, email, phone, plan, industry_category")
     .eq("id", companyId)
     .single()
 
@@ -137,16 +138,20 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  const bookingNoun = getBookingNoun(company.industry_category)
+  const nounCap = bookingNoun.noun.charAt(0).toUpperCase() + bookingNoun.noun.slice(1)
+
   // 4. Owner notification email
   if (company.email) {
     await resend.emails.send({
       from: "Found <hello@foundco.app>",
       to: company.email,
-      subject: `New booking: ${name} — ${displayDate} at ${displayTime}`,
+      subject: `New ${bookingNoun.noun}: ${name} — ${displayDate} at ${displayTime}`,
       html: buildBookingNotification({
         company, name, phone, email,
         displayDate, displayTime, service, notes, confirmationCode,
         replyUrl: `https://foundco.app/reply/${replyToken}`,
+        bookingNoun: bookingNoun.noun,
       }),
     }).catch(err => console.error("[Resend] booking notification:", err))
   }
@@ -156,9 +161,11 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: `${company.name} <hello@foundco.app>`,
       to: email,
-      subject: `Your booking is confirmed — ${displayDate} at ${displayTime}`,
+      subject: `${nounCap} ${bookingNoun.pastTense} — ${displayDate} at ${displayTime}`,
       html: buildBookingConfirmation({
         company, name, displayDate, displayTime, service, confirmationCode,
+        bookingNoun: bookingNoun.noun,
+        confirmMode: bookingNoun.confirmMode,
       }),
     }).catch(err => console.error("[Resend] booking confirmation:", err))
   }
