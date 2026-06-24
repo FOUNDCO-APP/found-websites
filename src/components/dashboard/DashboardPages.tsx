@@ -88,7 +88,16 @@ export default function DashboardPages({
       const allowed = new Set(allPages.map(p => p.id))
       const ordered = ids.filter(id => allowed.has(id))
       const missing = defaultIds.filter(id => !ordered.includes(id))
-      setTabIds([...ordered, ...missing].slice(0, 5))
+      const combined = [...ordered, ...missing]
+      // HOME always first, MORE always last
+      const hasHome = combined.includes("home")
+      const hasMore = combined.includes("more")
+      const middle  = combined.filter(id => id !== "home" && id !== "more").slice(0, 3)
+      setTabIds([
+        ...(hasHome ? ["home"] : []),
+        ...middle,
+        ...(hasMore ? ["more"] : []),
+      ])
     } catch {
       setTabIds(defaultIds)
     }

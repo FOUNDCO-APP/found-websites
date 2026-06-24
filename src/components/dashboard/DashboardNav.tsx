@@ -242,15 +242,27 @@ export default function DashboardNav({
       .catch(() => {})
   }, [prefix])
 
+  function buildTabs(ids: string[]): Tab[] {
+    const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
+    const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
+    const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
+    const combined = [...ordered, ...missing]
+    // HOME always first, MORE always last — regardless of saved order or appended missing tabs
+    const homeTab = combined.find(t => t.id === "home")
+    const moreTab = combined.find(t => t.id === "more")
+    const middle  = combined.filter(t => t.id !== "home" && t.id !== "more").slice(0, 3)
+    return [
+      ...(homeTab ? [homeTab] : []),
+      ...middle,
+      ...(moreTab ? [moreTab] : []),
+    ]
+  }
+
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(storageKey)
       if (!saved) { setTabs(defaultTabs); return }
-      const ids = JSON.parse(saved) as string[]
-      const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
-      const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
-      const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
-      setTabs([...ordered, ...missing].slice(0, 5))
+      setTabs(buildTabs(JSON.parse(saved) as string[]))
     } catch { setTabs(defaultTabs) }
   }, [storageKey, industry, addonKey])
 
@@ -259,11 +271,7 @@ export default function DashboardNav({
       try {
         const saved = window.localStorage.getItem(storageKey)
         if (!saved) { setTabs(defaultTabs); return }
-        const ids = JSON.parse(saved) as string[]
-        const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
-        const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
-        const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
-        setTabs([...ordered, ...missing].slice(0, 5))
+        setTabs(buildTabs(JSON.parse(saved) as string[]))
       } catch {}
     }
     window.addEventListener("found:dashboard-tabs-updated", onNavChanged)
