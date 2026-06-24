@@ -199,11 +199,11 @@ function ClientPaymentForm({
       <div className="px-5 pt-5">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Secure checkout</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Checkout</p>
             <p className="mt-1 text-xl font-black text-white">{formatMoney(total)}</p>
           </div>
           <div className="text-right text-[11px] font-bold leading-snug" style={{ color: "rgba(255,255,255,0.42)" }}>
-            Secure card payment
+            Card payment
           </div>
         </div>
         <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
