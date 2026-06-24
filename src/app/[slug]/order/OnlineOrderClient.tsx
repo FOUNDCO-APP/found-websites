@@ -37,7 +37,7 @@ function paymentAppearance(primary: string): StripeElementsOptions["appearance"]
       colorBackground: "#151716",
       colorText: "#ffffff",
       colorDanger: "#F43F5E",
-      colorTextSecondary: primary,
+      colorTextSecondary: "#ffffff",
       colorTextPlaceholder: "rgba(255,255,255,0.28)",
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       fontSizeBase: "15px",
@@ -55,7 +55,7 @@ function paymentAppearance(primary: string): StripeElementsOptions["appearance"]
         boxShadow: `0 0 0 1px ${primary}26`,
       },
       ".Label": {
-        color: primary,
+        color: "#ffffff",
         fontSize: "11px",
         fontWeight: "800",
         letterSpacing: "0.14em",
@@ -202,7 +202,7 @@ function ClientPaymentForm({
             <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Checkout</p>
             <p className="mt-1 text-xl font-black text-white">{formatMoney(total)}</p>
           </div>
-          <div className="text-right text-[11px] font-bold leading-snug" style={{ color: primary }}>
+          <div className="text-right text-[11px] font-bold leading-snug" style={{ color: "#ffffff" }}>
             Card payment
           </div>
         </div>
