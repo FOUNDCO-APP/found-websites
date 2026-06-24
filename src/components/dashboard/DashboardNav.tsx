@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor } from "@/lib/dashboard/typography"
+import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor, defaultFormIntentFor } from "@/lib/dashboard/typography"
 
 type Tab = { path: string; label: string; id: string }
 type Album = { id: string; name: string; cover_url: string | null }
@@ -17,6 +17,16 @@ const BASE_TABS: Tab[] = [
 ]
 
 const SCHEDULE_TAB: Tab = { id: "schedule", path: "/schedule", label: "Schedule" }
+
+function inboxLabelFor(industry: string | null | undefined): string {
+  switch (defaultFormIntentFor(industry)) {
+    case "booking":     return "Bookings"
+    case "appointment": return "Appointments"
+    case "estimate":    return "Estimates"
+    case "order":       return "Orders"
+    default:            return "Leads"
+  }
+}
 
 // All possible tabs for an industry — used for byId mapping when loading from localStorage
 function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
@@ -37,9 +47,10 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
     ]
   }
 
+  const inboxLabel = inboxLabelFor(industry)
   return [
     { id: "home", path: "/", label: "Home" },
-    { id: "inbox", path: "/leads", label: "Inbox" },
+    { id: "inbox", path: "/leads", label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
@@ -72,9 +83,10 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
     ]
   }
 
-  // All other industries
+  // All other industries — inbox label matches the page header
+  const inboxLabel = inboxLabelFor(industry)
   const middle = [
-    { id: "inbox", path: "/leads", label: "Inbox" },
+    { id: "inbox", path: "/leads", label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },

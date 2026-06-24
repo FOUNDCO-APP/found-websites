@@ -3,9 +3,19 @@
 import React, { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { TYPE, TEXT_OPACITY, GREEN } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN, defaultFormIntentFor } from "@/lib/dashboard/typography"
 
 type PageDef = { id: string; label: string; path: string }
+
+function inboxLabelFor(industry: string | null | undefined): string {
+  switch (defaultFormIntentFor(industry)) {
+    case "booking":     return "Bookings"
+    case "appointment": return "Appointments"
+    case "estimate":    return "Estimates"
+    case "order":       return "Orders"
+    default:            return "Leads"
+  }
+}
 
 function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
@@ -25,9 +35,10 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
     ]
   }
 
+  const inboxLabel = inboxLabelFor(industry)
   return [
     { id: "home", label: "Home", path: "/" },
-    { id: "inbox", label: "Inbox", path: "/leads" },
+    { id: "inbox", label: inboxLabel, path: "/leads" },
     ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
     { id: "photos", label: "Photos", path: "/photos" },
     { id: "contacts", label: "Contacts", path: "/contacts" },
