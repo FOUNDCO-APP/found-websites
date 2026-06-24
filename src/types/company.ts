@@ -65,6 +65,7 @@ export type Company = {
   logo_white_url: string | null
   navbar_dark: boolean | null
   stripe_customer_id: string | null
+  stripe_connect_account_id: string | null
   plan: string | null
   subscription_status: string | null
   trial_ends_at: string | null

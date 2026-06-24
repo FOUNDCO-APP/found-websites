@@ -5,6 +5,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import type { Metadata } from "next"
 
@@ -42,6 +43,16 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     ? config.menu_items
     : null
 
+  const admin = createAdminClient()
+  const { data: onlineOrderingAddon } = await admin
+    .from("addon_subscriptions")
+    .select("id")
+    .eq("company_id", company.id)
+    .eq("addon_slug", "online_ordering")
+    .eq("active", true)
+    .maybeSingle()
+  const onlineOrderingActive = Boolean(onlineOrderingAddon)
+
   return (
     <>
       {/* ── HERO ── */}
@@ -66,6 +77,12 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
           </h1>
           {config?.tagline && (
             <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>{config.tagline}</p>
+          )}
+          {onlineOrderingActive && menuCategories && (
+            <Link href={`/${slug}/order`} className="btn text-white inline-flex mt-8"
+              style={{ backgroundColor: primary, borderColor: primary }}>
+              Start Order
+            </Link>
           )}
         </div>
       </section>
