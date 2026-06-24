@@ -21,25 +21,6 @@ export default function StickyCtaBar({
 
   const isPhone = href.startsWith("tel:")
 
-  const btn = (
-    <span style={{
-      display: "block",
-      width: "100%",
-      padding: "15px 0",
-      borderRadius: 999,
-      textAlign: "center" as const,
-      backgroundColor: color,
-      color: "white",
-      fontWeight: 800,
-      fontSize: "1rem",
-      letterSpacing: "-0.01em",
-      textDecoration: "none",
-      boxShadow: `0 4px 20px ${color}40`,
-    }}>
-      {label}
-    </span>
-  )
-
   return (
     <div
       className="md:hidden"
@@ -58,9 +39,21 @@ export default function StickyCtaBar({
       }}
     >
       {isPhone ? (
-        <a href={href} style={{ textDecoration: "none" }}>{btn}</a>
+        <a
+          href={href}
+          className="btn w-full text-white"
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center" }}
+        >
+          {label}
+        </a>
       ) : (
-        <Link href={href} style={{ textDecoration: "none" }}>{btn}</Link>
+        <Link
+          href={href}
+          className="btn w-full text-white"
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center" }}
+        >
+          {label}
+        </Link>
       )}
     </div>
   )

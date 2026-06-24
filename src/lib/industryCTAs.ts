@@ -1,4 +1,4 @@
-import { intentHref } from "@/types/company"
+import { intentLabel, intentHref } from "@/types/company"
 
 export type CTA = { label: string; href: string }
 
@@ -90,4 +90,29 @@ export function getIndustryCTAs(
   }
 
   return { supportingCTA }
+}
+
+// Intents strong enough to anchor the sticky dock bar
+const STRONG_INTENTS = new Set(["call", "book", "quote", "reserve", "menu", "shop"])
+
+export function getStickyCTA(
+  industry: string,
+  primaryIntent: string,
+  phone: string | null
+): { label: string; href: string; matchPath: string | null } | null {
+  if (STRONG_INTENTS.has(primaryIntent)) {
+    return {
+      label: intentLabel[primaryIntent] || "Contact Us",
+      href: primaryIntent === "call"
+        ? `tel:${phone?.replace(/\D/g, "") ?? ""}`
+        : intentHref[primaryIntent] || "/contact",
+      matchPath: primaryIntent === "call" ? null : intentHref[primaryIntent] || "/contact",
+    }
+  }
+
+  // "visit" / "contact" — fall back to the industry scheduling CTA
+  const fallback = SCHEDULING_CTA[industry]
+  if (fallback) return { ...fallback, matchPath: fallback.href }
+
+  return null
 }

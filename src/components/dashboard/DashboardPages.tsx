@@ -124,7 +124,7 @@ export default function DashboardPages({
           <p style={{ margin: 0, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Pages</p>
           <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 5px ${GREEN}80`, flexShrink: 0 }} />
-            <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>= active in bottom bar</span>
+            <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>= in your Dock</span>
           </span>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -163,7 +163,7 @@ export default function DashboardPages({
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Organize my bottom bar</span>
+            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Organize my Dock</span>
           </button>
         </div>
       </section>
@@ -185,7 +185,7 @@ export default function DashboardPages({
       <div style={{ borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
         <div style={{ padding: "14px 16px 6px" }}>
           <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.5 }}>
-            Choose up to 5 tabs for your dashboard.
+            Choose up to 5 pages to pin to your Dock.
           </p>
           {activeTabs.map((tab, index) => {
             const locked = tab.id === "home" || tab.id === "more"
