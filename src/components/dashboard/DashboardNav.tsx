@@ -28,7 +28,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
       { id: "home", path: "/", label: "Home" },
       ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
       hasCalendar
-        ? { id: "reservations", path: "/leads?view=reservations", label: "Bookings" }
+        ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
         : { id: "inbox", path: "/leads", label: "Reservations" },
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
@@ -54,7 +54,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
 
   if (industry === "food") {
     const reservationsTab = hasCalendar
-      ? { id: "reservations", path: "/leads?view=reservations", label: "Bookings" }
+      ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
       : { id: "inbox", path: "/leads", label: "Reservations" }
 
     const middle = [

@@ -16,7 +16,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
       { id: "home", label: "Home", path: "/" },
       ...(hasOrders ? [{ id: "orders", label: "Orders", path: "/leads?view=orders" }] : []),
       hasCalendar
-        ? { id: "reservations", label: "Bookings", path: "/leads?view=reservations" }
+        ? { id: "reservations", label: "Reservations", path: "/leads?view=reservations" }
         : { id: "inbox", label: "Reservations", path: "/leads" },
       ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
       { id: "photos", label: "Photos", path: "/photos" },
