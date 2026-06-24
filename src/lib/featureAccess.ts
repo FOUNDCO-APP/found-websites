@@ -91,30 +91,23 @@ export type AddonDef = {
 
 export const ALL_ADDONS: AddonDef[] = [
   {
-    slug: "menu_display",
-    label: "Menu Page",
-    description: "Show a beautiful, organized menu on your website — categories, descriptions, and prices.",
-    price: 10,
+    slug: "online_ordering",
+    label: "Online Ordering",
+    description: "Turn your existing menu into a paid order flow. Customers choose items, pay online, and the order lands in your Inbox.",
+    price: 20,
     relevantIndustries: ["food", "home_based_food"],
   },
   {
-    slug: "online_ordering",
-    label: "Order Online",
-    description: "Let customers place orders and pay directly from your site. No third-party apps, no commission.",
-    price: 20,
-    relevantIndustries: ["food", "home_based_food", "retail"],
-  },
-  {
     slug: "reservation_calendar",
-    label: "Reservation Calendar",
-    description: "Manage reservations with a built-in calendar. Set available times, confirm requests, see your day at a glance.",
+    label: "Booking Calendar",
+    description: "Let customers request a time from your site. Restaurants can take reservations; service businesses can use it for appointments or classes.",
     price: 15,
     relevantIndustries: ["food", "wellness", "beauty", "fitness", "pet_services", "education", "automotive", "healthcare"],
   },
   {
     slug: "shopping_cart",
     label: "Shopping Cart",
-    description: "Sell products directly from your website. Add items, set prices, collect payments through Stripe.",
+    description: "Sell products like shirts, packaged goods, or merch from your site with a real cart and Stripe checkout.",
     price: 20,
     relevantIndustries: ["retail", "makers_crafts", "home_based_food"],
   },
@@ -135,7 +128,7 @@ export const ALL_ADDONS: AddonDef[] = [
   {
     slug: "second_location",
     label: "Second Location",
-    description: "Add a second business location to your Found account — its own page, photos, and contact info.",
+    description: "Add another location under the same business without creating a second full account.",
     price: 15,
     relevantIndustries: [],
   },

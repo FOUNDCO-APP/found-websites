@@ -19,7 +19,7 @@ export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const addonSlug = formData.get("addonSlug") as string
   const stripe = getStripe()
-  if (!stripe || !companyId || !addonSlug) return
+  if (!stripe || !companyId || !addonSlug) redirect("/more?addon_unavailable=1")
 
   const admin = createAdminClient()
 
@@ -28,7 +28,7 @@ export async function startAddonCheckout(formData: FormData) {
     admin.from("addon_stripe_prices").select("stripe_price_id").eq("addon_slug", addonSlug).single(),
   ])
 
-  if (!company || !priceRow?.stripe_price_id) return
+  if (!company || !priceRow?.stripe_price_id) redirect("/more?addon_unavailable=1")
 
   let customerId = company.stripe_customer_id as string | undefined
 
