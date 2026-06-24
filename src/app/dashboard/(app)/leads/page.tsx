@@ -382,7 +382,7 @@ export default function LeadsPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -397,7 +397,7 @@ export default function LeadsPage() {
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {otherLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -473,12 +473,13 @@ export default function LeadsPage() {
 }
 
 function LeadCard({
-  lead, hasTemperature, onSelect, onTempChange,
+  lead, hasTemperature, onSelect, onTempChange, onMarkDone,
 }: {
   lead: LeadRow
   hasTemperature: boolean
   onSelect: (lead: LeadRow) => void
   onTempChange: (id: string, temp: "hot" | "warm" | "cold") => void
+  onMarkDone?: (id: string) => void
 }) {
   const [pickingTemp, setPickingTemp] = useState(false)
   const pa = lead.partial_answers
@@ -563,8 +564,23 @@ function LeadCard({
         )}
       </div>
 
-      {/* Inline contact actions */}
-      {!isDone && (phoneHref || emailHref) && (
+      {/* Order cards: quick Mark Done button */}
+      {isOnlineOrder(lead) && !isDone && onMarkDone && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 12px" }}>
+          <button
+            onClick={e => { e.stopPropagation(); onMarkDone(lead.id) }}
+            style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Mark Done
+          </button>
+        </div>
+      )}
+
+      {/* Regular leads: Call / Text / Email inline actions */}
+      {!isOnlineOrder(lead) && !isDone && (phoneHref || emailHref) && (
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "0 4px 4px" }}>
           {phoneHref && (
             <a href={phoneHref} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", textDecoration: "none", borderRadius: 14 }}>
@@ -635,12 +651,19 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;")
     const itemRows = items.map(item => `<tr><td>${Number(item.quantity || 1)}x</td><td>${htmlEscape(item.name || "Item")}</td><td>${formatCents(Number(item.unit_amount || 0) * Number(item.quantity || 1))}</td></tr>`).join("")
-    const ticket = window.open("", "_blank", "width=420,height=680")
-    if (!ticket) return
-    ticket.document.write(`<!doctype html><html><head><title>Order Ticket</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111}.ticket{max-width:360px;margin:0 auto}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.name{font-size:26px;font-weight:900;margin:8px 0 4px}.meta{font-size:14px;margin:0 0 18px}.pickup{border:2px solid #111;padding:14px;margin:16px 0;font-size:22px;font-weight:900;text-align:center}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:10px 0;border-bottom:1px solid #ddd;font-size:16px}td:first-child{width:48px;font-weight:900}td:last-child{text-align:right}.total{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin-top:14px}.notes{margin-top:18px;padding:12px;border:1px solid #111;font-size:15px;white-space:pre-wrap}.small{font-size:12px;margin-top:18px;color:#555}@media print{button{display:none}body{padding:0}.ticket{max-width:none}}</style></head><body><div class="ticket"><div class="eyebrow">Online Order</div><div class="name">${htmlEscape(lead.name || "Customer")}</div><p class="meta">${htmlEscape(lead.phone || "")}${lead.email ? ` | ${htmlEscape(lead.email)}` : ""}</p>${pickupTime ? `<div class="pickup">Pickup ${htmlEscape(pickupTime)}</div>` : ""}<table>${itemRows}</table><div class="total"><span>Total paid</span><span>${orderTotal}</span></div>${orderNotes ? `<div class="notes"><strong>Notes</strong><br>${htmlEscape(orderNotes)}</div>` : ""}<p class="small">Order ${htmlEscape(lead.id.slice(0, 8))}${lead.created_at ? ` | ${htmlEscape(new Date(lead.created_at).toLocaleString())}` : ""}</p><button onclick="window.print()" style="width:100%;margin-top:18px;padding:14px;border:0;background:#111;color:#fff;font-weight:800;border-radius:10px;">Print ticket</button></div></body></html>`)
-    ticket.document.close()
-    ticket.focus()
-    setTimeout(() => ticket.print(), 250)
+    const ticketHtml = `<!doctype html><html><head><title>Order Ticket</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111}.ticket{max-width:360px;margin:0 auto}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.name{font-size:26px;font-weight:900;margin:8px 0 4px}.meta{font-size:14px;margin:0 0 18px}.pickup{border:2px solid #111;padding:14px;margin:16px 0;font-size:22px;font-weight:900;text-align:center}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:10px 0;border-bottom:1px solid #ddd;font-size:16px}td:first-child{width:48px;font-weight:900}td:last-child{text-align:right}.total{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin-top:14px}.notes{margin-top:18px;padding:12px;border:1px solid #111;font-size:15px;white-space:pre-wrap}.small{font-size:12px;margin-top:18px;color:#555}@media print{body{padding:0}.ticket{max-width:none}}</style></head><body><div class="ticket"><div class="eyebrow">Online Order</div><div class="name">${htmlEscape(lead.name || "Customer")}</div><p class="meta">${htmlEscape(lead.phone || "")}${lead.email ? ` | ${htmlEscape(lead.email)}` : ""}</p>${pickupTime ? `<div class="pickup">Pickup ${htmlEscape(pickupTime)}</div>` : ""}<table>${itemRows}</table><div class="total"><span>Total paid</span><span>${orderTotal}</span></div>${orderNotes ? `<div class="notes"><strong>Notes</strong><br>${htmlEscape(orderNotes)}</div>` : ""}<p class="small">Order ${htmlEscape(lead.id.slice(0, 8))}${lead.created_at ? ` | ${htmlEscape(new Date(lead.created_at).toLocaleString())}` : ""}</p></div></body></html>`
+    const iframe = document.createElement("iframe")
+    iframe.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:420px;height:680px;border:none;visibility:hidden;"
+    document.body.appendChild(iframe)
+    const doc = iframe.contentDocument || iframe.contentWindow?.document
+    if (!doc) { document.body.removeChild(iframe); return }
+    doc.open()
+    doc.write(ticketHtml)
+    doc.close()
+    setTimeout(() => {
+      try { iframe.contentWindow?.print() } catch {}
+      setTimeout(() => { try { document.body.removeChild(iframe) } catch {} }, 1000)
+    }, 300)
   }
 
   async function handleSave() {
@@ -769,7 +792,7 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
             </div>
 
             {onlineOrder && (
-              <div style={{ marginBottom: 22, padding: 18, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ marginBottom: 18, padding: 18, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
                   <div>
                     <div style={{ color: SIGNAL_GREEN, marginBottom: 4, ...TYPE.caption }}>Kitchen Ticket</div>
@@ -779,7 +802,11 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
                     Print
                   </button>
                 </div>
-                {pickupTime && <div style={{ marginBottom: 12, color: "white", ...TYPE.subhead }}><strong>Pickup:</strong> {pickupTime}</div>}
+                {pickupTime && (
+                  <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10, border: "2px solid rgba(255,255,255,0.18)", textAlign: "center", color: "white", ...TYPE.headline }}>
+                    Pickup {pickupTime}
+                  </div>
+                )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {items.map((item, index) => (
                     <div key={`${item.name}-${index}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, color: "white", opacity: TEXT_OPACITY.secondary, ...TYPE.body }}>
@@ -795,26 +822,46 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
                 )}
               </div>
             )}
-            <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
-              {phoneHref && (
-                <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
-                </a>
-              )}
-              {smsHref && (
-                <a href={smsHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
-                </a>
-              )}
-              {emailHref && (
-                <a href={emailHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                  <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
-                </a>
-              )}
-            </div>
+
+            {/* Mark as Done / Reopen — TOP position for online orders */}
+            {onlineOrder && (
+              isDone ? (
+                <button onClick={() => onReopen(lead.id)} style={{ width: "100%", marginBottom: 16, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  Reopen
+                </button>
+              ) : (
+                <button onClick={handleMarkDone} style={{ width: "100%", marginBottom: 16, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Mark as Done
+                </button>
+              )
+            )}
+
+            {/* Call / Text / Email */}
+            {(phoneHref || emailHref) && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+                {phoneHref && (
+                  <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: SIGNAL_GREEN }}>Call</span>
+                  </a>
+                )}
+                {smsHref && (
+                  <a href={smsHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
+                  </a>
+                )}
+                {emailHref && (
+                  <a href={emailHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
+                  </a>
+                )}
+              </div>
+            )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>
               {lead.phone && <DetailRow label="Phone" value={lead.phone} />}
@@ -835,28 +882,20 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
               )}
             </div>
 
-            {/* Mark as Done / Reopen */}
-            {isDone ? (
-              <button onClick={() => onReopen(lead.id)} style={{
-                width: "100%", padding: "14px 0", borderRadius: 14,
-                border: "1px solid rgba(255,255,255,0.1)",
-                backgroundColor: "transparent", color: "rgba(255,255,255,0.4)",
-                fontSize: 14, fontWeight: 600, cursor: "pointer",
-              }}>
-                Reopen
-              </button>
-            ) : (
-              <button onClick={handleMarkDone} style={{
-                width: "100%", padding: "15px 0", borderRadius: 14, border: "none",
-                backgroundColor: `${SIGNAL_GREEN}18`,
-                color: SIGNAL_GREEN, fontSize: 15, fontWeight: 700, cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Mark as Done
-              </button>
+            {/* Mark as Done / Reopen — bottom position for regular leads only */}
+            {!onlineOrder && (
+              isDone ? (
+                <button onClick={() => onReopen(lead.id)} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                  Reopen
+                </button>
+              ) : (
+                <button onClick={handleMarkDone} style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: `${SIGNAL_GREEN}18`, color: SIGNAL_GREEN, fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Mark as Done
+                </button>
+              )
             )}
           </>
         )}
