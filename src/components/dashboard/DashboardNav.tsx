@@ -16,38 +16,66 @@ const BASE_TABS: Tab[] = [
   { id: "more", path: "/more", label: "More" },
 ]
 
+const SCHEDULE_TAB: Tab = { id: "schedule", path: "/schedule", label: "Schedule" }
+
 // All possible tabs for an industry — used for byId mapping when loading from localStorage
 function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
+  const hasCalendar = activeAddons.includes("reservation_calendar")
+  const hasOrders = activeAddons.includes("online_ordering")
+
   if (industry === "food") {
-    const hasCalendar = activeAddons.includes("reservation_calendar")
     return [
       { id: "home", path: "/", label: "Home" },
-      ...(activeAddons.includes("online_ordering") ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
+      ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
       hasCalendar
-        ? { id: "reservations", path: "/leads?view=reservations", label: "Reserve" }
+        ? { id: "reservations", path: "/leads?view=reservations", label: "Bookings" }
         : { id: "inbox", path: "/leads", label: "Reservations" },
+      ...(hasCalendar ? [SCHEDULE_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
       { id: "contacts", path: "/contacts", label: "Contacts" },
       { id: "more", path: "/more", label: "More" },
     ]
   }
-  return BASE_TABS
+
+  return [
+    { id: "home", path: "/", label: "Home" },
+    { id: "inbox", path: "/leads", label: "Inbox" },
+    ...(hasCalendar ? [SCHEDULE_TAB] : []),
+    { id: "photos", path: "/photos", label: "Photos" },
+    { id: "contacts", path: "/contacts", label: "Contacts" },
+    { id: "more", path: "/more", label: "More" },
+  ]
 }
 
 // Default 5-tab layout — Home locked first, More locked last
 function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
-  if (industry !== "food") return BASE_TABS
-  const hasOrders = activeAddons.includes("online_ordering")
   const hasCalendar = activeAddons.includes("reservation_calendar")
+  const hasOrders = activeAddons.includes("online_ordering")
 
-  const reservationsTab = hasCalendar
-    ? { id: "reservations", path: "/leads?view=reservations", label: "Reserve" }
-    : { id: "inbox", path: "/leads", label: "Reservations" }
+  if (industry === "food") {
+    const reservationsTab = hasCalendar
+      ? { id: "reservations", path: "/leads?view=reservations", label: "Bookings" }
+      : { id: "inbox", path: "/leads", label: "Reservations" }
 
-  // 3 middle slots — Home and More are always pinned
+    const middle = [
+      ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
+      reservationsTab,
+      ...(hasCalendar ? [SCHEDULE_TAB] : []),
+      { id: "photos", path: "/photos", label: "Photos" },
+      { id: "contacts", path: "/contacts", label: "Contacts" },
+    ].slice(0, 3)
+
+    return [
+      { id: "home", path: "/", label: "Home" },
+      ...middle,
+      { id: "more", path: "/more", label: "More" },
+    ]
+  }
+
+  // All other industries
   const middle = [
-    ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
-    reservationsTab,
+    { id: "inbox", path: "/leads", label: "Inbox" },
+    ...(hasCalendar ? [SCHEDULE_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
   ].slice(0, 3)
@@ -132,6 +160,19 @@ function ReservationsIcon({ active }: { active: boolean }) {
     </svg>
   )
 }
+function ScheduleIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>
+      <path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/>
+      <path d="M8 18h.01"/><path d="M12 18h.01"/>
+    </svg>
+  )
+}
+
 function MoreIcon({ active }: { active: boolean }) {
   const c = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   return (
@@ -144,13 +185,15 @@ function MoreIcon({ active }: { active: boolean }) {
 }
 
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
-  "/":         (a) => <HomeIcon     active={a} />,
-  "/leads":    (a) => <LeadsIcon    active={a} />,
-  "orders":    (a) => <OrdersIcon   active={a} />,
+  "/":            (a) => <HomeIcon         active={a} />,
+  "/leads":       (a) => <LeadsIcon        active={a} />,
+  "orders":       (a) => <OrdersIcon       active={a} />,
   "reservations": (a) => <ReservationsIcon active={a} />,
-  "/photos":   (a) => <PhotosIcon   active={a} />,
-  "/contacts": (a) => <ContactsIcon active={a} />,
-  "/more":     (a) => <MoreIcon     active={a} />,
+  "/schedule":    (a) => <ScheduleIcon     active={a} />,
+  "schedule":     (a) => <ScheduleIcon     active={a} />,
+  "/photos":      (a) => <PhotosIcon       active={a} />,
+  "/contacts":    (a) => <ContactsIcon     active={a} />,
+  "/more":        (a) => <MoreIcon         active={a} />,
 }
 
 export default function DashboardNav({

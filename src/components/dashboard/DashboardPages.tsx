@@ -8,22 +8,27 @@ import { TYPE, TEXT_OPACITY, GREEN } from "@/lib/dashboard/typography"
 type PageDef = { id: string; label: string; path: string }
 
 function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
+  const hasCalendar = activeAddons.includes("reservation_calendar")
+  const hasOrders = activeAddons.includes("online_ordering")
+
   if (industry === "food") {
-    const hasCalendar = activeAddons.includes("reservation_calendar")
     return [
       { id: "home", label: "Home", path: "/" },
-      ...(activeAddons.includes("online_ordering") ? [{ id: "orders", label: "Orders", path: "/leads?view=orders" }] : []),
+      ...(hasOrders ? [{ id: "orders", label: "Orders", path: "/leads?view=orders" }] : []),
       hasCalendar
-        ? { id: "reservations", label: "Reserve", path: "/leads?view=reservations" }
+        ? { id: "reservations", label: "Bookings", path: "/leads?view=reservations" }
         : { id: "inbox", label: "Reservations", path: "/leads" },
+      ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
       { id: "photos", label: "Photos", path: "/photos" },
       { id: "contacts", label: "Contacts", path: "/contacts" },
       { id: "more", label: "More", path: "/more" },
     ]
   }
+
   return [
     { id: "home", label: "Home", path: "/" },
     { id: "inbox", label: "Inbox", path: "/leads" },
+    ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
     { id: "photos", label: "Photos", path: "/photos" },
     { id: "contacts", label: "Contacts", path: "/contacts" },
     { id: "more", label: "More", path: "/more" },
@@ -31,19 +36,28 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
 }
 
 function defaultTabIdsFor(industry: string | null | undefined, activeAddons: string[]): string[] {
+  const hasCalendar = activeAddons.includes("reservation_calendar")
+  const hasOrders = activeAddons.includes("online_ordering")
+
   if (industry === "food") {
-    const hasOrders = activeAddons.includes("online_ordering")
-    const hasCalendar = activeAddons.includes("reservation_calendar")
     const reservationId = hasCalendar ? "reservations" : "inbox"
     const middle = [
       ...(hasOrders ? ["orders"] : []),
       reservationId,
+      ...(hasCalendar ? ["schedule"] : []),
       "photos",
       "contacts",
     ].slice(0, 3)
     return ["home", ...middle, "more"]
   }
-  return ["home", "inbox", "photos", "contacts", "more"]
+
+  const middle = [
+    "inbox",
+    ...(hasCalendar ? ["schedule"] : []),
+    "photos",
+    "contacts",
+  ].slice(0, 3)
+  return ["home", ...middle, "more"]
 }
 
 export default function DashboardPages({

@@ -3,7 +3,7 @@ import { intentLabel, intentHref } from "@/types/company"
 export type CTA = { label: string; href: string }
 
 // The scheduling action — upgradeable to full calendar add-on
-const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
+export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
   food:                  { label: "Reserve a Table",     href: "/reserve" },
   wellness:              { label: "Book Now",             href: "/reserve" },
   beauty:                { label: "Book Now",             href: "/reserve" },

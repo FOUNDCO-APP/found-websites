@@ -275,3 +275,160 @@ export function buildReservationAutoReply({
 </body>
 </html>`
 }
+
+// ── Booking calendar: owner notification ────────────────────────────────────
+export function buildBookingNotification({
+  company,
+  name,
+  phone,
+  email,
+  displayDate,
+  displayTime,
+  service,
+  notes,
+  confirmationCode,
+  replyUrl,
+}: {
+  company: { name: string }
+  name: string
+  phone: string
+  email: string
+  displayDate: string
+  displayTime: string
+  service: string
+  notes: string
+  confirmationCode: string
+  replyUrl: string
+}) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#111111;padding:32px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">Booking Confirmed</p>
+            <h1 style="margin:0;font-size:22px;font-weight:900;color:#ffffff;">${company.name}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px;">
+            <p style="margin:0 0 24px;font-size:16px;color:#444444;">You have a new booking from your website.</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Date</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${displayDate}</p>
+              </td></tr>
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Time</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${displayTime}</p>
+              </td></tr>
+              ${confirmationCode ? `<tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Confirmation #</p>
+                <p style="margin:0;font-size:15px;font-weight:700;color:#555555;">${confirmationCode}</p>
+              </td></tr>` : ""}
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Name</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${name}</p>
+              </td></tr>
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Phone</p>
+                <p style="margin:0;font-size:15px;font-weight:600;color:#333333;"><a href="tel:${phone.replace(/\D/g, "")}" style="color:#333333;text-decoration:none;">${phone}</a></p>
+              </td></tr>
+              ${email ? `<tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Email</p>
+                <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${email}</p>
+              </td></tr>` : ""}
+              ${service ? `<tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Service</p>
+                <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${service}</p>
+              </td></tr>` : ""}
+              ${notes ? `<tr><td>
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Notes</p>
+                <p style="margin:0;font-size:15px;color:#333333;line-height:1.6;">${notes}</p>
+              </td></tr>` : ""}
+            </table>
+            <a href="${replyUrl}" style="display:inline-block;background:#111111;color:#ffffff;font-size:14px;font-weight:800;padding:16px 32px;border-radius:50px;text-decoration:none;">View in Found</a>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#cccccc;">Powered by <a href="https://foundco.app" style="color:#cccccc;text-decoration:underline;">Found</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
+// ── Booking calendar: customer confirmation ──────────────────────────────────
+export function buildBookingConfirmation({
+  company,
+  name,
+  displayDate,
+  displayTime,
+  service,
+  confirmationCode,
+}: {
+  company: { name: string; phone: string | null }
+  name: string
+  displayDate: string
+  displayTime: string
+  service: string
+  confirmationCode: string
+}) {
+  const firstName = name.split(" ")[0]
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;">
+        <tr>
+          <td style="background:#111111;padding:32px;text-align:center;">
+            <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">You're booked</p>
+            <h1 style="margin:0;font-size:22px;font-weight:900;color:#ffffff;">${company.name}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 32px;">
+            <p style="margin:0 0 24px;font-size:16px;color:#444444;">Hi ${firstName}, your booking is confirmed!</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:24px;margin-bottom:28px;">
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Date</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${displayDate}</p>
+              </td></tr>
+              <tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Time</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${displayTime}</p>
+              </td></tr>
+              ${service ? `<tr><td style="padding-bottom:16px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Service</p>
+                <p style="margin:0;font-size:15px;font-weight:600;color:#333333;">${service}</p>
+              </td></tr>` : ""}
+              ${confirmationCode ? `<tr><td>
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Confirmation #</p>
+                <p style="margin:0;font-size:17px;font-weight:800;color:#111111;">${confirmationCode}</p>
+              </td></tr>` : ""}
+            </table>
+            ${company.phone ? `<p style="margin:0 0 24px;font-size:14px;color:#666666;line-height:1.6;">
+              Need to change or cancel? Call us at <a href="tel:${company.phone.replace(/\D/g, "")}" style="color:#111111;font-weight:600;">${company.phone}</a>.
+            </p>` : ""}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 32px;border-top:1px solid #f0f0f0;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#cccccc;">Powered by <a href="https://foundco.app" style="color:#cccccc;text-decoration:underline;">Found</a></p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
