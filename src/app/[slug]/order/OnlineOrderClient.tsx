@@ -236,7 +236,7 @@ export default function OnlineOrderClient({
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
             <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
             <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-            <input value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} placeholder="Pickup time" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
+            <input value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} aria-label="Pickup time" type="time" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: pickupTime ? "#111" : "#666" }} />
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes" rows={3} className="w-full px-4 py-3 border border-neutral-200 text-base resize-none" style={{ borderRadius: 8, color: "#111" }} />
           </div>
 
