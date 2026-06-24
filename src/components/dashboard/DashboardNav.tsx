@@ -16,17 +16,35 @@ const BASE_TABS: Tab[] = [
   { id: "more", path: "/more", label: "More" },
 ]
 
+// All possible tabs for an industry — used for byId mapping when loading from localStorage
+function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
+  if (industry === "food") {
+    const hasCalendar = activeAddons.includes("reservation_calendar")
+    return [
+      { id: "home", path: "/", label: "Home" },
+      ...(activeAddons.includes("online_ordering") ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
+      hasCalendar
+        ? { id: "reservations", path: "/leads?view=reservations", label: "Reserve" }
+        : { id: "inbox", path: "/leads", label: "Reservations" },
+      { id: "photos", path: "/photos", label: "Photos" },
+      { id: "contacts", path: "/contacts", label: "Contacts" },
+      { id: "more", path: "/more", label: "More" },
+    ]
+  }
+  return BASE_TABS
+}
+
+// Default 5-tab layout — Home locked first, More locked last
 function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
   if (industry !== "food") return BASE_TABS
   const hasOrders = activeAddons.includes("online_ordering")
   const hasCalendar = activeAddons.includes("reservation_calendar")
 
-  // Restaurants always have a reservations tab — basic list or calendar upgrade
   const reservationsTab = hasCalendar
     ? { id: "reservations", path: "/leads?view=reservations", label: "Reserve" }
     : { id: "inbox", path: "/leads", label: "Reservations" }
 
-  // Fill 3 middle slots (Home and More are always locked at start/end)
+  // 3 middle slots — Home and More are always pinned
   const middle = [
     ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
     reservationsTab,
@@ -156,6 +174,7 @@ export default function DashboardNav({
   const albumLabel = albumLabelFor(industry)
   const addonKey = activeAddons.join("|")
   const defaultTabs = defaultTabsFor(industry, activeAddons)
+  const allAvailable = allTabsFor(industry, activeAddons)
   const storageKey = `found_dashboard_tabs_${companyName || "default"}`
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
 
@@ -185,7 +204,7 @@ export default function DashboardNav({
       const saved = window.localStorage.getItem(storageKey)
       if (!saved) { setTabs(defaultTabs); return }
       const ids = JSON.parse(saved) as string[]
-      const byId = new Map(defaultTabs.map(tab => [tab.id, tab]))
+      const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
       const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
       const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
       setTabs([...ordered, ...missing].slice(0, 5))
@@ -198,7 +217,7 @@ export default function DashboardNav({
         const saved = window.localStorage.getItem(storageKey)
         if (!saved) { setTabs(defaultTabs); return }
         const ids = JSON.parse(saved) as string[]
-        const byId = new Map(defaultTabs.map(tab => [tab.id, tab]))
+        const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
         const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
         const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
         setTabs([...ordered, ...missing].slice(0, 5))
