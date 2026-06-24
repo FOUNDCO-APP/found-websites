@@ -27,53 +27,53 @@ type PaymentSetup = {
   stripeAccountId: string
 }
 
-const FOUND_BLACK = "#0D0F0E"
-const SIGNAL_GREEN = "#32D074"
+const CHECKOUT_BLACK = "#0D0F0E"
 
-const paymentAppearance: StripeElementsOptions["appearance"] = {
-  theme: "night",
-  variables: {
-    colorPrimary: SIGNAL_GREEN,
-    colorBackground: "#151716",
-    colorText: "#ffffff",
-    colorDanger: "#F43F5E",
-    colorTextSecondary: "rgba(255,255,255,0.52)",
-    colorTextPlaceholder: "rgba(255,255,255,0.28)",
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    fontSizeBase: "15px",
-    borderRadius: "12px",
-  },
-  rules: {
-    ".Input": {
-      backgroundColor: "#101211",
-      border: "1px solid rgba(255,255,255,0.12)",
-      boxShadow: "none",
-      padding: "14px 16px",
+function paymentAppearance(primary: string): StripeElementsOptions["appearance"] {
+  return {
+    theme: "night",
+    variables: {
+      colorPrimary: primary,
+      colorBackground: "#151716",
+      colorText: "#ffffff",
+      colorDanger: "#F43F5E",
+      colorTextSecondary: "rgba(255,255,255,0.52)",
+      colorTextPlaceholder: "rgba(255,255,255,0.28)",
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontSizeBase: "15px",
+      borderRadius: "12px",
     },
-    ".Input:focus": {
-      border: `1px solid ${SIGNAL_GREEN}`,
-      boxShadow: `0 0 0 1px ${SIGNAL_GREEN}26`,
+    rules: {
+      ".Input": {
+        backgroundColor: "#101211",
+        border: "1px solid rgba(255,255,255,0.12)",
+        boxShadow: "none",
+        padding: "14px 16px",
+      },
+      ".Input:focus": {
+        border: `1px solid ${primary}`,
+        boxShadow: `0 0 0 1px ${primary}26`,
+      },
+      ".Label": {
+        color: "rgba(255,255,255,0.52)",
+        fontSize: "11px",
+        fontWeight: "800",
+        letterSpacing: "0.14em",
+        textTransform: "uppercase",
+        marginBottom: "8px",
+      },
+      ".Error": { color: "#F43F5E", fontSize: "12px" },
+      ".Tab": {
+        backgroundColor: "#101211",
+        border: "1px solid rgba(255,255,255,0.1)",
+      },
+      ".Tab--selected": {
+        borderColor: primary,
+        boxShadow: `0 0 0 1px ${primary}33`,
+      },
     },
-    ".Label": {
-      color: "rgba(255,255,255,0.52)",
-      fontSize: "11px",
-      fontWeight: "800",
-      letterSpacing: "0.14em",
-      textTransform: "uppercase",
-      marginBottom: "8px",
-    },
-    ".Error": { color: "#F43F5E", fontSize: "12px" },
-    ".Tab": {
-      backgroundColor: "#101211",
-      border: "1px solid rgba(255,255,255,0.1)",
-    },
-    ".Tab--selected": {
-      borderColor: SIGNAL_GREEN,
-      boxShadow: `0 0 0 1px ${SIGNAL_GREEN}33`,
-    },
-  },
+  }
 }
-
 function parsePriceCents(price: string | null | undefined) {
   if (!price) return null
   const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
@@ -100,7 +100,7 @@ function pickupTimeOptions() {
   return options
 }
 
-function FoundPaymentElement({
+function ClientPaymentElement({
   setup,
   companyId,
   slug,
@@ -121,13 +121,13 @@ function FoundPaymentElement({
   )
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret: setup.clientSecret, appearance: paymentAppearance }}>
-      <FoundPaymentForm companyId={companyId} slug={slug} setup={setup} total={total} primary={primary} onPaid={onPaid} />
+    <Elements stripe={stripePromise} options={{ clientSecret: setup.clientSecret, appearance: paymentAppearance(primary) }}>
+      <ClientPaymentForm companyId={companyId} slug={slug} setup={setup} total={total} primary={primary} onPaid={onPaid} />
     </Elements>
   )
 }
 
-function FoundPaymentForm({
+function ClientPaymentForm({
   setup,
   companyId,
   slug,
@@ -194,15 +194,16 @@ function FoundPaymentForm({
   }
 
   return (
-    <form onSubmit={submitPayment} className="mt-5 overflow-hidden" style={{ borderRadius: 16, backgroundColor: FOUND_BLACK }}>
+    <>
+    <form onSubmit={submitPayment} className="mt-5 overflow-hidden" style={{ borderRadius: 16, backgroundColor: CHECKOUT_BLACK }}>
       <div className="px-5 pt-5">
         <div className="mb-5 flex items-center justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Found secure checkout</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Secure checkout</p>
             <p className="mt-1 text-xl font-black text-white">{formatMoney(total)}</p>
           </div>
           <div className="text-right text-[11px] font-bold leading-snug" style={{ color: "rgba(255,255,255,0.42)" }}>
-            Card payment<br />powered by Stripe
+            Secure card payment
           </div>
         </div>
         <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
@@ -217,6 +218,16 @@ function FoundPaymentForm({
         {loading ? "Processing..." : `Pay ${formatMoney(total)}`}
       </button>
     </form>
+    <style>{`
+      a[href*="stripe.com"],
+      [class*="StripeElement-badge"],
+      [class*="powered-by"],
+      [class*="PoweredBy"] {
+        pointer-events: none !important;
+        opacity: 0 !important;
+      }
+    `}</style>
+    </>
   )
 }
 
@@ -331,7 +342,7 @@ export default function OnlineOrderClient({
   return (
     <div className={isEmbedded ? "bg-white" : "min-h-screen bg-white"}>
       {!isEmbedded && (
-        <section className="px-6 pt-12 pb-8" style={{ backgroundColor: FOUND_BLACK }}>
+        <section className="px-6 pt-12 pb-8" style={{ backgroundColor: CHECKOUT_BLACK }}>
           <div className="max-w-5xl mx-auto">
             <p className="text-xs font-black tracking-[0.22em] uppercase mb-4" style={{ color: primary }}>
               Order Online
@@ -487,7 +498,7 @@ export default function OnlineOrderClient({
                   {!paymentsReady ? "Payment setup needed" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
                 </button>
               ) : (
-                <FoundPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
+                <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
               )}
             </>
           )}
