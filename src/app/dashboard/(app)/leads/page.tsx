@@ -89,6 +89,7 @@ export default function LeadsPage() {
   const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
   const [showClosedSection, setShowClosedSection] = useState(false)
   const [showIntentPicker, setShowIntentPicker] = useState(false)
+  const [search, setSearch] = useState("")
 
   const effectiveIntent = formIntent ?? defaultFormIntentFor(industry)
   const intentLabel = formIntentLabelFor(effectiveIntent)
@@ -180,6 +181,16 @@ export default function LeadsPage() {
   const openLeads = visibleLeads.filter(l => !l.status || l.status === "open")
   const closedLeads = visibleLeads.filter(l => l.status === "closed")
 
+  const searchQuery = search.toLowerCase().trim()
+  const searchActive = searchQuery.length > 0
+  const searchResults = searchActive
+    ? visibleLeads.filter(l =>
+        l.name?.toLowerCase().includes(searchQuery) ||
+        l.phone?.toLowerCase().includes(searchQuery) ||
+        l.email?.toLowerCase().includes(searchQuery)
+      )
+    : []
+
   const filteredOpen = filterTemp === "all"
     ? openLeads
     : openLeads.filter(l => (l.temperature ?? "warm") === filterTemp)
@@ -234,8 +245,38 @@ export default function LeadsPage() {
         </button>
       </div>
 
+      {/* Search bar */}
+      {(openLeads.length > 0 || closedLeads.length > 0) && (
+        <div style={{ position: "relative", marginBottom: 16 }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="search"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={`Search by name or phone…`}
+            style={{
+              width: "100%", boxSizing: "border-box",
+              padding: "13px 40px 13px 40px",
+              borderRadius: 14,
+              backgroundColor: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "white", fontSize: 15, outline: "none",
+            }}
+          />
+          {searchActive && (
+            <button onClick={() => setSearch("")}
+              style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 4, color: "rgba(255,255,255,0.35)", display: "flex", alignItems: "center" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Temperature filter pills — only for temp-based intents */}
-      {pageLabel.hasTemperature && openLeads.length > 0 && (
+      {!searchActive && pageLabel.hasTemperature && openLeads.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
           {FILTER_PILLS.map(pill => {
             const active = filterTemp === pill.key
@@ -338,12 +379,31 @@ export default function LeadsPage() {
         </div>
       )}
 
+      {/* Search results — replaces normal list when searching */}
+      {searchActive && !loading && (
+        searchResults.length === 0 ? (
+          <div style={{ paddingTop: 60, textAlign: "center" }}>
+            <p style={{ margin: "0 0 6px", fontSize: "1.25rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>No results</p>
+            <p style={{ margin: 0, ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Nothing matched "{search}"</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {searchResults.map(lead => (
+              <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+            ))}
+            <p style={{ margin: "12px 0 0", textAlign: "center", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+        )
+      )}
+
       {/* Main content */}
-      {loading ? (
+      {!searchActive && loading ? (
         <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>
           Loading…
         </div>
-      ) : filteredOpen.length === 0 && filterTemp !== "all" ? (
+      ) : !searchActive && filteredOpen.length === 0 && filterTemp !== "all" ? (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
             No {filterTemp} {pageLabel.plural.toLowerCase()}.
@@ -352,7 +412,7 @@ export default function LeadsPage() {
             Tap the temperature pill on any {pageLabel.singular.toLowerCase()} to tag it.
           </p>
         </div>
-      ) : openLeads.length === 0 && closedLeads.length === 0 ? (
+      ) : !searchActive && openLeads.length === 0 && closedLeads.length === 0 ? (
         <div style={{ paddingTop: 80, textAlign: "center" }}>
           <div style={{
             width: 64, height: 64, borderRadius: 20,
@@ -375,7 +435,7 @@ export default function LeadsPage() {
             Add one manually or wait for your site to bring one in.
           </p>
         </div>
-      ) : (
+      ) : !searchActive ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
 
           {pageLabel.hasTemperature && hotLeads.length > 0 && (
@@ -408,10 +468,10 @@ export default function LeadsPage() {
           )}
 
         </div>
-      )}
+      ) : null}
 
       {/* Closed / Done section */}
-      {!loading && closedLeads.length > 0 && (
+      {!searchActive && !loading && closedLeads.length > 0 && (
         <div style={{ marginTop: openLeads.length === 0 && closedLeads.length > 0 ? 0 : 36 }}>
           <button onClick={() => setShowClosedSection(v => !v)} style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
