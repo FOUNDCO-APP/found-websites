@@ -16,7 +16,8 @@ const BASE_TABS: Tab[] = [
   { id: "more", path: "/more", label: "More" },
 ]
 
-const SCHEDULE_TAB: Tab = { id: "schedule", path: "/schedule", label: "Schedule" }
+const SCHEDULE_TAB: Tab  = { id: "schedule",  path: "/schedule",  label: "Schedule" }
+const EMAIL_TAB: Tab     = { id: "email",     path: "/marketing", label: "Email" }
 
 function inboxLabelFor(industry: string | null | undefined): string {
   switch (defaultFormIntentFor(industry)) {
@@ -31,7 +32,8 @@ function inboxLabelFor(industry: string | null | undefined): string {
 // All possible tabs for an industry — used for byId mapping when loading from localStorage
 function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders = activeAddons.includes("online_ordering")
+  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
     return [
@@ -43,6 +45,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
       { id: "contacts", path: "/contacts", label: "Contacts" },
+      ...(hasEmail ? [EMAIL_TAB] : []),
       { id: "more", path: "/more", label: "More" },
     ]
   }
@@ -54,6 +57,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
+    ...(hasEmail ? [EMAIL_TAB] : []),
     { id: "more", path: "/more", label: "More" },
   ]
 }
@@ -61,7 +65,8 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
 // Default 5-tab layout — Home locked first, More locked last
 function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders = activeAddons.includes("online_ordering")
+  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
     const reservationsTab = hasCalendar
@@ -72,6 +77,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
       ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
       reservationsTab,
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
+      ...(hasEmail ? [EMAIL_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
       { id: "contacts", path: "/contacts", label: "Contacts" },
     ].slice(0, 3)
@@ -83,11 +89,11 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
     ]
   }
 
-  // All other industries — inbox label matches the page header
   const inboxLabel = inboxLabelFor(industry)
   const middle = [
     { id: "inbox", path: "/leads", label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
+    ...(hasEmail ? [EMAIL_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
   ].slice(0, 3)
@@ -196,6 +202,17 @@ function MoreIcon({ active }: { active: boolean }) {
   )
 }
 
+function EmailIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+      <polyline points="22,6 12,13 2,6"/>
+    </svg>
+  )
+}
+
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/":            (a) => <HomeIcon         active={a} />,
   "/leads":       (a) => <LeadsIcon        active={a} />,
@@ -205,6 +222,8 @@ const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "schedule":     (a) => <ScheduleIcon     active={a} />,
   "/photos":      (a) => <PhotosIcon       active={a} />,
   "/contacts":    (a) => <ContactsIcon     active={a} />,
+  "/marketing":   (a) => <EmailIcon        active={a} />,
+  "email":        (a) => <EmailIcon        active={a} />,
   "/more":        (a) => <MoreIcon         active={a} />,
 }
 

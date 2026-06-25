@@ -19,7 +19,8 @@ function inboxLabelFor(industry: string | null | undefined): string {
 
 function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders = activeAddons.includes("online_ordering")
+  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
     return [
@@ -31,6 +32,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
       ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
       { id: "photos", label: "Photos", path: "/photos" },
       { id: "contacts", label: "Contacts", path: "/contacts" },
+      ...(hasEmail ? [{ id: "email", label: "Email", path: "/marketing" }] : []),
       { id: "more", label: "More", path: "/more" },
     ]
   }
@@ -42,13 +44,15 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
     ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
     { id: "photos", label: "Photos", path: "/photos" },
     { id: "contacts", label: "Contacts", path: "/contacts" },
+    ...(hasEmail ? [{ id: "email", label: "Email", path: "/marketing" }] : []),
     { id: "more", label: "More", path: "/more" },
   ]
 }
 
 function defaultTabIdsFor(industry: string | null | undefined, activeAddons: string[]): string[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders = activeAddons.includes("online_ordering")
+  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
     const reservationId = hasCalendar ? "reservations" : "inbox"
@@ -56,6 +60,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
       ...(hasOrders ? ["orders"] : []),
       reservationId,
       ...(hasCalendar ? ["schedule"] : []),
+      ...(hasEmail ? ["email"] : []),
       "photos",
       "contacts",
     ].slice(0, 3)
@@ -65,6 +70,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
   const middle = [
     "inbox",
     ...(hasCalendar ? ["schedule"] : []),
+    ...(hasEmail ? ["email"] : []),
     "photos",
     "contacts",
   ].slice(0, 3)
