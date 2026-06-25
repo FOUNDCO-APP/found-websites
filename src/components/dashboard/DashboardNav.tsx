@@ -21,8 +21,10 @@ const SCHEDULE_TAB: Tab  = { id: "schedule",  path: "/schedule",  label: "Schedu
 const EMAIL_TAB: Tab     = { id: "email",     path: "/marketing", label: "Email" }
 
 function peopleTab(industry: string | null | undefined): Tab {
-  const { tabLabel } = getBusinessModel(industry, null)
-  return { id: "people", path: "/people", label: tabLabel }
+  // Food businesses (restaurants, bars, coffee shops) → Guests
+  // Other industries get their model-derived label
+  const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
+  return { id: "people", path: "/people", label }
 }
 
 function inboxLabelFor(industry: string | null | undefined): string {

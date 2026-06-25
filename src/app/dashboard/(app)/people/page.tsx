@@ -137,7 +137,9 @@ export default async function PeoplePage() {
     .order("created_at", { ascending: false })
 
   const people = groupLeads((leads ?? []) as LeadItem[])
-  const { tabLabel, tabLabelSingular } = getBusinessModel(company.industry_category, null)
+  const bm = getBusinessModel(company.industry_category, null)
+  const tabLabel = company.industry_category === "food" ? "Guests" : bm.tabLabel
+  const tabLabelSingular = company.industry_category === "food" ? "Guest" : bm.tabLabelSingular
 
   return (
     <PeopleClient
