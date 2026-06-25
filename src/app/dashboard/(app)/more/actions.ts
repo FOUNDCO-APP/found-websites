@@ -12,28 +12,12 @@ async function markAddonActive(
   addonSlug: string,
   stripeSubscriptionItemId: string,
 ) {
-  const { data: existing } = await admin
-    .from("addon_subscriptions")
-    .select("id")
-    .eq("company_id", companyId)
-    .eq("addon_slug", addonSlug)
-    .eq("active", true)
-    .maybeSingle()
-
-  if (existing?.id) {
-    await admin
-      .from("addon_subscriptions")
-      .update({ stripe_subscription_item_id: stripeSubscriptionItemId, active: true })
-      .eq("id", existing.id)
-    return
-  }
-
-  await admin.from("addon_subscriptions").insert({
+  await admin.from("addon_subscriptions").upsert({
     company_id: companyId,
     addon_slug: addonSlug,
     stripe_subscription_item_id: stripeSubscriptionItemId,
     active: true,
-  })
+  }, { onConflict: "company_id,addon_slug" })
 }
 const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND,
