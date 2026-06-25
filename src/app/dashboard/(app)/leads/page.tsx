@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, formIntentLabelFor, defaultFormIntentFor, FormIntentLabel } from "@/lib/dashboard/typography"
 import { addContact } from "../contacts/actions"
+import LeadContactSheet from "@/components/dashboard/LeadContactSheet"
 
 type LeadRow = {
   id: string
@@ -84,6 +85,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
   const [industry, setIndustry] = useState<string | null>(null)
   const [formIntent, setFormIntent] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState("")
   const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
   const [showClosedSection, setShowClosedSection] = useState(false)
   const [showIntentPicker, setShowIntentPicker] = useState(false)
@@ -117,6 +119,7 @@ export default function LeadsPage() {
       setLeads(ld.leads ?? [])
       setIndustry(sd.industry ?? null)
       setFormIntent(sd.formIntent ?? null)
+      setCompanyName(sd.name ?? "")
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -383,7 +386,7 @@ export default function LeadsPage() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -398,7 +401,7 @@ export default function LeadsPage() {
               )}
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {otherLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -434,7 +437,7 @@ export default function LeadsPage() {
           {showClosedSection && (
             <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 8 }}>
               {closedLeads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} hasTemperature={false} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} />
               ))}
             </div>
           )}
@@ -446,6 +449,8 @@ export default function LeadsPage() {
         <LeadDetailSheet
           lead={selectedLead}
           intentLabel={pageLabel as FormIntentLabel}
+          industry={industry}
+          companyName={companyName}
           onClose={() => setSelectedLead(null)}
           onSaved={(updated) => {
             setLeads(prev => prev.map(l => l.id === updated.id ? updated : l))
@@ -474,15 +479,19 @@ export default function LeadsPage() {
 }
 
 function LeadCard({
-  lead, hasTemperature, onSelect, onTempChange, onMarkDone,
+  lead, hasTemperature, industry, companyName, onSelect, onTempChange, onMarkDone,
 }: {
   lead: LeadRow
   hasTemperature: boolean
+  industry: string | null
+  companyName: string
   onSelect: (lead: LeadRow) => void
   onTempChange: (id: string, temp: "hot" | "warm" | "cold") => void
   onMarkDone?: (id: string) => void
 }) {
   const [pickingTemp, setPickingTemp] = useState(false)
+  const [showContactSheet, setShowContactSheet] = useState(false)
+  const [contactChannel, setContactChannel] = useState<"email" | "sms">("email")
   const pa = lead.partial_answers
   const textAnswer = (value: unknown) => typeof value === "string" ? value : ""
   const preview = isOnlineOrder(lead)
@@ -592,23 +601,32 @@ function LeadCard({
             </a>
           )}
           {smsHref && (
-            <a href={smsHref} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", textDecoration: "none", borderRadius: 14 }}>
+            <button onClick={e => { e.stopPropagation(); setContactChannel("sms"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", background: "none", border: "none", borderRadius: 14, cursor: "pointer" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
               </svg>
               <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Text</span>
-            </a>
+            </button>
           )}
           {emailHref && (
-            <a href={emailHref} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", textDecoration: "none", borderRadius: 14 }}>
+            <button onClick={e => { e.stopPropagation(); setContactChannel("email"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", background: "none", border: "none", borderRadius: 14, cursor: "pointer" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                 <polyline points="22,6 12,13 2,6"/>
               </svg>
               <span style={{ fontSize: 14, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>Email</span>
-            </a>
+            </button>
           )}
         </div>
+      )}
+      {showContactSheet && (
+        <LeadContactSheet
+          lead={lead}
+          industry={industry}
+          companyName={companyName}
+          defaultChannel={contactChannel}
+          onClose={() => setShowContactSheet(false)}
+        />
       )}
     </div>
   )
@@ -616,15 +634,19 @@ function LeadCard({
 
 type SheetMode = "view" | "edit" | "done"
 
-function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onReopen }: {
+function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, onSaved, onMarkDone, onReopen }: {
   lead: LeadRow
   intentLabel: FormIntentLabel
+  industry: string | null
+  companyName: string
   onClose: () => void
   onSaved: (lead: LeadRow) => void
   onMarkDone: (id: string) => void
   onReopen: (id: string) => void
 }) {
   const [mode, setMode] = useState<SheetMode>("view")
+  const [showContactSheet, setShowContactSheet] = useState(false)
+  const [contactChannel, setContactChannel] = useState<"email" | "sms">("email")
   const [name, setName] = useState(lead.name ?? "")
   const [phone, setPhone] = useState(lead.phone ?? "")
   const [email, setEmail] = useState(lead.email ?? "")
@@ -850,16 +872,16 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
                   </a>
                 )}
                 {smsHref && (
-                  <a href={smsHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <button onClick={() => { setContactChannel("sms"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
-                  </a>
+                  </button>
                 )}
                 {emailHref && (
-                  <a href={emailHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", textDecoration: "none" }}>
+                  <button onClick={() => { setContactChannel("email"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>
-                  </a>
+                  </button>
                 )}
               </div>
             )}
@@ -962,6 +984,15 @@ function LeadDetailSheet({ lead, intentLabel, onClose, onSaved, onMarkDone, onRe
           </>
         )}
       </div>
+      {showContactSheet && (
+        <LeadContactSheet
+          lead={lead}
+          industry={industry}
+          companyName={companyName}
+          defaultChannel={contactChannel}
+          onClose={() => setShowContactSheet(false)}
+        />
+      )}
     </>
   )
 }

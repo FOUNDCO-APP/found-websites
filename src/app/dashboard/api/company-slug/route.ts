@@ -10,7 +10,7 @@ export async function GET() {
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
-  return NextResponse.json({ slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro })
 }
 
 export async function PATCH(req: Request) {
