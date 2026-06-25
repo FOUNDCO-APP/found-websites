@@ -75,18 +75,26 @@ export async function startAddonCheckout(formData: FormData) {
     redirect(`/more?addon_added=${addonSlug}`)
   }
 
+  // redirect() must live outside try/catch — it throws a special Next.js error
+  // that gets swallowed if called inside a catch block
+  let addedItemId: string | null = null
+  let stripeError: string | null = null
+
   try {
     const item = await stripe.subscriptionItems.create({
       subscription: sub.id,
       price: priceRow.stripe_price_id,
       quantity: 1,
     })
-    await markAddonActive(admin, companyId, addonSlug, item.id)
+    addedItemId = item.id
   } catch (err) {
     console.error("[more] add-on subscription item error:", err)
-    redirect("/more?addon_unavailable=1")
+    stripeError = String(err)
   }
 
+  if (stripeError || !addedItemId) redirect("/more?addon_unavailable=1")
+
+  await markAddonActive(admin, companyId, addonSlug, addedItemId!)
   redirect(`/more?addon_added=${addonSlug}`)
 }
 function getStripe() {
