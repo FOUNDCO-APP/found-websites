@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, formIntentLabelFor, defaultFormIntentFor, FormIntentLabel } from "@/lib/dashboard/typography"
+import { getBusinessModel } from "@/lib/getBusinessModel"
 import { addContact } from "../contacts/actions"
 import LeadContactSheet from "@/components/dashboard/LeadContactSheet"
 
@@ -93,6 +94,7 @@ export default function LeadsPage() {
 
   const effectiveIntent = formIntent ?? defaultFormIntentFor(industry)
   const intentLabel = formIntentLabelFor(effectiveIntent)
+  const { tabLabel: peopleLabel } = getBusinessModel(industry, null)
 
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -256,7 +258,7 @@ export default function LeadsPage() {
             type="search"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={`Search by name or phone…`}
+            placeholder={`Search ${peopleLabel.toLowerCase()}…`}
             style={{
               width: "100%", boxSizing: "border-box",
               padding: "13px 40px 13px 40px",

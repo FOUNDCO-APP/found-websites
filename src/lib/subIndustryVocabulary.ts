@@ -477,6 +477,21 @@ const retailVocab: Record<string, SubIndustryVocab> = {
     ctaBodyText: "come see what's new",
   },
   "specialty retail": { ...retailDefaults },
+  florist: {
+    ...retailDefaults,
+    servicesLabel: "What We Offer",
+    servicesOverline: "Fresh Flowers & More",
+    galleryLabel: "Recent Arrangements",
+    ctaBodyText: "come in or call — we'd love to create something beautiful for you",
+  },
+  "dry cleaner": {
+    ...retailDefaults,
+    servicesLabel: "Our Services",
+    servicesOverline: "What We Clean",
+    galleryLabel: "Ready for Pickup",
+    ctaBodyText: "stop by — we'll take great care of your clothes",
+    appointmentWord: "drop-off",
+  },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
