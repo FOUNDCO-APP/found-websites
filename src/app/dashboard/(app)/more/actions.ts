@@ -32,7 +32,7 @@ export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const addonSlug = formData.get("addonSlug") as string
   const stripe = getStripe()
-  if (!stripe || !companyId || !addonSlug) redirect("/more?addon_unavailable=1")
+  if (!stripe || !companyId || !addonSlug) redirect("/dashboard/more?addon_unavailable=1")
 
   const admin = createAdminClient()
 
@@ -41,7 +41,7 @@ export async function startAddonCheckout(formData: FormData) {
     admin.from("addon_stripe_prices").select("stripe_price_id").eq("addon_slug", addonSlug).single(),
   ])
 
-  if (!company || !priceRow?.stripe_price_id) redirect("/more?addon_unavailable=1")
+  if (!company || !priceRow?.stripe_price_id) redirect("/dashboard/more?addon_unavailable=1")
 
   let customerId = company.stripe_customer_id as string | undefined
 
@@ -62,7 +62,7 @@ export async function startAddonCheckout(formData: FormData) {
     expand: ["data.items.data.price"],
   })
   const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing")
-  if (!sub) redirect("/more?activate_required=1")
+  if (!sub) redirect("/dashboard/more?activate_required=1")
 
   const existingItem = sub.items.data.find((item) =>
     item.price.id === priceRow.stripe_price_id ||
@@ -72,7 +72,7 @@ export async function startAddonCheckout(formData: FormData) {
 
   if (existingItem) {
     await markAddonActive(admin, companyId, addonSlug, existingItem.id)
-    redirect(`/more?addon_added=${addonSlug}`)
+    redirect(`/dashboard/more?addon_added=${addonSlug}`)
   }
 
   // redirect() must live outside try/catch — it throws a special Next.js error
@@ -92,10 +92,10 @@ export async function startAddonCheckout(formData: FormData) {
     stripeError = String(err)
   }
 
-  if (stripeError || !addedItemId) redirect("/more?addon_unavailable=1")
+  if (stripeError || !addedItemId) redirect("/dashboard/more?addon_unavailable=1")
 
   await markAddonActive(admin, companyId, addonSlug, addedItemId!)
-  redirect(`/more?addon_added=${addonSlug}`)
+  redirect(`/dashboard/more?addon_added=${addonSlug}`)
 }
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null
@@ -131,7 +131,7 @@ export async function openBillingPortal(formData: FormData) {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: data.stripe_customer_id,
-    return_url: `${APP_BASE}/more`,
+    return_url: `${APP_BASE}/dashboard/more`,
   })
 
   redirect(session.url)
@@ -175,10 +175,10 @@ export async function startUpgradeCheckout(formData: FormData) {
         metadata: { company_id: companyId, plan: targetPlan },
       })
       await admin.from("companies").update({ plan: targetPlan }).eq("id", companyId)
-      redirect("/more?upgraded=1")
+      redirect("/dashboard/more?upgraded=1")
       return
     }
   }
   // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
-  redirect("/more?activate_required=1")
+  redirect("/dashboard/more?activate_required=1")
 }

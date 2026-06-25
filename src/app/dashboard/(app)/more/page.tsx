@@ -93,11 +93,14 @@ function ChevronRight() {
   )
 }
 
-export default async function MorePage() {
+export default async function MorePage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const user = await getAuthUser()
   if (!user) redirect("/login")
 
   const company = await getCompany(user.id, user.email ?? "")
+  const sp = await searchParams
+  const addonAdded = sp.addon_added ?? null
+  const addonUnavailable = sp.addon_unavailable === "1"
 
   const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
   const plan = isActive ? (company?.plan ?? "found") : "found"
@@ -136,6 +139,22 @@ export default async function MorePage() {
       <h1 style={{ margin: "0 0 24px", ...TYPE.largeTitle, color: "white" }}>
         More
       </h1>
+
+      {addonAdded && (
+        <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: `${GREEN}18`, border: `1px solid ${GREEN}35` }}>
+          <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+            ✓ Add-on activated successfully
+          </p>
+        </div>
+      )}
+      {addonUnavailable && (
+        <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)" }}>
+          <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: "#FF3B30" }}>
+            Something went wrong — please try again or contact support.
+          </p>
+        </div>
+      )}
+
       {/* My Site */}
       <section style={{ marginBottom: 12 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
