@@ -18,6 +18,7 @@ export default async function MarketingPage() {
       .select("id, name, email, birthday_month, birthday_day, created_at")
       .eq("company_id", company.id)
       .eq("email_subscribed", true)
+      .eq("source", "subscribe_page")
       .not("email", "is", null),
     admin.from("email_campaigns")
       .select("id, subject, sent_at, recipient_count, status")

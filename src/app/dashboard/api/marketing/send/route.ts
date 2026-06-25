@@ -49,6 +49,7 @@ export async function POST(req: NextRequest) {
       .select("id, name, email, birthday_month, created_at")
       .eq("company_id", companyId)
       .eq("email_subscribed", true)
+      .eq("source", "subscribe_page")
       .not("email", "is", null)
 
     if (filter === "birthday_month") {
