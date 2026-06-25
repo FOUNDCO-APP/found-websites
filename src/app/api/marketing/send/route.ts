@@ -27,7 +27,7 @@ function wrapEmail(body: string, companyName: string, unsubUrl: string): string 
 
 export async function POST(req: NextRequest) {
   try {
-    const { companyId, templateSlug, subject, body, companySlug, rootDomain } = await req.json()
+    const { companyId, templateSlug, subject, body, companySlug, rootDomain, filter } = await req.json()
     if (!companyId || !subject || !body) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 })
     }
@@ -44,13 +44,26 @@ export async function POST(req: NextRequest) {
       .single()
     if (!company) return NextResponse.json({ error: "Company not found." }, { status: 404 })
 
-    // Get subscribed contacts with emails
-    const { data: contacts } = await admin
+    // Build contact query based on audience filter
+    let contactQuery = admin
       .from("contacts")
-      .select("id, name, email")
+      .select("id, name, email, birthday_month, created_at")
       .eq("company_id", companyId)
       .eq("email_subscribed", true)
       .not("email", "is", null)
+
+    if (filter === "birthday_month") {
+      const currentMonth = new Date().getMonth() + 1
+      contactQuery = contactQuery.eq("birthday_month", currentMonth)
+    } else if (filter === "new_30") {
+      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      contactQuery = contactQuery.gte("created_at", cutoff)
+    } else if (filter === "reengage") {
+      const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
+      contactQuery = contactQuery.lt("created_at", cutoff)
+    }
+
+    const { data: contacts } = await contactQuery
 
     if (!contacts?.length) return NextResponse.json({ error: "No subscribers to send to." }, { status: 400 })
 
