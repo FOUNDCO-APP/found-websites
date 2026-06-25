@@ -12,12 +12,13 @@ async function markAddonActive(
   addonSlug: string,
   stripeSubscriptionItemId: string,
 ) {
-  await admin.from("addon_subscriptions").upsert({
+  const { error } = await admin.from("addon_subscriptions").upsert({
     company_id: companyId,
     addon_slug: addonSlug,
     stripe_subscription_item_id: stripeSubscriptionItemId,
     active: true,
   }, { onConflict: "company_id,addon_slug" })
+  if (error) throw new Error(`markAddonActive failed: ${error.message}`)
 }
 const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND,
