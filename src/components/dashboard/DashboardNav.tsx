@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor, defaultFormIntentFor } from "@/lib/dashboard/typography"
+import { getBusinessModel } from "@/lib/getBusinessModel"
 
 type Tab = { path: string; label: string; id: string }
 type Album = { id: string; name: string; cover_url: string | null }
@@ -18,6 +19,11 @@ const BASE_TABS: Tab[] = [
 
 const SCHEDULE_TAB: Tab  = { id: "schedule",  path: "/schedule",  label: "Schedule" }
 const EMAIL_TAB: Tab     = { id: "email",     path: "/marketing", label: "Email" }
+
+function peopleTab(industry: string | null | undefined): Tab {
+  const { tabLabel } = getBusinessModel(industry, null)
+  return { id: "people", path: "/people", label: tabLabel }
+}
 
 function inboxLabelFor(industry: string | null | undefined): string {
   switch (defaultFormIntentFor(industry)) {
@@ -36,12 +42,14 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
   const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
+    const PEOPLE = peopleTab(industry)
     return [
       { id: "home", path: "/", label: "Home" },
       ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
       hasCalendar
         ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
         : { id: "inbox", path: "/leads", label: "Reservations" },
+      PEOPLE,
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
       { id: "contacts", path: "/contacts", label: "Contacts" },
@@ -69,6 +77,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
   const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
+    const PEOPLE = peopleTab(industry)
     const reservationsTab = hasCalendar
       ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
       : { id: "inbox", path: "/leads", label: "Reservations" }
@@ -76,6 +85,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
     const middle = [
       ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
       reservationsTab,
+      PEOPLE,
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
       ...(hasEmail ? [EMAIL_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
@@ -202,6 +212,17 @@ function MoreIcon({ active }: { active: boolean }) {
   )
 }
 
+function PeopleIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  )
+}
+
 function EmailIcon({ active }: { active: boolean }) {
   const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
@@ -216,6 +237,8 @@ function EmailIcon({ active }: { active: boolean }) {
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/":            (a) => <HomeIcon         active={a} />,
   "/leads":       (a) => <LeadsIcon        active={a} />,
+  "/people":      (a) => <PeopleIcon       active={a} />,
+  "people":       (a) => <PeopleIcon       active={a} />,
   "orders":       (a) => <OrdersIcon       active={a} />,
   "reservations": (a) => <ReservationsIcon active={a} />,
   "/schedule":    (a) => <ScheduleIcon     active={a} />,
@@ -329,6 +352,7 @@ export default function DashboardNav({
     if (tabPath.includes("view=reservations")) return effective.startsWith("/leads") && view === "reservations"
     if (cleanPath === "/") return effective === "/"
     if (cleanPath === "/leads") return effective.startsWith("/leads") && !view
+    if (cleanPath === "/people") return effective.startsWith("/people")
     return effective === cleanPath || effective.startsWith(cleanPath + "/")
   }
 
