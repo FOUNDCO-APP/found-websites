@@ -5,7 +5,8 @@ import SignOutButton from "@/components/dashboard/SignOutButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
-import { openBillingPortal, startUpgradeCheckout, startAddonCheckout } from "./actions"
+import { openBillingPortal, startUpgradeCheckout } from "./actions"
+import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -421,23 +422,12 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                       +${addon.price}/mo
                     </p>
                     {company?.id && isActive && (
-                      <form action={startAddonCheckout}>
-                        <input type="hidden" name="companyId" value={company.id} />
-                        <input type="hidden" name="addonSlug" value={addon.slug} />
-                        <button type="submit" style={{
-                          minHeight: 34,
-                          borderRadius: 999,
-                          padding: "0 15px",
-                          ...TYPE.caption,
-                          backgroundColor: `${GREEN}18`,
-                          color: GREEN,
-                          border: `1px solid ${GREEN}35`,
-                          cursor: "pointer",
-                          boxShadow: `0 0 18px ${GREEN}10`,
-                        }}>
-                          Add
-                        </button>
-                      </form>
+                      <AddonActivateButton
+                        companyId={company.id}
+                        addonSlug={addon.slug}
+                        addonLabel={addon.label}
+                        addonPrice={addon.price}
+                      />
                     )}
                     {company?.slug && !isActive && (
                       <div style={{ width: 112 }}>

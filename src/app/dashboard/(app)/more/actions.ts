@@ -29,6 +29,59 @@ const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
 ].filter(Boolean) as string[])
 
+export async function purchaseAddon(companyId: string, addonSlug: string): Promise<{ success: boolean; error?: string }> {
+  const stripe = getStripe()
+  if (!stripe || !companyId || !addonSlug) return { success: false, error: "Missing required fields." }
+
+  const admin = createAdminClient()
+  const [{ data: company }, { data: priceRow }] = await Promise.all([
+    admin.from("companies").select("stripe_customer_id, name, email").eq("id", companyId).single(),
+    admin.from("addon_stripe_prices").select("stripe_price_id").eq("addon_slug", addonSlug).single(),
+  ])
+
+  if (!company || !priceRow?.stripe_price_id) return { success: false, error: "Add-on not available." }
+
+  let customerId = company.stripe_customer_id as string | undefined
+  if (!customerId) {
+    const customer = await stripe.customers.create({
+      name: company.name ?? undefined,
+      email: company.email ?? undefined,
+      metadata: { company_id: companyId },
+    })
+    customerId = customer.id
+    await admin.from("companies").update({ stripe_customer_id: customerId }).eq("id", companyId)
+  }
+
+  const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10, expand: ["data.items.data.price"] })
+  const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing")
+  if (!sub) return { success: false, error: "No active subscription found." }
+
+  const existingItem = sub.items.data.find((item) => item.price.id === priceRow.stripe_price_id)
+
+  let itemId: string
+  if (existingItem) {
+    itemId = existingItem.id
+  } else {
+    let newItemId: string | null = null
+    let stripeError: string | null = null
+    try {
+      const item = await stripe.subscriptionItems.create({ subscription: sub.id, price: priceRow.stripe_price_id, quantity: 1 })
+      newItemId = item.id
+    } catch (err) {
+      stripeError = String(err)
+    }
+    if (stripeError || !newItemId) return { success: false, error: "Could not add to subscription." }
+    itemId = newItemId
+  }
+
+  try {
+    await markAddonActive(admin, companyId, addonSlug, itemId)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}
+
 export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const addonSlug = formData.get("addonSlug") as string
