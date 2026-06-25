@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       .select("id")
       .single()
 
-    const fromAddress = `${company.name} <hello@mail.foundco.app>`
+    const fromAddress = `${company.name} <hello@foundco.app>`
     let sent = 0
     let failed = 0
 
