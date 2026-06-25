@@ -202,15 +202,21 @@ function TemplateIcon({ slug, color }: { slug: string; color: string }) {
   }
 }
 
-// ─── QR download ─────────────────────────────────────────────────
+// ─── QR download / share ─────────────────────────────────────────
 async function downloadQR(subscribeUrl: string, companySlug: string) {
   const res = await fetch(`/api/qr?data=${encodeURIComponent(subscribeUrl)}`)
   const blob = await res.blob()
-  const a = document.createElement("a")
-  a.href = URL.createObjectURL(blob)
-  a.download = `${companySlug}-subscribe-qr.png`
-  a.click()
-  URL.revokeObjectURL(a.href)
+  const file = new File([blob], `${companySlug}-subscribe-qr.png`, { type: "image/png" })
+  // On iOS this opens the share sheet — user can tap "Save to Photos"
+  if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({ files: [file], title: "Subscribe QR Code" })
+  } else {
+    const a = document.createElement("a")
+    a.href = URL.createObjectURL(blob)
+    a.download = file.name
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
 }
 
 // ─── Main component ───────────────────────────────────────────────
@@ -356,6 +362,11 @@ export default function MarketingClient({
   // CONFIRM VIEW
   // ═══════════════════════════════════════════════════════════════
   if (step === "confirm") {
+    // Personalize preview with "there" as placeholder first name
+    const previewBody = body
+      .replace(/\{firstName\}/gi, "there")
+      .replace(/\{first_name\}/gi, "there")
+
     return (
       <main style={{ padding: "20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -366,27 +377,39 @@ export default function MarketingClient({
           <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Review & Send</span>
         </div>
 
-        <div style={{ ...card, padding: "18px", marginBottom: 16 }}>
-          <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Subject</p>
-          <p style={{ margin: "0 0 16px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>{subject}</p>
-          <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Preview</p>
-          <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, whiteSpace: "pre-wrap", lineHeight: 1.65 }}>
-            {body.slice(0, 220)}{body.length > 220 ? "…" : ""}
-          </p>
-        </div>
-
-        {/* Audience row */}
+        {/* To: at top */}
         <button
           onClick={() => setShowAudience(true)}
-          style={{ ...card, width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", marginBottom: 20, cursor: "pointer", border: `1px solid ${GREEN}25`, backgroundColor: `${GREEN}0D` }}
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "13px 16px", marginBottom: 14, borderRadius: 12, backgroundColor: `${GREEN}0D`, border: `1px solid ${GREEN}25`, cursor: "pointer" }}
         >
-          <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
+          <span style={{ ...TYPE.caption, fontWeight: 700, color: `${GREEN}CC`, flexShrink: 0, letterSpacing: "0.08em" }}>TO</span>
           <span style={{ flex: 1, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, textAlign: "left" as const }}>
-            Sending to <strong style={{ color: "white" }}>{recipientCount} {recipientCount === 1 ? "person" : "people"}</strong>
-            {filter !== "all" && <span style={{ color: `rgba(255,255,255,0.4)` }}> · {segments[filter].label}</span>}
+            <strong style={{ color: "white" }}>{recipientCount} {recipientCount === 1 ? "person" : "people"}</strong>
+            <span style={{ color: `rgba(255,255,255,0.35)` }}> · {segments[filter].label}</span>
           </span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,0.3)`} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`${GREEN}80`} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
+
+        {/* Email preview — white card so it looks like a real inbox */}
+        <div style={{ borderRadius: 16, overflow: "hidden", marginBottom: 20, boxShadow: "0 4px 24px rgba(0,0,0,0.4)" }}>
+          {/* Email header bar */}
+          <div style={{ backgroundColor: "#f2f2f7", padding: "12px 16px", borderBottom: "1px solid #e5e5ea" }}>
+            <p style={{ margin: "0 0 2px", fontSize: 11, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "#8e8e93" }}>{companyName}</p>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "#1c1c1e", lineHeight: 1.3 }}>{subject}</p>
+          </div>
+          {/* Email body */}
+          <div style={{ backgroundColor: "#ffffff", padding: "18px 16px" }}>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.75, color: "#333333", whiteSpace: "pre-wrap" as const }}>
+              {previewBody.length > 320 ? previewBody.slice(0, 320) + "…" : previewBody}
+            </p>
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid #eeeeee" }}>
+              <p style={{ margin: 0, fontSize: 11, color: "#aaaaaa" }}>
+                You're receiving this because you subscribed to {companyName}. &nbsp;·&nbsp;
+                <span style={{ color: "#aaaaaa", textDecoration: "underline" }}>Unsubscribe</span>
+              </p>
+            </div>
+          </div>
+        </div>
 
         {error && <p style={{ margin: "0 0 12px", ...TYPE.caption, color: "#F43F5E", fontWeight: 700 }}>{error}</p>}
 
