@@ -316,7 +316,15 @@ export default function DashboardNav({
     try {
       const saved = window.localStorage.getItem(storageKey)
       if (!saved) { setTabs(defaultTabs); return }
-      setTabs(buildTabs(JSON.parse(saved) as string[]))
+      const savedIds = JSON.parse(saved) as string[]
+      // If defaultTabs has new tabs that weren't in the saved order, reset so they show up
+      const hasNewDefaults = defaultTabs.some(t => !savedIds.includes(t.id))
+      if (hasNewDefaults) {
+        window.localStorage.removeItem(storageKey)
+        setTabs(defaultTabs)
+        return
+      }
+      setTabs(buildTabs(savedIds))
     } catch { setTabs(defaultTabs) }
   }, [storageKey, industry, addonKey])
 
@@ -325,7 +333,14 @@ export default function DashboardNav({
       try {
         const saved = window.localStorage.getItem(storageKey)
         if (!saved) { setTabs(defaultTabs); return }
-        setTabs(buildTabs(JSON.parse(saved) as string[]))
+        const savedIds = JSON.parse(saved) as string[]
+        const hasNewDefaults = defaultTabs.some(t => !savedIds.includes(t.id))
+        if (hasNewDefaults) {
+          window.localStorage.removeItem(storageKey)
+          setTabs(defaultTabs)
+          return
+        }
+        setTabs(buildTabs(savedIds))
       } catch {}
     }
     window.addEventListener("found:dashboard-tabs-updated", onNavChanged)
