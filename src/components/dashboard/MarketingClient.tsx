@@ -201,6 +201,7 @@ export default function MarketingClient({
   const [showAudience, setShowAudience]     = useState(false)
   const [showConfirm, setShowConfirm]       = useState(false)
   const [selectedSlug, setSelectedSlug]     = useState<TemplateSlug | null>(null)
+  const [customTemplateName, setCustomTemplateName] = useState<string | null>(null)
   const [subject, setSubject]               = useState("")
   const [body, setBody]                     = useState("")
   const [filter, setFilter]                 = useState<FilterKey>("all")
@@ -209,6 +210,17 @@ export default function MarketingClient({
   const [sentCount, setSentCount]           = useState(0)
   const [linkState, setLinkState]           = useState<"idle" | "copied">("idle")
   const [qrWorking, setQrWorking]           = useState(false)
+  const [savedTemplates, setSavedTemplates] = useState<{ id: string; name: string; subject: string | null; body: string }[]>([])
+  const [showSaveModal, setShowSaveModal]   = useState(false)
+  const [saveName, setSaveName]             = useState("")
+  const [savingTpl, setSavingTpl]           = useState(false)
+
+  useEffect(() => {
+    fetch("/api/leads/templates?context=marketing&channel=email")
+      .then(r => r.json())
+      .then(d => setSavedTemplates(d.templates ?? []))
+      .catch(() => {})
+  }, [])
 
   const vocab      = getVocab(industry)
   const templates  = getTemplates(vocab)
@@ -233,6 +245,7 @@ export default function MarketingClient({
   function pickTemplate(t: Template) {
     const draft = draftEmail(t.slug, companyName, vocab)
     setSelectedSlug(t.slug)
+    setCustomTemplateName(null)
     setSubject(draft.subject)
     setBody(draft.body)
     setFilter("all")
@@ -240,8 +253,53 @@ export default function MarketingClient({
     setStep("compose")
   }
 
+  function pickSavedTemplate(t: { name: string; subject: string | null; body: string }) {
+    setSelectedSlug(null)
+    setCustomTemplateName(t.name)
+    setSubject(t.subject ?? "")
+    setBody(t.body)
+    setFilter("all")
+    setShowTemplates(false)
+    setStep("compose")
+  }
+
+  function pickScratch() {
+    setSelectedSlug(null)
+    setCustomTemplateName(null)
+    setSubject("")
+    setBody("")
+    setFilter("all")
+    setShowTemplates(false)
+    setStep("compose")
+  }
+
+  async function handleSaveTemplate() {
+    if (!saveName.trim()) return
+    setSavingTpl(true)
+    try {
+      const res = await fetch("/api/leads/templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: saveName, subject, body, context: "marketing", channel: "email" }),
+      })
+      const data = await res.json()
+      if (data.template) {
+        setSavedTemplates(prev => [data.template, ...prev])
+        setShowSaveModal(false)
+        setSaveName("")
+      }
+    } finally {
+      setSavingTpl(false)
+    }
+  }
+
+  async function handleDeleteSavedTemplate(id: string) {
+    await fetch(`/api/leads/templates?id=${id}`, { method: "DELETE" })
+    setSavedTemplates(prev => prev.filter(t => t.id !== id))
+  }
+
   async function handleSend() {
-    if (!selectedSlug || !subject.trim() || !body.trim()) return
+    if (!subject.trim() || !body.trim()) return
     setSending(true)
     setError(null)
     try {
@@ -266,6 +324,7 @@ export default function MarketingClient({
   function reset() {
     setStep("home")
     setSelectedSlug(null)
+    setCustomTemplateName(null)
     setSubject("")
     setBody("")
     setFilter("all")
@@ -338,7 +397,11 @@ export default function MarketingClient({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
             Back
           </button>
-          {selectedTemplate && <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{selectedTemplate.label}</span>}
+          {(customTemplateName ?? selectedTemplate?.label) && (
+            <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              {customTemplateName ?? selectedTemplate?.label}
+            </span>
+          )}
         </div>
 
         {/* TO: row */}
@@ -366,6 +429,11 @@ export default function MarketingClient({
           disabled={!subject.trim() || !body.trim()}
           style={{ marginTop: 16, width: "100%", padding: "15px 0", borderRadius: 14, backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 900, border: "none", cursor: (!subject.trim() || !body.trim()) ? "default" : "pointer", opacity: (!subject.trim() || !body.trim()) ? 0.4 : 1 }}>
           Send →
+        </button>
+
+        <button onClick={() => setShowSaveModal(true)} disabled={!subject.trim() || !body.trim()}
+          style={{ marginTop: 10, width: "100%", padding: "12px 0", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.footnote, fontWeight: 600, cursor: "pointer", opacity: (!subject.trim() || !body.trim()) ? 0.3 : 1 }}>
+          Save as template
         </button>
 
         {audienceSheet}
@@ -469,6 +537,27 @@ export default function MarketingClient({
       {/* Template picker sheet */}
       <Sheet open={showTemplates} onClose={() => setShowTemplates(false)} title="Pick a template">
         <div style={{ padding: "0 20px 24px" }}>
+          {/* Saved custom templates */}
+          {savedTemplates.length > 0 && (
+            <>
+              <p style={{ margin: "0 0 6px", ...TYPE.caption, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Your Templates</p>
+              {savedTemplates.map(t => (
+                <div key={t.id} style={{ display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                  <button onClick={() => pickSavedTemplate(t)}
+                    style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "13px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const }}>
+                    <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN, flexShrink: 0 }} />
+                    <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{t.name}</span>
+                  </button>
+                  <button onClick={() => handleDeleteSavedTemplate(t.id)}
+                    style={{ padding: "13px 0 13px 10px", background: "none", border: "none", cursor: "pointer", color: `rgba(255,255,255,0.2)` }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+                  </button>
+                </div>
+              ))}
+              <p style={{ margin: "18px 0 6px", ...TYPE.caption, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase" as const, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Built-in Templates</p>
+            </>
+          )}
+
           {templates.map((t, i) => (
             <button key={t.slug} onClick={() => pickTemplate(t)}
               style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "14px 0", background: "none", border: "none", borderBottom: i < templates.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none", cursor: "pointer", textAlign: "left" as const }}>
@@ -482,8 +571,42 @@ export default function MarketingClient({
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           ))}
+
+          {/* Write from scratch */}
+          <button onClick={pickScratch}
+            style={{ marginTop: 10, width: "100%", padding: "13px 0", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.footnote, fontWeight: 600, cursor: "pointer" }}>
+            Write from scratch
+          </button>
         </div>
       </Sheet>
+
+      {/* Save template modal */}
+      {showSaveModal && createPortal(
+        <div onClick={() => setShowSaveModal(false)} style={{ position: "fixed", inset: 0, zIndex: 10000, backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 24px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 340, backgroundColor: "#2C2C2E", borderRadius: 16, padding: "24px 20px" }}>
+            <p style={{ margin: "0 0 14px", ...TYPE.title, fontWeight: 700, color: "white" }}>Save template</p>
+            <input
+              type="text"
+              value={saveName}
+              onChange={e => setSaveName(e.target.value)}
+              placeholder="Template name…"
+              autoFocus
+              style={{ width: "100%", boxSizing: "border-box", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, padding: "12px 14px", ...TYPE.footnote, color: "white", outline: "none", marginBottom: 14, fontFamily: "inherit" }}
+            />
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => { setShowSaveModal(false); setSaveName("") }}
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, backgroundColor: "rgba(255,255,255,0.06)", border: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.footnote, fontWeight: 600, cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button onClick={handleSaveTemplate} disabled={savingTpl || !saveName.trim()}
+                style={{ flex: 1, padding: "11px 0", borderRadius: 10, backgroundColor: GREEN, color: BLACK, border: "none", ...TYPE.footnote, fontWeight: 800, cursor: "pointer", opacity: (!saveName.trim() || savingTpl) ? 0.4 : 1 }}>
+                {savingTpl ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </main>
   )
 }
