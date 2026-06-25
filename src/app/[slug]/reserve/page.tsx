@@ -5,9 +5,26 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { SCHEDULING_CTA } from "@/lib/industryCTAs"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
+import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import ReservationForm from "./ReservationForm"
 import BookingCalendar from "@/components/public/BookingCalendar"
 import type { Metadata } from "next"
+
+async function getNextAvailableText(companyId: string): Promise<string | null> {
+  const today = new Date()
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today)
+    d.setDate(today.getDate() + i)
+    const dateStr = d.toISOString().split("T")[0]
+    const slots = await getAvailableSlots(companyId, dateStr)
+    if (slots.length > 0) {
+      const label = i === 0 ? "Today" : i === 1 ? "Tomorrow"
+        : d.toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" })
+      return `${label} at ${slots[0].display}`
+    }
+  }
+  return null
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -40,6 +57,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
 
   // Fetch working days to grey non-working days on the calendar (no API calls from client)
   let workingDays: number[] = []
+  let nextAvailable: string | null = null
   if (hasCalendar) {
     const { data: availability } = await admin
       .from("company_availability")
@@ -47,6 +65,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
       .eq("company_id", company.id)
       .eq("is_working", true)
     workingDays = (availability ?? []).map((a: { day_of_week: number }) => a.day_of_week)
+    nextAvailable = await getNextAvailableText(company.id)
   }
 
   const primary = company.primary_color
@@ -84,6 +103,11 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
             {pageSubtitle}
           </p>
+          {hasCalendar && nextAvailable && (
+            <p className="mt-4 text-sm font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Next available: <span style={{ color: "#ffffff" }}>{nextAvailable}</span>
+            </p>
+          )}
         </div>
       </section>
 
@@ -107,7 +131,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
                   <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>
                     Tell us about your visit
                   </h2>
-                  <ReservationForm companyId={company.id} primaryColor={primary} showPartySize={company.industry_category === "food"} />
+                  <ReservationForm companyId={company.id} primaryColor={primary} showPartySize={company.industry_category === "food"} companyPhone={company.phone ?? null} />
                 </>
               )}
             </div>

@@ -8,10 +8,12 @@ export default function ReservationForm({
   companyId,
   primaryColor,
   showPartySize = true,
+  companyPhone,
 }: {
   companyId: string
   primaryColor: string
   showPartySize?: boolean
+  companyPhone?: string | null
 }) {
   const [state, formAction, pending] = useActionState(submitReservation, initialState)
 
@@ -21,15 +23,25 @@ export default function ReservationForm({
     return (
       <div className="text-center py-16 px-8">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-          style={{ backgroundColor: `${primaryColor}22` }}>
-          <svg className="w-8 h-8" fill="none" stroke={primaryColor} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          style={{ backgroundColor: "#f5f5f5" }}>
+          <svg className="w-8 h-8" fill="none" stroke="#888888" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" strokeWidth={2} />
+            <polyline points="12 6 12 12 16 14" strokeWidth={2} strokeLinecap="round" />
           </svg>
         </div>
-        <h2 className="text-2xl font-black mb-3" style={{ color: "#111111" }}>Request received!</h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          We&apos;ll confirm your reservation as soon as possible. Check your email for a confirmation.
+        <h2 className="text-2xl font-black mb-3" style={{ color: "#111111" }}>Request sent</h2>
+        <p className="text-gray-500 max-w-sm mx-auto mb-4">
+          We&apos;ll call or text you to confirm availability. <strong style={{ color: "#111111" }}>This is not a guaranteed reservation</strong> until you hear back from us.
         </p>
+        {companyPhone && (
+          <p className="text-sm text-gray-400">
+            Want to confirm sooner?{" "}
+            <a href={`tel:${companyPhone.replace(/\D/g, "")}`}
+              style={{ color: primaryColor, fontWeight: 700, textDecoration: "none" }}>
+              Call us at {companyPhone}
+            </a>
+          </p>
+        )}
       </div>
     )
   }

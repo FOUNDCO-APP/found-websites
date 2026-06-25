@@ -205,6 +205,9 @@ export function buildReservationEmail({
                 <p style="margin:0;font-size:15px;color:#333333;line-height:1.6;">${notes}</p>
               </td></tr>` : ""}
             </table>
+            <p style="margin:0 0 16px;font-size:14px;color:#666666;line-height:1.55;">
+              <strong style="color:#111111;">${firstName} hasn't been confirmed yet.</strong> Call or text them to let them know if that time works.
+            </p>
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td style="padding-right:6px;">
@@ -218,6 +221,17 @@ export function buildReservationEmail({
                 </td>` : ""}
               </tr>
             </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px 32px;background:#f9f9f9;border-top:1px solid #eeeeee;">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#aaaaaa;">Stop confirming reservations manually</p>
+            <p style="margin:0 0 14px;font-size:13px;color:#666666;line-height:1.6;">
+              The Found Booking Calendar shows customers only your available times — they pick a slot, it's confirmed instantly. No back-and-forth required.
+            </p>
+            <a href="https://my.foundco.app/more" style="display:inline-block;background:#111111;color:#ffffff;font-size:12px;font-weight:800;padding:11px 22px;border-radius:50px;text-decoration:none;">
+              See how it works →
+            </a>
           </td>
         </tr>
         <tr>
@@ -258,8 +272,11 @@ export function buildReservationAutoReply({
             <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;">
               We received your reservation request for <strong>${date} at ${time}</strong>${partySize ? ` for ${partySize} ${partySize === "1" ? "guest" : "guests"}` : ""}.
             </p>
+            <p style="margin:0 0 16px;font-size:15px;color:#444444;line-height:1.7;">
+              <strong style="color:#111111;">This is not a guaranteed reservation.</strong> Someone from <strong>${company.name}</strong> will call or text you to confirm if that time is available.
+            </p>
             <p style="margin:0 0 32px;font-size:15px;color:#444444;line-height:1.7;">
-              Someone from <strong>${company.name}</strong> will confirm your reservation as soon as possible. If you need to reach us right away, please call.
+              If you'd like to confirm sooner, give us a call.
             </p>
             ${phone ? `<a href="tel:${phone.replace(/\D/g, "")}" style="display:inline-block;background:#111111;color:#ffffff;font-size:14px;font-weight:800;padding:16px 32px;border-radius:50px;text-decoration:none;">Call ${company.name}</a>` : ""}
           </td>
