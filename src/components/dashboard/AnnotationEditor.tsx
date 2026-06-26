@@ -2,8 +2,8 @@
 
 import React, { useRef, useState, useEffect } from "react"
 
-type Tool = "rect" | "circle" | "arrow"
-type Stroke = { tool: Tool; color: string; lw: number; x1: number; y1: number; x2: number; y2: number }
+type Tool = "rect" | "circle" | "arrow" | "text"
+type Stroke = { tool: Tool; color: string; lw: number; x1: number; y1: number; x2: number; y2: number; text?: string }
 
 const COLORS = [
   "#FF3B30", // red
@@ -43,6 +43,8 @@ export default function AnnotationEditor({
   const [color, setColor]         = useState(COLORS[0])
   const [lw, setLw]               = useState(7)
   const [strokes, setStrokes]     = useState<Stroke[]>([])
+  const [textEntry, setTextEntry] = useState<{ x: number; y: number } | null>(null)
+  const [pendingText, setPendingText] = useState("")
   const [loaded, setLoaded]       = useState(false)
   const [saving, setSaving]       = useState(false)
 
@@ -53,6 +55,13 @@ export default function AnnotationEditor({
   useEffect(() => { strokesRef.current = strokes }, [strokes])
 
   // ── Canvas helpers ──────────────────────────────────────────────────────────
+
+  function getContrastColor(hex: string): string {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 140 ? "#000000" : "#FFFFFF"
+  }
 
   function contain(iw: number, ih: number, cw: number, ch: number) {
     const scale = Math.min(cw / iw, ch / ih)
@@ -72,6 +81,29 @@ export default function AnnotationEditor({
   }
 
   function paintStroke(ctx: CanvasRenderingContext2D, s: Stroke) {
+    if (s.tool === "text") {
+      const text = s.text ?? ""
+      if (!text) return
+      const fs = 18, padX = 14, padY = 9
+      ctx.font = `700 ${fs}px -apple-system, BlinkMacSystemFont, system-ui, sans-serif`
+      ctx.textBaseline = "top"
+      const tw = ctx.measureText(text).width
+      const bw = tw + padX * 2, bh = fs + padY * 2
+      // Pill background
+      ctx.fillStyle = s.color
+      const r = bh / 2
+      ctx.beginPath()
+      if ((ctx as CanvasRenderingContext2D & { roundRect?: (...a: unknown[]) => void }).roundRect) {
+        (ctx as CanvasRenderingContext2D & { roundRect: (...a: unknown[]) => void }).roundRect(s.x1, s.y1, bw, bh, r)
+      } else {
+        ctx.rect(s.x1, s.y1, bw, bh)
+      }
+      ctx.fill()
+      // Contrasting text
+      ctx.fillStyle = getContrastColor(s.color)
+      ctx.fillText(text, s.x1 + padX, s.y1 + padY)
+      return
+    }
     ctx.strokeStyle = s.color
     ctx.lineWidth   = s.lw
     ctx.lineCap     = "round"
@@ -150,20 +182,25 @@ export default function AnnotationEditor({
   function onDown(e: React.PointerEvent<HTMLCanvasElement>) {
     e.preventDefault()
     const { x, y } = xy(e)
+    if (toolRef.current === "text") {
+      setTextEntry({ x, y })
+      setPendingText("")
+      return
+    }
     drawingRef.current = true
     startRef.current = { x, y }
     canvasRef.current?.setPointerCapture(e.pointerId)
   }
 
   function onMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawingRef.current) return
+    if (!drawingRef.current || toolRef.current === "text") return
     e.preventDefault()
     const { x, y } = xy(e)
     render(strokesRef.current, { x1: startRef.current.x, y1: startRef.current.y, x2: x, y2: y })
   }
 
   function onUp(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (!drawingRef.current) return
+    if (!drawingRef.current || toolRef.current === "text") return
     drawingRef.current = false
     const { x, y } = xy(e)
     const s: Stroke = {
@@ -174,6 +211,22 @@ export default function AnnotationEditor({
     strokesRef.current = next
     setStrokes(next)
     render(next)
+  }
+
+  function commitText() {
+    const text = pendingText.trim()
+    if (!text || !textEntry) return
+    const s: Stroke = {
+      tool: "text", color: colorRef.current, lw: lwRef.current,
+      x1: textEntry.x, y1: textEntry.y, x2: textEntry.x, y2: textEntry.y,
+      text,
+    }
+    const next = [...strokesRef.current, s]
+    strokesRef.current = next
+    setStrokes(next)
+    render(next)
+    setTextEntry(null)
+    setPendingText("")
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
@@ -251,7 +304,7 @@ export default function AnnotationEditor({
           onPointerMove={onMove}
           onPointerUp={onUp}
           onPointerCancel={onUp}
-          style={{ display: "block", width: "100%", height: "100%", cursor: "crosshair", touchAction: "none" }}
+          style={{ display: "block", width: "100%", height: "100%", cursor: tool === "text" ? "text" : "crosshair", touchAction: "none" }}
         />
         {!loaded && (
           <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -271,24 +324,25 @@ export default function AnnotationEditor({
         {/* Row 1: Tool + Thickness */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           {/* Tools */}
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 6 }}>
             {([
               { t: "rect"   as Tool, icon: <rect x="3" y="3" width="18" height="18" rx="2"/> },
               { t: "circle" as Tool, icon: <circle cx="12" cy="12" r="9"/> },
               { t: "arrow"  as Tool, icon: <><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></> },
+              { t: "text"   as Tool, icon: <><path d="M4 7V4h16v3"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="9" y1="20" x2="15" y2="20"/></> },
             ] as { t: Tool; icon: React.ReactNode }[]).map(({ t, icon }) => (
               <button
                 key={t}
                 onClick={() => setTool(t)}
                 style={{
-                  width: 48, height: 48, borderRadius: 14,
+                  width: 44, height: 44, borderRadius: 13,
                   backgroundColor: tool === t ? "rgba(255,255,255,0.14)" : "rgba(255,255,255,0.05)",
                   border: tool === t ? "1.5px solid rgba(255,255,255,0.35)" : "1.5px solid transparent",
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.12s ease",
                 }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   {icon}
                 </svg>
               </button>
@@ -328,6 +382,67 @@ export default function AnnotationEditor({
           ))}
         </div>
       </div>
+
+      {/* ── Text entry sheet ── */}
+      {textEntry && (
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 20,
+          backgroundColor: "rgba(0,0,0,0.65)",
+          display: "flex", alignItems: "flex-end",
+        }}>
+          <div style={{
+            width: "100%", backgroundColor: "#1C1F1E",
+            borderRadius: "24px 24px 0 0", borderTop: "1px solid rgba(255,255,255,0.08)",
+            padding: `28px 20px max(env(safe-area-inset-bottom, 0px), 28px)`,
+          }}>
+            <p style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Add text label
+            </p>
+
+            {/* Input */}
+            <input
+              autoFocus
+              value={pendingText}
+              onChange={e => setPendingText(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") commitText(); if (e.key === "Escape") { setTextEntry(null); setPendingText("") } }}
+              placeholder="Type your note…"
+              style={{
+                width: "100%", padding: "14px 16px", borderRadius: 14,
+                backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                color: "white", fontSize: 16, outline: "none", boxSizing: "border-box",
+                fontFamily: "inherit", marginBottom: 16,
+              }}
+            />
+
+            {/* Preview */}
+            {pendingText.trim() && (
+              <div style={{ marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>Preview</span>
+                <div style={{ display: "inline-flex", alignItems: "center", backgroundColor: color, borderRadius: 100, padding: "6px 14px" }}>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: getContrastColor(color) }}>{pendingText}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Buttons */}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => { setTextEntry(null); setPendingText("") }}
+                style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={commitText}
+                disabled={!pendingText.trim()}
+                style={{ flex: 2, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: pendingText.trim() ? GREEN : "rgba(255,255,255,0.07)", color: pendingText.trim() ? "#000" : "rgba(255,255,255,0.3)", fontSize: 15, fontWeight: 700, cursor: pendingText.trim() ? "pointer" : "default", transition: "all 0.15s ease" }}
+              >
+                Place on Photo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`@keyframes ann-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
