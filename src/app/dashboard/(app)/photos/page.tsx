@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
@@ -44,6 +44,10 @@ function groupPhotosByDate(photos: Photo[]): Array<{ label: string; photos: Phot
 }
 
 export default function PhotosPage() {
+  return <Suspense><PhotosPageInner /></Suspense>
+}
+
+function PhotosPageInner() {
   const [view, setView] = useState<View>("queue")
   const [photos, setPhotos] = useState<Photo[]>([])
   const [albums, setAlbums] = useState<Album[]>([])

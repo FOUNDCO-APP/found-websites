@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, formIntentLabelFor, defaultFormIntentFor, FormIntentLabel } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
@@ -123,6 +123,10 @@ const INTENT_OPTIONS = [
 ]
 
 export default function LeadsPage() {
+  return <Suspense><LeadsPageInner /></Suspense>
+}
+
+function LeadsPageInner() {
   const [leads, setLeads] = useState<LeadRow[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)

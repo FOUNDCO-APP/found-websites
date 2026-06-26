@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 
 const GREEN = "#32D074"
@@ -9,6 +9,14 @@ const BLACK = "#080A09"
 type Mode = "password" | "magic"
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const [mode, setMode] = useState<Mode>("password")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
