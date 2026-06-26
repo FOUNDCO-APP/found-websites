@@ -32,7 +32,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const hwZoomRef       = useRef(false)
 
-  const [ratio, setRatio]         = useState<AspectRatio>("4:3")
+  const [ratio, setRatio]         = useState<AspectRatio>("16:9")
   const [portrait, setPortrait]   = useState(true)
   const [facing, setFacing]       = useState<"environment" | "user">("environment")
   const [torchOn, setTorchOn]     = useState(false)
