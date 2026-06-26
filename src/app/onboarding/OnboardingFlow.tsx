@@ -357,8 +357,8 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
-  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean
+function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string
 }) {
   const [iframeReady, setIframeReady] = useState(false)
 
@@ -466,7 +466,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
         {email && !drawerMode && (
           <div className="mt-4 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.75s ease-out both" }}>
             <a
-              href={result?.companyId ? `https://my.foundco.app/api/select-company?id=${result.companyId}` : `https://my.foundco.app/login`}
+              href={companyId ? `https://my.foundco.app/api/select-company?id=${companyId}` : `https://my.foundco.app/login`}
               className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
               style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)", backgroundColor: "transparent" }}>
               Open my dashboard →
@@ -1120,6 +1120,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
       primaryColor={answers.primaryColor}
       email={answers.email}
       drawerMode={drawerMode}
+      companyId={result.companyId}
     />
   )
 
