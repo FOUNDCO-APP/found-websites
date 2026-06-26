@@ -36,6 +36,7 @@ export default function CameraSheet({
   const streamRef = useRef<MediaStream | null>(null)
 
   const [ratio, setRatio] = useState<AspectRatio>("4:3")
+  const [portrait, setPortrait] = useState(true)
   const [facing, setFacing] = useState<"environment" | "user">("environment")
   const [torchOn, setTorchOn] = useState(false)
   const [torchSupported, setTorchSupported] = useState(false)
@@ -139,7 +140,11 @@ export default function CameraSheet({
     onClose()
   }
 
-  const currentR = RATIOS.find(r => r.value === ratio)!
+  const baseR = RATIOS.find(r => r.value === ratio)!
+  // For non-square ratios, swap w/h in portrait mode
+  const currentR = (portrait && ratio !== "1:1")
+    ? { ...baseR, w: baseR.h, h: baseR.w }
+    : baseR
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "#000", display: "flex", flexDirection: "column", userSelect: "none" }}>
@@ -225,25 +230,50 @@ export default function CameraSheet({
           </svg>
         </button>
 
-        {/* Ratio picker */}
-        <div style={{
-          display: "flex", gap: 2,
-          backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
-          borderRadius: 100, padding: "3px 4px",
-        }}>
-          {RATIOS.map(r => (
+        {/* Ratio picker + portrait/landscape toggle */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          <div style={{
+            display: "flex", gap: 2,
+            backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+            borderRadius: 100, padding: "3px 4px",
+          }}>
+            {RATIOS.map(r => (
+              <button
+                key={r.value}
+                onClick={() => setRatio(r.value)}
+                style={{
+                  padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer",
+                  fontSize: 12, fontWeight: 700, letterSpacing: "0.02em",
+                  backgroundColor: ratio === r.value ? "white" : "transparent",
+                  color: ratio === r.value ? "#000" : "rgba(255,255,255,0.55)",
+                  transition: "all 0.15s ease",
+                }}
+              >{r.label}</button>
+            ))}
+          </div>
+
+          {/* Portrait / Landscape toggle — hidden for 1:1 */}
+          {ratio !== "1:1" && (
             <button
-              key={r.value}
-              onClick={() => setRatio(r.value)}
+              onClick={() => setPortrait(p => !p)}
               style={{
-                padding: "6px 14px", borderRadius: 100, border: "none", cursor: "pointer",
-                fontSize: 12, fontWeight: 700, letterSpacing: "0.02em",
-                backgroundColor: ratio === r.value ? "white" : "transparent",
-                color: ratio === r.value ? "#000" : "rgba(255,255,255,0.55)",
-                transition: "all 0.15s ease",
+                display: "flex", alignItems: "center", gap: 5,
+                backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+                borderRadius: 100, padding: "4px 12px", border: "none", cursor: "pointer",
               }}
-            >{r.label}</button>
-          ))}
+            >
+              <svg
+                width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="rgba(255,255,255,0.75)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: portrait ? "rotate(0deg)" : "rotate(90deg)", transition: "transform 0.2s ease" }}
+              >
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+              </svg>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.75)", letterSpacing: "0.04em" }}>
+                {portrait ? "Portrait" : "Landscape"}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Flash / torch */}
