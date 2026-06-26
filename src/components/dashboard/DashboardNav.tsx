@@ -286,6 +286,7 @@ export default function DashboardNav({
   const [showPicker, setShowPicker]         = useState(false)
   const [showCamera, setShowCamera]         = useState(false)
   const [showNewAlbum, setShowNewAlbum]     = useState(false)
+  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null)
   const [newAlbumName, setNewAlbumName]     = useState("")
   const [creating, setCreating]             = useState(false)
   const [uploading, setUploading]           = useState(false)
@@ -294,6 +295,7 @@ export default function DashboardNav({
 
   const newAlbumInputRef = useRef<HTMLInputElement>(null)
   const fileRef          = useRef<HTMLInputElement>(null)
+  const uploadRef        = useRef<HTMLInputElement>(null)
   const pendingAlbumRef  = useRef<string | null>(null)
   const toastTimer       = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -373,6 +375,7 @@ export default function DashboardNav({
     setShowPicker(false)
     setShowNewAlbum(false)
     setNewAlbumName("")
+    setSelectedAlbumId(null)
   }
 
   function shoot(albumId?: string) {
@@ -383,6 +386,12 @@ export default function DashboardNav({
     } else {
       fileRef.current?.click()
     }
+  }
+
+  function uploadFromLibrary(albumId?: string) {
+    closePicker()
+    pendingAlbumRef.current = albumId ?? null
+    uploadRef.current?.click()
   }
 
   function handleCameraUploaded(photo: UploadedPhoto) {
@@ -564,7 +573,17 @@ export default function DashboardNav({
         </div>
       </aside>
 
-      {/* ── Hidden file input ── */}
+      {/* ── Hidden file inputs ── */}
+      {/* Library / files picker — no capture, opens photo library */}
+      <input
+        ref={uploadRef}
+        type="file"
+        accept="image/*,video/*"
+        multiple
+        style={{ display: "none" }}
+        onChange={handleNavUpload}
+      />
+      {/* Fallback OS camera (only used when getUserMedia unavailable) */}
       <input
         ref={fileRef}
         type="file"
@@ -609,48 +628,68 @@ export default function DashboardNav({
             backgroundColor: "#0D100E",
             borderRadius: "24px 24px 0 0",
             borderTop: "1px solid rgba(255,255,255,0.06)",
-            padding: `20px 0 calc(env(safe-area-inset-bottom, 0px) + 28px)`,
+            minHeight: "50vh",
+            padding: `20px 0 calc(env(safe-area-inset-bottom, 0px) + 32px)`,
             animation: "sheetUp 0.22s cubic-bezier(0.32, 0.72, 0, 1)",
+            display: "flex", flexDirection: "column",
           }}>
 
-            <div style={{ width: 32, height: 3, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.1)", margin: "0 auto 24px" }} />
+            {/* Drag handle */}
+            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.12)", margin: "0 auto 28px" }} />
 
-            <div style={{ padding: "0 20px 16px" }}>
-              <p style={{ margin: 0, fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                Where does this go?
+            {/* Title */}
+            <div style={{ padding: "0 24px 24px" }}>
+              <p style={{ margin: "0 0 4px", fontSize: "1.375rem", fontWeight: 300, letterSpacing: "-0.02em", color: "white" }}>
+                Add photos or video
+              </p>
+              <p style={{ margin: 0, fontSize: "0.8125rem", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                {selectedAlbumId
+                  ? `Saving to "${albums.find(a => a.id === selectedAlbumId)?.name ?? "project"}"`
+                  : "Pick a project below, or just shoot and organize later."}
               </p>
             </div>
 
+            {/* Project selector */}
             {albums.length > 0 && (
               <div
                 className="picker-scroll"
-                style={{ display: "flex", gap: 10, overflowX: "auto", padding: "2px 20px 8px", scrollbarWidth: "none" }}
+                style={{ display: "flex", gap: 12, overflowX: "auto", padding: "2px 24px 4px", scrollbarWidth: "none", flexShrink: 0 }}
               >
                 {albums.map(album => {
-                  const color = avatarColorFor(album.name)
+                  const color    = avatarColorFor(album.name)
+                  const selected = selectedAlbumId === album.id
                   return (
                     <button
                       key={album.id}
-                      onClick={() => shoot(album.id)}
-                      style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                      onClick={() => setSelectedAlbumId(selected ? null : album.id)}
+                      style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                     >
                       <div style={{
-                        width: 72, height: 72, borderRadius: 18, overflow: "hidden",
-                        border: `1.5px solid ${album.cover_url ? "rgba(255,255,255,0.12)" : `${color}28`}`,
+                        width: 76, height: 76, borderRadius: 20, overflow: "hidden", position: "relative",
+                        border: selected ? `2px solid ${SIGNAL_GREEN}` : `1.5px solid ${album.cover_url ? "rgba(255,255,255,0.12)" : `${color}28`}`,
                         display: "flex", alignItems: "center", justifyContent: "center",
                         backgroundColor: album.cover_url ? "#111" : `${color}15`,
                         flexShrink: 0,
+                        boxShadow: selected ? `0 0 0 3px ${SIGNAL_GREEN}25` : "none",
+                        transition: "border-color 0.15s ease, box-shadow 0.15s ease",
                       }}>
                         {album.cover_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={album.cover_url} alt={album.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                         ) : (
-                          <span style={{ fontSize: "1.625rem", fontWeight: 300, color, lineHeight: 1 }}>
+                          <span style={{ fontSize: "1.75rem", fontWeight: 300, color, lineHeight: 1 }}>
                             {album.name[0].toUpperCase()}
                           </span>
                         )}
+                        {selected && (
+                          <div style={{ position: "absolute", top: 4, right: 4, width: 18, height: 18, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </div>
+                        )}
                       </div>
-                      <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: `rgba(255,255,255,0.65)`, maxWidth: 72, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center" }}>
+                      <span style={{ fontSize: "0.6875rem", fontWeight: selected ? 700 : 600, color: selected ? SIGNAL_GREEN : `rgba(255,255,255,0.65)`, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center", transition: "color 0.15s ease" }}>
                         {album.name}
                       </span>
                     </button>
@@ -660,9 +699,9 @@ export default function DashboardNav({
                 {!showNewAlbum && (
                   <button
                     onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
-                    style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                    style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
                   >
-                    <div style={{ width: 72, height: 72, borderRadius: 18, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 76, height: 76, borderRadius: 20, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
                         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                       </svg>
@@ -673,24 +712,29 @@ export default function DashboardNav({
               </div>
             )}
 
+            {/* Empty state — no projects yet */}
             {albums.length === 0 && !showNewAlbum && (
-              <div style={{ padding: "0 20px 12px" }}>
+              <div style={{ padding: "0 24px 8px" }}>
                 <button
                   onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
-                  style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "1.5px dashed rgba(255,255,255,0.15)", borderRadius: 14, padding: "12px 16px", cursor: "pointer", width: "100%" }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, background: "none", border: "1.5px dashed rgba(255,255,255,0.12)", borderRadius: 16, padding: "16px 18px", cursor: "pointer", width: "100%", boxSizing: "border-box" }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  <span style={{ fontSize: "0.875rem", fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-                    Create your first {albumLabel.singular.toLowerCase()}
-                  </span>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </div>
+                  <div style={{ textAlign: "left" }}>
+                    <p style={{ margin: "0 0 2px", fontSize: "0.875rem", fontWeight: 600, color: "rgba(255,255,255,0.6)" }}>Create a project</p>
+                    <p style={{ margin: 0, fontSize: "0.75rem", color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Group photos by job, event, or location</p>
+                  </div>
                 </button>
               </div>
             )}
 
+            {/* New project input */}
             {showNewAlbum && (
-              <div style={{ padding: "4px 20px 12px", animation: "pickerFade 0.15s ease" }}>
+              <div style={{ padding: "4px 24px 8px", animation: "pickerFade 0.15s ease" }}>
                 <div style={{ borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}20` }}>
                   <input
                     ref={newAlbumInputRef}
@@ -722,23 +766,43 @@ export default function DashboardNav({
               </div>
             )}
 
-            <div style={{ padding: "8px 20px 0" }}>
+            {/* Spacer pushes buttons to bottom */}
+            <div style={{ flex: 1, minHeight: 24 }} />
+
+            {/* Shoot | Upload — two large primary buttons */}
+            <div style={{ padding: "0 24px", display: "flex", gap: 12 }}>
               <button
-                onClick={() => shoot()}
+                onClick={() => shoot(selectedAlbumId ?? undefined)}
                 style={{
-                  width: "100%", padding: "15px 0", borderRadius: 16,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "white", fontSize: "0.9375rem", fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  flex: 1, padding: "18px 0", borderRadius: 18,
+                  backgroundColor: SIGNAL_GREEN,
+                  border: "none", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                  boxShadow: `0 0 28px ${SIGNAL_GREEN}33`,
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
                   <circle cx="12" cy="13" r="4"/>
                 </svg>
-                Just shoot
+                <span style={{ fontSize: "1rem", fontWeight: 700, color: FOUND_BLACK, letterSpacing: "-0.01em" }}>Shoot</span>
+              </button>
+
+              <button
+                onClick={() => uploadFromLibrary(selectedAlbumId ?? undefined)}
+                style={{
+                  flex: 1, padding: "18px 0", borderRadius: 18,
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                }}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="16 16 12 12 8 16"/>
+                  <line x1="12" y1="12" x2="12" y2="21"/>
+                  <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+                </svg>
+                <span style={{ fontSize: "1rem", fontWeight: 700, color: "white", letterSpacing: "-0.01em" }}>Upload</span>
               </button>
             </div>
           </div>
