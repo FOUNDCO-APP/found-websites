@@ -127,8 +127,8 @@ export const ALL_ADDONS: AddonDef[] = [
   },
   {
     slug: "second_location",
-    label: "Second Location",
-    description: "Add another location under the same business without creating a second full account.",
+    label: "Multiple Locations",
+    description: "Show a second location on your website — address, hours, and directions. Both locations appear in a 'Find Us' section.",
     price: 15,
     relevantIndustries: [],
   },

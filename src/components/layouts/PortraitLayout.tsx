@@ -4,9 +4,10 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
+import FindUsSection from "@/components/layouts/FindUsSection"
 import type { LayoutProps } from "@/types/layout"
 
-export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage }: LayoutProps) {
+export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -236,6 +237,8 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
           </div>
         </section>
       )}
+
+      {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
       {/* ── FINAL CTA ── */}
       <section className="relative py-32 text-center overflow-hidden">

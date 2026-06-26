@@ -1,5 +1,6 @@
 import type { Company } from "./company"
 import type { CTA } from "@/lib/industryCTAs"
+import type { PublicLocation } from "@/components/layouts/FindUsSection"
 
 export type LayoutProps = {
   company: Company
@@ -10,4 +11,5 @@ export type LayoutProps = {
   heroImage: string | null
   heroVideo: string | null
   uploadedImgs?: string[]
+  locations?: PublicLocation[]
 }

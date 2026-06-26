@@ -4,9 +4,10 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
+import FindUsSection from "@/components/layouts/FindUsSection"
 import type { LayoutProps } from "@/types/layout"
 
-export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo }: LayoutProps) {
+export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -186,6 +187,8 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
           </div>
         </section>
       )}
+
+      {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
       {/* ── FINAL CTA ── */}
       <section className="relative py-28 text-center overflow-hidden">
