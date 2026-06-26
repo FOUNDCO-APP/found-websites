@@ -350,14 +350,14 @@ export default function HomeClient({
           )}
 
           {tile2 === "photo" && (
-            <button
-              onClick={openCamera}
+            <Link
+              href="/photos"
               style={{
                 flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
                 padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
                 background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
                 border: "1px solid rgba(255,255,255,0.1)",
-                cursor: "pointer", textAlign: "left",
+                textDecoration: "none",
               }}
             >
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -366,10 +366,10 @@ export default function HomeClient({
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
               <div>
-                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Add a Photo</div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Keep your site fresh</div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>My Photos</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Gallery &amp; uploads</div>
               </div>
-            </button>
+            </Link>
           )}
 
           {tile2 === "edit" && (

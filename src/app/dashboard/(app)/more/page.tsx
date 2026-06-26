@@ -228,7 +228,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       {/* Plan */}
       <section style={{ marginBottom: 24 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Your Plan
+          My Plan
         </p>
         <div style={{
           borderRadius: 22,
@@ -297,6 +297,9 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       {/* Upgrade */}
       {upgrade && company?.id && (
         <section style={{ marginBottom: 24 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Recommendations
+          </p>
           <div style={{
             borderRadius: 22,
             padding: "22px 20px",
@@ -486,7 +489,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       {activeAddonSlugs.length > 0 && (
         <section style={{ marginBottom: 20 }}>
           <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            Active Add-ons
+            My Add-ons
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {activeAddonSlugs.map((slug) => {
@@ -519,7 +522,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       {/* Account */}
       <section style={{ marginBottom: 20 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Account
+          My Account
         </p>
         <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 2 }}>
           <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
@@ -549,7 +552,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       {/* Settings */}
       <section style={{ marginBottom: 20 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Settings
+          My Settings
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {hasStripe && company?.id && (
