@@ -466,7 +466,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode }: {
         {email && !drawerMode && (
           <div className="mt-4 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.75s ease-out both" }}>
             <a
-              href={`https://my.foundco.app/login`}
+              href={result?.companyId ? `https://my.foundco.app/api/select-company?id=${result.companyId}` : `https://my.foundco.app/login`}
               className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
               style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)", backgroundColor: "transparent" }}>
               Open my dashboard →
@@ -821,7 +821,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
-  const [result, setResult]         = useState<{ url?: string; checkoutUrl?: string; error?: string } | null>(null)
+  const [result, setResult]         = useState<{ url?: string; checkoutUrl?: string; companyId?: string; error?: string } | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
@@ -914,7 +914,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
     ])
     if (res.success && res.url && res.slug && res.companyId) {
       const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
-      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}` })
+      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}`, companyId: res.companyId })
       // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
       createSetupIntentForCompany({
         companyId: res.companyId,

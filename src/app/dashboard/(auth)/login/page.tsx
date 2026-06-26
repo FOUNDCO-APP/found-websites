@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 
 const GREEN = "#32D074"
 const BLACK = "#080A09"
@@ -15,6 +16,14 @@ export default function LoginPage() {
   const [sent, setSent] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const e = searchParams.get("error")
+    if (e === "link_expired") setError("That login link has expired. Enter your email to get a new one.")
+    else if (e === "no_company") setError("No business found for this account.")
+    else if (e === "auth_failed") setError("Sign-in failed. Please try again.")
+  }, [searchParams])
 
   async function handlePasswordLogin(e: React.FormEvent) {
     e.preventDefault()

@@ -362,7 +362,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
       email,
-      options: { redirectTo: `https://my.${ROOT_DOMAIN}/auth/token` },
+      options: { redirectTo: `https://my.${ROOT_DOMAIN}/auth/callback` },
     })
     if (linkError) {
       console.error("[onboarding] generateLink error:", linkError.message)

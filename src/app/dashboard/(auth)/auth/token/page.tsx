@@ -24,15 +24,13 @@ export default function AuthTokenPage() {
           window.location.href = "/auth/set-password"
           return
         }
-      }
-
-      // Already have a session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        window.location.href = "/auth/set-password"
+        // Token failed — sign out any stale session so we never land on the wrong account
+        await supabase.auth.signOut()
+        window.location.href = "/login?error=link_expired"
         return
       }
 
+      // No tokens in hash — this page was reached incorrectly
       window.location.href = "/login?error=auth_failed"
     }
 
