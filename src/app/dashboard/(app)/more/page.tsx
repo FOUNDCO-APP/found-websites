@@ -556,6 +556,10 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       </section>
 
       <SignOutButton />
+
+      <p style={{ textAlign: "center", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, padding: "8px 0 40px" }}>
+        v2026.1
+      </p>
     </main>
   )
 }
