@@ -46,10 +46,36 @@ type Props = {
   industry: string | null
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function sourceLabel(source: string | null | undefined): string | null {
+  if (!source) return null
+  const map: Record<string, string> = {
+    website:         "Website form",
+    website_form:    "Website form",
+    found_form:      "Website form",
+    google:          "Google",
+    google_maps:     "Google Maps",
+    referral:        "Referral",
+    instagram:       "Instagram",
+    facebook:        "Facebook",
+    yelp:            "Yelp",
+    walk_in:         "Walk-in",
+    phone:           "Phone call",
+    direct:          "Direct",
+    manual:          "Added manually",
+    online_ordering: "Online order",
+    reservation:     "Reservation form",
+    reservations:    "Reservation form",
+  }
+  return map[source.toLowerCase()] ?? source
+}
+
 // ── Leads sheet ──────────────────────────────────────────────────────────────
 
-function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCount: number; onClose: () => void }) {
+function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[]; newCount: number; industry: string | null; onClose: () => void }) {
   const newLeads = leads.filter(l => l.created_at && Date.now() - new Date(l.created_at).getTime() < 7 * 86400000)
+  const guestWordPl = industry === "food" ? "guests" : "leads"
 
   return (
     <>
@@ -73,7 +99,7 @@ function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCoun
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}`, animation: "breathe 2s ease-in-out infinite" }} />
               <span style={{ ...TYPE.headline, color: "white" }}>
-                {newCount} new {newCount === 1 ? "lead" : "leads"}
+                {newCount} new {newCount === 1 ? guestWordPl.replace(/s$/, "") : guestWordPl} this week
               </span>
             </div>
             <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 6 }}>
@@ -108,8 +134,13 @@ function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCoun
                         {lead.created_at ? timeAgo(lead.created_at) : ""}
                       </span>
                     </div>
+                    {sourceLabel(lead.source) && (
+                      <p style={{ margin: "2px 0 0", ...TYPE.footnote, fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                        via {sourceLabel(lead.source)}
+                      </p>
+                    )}
                     {lead.message && (
-                      <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,0.5)`, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>
+                      <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,0.5)`, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>
                         {lead.message}
                       </p>
                     )}
@@ -143,7 +174,7 @@ function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCoun
         {/* Footer */}
         <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.05)", flexShrink: 0, paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
           <Link href="/leads" onClick={onClose} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "14px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
-            <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>View all leads</span>
+            <span style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>View all {guestWordPl}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
           </Link>
         </div>
@@ -210,6 +241,12 @@ export default function HomeClient({
       flexDirection: "column",
       backgroundColor: BLACK,
       backgroundImage: AMBIENT[greeting] ?? AMBIENT.afternoon,
+      // Fill exactly the space between header and bottom of viewport.
+      // marginBottom: -120 cancels the layout wrapper's paddingBottom: 120
+      // so the total page height = 100dvh (no scroll on home).
+      height: "calc(100dvh - 50px)",
+      marginBottom: -120,
+      overflow: "hidden",
     }}>
 
       {/* ── GREETING ── */}
@@ -302,8 +339,11 @@ export default function HomeClient({
         </div>
       )}
 
+      {/* ── RESPONSIVE SPACER — distributes empty space between card and tiles ── */}
+      <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />
+
       {/* ── QUICK ACTIONS — Camera + context tile ── */}
-      <div style={{ padding: "28px 20px 0", ...fade(0.12) }}>
+      <div style={{ padding: "0 20px 0", ...fade(0.12) }}>
         <div style={{ display: "flex", gap: 10 }}>
 
           {/* Camera — always */}
@@ -401,7 +441,7 @@ export default function HomeClient({
       </div>
 
       {/* ── ROW 2 — My Contacts + Edit My Site ── */}
-      <div style={{ padding: "10px 20px 0", ...fade(0.18) }}>
+      <div style={{ padding: "12px 20px calc(env(safe-area-inset-bottom, 0px) + 80px)", ...fade(0.18) }}>
         <div style={{ display: "flex", gap: 10 }}>
 
           {/* My Contacts */}
@@ -454,6 +494,7 @@ export default function HomeClient({
         <LeadsSheet
           leads={recentLeads}
           newCount={newCount}
+          industry={industry}
           onClose={() => setShowSheet(false)}
         />
       )}
