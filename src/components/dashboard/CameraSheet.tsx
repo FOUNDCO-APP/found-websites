@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
+import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
 type CameraMode = "photo" | "video"
@@ -46,6 +47,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const [captures, setCaptures]     = useState<Capture[]>([])
   const [reviewIndex, setReviewIndex] = useState<number | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [annotating, setAnnotating]   = useState(false)
   const [shutterFlash, setFlash]  = useState(false)
   const [ready, setReady]         = useState(false)
   const [error, setError]         = useState<string | null>(null)
@@ -189,6 +191,27 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     setCaptures(prev => [{ id, previewUrl, uploading: true, isVideo: true }, ...prev])
     const form = new FormData()
     form.append("file", blob, `video-${id}.${ext}`)
+    if (pendingAlbumId) form.append("album_id", pendingAlbumId)
+    try {
+      const res = await fetch("/api/photos", { method: "POST", body: form })
+      const data = await res.json()
+      if (data.photo) {
+        onUploaded(data.photo)
+        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
+      }
+    } catch {
+      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
+    }
+  }
+
+  async function handleAnnotationSave(blob: Blob) {
+    setAnnotating(false)
+    const previewUrl = URL.createObjectURL(blob)
+    const id = `${Date.now()}`
+    setCaptures(prev => [{ id, previewUrl, uploading: true }, ...prev])
+    setReviewIndex(0)
+    const form = new FormData()
+    form.append("file", blob, `annotated-${id}.jpg`)
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
     try {
       const res = await fetch("/api/photos", { method: "POST", body: form })
@@ -467,16 +490,31 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                 {captures.length === 1 ? "1 photo" : `${captures.length} photos`}
               </span>
 
-              {/* Delete — explicit red pill with label */}
-              <button
-                onClick={() => setConfirmDelete(true)}
-                style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
-                </svg>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
-              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* Annotate */}
+                {!cap.isVideo && (
+                  <button
+                    onClick={() => setAnnotating(true)}
+                    style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.08)", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Annotate</span>
+                  </button>
+                )}
+
+                {/* Delete */}
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
+                  </svg>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
+                </button>
+              </div>
             </div>
 
             {/* ── Main preview ── */}
@@ -541,6 +579,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                 })}
               </div>
             </div>
+
+            {/* ── Annotation editor ── */}
+            {annotating && (
+              <AnnotationEditor
+                src={cap.previewUrl}
+                onSave={handleAnnotationSave}
+                onDiscard={() => setAnnotating(false)}
+              />
+            )}
 
             {/* ── Delete confirmation sheet ── */}
             {confirmDelete && (
