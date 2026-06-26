@@ -21,7 +21,15 @@ export default async function HomePage() {
     .order("created_at", { ascending: false })
     .limit(20)
 
-  const allLeads = allLeadsRaw ?? []
+  // Deduplicate by phone → email → id (array is already ordered newest-first,
+  // so first occurrence = most recent submission per unique person)
+  const seen = new Set<string>()
+  const allLeads = (allLeadsRaw ?? []).filter(l => {
+    const key = l.phone?.replace(/\D/g, "") || l.email?.toLowerCase() || l.id
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 
   const newCount = allLeads.filter(l => {
     if (!l.created_at) return false
