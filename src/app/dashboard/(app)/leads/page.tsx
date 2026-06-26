@@ -636,18 +636,33 @@ function LeadCard({
         )}
       </div>
 
-      {/* Order cards: quick Mark Done button */}
-      {isOnlineOrder(lead) && !isDone && onMarkDone && (
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 12px" }}>
-          <button
-            onClick={e => { e.stopPropagation(); onMarkDone(lead.id) }}
-            style={{ width: "100%", padding: "9px 0", borderRadius: 10, border: "none", backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            Mark Done
-          </button>
+      {/* Order cards: Call / Text + Mark Done */}
+      {isOnlineOrder(lead) && !isDone && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "8px 12px", display: "flex", gap: 8 }}>
+          {phoneHref && (
+            <a href={phoneHref} onClick={e => e.stopPropagation()} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.1 1.22 2 2 0 012.11 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.45-.45a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.55)" }}>Call</span>
+            </a>
+          )}
+          {smsHref && (
+            <button onClick={e => { e.stopPropagation(); setContactChannel("sms"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", cursor: "pointer" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+              </svg>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.55)" }}>Text</span>
+            </button>
+          )}
+          {onMarkDone && (
+            <button onClick={e => { e.stopPropagation(); onMarkDone(lead.id) }} style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "9px 0", borderRadius: 10, border: "none", backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Mark Done
+            </button>
+          )}
         </div>
       )}
 
@@ -924,8 +939,8 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
               )
             )}
 
-            {/* Call / Text / Email */}
-            {(phoneHref || emailHref) && (
+            {/* Call / Text (orders) — Call / Text / Email (regular leads) */}
+            {(phoneHref || smsHref || (!onlineOrder && emailHref)) && (
               <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                 {phoneHref && (
                   <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
@@ -939,7 +954,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
                     <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Text</span>
                   </button>
                 )}
-                {emailHref && (
+                {!onlineOrder && emailHref && (
                   <button onClick={() => { setContactChannel("email"); setShowContactSheet(true) }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "none", cursor: "pointer" }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     <span style={{ fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>Email</span>

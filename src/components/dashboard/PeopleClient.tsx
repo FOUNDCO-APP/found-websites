@@ -1,10 +1,21 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { GREEN, BLACK, TYPE, TEXT_OPACITY } from "@/lib/dashboard/typography"
 import LeadContactSheet from "./LeadContactSheet"
 import type { PersonRecord, LeadItem } from "@/app/dashboard/(app)/people/page"
+
+type EmailSend = {
+  id: string
+  subject: string | null
+  created_at: string
+  recipient_name: string | null
+}
+
+type TimelineEntry =
+  | { kind: "lead"; data: LeadItem }
+  | { kind: "email"; data: EmailSend }
 
 function formatTimeAgo(iso: string) {
   if (!iso) return ""
@@ -87,9 +98,31 @@ function PersonDetailSheet({
 }) {
   const [showContact, setShowContact] = useState(false)
   const [contactChannel, setContactChannel] = useState<"email" | "sms">("email")
+  const [emailSends, setEmailSends] = useState<EmailSend[]>([])
   const displayName = person.name || "Unknown Guest"
   const color = avatarColor(person.name)
   const mostRecentLead = person.leads[0]
+
+  useEffect(() => {
+    if (!person.email) return
+    fetch(`/api/people/history?email=${encodeURIComponent(person.email)}`)
+      .then(r => r.json())
+      .then(d => setEmailSends(d.emailSends ?? []))
+      .catch(() => {})
+  }, [person.email])
+
+  // Merge leads + email sends into a single sorted timeline
+  const timeline: TimelineEntry[] = useMemo(() => {
+    const entries: TimelineEntry[] = [
+      ...person.leads.map(l => ({ kind: "lead" as const, data: l })),
+      ...emailSends.map(e => ({ kind: "email" as const, data: e })),
+    ]
+    return entries.sort(
+      (a, b) =>
+        new Date(b.data.created_at ?? 0).getTime() -
+        new Date(a.data.created_at ?? 0).getTime()
+    )
+  }, [person.leads, emailSends])
 
   function openEmail() { setContactChannel("email"); setShowContact(true) }
   function openSms() { setContactChannel("sms"); setShowContact(true) }
@@ -186,12 +219,38 @@ function PersonDetailSheet({
             History
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {person.leads.map(lead => {
+            {timeline.map(entry => {
+              if (entry.kind === "email") {
+                const e = entry.data
+                return (
+                  <div key={`email-${e.id}`} style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: "rgba(120,160,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(140,180,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                        <polyline points="22,6 12,13 2,6"/>
+                      </svg>
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                        <span style={{ ...TYPE.subhead, fontWeight: 600, color: "rgba(140,180,255,0.9)" }}>Email sent</span>
+                        <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, flexShrink: 0 }}>
+                          {formatDate(e.created_at)}
+                        </span>
+                      </div>
+                      <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {e.subject || "No subject"}
+                      </p>
+                    </div>
+                  </div>
+                )
+              }
+
+              const lead = entry.data
               const isOrd = isOrder(lead)
               const isRes = isReservation(lead)
               const totalCents = lead.partial_answers?.total_cents
               return (
-                <div key={lead.id} style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div key={`lead-${lead.id}`} style={{ display: "flex", gap: 12, padding: "14px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <div style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: isOrd ? `${GREEN}15` : isRes ? "rgba(100,200,255,0.1)" : "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     {isOrd && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
