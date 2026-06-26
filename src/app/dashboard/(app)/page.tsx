@@ -40,6 +40,14 @@ export default async function HomePage() {
     source: l.source ?? l.type ?? null,
   }))
 
+  const { data: lastPhotoRow } = await admin
+    .from("photos")
+    .select("created_at")
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
   const firstName = (company.name ?? "").split(" ")[0] || "there"
@@ -56,6 +64,7 @@ export default async function HomePage() {
       siteSlug={company.slug}
       isActive={isActive}
       recentLeads={recentLeads}
+      lastPhotoAt={lastPhotoRow?.created_at ?? null}
     />
   )
 }

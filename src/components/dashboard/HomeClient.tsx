@@ -42,6 +42,7 @@ type Props = {
   siteSlug: string
   isActive: boolean
   recentLeads: RecentLead[]
+  lastPhotoAt: string | null
 }
 
 // ── Leads sheet ──────────────────────────────────────────────────────────────
@@ -155,7 +156,7 @@ function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCoun
 export default function HomeClient({
   firstName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads,
+  siteSlug, isActive, recentLeads, lastPhotoAt,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -181,8 +182,16 @@ export default function HomeClient({
     }
   }
 
-  const hasNewLead = newCount > 0 && topName
-  const isWelcome  = isActive && totalCount === 0
+  const hasNewLead    = newCount > 0 && topName
+  const isWelcome     = isActive && totalCount === 0
+  const photoThisWeek = lastPhotoAt && Date.now() - new Date(lastPhotoAt).getTime() < 7 * 86400000
+
+  // Context-aware second tile priority: Share → Add Photo → Edit My Site
+  const tile2 = (!isActive || totalCount === 0)
+    ? "share"
+    : !photoThisWeek
+      ? "photo"
+      : "edit"
 
   const fade = (delay: number) => ({
     opacity: mounted ? 1 : 0,
@@ -290,23 +299,17 @@ export default function HomeClient({
         </div>
       )}
 
-      {/* ── QUICK ACTIONS ── */}
+      {/* ── QUICK ACTIONS — Camera + context tile ── */}
       <div style={{ padding: "28px 20px 0", ...fade(0.12) }}>
-        <p style={{ margin: "0 0 14px", fontSize: "0.6875rem", fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Quick actions
-        </p>
+        <div style={{ display: "flex", gap: 10 }}>
 
-        {/* Row 1: Camera + View Site — tall tiles */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
-
-          {/* Camera */}
+          {/* Camera — always */}
           <button
             onClick={openCamera}
             style={{
               flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
               padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
-              background: GREEN,
-              border: "none",
+              background: GREEN, border: "none",
               cursor: "pointer", textAlign: "left",
               boxShadow: `0 4px 24px ${GREEN}55`,
             }}
@@ -321,54 +324,77 @@ export default function HomeClient({
             </div>
           </button>
 
-          {/* View Site */}
-          <a
-            href={`https://${siteSlug}.foundco.app`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
-              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
-              background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              textDecoration: "none",
-            }}
-          >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-            </svg>
-            <div>
-              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>View Site</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)`, lineHeight: 1.4 }}>Your live website</div>
-            </div>
-          </a>
-        </div>
+          {/* Context tile */}
+          {tile2 === "share" && (
+            <button
+              onClick={handleShare}
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+                background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                cursor: "pointer", textAlign: "left",
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>
+                  {copied ? "Link Copied ✓" : "Share My Site"}
+                </div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Send your link</div>
+              </div>
+            </button>
+          )}
 
-        {/* Edit My Site — full-width row */}
-        <Link
-          href="/site"
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "18px 20px", borderRadius: 20,
-            background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
-            border: "1px solid rgba(255,255,255,0.09)",
-            textDecoration: "none",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
-            </svg>
-            <div>
-              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 2 }}>Edit My Site</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: `rgba(255,255,255,0.38)` }}>Copy, photos, services · AI rewrite</div>
-            </div>
-          </div>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-        </Link>
+          {tile2 === "photo" && (
+            <button
+              onClick={openCamera}
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+                background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                cursor: "pointer", textAlign: "left",
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Add a Photo</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Keep your site fresh</div>
+              </div>
+            </button>
+          )}
+
+          {tile2 === "edit" && (
+            <Link
+              href="/site"
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+                background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                textDecoration: "none",
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Edit My Site</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Copy, photos, services</div>
+              </div>
+            </Link>
+          )}
+
+        </div>
       </div>
 
       {/* ── Leads sheet ── */}

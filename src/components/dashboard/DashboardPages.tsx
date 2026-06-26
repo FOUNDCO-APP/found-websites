@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN, defaultFormIntentFor } from "@/lib/dashboard/typography"
+import { getBusinessModel } from "@/lib/getBusinessModel"
 
 type PageDef = { id: string; label: string; path: string }
 
@@ -17,10 +18,16 @@ function inboxLabelFor(industry: string | null | undefined): string {
   }
 }
 
+function peoplePageFor(industry: string | null | undefined): PageDef {
+  const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
+  return { id: "people", label, path: "/people" }
+}
+
 function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
   const hasOrders   = activeAddons.includes("online_ordering")
   const hasEmail    = activeAddons.includes("email_marketing")
+  const PEOPLE      = peoplePageFor(industry)
 
   if (industry === "food") {
     return [
@@ -29,6 +36,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
       hasCalendar
         ? { id: "reservations", label: "Reservations", path: "/leads?view=reservations" }
         : { id: "inbox", label: "Reservations", path: "/leads" },
+      PEOPLE,
       ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
       { id: "photos", label: "Photos", path: "/photos" },
       { id: "contacts", label: "Contacts", path: "/contacts" },
@@ -42,6 +50,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
     { id: "home", label: "Home", path: "/" },
     { id: "inbox", label: inboxLabel, path: "/leads" },
     ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
+    PEOPLE,
     { id: "photos", label: "Photos", path: "/photos" },
     { id: "contacts", label: "Contacts", path: "/contacts" },
     ...(hasEmail ? [{ id: "email", label: "Email", path: "/marketing" }] : []),
@@ -59,6 +68,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
     const middle = [
       ...(hasOrders ? ["orders"] : []),
       reservationId,
+      "people",
       ...(hasCalendar ? ["schedule"] : []),
       ...(hasEmail ? ["email"] : []),
       "photos",
@@ -70,6 +80,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
   const middle = [
     "inbox",
     ...(hasCalendar ? ["schedule"] : []),
+    "people",
     ...(hasEmail ? ["email"] : []),
     "photos",
     "contacts",
