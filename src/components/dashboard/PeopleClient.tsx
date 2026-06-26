@@ -44,7 +44,7 @@ function visitSummary(person: PersonRecord): string {
   const parts: string[] = []
   if (person.orderCount > 0) parts.push(`${person.orderCount} order${person.orderCount !== 1 ? "s" : ""}`)
   if (person.reservationCount > 0) parts.push(`${person.reservationCount} reservation${person.reservationCount !== 1 ? "s" : ""}`)
-  if (person.inquiryCount > 0) parts.push(`${person.inquiryCount} inquiry${person.inquiryCount !== 1 ? "ies" : "y"}`.replace("inquiryies", "inquiries"))
+  if (person.inquiryCount > 0) parts.push(`${person.inquiryCount} ${person.inquiryCount === 1 ? "inquiry" : "inquiries"}`)
   return parts.join(" · ") || "1 visit"
 }
 
