@@ -12,11 +12,12 @@ const RATIOS = [
   { label: "1:1", value: "1:1" as AspectRatio, w: 1, h: 1 },
 ]
 
-type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean }
+type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string }
 
 export type UploadedPhoto = {
   id: string; url: string; for_website: boolean; for_social: boolean
   website_section: string | null; album_id: string | null; created_at: string
+  storage_path: string
 }
 
 export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
@@ -41,7 +42,9 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const [mode, setMode]           = useState<CameraMode>("photo")
   const [recording, setRecording] = useState(false)
   const [recSecs, setRecSecs]     = useState(0)
-  const [captures, setCaptures]   = useState<Capture[]>([])
+  const [captures, setCaptures]     = useState<Capture[]>([])
+  const [reviewIndex, setReviewIndex] = useState<number | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [shutterFlash, setFlash]  = useState(false)
   const [ready, setReady]         = useState(false)
   const [error, setError]         = useState<string | null>(null)
@@ -144,8 +147,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       try {
         const res = await fetch("/api/photos", { method: "POST", body: form })
         const data = await res.json()
-        if (data.photo) onUploaded(data.photo)
-      } finally {
+        if (data.photo) {
+          onUploaded(data.photo)
+          setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
+        }
+      } catch {
         setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
       }
     }, "image/jpeg", 0.92)
@@ -186,9 +192,26 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     try {
       const res = await fetch("/api/photos", { method: "POST", body: form })
       const data = await res.json()
-      if (data.photo) onUploaded(data.photo)
-    } finally {
+      if (data.photo) {
+        onUploaded(data.photo)
+        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
+      }
+    } catch {
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
+    }
+  }
+
+  async function deleteCapture(capture: Capture) {
+    setCaptures(prev => prev.filter(c => c.id !== capture.id))
+    setReviewIndex(null)
+    setConfirmDelete(false)
+    URL.revokeObjectURL(capture.previewUrl)
+    if (capture.photoId && capture.storagePath) {
+      await fetch("/api/photos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: capture.photoId, storage_path: capture.storagePath }),
+      })
     }
   }
 
@@ -340,8 +363,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
       }}>
-        {/* Last capture thumbnail */}
-        <div style={{ width: 58, height: 58 }}>
+        {/* Last capture thumbnail — tap to review */}
+        <button
+          onClick={() => captures.length > 0 ? setReviewIndex(0) : undefined}
+          style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
+        >
           {captures[0] ? (
             <div style={{ width: 58, height: 58, borderRadius: 12, overflow: "hidden", border: "2px solid rgba(255,255,255,0.75)", position: "relative", backgroundColor: "#111" }}>
               {captures[0].isVideo ? (
@@ -362,7 +388,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           ) : (
             <div style={{ width: 58, height: 58, borderRadius: 12, border: "2px solid rgba(255,255,255,0.15)" }} />
           )}
-        </div>
+        </button>
 
         {/* Shutter / Record */}
         <button
@@ -401,6 +427,122 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           </svg>
         </button>
       </div>
+
+      {/* ── Review overlay ── */}
+      {reviewIndex !== null && captures[reviewIndex] && (() => {
+        const cap = captures[reviewIndex]
+        return (
+          <div style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#000", display: "flex", flexDirection: "column" }}>
+
+            {/* Top bar */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "max(env(safe-area-inset-top, 0px), 20px) 20px 16px",
+              background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)",
+              position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
+            }}>
+              <button
+                onClick={() => { setReviewIndex(null); setConfirmDelete(false) }}
+                style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.55)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+
+              {captures.length > 1 && (
+                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
+                  {reviewIndex + 1} of {captures.length}
+                </span>
+              )}
+
+              <button
+                onClick={() => setConfirmDelete(true)}
+                style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(255,59,48,0.18)", border: "1px solid rgba(255,59,48,0.35)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Media */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              {cap.isVideo ? (
+                <video
+                  src={cap.previewUrl}
+                  controls
+                  playsInline
+                  style={{ maxWidth: "100%", maxHeight: "100%", outline: "none" }}
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={cap.previewUrl}
+                  alt=""
+                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }}
+                />
+              )}
+            </div>
+
+            {/* Prev / Next */}
+            {captures.length > 1 && (
+              <div style={{
+                position: "absolute", bottom: `calc(max(env(safe-area-inset-bottom, 0px), 24px) + 16px)`,
+                left: 0, right: 0, display: "flex", justifyContent: "space-between", padding: "0 24px", zIndex: 10,
+              }}>
+                <button
+                  onClick={() => { setReviewIndex(i => Math.max(0, (i ?? 0) - 1)); setConfirmDelete(false) }}
+                  disabled={reviewIndex === 0}
+                  style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: reviewIndex === 0 ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)", border: "none", cursor: reviewIndex === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: reviewIndex === 0 ? 0.3 : 1 }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button
+                  onClick={() => { setReviewIndex(i => Math.min(captures.length - 1, (i ?? 0) + 1)); setConfirmDelete(false) }}
+                  disabled={reviewIndex === captures.length - 1}
+                  style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: reviewIndex === captures.length - 1 ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)", border: "none", cursor: reviewIndex === captures.length - 1 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: reviewIndex === captures.length - 1 ? 0.3 : 1 }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            )}
+
+            {/* Delete confirmation */}
+            {confirmDelete && (
+              <div style={{
+                position: "absolute", inset: 0, zIndex: 20,
+                backgroundColor: "rgba(0,0,0,0.75)",
+                display: "flex", alignItems: "flex-end", justifyContent: "center",
+                padding: `0 20px max(env(safe-area-inset-bottom, 0px), 40px)`,
+              }}>
+                <div style={{ width: "100%", backgroundColor: "#1A1C1B", borderRadius: 24, padding: 24 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 600, color: "white", textAlign: "center" }}>
+                    Delete this {cap.isVideo ? "video" : "photo"}?
+                  </p>
+                  <p style={{ margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
+                    {cap.photoId ? "It will be removed from your account." : "It hasn't finished uploading yet."}
+                  </p>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <button
+                      onClick={() => setConfirmDelete(false)}
+                      style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => deleteCapture(cap)}
+                      style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: "#FF3B30", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       <style>{`
         @keyframes cam-spin  { to { transform: rotate(360deg); } }
