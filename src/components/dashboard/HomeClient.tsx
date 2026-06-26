@@ -397,40 +397,52 @@ export default function HomeClient({
         </div>
       </div>
 
-      {/* ── SHORTCUT PILLS ── */}
-      <div style={{ padding: "14px 20px 0", ...fade(0.18) }}>
-        <div style={{ display: "flex", gap: 8 }}>
-          <a
-            href={`https://${siteSlug}.foundco.app`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
-              <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
-            </svg>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em" }}>View Site</span>
-          </a>
-          <Link
-            href="/leads"
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-            </svg>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em" }}>My Leads</span>
-          </Link>
+      {/* ── ROW 2 — My Contacts + Edit My Site ── */}
+      <div style={{ padding: "10px 20px 0", ...fade(0.18) }}>
+        <div style={{ display: "flex", gap: 10 }}>
+
+          {/* My Contacts */}
           <Link
             href="/contacts"
-            style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+              background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              textDecoration: "none",
+            }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
             </svg>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em" }}>Contacts</span>
+            <div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>My Contacts</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Your full CRM</div>
+            </div>
           </Link>
+
+          {/* Edit My Site */}
+          <Link
+            href="/site"
+            style={{
+              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+              background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
+              border: "1px solid rgba(255,255,255,0.09)",
+              textDecoration: "none",
+            }}
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <div>
+              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Edit My Site</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Copy, photos, services</div>
+            </div>
+          </Link>
+
         </div>
       </div>
 

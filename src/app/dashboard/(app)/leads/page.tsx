@@ -177,8 +177,8 @@ export default function LeadsPage() {
   const visibleLeads = leads.filter(l => {
     if (isOrdersView) return isOnlineOrder(l)
     if (isReservationsView) return isReservationLead(l)
-    // Default view: show everything except paid online orders (those belong on the Orders tab)
-    return !isOnlineOrder(l)
+    // Default view: exclude orders (Orders tab) and reservations (Reservations tab)
+    return !isOnlineOrder(l) && !isReservationLead(l)
   })
   const openLeads = visibleLeads.filter(l => !l.status || l.status === "open")
   const closedLeads = visibleLeads.filter(l => l.status === "closed")
