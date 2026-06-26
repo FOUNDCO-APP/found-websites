@@ -71,28 +71,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
             {/* Company name / switcher */}
             {company?.name && (
               hasMultiple ? (
-                <Link href="/select" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 5 }}>
+                <Link href="/select" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 100, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}>
                   <span style={{
-                    fontSize: 10, fontWeight: 900,
-                    color: "rgba(255,255,255,0.35)",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.18em",
+                    fontSize: 12, fontWeight: 700,
+                    color: "rgba(255,255,255,0.85)",
                     maxWidth: 160,
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
                     {company.name}
                   </span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                    stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9"/>
                   </svg>
                 </Link>
               ) : (
                 <span style={{
-                  fontSize: 10, fontWeight: 900,
-                  color: "rgba(255,255,255,0.3)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.18em",
+                  fontSize: 12, fontWeight: 700,
+                  color: "rgba(255,255,255,0.75)",
                   maxWidth: 180,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
