@@ -45,6 +45,55 @@ function orderSummary(lead: LeadRow) {
   if (items.length === 0) return lead.message || "Online order"
   return items.map(item => `${item.quantity || 1}x ${item.name || "Item"}`).join(", ")
 }
+function sourceLabel(source: string | null | undefined): string | null {
+  if (!source) return null
+  const map: Record<string, string> = {
+    website:        "Website form",
+    website_form:   "Website form",
+    found_form:     "Website form",
+    google:         "Google",
+    google_maps:    "Google Maps",
+    referral:       "Referral",
+    instagram:      "Instagram",
+    facebook:       "Facebook",
+    yelp:           "Yelp",
+    walk_in:        "Walk-in",
+    phone:          "Phone call",
+    direct:         "Direct",
+    manual:         "Added manually",
+  }
+  return map[source.toLowerCase()] ?? source
+}
+
+type DateBucket = "today" | "yesterday" | "this_week" | "older"
+const DATE_BUCKET_LABELS: Record<DateBucket, string> = {
+  today:     "Today",
+  yesterday: "Yesterday",
+  this_week: "This Week",
+  older:     "Older",
+}
+
+function getDateBucket(iso: string): DateBucket {
+  const now = new Date()
+  const date = new Date(iso)
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000)
+  const weekStart = new Date(todayStart.getTime() - 6 * 86400000)
+  if (date >= todayStart) return "today"
+  if (date >= yesterdayStart) return "yesterday"
+  if (date >= weekStart) return "this_week"
+  return "older"
+}
+
+function groupByDate(leads: LeadRow[]): Array<{ bucket: DateBucket; items: LeadRow[] }> {
+  const buckets: Record<DateBucket, LeadRow[]> = { today: [], yesterday: [], this_week: [], older: [] }
+  for (const lead of leads) {
+    buckets[lead.created_at ? getDateBucket(lead.created_at) : "older"].push(lead)
+  }
+  const order: DateBucket[] = ["today", "yesterday", "this_week", "older"]
+  return order.filter(b => buckets[b].length > 0).map(b => ({ bucket: b, items: buckets[b] }))
+}
+
 function formatTimeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -454,20 +503,18 @@ export default function LeadsPage() {
             </div>
           )}
 
-          {otherLeads.length > 0 && (
-            <div>
-              {pageLabel.hasTemperature && hotLeads.length > 0 && filterTemp === "all" && (
-                <div style={{ color: "white", opacity: TEXT_OPACITY.disabled, marginBottom: 12, ...TYPE.caption }}>
-                  All {pageLabel.plural}
-                </div>
-              )}
+          {otherLeads.length > 0 && groupByDate(otherLeads).map(({ bucket, items }) => (
+            <div key={bucket}>
+              <div style={{ color: "white", opacity: TEXT_OPACITY.disabled, marginBottom: 10, ...TYPE.caption }}>
+                {DATE_BUCKET_LABELS[bucket]}
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {otherLeads.map(lead => (
+                {items.map(lead => (
                   <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
-          )}
+          ))}
 
         </div>
       ) : null}
@@ -581,7 +628,7 @@ function LeadCard({
         onClick={() => { if (!pickingTemp) onSelect(lead) }}
         style={{ padding: "16px 16px 12px", cursor: "pointer" }}
       >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: preview ? 6 : 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 4 }}>
           <span style={{ color: "white", ...TYPE.headline, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {lead.name || "Unknown"}
           </span>
@@ -625,13 +672,18 @@ function LeadCard({
           </div>
         </div>
 
-        {preview ? (
+        {/* Source badge */}
+        {sourceLabel(lead.source) && (
+          <div style={{ marginBottom: preview ? 5 : 0 }}>
+            <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              via {sourceLabel(lead.source)}
+            </span>
+          </div>
+        )}
+
+        {preview && (
           <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.secondary, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", ...TYPE.subhead }}>
             {preview}
-          </p>
-        ) : (
-          <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.subhead }}>
-            {lead.source === "manual" ? "Added manually" : "Reached out from your site"}
           </p>
         )}
       </div>

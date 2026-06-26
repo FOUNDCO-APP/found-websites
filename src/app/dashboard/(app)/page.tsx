@@ -65,6 +65,7 @@ export default async function HomePage() {
       isActive={isActive}
       recentLeads={recentLeads}
       lastPhotoAt={lastPhotoRow?.created_at ?? null}
+      industry={company.industry_category ?? null}
     />
   )
 }

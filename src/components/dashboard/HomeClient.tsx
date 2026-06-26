@@ -43,6 +43,7 @@ type Props = {
   isActive: boolean
   recentLeads: RecentLead[]
   lastPhotoAt: string | null
+  industry: string | null
 }
 
 // ── Leads sheet ──────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ function LeadsSheet({ leads, newCount, onClose }: { leads: RecentLead[]; newCoun
 export default function HomeClient({
   firstName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads, lastPhotoAt,
+  siteSlug, isActive, recentLeads, lastPhotoAt, industry,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -185,6 +186,10 @@ export default function HomeClient({
   const hasNewLead    = newCount > 0 && topName
   const isWelcome     = isActive && totalCount === 0
   const photoThisWeek = lastPhotoAt && Date.now() - new Date(lastPhotoAt).getTime() < 7 * 86400000
+
+  // Industry-aware guest word for the alert card
+  const guestWord   = industry === "food" ? "guest"  : "lead"
+  const guestWordPl = industry === "food" ? "guests" : "leads"
 
   // Context-aware second tile priority: Share → Add Photo → Edit My Site
   const tile2 = (!isActive || totalCount === 0)
@@ -233,7 +238,7 @@ export default function HomeClient({
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 10px ${GREEN}`, animation: "breathe 2s ease-in-out infinite", flexShrink: 0 }} />
                 <span style={{ color: GREEN, ...TYPE.caption, fontWeight: 700 }}>
-                  {newCount === 1 ? "1 new lead" : `${newCount} new leads`}
+                  {newCount === 1 ? `1 new ${guestWord} this week` : `${newCount} new ${guestWordPl} this week`}
                 </span>
               </div>
               <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
@@ -252,7 +257,7 @@ export default function HomeClient({
                 {newCount > 1 ? `+${newCount - 1} more` : "Tap to respond"}
               </span>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: GREEN }}>See leads</span>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: GREEN }}>See {guestWordPl}</span>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
             </div>
@@ -416,7 +421,7 @@ export default function HomeClient({
             </svg>
             <div>
               <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>My Contacts</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Your full CRM</div>
+              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Vendors, staff &amp; suppliers</div>
             </div>
           </Link>
 
