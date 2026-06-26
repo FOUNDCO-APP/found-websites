@@ -32,6 +32,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   const chunksRef       = useRef<Blob[]>([])
   const timerRef        = useRef<ReturnType<typeof setInterval> | null>(null)
   const hwZoomRef       = useRef(false)
+  const stripRef        = useRef<HTMLDivElement>(null)
 
   const [ratio, setRatio]         = useState<AspectRatio>("16:9")
   const [portrait, setPortrait]   = useState(true)
@@ -228,6 +229,15 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     onClose()
   }
 
+  // Auto-scroll filmstrip when selected photo changes
+  useEffect(() => {
+    if (reviewIndex === null || !stripRef.current) return
+    const el = stripRef.current
+    const thumbW = 72 + 10
+    const target = reviewIndex * thumbW - (el.clientWidth / 2 - 36)
+    el.scrollTo({ left: Math.max(0, target), behavior: "smooth" })
+  }, [reviewIndex])
+
   const baseR    = RATIOS.find(r => r.value === ratio)!
   const currentR = (portrait && ratio !== "1:1") ? { ...baseR, w: baseR.h, h: baseR.w } : baseR
   const cssZoom  = !hwZoomRef.current && zoom > 1 ? zoom : 1
@@ -293,8 +303,8 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         padding: "max(env(safe-area-inset-top, 0px), 20px) 18px 16px",
       }}>
         {/* Close */}
-        <button onClick={handleClose} style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "none", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+        <button onClick={handleClose} style={{ width: 42, height: 42, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.62)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
@@ -432,107 +442,131 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       {reviewIndex !== null && captures[reviewIndex] && (() => {
         const cap = captures[reviewIndex]
         return (
-          <div style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#000", display: "flex", flexDirection: "column" }}>
+          <div style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#0A0C0B", display: "flex", flexDirection: "column" }}>
 
-            {/* Top bar */}
+            {/* ── Top bar — solid, always visible ── */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "max(env(safe-area-inset-top, 0px), 20px) 20px 16px",
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, transparent 100%)",
-              position: "absolute", top: 0, left: 0, right: 0, zIndex: 10,
+              padding: "max(env(safe-area-inset-top, 0px), 18px) 20px 14px",
+              backgroundColor: "#0D100E",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+              flexShrink: 0,
             }}>
+              {/* Back to camera */}
               <button
                 onClick={() => { setReviewIndex(null); setConfirmDelete(false) }}
-                style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.55)", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                  <polyline points="15 18 9 12 15 6"/>
                 </svg>
+                <span style={{ fontSize: 16, fontWeight: 600, color: "white" }}>Camera</span>
               </button>
 
-              {captures.length > 1 && (
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>
-                  {reviewIndex + 1} of {captures.length}
-                </span>
-              )}
+              <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.45)", letterSpacing: "0.02em" }}>
+                {captures.length === 1 ? "1 photo" : `${captures.length} photos`}
+              </span>
 
+              {/* Delete — explicit red pill with label */}
               <button
                 onClick={() => setConfirmDelete(true)}
-                style={{ width: 38, height: 38, borderRadius: "50%", backgroundColor: "rgba(255,59,48,0.18)", border: "1px solid rgba(255,59,48,0.35)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                style={{ display: "flex", alignItems: "center", gap: 6, backgroundColor: "rgba(255,59,48,0.14)", border: "1.5px solid rgba(255,59,48,0.55)", borderRadius: 100, padding: "7px 14px", cursor: "pointer" }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/>
                 </svg>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#FF3B30" }}>Delete</span>
               </button>
             </div>
 
-            {/* Media */}
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              {cap.isVideo ? (
-                <video
-                  src={cap.previewUrl}
-                  controls
-                  playsInline
-                  style={{ maxWidth: "100%", maxHeight: "100%", outline: "none" }}
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={cap.previewUrl}
-                  alt=""
-                  style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", display: "block" }}
-                />
-              )}
+            {/* ── Main preview ── */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 16px", overflow: "hidden", minHeight: 0 }}>
+              <div style={{ width: "100%", height: "100%", borderRadius: 20, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {cap.isVideo ? (
+                  <video
+                    src={cap.previewUrl}
+                    controls
+                    playsInline
+                    style={{ width: "100%", height: "100%", objectFit: "contain", outline: "none" }}
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cap.previewUrl}
+                    alt=""
+                    style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+                  />
+                )}
+              </div>
             </div>
 
-            {/* Prev / Next */}
-            {captures.length > 1 && (
-              <div style={{
-                position: "absolute", bottom: `calc(max(env(safe-area-inset-bottom, 0px), 24px) + 16px)`,
-                left: 0, right: 0, display: "flex", justifyContent: "space-between", padding: "0 24px", zIndex: 10,
-              }}>
-                <button
-                  onClick={() => { setReviewIndex(i => Math.max(0, (i ?? 0) - 1)); setConfirmDelete(false) }}
-                  disabled={reviewIndex === 0}
-                  style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: reviewIndex === 0 ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)", border: "none", cursor: reviewIndex === 0 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: reviewIndex === 0 ? 0.3 : 1 }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                </button>
-                <button
-                  onClick={() => { setReviewIndex(i => Math.min(captures.length - 1, (i ?? 0) + 1)); setConfirmDelete(false) }}
-                  disabled={reviewIndex === captures.length - 1}
-                  style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: reviewIndex === captures.length - 1 ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.14)", border: "none", cursor: reviewIndex === captures.length - 1 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: reviewIndex === captures.length - 1 ? 0.3 : 1 }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
+            {/* ── Filmstrip ── */}
+            <div style={{ flexShrink: 0, backgroundColor: "#0D100E", borderTop: "1px solid rgba(255,255,255,0.07)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)" }}>
+              <div
+                ref={stripRef}
+                className="picker-scroll"
+                style={{ display: "flex", gap: 10, overflowX: "auto", padding: "14px 16px", scrollbarWidth: "none" }}
+              >
+                {captures.map((c, i) => {
+                  const selected = i === reviewIndex
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => { setReviewIndex(i); setConfirmDelete(false) }}
+                      style={{ flexShrink: 0, padding: 0, background: "none", border: "none", cursor: "pointer", position: "relative" }}
+                    >
+                      <div style={{
+                        width: 72, height: 72, borderRadius: 12, overflow: "hidden",
+                        border: selected ? "2.5px solid white" : "2.5px solid transparent",
+                        opacity: selected ? 1 : 0.45,
+                        transform: selected ? "scale(1.04)" : "scale(1)",
+                        transition: "all 0.15s ease",
+                        backgroundColor: "#1A1A1A",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {c.isVideo ? (
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.previewUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        )}
+                        {c.uploading && (
+                          <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 10 }}>
+                            <div style={{ width: 12, height: 12, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "white", animation: "cam-spin 0.8s linear infinite" }} />
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
               </div>
-            )}
+            </div>
 
-            {/* Delete confirmation */}
+            {/* ── Delete confirmation sheet ── */}
             {confirmDelete && (
               <div style={{
                 position: "absolute", inset: 0, zIndex: 20,
-                backgroundColor: "rgba(0,0,0,0.75)",
-                display: "flex", alignItems: "flex-end", justifyContent: "center",
-                padding: `0 20px max(env(safe-area-inset-bottom, 0px), 40px)`,
+                backgroundColor: "rgba(0,0,0,0.72)",
+                display: "flex", alignItems: "flex-end",
+                padding: `0 16px max(env(safe-area-inset-bottom, 0px), 32px)`,
               }}>
-                <div style={{ width: "100%", backgroundColor: "#1A1C1B", borderRadius: 24, padding: 24 }}>
-                  <p style={{ margin: "0 0 6px", fontSize: 17, fontWeight: 600, color: "white", textAlign: "center" }}>
+                <div style={{ width: "100%", backgroundColor: "#1C1F1E", borderRadius: 24, padding: "28px 24px 24px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 600, color: "white", textAlign: "center" }}>
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
-                  <p style={{ margin: "0 0 24px", fontSize: 13, color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
-                    {cap.photoId ? "It will be removed from your account." : "It hasn't finished uploading yet."}
+                  <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
+                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading — it will be discarded."}
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button
                       onClick={() => setConfirmDelete(false)}
-                      style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "white", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={() => deleteCapture(cap)}
-                      style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: "#FF3B30", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
+                      style={{ flex: 1, padding: "16px 0", borderRadius: 14, border: "none", backgroundColor: "#FF3B30", color: "white", fontSize: 15, fontWeight: 700, cursor: "pointer" }}
                     >
                       Delete
                     </button>
