@@ -38,15 +38,12 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const activeAddons = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
   const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
 
-  let locations: import("@/components/layouts/FindUsSection").PublicLocation[] = []
-  if (activeAddons.includes("second_location")) {
-    const { data: locRows } = await admin
-      .from("company_locations")
-      .select("id, name, address, phone, hours")
-      .eq("company_id", company.id)
-      .order("sort_order", { ascending: true })
-    locations = (locRows ?? []) as typeof locations
-  }
+  const { data: locRows } = await admin
+    .from("company_locations")
+    .select("id, name, address, phone, hours")
+    .eq("company_id", company.id)
+    .order("sort_order", { ascending: true })
+  const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
 
   const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, locations }
 

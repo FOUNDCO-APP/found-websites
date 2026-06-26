@@ -14,15 +14,6 @@ export default async function LocationsPage() {
 
   const admin = createAdminClient()
 
-  const { data: addonRows } = await admin
-    .from("addon_subscriptions")
-    .select("addon_slug")
-    .eq("company_id", company.id)
-    .eq("active", true)
-
-  const activeAddons = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
-  if (!activeAddons.includes("second_location")) redirect("/more")
-
   const { data: locations } = await admin
     .from("company_locations")
     .select("id, name, address, phone, hours, sort_order")

@@ -15,7 +15,6 @@ export type Feature =
   | "shopping_cart"
   | "quote_payments"
   | "reservation_calendar"
-  | "second_location"
   // Always-on (all plans, no gate)
   | "dns_setup"
   | "industry_form"
@@ -28,7 +27,6 @@ export type AddonSlug =
   | "shopping_cart"
   | "quote_payments"
   | "reservation_calendar"
-  | "second_location"
   | "email_marketing"
 
 export function getFeatureAccess(
@@ -73,8 +71,6 @@ export function getFeatureAccess(
       return activeAddons.includes("quote_payments")
     case "reservation_calendar":
       return activeAddons.includes("reservation_calendar")
-    case "second_location":
-      return activeAddons.includes("second_location")
 
     default:
       return false
@@ -122,13 +118,6 @@ export const ALL_ADDONS: AddonDef[] = [
     slug: "email_marketing",
     label: "Email Marketing",
     description: "Send campaigns to your full contact list. Announce promotions, seasonal offers, and news.",
-    price: 15,
-    relevantIndustries: [],
-  },
-  {
-    slug: "second_location",
-    label: "Multiple Locations",
-    description: "Show a second location on your website — address, hours, and directions. Both locations appear in a 'Find Us' section.",
     price: 15,
     relevantIndustries: [],
   },

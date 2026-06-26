@@ -188,33 +188,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
             </div>
           </Link>
 
-          {activeAddonSlugs.includes("second_location") && (
-            <Link href="/locations" style={{ textDecoration: "none", display: "block" }}>
-              <div style={{
-                borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                padding: "16px 18px",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 12,
-                    backgroundColor: `${GREEN}18`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Locations</p>
-                    <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Manage your second location</p>
-                  </div>
-                </div>
-                <ChevronRight />
-              </div>
-            </Link>
-          )}
         </div>
       </section>
 
