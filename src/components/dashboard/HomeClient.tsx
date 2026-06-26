@@ -201,12 +201,10 @@ export default function HomeClient({
 
   return (
     <main style={{
-      minHeight: "100dvh",
       display: "flex",
       flexDirection: "column",
       backgroundColor: BLACK,
       backgroundImage: AMBIENT[greeting] ?? AMBIENT.afternoon,
-      paddingBottom: 100,
     }}>
 
       {/* ── GREETING ── */}

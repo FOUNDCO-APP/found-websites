@@ -305,12 +305,10 @@ export default function DashboardNav({
   function buildTabs(ids: string[]): Tab[] {
     const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
     const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
-    const missing = defaultTabs.filter(tab => !ids.includes(tab.id))
-    const combined = [...ordered, ...missing]
-    // HOME always first, MORE always last — regardless of saved order or appended missing tabs
-    const homeTab = combined.find(t => t.id === "home")
-    const moreTab = combined.find(t => t.id === "more")
-    const middle  = combined.filter(t => t.id !== "home" && t.id !== "more").slice(0, 3)
+    // HOME always first, MORE always last — fall back to defaults if missing from saved set
+    const homeTab = ordered.find(t => t.id === "home") ?? defaultTabs.find(t => t.id === "home")
+    const moreTab = ordered.find(t => t.id === "more") ?? defaultTabs.find(t => t.id === "more")
+    const middle  = ordered.filter(t => t.id !== "home" && t.id !== "more").slice(0, 3)
     return [
       ...(homeTab ? [homeTab] : []),
       ...middle,
@@ -323,13 +321,6 @@ export default function DashboardNav({
       const saved = window.localStorage.getItem(storageKey)
       if (!saved) { setTabs(defaultTabs); return }
       const savedIds = JSON.parse(saved) as string[]
-      // If defaultTabs has new tabs that weren't in the saved order, reset so they show up
-      const hasNewDefaults = defaultTabs.some(t => !savedIds.includes(t.id))
-      if (hasNewDefaults) {
-        window.localStorage.removeItem(storageKey)
-        setTabs(defaultTabs)
-        return
-      }
       setTabs(buildTabs(savedIds))
     } catch { setTabs(defaultTabs) }
   }, [storageKey, industry, addonKey])
@@ -340,12 +331,6 @@ export default function DashboardNav({
         const saved = window.localStorage.getItem(storageKey)
         if (!saved) { setTabs(defaultTabs); return }
         const savedIds = JSON.parse(saved) as string[]
-        const hasNewDefaults = defaultTabs.some(t => !savedIds.includes(t.id))
-        if (hasNewDefaults) {
-          window.localStorage.removeItem(storageKey)
-          setTabs(defaultTabs)
-          return
-        }
         setTabs(buildTabs(savedIds))
       } catch {}
     }
