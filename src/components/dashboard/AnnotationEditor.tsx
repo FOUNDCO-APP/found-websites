@@ -87,7 +87,7 @@ export default function AnnotationEditor({
       if (!text) return
       const fs = 18, padX = 14, padY = 9
       ctx.font = `700 ${fs}px -apple-system, BlinkMacSystemFont, system-ui, sans-serif`
-      ctx.textBaseline = "top"
+      ctx.textBaseline = "middle"
       const tw = ctx.measureText(text).width
       const bw = tw + padX * 2, bh = fs + padY * 2
       // Pill background
@@ -100,9 +100,9 @@ export default function AnnotationEditor({
         ctx.rect(s.x1, s.y1, bw, bh)
       }
       ctx.fill()
-      // Contrasting text
+      // Contrasting text — draw at vertical center of pill
       ctx.fillStyle = getContrastColor(s.color)
-      ctx.fillText(text, s.x1 + padX, s.y1 + padY)
+      ctx.fillText(text, s.x1 + padX, s.y1 + bh / 2)
       return
     }
     ctx.strokeStyle = s.color
