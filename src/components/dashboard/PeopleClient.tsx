@@ -145,33 +145,39 @@ function PersonDetailSheet({
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-            {person.phone && (
-              <a href={`tel:${person.phone}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.64A2 2 0 012 .95h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.85a16 16 0 006.29 6.29l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-                </svg>
-                <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Call</span>
-              </a>
-            )}
-            {person.phone && (
-              <button onClick={openSms} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                </svg>
-                <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Text</span>
-              </button>
-            )}
-            {person.email && (
-              <button onClick={openEmail} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
-                <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Email</span>
-              </button>
-            )}
-          </div>
+          {(person.phone || person.email) ? (
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              {person.phone && (
+                <a href={`tel:${person.phone}`} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", textDecoration: "none" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.64A2 2 0 012 .95h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.85a16 16 0 006.29 6.29l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
+                  </svg>
+                  <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Call</span>
+                </a>
+              )}
+              {person.phone && (
+                <button onClick={openSms} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                  </svg>
+                  <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Text</span>
+                </button>
+              )}
+              {person.email && (
+                <button onClick={openEmail} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "12px 0", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  <span style={{ ...TYPE.caption, fontWeight: 700, color: "white" }}>Email</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <p style={{ margin: "14px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,0.3)`, textAlign: "center" }}>
+              No contact info on file
+            </p>
+          )}
         </div>
 
         {/* Timeline */}
@@ -411,8 +417,15 @@ export default function PeopleClient({
           </div>
           <p style={{ margin: 0, color: "white", ...TYPE.headline, fontWeight: 600 }}>No {tabLabel.toLowerCase()} yet</p>
           <p style={{ margin: "8px 0 0", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.subhead }}>
-            {tabLabel} will appear here once they contact you
+            {industry === "food"
+              ? "Guests who order or reserve online will show up here."
+              : `${tabLabel} who reach out through your website will show up here.`}
           </p>
+          {industry === "food" && (
+            <p style={{ margin: "6px 0 0", color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, ...TYPE.footnote }}>
+              Walk-in guests aren&apos;t tracked here — only online orders and reservations.
+            </p>
+          )}
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: "center", paddingTop: 60 }}>

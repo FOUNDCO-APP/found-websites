@@ -21,8 +21,8 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const partySize = (formData.get("party_size") as string)?.trim()
   const notes = (formData.get("notes") as string)?.trim()
 
-  if (!companyId || !name || !phone || !date || !time) {
-    return { success: false, error: "Name, phone, date, and time are required." }
+  if (!companyId || !name || !phone || !email || !date || !time) {
+    return { success: false, error: "Name, phone, email, date, and time are required." }
   }
 
   const supabase = await createClient()

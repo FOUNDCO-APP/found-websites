@@ -61,10 +61,12 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
   }
 
   const inboxLabel = inboxLabelFor(industry)
+  const PEOPLE = peopleTab(industry)
   return [
     { id: "home", path: "/", label: "Home" },
     { id: "inbox", path: "/leads", label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
+    PEOPLE,
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },
     ...(hasEmail ? [EMAIL_TAB] : []),
@@ -102,9 +104,11 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
   }
 
   const inboxLabel = inboxLabelFor(industry)
+  const PEOPLE = peopleTab(industry)
   const middle = [
     { id: "inbox", path: "/leads", label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
+    PEOPLE,
     ...(hasEmail ? [EMAIL_TAB] : []),
     { id: "photos", path: "/photos", label: "Photos" },
     { id: "contacts", path: "/contacts", label: "Contacts" },

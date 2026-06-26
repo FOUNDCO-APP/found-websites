@@ -69,9 +69,9 @@ export default function ReservationForm({
 
       <div>
         <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>
-          Email <span className="text-gray-400 font-normal">(optional — for confirmation)</span>
+          Email <span style={{ color: primaryColor }}>*</span>
         </label>
-        <input name="email" type="email" placeholder="your@email.com"
+        <input name="email" type="email" required placeholder="your@email.com"
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2" />
       </div>
 

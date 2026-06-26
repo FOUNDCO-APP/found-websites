@@ -25,8 +25,8 @@ export async function POST(req: NextRequest) {
   const service    = clean(body.service, 120)
   const notes      = clean(body.notes, 600)
 
-  if (!companyId || !date || !startTime || !endTime || !name || !phone) {
-    return NextResponse.json({ error: "Name, phone, date, and time are required." }, { status: 400 })
+  if (!companyId || !date || !startTime || !endTime || !name || !phone || !email) {
+    return NextResponse.json({ error: "Name, phone, email, date, and time are required." }, { status: 400 })
   }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(startTime)) {
     return NextResponse.json({ error: "Invalid date or time format." }, { status: 400 })

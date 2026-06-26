@@ -466,10 +466,13 @@ export default function MarketingClient({
   // ═══ HOME ═════════════════════════════════════════════════════════
   return (
     <main style={{ padding: "24px 20px 40px" }}>
-      <p style={{ margin: "0 0 20px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+      <p style={{ margin: "0 0 4px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
         <span style={{ color: "white", fontWeight: 700 }}>{contacts.length}</span> subscribers
         &nbsp;·&nbsp;
         <span style={{ color: "white", fontWeight: 700 }}>{campaigns.length}</span> campaigns sent
+      </p>
+      <p style={{ margin: "0 0 20px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+        Subscribers are people who opted in through your public website — not your contacts list.
       </p>
 
       {/* Hero card — no icon, just headline + button */}
