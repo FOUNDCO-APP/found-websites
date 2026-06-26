@@ -12,7 +12,7 @@ export default function SignOutButton() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     )
     await supabase.auth.signOut()
-    // Redirect to login — works in both prod (app.foundco.app/login) and dev
+    document.cookie = "found_company_id=; max-age=0; path=/"
     router.push("/login")
     router.refresh()
   }
