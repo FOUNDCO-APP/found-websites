@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
+import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 
 type Photo = {
   id: string
@@ -60,6 +61,7 @@ export default function PhotosPage() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
   const [lightroomSource, setLightroomSource] = useState<"current" | "album">("current")
+  const [showCamera, setShowCamera] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
@@ -202,7 +204,29 @@ export default function PhotosPage() {
 
   function openCamera() {
     if (activeAlbum) pendingAlbumIdRef.current = activeAlbum.id
-    fileRef.current?.click()
+    if (typeof navigator !== "undefined" && "mediaDevices" in navigator) {
+      setShowCamera(true)
+    } else {
+      fileRef.current?.click()
+    }
+  }
+
+  function handleCameraUploaded(photo: UploadedPhoto) {
+    const albumId = pendingAlbumIdRef.current
+    const newPhoto = { ...photo, album_id: albumId ?? null }
+    setPhotos(prev => [newPhoto, ...prev])
+    if (albumId) {
+      fetch("/api/photos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: photo.id, album_id: albumId }),
+      }).catch(console.error)
+    }
+  }
+
+  function handleCameraClose() {
+    pendingAlbumIdRef.current = null
+    setShowCamera(false)
   }
 
   const unsorted  = photos.filter(p => !p.for_website && !p.for_social)
@@ -416,6 +440,15 @@ export default function PhotosPage() {
       {/* Upgrade sheet */}
       {showUpgrade && (
         <UpgradeSheet onClose={() => setShowUpgrade(false)} />
+      )}
+
+      {/* In-app camera */}
+      {showCamera && (
+        <CameraSheet
+          onClose={handleCameraClose}
+          onUploaded={handleCameraUploaded}
+          pendingAlbumId={pendingAlbumIdRef.current}
+        />
       )}
     </main>
   )

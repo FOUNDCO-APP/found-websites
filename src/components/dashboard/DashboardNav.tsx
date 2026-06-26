@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor, defaultFormIntentFor } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
+import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 
 type Tab = { path: string; label: string; id: string }
 type Album = { id: string; name: string; cover_url: string | null }
@@ -283,6 +284,7 @@ export default function DashboardNav({
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
+  const [showCamera, setShowCamera]         = useState(false)
   const [showNewAlbum, setShowNewAlbum]     = useState(false)
   const [newAlbumName, setNewAlbumName]     = useState("")
   const [creating, setCreating]             = useState(false)
@@ -376,7 +378,34 @@ export default function DashboardNav({
   function shoot(albumId?: string) {
     closePicker()
     pendingAlbumRef.current = albumId ?? null
-    fileRef.current?.click()
+    if (typeof navigator !== "undefined" && "mediaDevices" in navigator) {
+      setShowCamera(true)
+    } else {
+      fileRef.current?.click()
+    }
+  }
+
+  function handleCameraUploaded(photo: UploadedPhoto) {
+    const albumId = pendingAlbumRef.current
+    if (albumId) {
+      fetch(`${prefix}/api/photos`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: photo.id, album_id: albumId }),
+      }).catch(console.error)
+      setAlbums(prev => prev.map(a =>
+        a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
+      ))
+    }
+    window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
+      detail: { photo: { ...photo, album_id: albumId ?? null } },
+    }))
+    showToastMsg(albumId ? `Saved to ${albums.find(a => a.id === albumId)?.name ?? "album"}` : "Photo saved")
+  }
+
+  function handleCameraClose() {
+    pendingAlbumRef.current = null
+    setShowCamera(false)
   }
 
   function showToastMsg(msg: string) {
@@ -714,6 +743,15 @@ export default function DashboardNav({
             </div>
           </div>
         </>
+      )}
+
+      {/* In-app camera */}
+      {showCamera && (
+        <CameraSheet
+          onClose={handleCameraClose}
+          onUploaded={handleCameraUploaded}
+          pendingAlbumId={pendingAlbumRef.current}
+        />
       )}
 
       <style>{`
