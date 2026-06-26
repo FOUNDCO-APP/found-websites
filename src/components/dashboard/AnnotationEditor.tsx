@@ -43,8 +43,9 @@ export default function AnnotationEditor({
   const [color, setColor]         = useState(COLORS[0])
   const [lw, setLw]               = useState(7)
   const [strokes, setStrokes]     = useState<Stroke[]>([])
-  const [textEntry, setTextEntry] = useState<{ x: number; y: number } | null>(null)
+  const [textEntry, setTextEntry]     = useState<{ x: number; y: number } | null>(null)
   const [pendingText, setPendingText] = useState("")
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [loaded, setLoaded]       = useState(false)
   const [saving, setSaving]       = useState(false)
 
@@ -174,6 +175,27 @@ export default function AnnotationEditor({
 
   // ── Pointer handlers ────────────────────────────────────────────────────────
 
+  function measureTextWidth(text: string): number {
+    const canvas = canvasRef.current
+    if (!canvas) return 0
+    const ctx = canvas.getContext("2d")!
+    ctx.font = "700 18px -apple-system, BlinkMacSystemFont, system-ui, sans-serif"
+    return ctx.measureText(text).width
+  }
+
+  // Returns the index of the topmost text stroke whose bounding box contains (x, y), or null
+  function findTextAt(x: number, y: number): number | null {
+    const padX = 14, padY = 9, fs = 18
+    for (let i = strokesRef.current.length - 1; i >= 0; i--) {
+      const s = strokesRef.current[i]
+      if (s.tool !== "text" || !s.text) continue
+      const bw = measureTextWidth(s.text) + padX * 2
+      const bh = fs + padY * 2
+      if (x >= s.x1 && x <= s.x1 + bw && y >= s.y1 && y <= s.y1 + bh) return i
+    }
+    return null
+  }
+
   function xy(e: React.PointerEvent<HTMLCanvasElement>) {
     const r = canvasRef.current!.getBoundingClientRect()
     return { x: e.clientX - r.left, y: e.clientY - r.top }
@@ -183,8 +205,22 @@ export default function AnnotationEditor({
     e.preventDefault()
     const { x, y } = xy(e)
     if (toolRef.current === "text") {
-      setTextEntry({ x, y })
-      setPendingText("")
+      const hit = findTextAt(x, y)
+      if (hit !== null) {
+        // Tap on existing label → edit it
+        const s = strokesRef.current[hit]
+        setEditingIndex(hit)
+        setPendingText(s.text ?? "")
+        setTextEntry({ x: s.x1, y: s.y1 })
+        // Sync color picker to the label's current color
+        setColor(s.color)
+        colorRef.current = s.color
+      } else {
+        // Tap on empty space → new label
+        setEditingIndex(null)
+        setTextEntry({ x, y })
+        setPendingText("")
+      }
       return
     }
     drawingRef.current = true
@@ -216,17 +252,25 @@ export default function AnnotationEditor({
   function commitText() {
     const text = pendingText.trim()
     if (!text || !textEntry) return
-    const s: Stroke = {
-      tool: "text", color: colorRef.current, lw: lwRef.current,
-      x1: textEntry.x, y1: textEntry.y, x2: textEntry.x, y2: textEntry.y,
-      text,
+    let next: Stroke[]
+    if (editingIndex !== null) {
+      // Replace the existing label in-place, updating text and color
+      next = strokesRef.current.map((s, i) =>
+        i === editingIndex ? { ...s, text, color: colorRef.current } : s
+      )
+    } else {
+      next = [...strokesRef.current, {
+        tool: "text" as Tool, color: colorRef.current, lw: lwRef.current,
+        x1: textEntry.x, y1: textEntry.y, x2: textEntry.x, y2: textEntry.y,
+        text,
+      }]
     }
-    const next = [...strokesRef.current, s]
     strokesRef.current = next
     setStrokes(next)
     render(next)
     setTextEntry(null)
     setPendingText("")
+    setEditingIndex(null)
   }
 
   // ── Save ────────────────────────────────────────────────────────────────────
@@ -396,7 +440,7 @@ export default function AnnotationEditor({
             padding: `28px 20px max(env(safe-area-inset-bottom, 0px), 28px)`,
           }}>
             <p style={{ margin: "0 0 14px", fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Add text label
+              {editingIndex !== null ? "Edit label" : "Add text label"}
             </p>
 
             {/* Input */}
@@ -404,7 +448,7 @@ export default function AnnotationEditor({
               autoFocus
               value={pendingText}
               onChange={e => setPendingText(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") commitText(); if (e.key === "Escape") { setTextEntry(null); setPendingText("") } }}
+              onKeyDown={e => { if (e.key === "Enter") commitText(); if (e.key === "Escape") { setTextEntry(null); setPendingText(""); setEditingIndex(null) } }}
               placeholder="Type your note…"
               style={{
                 width: "100%", padding: "14px 16px", borderRadius: 14,
@@ -427,7 +471,7 @@ export default function AnnotationEditor({
             {/* Buttons */}
             <div style={{ display: "flex", gap: 12 }}>
               <button
-                onClick={() => { setTextEntry(null); setPendingText("") }}
+                onClick={() => { setTextEntry(null); setPendingText(""); setEditingIndex(null) }}
                 style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "rgba(255,255,255,0.7)", fontSize: 15, fontWeight: 600, cursor: "pointer" }}
               >
                 Cancel
@@ -437,7 +481,7 @@ export default function AnnotationEditor({
                 disabled={!pendingText.trim()}
                 style={{ flex: 2, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: pendingText.trim() ? GREEN : "rgba(255,255,255,0.07)", color: pendingText.trim() ? "#000" : "rgba(255,255,255,0.3)", fontSize: 15, fontWeight: 700, cursor: pendingText.trim() ? "pointer" : "default", transition: "all 0.15s ease" }}
               >
-                Place on Photo
+                {editingIndex !== null ? "Update Label" : "Place on Photo"}
               </button>
             </div>
           </div>
