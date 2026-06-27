@@ -1083,8 +1083,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     <div>
-                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Stripe not connected</div>
-                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Connect Stripe in Settings to collect deposits automatically next time.</div>
+                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Deposit payments aren&apos;t set up yet</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>You can still accept the job. Turn on online payments later if you want clients to pay a deposit here.</div>
                     </div>
                   </div>
                 )}
@@ -1097,6 +1097,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
               </div>
             )}
 
+            <div style={{ height: 22 }} />
             {/* Activity timeline */}
             <ActivityTimeline estimate={est} />
           </>
