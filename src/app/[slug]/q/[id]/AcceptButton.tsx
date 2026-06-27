@@ -25,22 +25,22 @@ function contrastColor(hex: string): string {
 
 function stripeAppearance(color: string): StripeElementsOptions["appearance"] {
   return {
-    theme: "night",
+    theme: "stripe",
     variables: {
       colorPrimary: color,
-      colorBackground: "#0F1211",
-      colorText: "#ffffff",
+      colorBackground: "#ffffff",
+      colorText: "#111111",
       colorDanger: "#FF453A",
-      colorTextSecondary: "rgba(255,255,255,0.55)",
-      colorTextPlaceholder: "rgba(255,255,255,0.25)",
+      colorTextSecondary: "#666666",
+      colorTextPlaceholder: "#999999",
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       fontSizeBase: "15px",
       borderRadius: "14px",
     },
     rules: {
       ".Input": {
-        backgroundColor: "#080A09",
-        border: "1px solid rgba(255,255,255,0.1)",
+        backgroundColor: "#ffffff",
+        border: "1px solid #E8E8E2",
         boxShadow: "none",
         padding: "14px 16px",
       },
@@ -49,7 +49,7 @@ function stripeAppearance(color: string): StripeElementsOptions["appearance"] {
         boxShadow: `0 0 0 2px ${color}22`,
       },
       ".Label": {
-        color: "rgba(255,255,255,0.4)",
+        color: "#777772",
         fontSize: "11px",
         fontWeight: "800",
         letterSpacing: "0.12em",
@@ -57,7 +57,7 @@ function stripeAppearance(color: string): StripeElementsOptions["appearance"] {
         marginBottom: "8px",
       },
       ".Error": { color: "#FF453A", fontSize: "13px" },
-      ".Tab": { backgroundColor: "#0A0C0B", border: "1px solid rgba(255,255,255,0.08)" },
+      ".Tab": { backgroundColor: "#F7F7F5", border: "1px solid #E8E8E2" },
       ".Tab--selected": { borderColor: color, boxShadow: `0 0 0 1px ${color}44` },
     },
   }
@@ -135,17 +135,17 @@ function PaymentForm({
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <h3 style={{ margin: "0 0 8px", color: "white", fontSize: "1.625rem", fontWeight: 300, letterSpacing: "-0.03em" }}>
+        <h3 style={{ margin: "0 0 8px", color: "#111", fontSize: "1.625rem", fontWeight: 300, letterSpacing: "-0.03em" }}>
           You&apos;re all set!
         </h3>
-        <p style={{ margin: "0 0 6px", color: "rgba(255,255,255,0.6)", fontSize: 15, lineHeight: 1.6 }}>
+        <p style={{ margin: "0 0 6px", color: "#5F5F5A", fontSize: 15, lineHeight: 1.6 }}>
           {fmt(depositAmount)} deposit received.
         </p>
-        <p style={{ margin: "0 0 4px", color: "rgba(255,255,255,0.3)", fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ margin: "0 0 4px", color: "#777772", fontSize: 14, lineHeight: 1.6 }}>
           {companyName} has been notified and will be in touch to schedule your project.
         </p>
         {remaining > 0 && (
-          <p style={{ margin: "16px 0 0", color: "rgba(255,255,255,0.2)", fontSize: 13 }}>
+          <p style={{ margin: "16px 0 0", color: "#8A8A84", fontSize: 13 }}>
             {fmt(remaining)} remaining due at completion.
           </p>
         )}
@@ -158,13 +158,13 @@ function PaymentForm({
     <>
       {/* Deposit breakdown */}
       <div style={{ textAlign: "center", marginBottom: 28 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "#8A8A84", marginBottom: 10 }}>
           {depositPct}% Deposit Due Now
         </div>
         <div style={{ fontSize: "2.75rem", fontWeight: 700, letterSpacing: "-0.04em", color, lineHeight: 1 }}>
           {fmt(depositAmount)}
         </div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", marginTop: 8 }}>
+        <div style={{ fontSize: 13, color: "#777772", marginTop: 8 }}>
           Full estimate: {fmt(total)} &nbsp;·&nbsp; {fmt(remaining)} at completion
         </div>
       </div>
@@ -183,8 +183,8 @@ function PaymentForm({
         style={{
           width: "100%", marginTop: 22, padding: "18px 0",
           borderRadius: 18, border: "none",
-          backgroundColor: (!stripe || paying) ? "rgba(255,255,255,0.08)" : color,
-          color: (!stripe || paying) ? "rgba(255,255,255,0.3)" : contrastColor(color),
+          backgroundColor: (!stripe || paying) ? "#E8E8E2" : color,
+          color: (!stripe || paying) ? "#8A8A84" : contrastColor(color),
           fontSize: 17, fontWeight: 800, cursor: (!stripe || paying) ? "default" : "pointer",
           letterSpacing: "-0.01em", transition: "all 0.15s ease",
         }}
@@ -193,15 +193,15 @@ function PaymentForm({
       </button>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14, marginBottom: 4 }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#B8B8B2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
         </svg>
-        <span style={{ color: "rgba(255,255,255,0.18)", fontSize: 12 }}>Secured by Stripe</span>
+        <span style={{ color: "#9A9A94", fontSize: 12 }}>Secured by Stripe</span>
       </div>
 
       <button
         onClick={onClose}
-        style={{ width: "100%", marginTop: 12, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+        style={{ width: "100%", marginTop: 12, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: "transparent", color: "#777772", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
       >
         Cancel
       </button>
@@ -238,23 +238,23 @@ function PaymentSheet({
       <div onClick={onClose} style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.8)" }} />
       <div style={{
         position: "relative", zIndex: 1, width: "100%",
-        backgroundColor: "#0C0E0D",
-        borderTop: "1px solid rgba(255,255,255,0.07)",
+        backgroundColor: "#F7F7F5",
+        borderTop: "1px solid #E8E8E2",
         borderRadius: "28px 28px 0 0",
         padding: `14px 24px max(env(safe-area-inset-bottom, 0px), 40px)`,
         maxHeight: "96dvh", overflowY: "auto",
       }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.12)", margin: "0 auto 22px" }} />
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "#D9D9D2", margin: "0 auto 22px" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <div>
-            <h2 style={{ margin: "0 0 3px", color: "white", fontSize: "1.125rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
+            <h2 style={{ margin: "0 0 3px", color: "#111", fontSize: "1.125rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
               Complete Your Deposit
             </h2>
-            <p style={{ margin: 0, color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{companyName}</p>
+            <p style={{ margin: 0, color: "#777772", fontSize: 13 }}>{companyName}</p>
           </div>
           <button
             onClick={onClose}
-            style={{ width: 32, height: 32, borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, lineHeight: 1 }}
+            style={{ width: 32, height: 32, borderRadius: 10, border: "1px solid #E8E8E2", backgroundColor: "white", color: "#777772", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, lineHeight: 1 }}
           >
             ×
           </button>
@@ -304,7 +304,8 @@ export default function AcceptButton({
     if (loading || accepted) return
     setLoading(true)
     try {
-      await fetch(`/api/accept-estimate/${estimateId}`, { method: "POST" })
+      const res = await fetch(`/api/accept-estimate/${estimateId}`, { method: "POST" })
+      if (!res.ok) throw new Error("Accept failed")
       setAccepted(true)
     } catch { setLoading(false) }
   }
@@ -338,7 +339,7 @@ export default function AcceptButton({
           </svg>
         </div>
         <div style={{ color, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
-        <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Thank you! We&apos;ll be in touch shortly.</div>
+        <div style={{ color: "#777772", fontSize: 14 }}>Thank you! We&apos;ll be in touch shortly.</div>
       </div>
     )
   }
@@ -360,7 +361,7 @@ export default function AcceptButton({
           >
             {loading ? "Loading…" : `Accept & Pay ${fmt(depositAmount)} Deposit`}
           </button>
-          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+          <p style={{ margin: "10px 0 0", textAlign: "center", color: "#666", fontSize: 13 }}>
             {depositPct}% deposit now &nbsp;·&nbsp; {fmt(total - depositAmount)} due at completion
           </p>
         </>
@@ -379,7 +380,7 @@ export default function AcceptButton({
           >
             {loading ? "Confirming…" : "Accept This Estimate"}
           </button>
-          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+          <p style={{ margin: "10px 0 0", textAlign: "center", color: "#666", fontSize: 13 }}>
             By accepting, you agree to proceed with the work as described above.
           </p>
         </>

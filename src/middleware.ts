@@ -53,17 +53,31 @@ export async function middleware(req: NextRequest) {
     return res
   }
 
-  // ── foundco.app / localhost → marketing site ──────────────────────
-  // Public API routes should never be rewritten into a customer site.
-  if (pathname.startsWith("/api/")) {
-    return NextResponse.next()
-  }
-  if (
+  const isRootHost =
     hostname === ROOT_DOMAIN ||
     hostname === `www.${ROOT_DOMAIN}` ||
     hostname === "localhost" ||
     hostname === "127.0.0.1"
+
+  // Quote accept/payment APIs are called from customer subdomains, but live under
+  // the tenant route so they can resolve the company safely.
+  if (
+    !isRootHost &&
+    (pathname.startsWith("/api/accept-estimate/") || pathname.startsWith("/api/pay-estimate/"))
   ) {
+    const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
+      ? hostname.slice(0, -(ROOT_DOMAIN.length + 1))
+      : `__domain__${hostname.replace(/^www\./, "")}`
+    const url = req.nextUrl.clone()
+    url.pathname = `/${slug}${pathname}`
+    return NextResponse.rewrite(url)
+  }
+
+  // Public API routes should never be rewritten into a customer site.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next()
+  }
+  if (isRootHost) {
     return NextResponse.next()
   }
 

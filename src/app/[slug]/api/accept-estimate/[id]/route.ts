@@ -58,12 +58,12 @@ export async function POST(req: Request, { params }: Params) {
       : (estimate.client_company ?? estimate.client_name ?? "Your client")
     const companyName = displayName(company.name)
     const color = company.primary_color ?? "#30D158"
-    const dashboardLink = `https://foundco.app/dashboard/estimates`
+    const dashboardLink = `https://my.${ROOT_DOMAIN}/estimates?estimate=${id}`
     const depositLine = body.paid && estimate.deposit_amount
       ? `<div style="background:#f0f9f3;border-radius:10px;padding:12px 16px;margin-top:14px;font-size:14px;color:#1A7A3C;font-weight:600">✓ ${fmt(estimate.deposit_amount)} deposit paid</div>`
       : ""
 
-    fetch("https://api.resend.com/emails", {
+    await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({

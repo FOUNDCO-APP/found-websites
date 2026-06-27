@@ -140,6 +140,10 @@ export default function EstimatesPage() {
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({})),
     ]).then(([ed, rd, sd]) => {
       setEstimates(ed.estimates ?? [])
+      const deepLinkedEstimate = new URLSearchParams(window.location.search).get("estimate")
+      if (deepLinkedEstimate && (ed.estimates ?? []).some((e: Estimate) => e.id === deepLinkedEstimate)) {
+        setSelectedId(deepLinkedEstimate)
+      }
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
       setCompanyStripeReady(Boolean(sd.stripe_connect_account_id))
@@ -982,8 +986,6 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
               )}
             </div>
 
-            {/* Activity timeline */}
-            <ActivityTimeline estimate={est} />
 
             {/* Line items */}
             {items.length > 0 && (
@@ -1094,6 +1096,9 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                 <div style={{ color: "#FF453A", fontSize: 14, fontWeight: 700 }}>Estimate Declined</div>
               </div>
             )}
+
+            {/* Activity timeline */}
+            <ActivityTimeline estimate={est} />
           </>
         )}
 

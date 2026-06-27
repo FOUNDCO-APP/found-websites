@@ -12,7 +12,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("estimates")
-    .select("id, client_name, client_phone, client_email, title, property_address, status, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, created_at, updated_at")
+    .select("id, client_name, client_phone, client_email, title, property_address, status, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, stripe_payment_intent_id, created_at, updated_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
     .limit(200)
