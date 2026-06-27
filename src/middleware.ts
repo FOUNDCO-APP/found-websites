@@ -74,6 +74,14 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone()
   url.pathname = `/${slug}${pathname === "/" ? "" : pathname}`
+
+  // Quote pages bypass the public site nav
+  if (pathname.startsWith("/q/")) {
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-is-quote", "1")
+    return NextResponse.rewrite(url, { request: { headers: requestHeaders } })
+  }
+
   return NextResponse.rewrite(url)
 }
 

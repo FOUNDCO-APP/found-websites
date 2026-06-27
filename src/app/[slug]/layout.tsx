@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 import type { Metadata } from "next"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import type { Company } from "@/types/company"
@@ -168,6 +169,12 @@ export default async function CompanyLayout({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+
+  // Quote/estimate pages need no nav, footer, or site chrome
+  const headersList = await headers()
+  if (headersList.get("x-is-quote") === "1") {
+    return <>{children}</>
+  }
 
   let company: Company | null = null
 

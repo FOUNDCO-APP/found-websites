@@ -210,25 +210,29 @@ export default function AnnotationEditor({
     e.preventDefault()
     rectRef.current = canvasRef.current!.getBoundingClientRect()
     const { x, y } = xy(e)
-    if (toolRef.current === "text") {
-      const hit = findTextAt(x, y)
-      if (hit !== null) {
-        // Tap on existing label → edit it
-        const s = strokesRef.current[hit]
-        setEditingIndex(hit)
-        setPendingText(s.text ?? "")
-        setTextEntry({ x: s.x1, y: s.y1 })
-        // Sync color picker to the label's current color
-        setColor(s.color)
-        colorRef.current = s.color
-      } else {
-        // Tap on empty space → new label
-        setEditingIndex(null)
-        setTextEntry({ x, y })
-        setPendingText("")
-      }
+
+    // Text label hit-test works from any tool — tap a label to edit it
+    const hit = findTextAt(x, y)
+    if (hit !== null) {
+      const s = strokesRef.current[hit]
+      setTool("text")
+      toolRef.current = "text"
+      setEditingIndex(hit)
+      setPendingText(s.text ?? "")
+      setTextEntry({ x: s.x1, y: s.y1 })
+      setColor(s.color)
+      colorRef.current = s.color
       return
     }
+
+    if (toolRef.current === "text") {
+      // Tap on empty space with text tool → new label
+      setEditingIndex(null)
+      setTextEntry({ x, y })
+      setPendingText("")
+      return
+    }
+
     drawingRef.current = true
     startRef.current = { x, y }
     canvasRef.current?.setPointerCapture(e.pointerId)
@@ -283,8 +287,23 @@ export default function AnnotationEditor({
   // ── Save ────────────────────────────────────────────────────────────────────
 
   function handleSave() {
+    if (saving) return
+    if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+
+    // Auto-commit any pending text label before saving
+    let strokesToSave = strokesRef.current
+    if (textEntry && pendingText.trim()) {
+      const text = pendingText.trim()
+      strokesToSave = editingIndex !== null
+        ? strokesRef.current.map((s, i) => i === editingIndex ? { ...s, text, color: colorRef.current } : s)
+        : [...strokesRef.current, { tool: "text" as Tool, color: colorRef.current, lw: lwRef.current, x1: textEntry.x, y1: textEntry.y, x2: textEntry.x, y2: textEntry.y, text }]
+      strokesRef.current = strokesToSave
+      setTextEntry(null); setPendingText(""); setEditingIndex(null)
+    }
+
+    render(strokesToSave)
     const canvas = canvasRef.current
-    if (!canvas || saving) return
+    if (!canvas) return
     setSaving(true)
     canvas.toBlob(blob => {
       if (blob) onSave(blob)
@@ -312,7 +331,7 @@ export default function AnnotationEditor({
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "max(env(safe-area-inset-top, 0px), 18px) 20px 14px",
         backgroundColor: DARK, borderBottom: "1px solid rgba(255,255,255,0.07)",
-        flexShrink: 0,
+        flexShrink: 0, position: "relative", zIndex: 25,
       }}>
         <button
           onClick={onDiscard}
@@ -436,11 +455,14 @@ export default function AnnotationEditor({
 
       {/* ── Text entry sheet ── */}
       {textEntry && (
-        <div style={{
-          position: "absolute", inset: 0, zIndex: 20,
-          backgroundColor: "rgba(0,0,0,0.65)",
-          display: "flex", alignItems: "flex-end",
-        }}>
+        <div
+          style={{
+            position: "absolute", inset: 0, zIndex: 20,
+            backgroundColor: "rgba(0,0,0,0.65)",
+            display: "flex", alignItems: "flex-end",
+          }}
+          onPointerDown={e => { if (e.target === e.currentTarget) { setTextEntry(null); setPendingText(""); setEditingIndex(null) } }}
+        >
           <div style={{
             width: "100%", backgroundColor: "#1C1F1E",
             borderRadius: "24px 24px 0 0", borderTop: "1px solid rgba(255,255,255,0.08)",

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import AcceptButton from "./AcceptButton"
+import PrintButton from "./PrintButton"
 
 export const dynamic = "force-dynamic"
 
@@ -51,9 +52,10 @@ export default async function EstimateClientPage({
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; color: black !important; }
-          .estimate-card { background: white !important; border: 1px solid #e0e0e0 !important; }
-          .line-row { border-color: #e0e0e0 !important; }
+          body { background: white !important; }
+          * { color: black !important; }
+          .estimate-card { background: white !important; border: 1px solid #ddd !important; }
+          .line-row { border-color: #eee !important; }
         }
       `}</style>
 
@@ -182,8 +184,13 @@ export default async function EstimateClientPage({
             </div>
           )}
 
+          {/* Print */}
+          <div style={{ marginBottom: 24 }}>
+            <PrintButton />
+          </div>
+
           {/* Footer */}
-          <div style={{ marginTop: 32, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 13, lineHeight: 1.7 }}>
+          <div style={{ marginTop: 8, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 13, lineHeight: 1.7 }}>
             <div>{company.name}</div>
             {company.phone && <div>{company.phone}</div>}
             {company.email && <div>{company.email}</div>}
