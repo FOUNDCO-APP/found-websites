@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
+import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -1084,7 +1085,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                     </svg>
                     <div>
                       <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Deposit payments aren&apos;t set up yet</div>
-                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>You can still accept the job. Turn on online payments later if you want clients to pay a deposit here.</div>
+                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>This estimate can be paid electronically by card once deposit payments are set up. Turn it on now so the next accepted estimate can collect money automatically.</div>
+                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="amber" compact>Set up deposit payments</PaymentSetupButton>
                     </div>
                   </div>
                 )}

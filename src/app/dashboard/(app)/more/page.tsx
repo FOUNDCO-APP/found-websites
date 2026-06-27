@@ -9,6 +9,7 @@ import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
 import { openBillingPortal, startUpgradeCheckout } from "./actions"
 import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
+import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -384,6 +385,23 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 Switch to {upgrade.label}
               </button>
             </form>
+          </div>
+        </section>
+      )}
+
+      {company && !company.stripe_connect_account_id && (
+        <section style={{ marginBottom: 24 }}>
+          <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}28`, backgroundColor: `${GREEN}10` }}>
+            <p style={{ margin: "0 0 5px", ...TYPE.caption, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: GREEN }}>
+              Get paid faster
+            </p>
+            <p style={{ margin: "0 0 7px", ...TYPE.subhead, fontWeight: 850, color: "white" }}>
+              Make estimates payable by card.
+            </p>
+            <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              Clients can accept an estimate and pay a deposit electronically. Setup takes a few minutes, and Found handles the secure payment screen.
+            </p>
+            <PaymentSetupButton returnTo="/more?payments=connected">Set up deposit payments</PaymentSetupButton>
           </div>
         </section>
       )}

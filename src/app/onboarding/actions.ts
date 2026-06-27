@@ -386,7 +386,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     to:      email,
     subject: `${name} is live.`,
     html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl: dashboardUrl }),
-    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Send it to one person.\nYour best customer. Right now. See what they say.\n\n4. Open your dashboard — one tap, no login needed.\n${dashboardUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
+    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Set up deposit payments.\nLet clients accept an estimate and pay by card.\nhttps://my.${ROOT_DOMAIN}/more?setup_payments=1\n\n4. Send it to one person.\nYour best customer. Right now. See what they say.\n\n5. Open your dashboard — one tap, no login needed.\n${dashboardUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
   }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
@@ -412,6 +412,7 @@ function buildWelcomeEmail({
 }) {
   const displayUrl = siteUrl.replace("https://", "")
   const connectUrl = `${appUrl}/connect-domain?slug=${slug}`
+  const paymentsUrl = `https://my.${ROOT_DOMAIN}/more?setup_payments=1`
 
   const step = (n: string, title: string, body: string, link?: { href: string; label: string }) => `
     <tr>
@@ -476,11 +477,12 @@ function buildWelcomeEmail({
         <!-- Three steps -->
         <tr>
           <td style="background:#ffffff;border-radius:0 0 16px 16px;padding:32px 36px 36px;">
-            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do these three things</p>
+            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do these four things</p>
             <table width="100%" cellpadding="0" cellspacing="0">
               ${step("01", "Pin it.", "Add your link to your Instagram bio and Google Business profile today. That's where your next customer is looking.")}
               ${step("02", "Connect your domain.", "Point your real domain here — takes about 10 minutes.", { href: connectUrl, label: "Connect now" })}
-              ${step("03", "Send it to one person.", "Your best customer. Right now. See what they say.")}
+              ${step("03", "Set up deposit payments.", "This lets clients accept an estimate and pay electronically by card. Setup takes a few minutes, and it makes the next yes easier to collect.", { href: paymentsUrl, label: "Set up payments" })}
+              ${step("04", "Send it to one person.", "Your best customer. Right now. See what they say.")}
             </table>
           </td>
         </tr>
