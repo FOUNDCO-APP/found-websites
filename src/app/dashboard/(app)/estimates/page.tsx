@@ -39,6 +39,7 @@ type Estimate = {
   deposit_paid_at: string | null
   stripe_payment_intent_id: string | null
   sent_at: string | null
+  email_sent_at: string | null
   accepted_at: string | null
   created_at: string
   estimate_line_items?: LineItem[]
@@ -178,17 +179,26 @@ export default function EstimatesPage() {
     setSelectedId(null)
   }
 
-  async function handleSend(estimate: Estimate, method: "email" | "sms" | "link") {
+  async function handleSend(estimate: Estimate, method: "email" | "sms" | "link"): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch(`/api/estimates/${estimate.id}/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ method }),
     })
     if (res.ok) {
+      const now = new Date().toISOString()
       setEstimates(prev => prev.map(e =>
-        e.id === estimate.id ? { ...e, status: "sent" as const, sent_at: new Date().toISOString() } : e
+        e.id === estimate.id ? {
+          ...e,
+          status: "sent" as const,
+          sent_at: now,
+          email_sent_at: method === "email" ? now : e.email_sent_at,
+        } : e
       ))
+      return { ok: true }
     }
+    const body = await res.json().catch(() => ({}))
+    return { ok: false, error: body.error ?? "Something went wrong" }
   }
 
   return (
@@ -609,7 +619,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
   rateSheet: RateSheetItem[]
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
-  onSend: (method: "email" | "sms" | "link") => Promise<void>
+  onSend: (method: "email" | "sms" | "link") => Promise<{ ok: boolean; error?: string }>
   onDelete: () => void
 }) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">("view")
@@ -621,6 +631,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
   const [editAddress, setEditAddress] = useState("")
   const [saving, setSaving] = useState(false)
   const [sending, setSending] = useState<"email" | null>(null)
+  const [sendError, setSendError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [addingItem, setAddingItem] = useState(false)
   const [newDesc, setNewDesc] = useState("")
@@ -675,6 +686,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
   }
 
   async function handleSendOption(method: "email" | "sms" | "link") {
+    setSendError(null)
     if (method === "link") {
       navigator.clipboard.writeText(link).then(() => {
         setCopied(true)
@@ -696,8 +708,12 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
     }
     setSending("email")
     try {
-      await onSend("email")
-      setMode("view")
+      const result = await onSend("email")
+      if (result.ok) {
+        setMode("view")
+      } else {
+        setSendError(result.error ?? "Failed to send email")
+      }
     } finally {
       setSending(null)
     }
@@ -787,6 +803,13 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                 </svg>
               )}
             </button>
+
+            {/* Email error */}
+            {sendError && (
+              <div style={{ marginBottom: 10, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)" }}>
+                <p style={{ margin: 0, color: "#FF453A", fontSize: 13, lineHeight: 1.5 }}>{sendError}</p>
+              </div>
+            )}
 
             {/* Text option */}
             <button
@@ -912,6 +935,32 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                 </div>
               )}
             </div>
+
+            {/* Send history */}
+            {(est.email_sent_at || est.sent_at) && est.status !== "accepted" && (
+              <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", gap: 6 }}>
+                {est.email_sent_at && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
+                      Email sent {new Date(est.email_sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </span>
+                  </div>
+                )}
+                {est.sent_at && !est.email_sent_at && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
+                      Sent via link/text {new Date(est.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Line items */}
             {items.length > 0 && (

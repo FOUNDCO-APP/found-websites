@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -25,16 +26,18 @@ export async function POST(
   const { id } = await params
   const { method } = await req.json() as { method: "email" | "sms" | "link" }
 
+  // Cookie-aware company lookup — same as all other dashboard routes
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+
   const admin = createAdminClient()
 
-  const { data: company } = await admin
+  // Fetch extra fields getCompany doesn't include
+  const { data: companyExtra } = await admin
     .from("companies")
-    .select("id, name, slug, email, phone, primary_color, logo_url")
-    .or(`user_id.eq.${user.id},email.eq.${user.email ?? ""}`)
-    .limit(1)
-    .maybeSingle()
-
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+    .select("logo_url")
+    .eq("id", company.id)
+    .single()
 
   const { data: estimate } = await admin
     .from("estimates")
@@ -43,19 +46,25 @@ export async function POST(
     .eq("company_id", company.id)
     .single()
 
-  if (!estimate) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (!estimate) return NextResponse.json({ error: "Estimate not found" }, { status: 404 })
 
   const link = `https://${company.slug}.${ROOT_DOMAIN}/q/${id}`
   const firstName = (estimate.client_name ?? "there").split(" ")[0]
+  const now = new Date().toISOString()
 
   if (method === "email") {
     const resendKey = process.env.RESEND_API_KEY
-    if (!resendKey) return NextResponse.json({ error: "Email not configured" }, { status: 503 })
-    if (!estimate.client_email) return NextResponse.json({ error: "No client email" }, { status: 400 })
+    if (!resendKey) {
+      console.error("[estimates/send] RESEND_API_KEY not set")
+      return NextResponse.json({ error: "Email not configured — RESEND_API_KEY missing" }, { status: 503 })
+    }
+    if (!estimate.client_email) {
+      return NextResponse.json({ error: "No email address on file for this client" }, { status: 400 })
+    }
 
     const color = company.primary_color ?? "#30D158"
     const btnTextColor = contrastColor(color)
-    const logo = company.logo_url as string | null
+    const logo = companyExtra?.logo_url as string | null
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -106,17 +115,27 @@ export async function POST(
 
     if (!emailRes.ok) {
       const err = await emailRes.json().catch(() => ({}))
-      console.error("[estimates/send] Resend error:", err)
-      return NextResponse.json({ error: "Failed to send email" }, { status: 502 })
+      console.error("[estimates/send] Resend error:", JSON.stringify(err))
+      return NextResponse.json({ error: "Failed to send email", detail: err }, { status: 502 })
     }
+
+    // Mark email sent separately so we can track it independent of link/sms
+    await admin.from("estimates").update({
+      status: "sent",
+      sent_at: now,
+      email_sent_at: now,
+      updated_at: now,
+    }).eq("id", id)
+
+    return NextResponse.json({ success: true, method: "email" })
   }
 
-  // Mark as sent (for all methods — sms opens native app, link is copied manually)
+  // SMS and link: just mark sent (native SMS opened client-side, link copied client-side)
   await admin.from("estimates").update({
     status: "sent",
-    sent_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    sent_at: now,
+    updated_at: now,
   }).eq("id", id)
 
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, method })
 }
