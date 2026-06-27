@@ -3,6 +3,7 @@ import { getCompany, hasMultipleCompanies } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
+import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
 
@@ -60,6 +61,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             display: "flex", alignItems: "center", justifyContent: "space-between",
             maxWidth: 760, margin: "0 auto",
             padding: "14px 20px",
+            paddingTop: "max(env(safe-area-inset-top), 14px)",
           }}>
             {/* FOUND wordmark — hidden on desktop (sidebar has it) */}
             <Link href="/" className="found-header-wordmark" style={{ textDecoration: "none" }}>
@@ -112,6 +114,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
 
       </div>
+
+      <InstallPrompt trigger="auto" />
 
       <DashboardNav
         companyName={company?.name ?? null}

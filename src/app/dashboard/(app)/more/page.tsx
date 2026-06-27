@@ -3,6 +3,7 @@ import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import BusinessNameEditor from "@/components/dashboard/BusinessNameEditor"
+import InstallButton from "@/components/dashboard/InstallButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
@@ -554,6 +555,10 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
             </div>
           </a>
         </div>
+      </section>
+
+      <section style={{ marginBottom: 24, padding: "0 20px" }}>
+        <InstallButton />
       </section>
 
       <BusinessNameEditor initialName={company?.name ?? ""} />
