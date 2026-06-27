@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       receipt_email: (estimate.client_email as string) ?? undefined,
       description: `${company.name} — ${depositPct}% deposit · ${estimate.client_name}`,
       payment_method_types: ["card"],
-      application_fee_amount: Math.round(depositCents * 0.03),
+      application_fee_amount: Math.round(depositCents * 0.005),
       metadata: {
         kind: "estimate_deposit",
         company_id: company.id,

@@ -746,6 +746,19 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
               </div>
             </div>
 
+            {/* Stripe setup nudge */}
+            {!companyStripeReady && (
+              <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,159,10,0.07)", border: "1px solid rgba(255,159,10,0.18)", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <div style={{ flex: 1 }}>
+                  <span style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700 }}>Connect Stripe </span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>to let clients pay a deposit the moment they accept.</span>
+                </div>
+              </div>
+            )}
+
             {/* Email option */}
             <button
               onClick={() => handleSendOption("email")}
