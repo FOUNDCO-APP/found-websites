@@ -3,7 +3,7 @@
 export default function PrintButton({ estimateId, slug }: { estimateId: string; slug: string }) {
   return (
     <button
-      onClick={() => window.open(`/${slug}/q/${estimateId}/print`, "_blank")}
+      onClick={() => window.open(window.location.pathname.replace(/\/$/, "") + "/print", "_blank")}
       className="no-print"
       style={{
         display: "inline-flex", alignItems: "center", gap: 8,

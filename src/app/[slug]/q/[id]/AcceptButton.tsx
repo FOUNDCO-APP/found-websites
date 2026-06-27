@@ -360,7 +360,7 @@ export default function AcceptButton({
           >
             {loading ? "Loading…" : `Accept & Pay ${fmt(depositAmount)} Deposit`}
           </button>
-          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
             {depositPct}% deposit now &nbsp;·&nbsp; {fmt(total - depositAmount)} due at completion
           </p>
         </>
@@ -379,7 +379,7 @@ export default function AcceptButton({
           >
             {loading ? "Confirming…" : "Accept This Estimate"}
           </button>
-          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+          <p style={{ margin: "10px 0 0", textAlign: "center", color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
             By accepting, you agree to proceed with the work as described above.
           </p>
         </>

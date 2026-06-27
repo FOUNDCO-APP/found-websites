@@ -327,6 +327,7 @@ export default function EstimatesPage() {
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
           onSend={(method) => handleSend(selected, method)}
           onDelete={() => handleDelete(selected.id)}
+          onSync={(fresh) => setEstimates(prev => prev.map(e => e.id === fresh.id ? { ...e, ...fresh } : e))}
         />
       )}
 
@@ -627,7 +628,7 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
 
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onClose, onUpdate, onSend, onDelete }: {
+function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
   companyStripeReady: boolean
@@ -636,6 +637,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
   onSend: (method: "email" | "sms" | "link") => Promise<{ ok: boolean; error?: string }>
   onDelete: () => void
+  onSync: (fresh: Estimate) => void
 }) {
   const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">("view")
   const [editItems, setEditItems] = useState<LineItem[]>([])
@@ -658,13 +660,25 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
   const hasFetched = useRef(false)
 
   useEffect(() => {
+    // Lock body scroll while sheet is open
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = "" }
+  }, [])
+
+  useEffect(() => {
     if (hasFetched.current) return
     hasFetched.current = true
     fetch(`/api/estimates/${estimate.id}`)
       .then(r => r.json())
-      .then(d => { if (d.estimate) setFullEstimate(d.estimate) })
+      .then(d => {
+        if (d.estimate) {
+          setFullEstimate(d.estimate)
+          // Propagate any status changes (e.g. client accepted) back to the list
+          if (d.estimate.status !== estimate.status) onSync(d.estimate)
+        }
+      })
       .catch(() => {})
-  }, [estimate.id])
+  }, [estimate.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const est = fullEstimate ?? estimate
   const items = est.estimate_line_items ?? []
@@ -755,7 +769,9 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
         borderRadius: "28px 28px 0 0",
         padding: "14px 22px 48px",
         maxHeight: "94dvh", overflowY: "auto",
-      }}>
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+      } as React.CSSProperties}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }} />
 
         {/* Send options */}

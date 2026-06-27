@@ -143,9 +143,9 @@ export default async function EstimateClientPage({
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginBottom: 10 }}>Prepared for</div>
             <div style={{ color: "white", fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{estimate.client_name}</div>
             {estimate.property_address && (
-              <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, marginTop: 4 }}>{estimate.property_address}</div>
+              <div style={{ color: "rgba(255,255,255,0.65)", fontSize: 14, marginTop: 4 }}>{estimate.property_address}</div>
             )}
-            <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13, marginTop: 8 }}>
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, marginTop: 8 }}>
               Created {new Date(estimate.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
             </div>
           </div>
@@ -162,7 +162,7 @@ export default async function EstimateClientPage({
                 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ color: "white", fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{item.description}</div>
-                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
+                    <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>
                       {item.quantity > 1 || item.unit ? `${item.quantity}${item.unit ? " " + item.unit : ""} · ${fmt(item.unit_price)}` : fmt(item.unit_price)}
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export default async function EstimateClientPage({
           </div>
 
           {/* Footer */}
-          <div style={{ marginTop: 8, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 13, lineHeight: 1.7 }}>
+          <div style={{ marginTop: 8, textAlign: "center", color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.7 }}>
             <div>{companyDisplayName}</div>
             {company.phone && <div>{company.phone}</div>}
             {company.email && <div>{company.email}</div>}

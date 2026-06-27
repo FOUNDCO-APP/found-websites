@@ -83,7 +83,9 @@ export async function POST(
 <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <tr><td style="background:${color};padding:26px 32px;text-align:center">
     ${logo
-      ? `<img src="${logo}" alt="${companyName}" style="height:40px;object-fit:contain;border-radius:6px;display:block;margin:0 auto">`
+      ? `<div style="display:inline-block;background:white;border-radius:10px;padding:10px 18px">
+          <img src="${logo}" alt="${companyName}" style="height:36px;object-fit:contain;display:block">
+        </div>`
       : `<div style="color:${btnTextColor};font-size:20px;font-weight:800;letter-spacing:-0.02em">${companyName}</div>`
     }
   </td></tr>
