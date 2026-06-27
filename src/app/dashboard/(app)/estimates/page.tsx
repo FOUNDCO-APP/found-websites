@@ -127,6 +127,12 @@ export default function EstimatesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showRateSheet, setShowRateSheet] = useState(false)
 
+  function refreshEstimates() {
+    fetch("/api/estimates").then(r => r.json()).then(ed => {
+      if (ed.estimates) setEstimates(ed.estimates)
+    }).catch(() => {})
+  }
+
   useEffect(() => {
     Promise.all([
       fetch("/api/estimates").then(r => r.json()),
@@ -140,6 +146,15 @@ export default function EstimatesPage() {
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
+
+  // Re-fetch when tab becomes visible (e.g. user accepted in another tab)
+  useEffect(() => {
+    function onVisible() {
+      if (document.visibilityState === "visible") refreshEstimates()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    return () => document.removeEventListener("visibilitychange", onVisible)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selected = estimates.find(e => e.id === selectedId) ?? null
 
@@ -323,7 +338,7 @@ export default function EstimatesPage() {
           companySlug={companySlug}
           companyStripeReady={companyStripeReady}
           rateSheet={rateSheet}
-          onClose={() => setSelectedId(null)}
+          onClose={() => { setSelectedId(null); refreshEstimates() }}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
           onSend={(method) => handleSend(selected, method)}
           onDelete={() => handleDelete(selected.id)}

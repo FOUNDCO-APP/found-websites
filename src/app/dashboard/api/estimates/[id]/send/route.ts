@@ -81,12 +81,11 @@ export async function POST(
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
 <tr><td align="center">
 <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
-  <tr><td style="background:${color};padding:26px 32px;text-align:center">
+  <tr><td style="background:${color};height:5px;font-size:0;line-height:0">&nbsp;</td></tr>
+  <tr><td style="background:white;padding:28px 36px 20px;text-align:center;border-bottom:1px solid #f0f0f0">
     ${logo
-      ? `<div style="display:inline-block;background:white;border-radius:10px;padding:10px 18px">
-          <img src="${logo}" alt="${companyName}" style="height:36px;object-fit:contain;display:block">
-        </div>`
-      : `<div style="color:${btnTextColor};font-size:20px;font-weight:800;letter-spacing:-0.02em">${companyName}</div>`
+      ? `<img src="${logo}" alt="${companyName}" style="height:44px;max-width:200px;object-fit:contain;display:block;margin:0 auto">`
+      : `<div style="color:#111;font-size:20px;font-weight:800;letter-spacing:-0.02em">${companyName}</div>`
     }
   </td></tr>
   <tr><td style="padding:36px 36px 28px">
