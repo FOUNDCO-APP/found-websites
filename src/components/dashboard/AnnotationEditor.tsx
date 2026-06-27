@@ -38,6 +38,8 @@ export default function AnnotationEditor({
   const toolRef      = useRef<Tool>("rect")
   const colorRef     = useRef(COLORS[0])
   const lwRef        = useRef(7)
+  const rafRef       = useRef<number | null>(null)
+  const rectRef      = useRef<DOMRect | null>(null)
 
   const [tool, setTool]           = useState<Tool>("rect")
   const [color, setColor]         = useState(COLORS[0])
@@ -168,11 +170,6 @@ export default function AnnotationEditor({
     img.src = src
   }, [src]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-render after undo
-  useEffect(() => {
-    if (loaded) render(strokes)
-  }, [strokes]) // eslint-disable-line react-hooks/exhaustive-deps
-
   // ── Pointer handlers ────────────────────────────────────────────────────────
 
   function measureTextWidth(text: string): number {
@@ -196,13 +193,22 @@ export default function AnnotationEditor({
     return null
   }
 
+  function scheduleRender(committed: Stroke[], preview?: Partial<Stroke> | null) {
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current)
+    rafRef.current = requestAnimationFrame(() => {
+      render(committed, preview)
+      rafRef.current = null
+    })
+  }
+
   function xy(e: React.PointerEvent<HTMLCanvasElement>) {
-    const r = canvasRef.current!.getBoundingClientRect()
+    const r = rectRef.current ?? canvasRef.current!.getBoundingClientRect()
     return { x: e.clientX - r.left, y: e.clientY - r.top }
   }
 
   function onDown(e: React.PointerEvent<HTMLCanvasElement>) {
     e.preventDefault()
+    rectRef.current = canvasRef.current!.getBoundingClientRect()
     const { x, y } = xy(e)
     if (toolRef.current === "text") {
       const hit = findTextAt(x, y)
@@ -232,12 +238,13 @@ export default function AnnotationEditor({
     if (!drawingRef.current || toolRef.current === "text") return
     e.preventDefault()
     const { x, y } = xy(e)
-    render(strokesRef.current, { x1: startRef.current.x, y1: startRef.current.y, x2: x, y2: y })
+    scheduleRender(strokesRef.current, { x1: startRef.current.x, y1: startRef.current.y, x2: x, y2: y })
   }
 
   function onUp(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!drawingRef.current || toolRef.current === "text") return
     drawingRef.current = false
+    if (rafRef.current !== null) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
     const { x, y } = xy(e)
     const s: Stroke = {
       tool: toolRef.current, color: colorRef.current, lw: lwRef.current,

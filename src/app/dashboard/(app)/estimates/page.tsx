@@ -416,7 +416,7 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, }} />
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
         backgroundColor: "#101411",
@@ -677,7 +677,7 @@ function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSe
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, }} />
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
         backgroundColor: "#101411",
@@ -972,7 +972,7 @@ function RateSheetManager({ items, onChange, onClose }: {
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 80, backdropFilter: "blur(4px)" }} />
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 80, }} />
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 22px 48px", maxHeight: "90dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
