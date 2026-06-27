@@ -34,6 +34,10 @@ type Estimate = {
   tax_rate: number
   tax_amount: number
   total: number
+  deposit_pct: number
+  deposit_amount: number | null
+  deposit_paid_at: string | null
+  stripe_payment_intent_id: string | null
   sent_at: string | null
   accepted_at: string | null
   created_at: string
@@ -111,6 +115,7 @@ export default function EstimatesPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([])
   const [rateSheet, setRateSheet] = useState<RateSheetItem[]>([])
   const [companySlug, setCompanySlug] = useState("")
+  const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "draft" | "sent" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
@@ -126,6 +131,7 @@ export default function EstimatesPage() {
       setEstimates(ed.estimates ?? [])
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
+      setCompanyStripeReady(Boolean(sd.stripe_connect_account_id))
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -172,9 +178,17 @@ export default function EstimatesPage() {
     setSelectedId(null)
   }
 
-  async function handleSend(estimate: Estimate) {
-    const sentAt = new Date().toISOString()
-    await handleUpdate(estimate.id, { status: "sent", sent_at: sentAt })
+  async function handleSend(estimate: Estimate, method: "email" | "sms" | "link") {
+    const res = await fetch(`/api/estimates/${estimate.id}/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ method }),
+    })
+    if (res.ok) {
+      setEstimates(prev => prev.map(e =>
+        e.id === estimate.id ? { ...e, status: "sent" as const, sent_at: new Date().toISOString() } : e
+      ))
+    }
   }
 
   return (
@@ -293,10 +307,11 @@ export default function EstimatesPage() {
         <DetailSheet
           estimate={selected}
           companySlug={companySlug}
+          companyStripeReady={companyStripeReady}
           rateSheet={rateSheet}
           onClose={() => setSelectedId(null)}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
-          onSend={() => handleSend(selected)}
+          onSend={(method) => handleSend(selected, method)}
           onDelete={() => handleDelete(selected.id)}
         />
       )}
@@ -587,16 +602,17 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
 
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSend, onDelete }: {
+function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onClose, onUpdate, onSend, onDelete }: {
   estimate: Estimate
   companySlug: string
+  companyStripeReady: boolean
   rateSheet: RateSheetItem[]
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
-  onSend: () => Promise<void>
+  onSend: (method: "email" | "sms" | "link") => Promise<void>
   onDelete: () => void
 }) {
-  const [mode, setMode] = useState<"view" | "edit" | "confirm_delete">("view")
+  const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">("view")
   const [editItems, setEditItems] = useState<LineItem[]>([])
   const [editTax, setEditTax] = useState(0)
   const [editName, setEditName] = useState("")
@@ -604,7 +620,7 @@ function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSe
   const [editEmail, setEditEmail] = useState("")
   const [editAddress, setEditAddress] = useState("")
   const [saving, setSaving] = useState(false)
-  const [sending, setSending] = useState(false)
+  const [sending, setSending] = useState<"email" | null>(null)
   const [copied, setCopied] = useState(false)
   const [addingItem, setAddingItem] = useState(false)
   const [newDesc, setNewDesc] = useState("")
@@ -658,10 +674,33 @@ function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSe
     setMode("view")
   }
 
-  async function handleSend() {
-    setSending(true)
-    await onSend()
-    setSending(false)
+  async function handleSendOption(method: "email" | "sms" | "link") {
+    if (method === "link") {
+      navigator.clipboard.writeText(link).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+      await onSend("link")
+      setMode("view")
+      return
+    }
+    if (method === "sms") {
+      const firstName = (est.client_name ?? "there").split(" ")[0]
+      const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.total)
+      const msg = `Hi ${firstName}, I put together your estimate${est.property_address ? ` for ${est.property_address}` : ""} — ${totalFmt}. You can view all the details and approve it right here: ${link}`
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      window.open(`sms:${est.client_phone}${isIOS ? "&" : "?"}body=${encodeURIComponent(msg)}`, "_self")
+      await onSend("sms")
+      setMode("view")
+      return
+    }
+    setSending("email")
+    try {
+      await onSend("email")
+      setMode("view")
+    } finally {
+      setSending(null)
+    }
   }
 
   function copyLink() {
@@ -687,6 +726,114 @@ function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSe
         maxHeight: "94dvh", overflowY: "auto",
       }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }} />
+
+        {/* Send options */}
+        {mode === "send_options" && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+              <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Send Estimate</h2>
+              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
+            </div>
+
+            {/* Summary pill */}
+            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "16px 18px", marginBottom: 22, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{est.client_name}</div>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.total)}</div>
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, textAlign: "right" }}>
+                {est.property_address && <div>{est.property_address}</div>}
+              </div>
+            </div>
+
+            {/* Email option */}
+            <button
+              onClick={() => handleSendOption("email")}
+              disabled={!est.client_email || sending === "email"}
+              style={{
+                width: "100%", padding: "16px 18px", borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: sending === "email" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)",
+                cursor: est.client_email ? "pointer" : "default",
+                opacity: est.client_email ? 1 : 0.4,
+                display: "flex", alignItems: "center", gap: 16, marginBottom: 10, textAlign: "left",
+              }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(0,122,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{sending === "email" ? "Sending…" : "Email"}</div>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{est.client_email ?? "No email on file"}</div>
+              </div>
+              {est.client_email && sending !== "email" && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              )}
+            </button>
+
+            {/* Text option */}
+            <button
+              onClick={() => handleSendOption("sms")}
+              disabled={!est.client_phone}
+              style={{
+                width: "100%", padding: "16px 18px", borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                cursor: est.client_phone ? "pointer" : "default",
+                opacity: est.client_phone ? 1 : 0.4,
+                display: "flex", alignItems: "center", gap: 16, marginBottom: 10, textAlign: "left",
+              }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(48,209,88,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#30D158" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>Text Message</div>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{est.client_phone ?? "No phone on file"}</div>
+              </div>
+              {est.client_phone && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              )}
+            </button>
+
+            {/* Copy link option */}
+            <button
+              onClick={() => handleSendOption("link")}
+              style={{
+                width: "100%", padding: "16px 18px", borderRadius: 16,
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 16, marginBottom: 22, textAlign: "left",
+              }}
+            >
+              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,159,10,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                </svg>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{copied ? "Copied!" : "Copy Link"}</div>
+                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Share anywhere</div>
+              </div>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={copied ? SIGNAL_GREEN : "rgba(255,255,255,0.2)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                {copied ? <polyline points="20 6 9 17 4 12"/> : <polyline points="9 18 15 12 9 6"/>}
+              </svg>
+            </button>
+
+            <button onClick={() => setMode("view")} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        )}
 
         {/* Delete confirmation */}
         {mode === "confirm_delete" && (
@@ -814,28 +961,43 @@ function DetailSheet({ estimate, companySlug, rateSheet, onClose, onUpdate, onSe
                   </button>
                 )}
                 {est.status === "draft" && (
-                  <button onClick={handleSend} disabled={sending} style={{
+                  <button onClick={() => setMode("send_options")} style={{
                     width: "100%", padding: "15px 0", borderRadius: 14, border: "none",
                     backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK,
                     fontSize: 15, fontWeight: 800, cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    opacity: sending ? 0.7 : 1,
                   }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                     </svg>
-                    {sending ? "Sending…" : "Send Estimate"}
+                    Send Estimate
                   </button>
                 )}
               </div>
             )}
 
             {est.status === "accepted" && (
-              <div style={{ padding: "16px 18px", borderRadius: 16, backgroundColor: `${SIGNAL_GREEN}12`, border: `1px solid ${SIGNAL_GREEN}30`, textAlign: "center" }}>
-                <div style={{ color: SIGNAL_GREEN, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
-                {est.accepted_at && (
-                  <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-                    {new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ padding: "16px 18px", borderRadius: 16, backgroundColor: `${SIGNAL_GREEN}12`, border: `1px solid ${SIGNAL_GREEN}30`, textAlign: "center" }}>
+                  <div style={{ color: SIGNAL_GREEN, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
+                    {est.deposit_paid_at ? "Accepted & Deposit Paid" : "Estimate Accepted"}
+                  </div>
+                  {est.accepted_at && (
+                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+                      {new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+                      {est.deposit_amount && est.deposit_paid_at ? ` · ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)} deposit received` : ""}
+                    </div>
+                  )}
+                </div>
+                {!est.deposit_paid_at && !companyStripeReady && (
+                  <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div>
+                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Stripe not connected</div>
+                      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>Connect Stripe in Settings to collect deposits automatically next time.</div>
+                    </div>
                   </div>
                 )}
               </div>

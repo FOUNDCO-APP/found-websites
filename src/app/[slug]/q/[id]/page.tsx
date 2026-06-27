@@ -157,7 +157,14 @@ export default async function EstimateClientPage({
 
           {/* Accept / Status */}
           {!isClosed && (
-            <AcceptButton estimateId={id} color={color} />
+            <AcceptButton
+              estimateId={id}
+              color={color}
+              stripeAccountId={company.stripe_connect_account_id}
+              total={estimate.total}
+              depositPct={(estimate.deposit_pct as number) ?? 50}
+              companyName={company.name}
+            />
           )}
 
           {isAccepted && (

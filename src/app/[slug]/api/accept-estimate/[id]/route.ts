@@ -13,6 +13,8 @@ export async function POST(req: Request, { params }: Params) {
 
   if (!company) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
+  const body = await req.json().catch(() => ({})) as { paid?: boolean }
+
   const admin = createAdminClient()
   const { data: estimate } = await admin
     .from("estimates")
@@ -22,13 +24,17 @@ export async function POST(req: Request, { params }: Params) {
     .single()
 
   if (!estimate) return NextResponse.json({ error: "Not found" }, { status: 404 })
-  if (estimate.status === "accepted") return NextResponse.json({ success: true })
+  if (estimate.status === "accepted" && !body.paid) return NextResponse.json({ success: true })
 
-  await admin.from("estimates").update({
+  const now = new Date().toISOString()
+  const patch: Record<string, string> = {
     status: "accepted",
-    accepted_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }).eq("id", id)
+    accepted_at: now,
+    updated_at: now,
+  }
+  if (body.paid) patch.deposit_paid_at = now
+
+  await admin.from("estimates").update(patch).eq("id", id)
 
   return NextResponse.json({ success: true })
 }
