@@ -38,6 +38,10 @@ function inboxLabelFor(industry: string | null | undefined): string {
   }
 }
 
+function inboxPathFor(industry: string | null | undefined): string {
+  return defaultFormIntentFor(industry) === "estimate" ? "/estimates" : "/leads"
+}
+
 // All possible tabs for an industry — used for byId mapping when loading from localStorage
 function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
@@ -62,10 +66,11 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
   }
 
   const inboxLabel = inboxLabelFor(industry)
+  const inboxPath = inboxPathFor(industry)
   const PEOPLE = peopleTab(industry)
   return [
     { id: "home", path: "/", label: "Home" },
-    { id: "inbox", path: "/leads", label: inboxLabel },
+    { id: "inbox", path: inboxPath, label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     PEOPLE,
     { id: "photos", path: "/photos", label: "Photos" },
@@ -105,9 +110,10 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
   }
 
   const inboxLabel = inboxLabelFor(industry)
+  const inboxPath = inboxPathFor(industry)
   const PEOPLE = peopleTab(industry)
   const middle = [
-    { id: "inbox", path: "/leads", label: inboxLabel },
+    { id: "inbox", path: inboxPath, label: inboxLabel },
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     PEOPLE,
     ...(hasEmail ? [EMAIL_TAB] : []),
@@ -244,6 +250,7 @@ function EmailIcon({ active }: { active: boolean }) {
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/":            (a) => <HomeIcon         active={a} />,
   "/leads":       (a) => <LeadsIcon        active={a} />,
+  "/estimates":   (a) => <LeadsIcon        active={a} />,
   "/people":      (a) => <PeopleIcon       active={a} />,
   "people":       (a) => <PeopleIcon       active={a} />,
   "orders":       (a) => <OrdersIcon       active={a} />,
@@ -362,6 +369,7 @@ export default function DashboardNav({
     if (tabPath.includes("view=reservations")) return effective.startsWith("/leads") && view === "reservations"
     if (cleanPath === "/") return effective === "/"
     if (cleanPath === "/leads") return effective.startsWith("/leads") && !view
+    if (cleanPath === "/estimates") return effective.startsWith("/estimates")
     if (cleanPath === "/people") return effective.startsWith("/people")
     return effective === cleanPath || effective.startsWith(cleanPath + "/")
   }
