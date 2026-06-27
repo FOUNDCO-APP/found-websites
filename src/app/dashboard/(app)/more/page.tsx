@@ -2,6 +2,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
+import BusinessNameEditor from "@/components/dashboard/BusinessNameEditor"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
@@ -555,10 +556,12 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </div>
       </section>
 
+      <BusinessNameEditor initialName={company?.name ?? ""} />
+
       <SignOutButton />
 
       <p style={{ textAlign: "center", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, padding: "8px 0 40px" }}>
-        v2026.1
+        v2026.5
       </p>
     </main>
   )

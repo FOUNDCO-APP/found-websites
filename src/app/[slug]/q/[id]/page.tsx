@@ -36,11 +36,53 @@ export default async function EstimateClientPage({
   // Mark as viewed if it's been sent but not yet viewed/accepted
   if (estimate.status === "sent") {
     await admin.from("estimates").update({ status: "viewed", updated_at: new Date().toISOString() }).eq("id", id)
+    // Notify owner
+    const resendKey = process.env.RESEND_API_KEY
+    if (resendKey && company.email) {
+      const clientName = estimate.client_first_name
+        ? `${estimate.client_first_name} ${estimate.client_last_name ?? ""}`.trim()
+        : (estimate.client_name ?? "Your client")
+      const color = company.primary_color ?? "#30D158"
+      const ownerLink = `https://foundco.app/dashboard/estimates`
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: `Found <hello@foundco.app>`,
+          to: [company.email],
+          subject: `${clientName} just opened your estimate`,
+          html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center">
+<table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee">
+  <tr><td style="padding:32px 32px 24px;border-bottom:1px solid #f0f0f0">
+    <div style="font-size:13px;color:#999;margin-bottom:8px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase">Estimate Activity</div>
+    <h1 style="margin:0 0 6px;color:#111;font-size:22px;font-weight:700;letter-spacing:-0.02em">${clientName} opened your estimate</h1>
+    <p style="margin:0;color:#666;font-size:14px">They viewed it${estimate.property_address ? ` for ${estimate.property_address}` : ""}. This is your moment to follow up.</p>
+  </td></tr>
+  <tr><td style="padding:24px 32px">
+    <p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">If they haven't accepted yet, a quick text or call right now could be the difference. Strike while it's fresh.</p>
+    <a href="${ownerLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">View Estimate in Dashboard</a>
+  </td></tr>
+  <tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center">
+    <p style="margin:0;color:#bbb;font-size:12px">Found · Your business, always on.</p>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`,
+        }),
+      }).catch(() => {}) // non-blocking
+    }
   }
 
   const items = [...(estimate.estimate_line_items ?? [])].sort((a, b) => a.sort_order - b.sort_order)
   const color = company.primary_color ?? "#30D158"
   const logo = company.logo_url
+  const companyDisplayName = (() => {
+    const n = company.name
+    if (!n) return n
+    if (n === n.toLowerCase() && !n.includes(" ")) return n.charAt(0).toUpperCase() + n.slice(1)
+    return n
+  })()
 
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
@@ -49,14 +91,10 @@ export default async function EstimateClientPage({
 
   return (
     <>
+      <meta name="format-detection" content="telephone=no, address=no, email=no" />
       <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          body { background: white !important; }
-          * { color: black !important; }
-          .estimate-card { background: white !important; border: 1px solid #ddd !important; }
-          .line-row { border-color: #eee !important; }
-        }
+        a { color: inherit; text-decoration: none; }
+        .estimate-link { color: ${color} !important; }
       `}</style>
 
       <div style={{
@@ -82,14 +120,14 @@ export default async function EstimateClientPage({
               backgroundColor: `${color}22`, marginBottom: 16,
               color, fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em",
             }}>
-              {company.name}
+              {companyDisplayName}
             </div>
           )}
           <h1 style={{ margin: "0 0 8px", color: "white", fontSize: "1.875rem", fontWeight: 300, letterSpacing: "-0.03em" }}>
             Your Estimate
           </h1>
           <p style={{ margin: 0, color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
-            From {company.name}
+            From {companyDisplayName}
             {company.city ? ` · ${company.city}${company.state ? `, ${company.state}` : ""}` : ""}
           </p>
         </div>
@@ -193,12 +231,12 @@ export default async function EstimateClientPage({
 
           {/* Print */}
           <div style={{ marginBottom: 24 }}>
-            <PrintButton />
+            <PrintButton estimateId={id} slug={company.slug} />
           </div>
 
           {/* Footer */}
           <div style={{ marginTop: 8, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 13, lineHeight: 1.7 }}>
-            <div>{company.name}</div>
+            <div>{companyDisplayName}</div>
             {company.phone && <div>{company.phone}</div>}
             {company.email && <div>{company.email}</div>}
           </div>

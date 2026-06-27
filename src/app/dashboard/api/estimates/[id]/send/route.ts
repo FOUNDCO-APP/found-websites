@@ -5,6 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
+function displayName(name: string) {
+  if (!name) return name
+  if (name === name.toLowerCase() && !name.includes(" ")) {
+    return name.charAt(0).toUpperCase() + name.slice(1)
+  }
+  return name
+}
+
 function fmtCurrency(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
 }
@@ -65,6 +73,7 @@ export async function POST(
     const color = company.primary_color ?? "#30D158"
     const btnTextColor = contrastColor(color)
     const logo = companyExtra?.logo_url as string | null
+    const companyName = displayName(company.name)
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -74,15 +83,15 @@ export async function POST(
 <table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#141614;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)">
   <tr><td style="background:linear-gradient(180deg,${color}22 0%,transparent 100%);padding:40px 36px 28px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.06)">
     ${logo
-      ? `<img src="${logo}" alt="${company.name}" style="height:44px;object-fit:contain;border-radius:8px;margin:0 auto 16px;display:block">`
-      : `<div style="display:inline-block;padding:6px 18px;border-radius:10px;background:${color}22;color:${color};font-size:14px;font-weight:800;margin-bottom:16px">${company.name}</div>`
+      ? `<img src="${logo}" alt="${companyName}" style="height:44px;object-fit:contain;border-radius:8px;margin:0 auto 16px;display:block">`
+      : `<div style="display:inline-block;padding:6px 18px;border-radius:10px;background:${color}22;color:${color};font-size:14px;font-weight:800;margin-bottom:16px">${companyName}</div>`
     }
     <h1 style="margin:0 0 6px;color:white;font-size:26px;font-weight:300;letter-spacing:-0.03em">Your Estimate</h1>
-    <p style="margin:0;color:rgba(255,255,255,0.4);font-size:14px">From ${company.name}</p>
+    <p style="margin:0;color:rgba(255,255,255,0.4);font-size:14px">From ${companyName}</p>
   </td></tr>
   <tr><td style="padding:32px 36px">
     <p style="margin:0 0 18px;color:rgba(255,255,255,0.8);font-size:16px;line-height:1.65">Hi ${firstName},</p>
-    <p style="margin:0 0 24px;color:rgba(255,255,255,0.8);font-size:16px;line-height:1.65">${company.name} has prepared an estimate for you${estimate.property_address ? ` for <strong style="color:white">${estimate.property_address}</strong>` : ""}.</p>
+    <p style="margin:0 0 24px;color:rgba(255,255,255,0.8);font-size:16px;line-height:1.65">${companyName} has prepared an estimate for you${estimate.property_address ? ` for <strong style="color:white">${estimate.property_address}</strong>` : ""}.</p>
     <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px 24px;margin-bottom:28px;text-align:center">
       <div style="color:rgba(255,255,255,0.35);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px">Total Estimate</div>
       <div style="color:${color};font-size:40px;font-weight:700;letter-spacing:-0.04em">${fmtCurrency(estimate.total)}</div>
@@ -93,20 +102,20 @@ export async function POST(
     <p style="margin:12px 0 0;text-align:center;color:rgba(255,255,255,0.2);font-size:12px">You can view, review all line items, and accept right from your phone.</p>
   </td></tr>
   <tr><td style="padding:18px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
-    <p style="margin:0;color:rgba(255,255,255,0.2);font-size:12px;line-height:1.7">${company.name}${company.phone ? " &nbsp;·&nbsp; " + company.phone : ""}${company.email ? " &nbsp;·&nbsp; " + company.email : ""}</p>
+    <p style="margin:0;color:rgba(255,255,255,0.2);font-size:12px;line-height:1.7">${companyName}${company.phone ? " &nbsp;·&nbsp; " + company.phone : ""}${company.email ? " &nbsp;·&nbsp; " + company.email : ""}</p>
   </td></tr>
 </table>
 </td></tr>
 </table>
 </body></html>`
 
-    const emailSubject = `Your estimate from ${company.name}${estimate.property_address ? ` — ${estimate.property_address}` : ""}`
+    const emailSubject = `Your estimate from ${companyName}${estimate.property_address ? ` — ${estimate.property_address}` : ""}`
 
     const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: `${company.name} <hello@foundco.app>`,
+        from: `${companyName} <hello@foundco.app>`,
         to: [estimate.client_email],
         subject: emailSubject,
         html,

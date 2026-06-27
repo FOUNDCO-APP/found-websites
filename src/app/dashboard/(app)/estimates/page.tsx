@@ -25,6 +25,9 @@ type RateSheetItem = {
 type Estimate = {
   id: string
   client_name: string
+  client_first_name: string | null
+  client_last_name: string | null
+  client_company: string | null
   client_phone: string | null
   client_email: string | null
   title: string | null
@@ -391,7 +394,9 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
   onSave: (data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) => Promise<void>
   onClose: () => void
 }) {
-  const [clientName, setClientName] = useState("")
+  const [clientFirst, setClientFirst] = useState("")
+  const [clientLast, setClientLast] = useState("")
+  const [clientCompany, setClientCompany] = useState("")
   const [clientPhone, setClientPhone] = useState("")
   const [clientEmail, setClientEmail] = useState("")
   const [address, setAddress] = useState("")
@@ -430,10 +435,15 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
   }
 
   async function handleSave() {
-    if (!clientName.trim()) return
+    if (!clientFirst.trim()) return
+    const fullName = [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ")
     setSaving(true)
     await onSave({
-      client_name: clientName, client_phone: clientPhone, client_email: clientEmail,
+      client_name: fullName,
+      client_first_name: clientFirst.trim(),
+      client_last_name: clientLast.trim() || null,
+      client_company: clientCompany.trim() || null,
+      client_phone: clientPhone, client_email: clientEmail,
       property_address: address, line_items: lineItems, tax_rate: taxRate,
     })
     setSaving(false)
@@ -460,7 +470,11 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
         <div style={{ marginBottom: 24 }}>
           <p style={{ ...labelStyle }}>Client</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Full name *" style={inputStyle} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <input value={clientFirst} onChange={e => setClientFirst(e.target.value)} placeholder="First name *" style={inputStyle} />
+              <input value={clientLast} onChange={e => setClientLast(e.target.value)} placeholder="Last name" style={inputStyle} />
+            </div>
+            <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company / Business (optional)" style={inputStyle} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <input value={clientPhone} onChange={e => setClientPhone(e.target.value)} type="tel" placeholder="Phone" style={inputStyle} />
               <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} type="email" placeholder="Email" style={inputStyle} />
@@ -595,12 +609,12 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
         {/* Save */}
         <button
           onClick={handleSave}
-          disabled={saving || !clientName.trim()}
+          disabled={saving || !clientFirst.trim()}
           style={{
             width: "100%", padding: "16px 0", borderRadius: 16, border: "none",
-            backgroundColor: clientName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-            color: clientName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
-            fontSize: 16, fontWeight: 800, cursor: clientName.trim() ? "pointer" : "default",
+            backgroundColor: clientFirst.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+            color: clientFirst.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
+            fontSize: 16, fontWeight: 800, cursor: clientFirst.trim() ? "pointer" : "default",
           }}
         >
           {saving ? "Saving…" : "Save Estimate"}

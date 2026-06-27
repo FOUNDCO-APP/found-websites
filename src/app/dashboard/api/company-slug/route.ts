@@ -19,10 +19,14 @@ export async function PATCH(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
   const body = await req.json()
-  const { form_intent } = body
-  if (!form_intent) return NextResponse.json({ error: "form_intent required" }, { status: 400 })
   const admin = createAdminClient()
-  const { error } = await admin.from("companies").update({ form_intent }).eq("id", company.id)
+
+  const patch: Record<string, string> = {}
+  if (body.form_intent) patch.form_intent = body.form_intent
+  if (body.name) patch.name = body.name.trim()
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 })
+
+  const { error } = await admin.from("companies").update(patch).eq("id", company.id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }
