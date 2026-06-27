@@ -76,33 +76,32 @@ export async function POST(
     const companyName = displayName(company.name)
 
     const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#0C0E0D;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0">
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="format-detection" content="telephone=no,address=no,email=no"></head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px">
 <tr><td align="center">
-<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:#141614;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)">
-  <tr><td style="background:linear-gradient(180deg,${color}22 0%,transparent 100%);padding:40px 36px 28px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.06)">
+<table width="520" cellpadding="0" cellspacing="0" style="max-width:520px;width:100%;background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <tr><td style="background:${color};padding:26px 32px;text-align:center">
     ${logo
-      ? `<img src="${logo}" alt="${companyName}" style="height:44px;object-fit:contain;border-radius:8px;margin:0 auto 16px;display:block">`
-      : `<div style="display:inline-block;padding:6px 18px;border-radius:10px;background:${color}22;color:${color};font-size:14px;font-weight:800;margin-bottom:16px">${companyName}</div>`
+      ? `<img src="${logo}" alt="${companyName}" style="height:40px;object-fit:contain;border-radius:6px;display:block;margin:0 auto">`
+      : `<div style="color:${btnTextColor};font-size:20px;font-weight:800;letter-spacing:-0.02em">${companyName}</div>`
     }
-    <h1 style="margin:0 0 6px;color:white;font-size:26px;font-weight:300;letter-spacing:-0.03em">Your Estimate</h1>
-    <p style="margin:0;color:rgba(255,255,255,0.4);font-size:14px">From ${companyName}</p>
   </td></tr>
-  <tr><td style="padding:32px 36px">
-    <p style="margin:0 0 18px;color:rgba(255,255,255,0.8);font-size:16px;line-height:1.65">Hi ${firstName},</p>
-    <p style="margin:0 0 24px;color:rgba(255,255,255,0.8);font-size:16px;line-height:1.65">${companyName} has prepared an estimate for you${estimate.property_address ? ` for <strong style="color:white">${estimate.property_address}</strong>` : ""}.</p>
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px 24px;margin-bottom:28px;text-align:center">
-      <div style="color:rgba(255,255,255,0.35);font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;margin-bottom:8px">Total Estimate</div>
-      <div style="color:${color};font-size:40px;font-weight:700;letter-spacing:-0.04em">${fmtCurrency(estimate.total)}</div>
+  <tr><td style="padding:36px 36px 28px">
+    <p style="margin:0 0 14px;color:#111;font-size:17px;font-weight:600;line-height:1.5">Hi ${firstName},</p>
+    <p style="margin:0 0 28px;color:#555;font-size:15px;line-height:1.7">Here's your estimate${estimate.property_address ? ` for <strong style="color:#111">${estimate.property_address}</strong>` : ""} from ${companyName}.</p>
+    <div style="background:#f7f7f7;border:1px solid #e8e8e8;border-radius:14px;padding:22px 24px;margin-bottom:28px;text-align:center">
+      <div style="color:#999;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px">Total Estimate</div>
+      <div style="color:#111;font-size:38px;font-weight:700;letter-spacing:-0.03em">${fmtCurrency(estimate.total)}</div>
     </div>
-    <div style="text-align:center;margin-bottom:8px">
-      <a href="${link}" style="display:inline-block;background:${color};color:${btnTextColor};font-size:16px;font-weight:800;text-decoration:none;padding:17px 48px;border-radius:16px;letter-spacing:-0.01em">View &amp; Accept Estimate</a>
+    <div style="text-align:center;margin-bottom:12px">
+      <a href="${link}" style="display:inline-block;background:${color};color:${btnTextColor};font-size:15px;font-weight:700;text-decoration:none;padding:16px 44px;border-radius:14px;letter-spacing:-0.01em">View &amp; Accept Estimate</a>
     </div>
-    <p style="margin:12px 0 0;text-align:center;color:rgba(255,255,255,0.2);font-size:12px">You can view, review all line items, and accept right from your phone.</p>
+    <p style="margin:0;text-align:center;color:#bbb;font-size:12px;line-height:1.6">Review all line items and accept from any device</p>
   </td></tr>
-  <tr><td style="padding:18px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center">
-    <p style="margin:0;color:rgba(255,255,255,0.2);font-size:12px;line-height:1.7">${companyName}${company.phone ? " &nbsp;·&nbsp; " + company.phone : ""}${company.email ? " &nbsp;·&nbsp; " + company.email : ""}</p>
+  <tr><td style="padding:18px 36px;border-top:1px solid #f0f0f0;text-align:center">
+    <p style="margin:0;color:#bbb;font-size:12px;line-height:1.8">${companyName}${company.phone ? " &nbsp;·&nbsp; " + company.phone : ""}${company.email ? " &nbsp;·&nbsp; " + company.email : ""}</p>
+    <p style="margin:6px 0 0;color:#ddd;font-size:11px">Powered by Found</p>
   </td></tr>
 </table>
 </td></tr>

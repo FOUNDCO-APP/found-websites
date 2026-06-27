@@ -35,7 +35,8 @@ export default async function EstimateClientPage({
 
   // Mark as viewed if it's been sent but not yet viewed/accepted
   if (estimate.status === "sent") {
-    await admin.from("estimates").update({ status: "viewed", updated_at: new Date().toISOString() }).eq("id", id)
+    const now = new Date().toISOString()
+    await admin.from("estimates").update({ status: "viewed", viewed_at: now, updated_at: now }).eq("id", id)
     // Notify owner
     const resendKey = process.env.RESEND_API_KEY
     if (resendKey && company.email) {
@@ -112,7 +113,7 @@ export default async function EstimateClientPage({
           borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}>
           {logo && (
-            <img src={logo} alt={company.name} style={{ height: 48, objectFit: "contain", marginBottom: 16, borderRadius: 10 }} />
+            <img src={logo} alt={company.name} style={{ height: 48, objectFit: "contain", marginBottom: 16, borderRadius: 10, display: "block", margin: "0 auto 16px" }} />
           )}
           {!logo && (
             <div style={{
@@ -162,7 +163,7 @@ export default async function EstimateClientPage({
                   <div style={{ flex: 1 }}>
                     <div style={{ color: "white", fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{item.description}</div>
                     <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
-                      {item.quantity} {item.unit || "×"} {fmt(item.unit_price)}
+                      {item.quantity > 1 || item.unit ? `${item.quantity}${item.unit ? " " + item.unit : ""} · ${fmt(item.unit_price)}` : fmt(item.unit_price)}
                     </div>
                   </div>
                   <div style={{ color: "white", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>

@@ -43,6 +43,7 @@ type Estimate = {
   stripe_payment_intent_id: string | null
   sent_at: string | null
   email_sent_at: string | null
+  viewed_at: string | null
   accepted_at: string | null
   created_at: string
   estimate_line_items?: LineItem[]
@@ -121,7 +122,7 @@ export default function EstimatesPage() {
   const [companySlug, setCompanySlug] = useState("")
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<"all" | "draft" | "sent" | "accepted" | "declined">("all")
+  const [filter, setFilter] = useState<"all" | "draft" | "sent" | "viewed" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showRateSheet, setShowRateSheet] = useState(false)
@@ -213,7 +214,7 @@ export default function EstimatesPage() {
           <h1 style={{ margin: "0 0 4px", color: "white", ...TYPE.largeTitle }}>Estimates</h1>
           {estimates.length > 0 && (
             <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.disabled, ...TYPE.footnote }}>
-              {estimates.filter(e => e.status === "draft" || e.status === "sent").length} active
+              {estimates.filter(e => e.status === "draft" || e.status === "sent" || e.status === "viewed").length} active
               {counts.accepted ? ` · ${counts.accepted} won` : ""}
             </p>
           )}
@@ -246,7 +247,7 @@ export default function EstimatesPage() {
       {/* Status filters */}
       {estimates.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
-          {(["all", "draft", "sent", "accepted", "declined"] as const).map(f => {
+          {(["all", "draft", "sent", "viewed", "accepted", "declined"] as const).map(f => {
             const active = filter === f
             const color = f === "all" ? SIGNAL_GREEN : STATUS_COLORS[f]
             const count = f === "all" ? estimates.length : (counts[f] ?? 0)
@@ -950,31 +951,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
               )}
             </div>
 
-            {/* Send history */}
-            {(est.email_sent_at || est.sent_at) && est.status !== "accepted" && (
-              <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", gap: 6 }}>
-                {est.email_sent_at && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
-                      Email sent {new Date(est.email_sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                    </span>
-                  </div>
-                )}
-                {est.sent_at && !est.email_sent_at && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>
-                      Sent via link/text {new Date(est.sent_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Activity timeline */}
+            <ActivityTimeline estimate={est} />
 
             {/* Line items */}
             {items.length > 0 && (
@@ -1026,7 +1004,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                 {(est.status === "sent" || est.status === "viewed") && (
                   <button onClick={copyLink} style={{
                     width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)",
-                    backgroundColor: "rgba(255,255,255,0.05)", color: "white",
+                    backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)",
                     fontSize: 14, fontWeight: 700, cursor: "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   }}>
@@ -1036,19 +1014,20 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                     {copied ? "Copied!" : "Copy Client Link"}
                   </button>
                 )}
-                {est.status === "draft" && (
-                  <button onClick={() => setMode("send_options")} style={{
-                    width: "100%", padding: "15px 0", borderRadius: 14, border: "none",
-                    backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK,
-                    fontSize: 15, fontWeight: 800, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                    Send Estimate
-                  </button>
-                )}
+                {/* Send for draft, Resend for sent/viewed */}
+                <button onClick={() => setMode("send_options")} style={{
+                  width: "100%", padding: "15px 0", borderRadius: 14,
+                  border: est.status === "draft" ? "none" : `1px solid ${SIGNAL_GREEN}33`,
+                  backgroundColor: est.status === "draft" ? SIGNAL_GREEN : "rgba(48,209,88,0.12)",
+                  color: est.status === "draft" ? FOUND_BLACK : SIGNAL_GREEN,
+                  fontSize: 15, fontWeight: 800, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                  {est.status === "draft" ? "Send Estimate" : "Resend Estimate"}
+                </button>
               </div>
             )}
 
@@ -1176,6 +1155,101 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
         )}
       </div>
     </>
+  )
+}
+
+// ── Activity Timeline ─────────────────────────────────────────────────────────
+
+function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
+  type Event = { label: string; time: string | null; color: string; icon: React.ReactNode }
+  const events: Event[] = []
+
+  const iconProps = { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
+
+  events.push({
+    label: "Estimate created",
+    time: est.created_at,
+    color: "rgba(255,255,255,0.3)",
+    icon: <svg {...iconProps} stroke="rgba(255,255,255,0.3)"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>,
+  })
+
+  if (est.email_sent_at) {
+    events.push({
+      label: `Emailed to ${est.client_email ?? "client"}`,
+      time: est.email_sent_at,
+      color: "#0A84FF",
+      icon: <svg {...iconProps} stroke="#0A84FF"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+    })
+  }
+
+  if (est.sent_at && !est.email_sent_at) {
+    events.push({
+      label: "Sent via link or text",
+      time: est.sent_at,
+      color: "rgba(255,255,255,0.4)",
+      icon: <svg {...iconProps} stroke="rgba(255,255,255,0.4)"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+    })
+  }
+
+  if (est.viewed_at || (est.status === "viewed" || est.status === "accepted")) {
+    events.push({
+      label: `Opened by ${est.client_first_name ?? est.client_name ?? "client"}`,
+      time: est.viewed_at,
+      color: "#FFD60A",
+      icon: <svg {...iconProps} stroke="#FFD60A"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+    })
+  }
+
+  if (est.accepted_at) {
+    events.push({
+      label: "Estimate accepted",
+      time: est.accepted_at,
+      color: "#30D158",
+      icon: <svg {...iconProps} stroke="#30D158"><polyline points="20 6 9 17 4 12"/></svg>,
+    })
+  }
+
+  if (est.deposit_paid_at) {
+    events.push({
+      label: `Deposit paid${est.deposit_amount ? ` — ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)}` : ""}`,
+      time: est.deposit_paid_at,
+      color: "#30D158",
+      icon: <svg {...iconProps} stroke="#30D158"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
+    })
+  }
+
+  if (events.length <= 1) return null
+
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>Activity</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        {events.map((ev, i) => (
+          <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+            {/* Line + dot column */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: `${ev.color}18`, border: `1px solid ${ev.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {ev.icon}
+              </div>
+              {i < events.length - 1 && (
+                <div style={{ width: 1, flex: 1, minHeight: 18, backgroundColor: "rgba(255,255,255,0.07)", margin: "3px 0" }} />
+              )}
+            </div>
+            {/* Content */}
+            <div style={{ paddingBottom: i < events.length - 1 ? 18 : 0, paddingTop: 2, flex: 1 }}>
+              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600 }}>{ev.label}</div>
+              {ev.time && (
+                <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 2 }}>
+                  {new Date(ev.time).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                  {" at "}
+                  {new Date(ev.time).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
