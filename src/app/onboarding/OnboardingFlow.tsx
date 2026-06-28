@@ -15,7 +15,7 @@ const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 const LIGHT_BG = "#FAFAF9"
 
-type Phase = "welcome" | "questions"
+type Phase = "welcome" | "plan" | "questions"
 
 type Step =
   | "welcome" | "name" | "description" | "subIndustry" | "location"
@@ -90,6 +90,12 @@ const DIFFERENTIATOR_CHIPS: Record<string, string[]> = {
 }
 
 const GENERATING_LINES = ["Building your site.", "Writing your story.", "Almost ready."]
+
+const PLAN_CHOICES = [
+  { key: "found", name: "Found Starter", line: "Get online fast.", cta: "Continue with Found Starter" },
+  { key: "found_pro", name: "Found Pro", line: "Stop losing leads.", cta: "Continue with Found Pro" },
+  { key: "found_business", name: "Found Business", line: "Run the job after they say yes.", cta: "Continue with Found Business" },
+]
 
 // Resizes a photo client-side and returns a JPEG Blob.
 // Handles HEIC on iOS (Safari can decode HEIC natively into a canvas).
@@ -815,9 +821,88 @@ function SlugSheet({
   )
 }
 
+function PlanChoiceScreen({
+  selectedPlan,
+  onSelect,
+  onContinue,
+}: {
+  selectedPlan: string
+  onSelect: (plan: string) => void
+  onContinue: () => void
+}) {
+  const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[0]
+  return (
+    <section key="plan" className="relative flex min-h-full flex-col justify-center py-8">
+      <div
+        className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
+        style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.14) 0%, transparent 70%)" }}
+      />
+      <div className="relative max-w-lg">
+        <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+          Start here
+        </p>
+        <h1 className="text-4xl font-light leading-tight text-white md:text-[2.8rem]">
+          How do you want to start?
+        </h1>
+        <p className="mt-4 text-base leading-7 text-white/60">
+          Pick the starting point. You can compare details or change plans later.
+        </p>
+      </div>
+
+      <div className="relative mt-8 space-y-3">
+        {PLAN_CHOICES.map((choice) => {
+          const isActive = selectedPlan === choice.key
+          return (
+            <button
+              key={choice.key}
+              type="button"
+              onClick={() => onSelect(choice.key)}
+              className="flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition"
+              style={{
+                borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
+                backgroundColor: isActive ? "rgba(50,208,116,0.12)" : "rgba(255,255,255,0.04)",
+              }}
+            >
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.22)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
+              >
+                {isActive && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-black text-white">{choice.name}</span>
+                <span className="mt-0.5 block text-sm font-medium text-white/58">{choice.line}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="relative mt-7">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest whitespace-nowrap sm:w-auto sm:px-12 md:py-6"
+          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, boxShadow: "0 0 40px rgba(50,208,116,0.34)" }}
+        >
+          {active.cta}
+        </button>
+        <Link href="/plans" className="mt-4 block text-center text-xs font-black uppercase tracking-[0.16em] text-white/42 underline underline-offset-4 sm:text-left">
+          Compare plans
+        </Link>
+      </div>
+    </section>
+  )
+}
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: { onClose?: () => void; drawerMode?: boolean; plan?: string }) {
+export default function OnboardingFlow({ onClose, drawerMode, plan = "found", showPlanChoice = false }: { onClose?: () => void; drawerMode?: boolean; plan?: string; showPlanChoice?: boolean }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
+  const [currentPlan, setCurrentPlan] = useState(plan)
+  useEffect(() => setCurrentPlan(plan), [plan])
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
@@ -864,7 +949,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
 
   function back() {
     if (stepIndex <= 1) {
-      setPhase("welcome")
+      setPhase(showPlanChoice ? "plan" : "welcome")
       setStepIndex(0)
     } else {
       setStepIndex((i) => i - 1)
@@ -873,6 +958,10 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
 
   function advance() {
     if (step === "welcome") {
+      if (showPlanChoice) {
+        setPhase("plan")
+        return
+      }
       setPhase("questions")
       setStepIndex(1)
       return
@@ -908,7 +997,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
         logoWhiteUrl: answers.logoWhiteUrl || undefined,
         navbarDark: answers.navbarDark,
         heroImageUrls: answers.heroImageUrls,
-        plan,
+        plan: currentPlan,
       }),
       uiTimeout,
     ])
@@ -921,7 +1010,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
         email: answers.email,
         name: answers.name.trim(),
         slug: res.slug,
-        plan,
+        plan: currentPlan,
       }).catch(console.error)
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
@@ -1268,6 +1357,15 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
                     Let's go →
                   </button>
                 </section>
+              )}
+
+              {/* Plan choice (dark) */}
+              {phase === "plan" && (
+                <PlanChoiceScreen
+                  selectedPlan={currentPlan}
+                  onSelect={setCurrentPlan}
+                  onContinue={() => { setPhase("questions"); setStepIndex(1) }}
+                />
               )}
 
               {/* ── Questions (light) ── */}
@@ -1994,3 +2092,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found" }: 
     </>
   )
 }
+
+
+
+

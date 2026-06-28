@@ -13,6 +13,7 @@ const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found")
+  const [showPlanChoice, setShowPlanChoice] = useState(true)
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
 
@@ -29,14 +30,22 @@ export default function Home() {
     if (window.location.search.includes("start=1")) {
       const params = new URLSearchParams(window.location.search)
       const planParam = params.get("plan")
-      if (planParam) setSelectedPlan(planParam)
+      if (planParam) {
+        setSelectedPlan(planParam)
+        setShowPlanChoice(false)
+      } else {
+        setSelectedPlan("found")
+        setShowPlanChoice(true)
+      }
       setDrawerOpen(true)
       window.history.replaceState({}, "", "/")
     }
   }, [])
 
-  function openDrawer() {
+  function openDrawer(nextPlan?: string, requirePlanChoice = true) {
     if (drawerOpen || cinematic !== "off") return
+    setSelectedPlan(nextPlan ?? "found")
+    setShowPlanChoice(requirePlanChoice)
     setCinematic("on")
     setTimeout(() => setCinematic("iris"), 3000)
     setTimeout(() => {
@@ -48,7 +57,7 @@ export default function Home() {
 
   return (
     <>
-      <SiteNav transparent onCta={openDrawer} />
+      <SiteNav transparent onCta={() => openDrawer()} />
 
       <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
 
@@ -92,7 +101,7 @@ export default function Home() {
                 <div className="found-hero-actions absolute inset-x-6 bottom-8 flex flex-col gap-3 sm:flex-row md:static md:inset-auto md:mt-9">
                   <button
                     type="button"
-                    onClick={openDrawer}
+                    onClick={() => openDrawer()}
                     className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-7 text-xs font-black uppercase tracking-widest text-[#080A09] shadow-[0_0_34px_rgba(50,208,116,0.22)] transition hover:bg-[#5DE894] md:min-h-14 md:px-8 md:text-sm"
                   >
                     Get my site
@@ -148,7 +157,7 @@ export default function Home() {
             <div className="mt-16 text-center">
               <button
                 type="button"
-                onClick={openDrawer}
+                onClick={() => openDrawer()}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#32D074] px-8 text-sm font-black uppercase tracking-widest text-[#080A09] transition hover:bg-[#5DE894] md:min-h-14"
               >
                 Get my site
@@ -185,7 +194,7 @@ export default function Home() {
                   </p>
                   <button
                     type="button"
-                    onClick={openDrawer}
+                    onClick={() => openDrawer()}
                     className="inline-flex min-h-14 items-center justify-center rounded-full px-10 text-sm font-black uppercase tracking-widest transition hover:opacity-80"
                     style={{ backgroundColor: FOUND_BLACK, color: "white" }}
                   >
@@ -312,7 +321,7 @@ export default function Home() {
                     ))}
                   </ul>
                   <button
-                    onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.key); openDrawer() }}
+                    onClick={(e) => { e.stopPropagation(); openDrawer(plan.key, false) }}
                     className="w-full py-4 rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90"
                     style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                   >
@@ -335,7 +344,7 @@ export default function Home() {
 
       <SiteFooter />
 
-      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} />
+      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} showPlanChoice={showPlanChoice} />
 
       {/* Cinematic overlay */}
       {cinematic !== "off" && (
@@ -431,4 +440,6 @@ export default function Home() {
     </>
   )
 }
+
+
 

@@ -7,10 +7,12 @@ export default function OnboardingDrawer({
   open,
   onClose,
   plan = "found",
+  showPlanChoice = false,
 }: {
   open: boolean
   onClose: () => void
   plan?: string
+  showPlanChoice?: boolean
 }) {
   const savedScrollY = useRef(0)
 
@@ -98,9 +100,10 @@ export default function OnboardingDrawer({
           className="md:hidden absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ top: "calc(env(safe-area-inset-top) + 12px)", backgroundColor: "rgba(255,255,255,0.3)" }}
         />
-        <OnboardingFlow onClose={onClose} drawerMode plan={plan} />
+        <OnboardingFlow onClose={onClose} drawerMode plan={plan} showPlanChoice={showPlanChoice} />
       </div>
     </>
   )
 }
+
 
