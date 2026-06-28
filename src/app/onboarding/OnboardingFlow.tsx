@@ -860,6 +860,7 @@ function PlanChoiceScreen({
   const starter = PLAN_CHOICES.find((p) => p.key === "found") ?? PLAN_CHOICES[0]
   const business = PLAN_CHOICES.find((p) => p.key === "found_business") ?? PLAN_CHOICES[2]
   const proActive = selectedPlan === pro.key
+  const regularPrice = (key: string) => key === "found" ? "$39/mo" : key === "found_pro" ? "$69/mo" : "$99/mo"
   return (
     <section key="plan" className="relative flex min-h-full flex-col justify-center py-7">
       <div
@@ -870,11 +871,11 @@ function PlanChoiceScreen({
         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           Best place to start
         </p>
-        <h1 className="text-[2.25rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
-          Your site gets the lead. Pro follows up.
+        <h1 className="text-[2.28rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
+          Start with the one that keeps working.
         </h1>
         <p className="mt-4 text-base leading-7 text-white/62">
-          Most owners are busy when a new lead comes in. Pro keeps that person warm automatically, so fewer jobs slip away.
+          Your site brings in the lead. Pro follows up when you&apos;re busy, driving, or on the job.
         </p>
       </div>
 
@@ -906,17 +907,18 @@ function PlanChoiceScreen({
                 Recommended
               </span>
             </span>
-            <span className="mt-2 flex items-baseline gap-2">
+            <span className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className="text-[1.65rem] font-black leading-none text-white">$39/mo</span>
-              <span className="text-sm font-black" style={{ color: SIGNAL_GREEN }}>Website + automatic follow-up</span>
+              <span className="text-xs font-black uppercase tracking-[0.12em] text-white/34">regular <span className="line-through">$69/mo</span></span>
+            </span>
+            <span className="mt-2 block text-sm font-black" style={{ color: SIGNAL_GREEN }}>
+              Website + automatic follow-up
             </span>
             <span className="mt-3 block text-sm font-medium leading-6 text-white/68">
-              Best for most owners because every new lead gets answered, followed up, and organized even when you are working.
+              Every new lead gets answered, followed up, and organized.
             </span>
-            <span className="mt-4 grid gap-2 text-[13px] font-bold text-white/74">
-              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Follows up with every new lead</span>
-              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Organizes contacts automatically</span>
-              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Rewrite any page anytime</span>
+            <span className="mt-3 inline-flex rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: "rgba(50,208,116,0.14)", color: SIGNAL_GREEN }}>
+              Only $10/mo more than Starter
             </span>
           </span>
         </div>
@@ -951,14 +953,10 @@ function PlanChoiceScreen({
                   <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="text-base font-black text-white">{choice.name}</span>
                     <span className="text-base font-black text-white/88">{choice.price}</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-white/30">regular <span className="line-through">{regularPrice(choice.key)}</span></span>
                   </span>
                   <span className="mt-1 block text-sm font-bold" style={{ color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.58)" }}>
                     {choice.key === "found" ? "Website, leads, photos, instant replies" : "Pro + bookings, estimates, deposits"}
-                  </span>
-                  <span className="mt-1 block text-[13px] font-medium leading-5 text-white/45">
-                    {choice.key === "found"
-                      ? "Everything needed to get online and start getting inquiries."
-                      : "For owners ready to run more of the job inside Found."}
                   </span>
                 </span>
               </div>
@@ -2177,6 +2175,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
