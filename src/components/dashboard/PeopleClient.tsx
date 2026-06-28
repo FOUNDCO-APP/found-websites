@@ -59,7 +59,7 @@ function visitSummary(person: PersonRecord): string {
   return parts.join(" · ") || "1 visit"
 }
 
-function isOrder(l: LeadItem) { return l.type === "online_order" || l.source === "online_ordering" }
+function isOrder(l: LeadItem) { return l.type === "online_order" || l.source === "online_ordering" || l.type === "shopping_order" || l.source === "shopping_cart" }
 function isReservation(l: LeadItem) {
   return l.type === "reservation_request" || l.source === "reservation" || l.source === "reservations"
 }
@@ -512,3 +512,4 @@ export default function PeopleClient({
     </main>
   )
 }
+

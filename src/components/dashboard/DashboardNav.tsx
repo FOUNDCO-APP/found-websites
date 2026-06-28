@@ -45,7 +45,7 @@ function inboxPathFor(industry: string | null | undefined): string {
 // All possible tabs for an industry — used for byId mapping when loading from localStorage
 function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
@@ -83,7 +83,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
 // Default 5-tab layout — Home locked first, More locked last
 function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
@@ -840,6 +840,7 @@ export default function DashboardNav({
     </>
   )
 }
+
 
 
 

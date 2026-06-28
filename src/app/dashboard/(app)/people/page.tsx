@@ -38,7 +38,7 @@ function normalizePhone(phone: string | null): string | null {
 }
 
 function isOrder(l: LeadItem) {
-  return l.type === "online_order" || l.source === "online_ordering"
+  return l.type === "online_order" || l.source === "online_ordering" || l.type === "shopping_order" || l.source === "shopping_cart"
 }
 
 function isReservation(l: LeadItem) {
@@ -151,3 +151,4 @@ export default async function PeoplePage() {
     />
   )
 }
+

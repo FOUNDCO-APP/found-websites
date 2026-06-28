@@ -12,7 +12,7 @@ const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState("found_pro")
+  const [selectedPlan, setSelectedPlan] = useState("found")
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
 
@@ -431,3 +431,4 @@ export default function Home() {
     </>
   )
 }
+

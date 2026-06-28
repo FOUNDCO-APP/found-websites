@@ -23,7 +23,7 @@ type LeadRow = {
 
 
 function isOnlineOrder(lead: LeadRow) {
-  return lead.type === "online_order" || lead.source === "online_ordering"
+  return lead.type === "online_order" || lead.source === "online_ordering" || lead.type === "shopping_order" || lead.source === "shopping_cart"
 }
 
 function isReservationLead(lead: LeadRow) {
@@ -61,6 +61,8 @@ function sourceLabel(source: string | null | undefined): string | null {
     phone:          "Phone call",
     direct:         "Direct",
     manual:         "Added manually",
+    online_ordering: "Online ordering",
+    shopping_cart:  "Shopping cart",
   }
   return map[source.toLowerCase()] ?? source
 }
@@ -794,8 +796,11 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   const emailHref = lead.email ? `mailto:${lead.email}` : null
   const tempColor = TEMP_COLORS[lead.temperature ?? "warm"] ?? TEMP_COLORS.warm
   const onlineOrder = isOnlineOrder(lead)
+  const shopOrder = lead.type === "shopping_order" || lead.source === "shopping_cart"
   const items = orderItems(lead)
   const pickupTime = typeof lead.partial_answers?.pickup_time === "string" ? lead.partial_answers.pickup_time : ""
+  const fulfillment = typeof lead.partial_answers?.fulfillment === "string" ? lead.partial_answers.fulfillment : ""
+  const shippingAddress = typeof lead.partial_answers?.shipping_address === "string" ? lead.partial_answers.shipping_address : ""
   const orderNotes = typeof lead.partial_answers?.notes === "string" ? lead.partial_answers.notes : ""
   const orderTotal = formatCents(lead.partial_answers?.subtotal_cents)
 
@@ -807,7 +812,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;")
     const itemRows = items.map(item => `<tr><td>${Number(item.quantity || 1)}x</td><td>${htmlEscape(item.name || "Item")}</td><td>${formatCents(Number(item.unit_amount || 0) * Number(item.quantity || 1))}</td></tr>`).join("")
-    const ticketHtml = `<!doctype html><html><head><title>Order Ticket</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111}.ticket{max-width:360px;margin:0 auto}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.name{font-size:26px;font-weight:900;margin:8px 0 4px}.meta{font-size:14px;margin:0 0 18px}.pickup{border:2px solid #111;padding:14px;margin:16px 0;font-size:22px;font-weight:900;text-align:center}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:10px 0;border-bottom:1px solid #ddd;font-size:16px}td:first-child{width:48px;font-weight:900}td:last-child{text-align:right}.total{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin-top:14px}.notes{margin-top:18px;padding:12px;border:1px solid #111;font-size:15px;white-space:pre-wrap}.small{font-size:12px;margin-top:18px;color:#555}@media print{body{padding:0}.ticket{max-width:none}}</style></head><body><div class="ticket"><div class="eyebrow">Online Order</div><div class="name">${htmlEscape(lead.name || "Customer")}</div><p class="meta">${htmlEscape(lead.phone || "")}${lead.email ? ` | ${htmlEscape(lead.email)}` : ""}</p>${pickupTime ? `<div class="pickup">Pickup ${htmlEscape(pickupTime)}</div>` : ""}<table>${itemRows}</table><div class="total"><span>Total paid</span><span>${orderTotal}</span></div>${orderNotes ? `<div class="notes"><strong>Notes</strong><br>${htmlEscape(orderNotes)}</div>` : ""}<p class="small">Order ${htmlEscape(lead.id.slice(0, 8))}${lead.created_at ? ` | ${htmlEscape(new Date(lead.created_at).toLocaleString())}` : ""}</p></div></body></html>`
+    const ticketHtml = `<!doctype html><html><head><title>Order Ticket</title><style>body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#111}.ticket{max-width:360px;margin:0 auto}.eyebrow{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase}.name{font-size:26px;font-weight:900;margin:8px 0 4px}.meta{font-size:14px;margin:0 0 18px}.pickup{border:2px solid #111;padding:14px;margin:16px 0;font-size:22px;font-weight:900;text-align:center}table{width:100%;border-collapse:collapse;margin:16px 0}td{padding:10px 0;border-bottom:1px solid #ddd;font-size:16px}td:first-child{width:48px;font-weight:900}td:last-child{text-align:right}.total{display:flex;justify-content:space-between;font-size:18px;font-weight:900;margin-top:14px}.notes{margin-top:18px;padding:12px;border:1px solid #111;font-size:15px;white-space:pre-wrap}.small{font-size:12px;margin-top:18px;color:#555}@media print{body{padding:0}.ticket{max-width:none}}</style></head><body><div class="ticket"><div class="eyebrow">${shopOrder ? "Shop Order" : "Online Order"}</div><div class="name">${htmlEscape(lead.name || "Customer")}</div><p class="meta">${htmlEscape(lead.phone || "")}${lead.email ? ` | ${htmlEscape(lead.email)}` : ""}</p>${pickupTime ? `<div class="pickup">Pickup ${htmlEscape(pickupTime)}</div>` : shopOrder && fulfillment ? `<div class="pickup">${htmlEscape(fulfillment === "shipping" ? "Shipping" : "Pickup")}${shippingAddress ? `: ${htmlEscape(shippingAddress)}` : ""}</div>` : ""}<table>${itemRows}</table><div class="total"><span>Total paid</span><span>${orderTotal}</span></div>${orderNotes ? `<div class="notes"><strong>Notes</strong><br>${htmlEscape(orderNotes)}</div>` : ""}<p class="small">Order ${htmlEscape(lead.id.slice(0, 8))}${lead.created_at ? ` | ${htmlEscape(new Date(lead.created_at).toLocaleString())}` : ""}</p></div></body></html>`
     const iframe = document.createElement("iframe")
     iframe.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:420px;height:680px;border:none;visibility:hidden;"
     document.body.appendChild(iframe)
@@ -951,16 +956,16 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
               <div style={{ marginBottom: 18, padding: 18, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
                   <div>
-                    <div style={{ color: SIGNAL_GREEN, marginBottom: 4, ...TYPE.caption }}>Kitchen Ticket</div>
+                    <div style={{ color: SIGNAL_GREEN, marginBottom: 4, ...TYPE.caption }}>{shopOrder ? "Order Ticket" : "Kitchen Ticket"}</div>
                     <div style={{ color: "white", ...TYPE.title }}>{orderTotal}</div>
                   </div>
                   <button onClick={printKitchenTicket} style={{ padding: "10px 14px", borderRadius: 12, border: "none", backgroundColor: "white", color: FOUND_BLACK, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
                     Print
                   </button>
                 </div>
-                {pickupTime && (
+                {(pickupTime || (shopOrder && fulfillment)) && (
                   <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 10, border: "2px solid rgba(255,255,255,0.18)", textAlign: "center", color: "white", ...TYPE.headline }}>
-                    Pickup {pickupTime}
+                    {pickupTime ? `Pickup ${pickupTime}` : `${fulfillment === "shipping" ? "Shipping" : "Pickup"}${shippingAddress ? `: ${shippingAddress}` : ""}`}
                   </div>
                 )}
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1199,6 +1204,9 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+
+
 
 
 

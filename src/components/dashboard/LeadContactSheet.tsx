@@ -242,7 +242,7 @@ export default function LeadContactSheet({
   // Derive context from lead type/source
   const context: "order" | "booking" | "lead" = (() => {
     const t = lead.type ?? ""; const s = lead.source ?? ""
-    if (t === "online_order" || s === "online_ordering") return "order"
+    if (t === "online_order" || s === "online_ordering" || t === "shopping_order" || s === "shopping_cart") return "order"
     if (t === "reservation_request" || s === "reservation" || s === "reservations" || t === "booking") return "booking"
     return "lead"
   })()
@@ -498,3 +498,4 @@ export default function LeadContactSheet({
     </Portal>
   )
 }
+

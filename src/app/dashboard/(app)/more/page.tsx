@@ -88,6 +88,34 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string;
   },
 }
 
+function paymentSetupCopy(industry: string, activeAddons: string[]) {
+  if (industry === "retail" || industry === "makers_crafts" || activeAddons.includes("shopping_cart")) {
+    return {
+      headline: "Sell products online by card.",
+      body: "Customers can buy shirts, merch, packaged goods, or products from your site. Setup takes a few minutes, and Found handles the secure payment screen.",
+      button: "Set up online payments",
+    }
+  }
+  if (industry === "food" || industry === "home_based_food" || activeAddons.includes("online_ordering")) {
+    return {
+      headline: "Accept paid orders by card.",
+      body: "Customers can place an order and pay electronically before pickup. Setup takes a few minutes, and Found handles the secure payment screen.",
+      button: "Set up order payments",
+    }
+  }
+  if (["wellness", "beauty", "fitness", "events", "pet_services", "automotive", "creative_services", "professional_services"].includes(industry)) {
+    return {
+      headline: "Let clients pay deposits by card.",
+      body: "Clients can book or approve work and pay electronically. Setup takes a few minutes, and Found handles the secure payment screen.",
+      button: "Set up card payments",
+    }
+  }
+  return {
+    headline: "Make estimates payable by card.",
+    body: "Clients can accept an estimate and pay a deposit electronically. Setup takes a few minutes, and Found handles the secure payment screen.",
+    button: "Set up deposit payments",
+  }
+}
 function ChevronRight() {
   return (
     <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none"
@@ -130,6 +158,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   }
 
   const availableAddons = relevantAddons.filter((a) => !activeAddonSlugs.includes(a.slug))
+  const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
 
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
     const def = ALL_ADDONS.find(a => a.slug === slug)
@@ -396,12 +425,12 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               Get paid faster
             </p>
             <p style={{ margin: "0 0 7px", ...TYPE.subhead, fontWeight: 850, color: "white" }}>
-              Make estimates payable by card.
+              {paymentCopy.headline}
             </p>
             <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-              Clients can accept an estimate and pay a deposit electronically. Setup takes a few minutes, and Found handles the secure payment screen.
+              {paymentCopy.body}
             </p>
-            <PaymentSetupButton returnTo="/more?payments=connected">Set up deposit payments</PaymentSetupButton>
+            <PaymentSetupButton returnTo="/more?payments=connected">{paymentCopy.button}</PaymentSetupButton>
           </div>
         </section>
       )}
@@ -589,5 +618,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
     </main>
   )
 }
+
 
 

@@ -6,7 +6,7 @@ import OnboardingFlow from "@/app/onboarding/OnboardingFlow"
 export default function OnboardingDrawer({
   open,
   onClose,
-  plan = "found_pro",
+  plan = "found",
 }: {
   open: boolean
   onClose: () => void
@@ -103,3 +103,4 @@ export default function OnboardingDrawer({
     </>
   )
 }
+

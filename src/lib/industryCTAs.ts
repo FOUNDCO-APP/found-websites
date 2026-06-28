@@ -65,9 +65,12 @@ export function getIndustryCTAs(
   let schedulingCTA = SCHEDULING_CTA[industry] ?? null
   let contentCTA = CONTENT_CTA[industry] ?? null
 
-  // Upgrade content CTA when online_ordering add-on is active
+  // Upgrade content CTA when paid ordering/cart add-ons are active
   if ((industry === "food" || industry === "home_based_food") && activeAddons.includes("online_ordering")) {
     contentCTA = { label: "Order Online", href: "/order" }
+  }
+  if ((industry === "retail" || industry === "makers_crafts") && activeAddons.includes("shopping_cart")) {
+    contentCTA = { label: "Shop Online", href: "/shop" }
   }
 
   let supportingCTA: CTA | null = null
@@ -116,3 +119,5 @@ export function getStickyCTA(
 
   return null
 }
+
+

@@ -25,7 +25,7 @@ function peoplePageFor(industry: string | null | undefined): PageDef {
 
 function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
   const PEOPLE      = peoplePageFor(industry)
 
@@ -60,7 +60,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
 
 function defaultTabIdsFor(industry: string | null | undefined, activeAddons: string[]): string[] {
   const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = activeAddons.includes("online_ordering")
+  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
 
   if (industry === "food") {
@@ -293,3 +293,4 @@ export default function DashboardPages({
     </section>
   )
 }
+

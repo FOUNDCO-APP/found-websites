@@ -65,6 +65,7 @@ function sourceLabel(source: string | null | undefined): string | null {
     direct:          "Direct",
     manual:          "Added manually",
     online_ordering: "Online order",
+    shopping_cart:   "Shop order",
     reservation:     "Reservation form",
     reservations:    "Reservation form",
   }
@@ -510,3 +511,4 @@ export default function HomeClient({
     </main>
   )
 }
+
