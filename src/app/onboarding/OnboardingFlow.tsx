@@ -856,49 +856,90 @@ function PlanChoiceScreen({
   onContinue: () => void
 }) {
   const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
+  const pro = PLAN_CHOICES.find((p) => p.key === "found_pro") ?? PLAN_CHOICES[1]
+  const starter = PLAN_CHOICES.find((p) => p.key === "found") ?? PLAN_CHOICES[0]
+  const business = PLAN_CHOICES.find((p) => p.key === "found_business") ?? PLAN_CHOICES[2]
+  const proActive = selectedPlan === pro.key
   return (
     <section key="plan" className="relative flex min-h-full flex-col justify-center py-7">
       <div
         className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
-        style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.15) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)" }}
       />
       <div className="relative max-w-lg">
         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-          Choose your plan
+          Best place to start
         </p>
-        <h1 className="text-[2.35rem] font-light leading-[1.05] text-white md:text-[2.8rem]">
-          Most owners start with Pro.
+        <h1 className="text-[2.25rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
+          Your site gets the lead. Pro follows up.
         </h1>
         <p className="mt-4 text-base leading-7 text-white/62">
-          Starter gets you online. Pro keeps leads warm after they reach out. Business adds the tools to collect deposits and manage work.
+          Most owners are busy when a new lead comes in. Pro keeps that person warm automatically, so fewer jobs slip away.
         </p>
       </div>
 
-      <div className="relative mt-7 space-y-3">
-        {PLAN_CHOICES.map((choice) => {
+      <button
+        type="button"
+        onClick={() => onSelect(pro.key)}
+        className="relative mt-7 w-full rounded-[1.35rem] border p-5 text-left transition"
+        style={{
+          borderColor: proActive ? SIGNAL_GREEN : "rgba(50,208,116,0.46)",
+          background: "linear-gradient(180deg, rgba(50,208,116,0.15) 0%, rgba(50,208,116,0.075) 100%)",
+          boxShadow: "0 22px 70px rgba(50,208,116,0.16)",
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <span
+            className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
+            style={{ borderColor: SIGNAL_GREEN, backgroundColor: proActive ? SIGNAL_GREEN : "transparent" }}
+          >
+            {proActive && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-xl font-black text-white">Found Pro</span>
+              <span className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em]" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+                Recommended
+              </span>
+            </span>
+            <span className="mt-2 flex items-baseline gap-2">
+              <span className="text-[1.65rem] font-black leading-none text-white">$39/mo</span>
+              <span className="text-sm font-black" style={{ color: SIGNAL_GREEN }}>Website + automatic follow-up</span>
+            </span>
+            <span className="mt-3 block text-sm font-medium leading-6 text-white/68">
+              Best for most owners because every new lead gets answered, followed up, and organized even when you are working.
+            </span>
+            <span className="mt-4 grid gap-2 text-[13px] font-bold text-white/74">
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Follows up with every new lead</span>
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Organizes contacts automatically</span>
+              <span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />Rewrite any page anytime</span>
+            </span>
+          </span>
+        </div>
+      </button>
+
+      <div className="relative mt-3 grid gap-2">
+        {([starter, business] as const).map((choice) => {
           const isActive = selectedPlan === choice.key
-          const isFeatured = Boolean(choice.featured)
           return (
             <button
               key={choice.key}
               type="button"
               onClick={() => onSelect(choice.key)}
-              className="w-full rounded-2xl border p-4 text-left transition"
+              className="w-full rounded-2xl border px-4 py-3.5 text-left transition"
               style={{
-                borderColor: isActive ? SIGNAL_GREEN : isFeatured ? "rgba(50,208,116,0.38)" : "rgba(255,255,255,0.12)",
-                backgroundColor: isActive
-                  ? "rgba(50,208,116,0.13)"
-                  : isFeatured
-                    ? "rgba(50,208,116,0.07)"
-                    : "rgba(255,255,255,0.035)",
-                boxShadow: isActive || isFeatured ? "0 18px 48px rgba(50,208,116,0.12)" : "none",
-                transform: isFeatured ? "scale(1.015)" : "scale(1)",
+                borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.11)",
+                backgroundColor: isActive ? "rgba(50,208,116,0.10)" : "rgba(255,255,255,0.035)",
               }}
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3">
                 <span
                   className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
-                  style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.22)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
+                  style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.20)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
                 >
                   {isActive && (
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -907,20 +948,18 @@ function PlanChoiceScreen({
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-center gap-2">
+                  <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="text-base font-black text-white">{choice.name}</span>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em]"
-                      style={{ backgroundColor: isFeatured ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: isFeatured ? FOUND_BLACK : "rgba(255,255,255,0.58)" }}
-                    >
-                      {choice.badge}
-                    </span>
+                    <span className="text-base font-black text-white/88">{choice.price}</span>
                   </span>
-                  <span className="mt-1 flex items-baseline gap-2">
-                    <span className="text-lg font-black text-white">{choice.price}</span>
-                    <span className="text-sm font-bold" style={{ color: isFeatured ? SIGNAL_GREEN : "rgba(255,255,255,0.54)" }}>{choice.line}</span>
+                  <span className="mt-1 block text-sm font-bold" style={{ color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.58)" }}>
+                    {choice.key === "found" ? "Website, leads, photos, instant replies" : "Pro + bookings, estimates, deposits"}
                   </span>
-                  <span className="mt-1.5 block text-[13px] font-medium leading-5 text-white/50">{choice.detail}</span>
+                  <span className="mt-1 block text-[13px] font-medium leading-5 text-white/45">
+                    {choice.key === "found"
+                      ? "Everything needed to get online and start getting inquiries."
+                      : "For owners ready to run more of the job inside Found."}
+                  </span>
                 </span>
               </div>
             </button>
@@ -928,7 +967,7 @@ function PlanChoiceScreen({
         })}
       </div>
 
-      <div className="relative mt-7">
+      <div className="relative mt-6">
         <button
           type="button"
           onClick={onContinue}
@@ -2138,6 +2177,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
