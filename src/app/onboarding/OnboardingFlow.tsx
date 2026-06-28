@@ -912,10 +912,10 @@ function PlanChoiceScreen({
               <span className="text-xs font-semibold tracking-[0.02em] text-white/52">regular <span className="line-through">$69/mo</span></span>
             </span>
             <span className="mt-2 block text-sm font-black" style={{ color: SIGNAL_GREEN }}>
-              Website + automatic follow-up
+              Starter + automatic follow-up and organized contacts
             </span>
             <span className="mt-3 block text-sm font-medium leading-6 text-white/68">
-              Every new lead gets answered, followed up, and organized.
+              Everything in Starter, plus every new lead gets followed up and organized automatically.
             </span>
             <span className="mt-3 inline-flex rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: "rgba(50,208,116,0.14)", color: SIGNAL_GREEN }}>
               Only $10/mo more than Starter
@@ -2175,6 +2175,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
