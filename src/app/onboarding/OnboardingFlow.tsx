@@ -909,7 +909,7 @@ function PlanChoiceScreen({
             </span>
             <span className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <span className="text-[1.65rem] font-black leading-none text-white">$39/mo</span>
-              <span className="text-xs font-black uppercase tracking-[0.12em] text-white/34">regular <span className="line-through">$69/mo</span></span>
+              <span className="text-xs font-semibold tracking-[0.02em] text-white/52">regular <span className="line-through">$69/mo</span></span>
             </span>
             <span className="mt-2 block text-sm font-black" style={{ color: SIGNAL_GREEN }}>
               Website + automatic follow-up
@@ -953,7 +953,7 @@ function PlanChoiceScreen({
                   <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="text-base font-black text-white">{choice.name}</span>
                     <span className="text-base font-black text-white/88">{choice.price}</span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-white/30">regular <span className="line-through">{regularPrice(choice.key)}</span></span>
+                    <span className="text-[11px] font-semibold tracking-[0.02em] text-white/48">regular <span className="line-through">{regularPrice(choice.key)}</span></span>
                   </span>
                   <span className="mt-1 block text-sm font-bold" style={{ color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.58)" }}>
                     {choice.key === "found" ? "Website, leads, photos, instant replies" : "Pro + bookings, estimates, deposits"}
@@ -2175,6 +2175,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
