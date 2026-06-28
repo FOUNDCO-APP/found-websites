@@ -92,9 +92,34 @@ const DIFFERENTIATOR_CHIPS: Record<string, string[]> = {
 const GENERATING_LINES = ["Building your site.", "Writing your story.", "Almost ready."]
 
 const PLAN_CHOICES = [
-  { key: "found", name: "Found Starter", line: "Get online fast.", cta: "Continue with Found Starter" },
-  { key: "found_pro", name: "Found Pro", line: "Stop losing leads.", cta: "Continue with Found Pro" },
-  { key: "found_business", name: "Found Business", line: "Run the job after they say yes.", cta: "Continue with Found Business" },
+  {
+    key: "found",
+    name: "Found Starter",
+    price: "$29/mo",
+    line: "A polished website that gets you online.",
+    detail: "Site, copy, photos, lead capture, and instant replies.",
+    badge: "Start simple",
+    cta: "Continue with Found Starter",
+  },
+  {
+    key: "found_pro",
+    name: "Found Pro",
+    price: "$39/mo",
+    line: "Best for most owners.",
+    detail: "Everything in Starter, plus automatic lead follow-up, contact organization, and page rewrites.",
+    badge: "Recommended",
+    cta: "Continue with Found Pro",
+    featured: true,
+  },
+  {
+    key: "found_business",
+    name: "Found Business",
+    price: "$69/mo",
+    line: "For teams ready to run work inside Found.",
+    detail: "Adds bookings, estimates, deposits, reviews, campaigns, and team tools.",
+    badge: "Most complete",
+    cta: "Continue with Found Business",
+  },
 ]
 
 // Resizes a photo client-side and returns a JPEG Blob.
@@ -830,53 +855,74 @@ function PlanChoiceScreen({
   onSelect: (plan: string) => void
   onContinue: () => void
 }) {
-  const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[0]
+  const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
   return (
-    <section key="plan" className="relative flex min-h-full flex-col justify-center py-8">
+    <section key="plan" className="relative flex min-h-full flex-col justify-center py-7">
       <div
         className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
-        style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.14) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.15) 0%, transparent 70%)" }}
       />
       <div className="relative max-w-lg">
-        <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-          Start here
+        <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+          Choose your plan
         </p>
-        <h1 className="text-4xl font-light leading-tight text-white md:text-[2.8rem]">
-          How do you want to start?
+        <h1 className="text-[2.35rem] font-light leading-[1.05] text-white md:text-[2.8rem]">
+          Most owners start with Pro.
         </h1>
-        <p className="mt-4 text-base leading-7 text-white/60">
-          Pick the starting point. You can compare details or change plans later.
+        <p className="mt-4 text-base leading-7 text-white/62">
+          Starter gets you online. Pro keeps leads warm after they reach out. Business adds the tools to collect deposits and manage work.
         </p>
       </div>
 
-      <div className="relative mt-8 space-y-3">
+      <div className="relative mt-7 space-y-3">
         {PLAN_CHOICES.map((choice) => {
           const isActive = selectedPlan === choice.key
+          const isFeatured = Boolean(choice.featured)
           return (
             <button
               key={choice.key}
               type="button"
               onClick={() => onSelect(choice.key)}
-              className="flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition"
+              className="w-full rounded-2xl border p-4 text-left transition"
               style={{
-                borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-                backgroundColor: isActive ? "rgba(50,208,116,0.12)" : "rgba(255,255,255,0.04)",
+                borderColor: isActive ? SIGNAL_GREEN : isFeatured ? "rgba(50,208,116,0.38)" : "rgba(255,255,255,0.12)",
+                backgroundColor: isActive
+                  ? "rgba(50,208,116,0.13)"
+                  : isFeatured
+                    ? "rgba(50,208,116,0.07)"
+                    : "rgba(255,255,255,0.035)",
+                boxShadow: isActive || isFeatured ? "0 18px 48px rgba(50,208,116,0.12)" : "none",
+                transform: isFeatured ? "scale(1.015)" : "scale(1)",
               }}
             >
-              <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
-                style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.22)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
-              >
-                {isActive && (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-black text-white">{choice.name}</span>
-                <span className="mt-0.5 block text-sm font-medium text-white/58">{choice.line}</span>
-              </span>
+              <div className="flex items-start gap-4">
+                <span
+                  className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                  style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.22)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
+                >
+                  {isActive && (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-base font-black text-white">{choice.name}</span>
+                    <span
+                      className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.14em]"
+                      style={{ backgroundColor: isFeatured ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: isFeatured ? FOUND_BLACK : "rgba(255,255,255,0.58)" }}
+                    >
+                      {choice.badge}
+                    </span>
+                  </span>
+                  <span className="mt-1 flex items-baseline gap-2">
+                    <span className="text-lg font-black text-white">{choice.price}</span>
+                    <span className="text-sm font-bold" style={{ color: isFeatured ? SIGNAL_GREEN : "rgba(255,255,255,0.54)" }}>{choice.line}</span>
+                  </span>
+                  <span className="mt-1.5 block text-[13px] font-medium leading-5 text-white/50">{choice.detail}</span>
+                </span>
+              </div>
             </button>
           )
         })}
@@ -892,7 +938,7 @@ function PlanChoiceScreen({
           {active.cta}
         </button>
         <Link href="/plans" className="mt-4 block text-center text-xs font-black uppercase tracking-[0.16em] text-white/42 underline underline-offset-4 sm:text-left">
-          Compare plans
+          Compare all plans
         </Link>
       </div>
     </section>
@@ -2092,6 +2138,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 

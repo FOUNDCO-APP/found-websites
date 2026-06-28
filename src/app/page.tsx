@@ -12,7 +12,7 @@ const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedPlan, setSelectedPlan] = useState("found")
+  const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [showPlanChoice, setShowPlanChoice] = useState(true)
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
@@ -34,7 +34,7 @@ export default function Home() {
         setSelectedPlan(planParam)
         setShowPlanChoice(false)
       } else {
-        setSelectedPlan("found")
+        setSelectedPlan("found_pro")
         setShowPlanChoice(true)
       }
       setDrawerOpen(true)
@@ -44,7 +44,7 @@ export default function Home() {
 
   function openDrawer(nextPlan?: string, requirePlanChoice = true) {
     if (drawerOpen || cinematic !== "off") return
-    setSelectedPlan(nextPlan ?? "found")
+    setSelectedPlan(nextPlan ?? "found_pro")
     setShowPlanChoice(requirePlanChoice)
     setCinematic("on")
     setTimeout(() => setCinematic("iris"), 3000)
@@ -440,6 +440,7 @@ export default function Home() {
     </>
   )
 }
+
 
 
 
