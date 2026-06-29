@@ -862,16 +862,16 @@ function PlanChoiceScreen({
     { key: "found_business", label: "Business", price: "$69", regular: "$99", note: "Complete" },
   ]
   const rows = [
-    { label: "Website, copy, photos", plans: ["found", "found_pro", "found_business"] },
-    { label: "Leads + instant replies", plans: ["found", "found_pro", "found_business"] },
-    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
-    { label: "Organized contacts", plans: ["found_pro", "found_business"] },
+    { label: "Site, words, photos", plans: ["found", "found_pro", "found_business"] },
+    { label: "Leads get answered", plans: ["found", "found_pro", "found_business"] },
+    { label: "Follow-up texts", plans: ["found_pro", "found_business"] },
+    { label: "Customer list", plans: ["found_pro", "found_business"] },
     { label: "Bookings + estimates", plans: ["found_business"] },
-    { label: "Deposits + campaigns", plans: ["found_business"] },
+    { label: "Deposits + emails", plans: ["found_business"] },
   ]
 
   return (
-    <section key="plan" className="relative flex min-h-full flex-col justify-center py-6">
+    <section key="plan" className="relative flex min-h-full flex-col justify-center py-5">
       <div
         className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
         style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)" }}
@@ -880,15 +880,15 @@ function PlanChoiceScreen({
         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           Best place to start
         </p>
-        <h1 className="text-[2.15rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
-          Start with the one that keeps working.
+        <h1 className="text-[1.95rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
+          Most owners start with Pro.
         </h1>
-        <p className="mt-4 text-base leading-7 text-white/62">
-          Your site brings in the lead. Pro follows up when you&apos;re busy, driving, or on the job.
+        <p className="mt-3 text-sm leading-6 text-white/58">
+          Pick the plan that fits today. You can change it later.
         </p>
       </div>
 
-      <div className="relative mt-5 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.035]">
+      <div className="relative mt-4 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.035]">
         <div className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] bg-white/[0.045] text-[9px] font-black uppercase tracking-[0.11em] text-white/42">
           <div className="px-3 py-3">Feature</div>
           {plans.map((plan) => {
@@ -898,7 +898,7 @@ function PlanChoiceScreen({
                 key={plan.key}
                 type="button"
                 onClick={() => onSelect(plan.key)}
-                className="px-1 py-3 text-center transition"
+                className="px-1 py-3 text-center transition active:scale-[0.98]"
                 style={{ color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.46)" }}
               >
                 {plan.label}
@@ -915,14 +915,14 @@ function PlanChoiceScreen({
                 key={plan.key}
                 type="button"
                 onClick={() => onSelect(plan.key)}
-                className="px-1 py-2.5 text-center transition"
+                className="px-1 py-2.5 text-center transition active:scale-[0.98]"
                 style={{
                   backgroundColor: activePlan ? "rgba(50,208,116,0.12)" : "transparent",
                   color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.78)",
                 }}
               >
                 {plan.price}
-                <span className="block text-[8px] font-bold uppercase tracking-[0.08em] text-white/34">reg {plan.regular}</span>
+                <span className="block text-[8px] font-light uppercase tracking-[0.08em] text-white/44">reg {plan.regular}</span>
               </button>
             )
           })}
@@ -938,7 +938,7 @@ function PlanChoiceScreen({
                   key={plan.key}
                   type="button"
                   onClick={() => onSelect(plan.key)}
-                  className="flex items-center justify-center px-1 py-2.5 transition"
+                  className="flex items-center justify-center px-1 py-2.5 transition active:scale-[0.98]"
                   style={{ backgroundColor: activePlan ? "rgba(50,208,116,0.08)" : "transparent" }}
                   aria-label={`${has ? "Included in" : "Not included in"} ${plan.label}`}
                 >
@@ -954,7 +954,7 @@ function PlanChoiceScreen({
         ))}
       </div>
 
-      <div className="relative mt-4 grid grid-cols-3 gap-2">
+      <div className="relative mt-3 grid grid-cols-3 gap-2">
         {plans.map((plan) => {
           const activePlan = selectedPlan === plan.key
           return (
@@ -962,7 +962,7 @@ function PlanChoiceScreen({
               key={plan.key}
               type="button"
               onClick={() => onSelect(plan.key)}
-              className="rounded-2xl border px-2 py-3 text-center transition"
+              className="rounded-2xl border px-2 py-3 text-center transition active:scale-[0.98]"
               style={{
                 borderColor: activePlan ? SIGNAL_GREEN : plan.key === "found_pro" ? "rgba(50,208,116,0.34)" : "rgba(255,255,255,0.12)",
                 backgroundColor: activePlan ? "rgba(50,208,116,0.14)" : plan.key === "found_pro" ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.035)",
@@ -976,7 +976,7 @@ function PlanChoiceScreen({
         })}
       </div>
 
-      <div className="relative mt-5">
+      <div className="relative mt-4">
         <button
           type="button"
           onClick={onContinue}
@@ -2183,6 +2183,9 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
+
+
 
 
 
