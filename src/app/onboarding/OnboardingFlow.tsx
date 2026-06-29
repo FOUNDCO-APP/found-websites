@@ -846,6 +846,94 @@ function SlugSheet({
   )
 }
 
+function PlanCompareSheet({
+  selectedPlan,
+  onSelect,
+  onClose,
+}: {
+  selectedPlan: string
+  onSelect: (plan: string) => void
+  onClose: () => void
+}) {
+  const rows = [
+    { label: "Website, copy, photos", plans: ["found", "found_pro", "found_business"] },
+    { label: "Leads saved + instant replies", plans: ["found", "found_pro", "found_business"] },
+    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
+    { label: "Contacts organized", plans: ["found_pro", "found_business"] },
+    { label: "Bookings, estimates, deposits", plans: ["found_business"] },
+    { label: "Reviews, campaigns, team", plans: ["found_business"] },
+  ]
+  const plans = [
+    { key: "found", label: "Starter", price: "$29" },
+    { key: "found_pro", label: "Pro", price: "$39" },
+    { key: "found_business", label: "Business", price: "$69" },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center" style={{ backgroundColor: "rgba(0,0,0,0.62)" }}>
+      <button type="button" aria-label="Close comparison" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} />
+      <div className="relative w-full max-w-xl rounded-t-[1.7rem] border border-white/10 bg-[#101411] px-5 pb-6 pt-4 shadow-[0_-28px_90px_rgba(0,0,0,0.65)]" style={{ maxHeight: "86dvh", overflowY: "auto" }}>
+        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-white/18" />
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Compare plans</p>
+            <h2 className="text-2xl font-light leading-tight text-white">Pick what you need now.</h2>
+            <p className="mt-2 text-sm leading-6 text-white/54">You can change later. Pro is the best fit for most owners.</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/70">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
+          <div className="grid grid-cols-[1.4fr_repeat(3,0.68fr)] bg-white/[0.04] text-[10px] font-black uppercase tracking-[0.12em] text-white/42">
+            <div className="px-3 py-3">Feature</div>
+            {plans.map((plan) => <div key={plan.key} className="px-2 py-3 text-center">{plan.label}</div>)}
+          </div>
+          {rows.map((row) => (
+            <div key={row.label} className="grid grid-cols-[1.4fr_repeat(3,0.68fr)] border-t border-white/8 text-sm">
+              <div className="px-3 py-3 font-semibold leading-5 text-white/72">{row.label}</div>
+              {plans.map((plan) => {
+                const has = row.plans.includes(plan.key)
+                return (
+                  <div key={plan.key} className="flex items-center justify-center px-2 py-3">
+                    {has ? (
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/14" />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-2">
+          {plans.map((plan) => {
+            const active = selectedPlan === plan.key
+            const featured = plan.key === "found_pro"
+            return (
+              <button
+                key={plan.key}
+                type="button"
+                onClick={() => { onSelect(plan.key); onClose() }}
+                className="rounded-2xl border px-2 py-3 text-center transition"
+                style={{
+                  borderColor: active ? SIGNAL_GREEN : featured ? "rgba(50,208,116,0.38)" : "rgba(255,255,255,0.12)",
+                  backgroundColor: active ? "rgba(50,208,116,0.14)" : featured ? "rgba(50,208,116,0.08)" : "rgba(255,255,255,0.04)",
+                }}
+              >
+                <span className="block text-sm font-black text-white">{plan.label}</span>
+                <span className="mt-1 block text-xs font-bold" style={{ color: featured ? SIGNAL_GREEN : "rgba(255,255,255,0.48)" }}>{plan.price}/mo</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
 function PlanChoiceScreen({
   selectedPlan,
   onSelect,
@@ -855,6 +943,7 @@ function PlanChoiceScreen({
   onSelect: (plan: string) => void
   onContinue: () => void
 }) {
+  const [showCompare, setShowCompare] = useState(false)
   const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
   const pro = PLAN_CHOICES.find((p) => p.key === "found_pro") ?? PLAN_CHOICES[1]
   const starter = PLAN_CHOICES.find((p) => p.key === "found") ?? PLAN_CHOICES[0]
@@ -974,10 +1063,13 @@ function PlanChoiceScreen({
         >
           {active.cta}
         </button>
-        <Link href="/plans" className="mt-4 block text-center text-xs font-black uppercase tracking-[0.16em] text-white/42 underline underline-offset-4 sm:text-left">
+        <button type="button" onClick={() => setShowCompare(true)} className="mt-4 block w-full text-center text-xs font-black uppercase tracking-[0.16em] text-white/42 underline underline-offset-4 sm:text-left">
           Compare all plans
-        </Link>
+        </button>
       </div>
+      {showCompare && (
+        <PlanCompareSheet selectedPlan={selectedPlan} onSelect={onSelect} onClose={() => setShowCompare(false)} />
+      )}
     </section>
   )
 }
@@ -2175,6 +2267,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
