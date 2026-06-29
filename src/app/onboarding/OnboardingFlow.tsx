@@ -963,15 +963,20 @@ function PlanChoiceScreen({
                       </span>
                     ))}
                     {card.toolGroup && (
-                      <span className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
-                        <span className="block text-xs font-black leading-5 text-white/75">{card.toolGroup.label}</span>
-                        <span className="mt-1.5 grid gap-1 sm:grid-cols-2">
-                          {card.toolGroup.items.map((item) => (
-                            <span key={item} className="flex items-start gap-2 text-[11px] font-semibold leading-4 text-white/52">
-                              <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-                              {item}
-                            </span>
-                          ))}
+                      <span className="sm:col-span-2 flex items-start gap-2 text-xs font-semibold leading-5 text-white/62">
+                        <svg className="mt-0.5 shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span className="min-w-0">
+                          <span className="block font-black text-white/75">{card.toolGroup.label}</span>
+                          <span className="mt-1.5 grid gap-1 sm:grid-cols-2">
+                            {card.toolGroup.items.map((item) => (
+                              <span key={item} className="flex items-start gap-2 text-[11px] font-semibold leading-4 text-white/52">
+                                <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                                {item}
+                              </span>
+                            ))}
+                          </span>
                         </span>
                       </span>
                     )}
