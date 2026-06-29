@@ -862,12 +862,12 @@ function PlanChoiceScreen({
     { key: "found_business", label: "Business", price: "$69", regular: "$99", note: "Complete" },
   ]
   const rows = [
-    { label: "Site, words, photos", plans: ["found", "found_pro", "found_business"] },
-    { label: "Leads get answered", plans: ["found", "found_pro", "found_business"] },
-    { label: "Follow-up texts", plans: ["found_pro", "found_business"] },
-    { label: "Customer list", plans: ["found_pro", "found_business"] },
-    { label: "Bookings + estimates", plans: ["found_business"] },
-    { label: "Deposits + emails", plans: ["found_business"] },
+    { label: "Website built for you", plans: ["found", "found_pro", "found_business"] },
+    { label: "Leads sent to you", plans: ["found", "found_pro", "found_business"] },
+    { label: "Instant lead reply", plans: ["found", "found_pro", "found_business"] },
+    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
+    { label: "Customer list organized", plans: ["found_pro", "found_business"] },
+    { label: "Bookings, quotes, payments", plans: ["found_business"] },
   ]
 
   return (
@@ -884,7 +884,7 @@ function PlanChoiceScreen({
           Most owners start with Pro.
         </h1>
         <p className="mt-3 text-sm leading-6 text-white/58">
-          Pick the plan that fits today. You can change it later.
+          Starter gets you online. Pro follows up. Business helps you book, quote, and collect payment.
         </p>
       </div>
 
@@ -2183,17 +2183,4 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
