@@ -864,7 +864,7 @@ function PlanChoiceScreen({
       regular: "$39/mo",
       eyebrow: "Done for you",
       headline: "Get online without building it yourself.",
-      bullets: ["Website built for you", "Leads sent to you", "Automatic instant reply to new leads", "Turn photos into branded social posts"],
+      bullets: ["Website built for you", "Leads sent to you", "Automatic instant reply to new leads", "Update your site, photos, and social posts"],
     },
     {
       key: "found_pro",
@@ -883,7 +883,11 @@ function PlanChoiceScreen({
       regular: "$99/mo",
       eyebrow: "All in",
       headline: "Manage jobs from first call to final payment.",
-      bullets: ["Everything in Pro", "All business tools included", "Online ordering, bookings, estimates, payments, and email marketing", "Team access for owners and workers"],
+      bullets: ["Everything in Pro", "Team access for owners and workers", "Manage work from first call to final payment"],
+      toolGroup: {
+        label: "All business tools included:",
+        items: ["Online ordering", "Booking calendar", "Send estimates and collect deposits", "Email marketing"],
+      },
     },
   ]
 
@@ -958,6 +962,19 @@ function PlanChoiceScreen({
                         {bullet}
                       </span>
                     ))}
+                    {card.toolGroup && (
+                      <span className="sm:col-span-2 rounded-2xl border border-white/10 bg-white/[0.025] p-3">
+                        <span className="block text-xs font-black leading-5 text-white/75">{card.toolGroup.label}</span>
+                        <span className="mt-1.5 grid gap-1 sm:grid-cols-2">
+                          {card.toolGroup.items.map((item) => (
+                            <span key={item} className="flex items-start gap-2 text-[11px] font-semibold leading-4 text-white/52">
+                              <span className="mt-[0.45rem] h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                              {item}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                    )}
                   </span>
                 </span>
               </span>
