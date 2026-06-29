@@ -909,7 +909,7 @@ function PlanChoiceScreen({
         </p>
       </div>
 
-      <div className="relative mt-5 grid gap-2.5">
+      <div className="relative mt-5 grid gap-2.5 pb-24">
         {cards.map((card) => {
           const activePlan = selectedPlan === card.key
           return (
@@ -988,20 +988,15 @@ function PlanChoiceScreen({
         })}
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-1 mt-5 px-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
-        <div
-          className="rounded-[2rem] border border-white/12 bg-white/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
-          style={{ WebkitBackdropFilter: "blur(28px)", backdropFilter: "blur(28px)" }}
+      <div className="sticky bottom-0 z-10 mt-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="w-full rounded-full py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap md:py-5"
+          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, boxShadow: "0 14px 34px rgba(0,0,0,0.36)" }}
         >
-          <button
-            type="button"
-            onClick={onContinue}
-            className="w-full rounded-full py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap md:py-5"
-            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-          >
-            {active.cta}
-          </button>
-        </div>
+          {active.cta}
+        </button>
       </div>
     </section>
   )
