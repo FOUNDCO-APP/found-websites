@@ -988,18 +988,20 @@ function PlanChoiceScreen({
         })}
       </div>
 
-      <div
-        className="sticky bottom-0 z-10 -mx-1 mt-5 px-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4"
-        style={{ background: "linear-gradient(180deg, rgba(8,10,9,0) 0%, rgba(8,10,9,0.9) 48%, #080A09 100%)" }}
-      >
-        <button
-          type="button"
-          onClick={onContinue}
-          className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest whitespace-nowrap md:py-6"
-          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, boxShadow: "0 0 40px rgba(50,208,116,0.34)" }}
+      <div className="sticky bottom-0 z-10 -mx-1 mt-5 px-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
+        <div
+          className="rounded-[2rem] border border-white/12 bg-white/10 p-2 shadow-[0_18px_45px_rgba(0,0,0,0.34)] backdrop-blur-2xl"
+          style={{ WebkitBackdropFilter: "blur(28px)", backdropFilter: "blur(28px)" }}
         >
-          {active.cta}
-        </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            className="w-full rounded-full py-4 text-sm font-black uppercase tracking-widest whitespace-nowrap md:py-5"
+            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+          >
+            {active.cta}
+          </button>
+        </div>
       </div>
     </section>
   )
