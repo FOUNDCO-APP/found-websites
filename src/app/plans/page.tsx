@@ -15,14 +15,14 @@ export const metadata: Metadata = {
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
-const IS_FOUNDING_PERIOD = new Date() < FOUNDING_CUTOFF
+const IS_INTRO_RATE_PERIOD = new Date() < INTRO_RATE_CUTOFF
 
 const PLANS = [
-  { key: "found",          name: "Found Starter",  href: "/plans/found",          price: IS_FOUNDING_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
-  { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: IS_FOUNDING_PERIOD ? 39 : 69,  normalPrice: 69, tagline: "Follow up with every lead. Automatically.", featured: true },
-  { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: IS_FOUNDING_PERIOD ? 69 : 99,  normalPrice: 99, tagline: "Run your whole business." },
+  { key: "found",          name: "Found Starter",  href: "/plans/found",          price: IS_INTRO_RATE_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
+  { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: IS_INTRO_RATE_PERIOD ? 39 : 69,  normalPrice: 69, tagline: "Follow up with every lead. Automatically.", featured: true },
+  { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: IS_INTRO_RATE_PERIOD ? 69 : 99,  normalPrice: 99, tagline: "Run your whole business." },
 ]
 
 const ROWS: { label: string; values: (boolean | string)[] }[] = [
@@ -75,7 +75,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          {IS_FOUNDING_PERIOD ? "Intro rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+          {IS_INTRO_RATE_PERIOD ? "Intro rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
         </p>
       </section>
 
@@ -102,17 +102,17 @@ export default function PlansPage() {
             )}
             <p className="text-base font-black text-white mb-1">{plan.tagline}</p>
             <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
-            {IS_FOUNDING_PERIOD && (
+            {IS_INTRO_RATE_PERIOD && (
               <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>${plan.normalPrice}/month</p>
             )}
             <div className="flex items-baseline gap-1 mb-0.5">
               <span className="text-4xl font-light text-white">${plan.price}</span>
               <span className="text-sm font-medium text-white/40">/mo</span>
             </div>
-            {IS_FOUNDING_PERIOD && (
+            {IS_INTRO_RATE_PERIOD && (
               <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
             )}
-            <div className={IS_FOUNDING_PERIOD ? "" : "mt-6"}>
+            <div className={IS_INTRO_RATE_PERIOD ? "" : "mt-6"}>
               <Link
                 href={`/?start=1&plan=${plan.key}`}
                 className="block py-4 rounded-full text-xs font-black uppercase tracking-widest transition text-center"
@@ -180,7 +180,7 @@ export default function PlansPage() {
       {/* Bottom note */}
       <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
-          {IS_FOUNDING_PERIOD
+          {IS_INTRO_RATE_PERIOD
             ? <>Intro rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
             : "Cancel anytime. Results vary by market and business type."}
         </p>

@@ -8,7 +8,7 @@ import SiteFooter from "./SiteFooter"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -27,7 +27,7 @@ interface Props {
 export default function IndustryPage({ industry, eyebrow, headline, subheadline, description, features, faqs, closingLine }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
+  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -62,7 +62,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             >
               Get my site — today
             </button>
-            {isFoundingPeriod && (
+            {isIntroRatePeriod && (
               <div className="flex items-center gap-3 pt-2">
                 <div>
                   <p className="text-xs line-through" style={{ color: "rgba(255,255,255,0.3)" }}>$39/month</p>
@@ -105,7 +105,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             className="rounded-2xl px-8 py-12"
             style={{ backgroundColor: "rgba(50,208,116,0.06)", border: "2px solid rgba(50,208,116,0.3)" }}
           >
-            {isFoundingPeriod && (
+            {isIntroRatePeriod && (
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
                 Intro rate — expires July 15
               </p>
@@ -117,7 +117,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              {isFoundingPeriod ? "Get my site — $29/mo" : "Get my site"}
+              {isIntroRatePeriod ? "Get my site — $29/mo" : "Get my site"}
             </button>
           </div>
         </section>
@@ -158,7 +158,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine}</h2>
             <p className="text-white/45 mb-8 font-medium">
-              {isFoundingPeriod ? "Your site goes live today. Intro rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
+              {isIntroRatePeriod ? "Your site goes live today. Intro rate locked for 12 months." : "Your site goes live today. Cancel anytime."}
             </p>
             <button
               onClick={() => setDrawerOpen(true)}
@@ -168,7 +168,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               Get my site — today
             </button>
             <p className="mt-6 text-xs text-white/25">
-              {isFoundingPeriod
+              {isIntroRatePeriod
                 ? <>Intro rate expires July 15 · locked for 12 months, then $39/month.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans

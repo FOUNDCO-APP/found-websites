@@ -14,10 +14,10 @@ import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typograp
 import { getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 
-const PLAN_META: Record<string, { label: string; founding: number; normal: number; color: string }> = {
-  found:          { label: "Found Starter",  founding: 29, normal: 39,  color: GREEN },
-  found_pro:      { label: "Found Pro",      founding: 39, normal: 69,  color: GREEN },
-  found_business: { label: "Found Business", founding: 69, normal: 99,  color: GREEN },
+const PLAN_META: Record<string, { label: string; intro: number; normal: number; color: string }> = {
+  found:          { label: "Found Starter",  intro: 29, normal: 39,  color: GREEN },
+  found_pro:      { label: "Found Pro",      intro: 39, normal: 69,  color: GREEN },
+  found_business: { label: "Found Business", intro: 69, normal: 99,  color: GREEN },
 }
 
 const PLAN_FEATURES: Record<string, string[]> = {
@@ -53,14 +53,14 @@ const PLAN_PROMISE: Record<string, string> = {
   found_business: "Found helps run the job from first booking to final review.",
 }
 
-const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string; headline: string; body: string; foundingPrice: number; normalPrice: number; features: string[] }> = {
+const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string; headline: string; body: string; introPrice: number; normalPrice: number; features: string[] }> = {
   found: {
     plan: "found_pro",
     label: "Found Pro",
     eyebrow: "Recommended next",
     headline: "Stop losing leads when the day gets busy.",
     body: "Starter gets you found. Pro keeps every inquiry warm after it arrives, even when you're on a job, driving, or done for the day.",
-    foundingPrice: 39,
+    introPrice: 39,
     normalPrice: 69,
     features: [
       "Every new lead gets followed up automatically",
@@ -76,7 +76,7 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string;
     eyebrow: "For growing crews",
     headline: "Run the job, not just the website.",
     body: "Pro helps with leads. Business helps with the work after the lead says yes: bookings, estimates, deposits, reviews, and client galleries.",
-    foundingPrice: 69,
+    introPrice: 69,
     normalPrice: 99,
     features: [
       "Clients book themselves without back-and-forth texts",
@@ -138,11 +138,11 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const plan = company?.plan ?? "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
-  const isFoundingMember = !!company?.is_founding_member
-  const useIntroPrice = !isActive || isFoundingMember
+  const hasIntroRate = !!company?.is_founding_member
+  const useIntroPrice = !isActive || hasIntroRate
   const hasStripe = !!company?.stripe_customer_id
-  const displayPrice = useIntroPrice ? meta.founding : meta.normal
-  const upgradePrice = upgrade ? (useIntroPrice ? upgrade.foundingPrice : upgrade.normalPrice) : 0
+  const displayPrice = useIntroPrice ? meta.intro : meta.normal
+  const upgradePrice = upgrade ? (useIntroPrice ? upgrade.introPrice : upgrade.normalPrice) : 0
 
   const industryCategory = company?.industry_category ?? ""
   const relevantAddons = getRelevantAddons(industryCategory)
@@ -249,7 +249,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 10px ${meta.color}`, flexShrink: 0 }} />
                   <span style={{ ...TYPE.caption, color: meta.color }}>{meta.label}</span>
-                  {isFoundingMember && (
+                  {hasIntroRate && (
                     <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
                       Intro
                     </span>
@@ -267,10 +267,10 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
 
             <p style={{ margin: "0 0 16px", ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
               {isActive
-                ? isFoundingMember
-                  ? `Your intro rate is locked in. You save $${meta.normal - meta.founding}/month compared with the regular $${meta.normal}/month price.`
+                ? hasIntroRate
+                  ? `Your intro rate is locked in. You save $${meta.normal - meta.intro}/month compared with the regular $${meta.normal}/month price.`
                   : "Your subscription is active."
-                : `Activate today to lock in $${meta.founding}/month before the regular $${meta.normal}/month price.`}
+                : `Activate today to lock in $${meta.intro}/month before the regular $${meta.normal}/month price.`}
             </p>
 
             <div style={{ display: "grid", gap: 8 }}>
@@ -370,7 +370,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               </MoreActivateButton>
             ) : null}
             <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 700, textAlign: "center" as const, color: "rgba(8,10,9,0.46)" }}>
-              {isFoundingMember
+              {hasIntroRate
                 ? `Intro price locked. Regular price is $${upgrade.normalPrice}/month.`
                 : "Upgrade anytime. Your site, leads, and photos stay with you."}
             </p>

@@ -4,11 +4,11 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Stripe from "stripe"
 
-const FOUNDING_MEMBER_LIMIT = 25
+const INTRO_RATE_LIMIT = 25
 // July 15 midnight Arizona time (UTC-7, no DST)
-const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
-async function getFoundingMemberCount(): Promise<number> {
+async function getIntroRateCount(): Promise<number> {
   const admin = createAdminClient()
   const { count } = await admin
     .from("companies")
@@ -32,11 +32,11 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  // Founding member = before July 15 AND under the slot limit
-  const foundingCount = await getFoundingMemberCount()
-  const isFoundingMember = new Date() < FOUNDING_CUTOFF && foundingCount < FOUNDING_MEMBER_LIMIT
+  // Intro rate = before July 15 AND under the slot limit
+  const introRateCount = await getIntroRateCount()
+  const hasIntroRate = new Date() < INTRO_RATE_CUTOFF && introRateCount < INTRO_RATE_LIMIT
 
-  const priceId = isFoundingMember
+  const priceId = hasIntroRate
     ? (process.env.STRIPE_PRICE_ID_FOUND_FOUNDING ?? process.env.STRIPE_PRICE_ID_FOUND)
     : process.env.STRIPE_PRICE_ID_FOUND
 
@@ -50,7 +50,7 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
 
   await supabase.from("companies").update({ stripe_customer_id: customer.id }).eq("id", company.id)
 
-  if (isFoundingMember) {
+  if (hasIntroRate) {
     await supabase.from("companies").update({ is_founding_member: true }).eq("id", company.id)
   }
 
@@ -60,7 +60,7 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: 14,
-      metadata: { company_id: company.id, is_founding_member: isFoundingMember ? "true" : "false" },
+      metadata: { company_id: company.id, intro_rate: hasIntroRate ? "true" : "false" },
     },
     payment_method_collection: "always",
     success_url: `https://${slug}.foundco.app?trial=activated`,

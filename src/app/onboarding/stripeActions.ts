@@ -16,11 +16,11 @@ function getAdminClient() {
 }
 
 // July 15 midnight Arizona time (UTC-7, no DST)
-const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 function priceIdForPlan(plan?: string): string | undefined {
-  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
-  if (isFoundingPeriod) {
+  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+  if (isIntroRatePeriod) {
     if (plan === "found_pro")      return process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING
     if (plan === "found_business") return process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING
     return process.env.STRIPE_PRICE_ID_FOUND_FOUNDING

@@ -8,14 +8,14 @@ import SiteFooter from "@/components/SiteFooter"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const FOUNDING_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
+const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 export default function Home() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [showPlanChoice, setShowPlanChoice] = useState(true)
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
-  const isFoundingPeriod = new Date() < FOUNDING_CUTOFF
+  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
 
   useEffect(() => {
     document.documentElement.style.backgroundColor = FOUND_BLACK
@@ -167,8 +167,8 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Promo banner — only visible during founding period ── */}
-        {isFoundingPeriod && (
+        {/* ── Promo banner — only visible during intro-rate period ── */}
+        {isIntroRatePeriod && (
           <section style={{ backgroundColor: SIGNAL_GREEN }}>
             <div className="px-6 py-20 md:px-10 md:py-28 max-w-7xl mx-auto">
               <div className="md:grid md:grid-cols-2 md:gap-20 md:items-center">
@@ -213,7 +213,7 @@ export default function Home() {
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
               <p className="mt-5 text-base text-white/50 font-medium">
-            {isFoundingPeriod ? "Intro rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+            {isIntroRatePeriod ? "Intro rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
           </p>
             </div>
 
@@ -223,7 +223,7 @@ export default function Home() {
                   key: "found",
                   tagline: "Get online today.",
                   name: "Found",
-                  price: isFoundingPeriod ? "$29" : "$39",
+                  price: isIntroRatePeriod ? "$29" : "$39",
                   normalPrice: "$39",
                   features: [
                     "Complete website, five pages",
@@ -239,7 +239,7 @@ export default function Home() {
                   key: "found_pro",
                   tagline: "Follow up with every lead. Automatically.",
                   name: "Found Pro",
-                  price: isFoundingPeriod ? "$39" : "$69",
+                  price: isIntroRatePeriod ? "$39" : "$69",
                   normalPrice: "$69",
                   featured: true,
                   features: [
@@ -257,7 +257,7 @@ export default function Home() {
                   key: "found_business",
                   tagline: "Run your whole business.",
                   name: "Found Business",
-                  price: isFoundingPeriod ? "$69" : "$99",
+                  price: isIntroRatePeriod ? "$69" : "$99",
                   normalPrice: "$99",
                   features: [
                     "Everything in Found Pro",
@@ -300,14 +300,14 @@ export default function Home() {
                   </p>
                   <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
                   <div className="mb-8">
-                    {isFoundingPeriod && (
+                    {isIntroRatePeriod && (
                       <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.normalPrice}/month</p>
                     )}
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-light text-white">{plan.price}</span>
                       <span className="text-sm text-white/40 font-medium">/month</span>
                     </div>
-                    {isFoundingPeriod && (
+                    {isIntroRatePeriod && (
                       <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
                     )}
                   </div>
@@ -333,7 +333,7 @@ export default function Home() {
             </div>
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
-              {isFoundingPeriod
+              {isIntroRatePeriod
                 ? <>Intro rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
                 : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
               }

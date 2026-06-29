@@ -14,10 +14,11 @@ function setupIntentIdFromSecret(secret: string): string | null {
   return secret.split("_secret_")[0] || null
 }
 
-function priceIdForPlan(plan: string, founding: boolean): string | undefined {
-  if (plan === "found_business") return founding ? process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_BUSINESS
-  if (plan === "found_pro") return founding ? process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_PRO
-  return founding ? process.env.STRIPE_PRICE_ID_FOUND_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND
+// Stripe env vars still use their original names; product language is intro rate.
+function priceIdForPlan(plan: string, intro: boolean): string | undefined {
+  if (plan === "found_business") return intro ? process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_BUSINESS
+  if (plan === "found_pro") return intro ? process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND_PRO
+  return intro ? process.env.STRIPE_PRICE_ID_FOUND_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND
 }
 
 export async function createActivationSetup(slug: string, targetPlan?: string | null, targetAddonSlug?: string | null): Promise<{
@@ -41,8 +42,8 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   if ((company as Record<string, unknown>).subscription_status === "active") return null
 
   const requestedPlan = targetPlan || company.plan || "found"
-  const useFoundingPrice = !!company.is_founding_member || (company.subscription_status !== "active" && company.subscription_status !== "trialing")
-  const priceId = priceIdForPlan(requestedPlan, useFoundingPrice)
+  const useIntroPrice = !!company.is_founding_member || (company.subscription_status !== "active" && company.subscription_status !== "trialing")
+  const priceId = priceIdForPlan(requestedPlan, useIntroPrice)
   if (!priceId) {
     console.error("[Activate] Missing Stripe price for plan", requestedPlan)
     return null
@@ -58,9 +59,9 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
       const existingIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
-      const matchesFoundingPrice = existingIntent?.metadata?.founding_price === String(useFoundingPrice)
+      const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
-      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesFoundingPrice && hasNoAddon) {
+      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesIntroPrice && hasNoAddon) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
       }
     }
@@ -77,7 +78,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, founding_price: String(useFoundingPrice), addon_slug: targetAddonSlug ?? "" },
+      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, intro_rate: String(useIntroPrice), addon_slug: targetAddonSlug ?? "" },
     })
 
     if (!setupIntent.client_secret) {
@@ -169,7 +170,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       pending_setup_intent_secret: null,
       plan,
     }
-    if (setupIntent.metadata?.founding_price === "true") companyUpdate.is_founding_member = true
+    if (setupIntent.metadata?.intro_rate === "true") companyUpdate.is_founding_member = true
 
     await admin
       .from("companies")

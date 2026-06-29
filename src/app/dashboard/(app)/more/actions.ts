@@ -156,7 +156,8 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY)
 }
 
-function foundingPriceId(plan: string): string | undefined {
+// Stripe env vars still use their original names; product language is intro rate.
+function introPriceId(plan: string): string | undefined {
   if (plan === "found_pro")      return process.env.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING
   if (plan === "found_business") return process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING
   return process.env.STRIPE_PRICE_ID_FOUND_FOUNDING
@@ -207,8 +208,8 @@ export async function startUpgradeCheckout(formData: FormData) {
 
   if (!company) return
 
-  const isFoundingMember = !!company.is_founding_member
-  const priceId = isFoundingMember ? foundingPriceId(targetPlan) : regularPriceId(targetPlan)
+  const hasIntroRate = !!company.is_founding_member
+  const priceId = hasIntroRate ? introPriceId(targetPlan) : regularPriceId(targetPlan)
   if (!priceId) return
 
   // Already has a Stripe subscription — update the price directly
