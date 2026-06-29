@@ -846,94 +846,6 @@ function SlugSheet({
   )
 }
 
-function PlanCompareSheet({
-  selectedPlan,
-  onSelect,
-  onClose,
-}: {
-  selectedPlan: string
-  onSelect: (plan: string) => void
-  onClose: () => void
-}) {
-  const rows = [
-    { label: "Website, copy, photos", plans: ["found", "found_pro", "found_business"] },
-    { label: "Leads saved + instant replies", plans: ["found", "found_pro", "found_business"] },
-    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
-    { label: "Contacts organized", plans: ["found_pro", "found_business"] },
-    { label: "Bookings, estimates, deposits", plans: ["found_business"] },
-    { label: "Reviews, campaigns, team", plans: ["found_business"] },
-  ]
-  const plans = [
-    { key: "found", label: "Starter", price: "$29" },
-    { key: "found_pro", label: "Pro", price: "$39" },
-    { key: "found_business", label: "Business", price: "$69" },
-  ]
-
-  return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center" style={{ backgroundColor: "rgba(0,0,0,0.62)" }}>
-      <button type="button" aria-label="Close comparison" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} />
-      <div className="relative w-full max-w-xl rounded-t-[1.7rem] border border-white/10 bg-[#101411] px-5 pb-6 pt-4 shadow-[0_-28px_90px_rgba(0,0,0,0.65)]" style={{ maxHeight: "86dvh", overflowY: "auto" }}>
-        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-white/18" />
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="mb-2 text-xs font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Compare plans</p>
-            <h2 className="text-2xl font-light leading-tight text-white">Pick what you need now.</h2>
-            <p className="mt-2 text-sm leading-6 text-white/54">You can change later. Pro is the best fit for most owners.</p>
-          </div>
-          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 text-white/70">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" /></svg>
-          </button>
-        </div>
-
-        <div className="mt-5 overflow-hidden rounded-2xl border border-white/10">
-          <div className="grid grid-cols-[1.4fr_repeat(3,0.68fr)] bg-white/[0.04] text-[10px] font-black uppercase tracking-[0.12em] text-white/42">
-            <div className="px-3 py-3">Feature</div>
-            {plans.map((plan) => <div key={plan.key} className="px-2 py-3 text-center">{plan.label}</div>)}
-          </div>
-          {rows.map((row) => (
-            <div key={row.label} className="grid grid-cols-[1.4fr_repeat(3,0.68fr)] border-t border-white/8 text-sm">
-              <div className="px-3 py-3 font-semibold leading-5 text-white/72">{row.label}</div>
-              {plans.map((plan) => {
-                const has = row.plans.includes(plan.key)
-                return (
-                  <div key={plan.key} className="flex items-center justify-center px-2 py-3">
-                    {has ? (
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                    ) : (
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/14" />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5 grid grid-cols-3 gap-2">
-          {plans.map((plan) => {
-            const active = selectedPlan === plan.key
-            const featured = plan.key === "found_pro"
-            return (
-              <button
-                key={plan.key}
-                type="button"
-                onClick={() => { onSelect(plan.key); onClose() }}
-                className="rounded-2xl border px-2 py-3 text-center transition"
-                style={{
-                  borderColor: active ? SIGNAL_GREEN : featured ? "rgba(50,208,116,0.38)" : "rgba(255,255,255,0.12)",
-                  backgroundColor: active ? "rgba(50,208,116,0.14)" : featured ? "rgba(50,208,116,0.08)" : "rgba(255,255,255,0.04)",
-                }}
-              >
-                <span className="block text-sm font-black text-white">{plan.label}</span>
-                <span className="mt-1 block text-xs font-bold" style={{ color: featured ? SIGNAL_GREEN : "rgba(255,255,255,0.48)" }}>{plan.price}/mo</span>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
 function PlanChoiceScreen({
   selectedPlan,
   onSelect,
@@ -943,15 +855,23 @@ function PlanChoiceScreen({
   onSelect: (plan: string) => void
   onContinue: () => void
 }) {
-  const [showCompare, setShowCompare] = useState(false)
   const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
-  const pro = PLAN_CHOICES.find((p) => p.key === "found_pro") ?? PLAN_CHOICES[1]
-  const starter = PLAN_CHOICES.find((p) => p.key === "found") ?? PLAN_CHOICES[0]
-  const business = PLAN_CHOICES.find((p) => p.key === "found_business") ?? PLAN_CHOICES[2]
-  const proActive = selectedPlan === pro.key
-  const regularPrice = (key: string) => key === "found" ? "$39/mo" : key === "found_pro" ? "$69/mo" : "$99/mo"
+  const plans = [
+    { key: "found", label: "Starter", price: "$29", regular: "$39", note: "Website" },
+    { key: "found_pro", label: "Pro", price: "$39", regular: "$69", note: "Best fit" },
+    { key: "found_business", label: "Business", price: "$69", regular: "$99", note: "Complete" },
+  ]
+  const rows = [
+    { label: "Website, copy, photos", plans: ["found", "found_pro", "found_business"] },
+    { label: "Leads + instant replies", plans: ["found", "found_pro", "found_business"] },
+    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
+    { label: "Organized contacts", plans: ["found_pro", "found_business"] },
+    { label: "Bookings + estimates", plans: ["found_business"] },
+    { label: "Deposits + campaigns", plans: ["found_business"] },
+  ]
+
   return (
-    <section key="plan" className="relative flex min-h-full flex-col justify-center py-7">
+    <section key="plan" className="relative flex min-h-full flex-col justify-center py-6">
       <div
         className="pointer-events-none absolute bottom-0 -left-7 -right-7 md:-left-12 md:-right-12 h-2/3"
         style={{ background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)" }}
@@ -960,7 +880,7 @@ function PlanChoiceScreen({
         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           Best place to start
         </p>
-        <h1 className="text-[2.28rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
+        <h1 className="text-[2.15rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
           Start with the one that keeps working.
         </h1>
         <p className="mt-4 text-base leading-7 text-white/62">
@@ -968,93 +888,95 @@ function PlanChoiceScreen({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onSelect(pro.key)}
-        className="relative mt-7 w-full rounded-[1.35rem] border p-5 text-left transition"
-        style={{
-          borderColor: proActive ? SIGNAL_GREEN : "rgba(50,208,116,0.46)",
-          background: "linear-gradient(180deg, rgba(50,208,116,0.15) 0%, rgba(50,208,116,0.075) 100%)",
-          boxShadow: "0 22px 70px rgba(50,208,116,0.16)",
-        }}
-      >
-        <div className="flex items-start gap-4">
-          <span
-            className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
-            style={{ borderColor: SIGNAL_GREEN, backgroundColor: proActive ? SIGNAL_GREEN : "transparent" }}
-          >
-            {proActive && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            )}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="text-xl font-black text-white">Found Pro</span>
-              <span className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em]" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                Recommended
-              </span>
-            </span>
-            <span className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-              <span className="text-[1.65rem] font-black leading-none text-white">$39/mo</span>
-              <span className="text-xs font-semibold tracking-[0.02em] text-white/52">regular <span className="line-through">$69/mo</span></span>
-            </span>
-            <span className="mt-2 block text-sm font-black" style={{ color: SIGNAL_GREEN }}>
-              Starter + automatic follow-up and organized contacts
-            </span>
-            <span className="mt-3 block text-sm font-medium leading-6 text-white/68">
-              Everything in Starter, plus every new lead gets followed up and organized automatically.
-            </span>
-            <span className="mt-3 inline-flex rounded-full px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: "rgba(50,208,116,0.14)", color: SIGNAL_GREEN }}>
-              Only $10/mo more than Starter
-            </span>
-          </span>
+      <div className="relative mt-5 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.035]">
+        <div className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] bg-white/[0.045] text-[9px] font-black uppercase tracking-[0.11em] text-white/42">
+          <div className="px-3 py-3">Feature</div>
+          {plans.map((plan) => {
+            const activePlan = selectedPlan === plan.key
+            return (
+              <button
+                key={plan.key}
+                type="button"
+                onClick={() => onSelect(plan.key)}
+                className="px-1 py-3 text-center transition"
+                style={{ color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.46)" }}
+              >
+                {plan.label}
+              </button>
+            )
+          })}
         </div>
-      </button>
+        <div className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] border-t border-white/8 text-[11px] font-black text-white">
+          <div className="px-3 py-2.5 text-white/36">Intro rate</div>
+          {plans.map((plan) => {
+            const activePlan = selectedPlan === plan.key
+            return (
+              <button
+                key={plan.key}
+                type="button"
+                onClick={() => onSelect(plan.key)}
+                className="px-1 py-2.5 text-center transition"
+                style={{
+                  backgroundColor: activePlan ? "rgba(50,208,116,0.12)" : "transparent",
+                  color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.78)",
+                }}
+              >
+                {plan.price}
+                <span className="block text-[8px] font-bold uppercase tracking-[0.08em] text-white/34">reg {plan.regular}</span>
+              </button>
+            )
+          })}
+        </div>
+        {rows.map((row) => (
+          <div key={row.label} className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] border-t border-white/8 text-sm">
+            <div className="px-3 py-2.5 text-[13px] font-bold leading-5 text-white/72">{row.label}</div>
+            {plans.map((plan) => {
+              const has = row.plans.includes(plan.key)
+              const activePlan = selectedPlan === plan.key
+              return (
+                <button
+                  key={plan.key}
+                  type="button"
+                  onClick={() => onSelect(plan.key)}
+                  className="flex items-center justify-center px-1 py-2.5 transition"
+                  style={{ backgroundColor: activePlan ? "rgba(50,208,116,0.08)" : "transparent" }}
+                  aria-label={`${has ? "Included in" : "Not included in"} ${plan.label}`}
+                >
+                  {has ? (
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                  ) : (
+                    <span className="h-1.5 w-1.5 rounded-full bg-white/14" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </div>
 
-      <div className="relative mt-3 grid gap-2">
-        {([starter, business] as const).map((choice) => {
-          const isActive = selectedPlan === choice.key
+      <div className="relative mt-4 grid grid-cols-3 gap-2">
+        {plans.map((plan) => {
+          const activePlan = selectedPlan === plan.key
           return (
             <button
-              key={choice.key}
+              key={plan.key}
               type="button"
-              onClick={() => onSelect(choice.key)}
-              className="w-full rounded-2xl border px-4 py-3.5 text-left transition"
+              onClick={() => onSelect(plan.key)}
+              className="rounded-2xl border px-2 py-3 text-center transition"
               style={{
-                borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.11)",
-                backgroundColor: isActive ? "rgba(50,208,116,0.10)" : "rgba(255,255,255,0.035)",
+                borderColor: activePlan ? SIGNAL_GREEN : plan.key === "found_pro" ? "rgba(50,208,116,0.34)" : "rgba(255,255,255,0.12)",
+                backgroundColor: activePlan ? "rgba(50,208,116,0.14)" : plan.key === "found_pro" ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.035)",
               }}
             >
-              <div className="flex items-start gap-3">
-                <span
-                  className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
-                  style={{ borderColor: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.20)", backgroundColor: isActive ? SIGNAL_GREEN : "transparent" }}
-                >
-                  {isActive && (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-base font-black text-white">{choice.name}</span>
-                    <span className="text-base font-black text-white/88">{choice.price}</span>
-                    <span className="text-[11px] font-semibold tracking-[0.02em] text-white/48">regular <span className="line-through">{regularPrice(choice.key)}</span></span>
-                  </span>
-                  <span className="mt-1 block text-sm font-bold" style={{ color: isActive ? SIGNAL_GREEN : "rgba(255,255,255,0.58)" }}>
-                    {choice.key === "found" ? "Website, leads, photos, instant replies" : "Pro + bookings, estimates, deposits"}
-                  </span>
-                </span>
-              </div>
+              <span className="block text-sm font-black text-white">{plan.label}</span>
+              <span className="mt-1 block text-xs font-bold" style={{ color: activePlan || plan.key === "found_pro" ? SIGNAL_GREEN : "rgba(255,255,255,0.48)" }}>{plan.price}/mo</span>
+              <span className="mt-0.5 block text-[9px] font-black uppercase tracking-[0.08em] text-white/34">{plan.note}</span>
             </button>
           )
         })}
       </div>
 
-      <div className="relative mt-6">
+      <div className="relative mt-5">
         <button
           type="button"
           onClick={onContinue}
@@ -1063,13 +985,7 @@ function PlanChoiceScreen({
         >
           {active.cta}
         </button>
-        <button type="button" onClick={() => setShowCompare(true)} className="mt-4 block w-full text-center text-xs font-black uppercase tracking-[0.16em] text-white/42 underline underline-offset-4 sm:text-left">
-          Compare all plans
-        </button>
       </div>
-      {showCompare && (
-        <PlanCompareSheet selectedPlan={selectedPlan} onSelect={onSelect} onClose={() => setShowCompare(false)} />
-      )}
     </section>
   )
 }
@@ -2267,6 +2183,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     </>
   )
 }
+
 
 
 
