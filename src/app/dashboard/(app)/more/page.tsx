@@ -135,13 +135,14 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const addonUnavailable = sp.addon_unavailable === "1"
 
   const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
-  const plan = isActive ? (company?.plan ?? "found") : "found"
+  const plan = company?.plan ?? "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
   const isFoundingMember = !!company?.is_founding_member
+  const useIntroPrice = !isActive || isFoundingMember
   const hasStripe = !!company?.stripe_customer_id
-  const displayPrice = isFoundingMember ? meta.founding : meta.normal
-  const upgradePrice = upgrade ? (isFoundingMember ? upgrade.foundingPrice : upgrade.normalPrice) : 0
+  const displayPrice = useIntroPrice ? meta.founding : meta.normal
+  const upgradePrice = upgrade ? (useIntroPrice ? upgrade.foundingPrice : upgrade.normalPrice) : 0
 
   const industryCategory = company?.industry_category ?? ""
   const relevantAddons = getRelevantAddons(industryCategory)

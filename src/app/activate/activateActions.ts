@@ -41,7 +41,8 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   if ((company as Record<string, unknown>).subscription_status === "active") return null
 
   const requestedPlan = targetPlan || company.plan || "found"
-  const priceId = priceIdForPlan(requestedPlan, !!company.is_founding_member)
+  const useFoundingPrice = !!company.is_founding_member || (company.subscription_status !== "active" && company.subscription_status !== "trialing")
+  const priceId = priceIdForPlan(requestedPlan, useFoundingPrice)
   if (!priceId) {
     console.error("[Activate] Missing Stripe price for plan", requestedPlan)
     return null
@@ -57,8 +58,9 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
       const existingIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
+      const matchesFoundingPrice = existingIntent?.metadata?.founding_price === String(useFoundingPrice)
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
-      if (existingIntent?.status === "requires_payment_method" && matchesPlan && hasNoAddon) {
+      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesFoundingPrice && hasNoAddon) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
       }
     }
@@ -75,7 +77,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, addon_slug: targetAddonSlug ?? "" },
+      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, founding_price: String(useFoundingPrice), addon_slug: targetAddonSlug ?? "" },
     })
 
     if (!setupIntent.client_secret) {
@@ -162,13 +164,16 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       }
     }
 
+    const companyUpdate: Record<string, string | boolean | null> = {
+      subscription_status: "active",
+      pending_setup_intent_secret: null,
+      plan,
+    }
+    if (setupIntent.metadata?.founding_price === "true") companyUpdate.is_founding_member = true
+
     await admin
       .from("companies")
-      .update({
-        subscription_status: "active",
-        pending_setup_intent_secret: null,
-        plan,
-      })
+      .update(companyUpdate)
       .eq("slug", slug)
 
     return true

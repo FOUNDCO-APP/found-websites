@@ -6,6 +6,7 @@ import DashboardNav from "@/components/dashboard/DashboardNav"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
+import BusinessDisplayNamePrompt from "@/components/dashboard/BusinessDisplayNamePrompt"
 
 import { BLACK } from "@/lib/dashboard/typography"
 
@@ -100,6 +101,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
             )}
           </div>
         </header>
+
+        {company && (
+          <BusinessDisplayNamePrompt initialName={company.name} slug={company.slug} />
+        )}
 
         {/* Activation banner */}
         {company && company.subscription_status !== "active" && company.subscription_status !== "trialing" && (
