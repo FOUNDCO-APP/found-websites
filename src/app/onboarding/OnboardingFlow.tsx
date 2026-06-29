@@ -988,11 +988,14 @@ function PlanChoiceScreen({
         })}
       </div>
 
-      <div className="relative mt-5">
+      <div
+        className="sticky bottom-0 z-10 -mx-1 mt-5 px-1 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4"
+        style={{ background: "linear-gradient(180deg, rgba(8,10,9,0) 0%, rgba(8,10,9,0.9) 48%, #080A09 100%)" }}
+      >
         <button
           type="button"
           onClick={onContinue}
-          className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest whitespace-nowrap sm:w-auto sm:px-12 md:py-6"
+          className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest whitespace-nowrap md:py-6"
           style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, boxShadow: "0 0 40px rgba(50,208,116,0.34)" }}
         >
           {active.cta}
