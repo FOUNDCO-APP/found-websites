@@ -864,7 +864,7 @@ function PlanChoiceScreen({
       regular: "$39/mo",
       eyebrow: "Done for you",
       headline: "Get online without building it yourself.",
-      bullets: ["Website built for you", "Leads sent to you", "Instant lead reply", "Update your website photos"],
+      bullets: ["Website built for you", "Leads sent to you", "Automatic instant reply to new leads", "Update your website photos"],
     },
     {
       key: "found_pro",
@@ -873,7 +873,7 @@ function PlanChoiceScreen({
       regular: "$69/mo",
       eyebrow: "Recommended",
       headline: "Stop losing leads when you're busy.",
-      bullets: ["Everything in Starter", "Automatic lead follow-up", "Customer list organized", "Choose one: ordering, bookings, estimates, or emails"],
+      bullets: ["Everything in Starter", "Automatic follow-up messages sent for you", "Customer list organized", "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing"],
       featured: true,
     },
     {
@@ -883,7 +883,7 @@ function PlanChoiceScreen({
       regular: "$99/mo",
       eyebrow: "All in",
       headline: "Manage jobs from first call to final payment.",
-      bullets: ["Everything in Pro", "Ordering, bookings, estimates, and emails", "Collect deposits", "Team access"],
+      bullets: ["Everything in Pro", "Online ordering, bookings, estimates, and email marketing", "Collect deposits", "Team access"],
     },
   ]
 
@@ -946,7 +946,7 @@ function PlanChoiceScreen({
                     <span className="text-[1.35rem] font-black leading-none text-white">{card.price}</span>
                     <span className="text-xs font-medium tracking-[0.01em] text-white/62">regular <span className="line-through decoration-white/45 decoration-2">{card.regular}</span></span>
                   </span>
-                  <span className="mt-2 block text-sm font-black leading-5" style={{ color: activePlan || card.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.72)" }}>
+                  <span className="mt-2 block text-sm font-black leading-5" style={{ color: SIGNAL_GREEN }}>
                     {card.headline}
                   </span>
                   <span className="mt-3 grid gap-1.5 sm:grid-cols-2">
