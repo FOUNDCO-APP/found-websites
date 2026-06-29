@@ -40,7 +40,7 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Your crew contributes from the field",    values: [false, true, true] },
   { label: "Rewrite any page on your site, anytime",  values: [false, true, true] },
   { label: "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing", values: [false, true, true] },
-  { label: "All business tools included",             values: [false, false, true] },
+  { label: "All business tools included: online ordering, bookings, estimates, payments, and email marketing", values: [false, false, true] },
   { label: "Payment setup where it matters",          values: [false, true, true] },
   { label: "More five-star reviews, without asking",  values: [false, false, true] },
   { label: "Reach your full client list",             values: [false, false, true] },

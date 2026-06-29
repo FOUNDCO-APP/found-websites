@@ -261,7 +261,7 @@ export default function Home() {
                   normalPrice: "$99",
                   features: [
                     "Everything in Found Pro",
-                    "All business tools included",
+                    "All business tools included: online ordering, bookings, estimates, payments, and email marketing",
                     "Payment setup where it matters",
                     "More five-star reviews, without asking",
                     "Reach your full client list",
