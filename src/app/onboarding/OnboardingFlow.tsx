@@ -856,18 +856,35 @@ function PlanChoiceScreen({
   onContinue: () => void
 }) {
   const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
-  const plans = [
-    { key: "found", label: "Starter", price: "$29", regular: "$39", note: "Website" },
-    { key: "found_pro", label: "Pro", price: "$39", regular: "$69", note: "Best fit" },
-    { key: "found_business", label: "Business", price: "$69", regular: "$99", note: "Complete" },
-  ]
-  const rows = [
-    { label: "Website built for you", plans: ["found", "found_pro", "found_business"] },
-    { label: "Leads sent to you", plans: ["found", "found_pro", "found_business"] },
-    { label: "Instant lead reply", plans: ["found", "found_pro", "found_business"] },
-    { label: "Automatic follow-up", plans: ["found_pro", "found_business"] },
-    { label: "Customer list organized", plans: ["found_pro", "found_business"] },
-    { label: "Bookings, quotes, payments", plans: ["found_business"] },
+  const cards = [
+    {
+      key: "found",
+      name: "Found Starter",
+      price: "$29/mo",
+      regular: "$39/mo",
+      eyebrow: "Done for you",
+      headline: "Get online without building it yourself.",
+      bullets: ["Website built for you", "Leads sent to you", "Instant lead reply", "Update photos from your phone"],
+    },
+    {
+      key: "found_pro",
+      name: "Found Pro",
+      price: "$39/mo",
+      regular: "$69/mo",
+      eyebrow: "Recommended",
+      headline: "Stop losing leads when you're busy.",
+      bullets: ["Everything in Starter", "Automatic lead follow-up", "Customer list organized", "Choose one growth tool"],
+      featured: true,
+    },
+    {
+      key: "found_business",
+      name: "Found Business",
+      price: "$69/mo",
+      regular: "$99/mo",
+      eyebrow: "All in",
+      headline: "Run the work after they say yes.",
+      bullets: ["Everything in Pro", "All growth tools included", "Bookings, quotes, deposits", "Team access"],
+    },
   ]
 
   return (
@@ -884,99 +901,72 @@ function PlanChoiceScreen({
           Most owners start with Pro.
         </h1>
         <p className="mt-3 text-sm leading-6 text-white/58">
-          Starter gets you online. Pro follows up. Business helps you book, quote, and collect payment.
+          Starter beats DIY. Pro follows up with leads. Business unlocks the full toolkit.
         </p>
       </div>
 
-      <div className="relative mt-4 overflow-hidden rounded-[1.35rem] border border-white/10 bg-white/[0.035]">
-        <div className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] bg-white/[0.045] text-[9px] font-black uppercase tracking-[0.11em] text-white/42">
-          <div className="px-3 py-3">Feature</div>
-          {plans.map((plan) => {
-            const activePlan = selectedPlan === plan.key
-            return (
-              <button
-                key={plan.key}
-                type="button"
-                onClick={() => onSelect(plan.key)}
-                className="px-1 py-3 text-center transition active:scale-[0.98]"
-                style={{ color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.46)" }}
-              >
-                {plan.label}
-              </button>
-            )
-          })}
-        </div>
-        <div className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] border-t border-white/8 text-[11px] font-black text-white">
-          <div className="px-3 py-2.5 text-white/36">Intro rate</div>
-          {plans.map((plan) => {
-            const activePlan = selectedPlan === plan.key
-            return (
-              <button
-                key={plan.key}
-                type="button"
-                onClick={() => onSelect(plan.key)}
-                className="px-1 py-2.5 text-center transition active:scale-[0.98]"
-                style={{
-                  backgroundColor: activePlan ? "rgba(50,208,116,0.12)" : "transparent",
-                  color: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.78)",
-                }}
-              >
-                {plan.price}
-                <span className="block text-[8px] font-light uppercase tracking-[0.08em] text-white/44">reg {plan.regular}</span>
-              </button>
-            )
-          })}
-        </div>
-        {rows.map((row) => (
-          <div key={row.label} className="grid grid-cols-[1.2fr_repeat(3,0.72fr)] border-t border-white/8 text-sm">
-            <div className="px-3 py-2.5 text-[13px] font-bold leading-5 text-white/72">{row.label}</div>
-            {plans.map((plan) => {
-              const has = row.plans.includes(plan.key)
-              const activePlan = selectedPlan === plan.key
-              return (
-                <button
-                  key={plan.key}
-                  type="button"
-                  onClick={() => onSelect(plan.key)}
-                  className="flex items-center justify-center px-1 py-2.5 transition active:scale-[0.98]"
-                  style={{ backgroundColor: activePlan ? "rgba(50,208,116,0.08)" : "transparent" }}
-                  aria-label={`${has ? "Included in" : "Not included in"} ${plan.label}`}
-                >
-                  {has ? (
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                  ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-white/14" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        ))}
-      </div>
-
-      <div className="relative mt-3 grid grid-cols-3 gap-2">
-        {plans.map((plan) => {
-          const activePlan = selectedPlan === plan.key
+      <div className="relative mt-5 grid gap-2.5">
+        {cards.map((card) => {
+          const activePlan = selectedPlan === card.key
           return (
             <button
-              key={plan.key}
+              key={card.key}
               type="button"
-              onClick={() => onSelect(plan.key)}
-              className="rounded-2xl border px-2 py-3 text-center transition active:scale-[0.98]"
+              onClick={() => onSelect(card.key)}
+              className="w-full rounded-[1.2rem] border p-4 text-left transition active:scale-[0.99]"
               style={{
-                borderColor: activePlan ? SIGNAL_GREEN : plan.key === "found_pro" ? "rgba(50,208,116,0.34)" : "rgba(255,255,255,0.12)",
-                backgroundColor: activePlan ? "rgba(50,208,116,0.14)" : plan.key === "found_pro" ? "rgba(50,208,116,0.07)" : "rgba(255,255,255,0.035)",
+                borderColor: activePlan ? SIGNAL_GREEN : card.featured ? "rgba(50,208,116,0.34)" : "rgba(255,255,255,0.11)",
+                background: activePlan
+                  ? "linear-gradient(180deg, rgba(50,208,116,0.15) 0%, rgba(50,208,116,0.075) 100%)"
+                  : card.featured
+                    ? "rgba(50,208,116,0.065)"
+                    : "rgba(255,255,255,0.035)",
+                boxShadow: activePlan ? "0 20px 60px rgba(50,208,116,0.13)" : "none",
               }}
             >
-              <span className="block text-sm font-black text-white">{plan.label}</span>
-              <span className="mt-1 block text-xs font-bold" style={{ color: activePlan || plan.key === "found_pro" ? SIGNAL_GREEN : "rgba(255,255,255,0.48)" }}>{plan.price}/mo</span>
-              <span className="mt-0.5 block text-[9px] font-black uppercase tracking-[0.08em] text-white/34">{plan.note}</span>
+              <span className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                  style={{ borderColor: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.2)", backgroundColor: activePlan ? SIGNAL_GREEN : "transparent" }}
+                >
+                  {activePlan && (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-base font-black text-white">{card.name}</span>
+                    <span className="rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.12em]" style={{ backgroundColor: card.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: card.featured ? FOUND_BLACK : "rgba(255,255,255,0.55)" }}>
+                      {card.eyebrow}
+                    </span>
+                  </span>
+                  <span className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-[1.35rem] font-black leading-none text-white">{card.price}</span>
+                    <span className="text-[11px] font-light tracking-[0.02em] text-white/48">regular <span className="line-through">{card.regular}</span></span>
+                  </span>
+                  <span className="mt-2 block text-sm font-black leading-5" style={{ color: activePlan || card.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.72)" }}>
+                    {card.headline}
+                  </span>
+                  <span className="mt-3 grid gap-1.5 sm:grid-cols-2">
+                    {card.bullets.map((bullet) => (
+                      <span key={bullet} className="flex items-start gap-2 text-xs font-semibold leading-5 text-white/62">
+                        <svg className="mt-0.5 shrink-0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        {bullet}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </span>
             </button>
           )
         })}
       </div>
 
-      <div className="relative mt-4">
+      <div className="relative mt-5">
         <button
           type="button"
           onClick={onContinue}
