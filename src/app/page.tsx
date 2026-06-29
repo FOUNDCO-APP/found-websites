@@ -250,6 +250,7 @@ export default function Home() {
                     "Your entire contact list, organized",
                     "Your crew contributes from the field",
                     "Rewrite any page on your site, anytime",
+                    "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing",
                   ],
                 },
                 {
@@ -260,8 +261,8 @@ export default function Home() {
                   normalPrice: "$99",
                   features: [
                     "Everything in Found Pro",
-                    "Clients book themselves",
-                    "Send professional estimates, collect deposits",
+                    "All business tools included",
+                    "Payment setup where it matters",
                     "More five-star reviews, without asking",
                     "Reach your full client list",
                     "Your whole team, no extra charge",
@@ -440,7 +441,4 @@ export default function Home() {
     </>
   )
 }
-
-
-
 

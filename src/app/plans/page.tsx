@@ -39,8 +39,9 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Your entire contact list, organized",     values: [false, true, true] },
   { label: "Your crew contributes from the field",    values: [false, true, true] },
   { label: "Rewrite any page on your site, anytime",  values: [false, true, true] },
-  { label: "Clients book themselves",                 values: [false, false, true] },
-  { label: "Send professional estimates, collect deposits", values: [false, false, true] },
+  { label: "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing", values: [false, true, true] },
+  { label: "All business tools included",             values: [false, false, true] },
+  { label: "Payment setup where it matters",          values: [false, true, true] },
   { label: "More five-star reviews, without asking",  values: [false, false, true] },
   { label: "Reach your full client list",             values: [false, false, true] },
   { label: "Your whole team, no extra charge",        values: [false, false, true] },
@@ -155,7 +156,7 @@ export default function PlansPage() {
                     </td>
                   </tr>
                 )}
-                {i === 13 && (
+                {i === 14 && (
                   <tr key="divider-biz">
                     <td colSpan={4} className="pt-8 pb-2 pr-8">
                       <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Added in Found Business</p>
@@ -189,3 +190,4 @@ export default function PlansPage() {
     </div>
   )
 }
+

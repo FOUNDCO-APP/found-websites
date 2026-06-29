@@ -883,7 +883,7 @@ function PlanChoiceScreen({
       regular: "$99/mo",
       eyebrow: "All in",
       headline: "Manage jobs from first call to final payment.",
-      bullets: ["Everything in Pro", "Online ordering, bookings, estimates, and email marketing", "Collect deposits", "Team access"],
+      bullets: ["Everything in Pro", "Online ordering, bookings, estimates, and email marketing", "Payment setup where it matters", "Team access"],
     },
   ]
 
