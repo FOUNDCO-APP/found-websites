@@ -944,7 +944,7 @@ function PlanChoiceScreen({
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
                     <span className="text-[1.35rem] font-black leading-none text-white">{card.price}</span>
-                    <span className="text-[11px] font-light tracking-[0.02em] text-white/48">regular <span className="line-through">{card.regular}</span></span>
+                    <span className="text-xs font-medium tracking-[0.01em] text-white/62">regular <span className="line-through decoration-white/45 decoration-2">{card.regular}</span></span>
                   </span>
                   <span className="mt-2 block text-sm font-black leading-5" style={{ color: activePlan || card.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.72)" }}>
                     {card.headline}
