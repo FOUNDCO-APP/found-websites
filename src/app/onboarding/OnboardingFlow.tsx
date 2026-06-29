@@ -864,7 +864,7 @@ function PlanChoiceScreen({
       regular: "$39/mo",
       eyebrow: "Done for you",
       headline: "Get online without building it yourself.",
-      bullets: ["Website built for you", "Leads sent to you", "Automatic instant reply to new leads", "Update your website photos"],
+      bullets: ["Website built for you", "Leads sent to you", "Automatic instant reply to new leads", "Update your website and photos"],
     },
     {
       key: "found_pro",
