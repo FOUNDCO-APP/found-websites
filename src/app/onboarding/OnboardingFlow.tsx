@@ -864,7 +864,7 @@ function PlanChoiceScreen({
       regular: "$39/mo",
       eyebrow: "Done for you",
       headline: "Get online without building it yourself.",
-      bullets: ["Website built for you", "Leads sent to you", "Instant lead reply", "Update photos from your phone"],
+      bullets: ["Website built for you", "Leads sent to you", "Instant lead reply", "Update your website photos"],
     },
     {
       key: "found_pro",
@@ -873,7 +873,7 @@ function PlanChoiceScreen({
       regular: "$69/mo",
       eyebrow: "Recommended",
       headline: "Stop losing leads when you're busy.",
-      bullets: ["Everything in Starter", "Automatic lead follow-up", "Customer list organized", "Choose one growth tool"],
+      bullets: ["Everything in Starter", "Automatic lead follow-up", "Customer list organized", "Choose one: ordering, bookings, estimates, or emails"],
       featured: true,
     },
     {
@@ -882,8 +882,8 @@ function PlanChoiceScreen({
       price: "$69/mo",
       regular: "$99/mo",
       eyebrow: "All in",
-      headline: "Run the work after they say yes.",
-      bullets: ["Everything in Pro", "All growth tools included", "Bookings, quotes, deposits", "Team access"],
+      headline: "Manage jobs from first call to final payment.",
+      bullets: ["Everything in Pro", "Ordering, bookings, estimates, and emails", "Collect deposits", "Team access"],
     },
   ]
 
@@ -897,11 +897,11 @@ function PlanChoiceScreen({
         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           Best place to start
         </p>
-        <h1 className="text-[1.95rem] font-light leading-[1.04] text-white md:text-[2.8rem]">
+        <h1 className="whitespace-nowrap text-[1.72rem] font-light leading-[1.04] text-white sm:text-[1.95rem] md:text-[2.8rem]">
           Most owners start with Pro.
         </h1>
         <p className="mt-3 text-sm leading-6 text-white/58">
-          Starter beats DIY. Pro follows up with leads. Business unlocks the full toolkit.
+          Starter gets your site live. Pro keeps leads warm. Business helps you book jobs and collect money.
         </p>
       </div>
 
