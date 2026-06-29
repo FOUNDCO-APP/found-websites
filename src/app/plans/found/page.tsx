@@ -28,14 +28,14 @@ export default function FoundPlanPage() {
         { label: "Beautiful photos for your industry", desc: "Curated, professional photos matched to your type of business. Not random stock images — photos that look like your work." },
         { label: "Leads come straight to you", desc: "Every inquiry from your website is saved and forwarded to you the moment it comes in. Nothing falls through the cracks." },
         { label: "Inquiries get an automatic reply right away", desc: "When someone fills out your form, they automatically get a professional reply — making your business look responsive around the clock, even when you're on a job." },
-        { label: "Take a photo. It's on your site.", desc: "Finish a job, take a photo. Heart it in Found and it appears on your website gallery. Star it and it's sized and ready to post on Instagram and Facebook — no resizing, no editing app." },
+        { label: "Take a photo. It's on your site.", desc: "Finish a job, take a photo. Heart it for your website or star it for social. Found turns starred photos into branded post drafts you can share, download, or caption-copy from your phone." },
       ]}
       faqs={[
         { q: "How long does it take to go live?", a: "Most businesses are live in under 10 minutes. You answer a few questions about your business, Found builds the site, and you see the finished result right away." },
         { q: "Do I need any technical skills?", a: "None. Found asks you questions in plain English — your business name, what you do, where you're based, and how you want to sound. No templates, no drag-and-drop, no code." },
         { q: "Can I use my own domain name?", a: "Yes — every plan includes your own web address. You can connect an existing domain you already own, or buy a new one through any registrar. We walk you through it." },
         { q: "Can I upgrade to Pro or Business later?", a: "Yes — upgrade anytime from your dashboard. Your site, leads, and photos all carry over. Your intro rate stays locked in regardless of when you upgrade." },
-        { q: "How does the photo system work?", a: "You take photos on your phone — after a job, at a project, anywhere. Open Found, heart a photo and it goes live on your website. Star it and it exports in the exact dimensions for Instagram and Facebook. No resizing, no Canva, no extra steps." },
+        { q: "How does the photo system work?", a: "You take photos on your phone — after a job, at a project, anywhere. Open Found, heart a photo and it goes live on your website. Star it and Found creates branded square, portrait, and story post drafts for social." },
       ]}
     />
   )

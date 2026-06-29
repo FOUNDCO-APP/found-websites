@@ -25,7 +25,7 @@ export default function RetailPage() {
         { label: "Hours, location, and contact — always current", desc: "Update your hours for holidays, new location details, or seasonal changes directly from Found. Customers always have the right information before they make the trip." },
         { label: "Inquiries and special orders, captured instantly", desc: "Customers looking for something specific or wanting to place a special order can contact you through your site. Every message comes to your phone immediately." },
         { label: "A professional presence when local shoppers search nearby", desc: "Found sites are built with your neighborhood, your product category, and your store name structured for local search — so shoppers looking for what you sell can find you." },
-        { label: "Share your products on social, instantly", desc: "Star a product photo in Found and it's sized perfectly for Instagram and Facebook. Your best products reach your social audience without any editing or resizing." },
+        { label: "Turn product photos into social posts", desc: "Star a product photo in Found and it becomes a branded post draft you can share, download, or caption-copy from your phone." },
       ]}
       faqs={[
         { q: "How do I get a website for my retail store?", a: "Tell Found about your shop — what you sell, where you are, what makes you worth visiting. Found writes the copy, selects retail photography matched to your category, and builds the site. You're live in under 10 minutes." },

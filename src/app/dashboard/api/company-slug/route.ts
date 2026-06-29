@@ -10,7 +10,7 @@ export async function GET() {
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
-  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null })
 }
 
 export async function PATCH(req: Request) {

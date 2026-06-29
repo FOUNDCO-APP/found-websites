@@ -24,7 +24,7 @@ export default function RestaurantsPage() {
         { label: "Your story, told right", desc: "The copy on your site isn't generic. It's written around what makes your place different — your neighborhood, your style, your reason for opening. People feel it before they walk in." },
         { label: "Reservations and catering inquiries, straight to you", desc: "Every inquiry from your website comes to you immediately. No third-party booking platform taking a cut. Just a direct line from your website to your phone." },
         { label: "Your menu and hours, always current", desc: "Update your site directly from Found when your hours change or you add a seasonal menu. No waiting for a web designer, no FTP, no code." },
-        { label: "Take a food photo. It's on your site.", desc: "Plate something beautiful, take a photo. Heart it in Found and it goes live on your gallery. Star it and it's sized perfectly for Instagram and Facebook. No editing app needed." },
+        { label: "Take a food photo. It's on your site.", desc: "Plate something beautiful, take a photo. Heart it in Found and it goes live on your gallery. Star it and Found turns it into branded social post drafts. No editing app needed." },
         { label: "A professional presence when locals search for food nearby", desc: "Found sites are built with your neighborhood, your cuisine type, and your name structured for local search — so hungry people in your area have a way to find you." },
       ]}
       faqs={[

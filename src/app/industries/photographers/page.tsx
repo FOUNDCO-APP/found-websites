@@ -24,7 +24,7 @@ export default function PhotographersPage() {
         { label: "Your shoots, organized by project", desc: "Upload and organize photos by shoot — weddings, portraits, commercial, events. Clients can see exactly the style of work relevant to what they're booking." },
         { label: "Booking inquiries straight to you", desc: "Every booking request comes to you immediately with name, number, event date, and what they're looking for. You respond, they book. Simple." },
         { label: "Inquiries get an automatic reply right away", desc: "When a potential client contacts you, they automatically get a professional response. You look available and responsive even when you're on a shoot." },
-        { label: "Share your work to Instagram, perfectly sized", desc: "Star a photo in Found and it exports at 1080×1080 and 1080×1350 — ready to post on Instagram without cropping or editing. Your best shots hit social automatically." },
+        { label: "Turn shoots into branded social posts", desc: "Star a photo in Found and it becomes branded square, portrait, and story post drafts you can share or download without cropping or editing." },
         { label: "A professional presence when clients search for a photographer", desc: "Found sites are built with your photography specialty, your location, and your business name structured for local search — so clients looking for a photographer in your area can find you." },
       ]}
       faqs={[
