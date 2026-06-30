@@ -76,9 +76,13 @@ export default function PreviewBanner({
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [activating, setActivating] = useState(false)
+  const [previewOnly, setPreviewOnly] = useState(false)
 
   useEffect(() => {
     setMounted(true)
+    const isPreview = new URLSearchParams(window.location.search).get("preview") === "true"
+    setPreviewOnly(isPreview)
+    if (isPreview) return
     if (!isActivated) {
       setVisible(true)
       // Prefetch the overlay chunk now — before the user taps.
@@ -88,7 +92,7 @@ export default function PreviewBanner({
     }
   }, [isActivated])
 
-  if (!mounted) return null
+  if (!mounted || previewOnly) return null
 
   const { accent, label, headline, detail, cta } = getBannerState(trialEndsAt)
 

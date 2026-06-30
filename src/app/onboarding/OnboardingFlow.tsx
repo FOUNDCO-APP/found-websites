@@ -499,7 +499,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
 
               {/* Live iframe */}
               <iframe
-                src={url}
+                src={`${url}?preview=true`}
                 title={`${name} website preview`}
                 loading="eager"
                 sandbox="allow-scripts allow-same-origin"
@@ -680,6 +680,8 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
   const [areaDraft, setAreaDraft] = useState("")
   const [areaSuggestions, setAreaSuggestions] = useState<PlacePrediction[]>([])
   const [showAreaSuggestions, setShowAreaSuggestions] = useState(false)
+  const [locating, setLocating] = useState(false)
+  const [locationAttempted, setLocationAttempted] = useState(false)
   const cityBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const areaBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cityDebounce  = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -689,6 +691,35 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
   const dropdownBg     = isLight ? "#ffffff" : "#1a1c1b"
   const dropdownBorder = isLight ? "rgba(8,10,9,0.1)" : "rgba(255,255,255,0.1)"
 
+  async function useCurrentCity(silent = false) {
+    if (typeof navigator === "undefined" || !navigator.geolocation || locating) return
+    setLocating(true)
+    if (!silent) setLocationAttempted(true)
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords
+          const res = await fetch(`/api/places?lat=${encodeURIComponent(latitude)}&lng=${encodeURIComponent(longitude)}`)
+          const data = await res.json()
+          if (data.location) onLocation(data.location)
+        } catch (error) {
+          console.error("[onboarding] Location lookup failed:", error)
+        } finally {
+          setLocating(false)
+          setLocationAttempted(true)
+        }
+      },
+      () => {
+        setLocating(false)
+        setLocationAttempted(true)
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 },
+    )
+  }
+
+  useEffect(() => {
+    if (!location.trim() && !locationAttempted) void useCurrentCity(true)
+  }, [location, locationAttempted])
   function handleCityChange(v: string) {
     onLocation(v)
     setShowCitySuggestions(true)
@@ -737,6 +768,18 @@ function LocationInput({ location, serviceAreas, onLocation, onAreas, isLight, p
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-start">
+        <button
+          type="button"
+          onClick={() => void useCurrentCity(false)}
+          disabled={locating}
+          className="rounded-full border px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.16em] transition disabled:opacity-40"
+          style={{ borderColor: tk.cardBorder(false), color: location ? tk.muted : SIGNAL_GREEN, backgroundColor: tk.cardBg(false) }}
+        >
+          {locating ? "Finding your city..." : location ? "Use current city" : "Use my current city"}
+        </button>
+      </div>
+
       {/* City autocomplete */}
       <div className="relative">
         <input

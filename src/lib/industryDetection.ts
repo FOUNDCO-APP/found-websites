@@ -43,7 +43,7 @@ const keywordMap: Array<{ industry: string; terms: string[]; strongTerms?: strin
   { industry: "automotive", terms: ["auto", "car", "mechanic", "detailing", "tires", "oil change", "body shop"] },
   { industry: "pet_services", terms: ["pet", "dog", "cat", "grooming", "groomer", "boarding", "dog walker", "pet sitter"] },
   { industry: "cleaning", terms: ["cleaning", "cleaner", "maid", "janitorial", "move-out", "window cleaning", "carpet"] },
-  { industry: "landscaping", terms: ["landscape", "lawn", "yard", "garden", "pavers", "tree", "irrigation", "hardscape"] },
+  { industry: "landscaping", terms: ["landscaping", "landscaper", "landscape", "lawn care", "lawn", "yard", "garden", "pavers", "tree", "tree trimming", "irrigation", "hardscape"] },
   {
     industry: "creative_services",
     terms: ["graphic design", "designer", "photographer", "photography", "videographer", "video", "branding", "illustrator", "copywriter", "social media", "web design", "tattoo", "mural", "artist"],
