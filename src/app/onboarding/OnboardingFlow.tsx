@@ -394,7 +394,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
   name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string
 }) {
   const [iframeReady, setIframeReady] = useState(false)
-  const [activating, setActivating] = useState(Boolean(slug))
+  const [activating, setActivating] = useState(false)
 
   const phoneW    = drawerMode ? 200 : 290
   const phoneH    = drawerMode ? 420 : 600
@@ -484,15 +484,28 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
           </h1>
         </div>
 
-        {/* See your site → */}
-        <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
+        {/* Activation comes after the reveal, not before it. */}
+        {slug && !drawerMode && (
+          <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
+            <button
+              type="button"
+              onClick={() => setActivating(true)}
+              className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+              Activate my site
+            </button>
+          </div>
+        )}
+
+        {/* See your site */}
+        <div className={`${slug && !drawerMode ? "mt-4" : "mt-8"} w-full max-w-[280px]`} style={{ animation: "fade-up 0.6s 0.7s ease-out both" }}>
           <a
             href={`${url}?preview=true`}
             target="_blank"
             rel="noreferrer"
-            className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-            See your site →
+            className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
+            style={{ borderColor: "rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.72)", backgroundColor: "rgba(255,255,255,0.04)" }}>
+            See your site
           </a>
         </div>
 
