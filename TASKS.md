@@ -16,9 +16,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Test pass** — verify online ordering E2E on a food company, Orders tab routing, DashboardTabsManager in More, email delivery
-2. **Fix issues found in testing** — bugs, copy, UX gaps surfaced during test
-3. **Plan card savings display** — clean mockup for Shawn to approve (no "Founding rate" label)
+1. **Found Business E2E test** — verify plan selection, onboarding, display-name prompt, auto activation/payment overlay, welcome email, dashboard plan/tools, and $69 intro rate.
+2. **Fix issues found in Business test** — bugs, copy, UX gaps surfaced during the full customer flow.
+3. **Run migration 043 if needed** — `social_post_drafts` table for saved social post drafts.
 
 ---
 
@@ -91,10 +91,38 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
+## CURRENT SESSION HANDOFF (June 29, 2026 — Codex)
+
+### Shipped
+- Onboarding plan card flow polished and pushed.
+- Floating CTA is clean green pill, no glow/glass wrapper.
+- Found Business tools list flattened.
+- Intro-rate wording cleaned in runtime code; customer language must never say “founding member.”
+- More page inactive pricing fixed: Starter $29, Pro $39, Business $69 intro prices.
+- Activation uses intro Stripe price for inactive companies.
+- Display-name prompt added and refined.
+- Onboarding reveal opens activation/payment overlay automatically.
+- Public site wordmark color now has contrast guard on dark/light backgrounds.
+- Social post assistant shipped; migration 043 needs Supabase application if not already run.
+
+### Decisions
+- Use **intro rate** / **promo**, not “founding member.” Legacy DB/env names remain only until controlled migration.
+- Brand readability overrides selected brand color on dark headers.
+- Payment/card step belongs immediately after onboarding reveal; Activate banner is recovery only.
+- Display-name prompt asks how the business name appears to clients.
+
+### Must Test Next
+- Found Business full flow after deploy.
+- Display-name prompt save closes and does not return.
+- Contrast guard fixes muted gray/blue text on black headers.
+- Activation overlay opens after onboarding, carries selected Business plan, and uses $69 intro rate.
+- Welcome email and dashboard link point to the correct company.
+
+---
 ## BACKLOG
 
 ### Add-Ons & Monetization
-- Plan card savings display — show founding discount cleanly (no "Founding rate" label — Shawn rejected that)
+- Plan card savings display — show intro-rate discount cleanly (no "Founding rate" label — Shawn rejected that)
 - Upsell banner — not built; planned as next after June 22
 - Stripe custom payment form — Option B approved (in-app Stripe Elements), not built
 - Menu add-on gating — `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks

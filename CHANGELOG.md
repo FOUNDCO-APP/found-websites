@@ -4,6 +4,63 @@
 
 ---
 
+## Session: June 29, 2026 — Onboarding Plan Flow, Intro Pricing, Activation, Social Posts
+**AI:** Codex
+**Worked on:** public onboarding plan selection, More plan pricing, display-name prompt, activation flow, brand contrast, social post assistant, testing plan
+
+### Completed And Pushed
+- Onboarding plan picker redesigned as plan cards, with Pro positioned as the recommended default.
+- Sticky/floating selected-plan CTA added, then simplified to a clean green pill with no glow/glass wrapper.
+- Found Business included-tools list flattened so it is not a card inside a card.
+- Runtime pricing language changed to **intro rate**. Do not use "founding member" in product/customer language.
+- More page inactive pricing fixed: Starter $29, Pro $39, Business $69 intro prices.
+- Activation setup uses intro Stripe price IDs for inactive companies.
+- Stripe setup metadata now uses `intro_rate`, not `founding_price`.
+- Dashboard display-name prompt added/refined for slug-like company names.
+- Prompt copy is now: "How would you like your business name to appear to your clients?"
+- Prompt save dismisses before reload so it should not immediately reopen.
+- End of onboarding now opens the activation/payment overlay for the selected plan.
+- Activate banner remains as recovery if the owner closes/skips payment.
+- Public wordmark color now has a contrast guard on dark/light headers.
+- Social post assistant shipped in Photos → Social; migration 043 is required for saved drafts.
+
+### Decisions Captured
+- Use **intro rate** / **promo**, not "founding member." Legacy DB/env names remain only until a controlled migration.
+- Brand readability overrides selected brand color on dark headers.
+- Payment/card step belongs immediately after onboarding reveal; Activate is recovery only.
+- Display-name prompt asks how the business name appears to clients.
+
+### Carry Forward
+- Run a controlled migration later to replace legacy `is_founding_member` naming if desired. Do not rename the live Supabase column casually.
+- Run Supabase migration `scripts/migration-043-social-post-drafts.sql` if not already applied.
+- Found Business E2E test is next.
+
+### Found Business Test Plan
+1. Start from public Get My Site.
+2. Select Found Business.
+3. Complete onboarding with dark navbar and muted/gray brand color.
+4. Confirm generated site header wordmark is readable on black.
+5. Confirm display-name prompt copy is correct if name looks like slug.
+6. Save display name and confirm modal closes and does not return.
+7. Confirm activation/payment opens automatically after reveal screen.
+8. Confirm activation uses Business intro rate: $69/mo, regular $99/mo context.
+9. If payment is closed, confirm dashboard Activate banner remains as recovery nudge.
+10. Confirm welcome email arrives and dashboard link opens correct company.
+11. Confirm dashboard plan card says Found Business and $69/mo intro price before activation.
+12. Confirm Business tools/pages are visible as expected: online ordering, booking calendar, estimates/deposits, email marketing.
+
+### Recent Commits
+- `bc3f3bc` Fix onboarding activation flow and brand contrast
+- `8e618e3` Rename pricing logic to intro rate
+- `73bc86c` Fix intro pricing and display name prompt
+- `522fb7f` Simplify onboarding floating CTA
+- `9043e08` Refine onboarding CTA glass styling
+- `0eca834` Keep onboarding plan CTA visible
+- `7a7fa96` Flatten Business tools list
+- `2fce55d` Refine onboarding plan bullets
+- `97c3d1d` Add social post assistant
+
+---
 
 ## Session: June 24, 2026 — Online Ordering + Dashboard Tab Customization
 **AI:** Codex (prior) + Claude Code Sonnet 4.6 (this session)
