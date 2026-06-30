@@ -186,6 +186,95 @@ function questionTitle(step: Step, a: Answers): string {
   }
 }
 
+const SUB_INDUSTRY_ALIASES: Record<string, string[]> = {
+  roofing: ["roofer", "roof repair", "roofing contractor"],
+  remodeling: ["remodeler", "renovation", "renovations", "general contractor"],
+  painting: ["painter", "paint", "house painter", "painting contractor"],
+  drywall: ["drywaller", "sheetrock"],
+  flooring: ["floor", "floors", "tile", "floor installer"],
+  hvac: ["ac", "a c", "air conditioning", "heating", "cooling", "furnace"],
+  plumbing: ["plumber"],
+  electrical: ["electrician"],
+  "tv install": ["tv installer", "mount tv", "tv mounting"],
+  "camera install": ["security camera", "camera installer", "camera installation"],
+  landscaping: ["landscaper", "landscape"],
+  "lawn care": ["lawn", "yard care", "mowing"],
+  hardscaping: ["hardscape"],
+  pavers: ["paver", "paver installer"],
+  "tree trimming": ["tree service", "tree trimmer", "tree removal"],
+  irrigation: ["sprinkler", "sprinklers"],
+  photographer: ["photography"],
+  videographer: ["videography", "video"],
+  "graphic designer": ["graphic design"],
+  "social media manager": ["social media"],
+  "web designer": ["web design", "website designer"],
+  realtor: ["real estate agent", "listing agent", "buyer agent", "seller agent"],
+  "property manager": ["property management"],
+  restaurant: ["food place", "eatery"],
+  bakery: ["baker"],
+  catering: ["caterer"],
+  "food truck": ["food trailer"],
+  "coffee shop": ["cafe"],
+  barber: ["barbershop"],
+  "hair salon": ["hairstylist", "hair stylist", "stylist"],
+  "nail salon": ["nails", "nail tech", "manicure", "pedicure"],
+  lashes: ["lash", "lash artist"],
+  esthetician: ["facial", "skincare", "waxing"],
+  "auto repair": ["mechanic", "car repair"],
+  detailing: ["detailer", "car detailing"],
+  "body shop": ["collision"],
+  "pet groomer": ["dog groomer", "grooming"],
+  "dog walker": ["dog walking"],
+  "pet sitter": ["pet sitting"],
+  "home cleaner": ["house cleaner", "house cleaning", "maid"],
+  "commercial cleaner": ["commercial cleaning", "janitorial"],
+  "window cleaning": ["window cleaner"],
+  "carpet cleaning": ["carpet cleaner"],
+  accountant: ["accounting", "cpa"],
+  bookkeeper: ["bookkeeping"],
+  attorney: ["lawyer", "law firm"],
+  dentist: ["dental"],
+  chiropractor: ["chiropractic"],
+  daycare: ["day care", "child care", "childcare"],
+  babysitter: ["babysitting"],
+  tutor: ["tutoring"],
+  "music lessons": ["music teacher", "music instructor"],
+  musician: ["singer", "guitarist", "pianist"],
+  band: ["cover band"],
+  "jewelry maker": ["jewelry"],
+  "candle maker": ["candles"],
+  "soap maker": ["soaps"],
+}
+
+function normalizeBusinessPhrase(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function phraseMatches(text: string, phrase: string) {
+  const normalized = normalizeBusinessPhrase(phrase)
+  if (!normalized) return false
+  return ` ${text} `.includes(` ${normalized} `)
+}
+
+function detectSubIndustry(input: string, industry: string | null) {
+  if (!industry) return ""
+  const manifest = getIndustryManifest(industry)
+  if (!manifest) return ""
+  const text = normalizeBusinessPhrase(input)
+  if (!text) return ""
+
+  for (const option of manifest.subIndustries) {
+    const candidates = [option, ...(SUB_INDUSTRY_ALIASES[option] ?? [])]
+    if (candidates.some((candidate) => phraseMatches(text, candidate))) return option
+  }
+
+  return ""
+}
 function getAffirmation(step: Step, a: Answers): string {
   switch (step) {
     case "name":
@@ -1186,8 +1275,10 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       setShowSlugSheet(true)
       return
     }
-    if (stepIndex < STEPS.length - 1) setStepIndex((i) => i + 1)
-    else void submit()
+    if (stepIndex < STEPS.length - 1) {
+      const nextIndex = step === "description" && answers.subIndustry ? stepIndex + 2 : stepIndex + 1
+      setStepIndex(Math.min(nextIndex, STEPS.length - 1))
+    } else void submit()
   }
 
   function autoAdvance(updater: () => void) {
@@ -1241,12 +1332,16 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
 
   function handleDescription(value: string) {
     const detected = detectIndustry(value)
-    setAnswers((prev) => ({
-      ...prev,
-      description: value,
-      industry: detected ?? prev.industry,
-      subIndustry: detected && detected !== prev.industry ? "" : prev.subIndustry,
-    }))
+    setAnswers((prev) => {
+      const industry = detected ?? prev.industry
+      const detectedSubIndustry = detectSubIndustry(value, industry)
+      return {
+        ...prev,
+        description: value,
+        industry,
+        subIndustry: detectedSubIndustry || (detected && detected !== prev.industry ? "" : prev.subIndustry),
+      }
+    })
   }
 
   function detectLogoLightness(url: string): Promise<"light" | "dark" | "unknown"> {
