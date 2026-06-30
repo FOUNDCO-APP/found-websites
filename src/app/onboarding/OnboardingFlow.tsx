@@ -390,6 +390,48 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
+function GenerationErrorScreen({ message, onRetry, onBack }: {
+  message: string
+  onRetry: () => void
+  onBack: () => void
+}) {
+  return (
+    <main className="fixed inset-0 z-50 flex items-center justify-center px-7" style={{ backgroundColor: FOUND_BLACK }}>
+      <section className="w-full max-w-sm text-center">
+        <svg viewBox="0 0 420 72" className="mx-auto h-6 w-32 text-white" aria-label="Found">
+          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
+        </svg>
+        <p className="mt-10 text-[0.72rem] font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>
+          Still here
+        </p>
+        <h1 className="mt-4 text-4xl font-light leading-tight text-white">
+          Your site needs one more try.
+        </h1>
+        <p className="mt-5 text-base leading-7 text-white/58">
+          {message}
+        </p>
+        <div className="mt-9 space-y-3">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="w-full rounded-full py-5 text-sm font-black uppercase tracking-widest transition active:scale-[0.99]"
+            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+          >
+            Try again
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="w-full rounded-full border py-4 text-sm font-black uppercase tracking-widest text-white/70 transition hover:text-white"
+            style={{ borderColor: "rgba(255,255,255,0.14)" }}
+          >
+            Back to answers
+          </button>
+        </div>
+      </section>
+    </main>
+  )
+}
 function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan }: {
   name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string
 }) {
@@ -1110,29 +1152,37 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     setTimeout(() => setStepIndex((i) => Math.min(i + 1, STEPS.length - 1)), 320)
   }
 
-  async function submit() {
-    if (saving) return
+  async function submit(force = false) {
+    if (saving && !force) return
     setSaving(true)
     const uiTimeout = new Promise<{ success: false; error: string }>((resolve) =>
       setTimeout(() => resolve({ success: false, error: "This is taking longer than expected. Please try again." }), 25000)
     )
-    const res = await Promise.race([
-      createOnboardingSite({
-        ...answers,
-        services: answers.services.join(", "),
-        companyId: sessionId,
-        slugPreference: (slugCustom || clientSlugify(answers.name)) || undefined,
-        logoUrl: answers.logoUrl || undefined,
-        logoWhiteUrl: answers.logoWhiteUrl || undefined,
-        navbarDark: answers.navbarDark,
-        heroImageUrls: answers.heroImageUrls,
-        plan: currentPlan,
-      }),
-      uiTimeout,
-    ])
+    let res: Awaited<ReturnType<typeof createOnboardingSite>> | { success: false; error: string }
+    try {
+      res = await Promise.race([
+        createOnboardingSite({
+          ...answers,
+          services: answers.services.join(", "),
+          companyId: sessionId,
+          slugPreference: (slugCustom || clientSlugify(answers.name)) || undefined,
+          logoUrl: answers.logoUrl || undefined,
+          logoWhiteUrl: answers.logoWhiteUrl || undefined,
+          navbarDark: answers.navbarDark,
+          heroImageUrls: answers.heroImageUrls,
+          plan: currentPlan,
+        }),
+        uiTimeout,
+      ])
+    } catch (error) {
+      console.error("[onboarding] Site creation failed:", error)
+      setResult({ error: "This is taking longer than expected. Please try again." })
+      setSaving(false)
+      return
+    }
     if (res.success && res.url && res.slug && res.companyId) {
       setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan })
-      // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
+      // Fire-and-forget - activate page has its own fallback if intent isn't ready yet
       createSetupIntentForCompany({
         companyId: res.companyId,
         email: answers.email,
@@ -1330,6 +1380,19 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
 
   // ── Screens ────────────────────────────────────────────────────────────────
   if (saving && !result) return <GeneratingScreen />
+  if (result?.error) return (
+    <GenerationErrorScreen
+      message={result.error}
+      onRetry={() => {
+        setResult(null)
+        void submit(true)
+      }}
+      onBack={() => {
+        setResult(null)
+        setSaving(false)
+      }}
+    />
+  )
   if (result?.url) return (
     <RevealScreen
       name={answers.name.trim() || "Your business"}
