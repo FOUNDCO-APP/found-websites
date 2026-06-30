@@ -233,6 +233,98 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         activeAddons={effectiveAddonSlugs}
       />
 
+      {/* Add Features */}
+      {availableAddons.length > 0 && (
+        <section style={{ marginBottom: 20 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Add Features
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {availableAddons.map((addon) => (
+              <div key={addon.slug} style={{
+                borderRadius: 14,
+                backgroundColor: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                padding: "16px 18px",
+              }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
+                      {addon.label}
+                    </p>
+                    <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                      {addon.description}
+                    </p>
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                    <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+                      +${addon.price}/mo
+                    </p>
+                    {company?.id && isActive && (
+                      <AddonActivateButton
+                        companyId={company.id}
+                        addonSlug={addon.slug}
+                        addonLabel={addon.label}
+                        addonPrice={addon.price}
+                      />
+                    )}
+                    {company?.slug && !isActive && (
+                      <div style={{ width: 112 }}>
+                        <MoreActivateButton
+                          slug={company.slug}
+                          companyName={company.name}
+                          targetPlan={plan}
+                          targetAddonSlug={addon.slug}
+                          targetAddonLabel={addon.label}
+                          targetAddonPrice={addon.price}
+                          size="compact"
+                        >
+                          Activate
+                        </MoreActivateButton>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Active Add-ons */}
+      {(plan === "found_business" ? businessIncludedAddons.length > 0 : activeAddonSlugs.length > 0) && (
+        <section id={plan === "found_business" ? "business-tools" : undefined} style={{ marginBottom: 20 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            {plan === "found_business" ? "Included Business Tools" : "My Add-ons"}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {(plan === "found_business" ? businessIncludedAddons.map(a => a.slug) : activeAddonSlugs).map((slug) => {
+              const def = ALL_ADDONS.find((a) => a.slug === slug)
+              if (!def) return null
+              return (
+                <div key={slug} style={{
+                  borderRadius: 14,
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  padding: "14px 18px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
+                    <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
+                  </div>
+                  <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    {plan === "found_business" ? "Included" : `Active - $${def.price}/mo`}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Plan */}
       <section style={{ marginBottom: 24 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
@@ -451,98 +543,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
           </div>
         </Link>
       </div>
-
-      {/* Add Features */}
-      {availableAddons.length > 0 && (
-        <section style={{ marginBottom: 20 }}>
-          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            Add Features
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {availableAddons.map((addon) => (
-              <div key={addon.slug} style={{
-                borderRadius: 14,
-                backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                padding: "16px 18px",
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
-                      {addon.label}
-                    </p>
-                    <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                      {addon.description}
-                    </p>
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: "right" as const }}>
-                    <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
-                      +${addon.price}/mo
-                    </p>
-                    {company?.id && isActive && (
-                      <AddonActivateButton
-                        companyId={company.id}
-                        addonSlug={addon.slug}
-                        addonLabel={addon.label}
-                        addonPrice={addon.price}
-                      />
-                    )}
-                    {company?.slug && !isActive && (
-                      <div style={{ width: 112 }}>
-                        <MoreActivateButton
-                          slug={company.slug}
-                          companyName={company.name}
-                          targetPlan={plan}
-                          targetAddonSlug={addon.slug}
-                          targetAddonLabel={addon.label}
-                          targetAddonPrice={addon.price}
-                          size="compact"
-                        >
-                          Activate
-                        </MoreActivateButton>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Active Add-ons */}
-      {(plan === "found_business" ? businessIncludedAddons.length > 0 : activeAddonSlugs.length > 0) && (
-        <section id={plan === "found_business" ? "business-tools" : undefined} style={{ marginBottom: 20 }}>
-          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            {plan === "found_business" ? "Included Business Tools" : "My Add-ons"}
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {(plan === "found_business" ? businessIncludedAddons.map(a => a.slug) : activeAddonSlugs).map((slug) => {
-              const def = ALL_ADDONS.find((a) => a.slug === slug)
-              if (!def) return null
-              return (
-                <div key={slug} style={{
-                  borderRadius: 14,
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  padding: "14px 18px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
-                    <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
-                  </div>
-                  <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    {plan === "found_business" ? "Included" : `Active - $${def.price}/mo`}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Account */}
       <section style={{ marginBottom: 20 }}>

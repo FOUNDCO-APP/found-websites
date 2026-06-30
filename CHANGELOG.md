@@ -4,6 +4,19 @@
 
 ---
 
+## Session: June 30, 2026 — More Page Feature-Led Flow
+**AI:** Codex
+**Worked on:** More page order and upgrade psychology
+
+### Completed
+- Reordered the More page so business tools/features appear directly under My Dock.
+- My Plan now comes after Add Features / Included Business Tools, so the page leads with useful actions before billing context.
+- Existing activation, add-on, included Business tools, plan, and recommendation behavior stayed intact.
+
+### Decision Captured
+- Owners think in tools first, plans second. The More page should feel like business management before it feels like billing.
+
+---
 ## Session: June 30, 2026 — Business Tools Entitlements + Display Name Prompt
 **AI:** Codex
 **Worked on:** Found Business dashboard tools, display-name prompt persistence, Business public tool access

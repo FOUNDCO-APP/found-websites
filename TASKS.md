@@ -16,7 +16,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Found Business E2E retest** — verify refresh no longer repeats display-name prompt, all included tools appear free, public Business tools work, checkout gates allow Business, and $69 intro rate still holds.
+1. **Found Business E2E retest** — verify More page order is My Site → My Dock → included/tools → My Plan, refresh no longer repeats display-name prompt, all included tools appear free, public Business tools work, checkout gates allow Business, and $69 intro rate still holds.
 2. **Fix issues found in Business test** — bugs, copy, UX gaps surfaced during the full customer flow.
 3. **Run migration 043 if needed** — `social_post_drafts` table for saved social post drafts.
 
