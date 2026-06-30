@@ -538,6 +538,12 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
   const innerW    = phoneW - phonePad * 2 - 2
   const iframeScale = innerW / 390
 
+  useEffect(() => {
+    if (!slug || drawerMode || !iframeReady || activating) return
+    const t = setTimeout(() => setActivating(true), 1600)
+    return () => clearTimeout(t)
+  }, [slug, drawerMode, iframeReady, activating])
+
   return (
     <main
       className={`relative flex flex-col items-center ${drawerMode ? "h-full overflow-y-auto" : "min-h-screen"}`}
@@ -628,36 +634,20 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
           </div>
         )}
 
-        {/* See your site */}
-        <div className={`${slug && !drawerMode ? "mt-4" : "mt-8"} w-full max-w-[280px]`} style={{ animation: "fade-up 0.6s 0.7s ease-out both" }}>
-          <a
-            href={`${url}?preview=true`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
-            style={{ borderColor: "rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.72)", backgroundColor: "rgba(255,255,255,0.04)" }}>
-            See your site
-          </a>
-        </div>
-
-        {/* Set password CTA */}
-        {email && !drawerMode && (
-          <div className="mt-4 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.75s ease-out both" }}>
+        {/* See your site - only available in drawer/non-activation contexts. */}
+        {(!slug || drawerMode) && (
+          <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.7s ease-out both" }}>
             <a
-              href={companyId ? `https://my.foundco.app/api/select-company?id=${companyId}` : `https://my.foundco.app/login`}
+              href={`${url}?preview=true`}
+              target="_blank"
+              rel="noreferrer"
               className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
-              style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.5)", backgroundColor: "transparent" }}>
-              Open my dashboard →
+              style={{ borderColor: "rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.72)", backgroundColor: "rgba(255,255,255,0.04)" }}>
+              See your site
             </a>
           </div>
         )}
 
-        {/* Email nudge — non-drawer only */}
-        {email && !drawerMode && (
-          <p className="mt-6 text-center text-xs leading-6" style={{ color: "rgba(255,255,255,0.28)", animation: "fade-up 0.6s 0.8s ease-out both", opacity: 0 }}>
-            Dashboard link also sent to <span style={{ color: "rgba(255,255,255,0.5)" }}>{email}</span>
-          </p>
-        )}
       </div>
 
       {activating && slug && (
