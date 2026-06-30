@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
@@ -14,6 +15,7 @@ import { slugify as clientSlugify } from "@/lib/slugify"
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 const LIGHT_BG = "#FAFAF9"
+const ActivateOverlay = dynamic(() => import("@/components/ActivateOverlay"), { ssr: false })
 
 type Phase = "welcome" | "plan" | "questions"
 
@@ -388,10 +390,11 @@ function GeneratingScreen() {
 }
 
 // ── Reveal screen ─────────────────────────────────────────────────────────────
-function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId }: {
-  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string
+function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string
 }) {
   const [iframeReady, setIframeReady] = useState(false)
+  const [activating, setActivating] = useState(Boolean(slug))
 
   const phoneW    = drawerMode ? 200 : 290
   const phoneH    = drawerMode ? 420 : 600
@@ -512,6 +515,16 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId }:
           </p>
         )}
       </div>
+
+      {activating && slug && (
+        <ActivateOverlay
+          slug={slug}
+          companyName={name}
+          targetPlan={plan}
+          skipIntro
+          onClose={() => setActivating(false)}
+        />
+      )}
     </main>
   )
 }
@@ -1009,7 +1022,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
-  const [result, setResult]         = useState<{ url?: string; checkoutUrl?: string; companyId?: string; error?: string } | null>(null)
+  const [result, setResult]         = useState<{ url?: string; companyId?: string; slug?: string; plan?: string; error?: string } | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
@@ -1105,8 +1118,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       uiTimeout,
     ])
     if (res.success && res.url && res.slug && res.companyId) {
-      const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
-      setResult({ url: res.url, checkoutUrl: `https://${ROOT}/activate?slug=${res.slug}`, companyId: res.companyId })
+      setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan })
       // Fire-and-forget — activate page has its own fallback if intent isn't ready yet
       createSetupIntentForCompany({
         companyId: res.companyId,
@@ -1313,6 +1325,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       email={answers.email}
       drawerMode={drawerMode}
       companyId={result.companyId}
+      slug={result.slug}
+      plan={result.plan}
     />
   )
 

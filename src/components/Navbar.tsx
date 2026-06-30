@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import type { Company } from "@/types/company"
 import { intentLabel, intentHref } from "@/types/company"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { logoColor } from "@/lib/color"
 
 function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: string }) {
   const len = name.length
@@ -84,6 +85,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
   const navLinkWeight = "font-medium"
   const inactiveColor = isOnDark ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
   const barColor = isOnDark ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
+  const brandTextColor = logoColor(isOnDark ? "dark" : "light", primary)
 
   return (
     <>
@@ -133,7 +135,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                 </div>
               )
             ) : (
-              <BrandMark name={company.name} color={isOverlay ? "#ffffff" : primary} vibe={vibe} />
+              <BrandMark name={company.name} color={brandTextColor} vibe={vibe} />
             )}
           </Link>
 
@@ -197,7 +199,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     className="h-full w-full object-contain object-left" />
                 </div>
               ) : (
-                <BrandMark name={company.name} color={primary} vibe={vibe} />
+                <BrandMark name={company.name} color={logoColor("light", primary)} vibe={vibe} />
               )}
             </Link>
             <button onClick={() => setOpen(false)} aria-label="Close menu"

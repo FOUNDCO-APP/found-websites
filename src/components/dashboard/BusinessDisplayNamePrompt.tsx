@@ -14,9 +14,8 @@ function looksLikeSlug(name: string, slug: string) {
 }
 
 function titleFromSlug(slug: string) {
-  if (!slug.includes("-")) return ""
   return slug
-    .split("-")
+    .split(/[-_]+/)
     .filter(Boolean)
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ")
@@ -54,6 +53,8 @@ export default function BusinessDisplayNamePrompt({ initialName, slug }: { initi
       setError("Could not save the name. Try again.")
       return
     }
+    window.sessionStorage.setItem(storageKey, "dismissed")
+    setOpen(false)
     window.location.reload()
   }
 
@@ -69,10 +70,10 @@ export default function BusinessDisplayNamePrompt({ initialName, slug }: { initi
           Business name
         </p>
         <h2 style={{ margin: "0 0 10px", fontSize: 28, lineHeight: 1.05, fontWeight: 400, letterSpacing: 0, color: "white" }}>
-          How should your business name appear?
+          How would you like your business name to appear to your clients?
         </h2>
         <p style={{ margin: "0 0 18px", fontSize: 15, lineHeight: 1.55, color: "rgba(255,255,255,0.62)" }}>
-          Your URL can stay <strong style={{ color: "white" }}>{slug}</strong>. This is the name clients see on emails, estimates, and your website.
+          This is the name clients see on emails, estimates, and your website.
         </p>
         <input
           value={name}
