@@ -6,6 +6,7 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { hasAddonAccess } from "@/lib/featureAccess"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import OnlineOrderClient from "../order/OnlineOrderClient"
 import type { Metadata } from "next"
@@ -52,7 +53,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     .eq("addon_slug", "online_ordering")
     .eq("active", true)
     .maybeSingle()
-  const onlineOrderingActive = Boolean(onlineOrderingAddon)
+  const onlineOrderingActive = hasAddonAccess(company.plan, "online_ordering", onlineOrderingAddon ? ["online_ordering"] : [])
 
   return (
     <>

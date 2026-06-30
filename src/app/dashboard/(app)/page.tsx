@@ -4,6 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import HomeClient from "@/components/dashboard/HomeClient"
 
+function recommendedBusinessTool(industry: string | null): { name: string; path: string } {
+  if (industry === "food" || industry === "home_based_food") return { name: "online ordering", path: "/leads?view=orders" }
+  if (industry === "retail" || industry === "makers_crafts") return { name: "shopping cart", path: "/leads?view=orders" }
+  if (["wellness", "beauty", "fitness", "pet_services", "education", "healthcare"].includes(industry ?? "")) return { name: "booking calendar", path: "/schedule" }
+  return { name: "estimates", path: "/estimates" }
+}
 export default async function HomePage() {
   const user = await getAuthUser()
   if (!user) redirect("/login")
@@ -74,6 +80,7 @@ export default async function HomePage() {
       recentLeads={recentLeads}
       lastPhotoAt={lastPhotoRow?.created_at ?? null}
       industry={company.industry_category ?? null}
+      businessTool={company.plan === "found_business" ? recommendedBusinessTool(company.industry_category ?? null) : null}
     />
   )
 }

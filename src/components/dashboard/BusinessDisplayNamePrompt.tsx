@@ -33,6 +33,7 @@ export default function BusinessDisplayNamePrompt({ initialName, slug }: { initi
   useEffect(() => {
     if (!shouldAsk) return
     if (window.sessionStorage.getItem(storageKey) === "dismissed") return
+    if (window.localStorage.getItem(storageKey) === "dismissed") return
     setOpen(true)
   }, [shouldAsk, storageKey])
 
@@ -54,12 +55,14 @@ export default function BusinessDisplayNamePrompt({ initialName, slug }: { initi
       return
     }
     window.sessionStorage.setItem(storageKey, "dismissed")
+    window.localStorage.setItem(storageKey, "dismissed")
     setOpen(false)
     window.location.reload()
   }
 
   function keepCurrent() {
     window.sessionStorage.setItem(storageKey, "dismissed")
+    window.localStorage.setItem(storageKey, "dismissed")
     setOpen(false)
   }
 

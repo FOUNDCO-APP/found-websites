@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { hasAddonAccess } from "@/lib/featureAccess"
 import type { MenuCategory } from "@/types/company"
 
 type CheckoutItemInput = {
@@ -45,13 +46,19 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: company } = await admin
     .from("companies")
-    .select("id, name, email, phone, stripe_connect_account_id, website_config(menu_items), addon_subscriptions!inner(id)")
+    .select("id, name, email, phone, plan, stripe_connect_account_id, website_config(menu_items)")
     .eq("id", companyId)
-    .eq("addon_subscriptions.addon_slug", "online_ordering")
-    .eq("addon_subscriptions.active", true)
     .single()
 
-  if (!company) {
+  const { data: addon } = await admin
+    .from("addon_subscriptions")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("addon_slug", "online_ordering")
+    .eq("active", true)
+    .maybeSingle()
+
+  if (!company || !hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [])) {
     return NextResponse.json({ error: "Online ordering is not active for this business." }, { status: 404 })
   }
 

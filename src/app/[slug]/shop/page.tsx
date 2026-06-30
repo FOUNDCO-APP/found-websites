@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { hasAddonAccess } from "@/lib/featureAccess"
 import ShopClient from "./ShopClient"
 import type { Metadata } from "next"
 
@@ -32,7 +33,7 @@ export default async function ShopPage({ params, searchParams }: {
     .eq("active", true)
     .maybeSingle()
 
-  if (!addon) notFound()
+  if (!hasAddonAccess(company.plan, "shopping_cart", addon ? ["shopping_cart"] : [])) notFound()
 
   return (
     <>

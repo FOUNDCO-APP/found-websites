@@ -39,7 +39,10 @@ function inboxLabelFor(industry: string | null | undefined): string {
 }
 
 function inboxPathFor(industry: string | null | undefined): string {
-  return defaultFormIntentFor(industry) === "estimate" ? "/estimates" : "/leads"
+  const intent = defaultFormIntentFor(industry)
+  if (intent === "estimate") return "/estimates"
+  if (intent === "order") return "/leads?view=orders"
+  return "/leads"
 }
 
 // All possible tabs for an industry — used for byId mapping when loading from localStorage

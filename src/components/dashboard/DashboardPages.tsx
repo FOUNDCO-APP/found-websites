@@ -46,9 +46,10 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
   }
 
   const inboxLabel = inboxLabelFor(industry)
+  const inboxPath = defaultFormIntentFor(industry) === "order" ? "/leads?view=orders" : "/leads"
   return [
     { id: "home", label: "Home", path: "/" },
-    { id: "inbox", label: inboxLabel, path: "/leads" },
+    { id: "inbox", label: inboxLabel, path: inboxPath },
     ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
     PEOPLE,
     { id: "photos", label: "Photos", path: "/photos" },

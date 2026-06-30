@@ -9,7 +9,7 @@ export type Feature =
   | "quotes"
   | "review_collection"
   | "email_marketing"
-  // Add-ons (any plan, requires addon_subscriptions row)
+  // Add-ons (included with Business, or active on lower plans)
   | "menu_display"
   | "online_ordering"
   | "shopping_cart"
@@ -28,6 +28,33 @@ export type AddonSlug =
   | "quote_payments"
   | "reservation_calendar"
   | "email_marketing"
+
+export const BUSINESS_INCLUDED_ADDONS: AddonSlug[] = [
+  "online_ordering",
+  "shopping_cart",
+  "quote_payments",
+  "reservation_calendar",
+  "email_marketing",
+]
+
+export function getEffectiveAddons(
+  plan: string | null | undefined,
+  activeAddons: string[] = [],
+): AddonSlug[] {
+  const merged = new Set(activeAddons as AddonSlug[])
+  if ((plan ?? "found") === "found_business") {
+    BUSINESS_INCLUDED_ADDONS.forEach(slug => merged.add(slug))
+  }
+  return Array.from(merged)
+}
+
+export function hasAddonAccess(
+  plan: string | null | undefined,
+  addonSlug: AddonSlug,
+  activeAddons: string[] = [],
+): boolean {
+  return getEffectiveAddons(plan, activeAddons).includes(addonSlug)
+}
 
 export function getFeatureAccess(
   plan: string | null | undefined,
@@ -64,13 +91,13 @@ export function getFeatureAccess(
     case "menu_display":
       return activeAddons.includes("menu_display")
     case "online_ordering":
-      return activeAddons.includes("online_ordering")
+      return hasAddonAccess(p, "online_ordering", activeAddons)
     case "shopping_cart":
-      return activeAddons.includes("shopping_cart")
+      return hasAddonAccess(p, "shopping_cart", activeAddons)
     case "quote_payments":
-      return activeAddons.includes("quote_payments")
+      return hasAddonAccess(p, "quote_payments", activeAddons)
     case "reservation_calendar":
-      return activeAddons.includes("reservation_calendar")
+      return hasAddonAccess(p, "reservation_calendar", activeAddons)
 
     default:
       return false

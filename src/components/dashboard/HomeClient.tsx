@@ -44,6 +44,7 @@ type Props = {
   recentLeads: RecentLead[]
   lastPhotoAt: string | null
   industry: string | null
+  businessTool: { name: string; path: string } | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 export default function HomeClient({
   firstName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads, lastPhotoAt, industry,
+  siteSlug, isActive, recentLeads, lastPhotoAt, industry, businessTool,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -340,6 +341,19 @@ export default function HomeClient({
         </div>
       )}
 
+      {/* Business tools nudge */}
+      {businessTool && !hasNewLead && (
+        <div style={{ padding: "14px 20px 0", ...fade(0.1) }}>
+          <Link href="/more#business-tools" style={{ textDecoration: "none", display: "block" }}>
+            <div style={{ borderRadius: 20, padding: "16px 18px", background: "linear-gradient(160deg, rgba(50,208,116,0.11), rgba(50,208,116,0.035))", border: "1px solid rgba(50,208,116,0.18)" }}>
+              <p style={{ margin: "0 0 5px", ...TYPE.caption, color: GREEN }}>Business tools ready</p>
+              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                We turned on {businessTool.name} for you. View all included tools.
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
       {/* ── RESPONSIVE SPACER — distributes empty space between card and tiles ── */}
       <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />
 

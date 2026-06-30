@@ -4,6 +4,7 @@ import { getLayout } from "@/lib/layout"
 import { heroGradient } from "@/lib/color"
 import { getStockImages } from "@/lib/stockImages"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryCTAs } from "@/lib/industryCTAs"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
@@ -35,7 +36,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     .select("addon_slug")
     .eq("company_id", company.id)
     .eq("active", true)
-  const activeAddons = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
+  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
   const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
 
   const { data: locRows } = await admin

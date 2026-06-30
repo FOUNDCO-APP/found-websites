@@ -7,6 +7,7 @@ import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
 import BusinessDisplayNamePrompt from "@/components/dashboard/BusinessDisplayNamePrompt"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 
 import { BLACK } from "@/lib/dashboard/typography"
 
@@ -34,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .then(({ count }) => count ?? 0)
     : 0
 
-  const activeAddonSlugs = company?.id
+  const paidAddonSlugs = company?.id
     ? await admin
         .from("addon_subscriptions")
         .select("addon_slug")
@@ -126,7 +127,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         companyName={company?.name ?? null}
         newLeadCount={newLeadCount}
         industry={company?.industry_category ?? null}
-        activeAddons={activeAddonSlugs}
+        activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs)}
       />
 
       <style>{`

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { hasAddonAccess } from "@/lib/featureAccess"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { SCHEDULING_CTA } from "@/lib/industryCTAs"
@@ -53,7 +54,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
     .eq("active", true)
     .maybeSingle()
 
-  const hasCalendar = !!addon
+  const hasCalendar = hasAddonAccess(company.plan, "reservation_calendar", addon ? ["reservation_calendar"] : [])
 
   // Fetch working days to grey non-working days on the calendar (no API calls from client)
   let workingDays: number[] = []

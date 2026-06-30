@@ -4,6 +4,26 @@
 
 ---
 
+## Session: June 30, 2026 — Business Tools Entitlements + Display Name Prompt
+**AI:** Codex
+**Worked on:** Found Business dashboard tools, display-name prompt persistence, Business public tool access
+
+### Completed
+- Business display-name prompt now persists dismissal in `localStorage` so refreshing does not keep reopening it on the same browser.
+- Added shared Business entitlement logic: Found Business includes online ordering, shopping cart, quote/deposit payments, booking calendar, and email marketing without fake paid add-on rows.
+- Dashboard nav and More page now receive effective included tools for Found Business.
+- More page hides paid add-on upsells for Business and shows **Included Business Tools** instead.
+- Public `/order`, `/shop`, `/menu`, and `/reserve` access now respects Found Business entitlements.
+- Online ordering and shopping cart checkout APIs now allow Found Business via plan entitlement, not only add-on subscription rows.
+- Dashboard home now shows a Business tools nudge with an industry-aware recommended tool.
+- Retail/order dashboard routing now opens the orders view instead of the generic leads view.
+
+### Decisions Captured
+- Do not create fake Stripe add-on purchases for Found Business. Entitlement should come from the plan.
+- Business owners should see all included tools for free, while Found can still recommend the most relevant tool by industry.
+- Payment setup copy should remain industry-aware and should not switch to product-payment wording just because Business includes shopping cart.
+
+---
 ## Session: June 29, 2026 — Onboarding Plan Flow, Intro Pricing, Activation, Social Posts
 **AI:** Codex
 **Worked on:** public onboarding plan selection, More plan pricing, display-name prompt, activation flow, brand contrast, social post assistant, testing plan

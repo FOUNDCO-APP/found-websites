@@ -11,7 +11,7 @@ import { openBillingPortal, startUpgradeCheckout } from "./actions"
 import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
-import { getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
+import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const PLAN_META: Record<string, { label: string; intro: number; normal: number; color: string }> = {
@@ -158,7 +158,9 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
     activeAddonSlugs = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
   }
 
-  const availableAddons = relevantAddons.filter((a) => !activeAddonSlugs.includes(a.slug))
+  const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs)
+  const businessIncludedAddons = ALL_ADDONS.filter((a) => BUSINESS_INCLUDED_ADDONS.includes(a.slug))
+  const availableAddons = plan === "found_business" ? [] : relevantAddons.filter((a) => !effectiveAddonSlugs.includes(a.slug))
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
 
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
@@ -228,7 +230,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       <DashboardPages
         companyName={company?.name ?? null}
         industry={industryCategory}
-        activeAddons={activeAddonSlugs}
+        activeAddons={effectiveAddonSlugs}
       />
 
       {/* Plan */}
@@ -509,14 +511,14 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       )}
 
       {/* Active Add-ons */}
-      {activeAddonSlugs.length > 0 && (
-        <section style={{ marginBottom: 20 }}>
+      {(plan === "found_business" ? businessIncludedAddons.length > 0 : activeAddonSlugs.length > 0) && (
+        <section id={plan === "found_business" ? "business-tools" : undefined} style={{ marginBottom: 20 }}>
           <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            My Add-ons
+            {plan === "found_business" ? "Included Business Tools" : "My Add-ons"}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {activeAddonSlugs.map((slug) => {
-              const def = relevantAddons.find((a) => a.slug === slug)
+            {(plan === "found_business" ? businessIncludedAddons.map(a => a.slug) : activeAddonSlugs).map((slug) => {
+              const def = ALL_ADDONS.find((a) => a.slug === slug)
               if (!def) return null
               return (
                 <div key={slug} style={{
@@ -533,7 +535,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                     <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
                   </div>
                   <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    Active · ${def.price}/mo
+                    {plan === "found_business" ? "Included" : `Active - $${def.price}/mo`}
                   </span>
                 </div>
               )
