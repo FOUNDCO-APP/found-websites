@@ -539,10 +539,10 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
   const iframeScale = innerW / 390
 
   useEffect(() => {
-    if (!slug || drawerMode || !iframeReady || activating) return
+    if (!slug || !iframeReady || activating) return
     const t = setTimeout(() => setActivating(true), 1600)
     return () => clearTimeout(t)
-  }, [slug, drawerMode, iframeReady, activating])
+  }, [slug, iframeReady, activating])
 
   return (
     <main
@@ -622,8 +622,11 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
         </div>
 
         {/* Activation comes after the reveal, not before it. */}
-        {slug && !drawerMode && (
-          <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
+        {slug ? (
+          <div className="mt-8 w-full max-w-[300px] text-center" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
+            <p className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: SIGNAL_GREEN }}>
+              Ready to activate your site?
+            </p>
             <button
               type="button"
               onClick={() => setActivating(true)}
@@ -632,10 +635,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
               Activate my site
             </button>
           </div>
-        )}
-
-        {/* See your site - only available in drawer/non-activation contexts. */}
-        {(!slug || drawerMode) && (
+        ) : (
           <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.7s ease-out both" }}>
             <a
               href={`${url}?preview=true`}

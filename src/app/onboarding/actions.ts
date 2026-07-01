@@ -306,9 +306,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       lead_email: input.leadEmail?.trim() || null,
       city,
       state,
-      // When both logos are provided: swap so logo_url = light-bg version, logo_white_url = dark-bg version
-      logo_url: input.logoWhiteUrl ? input.logoWhiteUrl : (input.logoUrl ?? null),
-      logo_white_url: input.logoWhiteUrl ? (input.logoUrl ?? null) : null,
+      // logo_url is for light backgrounds; logo_white_url is for dark backgrounds.
+      logo_url: input.logoUrl ?? null,
+      logo_white_url: input.logoWhiteUrl ?? null,
       navbar_dark: input.navbarDark ?? false,
       primary_color: primaryColor,
       accent_color_1: mix(primaryColor, "#000000", 0.22),
