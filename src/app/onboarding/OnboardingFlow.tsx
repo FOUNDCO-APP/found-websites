@@ -2078,35 +2078,32 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                           <div className="space-y-3">
                             {/* Dual-background preview */}
                             <p className="text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
-                              How your logo looks on your site
+                              How your logo works across backgrounds
                             </p>
                             <div className="grid grid-cols-2 rounded-xl overflow-hidden border"
                               style={{ borderColor: tk.cardBorder(false) }}>
                               <div className="flex flex-col items-center justify-center gap-2 p-5" style={{ backgroundColor: "#111111", minHeight: "88px" }}>
-                                <img src={answers.logoUrl} alt="Logo on dark" className="max-h-10 max-w-full object-contain" />
-                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Dark sections</span>
+                                <img src={answers.logoWhiteUrl || answers.logoUrl} alt="Logo on dark" className="max-h-10 max-w-full object-contain" />
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Dark backgrounds</span>
                               </div>
                               <div className="flex flex-col items-center justify-center gap-2 p-5 border-l"
                                 style={{ backgroundColor: "#ffffff", borderColor: tk.cardBorder(false), minHeight: "88px" }}>
                                 <img src={answers.logoUrl} alt="Logo on light" className="max-h-10 max-w-full object-contain"
                                   style={{ filter: "drop-shadow(0 0 1px rgba(0,0,0,0.18)) drop-shadow(0 0 3px rgba(0,0,0,0.10))" }} />
-                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(0,0,0,0.3)" }}>Top nav bar</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "rgba(0,0,0,0.3)" }}>Light backgrounds</span>
                               </div>
                             </div>
                             {/* Smart fork — only shown when no decision made yet */}
                             {!answers.navbarDark && !answers.logoWhiteUrl && (
                               <div className="space-y-2">
-                                {logoTheme === "dark" && (
-                                  <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#32D074" }}>
-                                    ✓ Your logo looks great on both backgrounds.
-                                  </p>
-                                )}
-                                {(logoTheme === "unknown" || !logoTheme) && (
+                                {(logoTheme === "dark" || logoTheme === "unknown" || !logoTheme) && (
                                   <p className="text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
-                                    If the light side looks faint:
+                                    {logoTheme === "dark"
+                                      ? "Your logo is best on light backgrounds. Choose how it should work on dark backgrounds:"
+                                      : "If either side looks faint:"}
                                   </p>
                                 )}
-                                {(logoTheme === "unknown" || !logoTheme) && (
+                                {(logoTheme === "dark" || logoTheme === "unknown" || !logoTheme) && (
                                   <>
                                   <button type="button" onClick={() => set("navbarDark", true)}
                                     className="w-full flex items-center gap-3 rounded-xl border p-4 text-left transition hover:opacity-80"
@@ -2115,8 +2112,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                       <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
                                     </div>
                                     <div>
-                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Keep my site dark</span>
-                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Dark navigation throughout — your logo always shows perfectly</span>
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Use automatic light logo</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Found will create a light version for dark backgrounds. Best for simple logos.</span>
                                     </div>
                                   </button>
                                   <label className="w-full flex items-center gap-3 rounded-xl border p-4 text-left cursor-pointer transition hover:opacity-80"
@@ -2135,8 +2132,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for white backgrounds</span>
-                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Ask your designer for "the dark version of the logo" — then upload it here</span>
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for dark backgrounds</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Upload the white or light logo your designer made for dark backgrounds.</span>
                                       {logoWhiteError && <p className="text-xs font-black text-red-500 mt-1">{logoWhiteError}</p>}
                                     </div>
                                     <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
@@ -2156,8 +2153,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
                                   {logoTheme === "light"
-                                    ? "Light logo detected — navigation set to dark so it always stands out."
-                                    : "Dark navigation — your logo will look great everywhere."}
+                                    ? "Light logo detected - dark backgrounds will use the automatic light version."
+                                    : "Automatic light logo selected for dark backgrounds."}
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("navbarDark", false)}>
@@ -2172,10 +2169,10 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                 style={{ backgroundColor: `${answers.primaryColor}18`, border: `1px solid ${answers.primaryColor}40` }}>
                                 <div className="h-8 w-10 shrink-0 rounded border flex items-center justify-center overflow-hidden"
                                   style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
-                                  <img src={answers.logoWhiteUrl} alt="Light logo" className="max-h-7 max-w-full object-contain" />
+                                  <img src={answers.logoWhiteUrl} alt="Dark-background logo" className="max-h-7 max-w-full object-contain" />
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
-                                  Light-background version uploaded ✓
+                                  Dark-background logo uploaded ✓
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("logoWhiteUrl", "")}>
