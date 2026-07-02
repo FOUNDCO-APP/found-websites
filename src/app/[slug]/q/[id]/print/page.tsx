@@ -43,7 +43,9 @@ export default async function EstimatePrintPage({
   const color = company.primary_color ?? "#1A7A3C"
   const companyName = displayName(company.name)
 
-  const estimateNumber = id.slice(-8).toUpperCase()
+  const estimateNumber = estimate.estimate_number
+    ? String(estimate.estimate_number).padStart(4, "0")
+    : id.slice(-8).toUpperCase()
   const dateFormatted = new Date(estimate.created_at).toLocaleDateString("en-US", {
     month: "long", day: "numeric", year: "numeric",
   })

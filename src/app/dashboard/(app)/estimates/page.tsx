@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
+import PlacesInput from "@/components/dashboard/PlacesInput"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -122,6 +123,8 @@ export default function EstimatesPage() {
   const [rateSheet, setRateSheet] = useState<RateSheetItem[]>([])
   const [companySlug, setCompanySlug] = useState("")
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
+  const [defaultTaxRate, setDefaultTaxRate] = useState(0)
+  const [leads, setLeads] = useState<{ id: string; name: string; phone: string | null; email: string | null }[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "draft" | "sent" | "viewed" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
@@ -139,7 +142,8 @@ export default function EstimatesPage() {
       fetch("/api/estimates").then(r => r.json()),
       fetch("/api/rate-sheet").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({})),
-    ]).then(([ed, rd, sd]) => {
+      fetch("/api/leads").then(r => r.json()).catch(() => ({ leads: [] })),
+    ]).then(([ed, rd, sd, ld]) => {
       setEstimates(ed.estimates ?? [])
       const deepLinkedEstimate = new URLSearchParams(window.location.search).get("estimate")
       if (deepLinkedEstimate && (ed.estimates ?? []).some((e: Estimate) => e.id === deepLinkedEstimate)) {
@@ -148,6 +152,8 @@ export default function EstimatesPage() {
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
       setCompanyStripeReady(Boolean(sd.stripe_connect_account_id))
+      setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
+      setLeads((ld.leads ?? []).map((l: { id: string; name: string; phone: string | null; email: string | null }) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email })))
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -240,16 +246,18 @@ export default function EstimatesPage() {
           )}
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <button onClick={() => setShowRateSheet(true)} style={{
-            width: 44, height: 44, borderRadius: 14,
+          <button onClick={() => setShowRateSheet(true)} title="My Services" style={{
+            height: 38, padding: "0 14px", borderRadius: 12,
             backgroundColor: "rgba(255,255,255,0.06)",
             border: "1px solid rgba(255,255,255,0.1)",
-            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+            color: "rgba(255,255,255,0.45)", fontSize: 13, fontWeight: 600,
           }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
               <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
             </svg>
+            Services
           </button>
           <button onClick={() => setShowBuilder(true)} style={{
             width: 44, height: 44, borderRadius: "50%",
@@ -331,7 +339,13 @@ export default function EstimatesPage() {
       {showBuilder && (
         <BuilderSheet
           rateSheet={rateSheet}
+          leads={leads}
+          defaultTaxRate={defaultTaxRate}
           onSave={handleCreate}
+          onSaveDefaultTax={(rate) => {
+            setDefaultTaxRate(rate)
+            fetch("/api/company-slug", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ default_tax_rate: rate }) }).catch(() => {})
+          }}
           onClose={() => setShowBuilder(false)}
         />
       )}
@@ -359,6 +373,7 @@ export default function EstimatesPage() {
           onClose={() => setShowRateSheet(false)}
         />
       )}
+
     </main>
   )
 }
@@ -411,9 +426,14 @@ function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () =
 
 // ── Builder Sheet ─────────────────────────────────────────────────────────────
 
-function BuilderSheet({ rateSheet, onSave, onClose }: {
+type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null }
+
+function BuilderSheet({ rateSheet, leads, defaultTaxRate, onSave, onSaveDefaultTax, onClose }: {
   rateSheet: RateSheetItem[]
+  leads: LeadSuggestion[]
+  defaultTaxRate: number
   onSave: (data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) => Promise<void>
+  onSaveDefaultTax: (rate: number) => void
   onClose: () => void
 }) {
   const [clientFirst, setClientFirst] = useState("")
@@ -423,7 +443,10 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
   const [clientEmail, setClientEmail] = useState("")
   const [address, setAddress] = useState("")
   const [lineItems, setLineItems] = useState<LineItem[]>([])
-  const [taxRate, setTaxRate] = useState(0)
+  const [taxRate, setTaxRate] = useState(defaultTaxRate)
+  const [taxSaved, setTaxSaved] = useState(false)
+  const [suggestions, setSuggestions] = useState<LeadSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [saving, setSaving] = useState(false)
   const [newDesc, setNewDesc] = useState("")
   const [newQty, setNewQty] = useState("1")
@@ -435,6 +458,34 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.unit_price, 0)
   const taxAmt = subtotal * taxRate
   const total = subtotal + taxAmt
+
+  function handleFirstNameChange(value: string) {
+    setClientFirst(value)
+    if (value.trim().length >= 1) {
+      const q = value.toLowerCase()
+      const matches = leads.filter(l => l.name.toLowerCase().includes(q)).slice(0, 5)
+      setSuggestions(matches)
+      setShowSuggestions(matches.length > 0)
+    } else {
+      setShowSuggestions(false)
+    }
+  }
+
+  function selectSuggestion(lead: LeadSuggestion) {
+    const parts = lead.name.trim().split(" ")
+    setClientFirst(parts[0] ?? "")
+    setClientLast(parts.slice(1).join(" "))
+    setClientPhone(lead.phone ?? "")
+    setClientEmail(lead.email ?? "")
+    setShowSuggestions(false)
+    setSuggestions([])
+  }
+
+  function saveDefaultTax() {
+    onSaveDefaultTax(taxRate)
+    setTaxSaved(true)
+    setTimeout(() => setTaxSaved(false), 2000)
+  }
 
   function addFromRateSheet(item: RateSheetItem) {
     setLineItems(prev => [...prev, { ...item, quantity: 1 }])
@@ -493,7 +544,27 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
           <p style={{ ...labelStyle }}>Client</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <input value={clientFirst} onChange={e => setClientFirst(e.target.value)} placeholder="First name *" style={inputStyle} />
+              <div style={{ position: "relative" }}>
+                <input
+                  value={clientFirst}
+                  onChange={e => handleFirstNameChange(e.target.value)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+                  placeholder="First name *"
+                  autoComplete="off"
+                  style={inputStyle}
+                />
+                {showSuggestions && (
+                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 100, backgroundColor: "#1A1F1B", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, overflow: "hidden" }}>
+                    {suggestions.map(lead => (
+                      <button key={lead.id} onMouseDown={() => selectSuggestion(lead)} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", textAlign: "left", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ color: "white", fontSize: 14, fontWeight: 600 }}>{lead.name}</div>
+                        {lead.phone && <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{lead.phone}</div>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input value={clientLast} onChange={e => setClientLast(e.target.value)} placeholder="Last name" style={inputStyle} />
             </div>
             <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company / Business (optional)" style={inputStyle} />
@@ -506,8 +577,8 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
 
         {/* Property */}
         <div style={{ marginBottom: 24 }}>
-          <p style={{ ...labelStyle }}>Property Address</p>
-          <input value={address} onChange={e => setAddress(e.target.value)} placeholder="123 Main St, City, State" style={inputStyle} />
+          <p style={{ ...labelStyle }}>Property / Job Address</p>
+          <PlacesInput value={address} onChange={setAddress} style={inputStyle} />
         </div>
 
         {/* Line Items */}
@@ -521,19 +592,22 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
             }}>+ Add Line</button>
           </div>
 
-          {/* Rate sheet quick-add */}
+          {/* My Services quick-add */}
           {rateSheet.length > 0 && (
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
-              {rateSheet.map((item, i) => (
-                <button key={i} onClick={() => addFromRateSheet(item)} style={{
-                  padding: "6px 12px", borderRadius: 100,
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                }}>
-                  + {item.description}
-                </button>
-              ))}
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 6 }}>My Services</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {rateSheet.map((item, i) => (
+                  <button key={i} onClick={() => addFromRateSheet(item)} style={{
+                    padding: "6px 12px", borderRadius: 100,
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    backgroundColor: "rgba(255,255,255,0.04)",
+                    color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  }}>
+                    + {item.description}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -596,7 +670,14 @@ function BuilderSheet({ rateSheet, onSave, onClose }: {
         {/* Tax */}
         <div style={{ marginBottom: 24, padding: "16px 18px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subtotal > 0 ? 12 : 0 }}>
-            <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Tax rate</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Tax rate</span>
+              {taxRate > 0 && taxRate !== defaultTaxRate && (
+                <button onClick={saveDefaultTax} style={{ padding: "3px 9px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                  {taxSaved ? "Saved ✓" : "Save as default"}
+                </button>
+              )}
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
                 type="number"
@@ -1121,7 +1202,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                   <input value={editPhone} onChange={e => setEditPhone(e.target.value)} type="tel" placeholder="Phone" style={inputStyle} />
                   <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="Email" style={inputStyle} />
                 </div>
-                <input value={editAddress} onChange={e => setEditAddress(e.target.value)} placeholder="Property address" style={inputStyle} />
+                <PlacesInput value={editAddress} onChange={setEditAddress} placeholder="Property / Job address" style={inputStyle} />
               </div>
             </div>
 
@@ -1327,11 +1408,11 @@ function RateSheetManager({ items, onChange, onClose }: {
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 22px 48px", maxHeight: "90dvh", overflowY: "auto" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Rate Sheet</h2>
+          <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>My Services</h2>
           <button onClick={() => setAdding(v => !v)} style={{ padding: "7px 14px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`, backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add</button>
         </div>
         <p style={{ margin: "0 0 20px", color: "rgba(255,255,255,0.4)", fontSize: 13, lineHeight: 1.5 }}>
-          Save your common services and prices. They'll appear as quick-add buttons when building estimates.
+          Your saved services appear as quick-add buttons when building estimates.
         </p>
 
         {adding && (
@@ -1379,7 +1460,7 @@ function RateSheetManager({ items, onChange, onClose }: {
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            {saving ? "Saving…" : "Save Rate Sheet"}
+            {saving ? "Saving…" : "Save Services"}
           </button>
         </div>
       </div>

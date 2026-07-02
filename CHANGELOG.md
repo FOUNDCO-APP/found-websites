@@ -4,6 +4,37 @@
 
 ---
 
+## Session: July 2, 2026 — Estimates: Session 2 (Client Autocomplete, Google Places, Default Tax, Services)
+**AI:** Claude Code (Sonnet 4.6)
+**Commit:** pending
+
+### Completed
+- **Print page estimate number** — Now displays `estimate_number` (padded to 4 digits e.g. "0001") from Session 1 instead of the raw UUID tail.
+- **Client name autocomplete** — First-name field in the estimate builder now searches your leads as you type. Dropdown shows name + phone. Tapping a result auto-fills first name, last name, phone, and email from that lead's record.
+- **Google Places address autocomplete** — "Property / Job Address" field now uses the Google Maps Places API for address suggestions. Component (`PlacesInput.tsx`) loads the script once per page and initializes autocomplete. Falls back to plain input if `NEXT_PUBLIC_GOOGLE_PLACES_API_KEY` is not set.
+- **Default tax rate** — Companies now have a `default_tax_rate` field. New estimates pre-fill with the saved default. When the owner sets a different tax rate in the builder, a "Save as default" button appears inline. Click it → saves to the company for all future estimates. Migration 045 adds the column.
+- **Rate Sheet → "My Services"** — Renamed throughout the estimates page: the header button now says "Services", the manager sheet says "My Services", the save button says "Save Services", and the quick-add section label now says "My Services".
+- **"Property / Job Address"** — Label updated to be inclusive of service businesses that do on-site work (not just property work).
+
+### Files changed
+- `src/app/[slug]/q/[id]/print/page.tsx` — Uses `estimate.estimate_number` for estimate number display
+- `src/lib/dashboard/getCompany.ts` — Added `default_tax_rate` to SELECT and CompanyRow type
+- `src/app/dashboard/api/company-slug/route.ts` — Returns `default_tax_rate`; PATCH now accepts it
+- `src/components/dashboard/PlacesInput.tsx` — NEW Google Places address autocomplete component
+- `src/app/dashboard/(app)/estimates/page.tsx` — Client autocomplete, leads fetch, default tax, Services rename, PlacesInput
+
+### Must run before deploy
+- `scripts/migration-044-estimate-number.sql` in Supabase SQL editor (if not already done)
+- `scripts/migration-045-company-default-tax.sql` in Supabase SQL editor
+
+### Must Test
+- New estimate: type first 2+ chars of an existing lead's name → dropdown appears with matches → tap to auto-fill all contact fields
+- Address field: start typing an address → Google Places suggestions appear → select one → fills formatted address
+- Tax rate: set a rate that differs from the default → "Save as default" button appears → click it → create another estimate → confirm tax pre-fills
+- Print/PDF: click "Download / Print PDF" on any estimate → print page opens → estimate number is formatted as "0001" (or the actual number)
+
+---
+
 ## Session: July 2, 2026 — Estimates: Session 1 (P0 Webhook, Decline, Expiration, Numbering)
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** pending

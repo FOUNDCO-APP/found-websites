@@ -10,7 +10,7 @@ export async function GET() {
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
-  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, formIntent: company?.form_intent ?? null, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: company?.default_tax_rate ?? 0 })
 }
 
 export async function PATCH(req: Request) {
@@ -21,9 +21,10 @@ export async function PATCH(req: Request) {
   const body = await req.json()
   const admin = createAdminClient()
 
-  const patch: Record<string, string> = {}
+  const patch: Record<string, string | number> = {}
   if (body.form_intent) patch.form_intent = body.form_intent
   if (body.name) patch.name = body.name.trim()
+  if (typeof body.default_tax_rate === "number") patch.default_tax_rate = Math.max(0, Math.min(1, body.default_tax_rate))
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 })
 
   const { error } = await admin.from("companies").update(patch).eq("id", company.id)
