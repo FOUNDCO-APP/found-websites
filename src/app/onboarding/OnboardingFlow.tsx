@@ -1385,6 +1385,13 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
           set("primaryColor", res.dominantColor)
           setLogoDetectedColor(res.dominantColor)
         }
+
+        if (keepExistingWhite) {
+          setLogoTheme("dark")
+          set("navbarDark", false)
+          return
+        }
+
         detectLogoLightness(uploadedUrl).then((theme) => {
           setLogoTheme(theme)
           if (theme === "light") {
