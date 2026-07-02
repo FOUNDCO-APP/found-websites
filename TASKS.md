@@ -144,6 +144,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Remove debug `[Activate]` console logs
 - `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` for connect-domain feature
 - Custom domain flow end-to-end test
+- **Resend module-level init cleanup** — `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
 ### Decisions needed
 - Portal name — "Found Studio" proposed, needs Steve/team sign-off
