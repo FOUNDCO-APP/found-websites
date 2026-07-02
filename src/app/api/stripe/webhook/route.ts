@@ -179,6 +179,55 @@ export async function POST(req: NextRequest) {
 
   const supabase = getAdminClient()
 
+  if (event.type === "payment_intent.succeeded") {
+    const pi = event.data.object as Stripe.PaymentIntent
+    if (pi.metadata?.kind === "estimate_deposit" && pi.metadata?.estimate_id) {
+      const estimateId = pi.metadata.estimate_id
+      const { data: estimate } = await supabase
+        .from("estimates")
+        .select("id, deposit_paid_at, company_id, total, deposit_amount, client_name, client_first_name, client_last_name, client_email")
+        .eq("id", estimateId)
+        .maybeSingle()
+
+      if (estimate && !estimate.deposit_paid_at) {
+        const now = new Date().toISOString()
+        await supabase.from("estimates").update({
+          deposit_paid_at: now,
+          status: "accepted",
+          accepted_at: now,
+          updated_at: now,
+        }).eq("id", estimateId)
+
+        const { data: company } = await supabase
+          .from("companies")
+          .select("name, email, lead_email, primary_color")
+          .eq("id", estimate.company_id)
+          .maybeSingle()
+
+        const ownerEmail = company?.lead_email || company?.email
+        if (ownerEmail && process.env.RESEND_API_KEY) {
+          const resend = new Resend(process.env.RESEND_API_KEY)
+          const clientName = estimate.client_first_name
+            ? `${estimate.client_first_name} ${estimate.client_last_name ?? ""}`.trim()
+            : (estimate.client_name ?? "Your client")
+          const color = company?.primary_color ?? "#30D158"
+          const depositAmt = estimate.deposit_amount ?? 0
+          const total = estimate.total ?? 0
+          const depositFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(depositAmt)
+          const dashboardLink = `https://my.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"}/estimates?estimate=${estimateId}`
+
+          await resend.emails.send({
+            from: "Found <hello@foundco.app>",
+            to: ownerEmail,
+            subject: `Deposit received: ${clientName} paid ${depositFmt}`,
+            html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="background:linear-gradient(135deg,${color}18 0%,${color}06 100%);padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><div style="font-size:36px;margin-bottom:12px">💳</div><h1 style="margin:0 0 6px;color:#111;font-size:22px;font-weight:800;letter-spacing:-0.02em">Deposit received</h1><p style="margin:0;color:#666;font-size:15px">${clientName} paid ${depositFmt}</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:18px 20px;margin-bottom:20px;border:1px solid #d0eeda"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Deposit Confirmed</div><div style="font-size:24px;color:#1A7A3C;font-weight:800;letter-spacing:-0.02em">${depositFmt}</div>${total > 0 ? `<div style="font-size:13px;color:#4A8C5C;margin-top:4px">of ${new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(total)} total</div>` : ""}</div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">The deposit has been confirmed. Reach out to ${clientName.split(" ")[0]} to get the job scheduled.</p><a href="${dashboardLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">Open in Found</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found · Your business, always on.</p></td></tr></table></td></tr></table></body></html>`,
+          }).catch((err) => console.error("[Resend] Estimate deposit webhook email error:", err))
+        }
+      }
+    }
+    return NextResponse.json({ received: true })
+  }
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session
 

@@ -151,6 +151,26 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Custom domain flow end-to-end test
 - **Resend module-level init cleanup** — `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
+### Unified Product/Service Catalog — Cross-System Data Sharing
+**Vision:** One catalog, three systems. A business enters their products/services/prices once and that data flows into:
+- **Online store** (sell products by card)
+- **Online ordering** (menu items, catering packages)
+- **Estimates** (line items pulled from catalog)
+- **Eventually: invoices** (same items, same prices)
+
+**Use cases that drove this:**
+- Tire shop sells tires online + wants to pull tire prices into estimates
+- Auto mechanic has service prices in estimates + wants them in the store
+- Caterer uses online ordering for regular orders + needs same menu items for party/event estimates
+- Restaurant with online ordering wants to create catering estimates using the same menu data
+
+**Architectural note:** The current rate sheet (estimate add-on), online store products, and menu items are THREE separate data stores with no connection. The rebuild should unify them into a single `company_catalog` table:
+- `id`, `company_id`, `name`, `description`, `price`, `unit`, `category`, `available_in` (array: store | ordering | estimates)
+- Each system reads from the same table, filtered by `available_in`
+- Owner manages one list, controls where each item appears
+
+**When to build:** Needs its own dedicated session. Prerequisite for Session 2 of estimates rebuild (service catalog feature). Also blocks the online store and ordering system from feeling connected.
+
 ### New Industry Photo Curation
 - Curate Pexels photos for 3 new industries: `print_signage`, `tech_repair`, `transportation`
 - Team selects, Shawn approves via `/admin/photos` — same process as existing 22 industries

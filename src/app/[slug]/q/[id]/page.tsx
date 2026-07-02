@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import AcceptButton from "./AcceptButton"
+import DeclineButton from "./DeclineButton"
 import PrintButton from "./PrintButton"
 
 export const dynamic = "force-dynamic"
@@ -87,7 +88,14 @@ export default async function EstimateClientPage({
 
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
-  const isExpired = estimate.status === "expired"
+  let isExpired = estimate.status === "expired"
+
+  // Enforce expiration server-side even if status hasn't been updated yet
+  if (!isAccepted && !isDeclined && !isExpired && estimate.valid_until && new Date(estimate.valid_until) < new Date()) {
+    isExpired = true
+    await admin.from("estimates").update({ status: "expired", updated_at: new Date().toISOString() }).eq("id", id)
+  }
+
   const isClosed = isAccepted || isDeclined || isExpired
 
   return (
@@ -194,16 +202,19 @@ export default async function EstimateClientPage({
             </div>
           </div>
 
-          {/* Accept / Status */}
+          {/* Accept / Decline / Status */}
           {!isClosed && (
-            <AcceptButton
-              estimateId={id}
-              color={color}
-              stripeAccountId={company.stripe_connect_account_id}
-              total={estimate.total}
-              depositPct={(estimate.deposit_pct as number) ?? 50}
-              companyName={company.name}
-            />
+            <>
+              <AcceptButton
+                estimateId={id}
+                color={color}
+                stripeAccountId={company.stripe_connect_account_id}
+                total={estimate.total}
+                depositPct={(estimate.deposit_pct as number) ?? 50}
+                companyName={company.name}
+              />
+              <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />
+            </>
           )}
 
           {isAccepted && (

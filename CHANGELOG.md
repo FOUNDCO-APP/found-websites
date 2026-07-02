@@ -4,6 +4,44 @@
 
 ---
 
+## Session: July 2, 2026 — Estimates: Session 1 (P0 Webhook, Decline, Expiration, Numbering)
+**AI:** Claude Code (Sonnet 4.6)
+**Commit:** pending
+
+### Completed
+- **P0 Stripe webhook: `payment_intent.succeeded`** — Added handler in `webhook/route.ts`. When an estimate deposit is paid, if `deposit_paid_at` isn't set yet (client-side accept call failed or user closed browser), webhook catches it: sets `deposit_paid_at`, `status: accepted`, `accepted_at`, and sends owner a "Deposit received" email with amount details. Fully idempotent — skips if already set.
+- **Decline button on client estimate page** — `DeclineButton.tsx` added with two-step confirm flow ("No thanks, I'll pass" → confirm dialog → "Yes, Decline"). Calls new `/api/decline-estimate/[id]` route. Shows "Estimate Declined / We've let them know." inline after decline. Hidden once estimate is in any closed state.
+- **New `/[slug]/api/decline-estimate/[id]` route** — Sets status to `declined`. Sends owner notification email ("[Client] passed") with dashboard link.
+- **Expiration enforcement** — Client estimate page now checks `valid_until` server-side on every load. If expired and status not yet updated, sets `status: expired` in DB and renders expired state. Previously the status only changed if you manually updated it.
+- **30-day default expiration** — New estimates created via POST now get `valid_until = now + 30 days` automatically.
+- **Sequential estimate numbering** — New estimates get `estimate_number` (count of company's existing estimates + 1). GET response now includes `estimate_number`. Migration 044 back-fills existing estimates.
+- **Middleware** — Added `/api/decline-estimate/` to the tenant-domain rewrite block alongside accept and pay estimate routes.
+- **Migration 044** — `scripts/migration-044-estimate-number.sql` adds `estimate_number integer` column and back-fills existing rows with sequential per-company numbers.
+
+### Files changed
+- `src/middleware.ts` — Added `/api/decline-estimate/` to tenant rewrite block
+- `src/app/api/stripe/webhook/route.ts` — Added `payment_intent.succeeded` handler (P0)
+- `src/app/[slug]/api/decline-estimate/[id]/route.ts` — NEW decline API route
+- `src/app/[slug]/q/[id]/DeclineButton.tsx` — NEW client component
+- `src/app/[slug]/q/[id]/page.tsx` — Expiration enforcement + DeclineButton import + render
+- `src/app/dashboard/api/estimates/route.ts` — `estimate_number` + `valid_until` on POST; `estimate_number` in GET select
+- `scripts/migration-044-estimate-number.sql` — NEW migration
+
+### Must run before deploy
+- `scripts/migration-044-estimate-number.sql` in Supabase SQL editor
+
+### Must Test
+- Create a new estimate — confirm `estimate_number` is set (check DB or dashboard list)
+- Create estimate with `valid_until` 30 days out — load client page, confirm it's open
+- Manually set an estimate's `valid_until` to yesterday — load client page, confirm "expired" state
+- Open a client estimate page — confirm "No thanks, I'll pass" button appears below accept button
+- Click "No thanks" → confirm dialog appears with company name → "Go Back" dismisses → "Yes, Decline" shows declined state inline
+- Check owner's email after client declines — should receive "passed" notification
+- Pay a deposit on an estimate — disconnect/close browser right after Stripe confirms — check DB that `deposit_paid_at` was set by webhook (may take 5–10 seconds)
+- Check owner email for deposit confirmed email from webhook path
+
+---
+
 ## Session: July 1, 2026 — Onboarding: Typeform Step Animations + Progressive Email Reveal
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** pending

@@ -12,7 +12,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("estimates")
-    .select("id, client_name, client_phone, client_email, title, property_address, status, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, stripe_payment_intent_id, created_at, updated_at")
+    .select("id, estimate_number, client_name, client_phone, client_email, title, property_address, status, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, stripe_payment_intent_id, created_at, updated_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
     .limit(200)
@@ -50,6 +50,17 @@ export async function POST(req: Request) {
   const { subtotal, taxAmount, total } = calcTotals(items, taxRate)
 
   const admin = createAdminClient()
+
+  // Sequential estimate number (per company)
+  const { count } = await admin
+    .from("estimates")
+    .select("*", { count: "exact", head: true })
+    .eq("company_id", company.id)
+  const estimateNumber = (count ?? 0) + 1
+
+  // Default expiration: 30 days from now
+  const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
   const { data: estimate, error } = await admin
     .from("estimates")
     .insert({
@@ -62,6 +73,8 @@ export async function POST(req: Request) {
       ai_prompt: ai_prompt?.trim() || null,
       subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       status: "draft",
+      estimate_number: estimateNumber,
+      valid_until: validUntil,
     })
     .select()
     .single()

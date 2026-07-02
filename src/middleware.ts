@@ -63,7 +63,7 @@ export async function middleware(req: NextRequest) {
   // the tenant route so they can resolve the company safely.
   if (
     !isRootHost &&
-    (pathname.startsWith("/api/accept-estimate/") || pathname.startsWith("/api/pay-estimate/"))
+    (pathname.startsWith("/api/accept-estimate/") || pathname.startsWith("/api/pay-estimate/") || pathname.startsWith("/api/decline-estimate/"))
   ) {
     const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
       ? hostname.slice(0, -(ROOT_DOMAIN.length + 1))
