@@ -21,7 +21,7 @@ type Phase = "welcome" | "plan" | "questions"
 
 type Step =
   | "welcome" | "name" | "description" | "subIndustry" | "location"
-  | "contact" | "different" | "services" | "photos" | "logo"
+  | "phone" | "email" | "different" | "services" | "photos" | "logo"
   | "color" | "vibe" | "testimonials"
 
 type Answers = {
@@ -53,7 +53,7 @@ type Answers = {
 
 const STEPS: Step[] = [
   "welcome", "name", "description", "subIndustry", "location",
-  "contact", "different", "services", "photos", "logo",
+  "phone", "email", "different", "services", "photos", "logo",
   "color", "vibe", "testimonials",
 ]
 
@@ -157,7 +157,8 @@ function canAdvance(step: Step, a: Answers): boolean {
     case "description":  return a.description.trim().length > 8
     case "subIndustry":  return !!a.subIndustry
     case "location":     return a.location.trim().length > 2
-    case "contact":      return a.phone.replace(/\D/g, "").length >= 10 && /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)
+    case "phone":        return a.phone.replace(/\D/g, "").length >= 10
+    case "email":        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)
     case "different":    return a.different.trim().length > 8
     case "services":     return a.services.length > 0
     case "photos":       return !!a.photoChoice || a.heroImageUrls.length > 0
@@ -175,7 +176,8 @@ function questionTitle(step: Step, a: Answers): string {
     case "description":  return "What do you do? Tell me in your own words."
     case "subIndustry":  return "What kind of business is it?"
     case "location":     return "Where are you based?"
-    case "contact":      return "What's your business phone and email?"
+    case "phone":        return "What's your business phone number?"
+    case "email":        return "What's your business email?"
     case "different":    return "What makes you different?"
     case "services":     return "What services do you offer?"
     case "photos":       return "Got photos of your work?"
@@ -285,8 +287,10 @@ function getAffirmation(step: Step, a: Answers): string {
         : a.description.trim().length > 8 ? "Got it." : ""
     case "location":
       return a.location.trim() ? `${a.location.trim()} — that's your market. It goes everywhere.` : ""
-    case "contact":
-      return a.phone && a.email.includes("@") ? "Every button on your site goes here." : ""
+    case "phone":
+      return a.phone.replace(/\D/g, "").length >= 10 ? "Clients can call or text you right from your site." : ""
+    case "email":
+      return a.email.includes("@") ? "Every button on your site goes here." : ""
     case "different":
       return a.different.trim().length > 8 ? "That's your edge. It'll be front and center." : ""
     case "services":
@@ -1724,8 +1728,11 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                       {step === "location" && (
                         <p className="mt-2 text-sm" style={{ color: tk.hint }}>Your city anchors your headline, your CTA, and your SEO.</p>
                       )}
-                      {step === "contact" && (
-                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>You control what shows publicly — each field has a toggle below it.</p>
+                      {step === "phone" && (
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>You control whether this shows publicly — there's a toggle below.</p>
+                      )}
+                      {step === "email" && (
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>You control whether this shows publicly — there's a toggle below.</p>
                       )}
                       {ready && affirm && (
                         <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
@@ -1889,94 +1896,50 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                       />
                     )}
 
-                    {step === "contact" && (
-                      <div className="space-y-8">
-                        {/* Phone */}
-                        <div>
-                          <input
-                            autoFocus type="tel" autoComplete="tel"
-                            value={answers.phone}
-                            onChange={(e) => set("phone", e.target.value)}
-                            placeholder="Phone number"
-                            className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
-                            style={{ color: tk.text, borderBottomColor: answers.phone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
-                          />
-                          {answers.phone.length > 6 && (
-                            <button type="button"
-                              onClick={() => set("phoneVisible", !answers.phoneVisible)}
-                              className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
-                              style={{ color: answers.phoneVisible ? SIGNAL_GREEN : tk.muted }}>
-                              {answers.phoneVisible
-                                ? "✓ Shows on your contact page — tap to hide"
-                                : "Hidden from your site — tap to show"}
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Email — reveals after phone is complete */}
+                    {step === "phone" && (
+                      <div className="space-y-4">
+                        <input
+                          autoFocus type="tel" autoComplete="tel"
+                          value={answers.phone}
+                          onChange={(e) => set("phone", e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && advance()}
+                          placeholder="Phone number"
+                          className={`w-full text-[1.8rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.phone.replace(/\D/g, "").length >= 10 ? SIGNAL_GREEN : tk.border(false) }}
+                        />
                         {answers.phone.replace(/\D/g, "").length >= 10 && (
-                          <div style={{ animation: "step-in 0.45s cubic-bezier(0.16,1,0.3,1) both" }}>
-                            <input
-                              type="email" autoComplete="email"
-                              value={answers.email}
-                              onChange={(e) => set("email", e.target.value)}
-                              placeholder="Email address"
-                              className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
-                              style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
-                            />
-                            {answers.email.includes("@") && (
-                              <button type="button"
-                                onClick={() => set("emailVisible", !answers.emailVisible)}
-                                className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
-                                style={{ color: answers.emailVisible ? SIGNAL_GREEN : tk.muted }}>
-                                {answers.emailVisible
-                                  ? "✓ Shows on your contact page — tap to hide"
-                                  : "Hidden from your site — tap to show"}
-                              </button>
-                            )}
-                          </div>
+                          <button type="button"
+                            onClick={() => set("phoneVisible", !answers.phoneVisible)}
+                            className="text-xs font-black uppercase tracking-[0.14em] transition-colors"
+                            style={{ color: answers.phoneVisible ? SIGNAL_GREEN : tk.muted }}>
+                            {answers.phoneVisible
+                              ? "✓ Shows on your contact page — tap to hide"
+                              : "Hidden from your site — tap to show"}
+                          </button>
                         )}
+                      </div>
+                    )}
 
-                        {/* Lead routing — only shows when both fields are valid */}
-                        {answers.phone.length > 6 && answers.email.includes("@") && (
-                          !answers.separateLeads ? (
-                            <button type="button"
-                              onClick={() => set("separateLeads", true)}
-                              className="text-xs font-black uppercase tracking-[0.14em] underline decoration-[#32D074] underline-offset-4"
-                              style={{ color: tk.muted }}>
-                              Send leads to a different number or email?
-                            </button>
-                          ) : (
-                            <div className="space-y-5">
-                              <div className="flex items-center justify-between">
-                                <p className="text-xs font-black uppercase tracking-[0.14em]" style={{ color: tk.muted }}>
-                                  Lead notifications go to:
-                                </p>
-                                <button type="button"
-                                  onClick={() => { set("separateLeads", false); set("leadPhone", ""); set("leadEmail", "") }}
-                                  className="text-xs font-black uppercase tracking-[0.14em]"
-                                  style={{ color: tk.muted }}>
-                                  Cancel
-                                </button>
-                              </div>
-                              <input
-                                type="tel" autoComplete="tel"
-                                value={answers.leadPhone}
-                                onChange={(e) => set("leadPhone", e.target.value)}
-                                placeholder="Lead notification phone (optional)"
-                                className={`w-full text-xl ${tk.inputCls} ${tk.placeholder}`}
-                                style={{ color: tk.text, borderBottomColor: answers.leadPhone.length > 6 ? SIGNAL_GREEN : tk.border(false) }}
-                              />
-                              <input
-                                type="email" autoComplete="email"
-                                value={answers.leadEmail}
-                                onChange={(e) => set("leadEmail", e.target.value)}
-                                placeholder="Lead notification email"
-                                className={`w-full text-xl ${tk.inputCls} ${tk.placeholder}`}
-                                style={{ color: tk.text, borderBottomColor: answers.leadEmail.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
-                              />
-                            </div>
-                          )
+                    {step === "email" && (
+                      <div className="space-y-4">
+                        <input
+                          autoFocus type="email" autoComplete="email"
+                          value={answers.email}
+                          onChange={(e) => set("email", e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && advance()}
+                          placeholder="Email address"
+                          className={`w-full text-[1.8rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
+                        />
+                        {answers.email.includes("@") && (
+                          <button type="button"
+                            onClick={() => set("emailVisible", !answers.emailVisible)}
+                            className="text-xs font-black uppercase tracking-[0.14em] transition-colors"
+                            style={{ color: answers.emailVisible ? SIGNAL_GREEN : tk.muted }}>
+                            {answers.emailVisible
+                              ? "✓ Shows on your contact page — tap to hide"
+                              : "Hidden from your site — tap to show"}
+                          </button>
                         )}
                       </div>
                     )}
