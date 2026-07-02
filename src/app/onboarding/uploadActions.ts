@@ -53,11 +53,35 @@ async function extractDominantColor(bytes: ArrayBuffer, mimeType: string): Promi
   }
 }
 
+async function createDarkLogoVariant(bytes: ArrayBuffer, mimeType: string): Promise<Buffer | null> {
+  if (mimeType === "image/gif") return null
+  try {
+    const sharp = (await import("sharp")).default
+    const { data, info } = await sharp(Buffer.from(bytes))
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] > 0) {
+        data[i] = 17
+        data[i + 1] = 17
+        data[i + 2] = 17
+      }
+    }
+
+    return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+      .png()
+      .toBuffer()
+  } catch {
+    return null
+  }
+}
 export async function uploadLogoFile(
   formData: FormData,
   sessionId: string,
   variant: "primary" | "light" = "primary",
-): Promise<{ success: boolean; url?: string; dominantColor?: string; error?: string }> {
+): Promise<{ success: boolean; url?: string; autoDarkUrl?: string; dominantColor?: string; error?: string }> {
   const file = formData.get("file") as File | null
   if (!file || !file.size) return { success: false, error: "No file selected." }
 
@@ -84,9 +108,24 @@ export async function uploadLogoFile(
   }
 
   const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path)
+
+  let autoDarkUrl: string | undefined
+  if (variant === "primary") {
+    const darkBytes = await createDarkLogoVariant(bytes, file.type)
+    if (darkBytes) {
+      const darkPath = `logos/${sessionId}/logo-dark.png`
+      const { error: darkError } = await supabase.storage
+        .from(BUCKET)
+        .upload(darkPath, darkBytes, { contentType: "image/png", upsert: true })
+      if (!darkError) {
+        autoDarkUrl = supabase.storage.from(BUCKET).getPublicUrl(darkPath).data.publicUrl
+      }
+    }
+  }
+
   const dominantColor = await extractDominantColor(bytes, file.type)
 
-  return { success: true, url: publicUrl, dominantColor: dominantColor ?? undefined }
+  return { success: true, url: publicUrl, autoDarkUrl, dominantColor: dominantColor ?? undefined }
 }
 
 export async function uploadHeroFile(

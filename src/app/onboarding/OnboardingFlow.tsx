@@ -1214,6 +1214,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const [logoTipOpen, setLogoTipOpen]               = useState(false)
   const [logoWhiteUploading, setLogoWhiteUploading] = useState(false)
   const [logoWhiteError, setLogoWhiteError]         = useState<string | null>(null)
+  const [logoAutoDarkUrl, setLogoAutoDarkUrl]       = useState("")
   const [logoTheme, setLogoTheme]                   = useState<"light" | "dark" | "unknown" | null>(null)
   const [logoDetectedColor, setLogoDetectedColor]   = useState<string | null>(null)
 
@@ -1365,7 +1366,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     })
   }
 
-  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>, keepExistingWhite = false) {
     const file = e.target.files?.[0]
     if (!file) return
     setLogoUploading(true)
@@ -1375,16 +1376,27 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       fd.append("file", file)
       const res = await uploadLogoFile(fd, sessionId)
       if (res.success && res.url) {
-        set("logoUrl", res.url)
+        const uploadedUrl = res.url
+        setLogoAutoDarkUrl(res.autoDarkUrl ?? "")
+        set("logoUrl", uploadedUrl)
+        if (!keepExistingWhite) set("logoWhiteUrl", "")
         set("logoChoice", "uploaded")
         if (res.dominantColor) {
           set("primaryColor", res.dominantColor)
           setLogoDetectedColor(res.dominantColor)
         }
-        detectLogoLightness(res.url).then((theme) => {
+        detectLogoLightness(uploadedUrl).then((theme) => {
           setLogoTheme(theme)
-          if (theme === "light") set("navbarDark", true)
-          else if (theme === "dark") set("navbarDark", false)
+          if (theme === "light") {
+            setAnswers((prev) => ({
+              ...prev,
+              logoUrl: res.autoDarkUrl ?? prev.logoUrl,
+              logoWhiteUrl: uploadedUrl,
+              navbarDark: false,
+            }))
+          } else if (theme === "dark") {
+            set("navbarDark", false)
+          }
         })
       } else {
         setLogoError(res.error ?? "Upload failed — please try again.")
@@ -2172,15 +2184,32 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                   <img src={answers.logoWhiteUrl} alt="Dark-background logo" className="max-h-7 max-w-full object-contain" />
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
-                                  Dark-background logo uploaded ✓
+                                  {logoTheme === "light"
+                                    ? `Light logo detected - light backgrounds use ${logoAutoDarkUrl ? "the automatic dark version" : "a dark version"}.`
+                                    : "Dark-background logo uploaded ✓"}
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("logoWhiteUrl", "")}>
-                                  Remove
+                                  {logoTheme === "light" ? "Undo" : "Remove"}
                                 </button>
                               </div>
                             )}
 
+                            {logoTheme === "light" && answers.logoWhiteUrl && (
+                              <label className="w-full flex items-center gap-3 rounded-xl border p-4 text-left cursor-pointer transition hover:opacity-80"
+                                style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                                <div className="h-8 w-10 shrink-0 rounded border flex items-center justify-center"
+                                  style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
+                                  <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "#111111" }} />
+                                </div>
+                                <div className="flex-1">
+                                  <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for light backgrounds</span>
+                                  <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Upload your full-color or dark logo. Found will keep the white logo for dark sections.</span>
+                                </div>
+                                <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                                  className="sr-only" onChange={(e) => handleLogoUpload(e, true)} disabled={logoUploading} />
+                              </label>
+                            )}
                             <div className="flex items-center justify-between pt-1">
                               <p className="text-xs font-black" style={{ color: answers.primaryColor }}>Logo uploaded ✓</p>
                               <label className="cursor-pointer text-xs font-black uppercase tracking-widest transition hover:opacity-70"
