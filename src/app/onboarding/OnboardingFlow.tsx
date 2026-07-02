@@ -1374,7 +1374,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     try {
       const fd = new FormData()
       fd.append("file", file)
-      const res = await uploadLogoFile(fd, sessionId)
+      const res = await uploadLogoFile(fd, sessionId, keepExistingWhite ? "lightBackground" : "primary")
       if (res.success && res.url) {
         const uploadedUrl = res.url
         setLogoAutoDarkUrl(res.autoDarkUrl ?? "")
@@ -2187,7 +2187,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                               <div className="flex items-center gap-3 rounded-xl px-4 py-3"
                                 style={{ backgroundColor: `${answers.primaryColor}18`, border: `1px solid ${answers.primaryColor}40` }}>
                                 <div className="h-8 w-10 shrink-0 rounded border flex items-center justify-center overflow-hidden"
-                                  style={{ backgroundColor: "#ffffff", borderColor: "#e5e5e5" }}>
+                                  style={{ backgroundColor: "#111111", borderColor: "#222222" }}>
                                   <img src={answers.logoWhiteUrl} alt="Dark-background logo" className="max-h-7 max-w-full object-contain" />
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>

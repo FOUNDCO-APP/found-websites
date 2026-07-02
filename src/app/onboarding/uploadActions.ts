@@ -80,7 +80,7 @@ async function createDarkLogoVariant(bytes: ArrayBuffer, mimeType: string): Prom
 export async function uploadLogoFile(
   formData: FormData,
   sessionId: string,
-  variant: "primary" | "light" = "primary",
+  variant: "primary" | "light" | "lightBackground" = "primary",
 ): Promise<{ success: boolean; url?: string; autoDarkUrl?: string; dominantColor?: string; error?: string }> {
   const file = formData.get("file") as File | null
   if (!file || !file.size) return { success: false, error: "No file selected." }
@@ -95,7 +95,9 @@ export async function uploadLogoFile(
 
   const path = variant === "light"
     ? `logos/${sessionId}/logo-light.${ext}`
-    : `logos/${sessionId}/logo.${ext}`
+    : variant === "lightBackground"
+      ? `logos/${sessionId}/logo-light-background.${ext}`
+      : `logos/${sessionId}/logo.${ext}`
   const bytes = await file.arrayBuffer()
 
   const { error } = await supabase.storage
