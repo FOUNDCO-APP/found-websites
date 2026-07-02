@@ -5,13 +5,12 @@ import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import { buildBookingNotification, buildBookingConfirmation } from "@/lib/emailBuilders"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 function clean(v: unknown, max = 200): string {
   return typeof v === "string" ? v.trim().slice(0, max) : ""
 }
 
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 })
 

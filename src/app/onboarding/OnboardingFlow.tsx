@@ -979,11 +979,11 @@ function SlugSheet({
       >
         <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-black/10" />
         <p className="text-lg font-black" style={{ color: FOUND_BLACK }}>
-          That address is taken
+          That web address is taken
         </p>
         <p className="mt-1 text-sm leading-6" style={{ color: "rgba(8,10,9,0.50)" }}>
-          <span className="font-black" style={{ color: "#f87171" }}>{effective}</span>.{ROOT} is already in use.
-          Pick one below or type your own.
+          <span className="font-black" style={{ color: "#f87171" }}>{effective}</span>.{ROOT} is already taken.
+          Pick a different web address or type your own.
         </p>
 
         {suggestions.length > 0 && (
@@ -1653,6 +1653,21 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                 )}
               </header>
 
+              {/* Progress bar — shown during questions phase */}
+              {phase === "questions" && (
+                <div className="shrink-0 px-7 pb-1 md:px-12">
+                  <div className="h-[2px] w-full rounded-full overflow-hidden" style={{ backgroundColor: isLight ? "rgba(8,10,9,0.08)" : "rgba(255,255,255,0.08)" }}>
+                    <div
+                      className="h-full rounded-full transition-[width] duration-500 ease-out"
+                      style={{
+                        width: `${Math.round((stepIndex / (STEPS.length - 1)) * 100)}%`,
+                        backgroundColor: SIGNAL_GREEN,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Scrollable body — lets content scroll on short viewports / keyboard-open */}
               <div className="flex-1 overflow-y-auto px-7 md:px-12">
 
@@ -1739,83 +1754,70 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                     {/* ── Inputs ── */}
 
                     {step === "name" && (
-                      <div className="space-y-3">
-                        {/* Input with inline status icon — always visible above keyboard */}
-                        <div className="relative">
-                          <input
-                            autoFocus
-                            value={answers.name}
-                            onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false) }}
-                            onKeyDown={(e) => e.key === "Enter" && advance()}
-                            placeholder="e.g. Barrio Builders"
-                            className={`w-full text-[1.8rem] pr-8 ${tk.inputCls} ${tk.placeholder}`}
-                            style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
-                          />
-                          {/* Status icon — inside the input's right edge, never hidden by keyboard */}
-                          <div className="absolute right-0 bottom-3 flex items-center">
-                            {slugChecking && (
-                              <svg className="animate-spin" width="14" height="14" fill="none" viewBox="0 0 24 24" style={{ color: tk.muted }}>
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                              </svg>
-                            )}
-                            {!slugChecking && slugStatus === "ok" && (
-                              <span className="text-base font-black" style={{ color: SIGNAL_GREEN }}>✓</span>
-                            )}
-                            {!slugChecking && slugStatus === "taken" && (
-                              <span className="text-base font-black" style={{ color: "#f87171" }}>✗</span>
-                            )}
-                          </div>
-                        </div>
+                      <div className="space-y-4">
+                        <input
+                          autoFocus
+                          value={answers.name}
+                          onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false) }}
+                          onKeyDown={(e) => e.key === "Enter" && advance()}
+                          placeholder="e.g. Barrio Builders"
+                          className={`w-full text-[1.8rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.name ? SIGNAL_GREEN : tk.border(false) }}
+                        />
 
-                        {/* URL line — compact, below input, visible on taller phones */}
-                        {answers.name.trim().length >= 2 && (() => {
+                        {/* Web address — shown calmly after name is entered and checked */}
+                        {answers.name.trim().length >= 2 && !slugChecking && slugStatus !== "idle" && (() => {
                           const effective = slugCustom || clientSlugify(answers.name)
                           const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"
                           return (
-                            <>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xs font-black" style={{ color: slugStatus === "ok" ? SIGNAL_GREEN : slugStatus === "taken" ? "#f87171" : tk.muted }}>
-                                  {effective}<span style={{ color: tk.muted }}>.{ROOT}</span>
-                                </span>
-                                {slugStatus === "ok" && !slugCustom && (
-                                  <button type="button"
-                                    onClick={() => setShowSlugSheet(true)}
-                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                    style={{ color: tk.muted }}>
-                                    Change →
-                                  </button>
-                                )}
-                                {slugStatus === "ok" && slugCustom && (
-                                  <button type="button"
-                                    onClick={() => setSlugCustom("")}
-                                    className="text-[10px] font-black uppercase tracking-widest ml-auto"
-                                    style={{ color: tk.muted }}>
-                                    Reset
-                                  </button>
-                                )}
-                              </div>
-
-                              {/* Inline suggestions — shown immediately when slug is taken */}
-                              {slugStatus === "taken" && slugSuggestions.length > 0 && (
-                                <div className="mt-3" style={{ animation: "fade-up 0.3s ease-out both" }}>
-                                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: "#f87171" }}>
-                                    That address is taken. These are available:
+                            <div style={{ animation: "fade-up 0.3s ease-out both" }}>
+                              {slugStatus === "ok" && (
+                                <div className="space-y-2">
+                                  <p className="text-xs leading-5" style={{ color: tk.muted }}>
+                                    Your Found web address will be{" "}
+                                    <span className="font-black" style={{ color: tk.text }}>{effective}.{ROOT}</span>{" "}
+                                    until your real domain is connected.
                                   </p>
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                    {slugSuggestions.map((s) => (
-                                      <button key={s} type="button"
-                                        onClick={() => { setSlugCustom(s); setSlugStatus("ok") }}
-                                        className="rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] transition"
-                                        style={{
-                                          borderColor: slugCustom === s ? SIGNAL_GREEN : `${SIGNAL_GREEN}55`,
-                                          backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}14` : `${SIGNAL_GREEN}08`,
-                                          color: SIGNAL_GREEN,
-                                        }}>
-                                        {s}
+                                  <div className="flex items-center gap-3">
+                                    <button type="button"
+                                      onClick={() => setShowSlugSheet(true)}
+                                      className="text-[10px] font-black uppercase tracking-widest"
+                                      style={{ color: tk.muted }}>
+                                      Change my Found web address →
+                                    </button>
+                                    {slugCustom && (
+                                      <button type="button"
+                                        onClick={() => setSlugCustom("")}
+                                        className="text-[10px] font-black uppercase tracking-widest"
+                                        style={{ color: tk.muted }}>
+                                        Reset
                                       </button>
-                                    ))}
+                                    )}
                                   </div>
+                                </div>
+                              )}
+
+                              {slugStatus === "taken" && (
+                                <div className="space-y-3">
+                                  <p className="text-xs font-black" style={{ color: "#f87171" }}>
+                                    That web address is already taken. These are available:
+                                  </p>
+                                  {slugSuggestions.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                      {slugSuggestions.map((s) => (
+                                        <button key={s} type="button"
+                                          onClick={() => { setSlugCustom(s); setSlugStatus("ok") }}
+                                          className="rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] transition"
+                                          style={{
+                                            borderColor: slugCustom === s ? SIGNAL_GREEN : `${SIGNAL_GREEN}55`,
+                                            backgroundColor: slugCustom === s ? `${SIGNAL_GREEN}14` : `${SIGNAL_GREEN}08`,
+                                            color: SIGNAL_GREEN,
+                                          }}>
+                                          {s}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
                                   <div className="flex items-center gap-2 rounded-xl border px-4 py-2.5" style={{ borderColor: `${SIGNAL_GREEN}30` }}>
                                     <input
                                       type="text"
@@ -1831,12 +1833,12 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                       style={{ color: FOUND_BLACK, letterSpacing: "0.04em" }}
                                     />
                                     <span className="shrink-0 text-[10px] font-black" style={{ color: tk.muted }}>
-                                      .{process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"}
+                                      .{ROOT}
                                     </span>
                                   </div>
                                 </div>
                               )}
-                            </>
+                            </div>
                           )
                         })()}
                       </div>
