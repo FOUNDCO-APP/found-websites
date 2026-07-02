@@ -538,11 +538,6 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
   const innerW    = phoneW - phonePad * 2 - 2
   const iframeScale = innerW / 390
 
-  useEffect(() => {
-    if (!slug || !iframeReady || activating) return
-    const t = setTimeout(() => setActivating(true), 1600)
-    return () => clearTimeout(t)
-  }, [slug, iframeReady, activating])
 
   return (
     <main
@@ -625,14 +620,14 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
         {slug ? (
           <div className="mt-8 w-full max-w-[300px] text-center" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
             <p className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: SIGNAL_GREEN }}>
-              Ready to activate your site?
+Ready to launch your site?
             </p>
             <button
               type="button"
               onClick={() => setActivating(true)}
               className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-              Activate my site
+Launch my site
             </button>
           </div>
         ) : (
@@ -1217,6 +1212,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const [logoAutoDarkUrl, setLogoAutoDarkUrl]       = useState("")
   const [logoTheme, setLogoTheme]                   = useState<"light" | "dark" | "unknown" | null>(null)
   const [logoDetectedColor, setLogoDetectedColor]   = useState<string | null>(null)
+  const [logoDetectedColors, setLogoDetectedColors] = useState<string[]>([])
 
   // Slug picker state (name step)
   const [slugCustom, setSlugCustom]         = useState("")
@@ -1381,9 +1377,11 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
         set("logoUrl", uploadedUrl)
         if (!keepExistingWhite) set("logoWhiteUrl", "")
         set("logoChoice", "uploaded")
-        if (res.dominantColor) {
-          set("primaryColor", res.dominantColor)
-          setLogoDetectedColor(res.dominantColor)
+        const logoColors = res.dominantColors ?? (res.dominantColor ? [res.dominantColor] : [])
+        setLogoDetectedColors(logoColors)
+        setLogoDetectedColor(logoColors[0] ?? null)
+        if (logoColors[0]) {
+          set("primaryColor", logoColors[0])
         }
 
         if (keepExistingWhite) {
@@ -2270,72 +2268,93 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                     )}
 
                     {step === "color" && (
-                      <div className="space-y-4">
-                      {logoDetectedColor && (
-                        <>
-                          <div>
-                            <p className="mb-2 text-xs font-black uppercase tracking-widest" style={{ color: tk.muted }}>
-                              From your logo
+                      <div className="space-y-5">
+                        {logoDetectedColors.length > 0 ? (
+                          <section className="rounded-3xl border p-5"
+                            style={{ borderColor: `${answers.primaryColor}44`, backgroundColor: `${answers.primaryColor}10` }}>
+                            <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: answers.primaryColor }}>
+                              Love your colors.
                             </p>
-                            <button type="button"
-                              onClick={() => set("primaryColor", logoDetectedColor)}
-                              className="flex w-full items-center gap-4 rounded-2xl border-2 p-5 text-left transition"
-                              style={{
-                                borderColor: answers.primaryColor === logoDetectedColor ? logoDetectedColor : tk.cardBorder(false),
-                                backgroundColor: answers.primaryColor === logoDetectedColor ? `${logoDetectedColor}14` : tk.cardBg(false),
-                              }}>
-                              <span className="h-12 w-12 shrink-0 rounded-full shadow-md" style={{ backgroundColor: logoDetectedColor }} />
-                              <div className="flex-1">
-                                <span className="block text-base font-black" style={{ color: tk.text }}>Your brand color</span>
-                                <span className="block text-xs font-black uppercase mt-0.5" style={{ color: tk.muted }}>{logoDetectedColor}</span>
-                              </div>
-                              {answers.primaryColor === logoDetectedColor && (
-                                <span className="text-sm font-black shrink-0" style={{ color: logoDetectedColor }}>✓</span>
-                              )}
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
-                            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: tk.muted }}>Or choose a different color</span>
-                            <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
-                          </div>
-                        </>
-                      )}
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {palettes.map((p) => {
-                          const active = answers.primaryColor.toLowerCase() === p.hex.toLowerCase()
-                          return (
-                            <button key={p.hex} type="button"
-                              onClick={() => set("primaryColor", p.hex)}
-                              className="flex min-h-[4rem] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-all duration-150"
-                              style={{ borderColor: tk.cardBorder(active, p.hex), backgroundColor: tk.cardBg(active) }}>
-                              <span className="h-8 w-8 shrink-0 rounded-full" style={{ backgroundColor: p.hex }} />
-                              <span>
-                                <span className="block text-sm font-black" style={{ color: tk.text }}>{p.name}</span>
-                                <span className="block text-xs" style={{ color: tk.muted }}>{p.feel}</span>
-                              </span>
-                            </button>
-                          )
-                        })}
-                        <label className="flex min-h-[4rem] cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 transition"
-                          style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
-                          <span className="h-8 w-8 shrink-0 rounded-full border" style={{ backgroundColor: answers.primaryColor, borderColor: tk.cardBorder(false) }} />
-                          <span className="flex-1">
-                            <span className="block text-sm font-black" style={{ color: tk.text }}>Custom</span>
-                            <input
-                              value={answers.primaryColor}
-                              onChange={(e) => set("primaryColor", e.target.value)}
-                              onClick={(e) => e.stopPropagation()}
-                              className="mt-0.5 w-full bg-transparent text-xs font-black uppercase outline-none"
-                              style={{ color: tk.muted }}
-                              placeholder="#2E7D32"
-                            />
+                            <h3 className="mt-2 text-2xl font-light leading-tight" style={{ color: tk.text }}>
+                              We pulled these from your logo.
+                            </h3>
+                            <p className="mt-2 text-sm leading-6" style={{ color: tk.muted }}>
+                              Pick the one that feels most like your brand. You can still change it anytime.
+                            </p>
+                            <div className="mt-5 grid grid-cols-5 gap-2">
+                              {logoDetectedColors.map((color) => {
+                                const active = answers.primaryColor.toLowerCase() === color.toLowerCase()
+                                return (
+                                  <button key={color} type="button"
+                                    onClick={() => set("primaryColor", color)}
+                                    className="relative aspect-square rounded-2xl border transition active:scale-95"
+                                    style={{
+                                      backgroundColor: color,
+                                      borderColor: active ? tk.text : "rgba(255,255,255,0.22)",
+                                      boxShadow: active ? `0 0 0 3px ${color}33` : "none",
+                                    }}
+                                    aria-label={`Use logo color ${color}`}>
+                                    {active && (
+                                      <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{ color: "white", textShadow: "0 1px 5px rgba(0,0,0,0.55)" }}>✓</span>
+                                    )}
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </section>
+                        ) : answers.logoUrl || answers.logoWhiteUrl ? (
+                          <section className="rounded-3xl border p-5" style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                            <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: answers.primaryColor }}>
+                              Want us to pull your brand colors?
+                            </p>
+                            <p className="mt-2 text-sm leading-6" style={{ color: tk.muted }}>
+                              Upload your full-color logo and Found will suggest colors from it. White logo files are perfect for dark sections, but they do not give us brand colors to sample.
+                            </p>
+                          </section>
+                        ) : null}
+
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
+                          <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: tk.muted }}>
+                            {logoDetectedColors.length > 0 ? "Or choose a different color" : "Choose a color"}
                           </span>
-                        </label>
-                      </div>
+                          <div className="flex-1 border-t" style={{ borderColor: tk.cardBorder(false) }} />
+                        </div>
+
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          {palettes.map((p) => {
+                            const active = answers.primaryColor.toLowerCase() === p.hex.toLowerCase()
+                            return (
+                              <button key={p.hex} type="button"
+                                onClick={() => set("primaryColor", p.hex)}
+                                className="flex min-h-[4rem] items-center gap-4 rounded-xl border px-4 py-3 text-left transition-all duration-150"
+                                style={{ borderColor: tk.cardBorder(active, p.hex), backgroundColor: tk.cardBg(active) }}>
+                                <span className="h-8 w-8 shrink-0 rounded-full" style={{ backgroundColor: p.hex }} />
+                                <span>
+                                  <span className="block text-sm font-black" style={{ color: tk.text }}>{p.name}</span>
+                                  <span className="block text-xs" style={{ color: tk.muted }}>{p.feel}</span>
+                                </span>
+                              </button>
+                            )
+                          })}
+                          <label className="flex min-h-[4rem] cursor-pointer items-center gap-4 rounded-xl border px-4 py-3 transition"
+                            style={{ borderColor: tk.cardBorder(false), backgroundColor: tk.cardBg(false) }}>
+                            <span className="h-8 w-8 shrink-0 rounded-full border" style={{ backgroundColor: answers.primaryColor, borderColor: tk.cardBorder(false) }} />
+                            <span className="flex-1">
+                              <span className="block text-sm font-black" style={{ color: tk.text }}>Custom</span>
+                              <input
+                                value={answers.primaryColor}
+                                onChange={(e) => set("primaryColor", e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="mt-0.5 w-full bg-transparent text-xs font-black uppercase outline-none"
+                                style={{ color: tk.muted }}
+                                placeholder="#2E7D32"
+                              />
+                            </span>
+                          </label>
+                        </div>
                       </div>
                     )}
-
                     {step === "vibe" && (
                       <div className="space-y-3">
                         <div className="grid gap-2 sm:grid-cols-2">

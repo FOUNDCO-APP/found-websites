@@ -21,35 +21,50 @@ async function ensureBucket(supabase: ReturnType<typeof getAdminClient>) {
   }
 }
 
-// Returns the most visually dominant non-white/non-black/non-gray color as hex.
-// Returns null for SVG (can't decode without rendering) or if no color found.
-async function extractDominantColor(bytes: ArrayBuffer, mimeType: string): Promise<string | null> {
-  if (mimeType === "image/svg+xml") return null
+// Returns the strongest usable brand colors from the logo.
+// Skips white/black/gray so white logo variants do not create fake palettes.
+async function extractLogoColors(bytes: ArrayBuffer, mimeType: string): Promise<string[]> {
+  if (mimeType === "image/svg+xml") return []
   try {
     const sharp = (await import("sharp")).default
     const { data } = await sharp(Buffer.from(bytes))
-      .resize(40, 40, { fit: "cover" })
-      .removeAlpha()
+      .resize(72, 72, { fit: "inside" })
+      .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true })
 
     const counts: Record<string, number> = {}
-    for (let i = 0; i < data.length; i += 3) {
+    for (let i = 0; i < data.length; i += 4) {
+      const alpha = data[i + 3]
+      if (alpha < 40) continue
       const r = data[i], g = data[i + 1], b = data[i + 2]
-      if (r > 220 && g > 220 && b > 220) continue // skip near-white
-      if (r < 35  && g < 35  && b < 35)  continue // skip near-black
-      if (Math.max(r, g, b) - Math.min(r, g, b) < 30) continue // skip grays
-      // Quantize to 32-step buckets to merge similar shades
-      const key = `${Math.round(r / 32) * 32},${Math.round(g / 32) * 32},${Math.round(b / 32) * 32}`
+      const max = Math.max(r, g, b)
+      const min = Math.min(r, g, b)
+      if (r > 220 && g > 220 && b > 220) continue
+      if (r < 35 && g < 35 && b < 35) continue
+      if (max - min < 28) continue
+
+      const qr = Math.round(r / 24) * 24
+      const qg = Math.round(g / 24) * 24
+      const qb = Math.round(b / 24) * 24
+      const key = `${Math.min(255, qr)},${Math.min(255, qg)},${Math.min(255, qb)}`
       counts[key] = (counts[key] ?? 0) + 1
     }
 
-    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]
-    if (!top) return null
-    const [r, g, b] = top[0].split(",").map(Number)
-    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`
+    const colors: string[] = []
+    for (const [key] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+      const [r, g, b] = key.split(",").map(Number)
+      const tooClose = colors.some((hex) => {
+        const existing = hex.match(/\w\w/g)?.map((v) => parseInt(v, 16)) ?? [0, 0, 0]
+        return Math.abs(existing[0] - r) + Math.abs(existing[1] - g) + Math.abs(existing[2] - b) < 72
+      })
+      if (tooClose) continue
+      colors.push(`#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`)
+      if (colors.length >= 5) break
+    }
+    return colors
   } catch {
-    return null
+    return []
   }
 }
 
@@ -81,7 +96,7 @@ export async function uploadLogoFile(
   formData: FormData,
   sessionId: string,
   variant: "primary" | "light" | "lightBackground" = "primary",
-): Promise<{ success: boolean; url?: string; autoDarkUrl?: string; dominantColor?: string; error?: string }> {
+): Promise<{ success: boolean; url?: string; autoDarkUrl?: string; dominantColor?: string; dominantColors?: string[]; error?: string }> {
   const file = formData.get("file") as File | null
   if (!file || !file.size) return { success: false, error: "No file selected." }
 
@@ -125,9 +140,10 @@ export async function uploadLogoFile(
     }
   }
 
-  const dominantColor = await extractDominantColor(bytes, file.type)
+  const dominantColors = await extractLogoColors(bytes, file.type)
+  const dominantColor = dominantColors[0]
 
-  return { success: true, url: publicUrl, autoDarkUrl, dominantColor: dominantColor ?? undefined }
+  return { success: true, url: publicUrl, autoDarkUrl, dominantColor, dominantColors: dominantColors.length ? dominantColors : undefined }
 }
 
 export async function uploadHeroFile(

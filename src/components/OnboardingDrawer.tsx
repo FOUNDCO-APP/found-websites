@@ -95,11 +95,29 @@ export default function OnboardingDrawer({
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
           style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.45) 0px, transparent 72px)" }}
         />
-        {/* Handle pill — mobile only */}
+        {/* Sheet chrome */}
         <div
-          className="md:hidden absolute left-1/2 -translate-x-1/2 z-20 h-1.5 w-12 rounded-full pointer-events-none"
-          style={{ top: "calc(env(safe-area-inset-top) + 12px)", backgroundColor: "rgba(255,255,255,0.3)" }}
+          className="md:hidden absolute left-1/2 -translate-x-1/2 z-30 h-1.5 w-12 rounded-full pointer-events-none"
+          style={{ top: "12px", backgroundColor: "rgba(255,255,255,0.34)" }}
         />
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close onboarding"
+          className="absolute right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95"
+          style={{
+            top: "max(16px, env(safe-area-inset-top))",
+            backgroundColor: "rgba(8,10,9,0.42)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            color: "rgba(255,255,255,0.88)",
+            WebkitBackdropFilter: "blur(16px)",
+            backdropFilter: "blur(16px)",
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         <OnboardingFlow onClose={onClose} drawerMode plan={plan} showPlanChoice={showPlanChoice} />
       </div>
     </>
