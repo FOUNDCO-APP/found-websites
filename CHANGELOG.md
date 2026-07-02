@@ -4,6 +4,26 @@
 
 ---
 
+## Session: July 1, 2026 — Drawer Polish: Gap, Status Bar, Keyboard, Progress Bar
+**AI:** Claude Code (Sonnet 4.6)
+**Commit:** `d73ac49`
+
+### Completed
+- **Drawer gap fixed** — removed the 30px intentional "peek" offset from `.found-drawer` top. Drawer now goes flush to the Dynamic Island (`env(safe-area-inset-top)`). Marketing page FOUND logo no longer peeks through behind the drawer's FOUND logo.
+- **Status bar color fixed** — `theme-color` meta was being set to Signal Green (`#32D074`) when drawer opened, turning the Dynamic Island area green. Changed to `#080A09` (FOUND_BLACK) so the Dynamic Island area matches the dark drawer background.
+- **Keyboard fix** — added `visualViewport` resize/scroll listener in `OnboardingDrawer.tsx`. When keyboard opens on iOS or Android, the drawer's `bottom` adjusts by the keyboard height — Continue button always visible above the keyboard.
+- **Header padding fixed** — drawer header was adding `max(2rem, env(safe-area-inset-top))` as padding-top, but the drawer itself already accounts for the safe area at its `top` position. Was padding the safe area twice. Changed to flat `2rem` in drawer mode.
+- **Progress bar removed** — the Signal Green bar at top competed visually with the Signal Green input underline. Steve/Jony/Phil direction: affirmations do the job of showing progress. Bar removed entirely.
+- **Rounded corners stay** — `border-radius: 32px 32px 0 0` untouched. Sheet feel preserved.
+
+### Must Test
+- Open drawer from homepage on iPhone — confirm no gap at top showing marketing page behind it
+- Confirm Dynamic Island area is dark (not green) when drawer is open
+- Tap name input, keyboard opens — confirm Continue button is visible above keyboard
+- Go through questions — confirm no progress bar anywhere
+
+---
+
 ## Session: July 1, 2026 — Business Name / Web Address Separation + Progress Bar
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** `b3c5791`
