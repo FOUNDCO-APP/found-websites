@@ -4,6 +4,31 @@
 
 ---
 
+## Session: July 1, 2026 — Business Name / Web Address Separation + Progress Bar
+**AI:** Claude Code (Sonnet 4.6)
+**Commit:** `b3c5791`
+
+### Completed
+- **Business name step** — no longer shows the slug/URL while the owner is typing their business name. The name input is now just a name input. Clean and human.
+- **Web address shown after** — once the name is entered and the availability check completes, a calm confirmation appears: "Your Found web address will be X.foundco.app until your real domain is connected."
+- **"Change my Found web address →"** — small link below the confirmation. Opens the same `SlugSheet` as before for editing, but now framed as "web address" everywhere, never "slug" or "address."
+- **Taken state reworded** — "That web address is already taken. These are available:" — plain language, no technical framing.
+- **SlugSheet reworded** — title changed to "That web address is taken", body uses "web address" language throughout.
+- **Progress bar** — thin 2px Signal Green bar added to the header during the questions phase. Grows from ~8% on first question to 100% on testimonials. Quiet and visual, no step counter text.
+- **Bookings route build fix** — `src/app/api/bookings/create/route.ts` was initializing `new Resend(...)` at module level, which crashed local builds when `RESEND_API_KEY` isn't in `.env.local`. Moved inside the POST handler. No behavior change in production.
+
+### Decisions Captured
+- Business owners type their business name. Found generates the web address behind the scenes. Owners only see the web address after it's ready — as a result, not a field.
+- `company.name` (display name) and `company.slug` (URL route) remain fully separate. Always were in the DB; now also separated in the UI.
+- "Change my Found web address" is the only terminology. Never "slug," never "URL slug," never just "address."
+
+### Must Test Next
+- Go through onboarding on mobile: type a business name → confirm URL shows calmly below (not during typing) → tap "Change my Found web address →" → confirm SlugSheet opens with correct language → confirm slug conflict flow works end-to-end
+- Verify progress bar appears and grows correctly through all question steps
+- Found Business E2E test (carry from last session)
+
+---
+
 ## Session: June 30, 2026 — More Page Feature-Led Flow
 **AI:** Codex
 **Worked on:** More page order and upgrade psychology

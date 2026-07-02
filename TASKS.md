@@ -91,32 +91,26 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
-## CURRENT SESSION HANDOFF (June 29, 2026 — Codex)
+## CURRENT SESSION HANDOFF (July 1, 2026 — Claude Code)
 
 ### Shipped
-- Onboarding plan card flow polished and pushed.
-- Floating CTA is clean green pill, no glow/glass wrapper.
-- Found Business tools list flattened.
-- Intro-rate wording cleaned in runtime code; customer language must never say “founding member.”
-- More page inactive pricing fixed: Starter $29, Pro $39, Business $69 intro prices.
-- Activation uses intro Stripe price for inactive companies.
-- Display-name prompt added and refined.
-- Onboarding reveal opens activation/payment overlay automatically.
-- Public site wordmark color now has contrast guard on dark/light backgrounds.
-- Social post assistant shipped; migration 043 needs Supabase application if not already run.
+- Business name step: name input only, no URL shown while typing
+- Web address shown calmly after name is entered and verified available
+- “Change my Found web address →” link (opens SlugSheet, now using plain-language “web address”)
+- Progress bar: thin Signal Green bar in header during questions phase
+- Bookings route Resend init moved inside POST handler (local build fix)
+- Commit: `b3c5791`
 
 ### Decisions
-- Use **intro rate** / **promo**, not “founding member.” Legacy DB/env names remain only until controlled migration.
-- Brand readability overrides selected brand color on dark headers.
-- Payment/card step belongs immediately after onboarding reveal; Activate banner is recovery only.
-- Display-name prompt asks how the business name appears to clients.
+- Owners type the business name. Found generates the web address. They see it after, not during.
+- `company.name` and `company.slug` are separate and always were. Now the UI reflects that.
+- Always say “Found web address” — never “slug,” never “URL,” never “address” alone.
 
 ### Must Test Next
-- Found Business full flow after deploy.
-- Display-name prompt save closes and does not return.
-- Contrast guard fixes muted gray/blue text on black headers.
-- Activation overlay opens after onboarding, carries selected Business plan, and uses $69 intro rate.
-- Welcome email and dashboard link point to the correct company.
+- Onboarding on mobile: type name → see web address appear calmly below → tap “Change my Found web address” → SlugSheet language is correct → slug conflict flow still works
+- Progress bar grows correctly through all question steps
+- Found Business full E2E flow (carry from last session)
+- Display-name prompt save closes and does not return (carry from last session)
 
 ---
 ## BACKLOG
