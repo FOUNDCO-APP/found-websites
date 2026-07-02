@@ -100,6 +100,11 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Progress bar: thin Signal Green bar in header during questions phase
 - Bookings route Resend init moved inside POST handler (local build fix)
 - Commit: `b3c5791`
+- Drawer modal polish: gap fixed, Dynamic Island dark, keyboard awareness, double safe-area padding removed, progress bar removed
+- Commit: `d73ac49`
+- Typeform-style step animations: title wave 1 → inputs wave 2 (90ms stagger), spring easing, 44px travel
+- Contact step: email reveals progressively after 10-digit phone — keyboard/scroll problem gone
+- Commit: pending
 
 ### Decisions
 - Owners type the business name. Found generates the web address. They see it after, not during.

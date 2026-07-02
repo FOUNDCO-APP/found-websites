@@ -4,6 +4,28 @@
 
 ---
 
+## Session: July 1, 2026 — Onboarding: Typeform Step Animations + Progressive Email Reveal
+**AI:** Claude Code (Sonnet 4.6)
+**Commit:** pending
+
+### Completed
+- **Typeform-style step transitions** — each step now animates in two waves: (1) question title slides up with `step-in` at 0ms, (2) input area slides up 90ms behind it. Uses spring easing `cubic-bezier(0.16,1,0.3,1)` with 44px travel. Feels like a real conversation advancing, not a form swapping.
+- **New `@keyframes step-in`** added to `globals.css` — 44px translateY, spring easing, included in `prefers-reduced-motion` suppression block.
+- **Contact step progressive email reveal** — email field only appears after phone reaches 10 valid digits. Slides in with its own `step-in` animation. Eliminates the keyboard/scroll problem on the contact step entirely.
+- **`canAdvance("contact")` unchanged** — still requires 10-digit phone + valid email. The reveal threshold and the advance threshold are the same.
+
+### Files changed
+- `src/app/globals.css` — `@keyframes step-in`, reduced-motion update
+- `src/app/onboarding/OnboardingFlow.tsx` — section animation removed, question div wave 1, inputs wrapper wave 2, contact email conditional reveal
+
+### Must Test
+- Go through onboarding: each step should feel like Typeform — title appears first, then the field slides in just behind
+- Contact step: fill phone to 10 digits, confirm email slides in with animation
+- Tap email field — confirm it's visible above keyboard, no scroll needed
+- Fill email — Continue enables
+
+---
+
 ## Session: July 1, 2026 — Drawer Polish: Gap, Status Bar, Keyboard, Progress Bar
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** `d73ac49`

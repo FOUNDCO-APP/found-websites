@@ -1708,9 +1708,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                 <section
                   key={step}
                   className="flex min-h-full flex-col justify-start pt-6 pb-8"
-                  style={{ animation: "fade-up 0.38s ease-out both" }}
                 >
-                    <div className="mb-4 max-w-lg">
+                    <div className="mb-4 max-w-lg" style={{ animation: "step-in 0.5s cubic-bezier(0.16,1,0.3,1) both" }}>
                       {answers.industry && !["description"].includes(step) && (
                         <p className="mb-3 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
                           {industryLabels[answers.industry]}
@@ -1737,6 +1736,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                     </div>
 
                     {/* ── Inputs ── */}
+                    <div style={{ animation: "step-in 0.55s cubic-bezier(0.16,1,0.3,1) 0.09s both" }}>
 
                     {step === "name" && (
                       <div className="space-y-4">
@@ -1913,27 +1913,29 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                           )}
                         </div>
 
-                        {/* Email */}
-                        <div>
-                          <input
-                            type="email" autoComplete="email"
-                            value={answers.email}
-                            onChange={(e) => set("email", e.target.value)}
-                            placeholder="Email address"
-                            className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
-                            style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
-                          />
-                          {answers.email.includes("@") && (
-                            <button type="button"
-                              onClick={() => set("emailVisible", !answers.emailVisible)}
-                              className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
-                              style={{ color: answers.emailVisible ? SIGNAL_GREEN : tk.muted }}>
-                              {answers.emailVisible
-                                ? "✓ Shows on your contact page — tap to hide"
-                                : "Hidden from your site — tap to show"}
-                            </button>
-                          )}
-                        </div>
+                        {/* Email — reveals after phone is complete */}
+                        {answers.phone.replace(/\D/g, "").length >= 10 && (
+                          <div style={{ animation: "step-in 0.45s cubic-bezier(0.16,1,0.3,1) both" }}>
+                            <input
+                              type="email" autoComplete="email"
+                              value={answers.email}
+                              onChange={(e) => set("email", e.target.value)}
+                              placeholder="Email address"
+                              className={`w-full text-[1.25rem] ${tk.inputCls} ${tk.placeholder}`}
+                              style={{ color: tk.text, borderBottomColor: answers.email.includes("@") ? SIGNAL_GREEN : tk.border(false) }}
+                            />
+                            {answers.email.includes("@") && (
+                              <button type="button"
+                                onClick={() => set("emailVisible", !answers.emailVisible)}
+                                className="mt-3 text-xs font-black uppercase tracking-[0.14em] transition-colors"
+                                style={{ color: answers.emailVisible ? SIGNAL_GREEN : tk.muted }}>
+                                {answers.emailVisible
+                                  ? "✓ Shows on your contact page — tap to hide"
+                                  : "Hidden from your site — tap to show"}
+                              </button>
+                            )}
+                          </div>
+                        )}
 
                         {/* Lead routing — only shows when both fields are valid */}
                         {answers.phone.length > 6 && answers.email.includes("@") && (
@@ -2415,6 +2417,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                     {result?.error && (
                       <p className="mt-5 text-sm font-bold text-red-500">{result.error}</p>
                     )}
+
+                    </div>{/* end inputs wave */}
                 </section>
               )}
 
