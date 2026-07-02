@@ -9,11 +9,13 @@ export default function PlacesInput({
   onChange,
   placeholder,
   style,
+  locationBias,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   style?: React.CSSProperties
+  locationBias?: string
 }) {
   const [predictions, setPredictions] = useState<Prediction[]>([])
   const [open, setOpen] = useState(false)
@@ -25,7 +27,9 @@ export default function PlacesInput({
 
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/places-autocomplete?q=${encodeURIComponent(q)}`)
+        const qs = new URLSearchParams({ q })
+        if (locationBias) qs.set("bias", locationBias)
+        const res = await fetch(`/api/places-autocomplete?${qs}`)
         const data = await res.json()
         if (data.predictions?.length > 0) {
           setPredictions(data.predictions)

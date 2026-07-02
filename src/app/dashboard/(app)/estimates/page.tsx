@@ -125,6 +125,7 @@ export default function EstimatesPage() {
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [defaultTaxRate, setDefaultTaxRate] = useState(0)
   const [leads, setLeads] = useState<{ id: string; name: string; phone: string | null; email: string | null }[]>([])
+  const [locationBias, setLocationBias] = useState("")
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "draft" | "sent" | "viewed" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
@@ -153,6 +154,7 @@ export default function EstimatesPage() {
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
       setCompanyStripeReady(Boolean(sd.stripe_connect_account_id))
       setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
+      setLocationBias([sd.city, sd.state].filter(Boolean).join(", "))
       setLeads((ld.leads ?? []).map((l: { id: string; name: string; phone: string | null; email: string | null }) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email })))
       setLoading(false)
     }).catch(() => setLoading(false))
@@ -341,6 +343,7 @@ export default function EstimatesPage() {
           rateSheet={rateSheet}
           leads={leads}
           defaultTaxRate={defaultTaxRate}
+          locationBias={locationBias}
           onSave={handleCreate}
           onSaveDefaultTax={(rate) => {
             setDefaultTaxRate(rate)
@@ -356,6 +359,7 @@ export default function EstimatesPage() {
           estimate={selected}
           companySlug={companySlug}
           companyStripeReady={companyStripeReady}
+          locationBias={locationBias}
           rateSheet={rateSheet}
           onClose={() => { setSelectedId(null); refreshEstimates() }}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
@@ -428,10 +432,11 @@ function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () =
 
 type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null }
 
-function BuilderSheet({ rateSheet, leads, defaultTaxRate, onSave, onSaveDefaultTax, onClose }: {
+function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
   rateSheet: RateSheetItem[]
   leads: LeadSuggestion[]
   defaultTaxRate: number
+  locationBias?: string
   onSave: (data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) => Promise<void>
   onSaveDefaultTax: (rate: number) => void
   onClose: () => void
@@ -578,7 +583,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, onSave, onSaveDefaultT
         {/* Property */}
         <div style={{ marginBottom: 24 }}>
           <p style={{ ...labelStyle }}>Property / Job Address</p>
-          <PlacesInput value={address} onChange={setAddress} style={inputStyle} />
+          <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={inputStyle} />
         </div>
 
         {/* Line Items */}
@@ -729,10 +734,11 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, onSave, onSaveDefaultT
 
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
+function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
   companyStripeReady: boolean
+  locationBias?: string
   rateSheet: RateSheetItem[]
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
@@ -1202,7 +1208,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, rateSheet, onC
                   <input value={editPhone} onChange={e => setEditPhone(e.target.value)} type="tel" placeholder="Phone" style={inputStyle} />
                   <input value={editEmail} onChange={e => setEditEmail(e.target.value)} type="email" placeholder="Email" style={inputStyle} />
                 </div>
-                <PlacesInput value={editAddress} onChange={setEditAddress} placeholder="Property / Job address" style={inputStyle} />
+                <PlacesInput value={editAddress} onChange={setEditAddress} locationBias={locationBias} placeholder="Property / Job address" style={inputStyle} />
               </div>
             </div>
 
