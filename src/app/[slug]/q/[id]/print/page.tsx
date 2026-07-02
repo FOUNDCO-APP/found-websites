@@ -137,11 +137,7 @@ export default async function EstimatePrintPage({
           border-bottom: 1px solid #EFEFEF;
         }
 
-        /* ── Signature row ── */
-        .pg-sig-row {
-          display: flex;
-          gap: 32px;
-        }
+
 
         /* ── Mobile ── */
         @media screen and (max-width: 620px) {
@@ -158,7 +154,6 @@ export default async function EstimatePrintPage({
 
           .pg-client-row { flex-direction: column; gap: 20px; padding: 24px 0 20px; }
 
-          .pg-sig-row { flex-direction: column; gap: 20px; }
         }
 
         /* ── Print ── */
@@ -188,7 +183,6 @@ export default async function EstimatePrintPage({
           .pg-body { padding: 0 52px !important; }
           .pg-foot { padding: 20px 52px !important; }
           .pg-client-row { flex-direction: row !important; gap: 48px !important; padding: 32px 0 28px !important; }
-          .pg-sig-row { flex-direction: row !important; gap: 32px !important; }
         }
 
         a { color: inherit; text-decoration: none; }
@@ -378,27 +372,6 @@ export default async function EstimatePrintPage({
                 <div style={{ fontSize: 13, color: "#555", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{estimate.notes}</div>
               </div>
             )}
-
-            {/* Authorization */}
-            <div style={{ borderTop: "1px solid #EFEFEF", paddingTop: 32, marginBottom: 44 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: "#C0C0C0", marginBottom: 24 }}>
-                Authorization
-              </div>
-              <div className="pg-sig-row">
-                <div style={{ flex: 5, minWidth: 0 }}>
-                  <div style={{ height: 44, borderBottom: "1.5px solid #D8D8D8", marginBottom: 7 }} />
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#C0C0C0", letterSpacing: "0.06em" }}>Client Signature</div>
-                </div>
-                <div style={{ flex: 2, minWidth: 0 }}>
-                  <div style={{ height: 44, borderBottom: "1.5px solid #D8D8D8", marginBottom: 7 }} />
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#C0C0C0", letterSpacing: "0.06em" }}>Date</div>
-                </div>
-                <div style={{ flex: 3, minWidth: 0 }}>
-                  <div style={{ height: 44, borderBottom: "1.5px solid #D8D8D8", marginBottom: 7 }} />
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "#C0C0C0", letterSpacing: "0.06em" }}>Printed Name</div>
-                </div>
-              </div>
-            </div>
 
           </div>
 

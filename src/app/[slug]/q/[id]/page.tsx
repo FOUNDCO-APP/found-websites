@@ -3,12 +3,18 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import AcceptButton from "./AcceptButton"
 import DeclineButton from "./DeclineButton"
-import PrintButton from "./PrintButton"
 
 export const dynamic = "force-dynamic"
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+}
+
+function contrastColor(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return 0.299 * r + 0.587 * g + 0.114 * b > 140 ? "#000000" : "#ffffff"
 }
 
 export default async function EstimateClientPage({
@@ -38,7 +44,6 @@ export default async function EstimateClientPage({
   if (estimate.status === "sent") {
     const now = new Date().toISOString()
     await admin.from("estimates").update({ status: "viewed", viewed_at: now, updated_at: now }).eq("id", id)
-    // Notify owner
     const resendKey = process.env.RESEND_API_KEY
     if (resendKey && company.email) {
       const clientName = estimate.client_first_name
@@ -72,13 +77,14 @@ export default async function EstimateClientPage({
 </td></tr></table>
 </body></html>`,
         }),
-      }).catch(() => {}) // non-blocking
+      }).catch(() => {})
     }
   }
 
   const items = [...(estimate.estimate_line_items ?? [])].sort((a, b) => a.sort_order - b.sort_order)
   const color = company.primary_color ?? "#30D158"
-  const logo = company.logo_url
+  const onColor = contrastColor(color)
+  const isLight = onColor === "#000000"
   const companyDisplayName = (() => {
     const n = company.name
     if (!n) return n
@@ -86,11 +92,21 @@ export default async function EstimateClientPage({
     return n
   })()
 
+  const estimateNumber = estimate.estimate_number
+    ? String(estimate.estimate_number).padStart(4, "0")
+    : id.slice(-8).toUpperCase()
+
+  const dateFormatted = new Date(estimate.created_at).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  })
+  const validUntilFormatted = estimate.valid_until
+    ? new Date(estimate.valid_until).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : null
+
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
   let isExpired = estimate.status === "expired"
 
-  // Enforce expiration server-side even if status hasn't been updated yet
   if (!isAccepted && !isDeclined && !isExpired && estimate.valid_until && new Date(estimate.valid_until) < new Date()) {
     isExpired = true
     await admin.from("estimates").update({ status: "expired", updated_at: new Date().toISOString() }).eq("id", id)
@@ -98,83 +114,175 @@ export default async function EstimateClientPage({
 
   const isClosed = isAccepted || isDeclined || isExpired
 
+  const clientDisplayName = estimate.client_company
+    ? estimate.client_company
+    : (estimate.client_first_name && estimate.client_last_name)
+      ? `${estimate.client_first_name} ${estimate.client_last_name}`
+      : estimate.client_name ?? ""
+
+  const textHigh = isLight ? "rgba(0,0,0,0.90)" : "rgba(255,255,255,0.96)"
+  const textMid  = isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.65)"
+  const textLow  = isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.42)"
+  const badgeBg  = isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.16)"
+  const badgeBdr = isLight ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.28)"
+
   return (
     <>
       <meta name="format-detection" content="telephone=no, address=no, email=no" />
       <style>{`
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          background: #EDEDEB;
+        }
         a { color: inherit; text-decoration: none; }
-        .estimate-link { color: ${color} !important; }
+
+        .eq-head { padding: 36px 24px 32px; }
+        .eq-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+        .eq-num { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 10px; }
+
+        @media (max-width: 480px) {
+          .eq-head { padding: 28px 20px 24px; }
+          .eq-head-row { flex-direction: column; gap: 14px; }
+          .eq-head-right { text-align: left !important; }
+          .eq-num { font-size: 36px; }
+        }
       `}</style>
 
-      <div style={{
-        minHeight: "100dvh",
-        backgroundColor: "#F7F7F5",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        padding: "0 0 80px",
-      }}>
+      <div style={{ minHeight: "100dvh", background: "#EDEDEB" }}>
 
-        {/* Header */}
-        <div style={{
-          background: "white",
-          padding: "48px 24px 32px",
-          textAlign: "center",
-          borderBottom: "1px solid #EDEDE8",
-        }}>
-          {logo && (
-            <img src={logo} alt={company.name} style={{ height: 48, objectFit: "contain", marginBottom: 16, borderRadius: 10, display: "block", margin: "0 auto 16px" }} />
-          )}
-          {!logo && (
-            <div style={{
-              display: "inline-block", padding: "8px 18px", borderRadius: 12,
-              backgroundColor: `${color}22`, marginBottom: 16,
-              color, fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em",
-            }}>
-              {companyDisplayName}
+        {/* ── MASTHEAD ── */}
+        <div className="eq-head" style={{ background: color }}>
+          <div className="eq-head-row">
+
+            {/* Company */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {company.logo_url ? (
+                <div style={{ background: "white", borderRadius: 8, padding: "7px 12px", display: "inline-block", marginBottom: 12 }}>
+                  <img src={company.logo_url} alt={companyDisplayName ?? ""} style={{ height: 32, maxWidth: 150, objectFit: "contain", display: "block" }} />
+                </div>
+              ) : (
+                <div style={{ fontSize: 22, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 10 }}>
+                  {companyDisplayName}
+                </div>
+              )}
+              <div style={{ lineHeight: 1.85 }}>
+                {company.logo_url && (
+                  <div style={{ fontSize: 14, fontWeight: 700, color: textHigh, marginBottom: 1 }}>{companyDisplayName}</div>
+                )}
+                {(company.city || company.state) && (
+                  <div style={{ fontSize: 13, color: textMid }}>{[company.city, company.state].filter(Boolean).join(", ")}</div>
+                )}
+              </div>
             </div>
-          )}
-          <h1 style={{ margin: "0 0 8px", color: "#111", fontSize: "1.875rem", fontWeight: 300, letterSpacing: "-0.03em" }}>
-            Your Estimate
-          </h1>
-          <p style={{ margin: 0, color: "#6B6B66", fontSize: 14 }}>
-            From {companyDisplayName}
-            {company.city ? ` · ${company.city}${company.state ? `, ${company.state}` : ""}` : ""}
-          </p>
+
+            {/* Estimate number */}
+            <div className="eq-head-right" style={{ textAlign: "right", flexShrink: 0 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: textLow, marginBottom: 8 }}>
+                Estimate
+              </div>
+              <div className="eq-num" style={{ color: textHigh }}>#{estimateNumber}</div>
+              <div style={{ fontSize: 13, color: textMid, lineHeight: 1.9 }}>
+                <div>{dateFormatted}</div>
+                {validUntilFormatted && !isClosed && <div>Valid until {validUntilFormatted}</div>}
+              </div>
+              {isAccepted && (
+                <div style={{
+                  marginTop: 10, display: "inline-flex", alignItems: "center", gap: 6,
+                  background: badgeBg, borderRadius: 20, padding: "4px 12px",
+                  border: `1px solid ${badgeBdr}`,
+                }}>
+                  <span style={{ fontSize: 12, color: textHigh }}>✓</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: textHigh }}>Accepted</span>
+                </div>
+              )}
+              {isDeclined && (
+                <div style={{ marginTop: 10, display: "inline-block", background: badgeBg, borderRadius: 20, padding: "4px 12px" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: textMid }}>Declined</span>
+                </div>
+              )}
+              {isExpired && (
+                <div style={{ marginTop: 10, display: "inline-block", background: badgeBg, borderRadius: 20, padding: "4px 12px" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: textLow }}>Expired</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div style={{ maxWidth: 540, margin: "0 auto", padding: "32px 20px 0" }}>
+        {/* ── CONTENT ── */}
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "28px 20px 80px" }}>
 
-          {/* Client / job info */}
-          <div className="estimate-card" style={{
-            borderRadius: 20, backgroundColor: "white",
-            border: "1px solid #E8E8E2", padding: "20px 22px", marginBottom: 16,
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#8A8A84", marginBottom: 10 }}>Prepared for</div>
-            <div style={{ color: "#111", fontSize: 20, fontWeight: 700, marginBottom: 4 }}>{estimate.client_name}</div>
-            {estimate.property_address && (
-              <div style={{ color: "#4A4A46", fontSize: 14, marginTop: 4 }}>{estimate.property_address}</div>
-            )}
-            <div style={{ color: "#6B6B66", fontSize: 13, marginTop: 8 }}>
-              Created {new Date(estimate.created_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
+          {/* Status banners */}
+          {isAccepted && (
+            <div style={{
+              background: "white", borderRadius: 16, border: `2px solid ${color}40`,
+              padding: "20px 22px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14,
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: "50%",
+                background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 18, color, flexShrink: 0,
+              }}>✓</div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111", marginBottom: 2 }}>Estimate Accepted</div>
+                <div style={{ fontSize: 13, color: "#777" }}>
+                  {estimate.accepted_at
+                    ? new Date(estimate.accepted_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+                    : "Thank you for accepting."}
+                </div>
+              </div>
             </div>
+          )}
+
+          {isDeclined && (
+            <div style={{ background: "white", borderRadius: 16, border: "1.5px solid rgba(255,69,58,0.25)", padding: "18px 22px", marginBottom: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#FF453A" }}>Estimate Declined</div>
+            </div>
+          )}
+
+          {isExpired && (
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E0E0DA", padding: "18px 22px", marginBottom: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#999" }}>This estimate has expired</div>
+            </div>
+          )}
+
+          {/* Client info */}
+          <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "20px 22px", marginBottom: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B8B8B2", marginBottom: 10 }}>
+              Prepared For
+            </div>
+            {clientDisplayName && (
+              <div style={{ fontSize: 18, fontWeight: 800, color: "#111", letterSpacing: "-0.02em", marginBottom: 4 }}>{clientDisplayName}</div>
+            )}
+            {estimate.property_address && (
+              <div style={{ fontSize: 14, color: "#555", lineHeight: 1.5, marginTop: 4 }}>{estimate.property_address}</div>
+            )}
+            {estimate.client_phone && <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>{estimate.client_phone}</div>}
+            {estimate.client_email && <div style={{ fontSize: 13, color: "#888" }}>{estimate.client_email}</div>}
           </div>
 
           {/* Line items */}
           {items.length > 0 && (
-            <div className="estimate-card" style={{ borderRadius: 20, backgroundColor: "white", border: "1px solid #E8E8E2", marginBottom: 16, overflow: "hidden" }}>
-              <div style={{ padding: "16px 22px 10px", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#8A8A84" }}>Scope of Work</div>
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", marginBottom: 14, overflow: "hidden" }}>
+              <div style={{ padding: "16px 22px 10px", fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B8B8B2" }}>
+                Scope of Work
+              </div>
               {items.map((item, i) => (
-                <div key={i} className="line-row" style={{
+                <div key={i} style={{
                   display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16,
                   padding: "14px 22px",
-                  borderTop: "1px solid #EFEFEB",
+                  borderTop: "1px solid #F0F0EB",
                 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: "#111", fontSize: 15, fontWeight: 600, marginBottom: 3 }}>{item.description}</div>
-                    <div style={{ color: "#5F5F5A", fontSize: 13 }}>
-                      {item.quantity > 1 || item.unit ? `${item.quantity}${item.unit ? " " + item.unit : ""} · ${fmt(item.unit_price)}` : fmt(item.unit_price)}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#111", marginBottom: 3 }}>{item.description}</div>
+                    <div style={{ fontSize: 13, color: "#888" }}>
+                      {item.quantity}{item.unit ? ` ${item.unit}` : ""}{item.unit_price ? ` · ${fmt(item.unit_price)}` : ""}
+                      {item.category ? <span style={{ marginLeft: 6, color: "#C0C0C0", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>{item.category}</span> : null}
                     </div>
                   </div>
-                  <div style={{ color: "#111", fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#111", flexShrink: 0 }}>
                     {fmt(item.quantity * item.unit_price)}
                   </div>
                 </div>
@@ -183,28 +291,45 @@ export default async function EstimateClientPage({
           )}
 
           {/* Totals */}
-          <div className="estimate-card" style={{ borderRadius: 20, backgroundColor: "white", border: "1px solid #E8E8E2", padding: "18px 22px", marginBottom: 24 }}>
+          <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 24 }}>
             {estimate.tax_rate > 0 && (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ color: "#6B6B66", fontSize: 14 }}>Subtotal</span>
-                  <span style={{ color: "#4A4A46", fontSize: 14, fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
+                  <span style={{ fontSize: 14, color: "#888" }}>Subtotal</span>
+                  <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #EDEDE8" }}>
-                  <span style={{ color: "#6B6B66", fontSize: 14 }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
-                  <span style={{ color: "#4A4A46", fontSize: 14, fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #F0F0EB" }}>
+                  <span style={{ fontSize: 14, color: "#888" }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
+                  <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
                 </div>
               </>
             )}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: "#111", fontSize: 18, fontWeight: 700 }}>Total</span>
-              <span style={{ color, fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em" }}>{fmt(estimate.total)}</span>
+            <div style={{
+              background: color, borderRadius: 10, padding: "14px 20px",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: textLow, letterSpacing: "0.14em", textTransform: "uppercase" }}>Total Due</span>
+              <span style={{ fontSize: 26, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em" }}>{fmt(estimate.total)}</span>
             </div>
+            {estimate.deposit_paid_at && estimate.deposit_amount && (
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, padding: "10px 14px", background: "#F0FBF4", borderRadius: 8 }}>
+                <span style={{ fontSize: 13, color: "#16803C", fontWeight: 600 }}>✓ Deposit Paid</span>
+                <span style={{ fontSize: 13, color: "#16803C", fontWeight: 700 }}>{fmt(estimate.deposit_amount)}</span>
+              </div>
+            )}
           </div>
 
-          {/* Accept / Decline / Status */}
+          {/* Notes */}
+          {estimate.notes && (
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 20, borderLeft: `3px solid ${color}` }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B8B8B2", marginBottom: 8 }}>Notes</div>
+              <div style={{ fontSize: 13, color: "#555", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{estimate.notes}</div>
+            </div>
+          )}
+
+          {/* CTA */}
           {!isClosed && (
-            <>
+            <div style={{ marginBottom: 16 }}>
               <AcceptButton
                 estimateId={id}
                 color={color}
@@ -214,44 +339,38 @@ export default async function EstimateClientPage({
                 companyName={company.name}
               />
               <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />
-            </>
-          )}
-
-          {isAccepted && (
-            <div style={{ borderRadius: 20, backgroundColor: `${color}12`, border: `1px solid ${color}30`, padding: "24px 22px", textAlign: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: 28, marginBottom: 8 }}>✓</div>
-              <div style={{ color, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
-              <div style={{ color: "#777772", fontSize: 14 }}>
-                {estimate.accepted_at
-                  ? `Accepted on ${new Date(estimate.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}`
-                  : "Thank you for accepting this estimate."}
-              </div>
             </div>
           )}
 
-          {isDeclined && (
-            <div style={{ borderRadius: 20, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.2)", padding: "20px 22px", textAlign: "center" }}>
-              <div style={{ color: "#FF453A", fontSize: 15, fontWeight: 700 }}>Estimate Declined</div>
-            </div>
-          )}
-
-          {isExpired && (
-            <div style={{ borderRadius: 20, backgroundColor: "white", border: "1px solid #E8E8E2", padding: "20px 22px", textAlign: "center" }}>
-              <div style={{ color: "#777772", fontSize: 15, fontWeight: 600 }}>This estimate has expired</div>
-            </div>
-          )}
-
-          {/* Print */}
-          <div style={{ marginBottom: 24 }}>
-            <PrintButton estimateId={id} slug={company.slug} />
-          </div>
+          {/* Download PDF */}
+          <a
+            href={`/q/${id}/print`}
+            target="_blank"
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              width: "100%", padding: "14px 20px", borderRadius: 14,
+              border: `2px solid ${color}`,
+              color, background: "transparent",
+              fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 32,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download PDF
+          </a>
 
           {/* Footer */}
-          <div style={{ marginTop: 8, textAlign: "center", color: "#6B6B66", fontSize: 13, lineHeight: 1.7 }}>
-            <div>{companyDisplayName}</div>
+          <div style={{ textAlign: "center", color: "#AAA", fontSize: 13, lineHeight: 1.9 }}>
+            <div style={{ fontWeight: 700, color: "#888", marginBottom: 2 }}>{companyDisplayName}</div>
             {company.phone && <div>{company.phone}</div>}
             {company.email && <div>{company.email}</div>}
+            <div style={{ marginTop: 12, fontSize: 11, color: "#CCC", fontWeight: 600, letterSpacing: "0.04em" }}>Powered by Found</div>
           </div>
+
         </div>
       </div>
     </>
