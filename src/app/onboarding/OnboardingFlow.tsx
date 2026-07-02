@@ -1615,7 +1615,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
 
               <header
                 className="shrink-0 flex items-center justify-between px-7 pt-8 pb-2 md:px-12 md:pt-10"
-                style={onClose ? { paddingTop: "max(2rem, env(safe-area-inset-top))" } : undefined}
+                style={onClose ? { paddingTop: "2rem" } : undefined}
               >
                 {phase === "questions" ? (
                   <button
@@ -1652,21 +1652,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                   </button>
                 )}
               </header>
-
-              {/* Progress bar — shown during questions phase */}
-              {phase === "questions" && (
-                <div className="shrink-0 px-7 pb-1 md:px-12">
-                  <div className="h-[2px] w-full rounded-full overflow-hidden" style={{ backgroundColor: isLight ? "rgba(8,10,9,0.08)" : "rgba(255,255,255,0.08)" }}>
-                    <div
-                      className="h-full rounded-full transition-[width] duration-500 ease-out"
-                      style={{
-                        width: `${Math.round((stepIndex / (STEPS.length - 1)) * 100)}%`,
-                        backgroundColor: SIGNAL_GREEN,
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
 
               {/* Scrollable body — lets content scroll on short viewports / keyboard-open */}
               <div className="flex-1 overflow-y-auto px-7 md:px-12">

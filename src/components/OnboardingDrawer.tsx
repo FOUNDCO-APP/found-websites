@@ -15,6 +15,7 @@ export default function OnboardingDrawer({
   showPlanChoice?: boolean
 }) {
   const savedScrollY = useRef(0)
+  const drawerRef    = useRef<HTMLDivElement>(null)
 
   // Lock body scroll, manage URL, and sync status bar color with drawer state
   useEffect(() => {
@@ -36,8 +37,8 @@ export default function OnboardingDrawer({
       if (window.location.pathname !== "/onboarding") {
         window.history.pushState({ drawer: true }, "", "/onboarding")
       }
-      meta.content = "#32D074"
-      // FOUND_BLACK fills the safe-area gap at the bottom of the drawer
+      // Dark matches the drawer's FOUND_BLACK background around the Dynamic Island
+      meta.content = "#080A09"
       document.documentElement.style.backgroundColor = "#080A09"
     } else {
       document.body.style.position = ""
@@ -60,6 +61,29 @@ export default function OnboardingDrawer({
       document.body.style.width = ""
       meta!.content = "#080A09"
       document.documentElement.style.backgroundColor = "#080A09"
+    }
+  }, [open])
+
+  // Keyboard awareness — lift the drawer bottom when the keyboard opens on iOS/Android
+  useEffect(() => {
+    if (!open || typeof window === "undefined" || !window.visualViewport) return
+
+    function onViewportChange() {
+      const vv = window.visualViewport!
+      // keyboard height = full window height minus the visible viewport height
+      const keyH = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      if (drawerRef.current) {
+        drawerRef.current.style.bottom = keyH > 0 ? `${keyH}px` : ""
+      }
+    }
+
+    window.visualViewport.addEventListener("resize", onViewportChange)
+    window.visualViewport.addEventListener("scroll", onViewportChange)
+
+    return () => {
+      window.visualViewport!.removeEventListener("resize", onViewportChange)
+      window.visualViewport!.removeEventListener("scroll", onViewportChange)
+      if (drawerRef.current) drawerRef.current.style.bottom = ""
     }
   }, [open])
 
@@ -90,6 +114,7 @@ export default function OnboardingDrawer({
 
       {/* Drawer — mobile: slide up full-screen · desktop: right panel 520px */}
       <div
+        ref={drawerRef}
         className={`found-drawer ${open ? "found-drawer-open" : ""}`}
         aria-modal="true"
         aria-hidden={!open}
@@ -99,7 +124,7 @@ export default function OnboardingDrawer({
           className="pointer-events-none absolute inset-x-0 top-0 h-40 z-10"
           style={{ background: "linear-gradient(to bottom, rgba(50,208,116,0.45) 0px, transparent 72px)" }}
         />
-        {/* Sheet chrome */}
+        {/* Sheet chrome — drag handle */}
         <div
           className="md:hidden absolute left-1/2 -translate-x-1/2 z-30 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ top: "12px", backgroundColor: "rgba(255,255,255,0.34)" }}
