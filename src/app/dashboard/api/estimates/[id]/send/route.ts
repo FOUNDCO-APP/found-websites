@@ -95,13 +95,13 @@ export async function POST(
       <div style="color:#999;font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px">Total Estimate</div>
       <div style="color:#111;font-size:38px;font-weight:700;letter-spacing:-0.03em">${fmtCurrency(estimate.total)}</div>
     </div>
-    <div style="text-align:center;margin-bottom:12px">
+    <div style="text-align:center;margin-bottom:14px">
       <a href="${link}" style="display:inline-block;background:${color};color:${btnTextColor};font-size:15px;font-weight:700;text-decoration:none;padding:16px 44px;border-radius:14px;letter-spacing:-0.01em">View &amp; Accept Estimate</a>
     </div>
-    <p style="margin:0 0 10px;text-align:center;color:#bbb;font-size:12px;line-height:1.6">Review all line items and accept from any device</p>
-    <p style="margin:0;text-align:center">
-      <a href="${link}/print" style="color:#aaa;font-size:12px;text-decoration:underline">Download PDF</a>
-    </p>
+    <div style="text-align:center;margin-bottom:20px">
+      <a href="${link}/print" style="display:inline-block;border:2px solid ${color};color:${color};background:transparent;font-size:14px;font-weight:700;text-decoration:none;padding:12px 32px;border-radius:12px;letter-spacing:-0.01em">Download PDF</a>
+    </div>
+    <p style="margin:0;text-align:center;color:#bbb;font-size:12px;line-height:1.6">Review all line items and accept or save from any device</p>
   </td></tr>
   <tr><td style="padding:18px 36px;border-top:1px solid #f0f0f0;text-align:center">
     <p style="margin:0;color:#bbb;font-size:12px;line-height:1.8">${companyName}${company.phone ? " &nbsp;·&nbsp; " + company.phone : ""}${company.email ? " &nbsp;·&nbsp; " + company.email : ""}</p>
