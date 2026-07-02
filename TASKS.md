@@ -151,6 +151,11 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Custom domain flow end-to-end test
 - **Resend module-level init cleanup** — `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
+### New Industry Photo Curation
+- Curate Pexels photos for 3 new industries: `print_signage`, `tech_repair`, `transportation`
+- Team selects, Shawn approves via `/admin/photos` — same process as existing 22 industries
+- Needed before these industries can show real stock photos to new owners
+
 ### Decisions needed
 - Portal name — "Found Studio" proposed, needs Steve/team sign-off
 - Inbox tab — currently redirects to Leads. Should it become a full conversation thread view?

@@ -25,11 +25,10 @@ export default function BusinessNameEditor({ initialName }: { initialName: strin
   }
 
   return (
-    <section style={{ marginBottom: 24, padding: "0 20px" }}>
-      <div style={{
-        borderRadius: 18, backgroundColor: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)", padding: "18px 20px",
-      }}>
+    <div style={{
+      borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+      border: "1px solid rgba(255,255,255,0.08)", padding: "14px 18px",
+    }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: editing ? 14 : 0 }}>
           <div>
             <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 4 }}>
@@ -81,7 +80,6 @@ export default function BusinessNameEditor({ initialName }: { initialName: strin
             </div>
           </>
         )}
-      </div>
-    </section>
+    </div>
   )
 }

@@ -232,6 +232,11 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         activeAddons={effectiveAddonSlugs}
       />
 
+      {/* Add to Home Screen — shown early so owners don't miss it */}
+      <section style={{ marginBottom: 20 }}>
+        <InstallButton />
+      </section>
+
       {/* Get Paid Faster — high-value action, shown early */}
       {company && !company.stripe_connect_account_id && (
         <section style={{ marginBottom: 20 }}>
@@ -600,7 +605,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               <ChevronRight />
             </div>
           </a>
-          <InstallButton />
         </div>
       </section>
 
