@@ -1,51 +1,8 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 
-type GPlace = { formatted_address?: string }
-type GAutocomplete = {
-  getPlace: () => GPlace
-  addListener: (event: string, fn: () => void) => void
-}
-type GMaps = {
-  maps: {
-    places: {
-      Autocomplete: new (
-        el: HTMLInputElement,
-        opts: { types: string[]; componentRestrictions: { country: string }; fields: string[] }
-      ) => GAutocomplete
-    }
-  }
-}
-
-declare global {
-  interface Window {
-    google?: GMaps
-    initGoogleMaps?: () => void
-  }
-}
-
-let scriptLoaded = false
-let scriptLoading = false
-const onLoadCallbacks: (() => void)[] = []
-
-function loadGoogleMapsScript(apiKey: string, onLoad: () => void) {
-  if (typeof window === "undefined") return
-  if (scriptLoaded) { onLoad(); return }
-  onLoadCallbacks.push(onLoad)
-  if (scriptLoading) return
-  scriptLoading = true
-  window.initGoogleMaps = () => {
-    scriptLoaded = true
-    onLoadCallbacks.forEach(fn => fn())
-    onLoadCallbacks.length = 0
-  }
-  const script = document.createElement("script")
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps&loading=async`
-  script.async = true
-  script.defer = true
-  document.head.appendChild(script)
-}
+type Prediction = { description: string; place_id: string }
 
 export default function PlacesInput({
   value,
@@ -58,37 +15,75 @@ export default function PlacesInput({
   placeholder?: string
   style?: React.CSSProperties
 }) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<GAutocomplete | null>(null)
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  const [predictions, setPredictions] = useState<Prediction[]>([])
+  const [open, setOpen] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => {
-    if (!apiKey || !inputRef.current) return
+  const fetchPredictions = useCallback((q: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (q.trim().length < 2) { setPredictions([]); setOpen(false); return }
 
-    function initAutocomplete() {
-      if (!inputRef.current || autocompleteRef.current || !window.google) return
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
-        types: ["address"],
-        componentRestrictions: { country: "us" },
-        fields: ["formatted_address"],
-      })
-      autocompleteRef.current.addListener("place_changed", () => {
-        const place = autocompleteRef.current?.getPlace()
-        if (place?.formatted_address) onChange(place.formatted_address)
-      })
-    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/places-autocomplete?q=${encodeURIComponent(q)}`)
+        const data = await res.json()
+        if (data.predictions?.length > 0) {
+          setPredictions(data.predictions)
+          setOpen(true)
+        } else {
+          setPredictions([])
+          setOpen(false)
+        }
+      } catch {
+        setPredictions([])
+      }
+    }, 280)
+  }, [])
 
-    loadGoogleMapsScript(apiKey, initAutocomplete)
-  }, [apiKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  function handleChange(v: string) {
+    onChange(v)
+    fetchPredictions(v)
+  }
+
+  function select(description: string) {
+    onChange(description)
+    setPredictions([])
+    setOpen(false)
+  }
 
   return (
-    <input
-      ref={inputRef}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      placeholder={placeholder ?? "123 Main St, City, State"}
-      autoComplete="off"
-      style={style}
-    />
+    <div style={{ position: "relative" }}>
+      <input
+        value={value}
+        onChange={e => handleChange(e.target.value)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onFocus={() => { if (predictions.length > 0) setOpen(true) }}
+        placeholder={placeholder ?? "123 Main St, City, State"}
+        autoComplete="off"
+        style={style}
+      />
+      {open && predictions.length > 0 && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200,
+          backgroundColor: "#1A1F1B", border: "1px solid rgba(255,255,255,0.12)",
+          borderRadius: 12, overflow: "hidden",
+        }}>
+          {predictions.map((p, i) => (
+            <button
+              key={p.place_id}
+              onMouseDown={() => select(p.description)}
+              style={{
+                width: "100%", padding: "11px 14px", background: "none", border: "none",
+                borderBottom: i < predictions.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                textAlign: "left", cursor: "pointer", color: "white", fontSize: 13,
+                fontWeight: 500, lineHeight: 1.4,
+              }}
+            >
+              {p.description}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
