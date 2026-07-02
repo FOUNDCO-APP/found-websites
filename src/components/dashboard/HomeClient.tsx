@@ -33,7 +33,7 @@ type RecentLead = {
 }
 
 type Props = {
-  firstName: string
+  businessName: string
   greeting: string
   newCount: number
   totalCount: number
@@ -188,7 +188,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function HomeClient({
-  firstName, greeting, newCount, totalCount,
+  businessName, greeting, newCount, totalCount,
   topName, topCreatedAt,
   siteSlug, isActive, recentLeads, lastPhotoAt, industry, businessTool,
 }: Props) {
@@ -254,7 +254,7 @@ export default function HomeClient({
       {/* ── GREETING ── */}
       <div style={{ padding: "28px 24px 0", ...fade(0) }}>
         <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
-          Good {greeting},<br />{firstName}.
+          Good {greeting},<br />{businessName}.
         </h1>
       </div>
 

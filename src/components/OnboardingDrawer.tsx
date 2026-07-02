@@ -80,7 +80,11 @@ export default function OnboardingDrawer({
         className={`fixed inset-0 z-40 transition-opacity duration-300 ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
-        style={{ background: "rgba(8,10,9,0.6)" }}
+        style={{
+          background: "rgba(8,10,9,0.74)",
+          WebkitBackdropFilter: "blur(10px)",
+          backdropFilter: "blur(10px)",
+        }}
         onClick={open ? onClose : undefined}
       />
 
@@ -100,24 +104,6 @@ export default function OnboardingDrawer({
           className="md:hidden absolute left-1/2 -translate-x-1/2 z-30 h-1.5 w-12 rounded-full pointer-events-none"
           style={{ top: "12px", backgroundColor: "rgba(255,255,255,0.34)" }}
         />
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close onboarding"
-          className="absolute right-4 z-40 flex h-10 w-10 items-center justify-center rounded-full transition active:scale-95"
-          style={{
-            top: "max(16px, env(safe-area-inset-top))",
-            backgroundColor: "rgba(8,10,9,0.42)",
-            border: "1px solid rgba(255,255,255,0.18)",
-            color: "rgba(255,255,255,0.88)",
-            WebkitBackdropFilter: "blur(16px)",
-            backdropFilter: "blur(16px)",
-          }}
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
-            <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
         <OnboardingFlow onClose={onClose} drawerMode plan={plan} showPlanChoice={showPlanChoice} />
       </div>
     </>

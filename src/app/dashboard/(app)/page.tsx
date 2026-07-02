@@ -64,12 +64,12 @@ export default async function HomePage() {
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
-  const firstName = (company.name ?? "").split(" ")[0] || "there"
+  const businessName = (company.name ?? "").trim() || "there"
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
 
   return (
     <HomeClient
-      firstName={firstName}
+      businessName={businessName}
       greeting={greeting}
       newCount={newCount}
       totalCount={allLeads.length}

@@ -619,9 +619,6 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
         {/* Activation comes after the reveal, not before it. */}
         {slug ? (
           <div className="mt-8 w-full max-w-[300px] text-center" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
-            <p className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: SIGNAL_GREEN }}>
-Ready to launch your site?
-            </p>
             <button
               type="button"
               onClick={() => setActivating(true)}
