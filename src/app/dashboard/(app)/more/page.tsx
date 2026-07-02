@@ -222,16 +222,33 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               <ChevronRight />
             </div>
           </Link>
-
         </div>
       </section>
 
-      {/* Pages — merged nav + tab customization */}
+      {/* My Dock */}
       <DashboardPages
         companyName={company?.name ?? null}
         industry={industryCategory}
         activeAddons={effectiveAddonSlugs}
       />
+
+      {/* Get Paid Faster — high-value action, shown early */}
+      {company && !company.stripe_connect_account_id && (
+        <section style={{ marginBottom: 20 }}>
+          <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}28`, backgroundColor: `${GREEN}10` }}>
+            <p style={{ margin: "0 0 5px", ...TYPE.caption, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: GREEN }}>
+              Get paid faster
+            </p>
+            <p style={{ margin: "0 0 7px", ...TYPE.subhead, fontWeight: 850, color: "white" }}>
+              {paymentCopy.headline}
+            </p>
+            <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              {paymentCopy.body}
+            </p>
+            <PaymentSetupButton returnTo="/more?payments=connected">{paymentCopy.button}</PaymentSetupButton>
+          </div>
+        </section>
+      )}
 
       {/* Add Features */}
       {availableAddons.length > 0 && (
@@ -325,7 +342,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      {/* Plan */}
+      {/* My Plan */}
       <section style={{ marginBottom: 24 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           My Plan
@@ -483,7 +500,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      {/* Smart upsell banner - fires when add-ons push total within $15 of next tier */}
+      {/* Smart upsell banner */}
       {isActive && showUpsellBanner && upgrade && company?.id && (
         <section style={{ marginBottom: 24 }}>
           <div style={{
@@ -513,23 +530,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      {company && !company.stripe_connect_account_id && (
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}28`, backgroundColor: `${GREEN}10` }}>
-            <p style={{ margin: "0 0 5px", ...TYPE.caption, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: GREEN }}>
-              Get paid faster
-            </p>
-            <p style={{ margin: "0 0 7px", ...TYPE.subhead, fontWeight: 850, color: "white" }}>
-              {paymentCopy.headline}
-            </p>
-            <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-              {paymentCopy.body}
-            </p>
-            <PaymentSetupButton returnTo="/more?payments=connected">{paymentCopy.button}</PaymentSetupButton>
-          </div>
-        </section>
-      )}
-
       <div style={{ marginBottom: 24 }}>
         <Link href="https://foundco.app/plans" style={{ textDecoration: "none", display: "block" }}>
           <div style={{
@@ -544,38 +544,41 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </Link>
       </div>
 
-      {/* Account */}
+      {/* My Account — business name, email, password */}
       <section style={{ marginBottom: 20 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           My Account
         </p>
-        <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 2 }}>
-          <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
-            <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
-            <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
-          </div>
-        </div>
-        <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
-          <div style={{
-            borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: "14px 18px",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-              <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Change Password</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <BusinessNameEditor initialName={company?.name ?? ""} />
+          <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
+              <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
+              <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
             </div>
-            <ChevronRight />
           </div>
-        </Link>
+          <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
+            <div style={{
+              borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              padding: "14px 18px",
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <svg width={ICON.action} height={ICON.action} viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Change Password</span>
+              </div>
+              <ChevronRight />
+            </div>
+          </Link>
+        </div>
       </section>
 
-      {/* Settings */}
-      <section style={{ marginBottom: 20 }}>
+      {/* My Settings — billing, help, home screen install */}
+      <section style={{ marginBottom: 24 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           My Settings
         </p>
@@ -583,14 +586,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
           {hasStripe && company?.id && (
             <form action={openBillingPortal}>
               <input type="hidden" name="companyId" value={company.id} />
-              <button type="submit" style={{
-                width: "100%",
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                textAlign: "left",
-              }}>
+              <button type="submit" style={{ width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
                 <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <span style={{ ...TYPE.subhead, color: "white" }}>Manage billing</span>
                   <ChevronRight />
@@ -604,14 +600,9 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               <ChevronRight />
             </div>
           </a>
+          <InstallButton />
         </div>
       </section>
-
-      <section style={{ marginBottom: 24, padding: "0 20px" }}>
-        <InstallButton />
-      </section>
-
-      <BusinessNameEditor initialName={company?.name ?? ""} />
 
       <SignOutButton />
 

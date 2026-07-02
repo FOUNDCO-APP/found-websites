@@ -21,6 +21,9 @@ export const industryLabels: Record<string, string> = {
   makers_crafts: "Makers & Crafts",
   home_property: "Home & Property",
   nonprofit: "Nonprofit & Community",
+  print_signage: "Print & Signage",
+  tech_repair: "Tech & Device Repair",
+  transportation: "Transportation & Limo",
 }
 
 type KeywordConfig = {
@@ -54,8 +57,8 @@ const keywordMap: KeywordConfig[] = [
   },
   {
     industry: "events",
-    terms: ["event", "events", "wedding", "weddings", "party", "parties", "balloon", "balloons", "venue", "decor", "decorator", "dj", "rental", "rentals", "photo booth", "wedding photography", "event photography", "party rental"],
-    strongTerms: ["event planning", "wedding planner", "balloon garland", "balloon decor", "party rentals", "photo booth"],
+    terms: ["event", "events", "wedding", "weddings", "party", "parties", "balloon", "balloons", "venue", "decor", "decorator", "dj", "rental", "rentals", "photo booth", "wedding photography", "event photography", "party rental", "florist", "florist shop", "flower shop", "flowers", "floral", "floral design", "floral arrangements", "bouquet", "centerpiece"],
+    strongTerms: ["event planning", "wedding planner", "balloon garland", "balloon decor", "party rentals", "photo booth", "florist", "flower shop", "floral design", "floral arrangements"],
   },
   {
     industry: "retail",
@@ -74,8 +77,8 @@ const keywordMap: KeywordConfig[] = [
   },
   {
     industry: "automotive",
-    terms: ["auto", "automotive", "car", "cars", "vehicle", "vehicles", "mechanic", "detailing", "detailer", "tires", "oil change", "body shop", "collision", "mobile mechanic", "car audio", "wrap", "tint", "transmission", "brakes", "brake repair"],
-    strongTerms: ["auto repair", "body shop", "mobile mechanic", "oil change", "car detailing", "brake repair"],
+    terms: ["auto", "automotive", "car", "cars", "vehicle", "vehicles", "mechanic", "detailing", "detailer", "tires", "oil change", "body shop", "collision", "mobile mechanic", "car audio", "wrap", "tint", "transmission", "brakes", "brake repair", "car wash", "auto wash", "hand wash", "tow", "towing", "tow truck", "roadside", "roadside assistance", "jump start", "lockout", "appliance repair", "appliance", "refrigerator repair", "washer repair", "dryer repair", "dishwasher repair"],
+    strongTerms: ["auto repair", "body shop", "mobile mechanic", "oil change", "car detailing", "brake repair", "car wash", "tow truck", "towing service", "roadside assistance", "appliance repair"],
   },
   {
     industry: "pet_services",
@@ -84,8 +87,8 @@ const keywordMap: KeywordConfig[] = [
   },
   {
     industry: "cleaning",
-    terms: ["cleaning", "cleaner", "cleaners", "maid", "maids", "janitorial", "move out", "move-out", "window cleaning", "carpet cleaning", "deep clean", "house cleaning", "commercial cleaning", "office cleaning", "pressure washing", "power washing"],
-    strongTerms: ["house cleaning", "commercial cleaning", "window cleaning", "carpet cleaning", "move-out cleaning"],
+    terms: ["cleaning", "cleaner", "cleaners", "maid", "maids", "janitorial", "move out", "move-out", "window cleaning", "carpet cleaning", "deep clean", "house cleaning", "commercial cleaning", "office cleaning", "pressure washing", "power washing", "dry cleaning", "laundry", "laundromat", "alterations", "dry cleaner"],
+    strongTerms: ["house cleaning", "commercial cleaning", "window cleaning", "carpet cleaning", "move-out cleaning", "dry cleaning", "dry cleaner", "laundry service"],
   },
   {
     industry: "landscaping",
@@ -141,6 +144,21 @@ const keywordMap: KeywordConfig[] = [
     industry: "nonprofit",
     terms: ["nonprofit", "non profit", "charity", "church", "mosque", "temple", "community center", "volunteer", "mutual aid", "animal rescue", "food bank", "donation", "donations", "501c3", "ministry", "congregation", "foundation", "community program"],
     strongTerms: ["nonprofit", "non profit", "501c3", "food bank", "animal rescue", "mutual aid", "community center"],
+  },
+  {
+    industry: "print_signage",
+    terms: ["print", "printing", "printer", "print shop", "sign", "signs", "signage", "sign shop", "banner", "banners", "business cards", "flyers", "brochure", "vinyl", "vinyl wrap", "vehicle wrap", "decal", "decals", "commercial printing", "large format", "marketing materials", "promotional", "screen print", "screen printing", "embroidery", "apparel printing", "custom shirts", "custom printing", "engraving", "laser engraving", "trophy", "awards", "plaques"],
+    strongTerms: ["print shop", "sign shop", "commercial printing", "large format printing", "vinyl wrap", "business cards", "banner printing", "screen printing", "laser engraving"],
+  },
+  {
+    industry: "tech_repair",
+    terms: ["computer repair", "phone repair", "it support", "tech support", "laptop repair", "screen repair", "data recovery", "virus removal", "network setup", "wifi setup", "it services", "managed it", "computer service", "device repair", "tablet repair", "mac repair", "pc repair", "hardware repair", "software support", "tech help"],
+    strongTerms: ["computer repair", "phone repair", "it support", "tech support", "laptop repair", "screen repair", "data recovery", "managed it"],
+  },
+  {
+    industry: "transportation",
+    terms: ["limo", "limousine", "limo service", "transportation", "shuttle", "charter", "party bus", "black car", "car service", "town car", "executive car", "airport shuttle", "airport transfer", "ride", "driver", "chauffeur", "bus rental", "van service", "sprinter", "wedding car", "prom limo"],
+    strongTerms: ["limo service", "limousine", "charter bus", "party bus", "black car service", "airport shuttle", "chauffeur", "executive transportation"],
   },
 ]
 
