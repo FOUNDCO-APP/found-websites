@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup } from "./activateActions"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#111111"
@@ -191,9 +192,7 @@ export default function ActivateFlow({
 
       {/* Wordmark */}
       <div className="absolute left-7 top-7" style={{ animation: "fade-in 0.5s ease-out both" }}>
-        <svg viewBox="0 0 420 72" className="h-6 w-32 text-white" aria-label="Found">
-          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-        </svg>
+        <FoundWordmark height={24} className="text-white" />
       </div>
 
       {/* ── SPLASH ── */}

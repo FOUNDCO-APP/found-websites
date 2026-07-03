@@ -496,13 +496,52 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   const total = subtotal + taxAmt
   const canSave = clientFirst.trim().length > 0 && !saving
 
-  const sectionStyle: React.CSSProperties = {
-    borderRadius: 24,
-    backgroundColor: "rgba(255,255,255,0.045)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    padding: 18,
-    marginBottom: 14,
+  const STEP_LABELS = ["Customer", "Job", "Work", "Price", "Review"] as const
+  const [activeStep, setActiveStep] = useState(0)
+  const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const tapScrolling = useRef(false)
+
+  // Scroll-spy: the pill for whichever section is actually on screen lights up.
+  // Suppressed for a beat after a tap-to-jump so the target step doesn't flicker mid-scroll.
+  useEffect(() => {
+    const root = scrollRef.current
+    if (!root) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (tapScrolling.current) return
+        const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        if (visible.length === 0) return
+        const idx = sectionRefs.current.findIndex(el => el === visible[0].target)
+        if (idx !== -1) setActiveStep(idx)
+      },
+      { root, threshold: [0.25, 0.5, 0.75], rootMargin: "-15% 0px -55% 0px" }
+    )
+    sectionRefs.current.forEach(el => el && observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+
+  function jumpToStep(index: number) {
+    tapScrolling.current = true
+    setActiveStep(index)
+    sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" })
+    setTimeout(() => { tapScrolling.current = false }, 600)
   }
+
+  // Flowing section anchor — numbered marker + title, no card box around it.
+  function sectionAnchor(step: string, title: string, value?: string) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, color: SIGNAL_GREEN, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{step}</span>
+          <h3 style={{ margin: 0, color: "white", fontSize: 19, fontWeight: 800, letterSpacing: 0 }}>{title}</h3>
+        </div>
+        {value && <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{value}</span>}
+      </div>
+    )
+  }
+
+  const dividerStyle: React.CSSProperties = { border: "none", borderTop: "1px solid rgba(255,255,255,0.07)", margin: "32px 0" }
 
   function handleFirstNameChange(value: string) {
     setClientFirst(value)
@@ -595,20 +634,8 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
     }
   }
 
-  function sectionHeader(step: string, title: string, value?: string) {
-    return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, color: SIGNAL_GREEN, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{step}</span>
-          <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 800, letterSpacing: 0 }}>{title}</h3>
-        </div>
-        {value && <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{value}</span>}
-      </div>
-    )
-  }
-
   return (
-    <div style={{
+    <div ref={scrollRef} style={{
       position: "fixed", inset: 0, zIndex: 70,
       backgroundColor: "#0B0F0C", color: "white", overflowY: "auto",
       padding: "max(env(safe-area-inset-top), 18px) 18px max(env(safe-area-inset-bottom), 28px)",
@@ -618,7 +645,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
         <header style={{
           position: "sticky", top: 0, zIndex: 5,
           margin: "-18px -18px 10px", padding: "max(env(safe-area-inset-top), 18px) 18px 14px",
-          background: "linear-gradient(180deg, #0B0F0C 78%, rgba(11,15,12,0))",
+          backgroundColor: "#0B0F0C",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
             <div>
@@ -632,19 +659,20 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
             }}>x</button>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
-            {["Customer", "Job", "Work", "Price", "Review"].map((step, index) => (
-              <div key={step} style={{
+            {STEP_LABELS.map((step, index) => (
+              <button key={step} type="button" onClick={() => jumpToStep(index)} style={{
                 height: 34, borderRadius: 17, display: "flex", alignItems: "center", justifyContent: "center",
-                backgroundColor: index === 0 ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.05)",
-                border: `1px solid ${index === 0 ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.07)"}`,
-                color: index === 0 ? SIGNAL_GREEN : "rgba(255,255,255,0.38)", fontSize: 11, fontWeight: 800,
-              }}>{step}</div>
+                border: "1px solid", cursor: "pointer",
+                backgroundColor: activeStep === index ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.05)",
+                borderColor: activeStep === index ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.07)",
+                color: activeStep === index ? SIGNAL_GREEN : "rgba(255,255,255,0.38)", fontSize: 11, fontWeight: 800,
+              }}>{step}</button>
             ))}
           </div>
         </header>
 
-        <section style={sectionStyle}>
-          {sectionHeader("1", "Customer")}
+        <section ref={el => { sectionRefs.current[0] = el }}>
+          {sectionAnchor("1", "Customer")}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
               <div style={{ position: "relative" }}>
@@ -678,13 +706,17 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           </div>
         </section>
 
-        <section style={sectionStyle}>
-          {sectionHeader("2", "Job")}
+        <hr style={dividerStyle} />
+
+        <section ref={el => { sectionRefs.current[1] = el }}>
+          {sectionAnchor("2", "Job")}
           <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={inputStyle} />
         </section>
 
-        <section style={sectionStyle}>
-          {sectionHeader("3", "Work", lineItems.length ? `${lineItems.length} added` : undefined)}
+        <hr style={dividerStyle} />
+
+        <section ref={el => { sectionRefs.current[2] = el }}>
+          {sectionAnchor("3", "Work", lineItems.length ? `${lineItems.length} added` : undefined)}
 
           {rateSheet.length > 0 && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
@@ -779,8 +811,10 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           )}
         </section>
 
-        <section style={sectionStyle}>
-          {sectionHeader("4", "Price")}
+        <hr style={dividerStyle} />
+
+        <section ref={el => { sectionRefs.current[3] = el }}>
+          {sectionAnchor("4", "Price")}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
               <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 15, fontWeight: 750 }}>Tax rate</span>
@@ -818,8 +852,10 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           </div>
         </section>
 
-        <section style={{ ...sectionStyle, marginBottom: 16 }}>
-          {sectionHeader("5", "Review", clientFirst.trim() ? [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ") : undefined)}
+        <hr style={dividerStyle} />
+
+        <section ref={el => { sectionRefs.current[4] = el }} style={{ marginBottom: 16 }}>
+          {sectionAnchor("5", "Review", clientFirst.trim() ? [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ") : undefined)}
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center" }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, fontWeight: 700, marginBottom: 5 }}>Ready total</div>

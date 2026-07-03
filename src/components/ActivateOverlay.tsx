@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup } from "@/app/activate/activateActions"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
@@ -335,9 +336,7 @@ export default function ActivateOverlay({
         }}>
           {/* FOUND wordmark */}
           <div style={{ position: "absolute", left: 28, top: 28 }}>
-            <svg viewBox="0 0 420 72" style={{ height: 24, width: 128, color: "white" }} aria-label="Found">
-              <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-            </svg>
+            <FoundWordmark height={24} color="white" />
           </div>
 
           {/* Close */}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -82,9 +83,7 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
 
           {/* Logo */}
           <Link href="/" className="text-white shrink-0 z-10">
-            <svg viewBox="0 0 420 72" className="h-7 w-36" role="img" aria-label="Found">
-              <text x="0" y="56" fill="currentColor" fontFamily="var(--font-dm-sans), Arial, sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-            </svg>
+            <FoundWordmark height={28} />
           </Link>
 
           {/* Desktop links */}

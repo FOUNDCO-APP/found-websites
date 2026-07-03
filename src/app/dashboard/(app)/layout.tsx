@@ -9,6 +9,7 @@ import ActivationBanner from "@/components/dashboard/ActivationBanner"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 
 import { BLACK } from "@/lib/dashboard/typography"
+import FoundWordmark from "@/components/FoundWordmark"
 
 export const metadata = { title: "Found" }
 
@@ -66,9 +67,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           }}>
             {/* FOUND wordmark — hidden on desktop (sidebar has it) */}
             <Link href="/" className="found-header-wordmark" style={{ textDecoration: "none" }}>
-              <svg viewBox="0 0 420 72" style={{ height: 18, width: 98, color: "white" }} aria-label="Found">
-                <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-              </svg>
+              <FoundWordmark height={18} color="white" />
             </Link>
 
             {/* Company name / switcher */}

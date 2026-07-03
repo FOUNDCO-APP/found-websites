@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getAllCompanies, type CompanyRow } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -55,9 +56,7 @@ export default async function SelectPage() {
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         padding: "18px 24px",
       }}>
-        <svg viewBox="0 0 420 72" style={{ height: 20, width: 108, color: "white" }} aria-label="Found">
-          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-        </svg>
+        <FoundWordmark height={20} color="white" />
       </header>
 
       {/* Scrollable body */}

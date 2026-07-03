@@ -11,6 +11,7 @@ import { createSetupIntentForCompany } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -491,9 +492,7 @@ function GenerationErrorScreen({ message, onRetry, onBack }: {
   return (
     <main className="fixed inset-0 z-50 flex items-center justify-center px-7" style={{ backgroundColor: FOUND_BLACK }}>
       <section className="w-full max-w-sm text-center">
-        <svg viewBox="0 0 420 72" className="mx-auto h-6 w-32 text-white" aria-label="Found">
-          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-        </svg>
+        <FoundWordmark height={24} className="mx-auto text-white" />
         <p className="mt-10 text-[0.72rem] font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>
           Still here
         </p>
@@ -556,9 +555,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
 
       {/* Header */}
       <header className="relative z-10 flex w-full shrink-0 items-center justify-center px-7 pt-8">
-        <svg viewBox="0 0 420 72" className="h-6 w-32 text-white" aria-label="Found">
-          <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-        </svg>
+        <FoundWordmark height={24} className="text-white" />
       </header>
 
       {/* Centered column */}
@@ -1633,14 +1630,10 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                     </svg>
                   </button>
                 ) : onClose ? (
-                  <svg viewBox="0 0 420 72" className="h-7 w-36" aria-label="Found" style={{ color: tk.text }}>
-                    <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-                  </svg>
+                  <FoundWordmark height={28} style={{ color: tk.text }} />
                 ) : (
                   <Link href="/">
-                    <svg viewBox="0 0 420 72" className="h-7 w-36 text-white" aria-label="Found">
-                      <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-                    </svg>
+                    <FoundWordmark height={28} className="text-white" />
                   </Link>
                 )}
                 {onClose && (

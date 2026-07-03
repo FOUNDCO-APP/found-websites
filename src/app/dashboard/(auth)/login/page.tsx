@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const GREEN = "#32D074"
 const BLACK = "#080A09"
@@ -88,10 +89,7 @@ function LoginForm() {
 
       {/* Found wordmark */}
       <div style={{ marginBottom: 48 }}>
-        <svg viewBox="0 0 340 56" style={{ height: 20, color: "white" }} aria-label="Found">
-          <text x="0" y="44" fill="currentColor" fontFamily="Arial,sans-serif"
-            fontSize="46" fontWeight="300" letterSpacing="20">FOUND</text>
-        </svg>
+        <FoundWordmark height={20} color="white" />
       </div>
 
       {sent ? (

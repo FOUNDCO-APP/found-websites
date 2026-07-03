@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor, defaultFormIntentFor } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
+import FoundWordmark from "@/components/FoundWordmark"
 
 type Tab = { path: string; label: string; id: string }
 type Album = { id: string; name: string; cover_url: string | null }
@@ -544,9 +545,7 @@ export default function DashboardNav({
       {/* ── Desktop sidebar ── */}
       <aside className="found-sidebar" style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 220, backgroundColor: "#080A09", borderRight: "1px solid rgba(255,255,255,0.07)", flexDirection: "column", zIndex: 50, display: "none" }}>
         <div style={{ padding: "24px 20px 20px" }}>
-          <svg viewBox="0 0 420 72" style={{ height: 16, width: 88, color: "white", display: "block" }} aria-label="Found">
-            <text x="0" y="56" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="58" fontWeight="300" letterSpacing="25">FOUND</text>
-          </svg>
+          <FoundWordmark height={16} color="white" />
         </div>
         <div style={{ height: 1, backgroundColor: `${SIGNAL_GREEN}30` }} />
         {companyName && (

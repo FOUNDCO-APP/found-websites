@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const GREEN = "#32D074"
 const BLACK = "#080A09"
@@ -65,9 +66,7 @@ export default function SetPasswordPage() {
   if (hasPassword) {
     return (
       <div style={{ minHeight: "100dvh", backgroundColor: BLACK, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px" }}>
-        <svg viewBox="0 0 340 56" style={{ height: 20, color: "white", marginBottom: 48 }}>
-          <text x="0" y="44" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="46" fontWeight="300" letterSpacing="20">FOUND</text>
-        </svg>
+        <FoundWordmark height={20} color="white" style={{ marginBottom: 48 }} />
         <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 900, color: GREEN, letterSpacing: "0.22em", textTransform: "uppercase" }}>
           Welcome back
         </p>
@@ -94,9 +93,7 @@ export default function SetPasswordPage() {
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 28px" }}>
-      <svg viewBox="0 0 340 56" style={{ height: 20, color: "white", marginBottom: 48 }}>
-        <text x="0" y="44" fill="currentColor" fontFamily="Arial,sans-serif" fontSize="46" fontWeight="300" letterSpacing="20">FOUND</text>
-      </svg>
+      <FoundWordmark height={20} color="white" style={{ marginBottom: 48 }} />
       <p style={{ margin: "0 0 8px", fontSize: 10, fontWeight: 900, color: GREEN, letterSpacing: "0.22em", textTransform: "uppercase" }}>
         One last thing
       </p>
