@@ -1,5 +1,5 @@
 // Single source of truth for the FOUND wordmark.
-// Uses the DM Sans variable loaded in the root layout — never hardcode Arial here again.
+// Uses the Inter variable loaded in the root layout (the app's one true typeface) — never hardcode Arial here again.
 export default function FoundWordmark({
   height = 24,
   width,
@@ -28,7 +28,7 @@ export default function FoundWordmark({
         x="0"
         y="56"
         fill="currentColor"
-        fontFamily="var(--font-dm-sans), Arial, sans-serif"
+        fontFamily="var(--font-inter), Arial, sans-serif"
         fontSize="58"
         fontWeight="300"
         letterSpacing="25"
