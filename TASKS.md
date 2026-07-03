@@ -16,9 +16,10 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Estimator builder redesign plan** - team-approved product/design pass before more UI patching. Make `New Estimate` a focused full-screen tool: Customer, Job, Work, Price, Review.
-2. **Fix client-facing no-payment fallback** - public no-Stripe estimates must show `Accept Estimate` only. No Stripe/setup/payment-configuration language leaks to customers.
-3. **QA payable estimates after reset** - after the builder plan/fix, test Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and dashboard states.
+1. **QA estimator builder reset live** - confirm the full-screen mobile builder hides app chrome, work entry feels natural, tax `8.7` works, and save returns quickly.
+2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and public paid state.
+3. **Session 4: dashboard payment-link polish** - accepted/unpaid and paid/deposit-paid states, resend payment link, and owner-side payment setup nudges.
+
 ---
 
 ## RECENTLY COMPLETED (June 24, 2026 — Codex + Claude session)

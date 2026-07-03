@@ -488,11 +488,21 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   const [newUnit, setNewUnit] = useState("")
   const [newPrice, setNewPrice] = useState("")
   const [newCat, setNewCat] = useState("labor")
-  const [addingItem, setAddingItem] = useState(false)
+  const [pricingMode, setPricingMode] = useState<"flat" | "rate">("flat")
+  const [addingItem, setAddingItem] = useState(true)
 
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.unit_price, 0)
   const taxAmt = subtotal * taxRate
   const total = subtotal + taxAmt
+  const canSave = clientFirst.trim().length > 0 && !saving
+
+  const sectionStyle: React.CSSProperties = {
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.045)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    padding: 18,
+    marginBottom: 14,
+  }
 
   function handleFirstNameChange(value: string) {
     setClientFirst(value)
@@ -529,18 +539,32 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
 
   function addFromRateSheet(item: RateSheetItem) {
     setLineItems(prev => [...prev, { ...item, quantity: 1 }])
+    setAddingItem(false)
+  }
+
+  function resetNewItem() {
+    setNewDesc("")
+    setNewQty("1")
+    setNewUnit("")
+    setNewPrice("")
+    setNewCat("labor")
+    setPricingMode("flat")
   }
 
   function addManualItem() {
-    if (!newDesc.trim() || !newPrice) return
+    const price = Number(newPrice) || 0
+    if (!newDesc.trim() || price <= 0) return
+    const quantity = pricingMode === "rate" ? Number(newQty) || 1 : 1
+    const unit = pricingMode === "rate" ? newUnit.trim() : ""
     setLineItems(prev => [...prev, {
       description: newDesc.trim(),
-      quantity: Number(newQty) || 1,
-      unit: newUnit.trim(),
-      unit_price: Number(newPrice) || 0,
+      quantity,
+      unit,
+      unit_price: price,
       category: newCat,
     }])
-    setNewDesc(""); setNewQty("1"); setNewUnit(""); setNewPrice(""); setAddingItem(false)
+    resetNewItem()
+    setAddingItem(false)
   }
 
   function removeItem(i: number) {
@@ -548,7 +572,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   }
 
   async function handleSave() {
-    if (!clientFirst.trim() || saving) return
+    if (!canSave) return
     const fullName = [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ")
     setSaving(true)
     setSaveError(null)
@@ -565,34 +589,64 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
         tax_rate: taxRate,
       })
     } catch {
-      setSaveError("Could not save. Check the required fields and try again.")
+      setSaveError("Could not save. Check the customer name and try again.")
     } finally {
       setSaving(false)
     }
   }
 
-  return (
-    <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, }} />
-      <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
-        backgroundColor: "#101411",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "28px 28px 0 0",
-        padding: "14px 22px 48px",
-        maxHeight: "94dvh", overflowY: "auto",
-      }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-          <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>New Estimate</h2>
-          <button onClick={onClose} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>x</button>
+  function sectionHeader(step: string, title: string, value?: string) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, color: SIGNAL_GREEN, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{step}</span>
+          <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 800, letterSpacing: 0 }}>{title}</h3>
         </div>
+        {value && <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{value}</span>}
+      </div>
+    )
+  }
 
-        {/* Client */}
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ ...labelStyle }}>Client</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 70,
+      backgroundColor: "#0B0F0C", color: "white", overflowY: "auto",
+      padding: "max(env(safe-area-inset-top), 18px) 18px max(env(safe-area-inset-bottom), 28px)",
+      boxSizing: "border-box",
+    }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+        <header style={{
+          position: "sticky", top: 0, zIndex: 5,
+          margin: "-18px -18px 10px", padding: "max(env(safe-area-inset-top), 18px) 18px 14px",
+          background: "linear-gradient(180deg, #0B0F0C 78%, rgba(11,15,12,0))",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
+            <div>
+              <div style={{ color: SIGNAL_GREEN, fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Estimate</div>
+              <h2 style={{ margin: 0, color: "white", fontSize: 30, lineHeight: 1.05, fontWeight: 850, letterSpacing: 0 }}>Build the job</h2>
+            </div>
+            <button onClick={onClose} aria-label="Close" style={{
+              width: 44, height: 44, borderRadius: 22, border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)",
+              fontSize: 24, lineHeight: 1, cursor: "pointer", flexShrink: 0,
+            }}>x</button>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
+            {["Customer", "Job", "Work", "Price", "Review"].map((step, index) => (
+              <div key={step} style={{
+                height: 34, borderRadius: 17, display: "flex", alignItems: "center", justifyContent: "center",
+                backgroundColor: index === 0 ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.05)",
+                border: `1px solid ${index === 0 ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.07)"}`,
+                color: index === 0 ? SIGNAL_GREEN : "rgba(255,255,255,0.38)", fontSize: 11, fontWeight: 800,
+              }}>{step}</div>
+            ))}
+          </div>
+        </header>
+
+        <section style={sectionStyle}>
+          {sectionHeader("1", "Customer")}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
               <div style={{ position: "relative" }}>
                 <input
                   value={clientFirst}
@@ -604,11 +658,11 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                   style={inputStyle}
                 />
                 {showSuggestions && (
-                  <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 100, backgroundColor: "#1A1F1B", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12, overflow: "hidden" }}>
+                  <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 100, backgroundColor: "#1A1F1B", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, overflow: "hidden", boxShadow: "0 16px 40px rgba(0,0,0,0.32)" }}>
                     {suggestions.map(lead => (
-                      <button key={lead.id} onMouseDown={() => selectSuggestion(lead)} style={{ width: "100%", padding: "10px 14px", background: "none", border: "none", textAlign: "left", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ color: "white", fontSize: 14, fontWeight: 600 }}>{lead.name}</div>
-                        {lead.phone && <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{lead.phone}</div>}
+                      <button key={lead.id} onMouseDown={() => selectSuggestion(lead)} style={{ width: "100%", padding: "12px 14px", background: "none", border: "none", textAlign: "left", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ color: "white", fontSize: 14, fontWeight: 700 }}>{lead.name}</div>
+                        {lead.phone && <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, marginTop: 2 }}>{lead.phone}</div>}
                       </button>
                     ))}
                   </div>
@@ -616,173 +670,186 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
               </div>
               <input value={clientLast} onChange={e => setClientLast(e.target.value)} placeholder="Last name" style={inputStyle} />
             </div>
-            <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company / Business (optional)" style={inputStyle} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company optional" style={inputStyle} />
+            <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
               <input value={clientPhone} onChange={e => setClientPhone(e.target.value)} type="tel" placeholder="Phone" style={inputStyle} />
               <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} type="email" placeholder="Email" style={inputStyle} />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Property */}
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ ...labelStyle }}>Property / Job Address</p>
+        <section style={sectionStyle}>
+          {sectionHeader("2", "Job")}
           <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={inputStyle} />
-        </div>
+        </section>
 
-        {/* Line Items */}
-        <div style={{ marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <p style={{ ...labelStyle, margin: 0 }}>Work & pricing</p>
-            <button onClick={() => setAddingItem(v => !v)} style={{
-              padding: "5px 12px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`,
-              backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN,
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-            }}>Add item</button>
-          </div>
+        <section style={sectionStyle}>
+          {sectionHeader("3", "Work", lineItems.length ? `${lineItems.length} added` : undefined)}
 
-          {/* My Services quick-add */}
           {rateSheet.length > 0 && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 6 }}>My Services</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {rateSheet.map((item, i) => (
-                  <button key={i} onClick={() => addFromRateSheet(item)} style={{
-                    padding: "6px 12px", borderRadius: 100,
-                    border: "1px solid rgba(255,255,255,0.12)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "rgba(255,255,255,0.65)", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                  }}>
-                    + {item.description}
-                  </button>
-                ))}
-              </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+              {rateSheet.slice(0, 8).map((item, i) => (
+                <button key={i} onClick={() => addFromRateSheet(item)} style={{
+                  padding: "8px 12px", borderRadius: 100,
+                  border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.055)",
+                  color: "rgba(255,255,255,0.68)", fontSize: 12, fontWeight: 750, cursor: "pointer",
+                }}>
+                  + {item.description}
+                </button>
+              ))}
             </div>
           )}
 
-          {/* Manual add form */}
-          {addingItem && (
-            <div style={{ borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}33`, padding: 16, marginBottom: 12, backgroundColor: `${SIGNAL_GREEN}08` }}>
-              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="What are you doing?" style={{ ...inputStyle, marginBottom: 10 }} />
-              <div style={{ display: "grid", gridTemplateColumns: "76px 1fr 112px", gap: 8, marginBottom: 8 }}>
-                <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" inputMode="decimal" placeholder="Qty" style={inputStyle} />
-                <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
-                  {UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}
-                </select>
-                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Price" style={inputStyle} />
+          {addingItem ? (
+            <div style={{ borderRadius: 20, border: `1px solid ${SIGNAL_GREEN}35`, padding: 14, marginBottom: 14, backgroundColor: `${SIGNAL_GREEN}08` }}>
+              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Describe the work" style={{ ...inputStyle, fontSize: 17, padding: "15px 16px", marginBottom: 10 }} />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                {(["flat", "rate"] as const).map(mode => (
+                  <button key={mode} onClick={() => setPricingMode(mode)} style={{
+                    height: 46, borderRadius: 14, border: "1px solid",
+                    borderColor: pricingMode === mode ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
+                    backgroundColor: pricingMode === mode ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.035)",
+                    color: pricingMode === mode ? SIGNAL_GREEN : "rgba(255,255,255,0.44)",
+                    fontSize: 14, fontWeight: 800, cursor: "pointer",
+                  }}>{mode === "flat" ? "Flat price" : "Qty x rate"}</button>
+                ))}
               </div>
-              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+
+              {pricingMode === "flat" ? (
+                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Amount" style={{ ...inputStyle, marginBottom: 10 }} />
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "82px minmax(0, 1fr) minmax(104px, 0.8fr)", gap: 8, marginBottom: 10 }}>
+                  <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" inputMode="decimal" placeholder="Qty" style={inputStyle} />
+                  <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
+                    {UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}
+                  </select>
+                  <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Rate" style={inputStyle} />
+                </div>
+              )}
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
                 {(["labor", "materials", "other"] as const).map(c => (
                   <button key={c} onClick={() => setNewCat(c)} style={{
-                    flex: 1, padding: "8px 0", borderRadius: 10, border: "1px solid",
+                    height: 42, borderRadius: 14, border: "1px solid",
                     borderColor: newCat === c ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
-                    backgroundColor: newCat === c ? `${SIGNAL_GREEN}18` : "transparent",
-                    color: newCat === c ? SIGNAL_GREEN : "rgba(255,255,255,0.35)",
-                    fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    backgroundColor: newCat === c ? `${SIGNAL_GREEN}16` : "rgba(255,255,255,0.025)",
+                    color: newCat === c ? SIGNAL_GREEN : "rgba(255,255,255,0.36)",
+                    fontSize: 12, fontWeight: 800, cursor: "pointer",
                   }}>
                     {c.charAt(0).toUpperCase() + c.slice(1)}
                   </button>
                 ))}
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => { setAddingItem(false); setNewDesc(""); setNewQty("1"); setNewUnit(""); setNewPrice("") }} style={{ flex: 1, padding: "10px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button onClick={addManualItem} disabled={!newDesc.trim() || !newPrice} style={{ flex: 2, padding: "10px 0", borderRadius: 12, border: "none", backgroundColor: newDesc.trim() && newPrice ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newDesc.trim() && newPrice ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                  Add Item
-                </button>
+
+              <div style={{ display: "grid", gridTemplateColumns: "0.9fr 1.4fr", gap: 8 }}>
+                <button onClick={() => { resetNewItem(); setAddingItem(false) }} style={{ height: 48, borderRadius: 15, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Cancel</button>
+                <button onClick={addManualItem} disabled={!newDesc.trim() || !newPrice || Number(newPrice) <= 0} style={{
+                  height: 48, borderRadius: 15, border: "none",
+                  backgroundColor: newDesc.trim() && Number(newPrice) > 0 ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+                  color: newDesc.trim() && Number(newPrice) > 0 ? FOUND_BLACK : "rgba(255,255,255,0.24)",
+                  fontSize: 14, fontWeight: 850, cursor: newDesc.trim() && Number(newPrice) > 0 ? "pointer" : "default",
+                }}>Add work</button>
               </div>
             </div>
+          ) : (
+            <button onClick={() => setAddingItem(true)} style={{ width: "100%", height: 52, borderRadius: 17, border: `1px solid ${SIGNAL_GREEN}33`, backgroundColor: `${SIGNAL_GREEN}10`, color: SIGNAL_GREEN, fontSize: 15, fontWeight: 850, cursor: "pointer", marginBottom: 14 }}>Add work</button>
           )}
 
-          {/* Items list */}
-          {lineItems.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 16 }}>
-              {lineItems.map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-                      {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
+          {lineItems.length > 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {lineItems.map((item, i) => {
+                const isFlat = item.quantity === 1 && !item.unit
+                return (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto 32px", gap: 10, alignItems: "center", padding: "12px 12px 12px 14px", borderRadius: 17, backgroundColor: "rgba(255,255,255,0.052)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ color: "white", fontSize: 15, fontWeight: 750, lineHeight: 1.25, marginBottom: 4, overflowWrap: "anywhere" }}>{item.description}</div>
+                      <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, fontWeight: 650 }}>
+                        {isFlat ? "Flat price" : `${item.quantity} ${item.unit || "unit"} x ${fmt(item.unit_price)}`}
+                      </div>
                     </div>
+                    <div style={{ color: "white", fontSize: 15, fontWeight: 850, flexShrink: 0 }}>{fmt(item.quantity * item.unit_price)}</div>
+                    <button onClick={() => removeItem(i)} aria-label="Remove work" style={{ width: 32, height: 32, borderRadius: 16, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.32)", cursor: "pointer", fontSize: 17, lineHeight: 1 }}>x</button>
                   </div>
-                  <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>{fmt(item.quantity * item.unit_price)}</div>
-                  <button onClick={() => removeItem(i)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: "4px", fontSize: 18, lineHeight: 1 }}>x</button>
-                </div>
-              ))}
+                )
+              })}
             </div>
+          ) : (
+            <div style={{ padding: "12px 4px 2px", color: "rgba(255,255,255,0.26)", fontSize: 14, fontWeight: 650 }}>No work added yet.</div>
           )}
+        </section>
 
-          {lineItems.length === 0 && !addingItem && (
-            <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>
-              No line items yet - tap "+ Add Line" above
-            </div>
-          )}
-        </div>
-
-        {/* Tax */}
-        <div style={{ marginBottom: 24, padding: "16px 18px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: subtotal > 0 ? 12 : 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Tax rate</span>
+        <section style={sectionStyle}>
+          {sectionHeader("4", "Price")}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 15, fontWeight: 750 }}>Tax rate</span>
               {taxRate > 0 && taxRate !== defaultTaxRate && (
-                <button onClick={saveDefaultTax} style={{ padding: "3px 9px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
-                  {taxSaved ? "Saved ✓" : "Save as default"}
+                <button onClick={saveDefaultTax} style={{ padding: "5px 9px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {taxSaved ? "Saved" : "Save default"}
                 </button>
               )}
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
               <input
                 type="text"
                 inputMode="decimal"
                 value={taxInput}
                 onChange={e => handleTaxInput(e.target.value)}
                 placeholder="8.7"
-                style={{ ...inputStyle, width: 86, padding: "8px 12px", textAlign: "right" }}
+                style={{ ...inputStyle, width: 90, padding: "10px 13px", textAlign: "right", fontSize: 17 }}
               />
-              <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>%</span>
+              <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 15, fontWeight: 750 }}>%</span>
             </div>
           </div>
-          {subtotal > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Subtotal</span>
-                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 600 }}>{fmt(subtotal)}</span>
-              </div>
-              {taxRate > 0 && (
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>Tax ({(taxRate * 100).toFixed(2)}%)</span>
-                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 600 }}>{fmt(taxAmt)}</span>
-                </div>
-              )}
-              <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                <span style={{ color: "white", fontSize: 16, fontWeight: 700 }}>Total</span>
-                <span style={{ color: SIGNAL_GREEN, fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>{fmt(total)}</span>
-              </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+              <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, fontWeight: 650 }}>Subtotal</span>
+              <span style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, fontWeight: 800 }}>{fmt(subtotal)}</span>
             </div>
-          )}
-        </div>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+              <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 14, fontWeight: 650 }}>Tax</span>
+              <span style={{ color: "rgba(255,255,255,0.72)", fontSize: 14, fontWeight: 800 }}>{fmt(taxAmt)}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ color: "white", fontSize: 17, fontWeight: 850 }}>Total</span>
+              <span style={{ color: SIGNAL_GREEN, fontSize: 28, lineHeight: 1, fontWeight: 900, letterSpacing: 0 }}>{fmt(total)}</span>
+            </div>
+          </div>
+        </section>
+
+        <section style={{ ...sectionStyle, marginBottom: 16 }}>
+          {sectionHeader("5", "Review", clientFirst.trim() ? [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ") : undefined)}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center" }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, fontWeight: 700, marginBottom: 5 }}>Ready total</div>
+              <div style={{ color: "white", fontSize: 22, fontWeight: 900, letterSpacing: 0 }}>{fmt(total)}</div>
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.36)", fontSize: 13, fontWeight: 700, textAlign: "right" }}>{lineItems.length} work item{lineItems.length === 1 ? "" : "s"}</div>
+          </div>
+        </section>
 
         {saveError && (
-          <div style={{ marginBottom: 12, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13 }}>{saveError}</div>
+          <div style={{ marginBottom: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13, fontWeight: 700 }}>{saveError}</div>
         )}
 
-        {/* Save */}
         <button
           onClick={handleSave}
-          disabled={saving || !clientFirst.trim()}
+          disabled={!canSave}
           style={{
-            width: "100%", padding: "16px 0", borderRadius: 16, border: "none",
-            backgroundColor: clientFirst.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-            color: clientFirst.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
-            fontSize: 16, fontWeight: 800, cursor: clientFirst.trim() ? "pointer" : "default",
+            width: "100%", minHeight: 58, borderRadius: 18, border: "none",
+            backgroundColor: canSave ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+            color: canSave ? FOUND_BLACK : "rgba(255,255,255,0.24)",
+            fontSize: 16, fontWeight: 900, cursor: canSave ? "pointer" : "default",
+            boxShadow: canSave ? `0 12px 30px ${SIGNAL_GREEN}20` : "none",
           }}
         >
           {saving ? "Saving..." : "Save Estimate"}
         </button>
       </div>
-    </>
+    </div>
   )
 }
-
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
 function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {

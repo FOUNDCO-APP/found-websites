@@ -4,6 +4,34 @@
 
 ---
 
+## Session: July 2, 2026 - Estimates Builder Reset: Mobile Work Tool
+**AI:** Codex
+**Worked on:** Team-approved estimator builder reset after Shawn's mobile test screenshots and feedback.
+
+### Completed
+- Replaced the new-estimate bottom sheet with a full-screen mobile-first work surface so the Found header is no longer visible behind the estimator.
+- Reframed the builder into a clear owner workflow: Customer, Job, Work, Price, Review.
+- Reworked line-item entry away from spreadsheet rows: owners now describe the work, choose Flat price or Qty x rate, enter amount/rate, select Labor/Materials/Other, and add work.
+- Kept units contextual and optional: flat-price work has no unit; rate-based work uses the common unit dropdown.
+- Moved tax and total into a dedicated Price section and kept the 8.7-style percent input.
+- Confirmed public no-Stripe estimate pages do not expose Stripe/setup/payment-configuration language to customers.
+- Verified with `cmd /c npm run build` on July 2, 2026.
+
+### Must Test
+- On iPhone/Android mobile browser, tap + on Estimates and confirm the builder starts at the top of the viewport with no Found word visible behind it.
+- Create a flat-price item: describe work, keep Flat price, enter amount, add work, confirm it shows as Flat price.
+- Create a rate item: switch to Qty x rate, enter qty/unit/rate, add work, confirm math and total.
+- Enter tax as `8.7` and confirm subtotal, tax, and total update correctly.
+- Save estimate and confirm it opens the estimate detail page without a long hanging save.
+- Open the public estimate for a company without Stripe connected and confirm customers only see `Accept Estimate`, not payment setup language.
+
+### Next
+1. QA this builder reset on the live deployment once GitHub/Vercel finishes deploying main.
+2. Continue Session 4: dashboard payment-link polish for accepted/unpaid and paid states.
+3. Continue Session 5: AI estimate builder after the manual flow feels inevitable.
+
+---
+
 ## Session: July 2, 2026 - Estimates Replan: Payable Estimates First
 **AI:** Codex
 **Worked on:** Recovered Claude Code context, reviewed estimate implementation, held product/team planning session, and locked the next estimate rebuild sequence before continuing.
@@ -31,6 +59,7 @@
 4. **Later: Invoice mode / POS-lite** - invoice mode in the same tool for verbal approvals or completed work; POS-lite only after invoices prove the need.
 
 ---
+
 ## Session: July 2, 2026 — Estimates: Session 2 (Client Autocomplete, Google Places, Default Tax, Services)
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** pending
@@ -180,6 +209,7 @@
 - Owners think in tools first, plans second. The More page should feel like business management before it feels like billing.
 
 ---
+
 ## Session: June 30, 2026 — Business Tools Entitlements + Display Name Prompt
 **AI:** Codex
 **Worked on:** Found Business dashboard tools, display-name prompt persistence, Business public tool access
@@ -200,6 +230,7 @@
 - Payment setup copy should remain industry-aware and should not switch to product-payment wording just because Business includes shopping cart.
 
 ---
+
 ## Session: June 29, 2026 — Onboarding Plan Flow, Intro Pricing, Activation, Social Posts
 **AI:** Codex
 **Worked on:** public onboarding plan selection, More plan pricing, display-name prompt, activation flow, brand contrast, social post assistant, testing plan

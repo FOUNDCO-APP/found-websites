@@ -13,6 +13,14 @@
 
 ---
 
+**[2026-07-02] - Estimator builder is a full-screen mobile work tool, not a database form.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+Why: Business owners are trying to capture a customer decision on a job site. The builder must hide app chrome, guide the owner through Customer -> Job -> Work -> Price -> Review, and make work entry feel natural. Spreadsheet-like line-item entry is rejected for the primary mobile flow.
+
+**[2026-07-02] - Customers never see owner payment setup problems.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts + Priya Nair
+Why: If Stripe/payment setup is missing, the public estimate still presents a clean accept path. Setup friction belongs in the owner dashboard, never on the customer's decision page.
+
 ## CONTENT ARCHITECTURE DECISIONS (APPROVED — June 10, 2026)
 
 **[2026-06-10] — Website Job Framework: every Found industry has one primary website job.**
