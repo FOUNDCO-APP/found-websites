@@ -4,6 +4,30 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Builder Rail + Ending Polish
+**AI:** Codex
+**Worked on:** Followed Jony and Steve's direction after Shawn's live scroll screenshots: keep the new design direction, polish the behavior so the system feels like it knows where the owner is and what comes next.
+
+### Completed
+- Fixed the quiet progress rail so Review activates when the owner reaches the bottom of the estimator.
+- Changed the Review rail jump to scroll to the bottom of the builder, because the final section is too short to reliably become dominant through normal section alignment.
+- Added a bottom-of-scroll guard in the builder scroll handler so the rail fills the last segment whenever the owner is within 96px of the bottom.
+- Made the Save Estimate button sticky only after the estimate is valid, so the final action appears when the owner has enough information to save.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates -> + and scroll naturally to Review; confirm the fifth rail segment lights up at the bottom.
+- Tap the fifth rail segment; confirm it lands at the bottom/Review area, not above it.
+- Enter a customer first name; confirm Save Estimate becomes a sticky final action while valid.
+- Confirm the sticky Save button does not appear as a loud fixed CTA before the estimate is valid.
+
+### Next
+1. Shawn visual/behavior approval on the live deploy.
+2. Continue payable estimate QA: Accept & Pay, pay-later, receipt email, owner email, public paid state.
+3. Continue Session 4 dashboard payment-link polish.
+
+---
+
 ## Session: July 3, 2026 - Estimate Builder Jony Remodel Pass
 **AI:** Codex
 **Worked on:** Shawn approved Jony's recommendation to stop patching the estimate builder and remodel the shell around the same Customer -> Job -> Work -> Price -> Review flow.

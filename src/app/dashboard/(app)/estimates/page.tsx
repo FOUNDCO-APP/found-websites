@@ -531,11 +531,24 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
     return () => observer.disconnect()
   }, [])
 
+  function handleBuilderScroll() {
+    const root = scrollRef.current
+    if (!root || tapScrolling.current) return
+    const distanceFromBottom = root.scrollHeight - root.scrollTop - root.clientHeight
+    if (distanceFromBottom < 96) setActiveStep(STEP_LABELS.length - 1)
+  }
+
   function jumpToStep(index: number) {
+    const target = sectionRefs.current[index]
+    if (!target) return
     tapScrolling.current = true
     setActiveStep(index)
-    sectionRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "start" })
-    setTimeout(() => { tapScrolling.current = false }, 600)
+    if (index === STEP_LABELS.length - 1) {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
+    } else {
+      target.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
+    setTimeout(() => { tapScrolling.current = false; handleBuilderScroll() }, 700)
   }
 
   function sectionAnchor(step: string, title: string, value?: string) {
@@ -643,7 +656,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   }
 
   return (
-    <div ref={scrollRef} style={{
+    <div ref={scrollRef} onScroll={handleBuilderScroll} style={{
       position: "fixed", inset: 0, zIndex: 70,
       backgroundColor: "#0B0F0C", color: "white", overflowY: "auto",
       padding: "max(env(safe-area-inset-top), 18px) 18px max(env(safe-area-inset-bottom), 28px)",
@@ -880,19 +893,27 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           <div style={{ marginBottom: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13, fontWeight: 700 }}>{saveError}</div>
         )}
 
-        <button
-          onClick={handleSave}
-          disabled={!canSave}
-          style={{
-            width: "100%", minHeight: 58, borderRadius: 18, border: "none",
-            backgroundColor: canSave ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-            color: canSave ? FOUND_BLACK : "rgba(255,255,255,0.24)",
-            fontSize: 16, fontWeight: 900, cursor: canSave ? "pointer" : "default",
-            boxShadow: canSave ? `0 12px 30px ${SIGNAL_GREEN}20` : "none",
-          }}
-        >
-          {saving ? "Saving..." : "Save Estimate"}
-        </button>
+        <div style={{
+          position: canSave ? "sticky" : "static",
+          bottom: 0,
+          margin: "0 -2px",
+          padding: canSave ? "12px 0 max(env(safe-area-inset-bottom), 12px)" : "0 0 max(env(safe-area-inset-bottom), 0px)",
+          background: canSave ? "linear-gradient(180deg, rgba(11,15,12,0), #0B0F0C 30%)" : "transparent",
+        }}>
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            style={{
+              width: "100%", minHeight: 58, borderRadius: 18, border: "none",
+              backgroundColor: canSave ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+              color: canSave ? FOUND_BLACK : "rgba(255,255,255,0.24)",
+              fontSize: 16, fontWeight: 900, cursor: canSave ? "pointer" : "default",
+              boxShadow: canSave ? `0 12px 30px ${SIGNAL_GREEN}20` : "none",
+            }}
+          >
+            {saving ? "Saving..." : "Save Estimate"}
+          </button>
+        </div>
       </div>
     </div>
   )

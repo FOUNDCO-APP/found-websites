@@ -16,7 +16,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **QA Jony estimate builder remodel live** - hard refresh `my.foundco.app`, open Estimates -> +, confirm smaller header, quiet progress rail, cleaner section anchors, calmer composer, tap-to-jump, and black standalone PWA status bar.
+1. **QA estimate builder rail and ending live** - hard refresh `my.foundco.app`, open Estimates -> +, scroll to Review, confirm the fifth rail segment lights at the bottom, Review tap lands at bottom, and Save becomes sticky only after the estimate is valid.
 2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and public paid state.
 3. **Session 4: dashboard payment-link polish** - accepted/unpaid and paid/deposit-paid states, resend payment link, and owner-side payment setup nudges.
 ---
