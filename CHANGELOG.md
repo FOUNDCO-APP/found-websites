@@ -28,6 +28,32 @@
 
 ---
 
+## Session: July 3, 2026 - Dashboard Payment Status Polish
+**AI:** Codex
+**Worked on:** Session 4 follow-through from Steve/Jony direction: make the owner dashboard show the money state clearly after a customer accepts, and give the owner a direct payment-link action without exposing setup pain to the customer.
+
+### Completed
+- Added payment-aware dashboard status labels: `Paid`, `Deposit paid`, and `Accepted, unpaid` instead of flattening every won estimate into `Accepted`.
+- Added payment-state detail on estimate cards, so the owner can see `Paid in full`, `Deposit received`, `Payment link sent`, or `Needs payment link` at a glance.
+- Updated the estimate detail sheet accepted panel to show the correct payment state, total, accepted date, and next action.
+- Added owner-side `Send Payment Link` / `Resend Payment Link` for accepted-but-unpaid estimates with a client email.
+- Added a dashboard send API `payment_link` mode that emails a clean secure payment link and updates `payment_link_sent_at` without changing the estimate back to `sent`.
+- Kept Stripe/payment setup language owner-only; customer emails say only that they can pay securely.
+- Added activity timeline events for payment link sent, deposit paid, paid in full, and receipt sent.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open an accepted pay-later estimate in the owner dashboard and confirm the card says `Accepted, unpaid` with `Payment link sent` or `Needs payment link`.
+- Open that estimate detail and tap `Resend Payment Link`; confirm the customer gets a clean payment email and the dashboard still shows the estimate as accepted.
+- Test a Stripe-connected estimate: customer taps Accept & Pay, completes test payment, and owner dashboard changes to `Deposit paid` or `Paid`.
+- Confirm customers never see Stripe setup/payment-not-configured wording on the public estimate page or payment email.
+
+### Next
+1. QA payable estimates end to end in Stripe test mode: Accept & Pay, pay-later, owner email, customer receipt, dashboard paid state.
+2. Start Session 5: AI estimate builder only after the manual and payable flow passes live QA.
+3. Later product decision: invoice-now/POS mode for owners who already did the work from a verbal yes.
+
+---
 ## Session: July 3, 2026 - Estimate Builder Jony Remodel Pass
 **AI:** Codex
 **Worked on:** Shawn approved Jony's recommendation to stop patching the estimate builder and remodel the shell around the same Customer -> Job -> Work -> Price -> Review flow.

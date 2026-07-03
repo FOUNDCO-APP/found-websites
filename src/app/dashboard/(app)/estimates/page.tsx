@@ -42,12 +42,21 @@ type Estimate = {
   deposit_pct: number
   deposit_amount: number | null
   deposit_paid_at: string | null
+  payment_status: "unpaid" | "deposit_paid" | "paid" | null
+  accepted_payment_choice: "pay_now" | "pay_later" | null
+  accepted_pay_later_at: string | null
+  payment_link_sent_at: string | null
+  paid_at: string | null
+  receipt_sent_at: string | null
   stripe_payment_intent_id: string | null
+  estimate_number?: number | null
+  valid_until?: string | null
   sent_at: string | null
   email_sent_at: string | null
   viewed_at: string | null
   accepted_at: string | null
   created_at: string
+  updated_at?: string | null
   estimate_line_items?: LineItem[]
 }
 
@@ -120,19 +129,44 @@ function taxRateFromInput(value: string) {
   return numeric / 100
 }
 
+function estimateDisplayStatus(est: Estimate) {
+  if (est.payment_status === "paid" || est.paid_at) {
+    return { label: "Paid", color: SIGNAL_GREEN, detail: "Paid in full" }
+  }
+  if (est.payment_status === "deposit_paid" || est.deposit_paid_at) {
+    return {
+      label: "Deposit paid",
+      color: SIGNAL_GREEN,
+      detail: est.deposit_amount ? `${fmt(est.deposit_amount)} received` : "Deposit received",
+    }
+  }
+  if (est.status === "accepted" && (est.payment_status === "unpaid" || est.accepted_payment_choice === "pay_later" || est.accepted_pay_later_at)) {
+    return {
+      label: "Accepted, unpaid",
+      color: "#FFD60A",
+      detail: est.payment_link_sent_at ? "Payment link sent" : "Needs payment link",
+    }
+  }
+  return {
+    label: STATUS_LABELS[est.status] ?? est.status,
+    color: STATUS_COLORS[est.status] ?? STATUS_COLORS.draft,
+    detail: null,
+  }
+}
+
 // ── Status Badge ─────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: string }) {
-  const color = STATUS_COLORS[status] ?? STATUS_COLORS.draft
+function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
+  const badgeColor = color ?? STATUS_COLORS[status] ?? STATUS_COLORS.draft
   return (
     <div style={{
       display: "inline-flex", alignItems: "center", gap: 5,
       padding: "3px 10px", borderRadius: 100,
-      backgroundColor: `${color}18`,
-      border: `1px solid ${color}44`,
+      backgroundColor: `${badgeColor}18`,
+      border: `1px solid ${badgeColor}44`,
     }}>
-      <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontWeight: 700, color }}>{STATUS_LABELS[status] ?? status}</span>
+      <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: badgeColor, flexShrink: 0 }} />
+      <span style={{ fontSize: 12, fontWeight: 700, color: badgeColor }}>{label ?? STATUS_LABELS[status] ?? status}</span>
     </div>
   )
 }
@@ -239,7 +273,7 @@ export default function EstimatesPage() {
     setSelectedId(null)
   }
 
-  async function handleSend(estimate: Estimate, method: "email" | "sms" | "link"): Promise<{ ok: boolean; error?: string }> {
+  async function handleSend(estimate: Estimate, method: "email" | "sms" | "link" | "payment_link"): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch(`/api/estimates/${estimate.id}/send`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -248,7 +282,11 @@ export default function EstimatesPage() {
     if (res.ok) {
       const now = new Date().toISOString()
       setEstimates(prev => prev.map(e =>
-        e.id === estimate.id ? {
+        e.id === estimate.id ? method === "payment_link" ? {
+          ...e,
+          payment_link_sent_at: now,
+          updated_at: now,
+        } : {
           ...e,
           status: "sent" as const,
           sent_at: now,
@@ -413,6 +451,7 @@ export default function EstimatesPage() {
 // ── Estimate Card ─────────────────────────────────────────────────────────────
 
 function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () => void }) {
+  const displayStatus = estimateDisplayStatus(estimate)
   return (
     <div
       onClick={onClick}
@@ -430,7 +469,7 @@ function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () =
           <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {estimate.client_name}
           </span>
-          <StatusBadge status={estimate.status} />
+          <StatusBadge status={estimate.status} label={displayStatus.label} color={displayStatus.color} />
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {estimate.property_address && (
@@ -448,6 +487,9 @@ function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () =
         <div style={{ color: "white", fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>
           {fmt(estimate.total)}
         </div>
+        {displayStatus.detail && (
+          <div style={{ color: displayStatus.color, fontSize: 11, fontWeight: 750, marginTop: 3, whiteSpace: "nowrap" }}>{displayStatus.detail}</div>
+        )}
       </div>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 18 15 12 9 6"/>
@@ -928,7 +970,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
   rateSheet: RateSheetItem[]
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
-  onSend: (method: "email" | "sms" | "link") => Promise<{ ok: boolean; error?: string }>
+  onSend: (method: "email" | "sms" | "link" | "payment_link") => Promise<{ ok: boolean; error?: string }>
   onDelete: () => void
   onSync: (fresh: Estimate) => void
 }) {
@@ -942,7 +984,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
   const [editAddress, setEditAddress] = useState("")
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const [sending, setSending] = useState<"email" | null>(null)
+  const [sending, setSending] = useState<"email" | "payment_link" | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [addingItem, setAddingItem] = useState(false)
@@ -968,14 +1010,16 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
       .then(d => {
         if (d.estimate) {
           setFullEstimate(d.estimate)
-          // Propagate any status changes (e.g. client accepted) back to the list
-          if (d.estimate.status !== estimate.status) onSync(d.estimate)
+          // Propagate fresh payment/status fields back to the list.
+          onSync(d.estimate)
         }
       })
       .catch(() => {})
   }, [estimate.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const est = fullEstimate ?? estimate
+  const displayStatus = estimateDisplayStatus(est)
+  const isAcceptedUnpaid = est.status === "accepted" && !(est.payment_status === "paid" || est.paid_at || est.payment_status === "deposit_paid" || est.deposit_paid_at)
   const items = est.estimate_line_items ?? []
   const link = shareUrl(estimate.id, companySlug)
 
@@ -1056,6 +1100,22 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
     }
   }
 
+  async function handlePaymentLinkSend() {
+    if (sending) return
+    setSendError(null)
+    setSending("payment_link")
+    try {
+      const result = await onSend("payment_link")
+      if (result.ok) {
+        const now = new Date().toISOString()
+        setFullEstimate(prev => prev ? { ...prev, payment_link_sent_at: now, updated_at: now } : prev)
+      } else {
+        setSendError(result.error ?? "Could not send payment link")
+      }
+    } finally {
+      setSending(null)
+    }
+  }
   function copyLink() {
     navigator.clipboard.writeText(link).then(() => {
       setCopied(true)
@@ -1235,7 +1295,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
               <div>
                 <h2 style={{ margin: "0 0 6px", color: "white", ...TYPE.title }}>{est.client_name}</h2>
-                <StatusBadge status={est.status} />
+                <StatusBadge status={est.status} label={displayStatus.label} color={displayStatus.color} />
               </div>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setMode("confirm_delete")} style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,69,58,0.25)", backgroundColor: "rgba(255,69,58,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -1355,26 +1415,50 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             {est.status === "accepted" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ padding: "16px 18px", borderRadius: 16, backgroundColor: `${SIGNAL_GREEN}12`, border: `1px solid ${SIGNAL_GREEN}30`, textAlign: "center" }}>
-                  <div style={{ color: SIGNAL_GREEN, fontSize: 15, fontWeight: 700, marginBottom: 4 }}>
-                    {est.deposit_paid_at ? "Accepted & Deposit Paid" : "Estimate Accepted"}
+                <div style={{ padding: "16px 18px", borderRadius: 16, backgroundColor: `${displayStatus.color}12`, border: `1px solid ${displayStatus.color}30` }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+                    <div style={{ color: displayStatus.color, fontSize: 15, fontWeight: 800 }}>{displayStatus.label}</div>
+                    <div style={{ color: "white", fontSize: 15, fontWeight: 800 }}>{fmt(est.total)}</div>
                   </div>
-                  {est.accepted_at && (
-                    <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
-                      {new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-                      {est.deposit_amount && est.deposit_paid_at ? ` - ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)} deposit received` : ""}
-                    </div>
-                  )}
+                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.45 }}>
+                    {displayStatus.detail ?? "Estimate accepted"}
+                    {est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
+                  </div>
                 </div>
-                {!est.deposit_paid_at && !companyStripeReady && (
+
+                {isAcceptedUnpaid && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    <button
+                      onClick={handlePaymentLinkSend}
+                      disabled={!est.client_email || sending === "payment_link"}
+                      style={{
+                        width: "100%", padding: "15px 0", borderRadius: 14,
+                        border: `1px solid ${SIGNAL_GREEN}33`,
+                        backgroundColor: est.client_email ? "rgba(48,209,88,0.12)" : "rgba(255,255,255,0.05)",
+                        color: est.client_email ? SIGNAL_GREEN : "rgba(255,255,255,0.28)",
+                        fontSize: 15, fontWeight: 800, cursor: est.client_email && sending !== "payment_link" ? "pointer" : "default",
+                      }}
+                    >
+                      {sending === "payment_link" ? "Sending..." : est.payment_link_sent_at ? "Resend Payment Link" : "Send Payment Link"}
+                    </button>
+                    {!est.client_email && (
+                      <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>Add an email to send a payment link.</div>
+                    )}
+                    {sendError && (
+                      <div style={{ padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13, lineHeight: 1.45 }}>{sendError}</div>
+                    )}
+                  </div>
+                )}
+
+                {isAcceptedUnpaid && !companyStripeReady && (
                   <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     <div>
-                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Deposit payments aren&apos;t set up yet</div>
-                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>This estimate can be paid electronically by card once deposit payments are set up. Turn it on now so the next accepted estimate can collect money automatically.</div>
-                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="amber" compact>Set up deposit payments</PaymentSetupButton>
+                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Turn on online payments</div>
+                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>Future clients can pay the moment they accept.</div>
+                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="amber" compact>Set up payments</PaymentSetupButton>
                     </div>
                   </div>
                 )}

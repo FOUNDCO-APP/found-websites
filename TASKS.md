@@ -16,11 +16,21 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **QA estimate builder rail and ending live** - hard refresh `my.foundco.app`, open Estimates -> +, scroll to Review, confirm the fifth rail segment lights at the bottom, Review tap lands at bottom, and Save becomes sticky only after the estimate is valid.
-2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and public paid state.
-3. **Session 4: dashboard payment-link polish** - accepted/unpaid and paid/deposit-paid states, resend payment link, and owner-side payment setup nudges.
+1. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
+2. **Session 5: AI estimate builder** - AI-assisted work/pricing only after the manual estimator + payment path passes live QA.
+3. **Invoice-now / POS planning** - decide whether this belongs as a toggle/tab inside Estimates or a separate POS/invoice mode for owners who already did the work from a verbal yes.
 ---
 
+## RECENTLY COMPLETED (July 3, 2026 - Codex Session 4)
+- Completed dashboard payment-state polish for estimates.
+- Estimate cards now distinguish `Paid`, `Deposit paid`, and `Accepted, unpaid` instead of showing every won job as only `Accepted`.
+- Accepted estimate detail now shows the payment state, total, accepted date, and the owner next action.
+- Added owner-side `Send Payment Link` / `Resend Payment Link` for accepted-but-unpaid estimates with client email.
+- Added dashboard API `payment_link` send mode; it emails a clean secure payment link and updates `payment_link_sent_at` without changing accepted status back to sent.
+- Added timeline events for payment link sent, deposit paid, paid in full, and receipt sent.
+- Verified with `cmd /c npm run build`.
+
+---
 ## RECENTLY COMPLETED (July 3, 2026 — Claude Code session)
 - ✅ Estimate builder step pills — were hardcoded fake (`index === 0`), now real `IntersectionObserver` scroll-spy + tap-to-jump
 - ✅ Estimate builder card-stack removed — five sections now flow as one surface with hairline dividers, not five bordered boxes
