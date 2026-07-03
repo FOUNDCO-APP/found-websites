@@ -501,8 +501,18 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
   const scrollRef = useRef<HTMLDivElement>(null)
   const tapScrolling = useRef(false)
-
-  // Scroll-spy: the pill for whichever section is actually on screen lights up.
+  const fieldStyle: React.CSSProperties = {
+    ...inputStyle,
+    borderRadius: 16,
+    padding: "15px 16px",
+    backgroundColor: "rgba(255,255,255,0.045)",
+    border: "1px solid rgba(255,255,255,0.08)",
+    fontSize: 16,
+  }
+  const sectionBlockStyle: React.CSSProperties = {
+    scrollMarginTop: 118,
+  }
+  // Scroll-spy: the quiet progress rail follows whichever section is actually on screen.
   // Suppressed for a beat after a tap-to-jump so the target step doesn't flicker mid-scroll.
   useEffect(() => {
     const root = scrollRef.current
@@ -528,21 +538,19 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
     setTimeout(() => { tapScrolling.current = false }, 600)
   }
 
-  // Flowing section anchor — numbered marker + title, no card box around it.
   function sectionAnchor(step: string, title: string, value?: string) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, marginBottom: 16 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, color: SIGNAL_GREEN, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>{step}</span>
-          <h3 style={{ margin: 0, color: "white", fontSize: 19, fontWeight: 800, letterSpacing: 0 }}>{title}</h3>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 14, marginBottom: 18 }}>
+        <div>
+          <div style={{ color: SIGNAL_GREEN, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 7 }}>{step.padStart(2, "0")}</div>
+          <h3 style={{ margin: 0, color: "white", fontSize: 23, lineHeight: 1.1, fontWeight: 850, letterSpacing: 0 }}>{title}</h3>
         </div>
         {value && <span style={{ color: "rgba(255,255,255,0.38)", fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{value}</span>}
       </div>
     )
   }
 
-  const dividerStyle: React.CSSProperties = { border: "none", borderTop: "1px solid rgba(255,255,255,0.07)", margin: "32px 0" }
-
+  const dividerStyle: React.CSSProperties = { border: "none", borderTop: "1px solid rgba(255,255,255,0.06)", margin: "34px 0" }
   function handleFirstNameChange(value: string) {
     setClientFirst(value)
     if (value.trim().length >= 1) {
@@ -644,34 +652,37 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
         <header style={{
           position: "sticky", top: 0, zIndex: 5,
-          margin: "-18px -18px 10px", padding: "max(env(safe-area-inset-top), 18px) 18px 14px",
+          margin: "-18px -18px 22px", padding: "max(env(safe-area-inset-top), 18px) 18px 12px",
           backgroundColor: "#0B0F0C",
+          borderBottom: "1px solid rgba(255,255,255,0.045)",
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
-            <div>
-              <div style={{ color: SIGNAL_GREEN, fontSize: 12, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>Estimate</div>
-              <h2 style={{ margin: 0, color: "white", fontSize: 30, lineHeight: 1.05, fontWeight: 850, letterSpacing: 0 }}>Build the job</h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 12 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ color: SIGNAL_GREEN, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Estimate</div>
+              <h2 style={{ margin: 0, color: "white", fontSize: 18, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0 }}>New estimate</h2>
             </div>
             <button onClick={onClose} aria-label="Close" style={{
-              width: 44, height: 44, borderRadius: 22, border: "1px solid rgba(255,255,255,0.1)",
-              backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.65)",
-              fontSize: 24, lineHeight: 1, cursor: "pointer", flexShrink: 0,
+              width: 38, height: 38, borderRadius: 19, border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.58)",
+              fontSize: 21, lineHeight: 1, cursor: "pointer", flexShrink: 0,
             }}>x</button>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6 }}>
-            {STEP_LABELS.map((step, index) => (
-              <button key={step} type="button" onClick={() => jumpToStep(index)} style={{
-                height: 34, borderRadius: 17, display: "flex", alignItems: "center", justifyContent: "center",
-                border: "1px solid", cursor: "pointer",
-                backgroundColor: activeStep === index ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.05)",
-                borderColor: activeStep === index ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.07)",
-                color: activeStep === index ? SIGNAL_GREEN : "rgba(255,255,255,0.38)", fontSize: 11, fontWeight: 800,
-              }}>{step}</button>
-            ))}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
+              <span style={{ color: "rgba(255,255,255,0.44)", fontSize: 12, fontWeight: 750 }}>{STEP_LABELS[activeStep]}</span>
+              <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, fontWeight: 700 }}>{fmt(total)}</span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 5 }}>
+              {STEP_LABELS.map((step, index) => (
+                <button key={step} type="button" aria-label={step} title={step} onClick={() => jumpToStep(index)} style={{ border: "none", background: "transparent", padding: "9px 0", cursor: "pointer" }}>
+                  <span style={{ display: "block", height: 3, borderRadius: 3, backgroundColor: index <= activeStep ? SIGNAL_GREEN : "rgba(255,255,255,0.12)" }} />
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
-        <section ref={el => { sectionRefs.current[0] = el }}>
+        <section ref={el => { sectionRefs.current[0] = el }} style={sectionBlockStyle}>
           {sectionAnchor("1", "Customer")}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
@@ -683,7 +694,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                   onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
                   placeholder="First name *"
                   autoComplete="off"
-                  style={inputStyle}
+                  style={fieldStyle}
                 />
                 {showSuggestions && (
                   <div style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 100, backgroundColor: "#1A1F1B", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14, overflow: "hidden", boxShadow: "0 16px 40px rgba(0,0,0,0.32)" }}>
@@ -696,26 +707,26 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                   </div>
                 )}
               </div>
-              <input value={clientLast} onChange={e => setClientLast(e.target.value)} placeholder="Last name" style={inputStyle} />
+              <input value={clientLast} onChange={e => setClientLast(e.target.value)} placeholder="Last name" style={fieldStyle} />
             </div>
-            <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company optional" style={inputStyle} />
+            <input value={clientCompany} onChange={e => setClientCompany(e.target.value)} placeholder="Company optional" style={fieldStyle} />
             <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 10 }}>
-              <input value={clientPhone} onChange={e => setClientPhone(e.target.value)} type="tel" placeholder="Phone" style={inputStyle} />
-              <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} type="email" placeholder="Email" style={inputStyle} />
+              <input value={clientPhone} onChange={e => setClientPhone(e.target.value)} type="tel" placeholder="Phone" style={fieldStyle} />
+              <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} type="email" placeholder="Email" style={fieldStyle} />
             </div>
           </div>
         </section>
 
         <hr style={dividerStyle} />
 
-        <section ref={el => { sectionRefs.current[1] = el }}>
+        <section ref={el => { sectionRefs.current[1] = el }} style={sectionBlockStyle}>
           {sectionAnchor("2", "Job")}
-          <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={inputStyle} />
+          <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={fieldStyle} />
         </section>
 
         <hr style={dividerStyle} />
 
-        <section ref={el => { sectionRefs.current[2] = el }}>
+        <section ref={el => { sectionRefs.current[2] = el }} style={sectionBlockStyle}>
           {sectionAnchor("3", "Work", lineItems.length ? `${lineItems.length} added` : undefined)}
 
           {rateSheet.length > 0 && (
@@ -733,15 +744,15 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           )}
 
           {addingItem ? (
-            <div style={{ borderRadius: 20, border: `1px solid ${SIGNAL_GREEN}35`, padding: 14, marginBottom: 14, backgroundColor: `${SIGNAL_GREEN}08` }}>
-              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Describe the work" style={{ ...inputStyle, fontSize: 17, padding: "15px 16px", marginBottom: 10 }} />
+            <div style={{ borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", padding: 14, marginBottom: 14, backgroundColor: "rgba(255,255,255,0.025)" }}>
+              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Describe the work" style={{ ...fieldStyle, fontSize: 17, marginBottom: 10 }} />
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
                 {(["flat", "rate"] as const).map(mode => (
                   <button key={mode} onClick={() => setPricingMode(mode)} style={{
                     height: 46, borderRadius: 14, border: "1px solid",
-                    borderColor: pricingMode === mode ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
-                    backgroundColor: pricingMode === mode ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.035)",
+                    borderColor: pricingMode === mode ? `${SIGNAL_GREEN}88` : "rgba(255,255,255,0.08)",
+                    backgroundColor: pricingMode === mode ? "rgba(50,208,116,0.10)" : "rgba(255,255,255,0.025)",
                     color: pricingMode === mode ? SIGNAL_GREEN : "rgba(255,255,255,0.44)",
                     fontSize: 14, fontWeight: 800, cursor: "pointer",
                   }}>{mode === "flat" ? "Flat price" : "Qty x rate"}</button>
@@ -749,14 +760,14 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
               </div>
 
               {pricingMode === "flat" ? (
-                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Amount" style={{ ...inputStyle, marginBottom: 10 }} />
+                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Amount" style={{ ...fieldStyle, marginBottom: 10 }} />
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "82px minmax(0, 1fr) minmax(104px, 0.8fr)", gap: 8, marginBottom: 10 }}>
-                  <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" inputMode="decimal" placeholder="Qty" style={inputStyle} />
-                  <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
+                  <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" inputMode="decimal" placeholder="Qty" style={fieldStyle} />
+                  <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...fieldStyle, appearance: "none" }}>
                     {UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}
                   </select>
-                  <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Rate" style={inputStyle} />
+                  <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Rate" style={fieldStyle} />
                 </div>
               )}
 
@@ -764,8 +775,8 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                 {(["labor", "materials", "other"] as const).map(c => (
                   <button key={c} onClick={() => setNewCat(c)} style={{
                     height: 42, borderRadius: 14, border: "1px solid",
-                    borderColor: newCat === c ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
-                    backgroundColor: newCat === c ? `${SIGNAL_GREEN}16` : "rgba(255,255,255,0.025)",
+                    borderColor: newCat === c ? `${SIGNAL_GREEN}88` : "rgba(255,255,255,0.08)",
+                    backgroundColor: newCat === c ? "rgba(50,208,116,0.10)" : "rgba(255,255,255,0.02)",
                     color: newCat === c ? SIGNAL_GREEN : "rgba(255,255,255,0.36)",
                     fontSize: 12, fontWeight: 800, cursor: "pointer",
                   }}>
@@ -778,14 +789,14 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                 <button onClick={() => { resetNewItem(); setAddingItem(false) }} style={{ height: 48, borderRadius: 15, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 750, cursor: "pointer" }}>Cancel</button>
                 <button onClick={addManualItem} disabled={!newDesc.trim() || !newPrice || Number(newPrice) <= 0} style={{
                   height: 48, borderRadius: 15, border: "none",
-                  backgroundColor: newDesc.trim() && Number(newPrice) > 0 ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+                  backgroundColor: newDesc.trim() && Number(newPrice) > 0 ? SIGNAL_GREEN : "rgba(255,255,255,0.065)",
                   color: newDesc.trim() && Number(newPrice) > 0 ? FOUND_BLACK : "rgba(255,255,255,0.24)",
                   fontSize: 14, fontWeight: 850, cursor: newDesc.trim() && Number(newPrice) > 0 ? "pointer" : "default",
                 }}>Add work</button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setAddingItem(true)} style={{ width: "100%", height: 52, borderRadius: 17, border: `1px solid ${SIGNAL_GREEN}33`, backgroundColor: `${SIGNAL_GREEN}10`, color: SIGNAL_GREEN, fontSize: 15, fontWeight: 850, cursor: "pointer", marginBottom: 14 }}>Add work</button>
+            <button onClick={() => setAddingItem(true)} style={{ width: "100%", height: 52, borderRadius: 17, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.025)", color: SIGNAL_GREEN, fontSize: 15, fontWeight: 850, cursor: "pointer", marginBottom: 14 }}>Add work</button>
           )}
 
           {lineItems.length > 0 ? (
@@ -813,7 +824,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
 
         <hr style={dividerStyle} />
 
-        <section ref={el => { sectionRefs.current[3] = el }}>
+        <section ref={el => { sectionRefs.current[3] = el }} style={sectionBlockStyle}>
           {sectionAnchor("4", "Price")}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
@@ -831,7 +842,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                 value={taxInput}
                 onChange={e => handleTaxInput(e.target.value)}
                 placeholder="8.7"
-                style={{ ...inputStyle, width: 90, padding: "10px 13px", textAlign: "right", fontSize: 17 }}
+                style={{ ...fieldStyle, width: 90, padding: "10px 13px", textAlign: "right", fontSize: 17 }}
               />
               <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 15, fontWeight: 750 }}>%</span>
             </div>
@@ -854,7 +865,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
 
         <hr style={dividerStyle} />
 
-        <section ref={el => { sectionRefs.current[4] = el }} style={{ marginBottom: 16 }}>
+        <section ref={el => { sectionRefs.current[4] = el }} style={{ ...sectionBlockStyle, marginBottom: 16 }}>
           {sectionAnchor("5", "Review", clientFirst.trim() ? [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ") : undefined)}
           <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "center" }}>
             <div style={{ minWidth: 0 }}>

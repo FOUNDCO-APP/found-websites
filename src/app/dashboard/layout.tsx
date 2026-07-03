@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   manifest: "/dashboard-manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "black",
     title: "Found",
   },
   icons: {

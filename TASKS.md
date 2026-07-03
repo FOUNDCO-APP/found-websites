@@ -16,10 +16,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Confirm July 3 font/design fix on live deploy** - Shawn said the estimate builder "looks cheap" and the font didn't match other pages. Root cause found and fixed (dead Arial/Geist rules in `globals.css` overriding Inter sitewide, plus fake progress pills). Pushed as `33bc62e` + `3de39d7`. NOT yet visually confirmed by Shawn — get a fresh screenshot of the live deploy before considering this closed. If it still looks cheap after the font fix, it's a real Jony design pass on the flowing-surface layout, not a bug.
+1. **QA Jony estimate builder remodel live** - hard refresh `my.foundco.app`, open Estimates -> +, confirm smaller header, quiet progress rail, cleaner section anchors, calmer composer, tap-to-jump, and black standalone PWA status bar.
 2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and public paid state.
 3. **Session 4: dashboard payment-link polish** - accepted/unpaid and paid/deposit-paid states, resend payment link, and owner-side payment setup nudges.
-
 ---
 
 ## RECENTLY COMPLETED (July 3, 2026 — Claude Code session)

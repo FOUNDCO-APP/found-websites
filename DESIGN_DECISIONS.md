@@ -9,13 +9,33 @@
 **The five estimate builder steps (Customer, Job, Work, Price, Review) do not each live in their own bordered/tinted box.**
 Approved by: Shawn + Steve Jobs + Jony Ive
 
-Boxes-within-a-page reads as tight and cheap, not Apple-quality. Sections flow as one continuous surface, separated by hairline dividers and generous vertical spacing — the numbered green marker + title is the section anchor, not a card wrapper. Line-item rows and the "Add work" composer keep their own contained treatment (that's normal list/modal affordance, not clutter) — the ban is specifically on wrapping whole primary sections in their own card.
+Boxes-within-a-page reads as tight and cheap, not Apple-quality. Sections flow as one continuous surface, separated by hairline dividers and generous vertical spacing — the quiet step number + title is the section anchor, not a card wrapper. Line-item rows and the "Add work" composer keep their own contained treatment (that's normal list/modal affordance, not clutter) — the ban is specifically on wrapping whole primary sections in their own card.
 
-**The step pills at the top must be real, not decorative.** They reflect actual scroll position via scroll-spy (`IntersectionObserver`), and tapping one jumps to that section. A progress indicator that doesn't move is worse than no progress indicator — don't ship a static/hardcoded "active step" again.
+**The top progress indicator must be real, not decorative.** It reflects actual scroll position via scroll-spy (`IntersectionObserver`), and tapping one jumps to that section. A progress indicator that doesn't move is worse than no progress indicator — don't ship a static/hardcoded "active step" again.
 
 Why: Shawn's exact words on the previous version — "wrappers inside wrappers... losing white space... it doesn't even move through the top pills." Verified as literal code bugs (hardcoded `index === 0`, non-interactive `<div>`s, five separate `sectionStyle` card wrappers) and a compositional choice, not subjective taste. Implemented in `src/app/dashboard/(app)/estimates/page.tsx`.
 
 Related: see `DECISIONS.md` [2026-07-03] for the sitewide font fix that shipped alongside this.
+
+---
+
+
+## ESTIMATE BUILDER JONY REMODEL: QUIET PROGRESS RAIL (APPROVED - July 3, 2026)
+
+**The estimate builder should not use large top step pills or a heavy sticky title block.**
+Approved by: Shawn + Jony Ive
+
+The previous flowing-surface pass fixed real bugs, but the composition still felt like software: too much chrome, too many bordered controls, and a title block that consumed the screen. Jony's approved direction is a calmer full-screen workspace: a small `New estimate` header, one quiet current-step label, a five-segment progress rail, flowing sections, and the work composer as the only intentionally contained area.
+
+**Rules:**
+- Keep the Customer -> Job -> Work -> Price -> Review flow.
+- Progress must remain real: scroll-spy plus tap-to-jump.
+- Use a rail/line treatment for progress, not pill buttons.
+- Section anchors use quiet step numbers (`01`, `02`) plus clear titles, not green numbered bubbles.
+- The sticky header must stay compact enough that it does not dominate the mobile screen.
+- Builder visual changes must not touch estimate persistence, public payment, receipt, or Stripe behavior.
+
+Why: Shawn approved Jony's recommendation to stop patching individual borders and remodel the estimator shell. The owner should feel like they are moving through one calm work surface, not managing a database UI.
 
 ---
 

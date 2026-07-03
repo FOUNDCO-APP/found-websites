@@ -4,6 +4,34 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Builder Jony Remodel Pass
+**AI:** Codex
+**Worked on:** Shawn approved Jony's recommendation to stop patching the estimate builder and remodel the shell around the same Customer -> Job -> Work -> Price -> Review flow.
+
+### Completed
+- Replaced the heavy sticky `Build the job` title and five pill buttons with a smaller `New estimate` header and a quiet five-segment progress rail.
+- Kept the real scroll-spy and tap-to-jump behavior, but removed the generic pill styling that made the builder feel off-brand.
+- Replaced numbered green bubbles with quieter `01 / 02 / 03` section anchors and stronger section titles.
+- Added scroll margins so tap-to-jump targets do not disappear under the sticky header.
+- Softened the builder-only field treatment and reduced the green/boxed feel of the work composer.
+- Changed dashboard PWA status bar metadata from `black-translucent` to solid `black` to reduce the gray status-band issue in standalone mode.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Hard refresh `my.foundco.app` and open Estimates -> +.
+- Confirm the estimator header is smaller and no longer says `Build the job`.
+- Confirm the top progress is a quiet rail, not five large pills.
+- Tap each progress segment and confirm it jumps cleanly without hiding the target under the header.
+- Scroll through Customer, Job, Work, Price, Review and confirm the active rail segment follows the section.
+- Test in Add to Home Screen / standalone PWA to confirm the top status area is black instead of gray.
+
+### Next
+1. Shawn visual approval on live deploy screenshots.
+2. If approved, continue payable-estimate QA and Session 4 dashboard payment-link polish.
+3. If not approved, the next pass should be visual only; do not change estimate data/payment behavior.
+
+---
+
 ## Session: July 3, 2026 — Estimate Builder Design Audit + Sitewide Font Root-Cause Fix
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Design audit of the estimate builder (Customer/Job/Work/Price/Review) driven by Shawn's live-device screenshots, fixed fake progress pills, fixed FOUND wordmark font drift, then found and fixed a sitewide font bug that was silently overriding Inter with Arial across the whole app.
