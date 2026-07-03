@@ -28,6 +28,32 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate System Johnny/Steve Correction
+**AI:** Codex
+**Worked on:** Shawn rejected the noisy accepted/unpaid dashboard treatment and the false payment-link behavior. Johnny led the redesign correction; Steve second-reviewed product truth.
+
+### Completed
+- Blocked dashboard `payment_link` sends unless the business has Stripe connected; the API now returns `409` when online payments are off.
+- Removed the false owner action where an accepted/unpaid estimate could send a payment link even though payments were not set up.
+- Calmed estimate list rows: no center status badge, no yellow `Needs payment link`, no cramped badge competing with customer name.
+- Changed accepted/unpaid list language to an honest small state: `Payments off` when payments are not connected, `Ready to collect` when they are.
+- Simplified accepted estimate detail: no loud yellow payment-status card; one quiet accepted summary and one honest next action.
+- Changed no-payment setup prompt copy to `Set up payments before sending a payment link` and kept setup owner-only.
+- Reaffirmed product/design principle: the estimate system must feel like one Found workflow, not QuickBooks/Square/accounting/database software.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- On a company without Stripe connected, open an accepted/unpaid estimate and confirm there is no `Send Payment Link` button.
+- Confirm the estimate list no longer shows yellow `Accepted, unpaid` badges or `Needs payment link` text.
+- Confirm the detail sheet shows a quiet accepted state plus `Set up payments` only.
+- On a Stripe-connected company, confirm accepted/unpaid can still send/resend a payment link and the API updates `payment_link_sent_at`.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on live mobile screenshots.
+2. If approved, continue payable-estimate QA in Stripe test mode.
+3. Then move to the broader estimate-system cohesion pass before AI.
+
+---
 ## Session: July 3, 2026 - Dashboard Payment Status Polish
 **AI:** Codex
 **Worked on:** Session 4 follow-through from Steve/Jony direction: make the owner dashboard show the money state clearly after a customer accepts, and give the owner a direct payment-link action without exposing setup pain to the customer.

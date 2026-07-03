@@ -43,7 +43,7 @@ export async function POST(
   // Fetch extra fields getCompany doesn't include
   const { data: companyExtra } = await admin
     .from("companies")
-    .select("logo_url")
+    .select("logo_url, stripe_connect_account_id")
     .eq("id", company.id)
     .single()
 
@@ -61,6 +61,9 @@ export async function POST(
   const now = new Date().toISOString()
 
   if (method === "payment_link") {
+    if (!companyExtra?.stripe_connect_account_id) {
+      return NextResponse.json({ error: "Online payments are not set up yet" }, { status: 409 })
+    }
     const resendKey = process.env.RESEND_API_KEY
     if (!resendKey) {
       console.error("[estimates/send] RESEND_API_KEY not set")

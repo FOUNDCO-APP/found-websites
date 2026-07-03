@@ -142,9 +142,9 @@ function estimateDisplayStatus(est: Estimate) {
   }
   if (est.status === "accepted" && (est.payment_status === "unpaid" || est.accepted_payment_choice === "pay_later" || est.accepted_pay_later_at)) {
     return {
-      label: "Accepted, unpaid",
-      color: "#FFD60A",
-      detail: est.payment_link_sent_at ? "Payment link sent" : "Needs payment link",
+      label: "Accepted",
+      color: SIGNAL_GREEN,
+      detail: est.payment_link_sent_at ? "Payment link sent" : "Unpaid",
     }
   }
   return {
@@ -397,6 +397,7 @@ export default function EstimatesPage() {
             <EstimateCard
               key={est.id}
               estimate={est}
+              companyStripeReady={companyStripeReady}
               onClick={() => setSelectedId(est.id)}
             />
           ))}
@@ -450,56 +451,54 @@ export default function EstimatesPage() {
 
 // ── Estimate Card ─────────────────────────────────────────────────────────────
 
-function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () => void }) {
+function EstimateCard({ estimate, companyStripeReady, onClick }: { estimate: Estimate; companyStripeReady: boolean; onClick: () => void }) {
   const displayStatus = estimateDisplayStatus(estimate)
+  const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
+  const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : "Payments off") : displayStatus.detail
+  const hintColor = isAcceptedUnpaid && !companyStripeReady ? "rgba(255,255,255,0.38)" : displayStatus.color
+
   return (
     <div
       onClick={onClick}
       style={{
-        padding: "16px 18px",
-        borderRadius: 20,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        padding: "17px 18px",
+        borderRadius: 18,
+        backgroundColor: "rgba(255,255,255,0.035)",
+        border: "1px solid rgba(255,255,255,0.065)",
         cursor: "pointer",
-        display: "flex", alignItems: "center", gap: 12,
+        display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto 14px", alignItems: "center", gap: 12,
       }}
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
-          <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {estimate.client_name}
-          </span>
-          <StatusBadge status={estimate.status} label={displayStatus.label} color={displayStatus.color} />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>
+          {estimate.client_name}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
           {estimate.property_address && (
-            <span style={{ color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 180, textTransform: "none" }}>
+            <span style={{ color: "rgba(255,255,255,0.42)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 184, textTransform: "none" }}>
               {estimate.property_address}
             </span>
           )}
-          {estimate.property_address && <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>-</span>}
-          <span style={{ color: "white", opacity: TEXT_OPACITY.disabled, ...TYPE.footnote, textTransform: "none" }}>
+          {estimate.property_address && <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>}
+          <span style={{ color: "rgba(255,255,255,0.30)", ...TYPE.footnote, textTransform: "none", whiteSpace: "nowrap" }}>
             {timeAgo(estimate.created_at)}
           </span>
         </div>
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{ color: "white", fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em" }}>
+        <div style={{ color: "white", fontSize: 17, fontWeight: 760, letterSpacing: 0 }}>
           {fmt(estimate.total)}
         </div>
-        {displayStatus.detail && (
-          <div style={{ color: displayStatus.color, fontSize: 11, fontWeight: 750, marginTop: 3, whiteSpace: "nowrap" }}>{displayStatus.detail}</div>
+        {paymentHint && (
+          <div style={{ color: hintColor, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>{paymentHint}</div>
         )}
       </div>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 18 15 12 9 6"/>
       </svg>
     </div>
   )
 }
-
-// ── Builder Sheet ─────────────────────────────────────────────────────────────
-
 type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null }
 
 function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
@@ -1101,7 +1100,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
   }
 
   async function handlePaymentLinkSend() {
-    if (sending) return
+    if (sending || !companyStripeReady) return
     setSendError(null)
     setSending("payment_link")
     try {
@@ -1163,12 +1162,12 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             {/* Stripe setup nudge */}
             {!companyStripeReady && (
-              <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,159,10,0.07)", border: "1px solid rgba(255,159,10,0.18)", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.075)", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
                 <div style={{ flex: 1 }}>
-                  <span style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700 }}>Connect Stripe </span>
+                  <span style={{ color: "white", fontSize: 13, fontWeight: 760 }}>Connect Stripe </span>
                   <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>to let clients pay a deposit the moment they accept.</span>
                 </div>
               </div>
@@ -1250,8 +1249,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 display: "flex", alignItems: "center", gap: 16, marginBottom: 22, textAlign: "left",
               }}
             >
-              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,159,10,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                 </svg>
               </div>
@@ -1415,18 +1414,18 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             {est.status === "accepted" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div style={{ padding: "16px 18px", borderRadius: 16, backgroundColor: `${displayStatus.color}12`, border: `1px solid ${displayStatus.color}30` }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
-                    <div style={{ color: displayStatus.color, fontSize: 15, fontWeight: 800 }}>{displayStatus.label}</div>
-                    <div style={{ color: "white", fontSize: 15, fontWeight: 800 }}>{fmt(est.total)}</div>
+                <div style={{ padding: "2px 0 4px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 5 }}>
+                    <div style={{ color: SIGNAL_GREEN, fontSize: 14, fontWeight: 780 }}>Accepted</div>
+                    <div style={{ color: "white", fontSize: 15, fontWeight: 780 }}>{fmt(est.total)}</div>
                   </div>
-                  <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, lineHeight: 1.45 }}>
-                    {displayStatus.detail ?? "Estimate accepted"}
+                  <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, lineHeight: 1.45 }}>
+                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : "Online payments are off"}
                     {est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
                   </div>
                 </div>
 
-                {isAcceptedUnpaid && (
+                {isAcceptedUnpaid && companyStripeReady && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <button
                       onClick={handlePaymentLinkSend}
@@ -1451,14 +1450,14 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 )}
 
                 {isAcceptedUnpaid && !companyStripeReady && (
-                  <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.2)", display: "flex", alignItems: "center", gap: 10 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.075)", display: "flex", alignItems: "center", gap: 10 }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                       <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     <div>
-                      <div style={{ color: "#FF9F0A", fontSize: 13, fontWeight: 700, marginBottom: 2 }}>Turn on online payments</div>
-                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>Future clients can pay the moment they accept.</div>
-                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="amber" compact>Set up payments</PaymentSetupButton>
+                      <div style={{ color: "white", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Turn on online payments</div>
+                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>Set up payments before sending a payment link.</div>
+                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} compact>Set up payments</PaymentSetupButton>
                     </div>
                   </div>
                 )}
@@ -1609,8 +1608,8 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
     events.push({
       label: `Opened by ${est.client_first_name ?? est.client_name ?? "client"}`,
       time: est.viewed_at,
-      color: "#FFD60A",
-      icon: <svg {...iconProps} stroke="#FFD60A"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+      color: SIGNAL_GREEN,
+      icon: <svg {...iconProps} stroke={SIGNAL_GREEN}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
     })
   }
 
