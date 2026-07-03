@@ -13,6 +13,10 @@
 
 ---
 
+**[2026-07-03] - Found's product app has one typeface: Inter. No per-page font drift, ever.**
+Approved by: Shawn + Steve Jobs + Jony Ive
+Why: `globals.css` had dead `create-next-app` boilerplate — a hardcoded `body { font-family: Arial, Helvetica, sans-serif }` and a `--font-sans` token pointed at an unloaded Geist font — silently overriding the real Inter font loaded in the root layout, sitewide. This is why the app read as inconsistent and "cheap" across pages, not just on the wordmark (which had independently drifted to hardcoded Arial in 12 places). Fixed at the root — one shared `FoundWordmark` component, dead CSS rules removed — instead of patching individual occurrences. Any new UI must inherit the body font; do not set a competing `fontFamily` unless it's an intentional per-client-website typography choice (see the industry font palette used on generated `/[slug]` sites, which is separate from the Found product chrome).
+
 **[2026-07-02] - Estimator builder is a full-screen mobile work tool, not a database form.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
 Why: Business owners are trying to capture a customer decision on a job site. The builder must hide app chrome, guide the owner through Customer -> Job -> Work -> Price -> Review, and make work entry feel natural. Spreadsheet-like line-item entry is rejected for the primary mobile flow.

@@ -4,6 +4,32 @@
 
 ---
 
+## Session: July 3, 2026 — Estimate Builder Design Audit + Sitewide Font Root-Cause Fix
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Design audit of the estimate builder (Customer/Job/Work/Price/Review) driven by Shawn's live-device screenshots, fixed fake progress pills, fixed FOUND wordmark font drift, then found and fixed a sitewide font bug that was silently overriding Inter with Arial across the whole app.
+
+### Completed
+- Corrected an initial misdirected audit — first pass wrongly targeted `OnboardingFlow.tsx`. Shawn's screenshots showed the actual complaint was the estimate builder (`BuilderSheet` in `src/app/dashboard/(app)/estimates/page.tsx`).
+- **Step pills were fake** — the Customer/Job/Work/Price/Review pills were hardcoded `index === 0`, so "Customer" stayed lit green regardless of scroll position, and were plain non-interactive `<div>`s (no onClick). Rebuilt with a real `IntersectionObserver` scroll-spy (`activeStep` state) plus tap-to-jump smooth scroll (`jumpToStep`).
+- **Card-stack layout removed** — the five sections were each their own bordered/tinted box (`sectionStyle`). Replaced with one flowing surface separated by hairline dividers (`dividerStyle`), restoring the white space Shawn flagged as lost.
+- **FOUND wordmark font bug (first pass)** — found the wordmark hardcoded to `fontFamily="Arial,sans-serif"` in 12 places across onboarding, dashboard nav, auth pages, and activate flow. Extracted a single shared `src/components/FoundWordmark.tsx` component and replaced all 12 (plus `SiteNav.tsx`, the one place that had a working font reference) to use it.
+- **Real root cause found** — first-pass wordmark fix matched `var(--font-dm-sans)` (copied from `SiteNav.tsx`), which was wrong. `globals.css` had two dead Next.js template-boilerplate rules fighting the real font stack: `body { font-family: Arial, Helvetica, sans-serif; }` (hardcoded, silently overriding the properly-loaded Inter font from `layout.tsx`) and `--font-sans: var(--font-geist-sans)` (pointing Tailwind's font-sans token at a Geist font never loaded in this project). This affected every element sitewide with no explicit `fontFamily`, not just the wordmark — this is almost certainly why Shawn saw the app as looking inconsistent/cheap beyond just the logo.
+- Removed both dead rules from `globals.css`; `--font-sans` now correctly points at `--font-inter`. Corrected `FoundWordmark.tsx` to use `var(--font-inter)` — Inter (loaded via `inter.className` on `<body>` in root `layout.tsx`) is the app's one real typeface; DM Sans in `SiteNav.tsx` was itself an inconsistency, not the reference.
+- Two commits pushed to `main`: `33bc62e` (pills + wordmark component + card-stack removal), `3de39d7` (sitewide font root-cause fix).
+- Verified with `npm run build` after each commit — clean, no TypeScript errors, all 82 routes compiled both times.
+
+### Must Test
+- Reload `my.foundco.app` (hard refresh — may be cached) and confirm the FOUND wordmark and all body text render in Inter consistently across dashboard, onboarding, auth, and the estimate builder.
+- Open the estimate builder: scroll through Customer → Review and confirm the top pills track scroll position; tap a pill and confirm it jumps to that section.
+- **Not yet visually confirmed by Shawn.** His last words before the July 3 font fix deployed: "font and design suck balls... looks cheap." Do not assume resolved — wait for a fresh screenshot of the live deploy.
+
+### Next
+1. Get Shawn's fresh screenshot of the live deploy to confirm whether the sitewide font fix resolved the "looks cheap" complaint, or whether it's a deeper visual/spacing issue in the flowing-surface redesign that needs a real Jony pass.
+2. Still open: gray status-bar band at top of the estimate builder on first load — suspected to be iOS Safari's own browser chrome (not app CSS), unconfirmed. Ask Shawn to test after "Add to Home Screen" — if it persists in standalone PWA mode, it's real and needs a fix (`apple-mobile-web-app-status-bar-style`); if it disappears, it was Safari all along.
+3. Once font/design is confirmed resolved, close out the "ESTIMATOR BUILDER TEAM RESET" item in `TASKS.md`.
+
+---
+
 ## Session: July 2, 2026 - Estimates Builder Reset: Mobile Work Tool
 **AI:** Codex
 **Worked on:** Team-approved estimator builder reset after Shawn's mobile test screenshots and feedback.

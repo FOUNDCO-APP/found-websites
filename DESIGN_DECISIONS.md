@@ -4,6 +4,21 @@
 
 ---
 
+## ESTIMATE BUILDER SHELL: FLOWING SURFACE, NOT CARD-STACK (APPROVED — July 3, 2026)
+
+**The five estimate builder steps (Customer, Job, Work, Price, Review) do not each live in their own bordered/tinted box.**
+Approved by: Shawn + Steve Jobs + Jony Ive
+
+Boxes-within-a-page reads as tight and cheap, not Apple-quality. Sections flow as one continuous surface, separated by hairline dividers and generous vertical spacing — the numbered green marker + title is the section anchor, not a card wrapper. Line-item rows and the "Add work" composer keep their own contained treatment (that's normal list/modal affordance, not clutter) — the ban is specifically on wrapping whole primary sections in their own card.
+
+**The step pills at the top must be real, not decorative.** They reflect actual scroll position via scroll-spy (`IntersectionObserver`), and tapping one jumps to that section. A progress indicator that doesn't move is worse than no progress indicator — don't ship a static/hardcoded "active step" again.
+
+Why: Shawn's exact words on the previous version — "wrappers inside wrappers... losing white space... it doesn't even move through the top pills." Verified as literal code bugs (hardcoded `index === 0`, non-interactive `<div>`s, five separate `sectionStyle` card wrappers) and a compositional choice, not subjective taste. Implemented in `src/app/dashboard/(app)/estimates/page.tsx`.
+
+Related: see `DECISIONS.md` [2026-07-03] for the sitewide font fix that shipped alongside this.
+
+---
+
 ## SUB-INDUSTRY SECTION LABEL SYSTEM (APPROVED — June 10, 2026)
 
 **Hardcoded section labels are banned. Every section header reads from the sub-industry vocabulary table.**

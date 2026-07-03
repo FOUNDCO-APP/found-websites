@@ -16,9 +16,19 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **QA estimator builder reset live** - confirm the full-screen mobile builder hides app chrome, work entry feels natural, tax `8.7` works, and save returns quickly.
+1. **Confirm July 3 font/design fix on live deploy** - Shawn said the estimate builder "looks cheap" and the font didn't match other pages. Root cause found and fixed (dead Arial/Geist rules in `globals.css` overriding Inter sitewide, plus fake progress pills). Pushed as `33bc62e` + `3de39d7`. NOT yet visually confirmed by Shawn — get a fresh screenshot of the live deploy before considering this closed. If it still looks cheap after the font fix, it's a real Jony design pass on the flowing-surface layout, not a bug.
 2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and public paid state.
 3. **Session 4: dashboard payment-link polish** - accepted/unpaid and paid/deposit-paid states, resend payment link, and owner-side payment setup nudges.
+
+---
+
+## RECENTLY COMPLETED (July 3, 2026 — Claude Code session)
+- ✅ Estimate builder step pills — were hardcoded fake (`index === 0`), now real `IntersectionObserver` scroll-spy + tap-to-jump
+- ✅ Estimate builder card-stack removed — five sections now flow as one surface with hairline dividers, not five bordered boxes
+- ✅ FOUND wordmark — was hardcoded Arial in 12 places, now one shared `src/components/FoundWordmark.tsx` component
+- ✅ Sitewide font root cause — `globals.css` had dead `create-next-app` boilerplate (`body { font-family: Arial... }`, `--font-sans: var(--font-geist-sans)`) silently overriding the real Inter font loaded in `layout.tsx`. Removed both; `--font-sans` now points at `--font-inter`.
+- ⏳ Not yet visually confirmed — see NOW #1
+- ⏳ Gray status-bar band on estimate builder — suspected iOS Safari chrome, not app CSS. Needs Shawn to test via "Add to Home Screen" to confirm.
 
 ---
 
