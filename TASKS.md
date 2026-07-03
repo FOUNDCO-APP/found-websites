@@ -16,9 +16,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **QA payable estimates end to end** - migration 046 is applied. Test create -> send/open public page -> Accept & Pay -> receipt/owner email -> paid public state in Stripe test mode.
-2. **Estimates Session 4: Dashboard payment-link polish** - show `Accepted, unpaid`, `Deposit paid`, and `Paid`; add owner resend payment link; polish receipt/payment-link emails and dashboard actions.
-3. **Estimates Session 5: AI estimate builder** - owner types or speaks the job, Found drafts editable line items from My Services/future catalog, owner reviews/edits, then sends. AI never sends automatically.
+1. **Estimator builder redesign plan** - team-approved product/design pass before more UI patching. Make `New Estimate` a focused full-screen tool: Customer, Job, Work, Price, Review.
+2. **Fix client-facing no-payment fallback** - public no-Stripe estimates must show `Accept Estimate` only. No Stripe/setup/payment-configuration language leaks to customers.
+3. **QA payable estimates after reset** - after the builder plan/fix, test Stripe-connected Accept & Pay, pay-later, receipt email, owner email, and dashboard states.
 ---
 
 ## RECENTLY COMPLETED (June 24, 2026 — Codex + Claude session)
@@ -117,6 +117,26 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Display-name prompt save closes and does not return (carry from last session)
 
 ---
+
+
+### ESTIMATOR BUILDER TEAM RESET (July 2, 2026)
+
+Problem Shawn identified during testing:
+- The builder feels like filling out a database, not running a business tool.
+- The visual hierarchy is weak; the eye has no clear path.
+- The bottom sheet sits over Found branding and feels like an overlay, not the actual work surface.
+- Line items feel like spreadsheet rows.
+- Internal payment setup issues must never be visible to clients.
+
+Team-approved redesign direction:
+- Full-screen mobile-first estimator surface, starting directly under phone/browser chrome.
+- Workflow: Customer -> Job -> Work -> Price -> Review.
+- Work item composer should be guided: describe work, choose flat price or quantity/rate, then price it.
+- Unit is optional and contextual, not a required-looking database field.
+- My Services should feel like quick reusable work, not a rate-sheet database.
+- Public client page never says Stripe/payments are not set up. Owner dashboard handles setup warnings.
+
+Do not continue patching random fields before this plan is implemented.
 
 ## ESTIMATES REBUILD HANDOFF (July 2, 2026)
 

@@ -375,18 +375,17 @@ export default function AcceptButton({
 
   if (!hasStripe) {
     return (
-      <div style={{ borderRadius: 20, backgroundColor: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.24)", padding: "20px 18px", textAlign: "center", marginBottom: 16 }}>
-        <div style={{ color: "#B87500", fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Payments are not set up yet</div>
-        <div style={{ color: "#777772", fontSize: 14, lineHeight: 1.55 }}>This estimate can be accepted, but online payment is not available for this business yet.</div>
-        {!acceptedAlready && (
-          <button
-            onClick={handleSimpleAccept}
-            disabled={loading}
-            style={{ width: "100%", marginTop: 14, padding: "15px 0", borderRadius: 16, border: "none", backgroundColor: color, color: contrastColor(color), fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1 }}
-          >
-            {loading ? "Confirming..." : "Accept Without Paying"}
-          </button>
-        )}
+      <div style={{ marginBottom: 16 }}>
+        <button
+          onClick={handleSimpleAccept}
+          disabled={loading || acceptedAlready}
+          style={{ width: "100%", padding: "18px 0", borderRadius: 18, border: "none", backgroundColor: color, color: contrastColor(color), fontSize: 17, fontWeight: 800, cursor: loading || acceptedAlready ? "default" : "pointer", letterSpacing: "-0.01em", opacity: loading || acceptedAlready ? 0.7 : 1 }}
+        >
+          {loading ? "Confirming..." : acceptedAlready ? "Estimate Accepted" : "Accept Estimate"}
+        </button>
+        <p style={{ margin: "10px 0 0", textAlign: "center", color: "#777772", fontSize: 13 }}>
+          {acceptedAlready ? "Thank you. The business has been notified." : "By accepting, you agree to proceed with the work as described above."}
+        </p>
       </div>
     )
   }

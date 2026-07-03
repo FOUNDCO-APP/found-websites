@@ -288,7 +288,18 @@ Why: Contractors and service businesses live on quotes. This is their #1 admin t
 Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
 Why: Service businesses do not just send estimates. They need the full flow: quote, client approval, deposit, work, final invoice, final payment, receipt. Stripe should handle payments; Found should make the workflow simple.
 
-**[2026-07-02] - Payable estimates are the primary customer path; invoices are a fallback/sibling mode, not the default.**
+
+**[2026-07-02] - Estimator builder must be redesigned as a guided tool, not patched as a form.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair
+Why: Live testing showed the estimate builder feels like database entry. Found is supposed to make owners faster and more confident on a job site. The current builder exposes too much of the data model and does not guide the owner's eye or workflow.
+
+Locked direction:
+- `New Estimate` becomes a full-screen focused work surface, not a bottom sheet over Found branding.
+- Workflow is Customer -> Job -> Work -> Price -> Review.
+- Line items are built through an owner-friendly work composer, not spreadsheet-like rows.
+- Units stay optional/contextual.
+- Customer-facing pages never expose Stripe/setup/payment-configuration issues.
+- Owner dashboard may show payment setup warnings; clients should only see clean accept/pay or accept flows.**[2026-07-02] - Payable estimates are the primary customer path; invoices are a fallback/sibling mode, not the default.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair + Marcus Webb
 Why: The customer's emotional decision happens when they read the estimate and decide "yes." Most estimating tools break that moment by sending a separate invoice later. Found should collapse that gap: the public estimate page must make the next step feel natural, immediate, and modern.
 

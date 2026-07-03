@@ -20,7 +20,7 @@
 - Updated Stripe webhook backup so `payment_intent.succeeded` also records `payment_status`, `accepted_payment_choice`, `paid_at` for full payment, owner notification, and customer receipt when the webhook is the first confirmation path.
 - Applied migration 046 to Supabase on July 2, 2026 and verified the new estimate columns exist: split client fields, payment status, accepted payment choice, pay-later/payment-link timestamps, paid timestamp, and receipt timestamp.
 - Verified with `cmd /c npm run build` on July 2, 2026.
-- During live testing, fixed visibility/payment ambiguity: no-Stripe public estimates now show `Payments are not set up yet` and an explicit `Accept Without Paying` fallback instead of silently accepting like a payment flow happened.
+- During live testing, corrected customer-facing no-Stripe behavior: clients must never see owner setup pain. If online payment is unavailable, the public page shows a clean `Accept Estimate` path only; Stripe/setup language stays owner-side.
 - Improved estimate builder test friction: tax accepts normal percent input like `8.7`, line-item unit is a common-unit dropdown with `No unit`, manual item prompt now asks `What are you doing?`, and save failures surface a visible error.
 - Restarted local dev server on port 3000 so localhost reflects current files.
 
