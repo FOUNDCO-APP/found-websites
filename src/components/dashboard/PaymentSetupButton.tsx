@@ -5,7 +5,7 @@ import { useState } from "react"
 type PaymentSetupButtonProps = {
   children?: React.ReactNode
   returnTo?: string
-  variant?: "green" | "amber" | "dark"
+  variant?: "green" | "amber" | "dark" | "subtle"
   compact?: boolean
 }
 
@@ -13,6 +13,7 @@ const COLORS = {
   green: { bg: "#30D158", fg: "#080A09", border: "#30D158" },
   amber: { bg: "rgba(255,159,10,0.16)", fg: "#FFB340", border: "rgba(255,159,10,0.34)" },
   dark: { bg: "#080A09", fg: "#ffffff", border: "#080A09" },
+  subtle: { bg: "rgba(255,255,255,0.045)", fg: "#30D158", border: "rgba(255,255,255,0.09)" },
 }
 
 export default function PaymentSetupButton({

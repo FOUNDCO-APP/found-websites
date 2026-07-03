@@ -454,28 +454,37 @@ export default function EstimatesPage() {
 function EstimateCard({ estimate, companyStripeReady, onClick }: { estimate: Estimate; companyStripeReady: boolean; onClick: () => void }) {
   const displayStatus = estimateDisplayStatus(estimate)
   const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
-  const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : "Payments off") : displayStatus.detail
-  const hintColor = isAcceptedUnpaid && !companyStripeReady ? "rgba(255,255,255,0.38)" : displayStatus.color
+  const shouldShowStatus = estimate.status !== "accepted" || estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at
+  const paymentHint = isAcceptedUnpaid && companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : displayStatus.detail
 
   return (
-    <div
+    <button
       onClick={onClick}
       style={{
-        padding: "17px 18px",
-        borderRadius: 18,
-        backgroundColor: "rgba(255,255,255,0.035)",
-        border: "1px solid rgba(255,255,255,0.065)",
+        width: "100%",
+        padding: "16px 0",
+        border: "none",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        backgroundColor: "transparent",
         cursor: "pointer",
-        display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto 14px", alignItems: "center", gap: 12,
+        display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto 12px", alignItems: "center", gap: 12,
+        textAlign: "left",
       }}
     >
       <div style={{ minWidth: 0 }}>
-        <div style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 5 }}>
-          {estimate.client_name}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, marginBottom: 5 }}>
+          <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {estimate.client_name}
+          </span>
+          {shouldShowStatus && (
+            <span style={{ color: displayStatus.color, fontSize: 11, fontWeight: 760, flexShrink: 0 }}>
+              {displayStatus.label}
+            </span>
+          )}
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
           {estimate.property_address && (
-            <span style={{ color: "rgba(255,255,255,0.42)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 184, textTransform: "none" }}>
+            <span style={{ color: "rgba(255,255,255,0.42)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
               {estimate.property_address}
             </span>
           )}
@@ -489,14 +498,14 @@ function EstimateCard({ estimate, companyStripeReady, onClick }: { estimate: Est
         <div style={{ color: "white", fontSize: 17, fontWeight: 760, letterSpacing: 0 }}>
           {fmt(estimate.total)}
         </div>
-        {paymentHint && (
-          <div style={{ color: hintColor, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>{paymentHint}</div>
+        {paymentHint && paymentHint !== "Unpaid" && (
+          <div style={{ color: displayStatus.color, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>{paymentHint}</div>
         )}
       </div>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="9 18 15 12 9 6"/>
       </svg>
-    </div>
+    </button>
   )
 }
 type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null }
@@ -1128,19 +1137,14 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
   return (
     <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, }} />
       <div style={{
-        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
-        backgroundColor: "#101411",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "28px 28px 0 0",
-        padding: "14px 22px 48px",
-        maxHeight: "94dvh", overflowY: "auto",
+        position: "fixed", inset: 0, zIndex: 70,
+        backgroundColor: FOUND_BLACK,
+        padding: "calc(env(safe-area-inset-top, 0px) + 14px) 22px calc(env(safe-area-inset-bottom, 0px) + 36px)",
+        overflowY: "auto",
         overscrollBehavior: "contain",
         WebkitOverflowScrolling: "touch",
       } as React.CSSProperties}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }} />
-
         {/* Send options */}
         {mode === "send_options" && (
           <div>
@@ -1297,12 +1301,13 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 <StatusBadge status={est.status} label={displayStatus.label} color={displayStatus.color} />
               </div>
               <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setMode("confirm_delete")} style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,69,58,0.25)", backgroundColor: "rgba(255,69,58,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF453A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <button onClick={() => setMode("confirm_delete")} aria-label="Delete estimate" style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,69,58,0.2)", backgroundColor: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,69,58,0.82)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
                   </svg>
                 </button>
-                <button onClick={startEdit} style={{ padding: "8px 16px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Edit</button>
+                <button onClick={startEdit} style={{ padding: "8px 15px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.62)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Edit</button>
+                <button onClick={onClose} aria-label="Close estimate" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.58)", fontSize: 22, lineHeight: 1, cursor: "pointer" }}>x</button>
               </div>
             </div>
 
@@ -1420,7 +1425,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                     <div style={{ color: "white", fontSize: 15, fontWeight: 780 }}>{fmt(est.total)}</div>
                   </div>
                   <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, lineHeight: 1.45 }}>
-                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : "Online payments are off"}
+                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : "Accepted without online payments"}
                     {est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
                   </div>
                 </div>
@@ -1450,15 +1455,12 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 )}
 
                 {isAcceptedUnpaid && !companyStripeReady && (
-                  <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.075)", display: "flex", alignItems: "center", gap: 10 }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <div>
-                      <div style={{ color: "white", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Turn on online payments</div>
-                      <div style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: 1.45, marginBottom: 10 }}>Set up payments before sending a payment link.</div>
-                      <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} compact>Set up payments</PaymentSetupButton>
+                  <div style={{ padding: "12px 0 0", borderTop: "1px solid rgba(255,255,255,0.07)", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 142px", alignItems: "center", gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ color: "rgba(255,255,255,0.82)", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Online payments</div>
+                      <div style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, lineHeight: 1.45 }}>Set up payments when you want clients to pay online.</div>
                     </div>
+                    <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="subtle" compact>Set up</PaymentSetupButton>
                   </div>
                 )}
               </div>
@@ -1590,8 +1592,8 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
     events.push({
       label: `Emailed to ${est.client_email ?? "client"}`,
       time: est.email_sent_at,
-      color: "#0A84FF",
-      icon: <svg {...iconProps} stroke="#0A84FF"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+      color: "rgba(255,255,255,0.34)",
+      icon: <svg {...iconProps} stroke="rgba(255,255,255,0.34)"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
     })
   }
 
@@ -1608,8 +1610,8 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
     events.push({
       label: `Opened by ${est.client_first_name ?? est.client_name ?? "client"}`,
       time: est.viewed_at,
-      color: SIGNAL_GREEN,
-      icon: <svg {...iconProps} stroke={SIGNAL_GREEN}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+      color: "rgba(255,255,255,0.34)",
+      icon: <svg {...iconProps} stroke="rgba(255,255,255,0.34)"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
     })
   }
 
@@ -1635,13 +1637,13 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
 
   return (
     <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.3)", marginBottom: 14 }}>Activity</div>
+      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.24)", marginBottom: 14 }}>Activity</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
         {events.map((ev, i) => (
           <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
             {/* Line + dot column */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: `${ev.color}18`, border: `1px solid ${ev.color}44`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.025)", border: `1px solid ${ev.color}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {ev.icon}
               </div>
               {i < events.length - 1 && (
@@ -1650,7 +1652,7 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
             </div>
             {/* Content */}
             <div style={{ paddingBottom: i < events.length - 1 ? 18 : 0, paddingTop: 2, flex: 1 }}>
-              <div style={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600 }}>{ev.label}</div>
+              <div style={{ color: "rgba(255,255,255,0.62)", fontSize: 13, fontWeight: 600 }}>{ev.label}</div>
               {ev.time && (
                 <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, marginTop: 2 }}>
                   {new Date(ev.time).toLocaleDateString(undefined, { month: "short", day: "numeric" })}

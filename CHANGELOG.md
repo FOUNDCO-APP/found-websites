@@ -28,6 +28,35 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate List + Full-Screen Detail Refinement
+**AI:** Codex
+**Worked on:** Shawn brought the latest screenshots back to the team. Jony led the decision, Steve second-reviewed, and Angela/Craig/Priya/Marcus/Chris added user, architecture, payment, public-flow, and mobile guidance.
+
+### Completed
+- Removed the repeated `Payments off` language from accepted estimate cards so the list no longer repeats backend/payment setup state as a row label.
+- Changed estimate list rows from heavy rounded cards into quieter tappable rows with a simple divider, keeping true actions like `+`, `Services`, and filters as the visible buttons.
+- Converted estimate detail from a bottom sheet over the dashboard into a full-screen mobile workspace that covers the header behind it.
+- Removed the visible layered-screen effect where `FOUND` and `Construction` appeared behind the estimate detail.
+- Added an explicit close control to the focused estimate detail view.
+- Reframed accepted/no-Stripe copy as `Accepted without online payments` instead of making it feel broken.
+- Reduced the no-Stripe setup prompt from a loud card/primary CTA into a quiet secondary row with a subtle setup button.
+- Softened the activity timeline so email/open events read as quiet history while accepted/payment events keep completion emphasis.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates on mobile and confirm accepted rows no longer say `Payments off` repeatedly.
+- Confirm estimate rows feel like a calm working list, not stacked rounded buttons.
+- Tap an estimate and confirm the detail opens as a full-screen focused workspace with no `FOUND`/`Construction` visible behind it.
+- Confirm the close button returns to the estimate list and refreshes data.
+- On a non-Stripe company, confirm there is still no `Send Payment Link` button and the setup prompt is quiet.
+- On a Stripe-connected company, confirm `Send Payment Link` / `Resend Payment Link` still appears for accepted unpaid estimates.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on live mobile screenshots.
+2. If approved, continue payable-estimate QA: Accept & Pay, pay-later, receipt, owner notification, dashboard paid state.
+3. Do not start AI estimate builder until manual estimate creation and payable estimate flow pass live QA.
+
+---
 ## Session: July 3, 2026 - Estimate System Johnny/Steve Correction
 **AI:** Codex
 **Worked on:** Shawn rejected the noisy accepted/unpaid dashboard treatment and the false payment-link behavior. Johnny led the redesign correction; Steve second-reviewed product truth.
@@ -108,6 +137,35 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate List + Full-Screen Detail Refinement
+**AI:** Codex
+**Worked on:** Shawn brought the latest screenshots back to the team. Jony led the decision, Steve second-reviewed, and Angela/Craig/Priya/Marcus/Chris added user, architecture, payment, public-flow, and mobile guidance.
+
+### Completed
+- Removed the repeated `Payments off` language from accepted estimate cards so the list no longer repeats backend/payment setup state as a row label.
+- Changed estimate list rows from heavy rounded cards into quieter tappable rows with a simple divider, keeping true actions like `+`, `Services`, and filters as the visible buttons.
+- Converted estimate detail from a bottom sheet over the dashboard into a full-screen mobile workspace that covers the header behind it.
+- Removed the visible layered-screen effect where `FOUND` and `Construction` appeared behind the estimate detail.
+- Added an explicit close control to the focused estimate detail view.
+- Reframed accepted/no-Stripe copy as `Accepted without online payments` instead of making it feel broken.
+- Reduced the no-Stripe setup prompt from a loud card/primary CTA into a quiet secondary row with a subtle setup button.
+- Softened the activity timeline so email/open events read as quiet history while accepted/payment events keep completion emphasis.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates on mobile and confirm accepted rows no longer say `Payments off` repeatedly.
+- Confirm estimate rows feel like a calm working list, not stacked rounded buttons.
+- Tap an estimate and confirm the detail opens as a full-screen focused workspace with no `FOUND`/`Construction` visible behind it.
+- Confirm the close button returns to the estimate list and refreshes data.
+- On a non-Stripe company, confirm there is still no `Send Payment Link` button and the setup prompt is quiet.
+- On a Stripe-connected company, confirm `Send Payment Link` / `Resend Payment Link` still appears for accepted unpaid estimates.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on live mobile screenshots.
+2. If approved, continue payable-estimate QA: Accept & Pay, pay-later, receipt, owner notification, dashboard paid state.
+3. Do not start AI estimate builder until manual estimate creation and payable estimate flow pass live QA.
+
+---
 ## Session: July 3, 2026 — Estimate Builder Design Audit + Sitewide Font Root-Cause Fix
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Design audit of the estimate builder (Customer/Job/Work/Price/Review) driven by Shawn's live-device screenshots, fixed fake progress pills, fixed FOUND wordmark font drift, then found and fixed a sitewide font bug that was silently overriding Inter with Arial across the whole app.
