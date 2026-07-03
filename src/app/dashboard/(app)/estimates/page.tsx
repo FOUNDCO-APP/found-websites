@@ -93,6 +93,33 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 6, display: "block",
 }
 
+const UNIT_OPTIONS = [
+  { value: "", label: "No unit" },
+  { value: "each", label: "Each" },
+  { value: "hr", label: "Hour" },
+  { value: "day", label: "Day" },
+  { value: "sq ft", label: "Sq ft" },
+  { value: "linear ft", label: "Linear ft" },
+  { value: "ft", label: "Foot" },
+  { value: "yd", label: "Yard" },
+  { value: "room", label: "Room" },
+  { value: "item", label: "Item" },
+  { value: "trip", label: "Trip" },
+]
+
+function taxInputFromRate(rate: number) {
+  if (!rate) return ""
+  return String(Number((rate * 100).toFixed(3))).replace(/\.0+$/, "")
+}
+
+function taxRateFromInput(value: string) {
+  const cleaned = value.replace(/%/g, "").trim()
+  if (!cleaned) return 0
+  const numeric = Number(cleaned)
+  if (!Number.isFinite(numeric) || numeric < 0) return 0
+  return numeric / 100
+}
+
 // ── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
@@ -170,6 +197,7 @@ export default function EstimatesPage() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const selected = estimates.find(e => e.id === selectedId) ?? null
+  const [taxInput, setTaxInput] = useState(taxInputFromRate(defaultTaxRate))
 
   const filtered = filter === "all"
     ? estimates
@@ -243,7 +271,7 @@ export default function EstimatesPage() {
           {estimates.length > 0 && (
             <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.disabled, ...TYPE.footnote }}>
               {estimates.filter(e => e.status === "draft" || e.status === "sent" || e.status === "viewed").length} active
-              {counts.accepted ? ` · ${counts.accepted} won` : ""}
+              {counts.accepted ? ` - ${counts.accepted} won` : ""}
             </p>
           )}
         </div>
@@ -301,7 +329,7 @@ export default function EstimatesPage() {
 
       {/* List */}
       {loading ? (
-        <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>Loading…</div>
+        <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>Loading...</div>
       ) : filtered.length === 0 ? (
         <div style={{ paddingTop: 80, textAlign: "center" }}>
           <div style={{
@@ -410,7 +438,7 @@ function EstimateCard({ estimate, onClick }: { estimate: Estimate; onClick: () =
               {estimate.property_address}
             </span>
           )}
-          {estimate.property_address && <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>}
+          {estimate.property_address && <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>-</span>}
           <span style={{ color: "white", opacity: TEXT_OPACITY.disabled, ...TYPE.footnote, textTransform: "none" }}>
             {timeAgo(estimate.created_at)}
           </span>
@@ -449,10 +477,12 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   const [address, setAddress] = useState("")
   const [lineItems, setLineItems] = useState<LineItem[]>([])
   const [taxRate, setTaxRate] = useState(defaultTaxRate)
+  const [taxInput, setTaxInput] = useState(taxInputFromRate(defaultTaxRate))
   const [taxSaved, setTaxSaved] = useState(false)
   const [suggestions, setSuggestions] = useState<LeadSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [newDesc, setNewDesc] = useState("")
   const [newQty, setNewQty] = useState("1")
   const [newUnit, setNewUnit] = useState("")
@@ -492,6 +522,11 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
     setTimeout(() => setTaxSaved(false), 2000)
   }
 
+  function handleTaxInput(value: string) {
+    setTaxInput(value)
+    setTaxRate(taxRateFromInput(value))
+  }
+
   function addFromRateSheet(item: RateSheetItem) {
     setLineItems(prev => [...prev, { ...item, quantity: 1 }])
   }
@@ -513,18 +548,27 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   }
 
   async function handleSave() {
-    if (!clientFirst.trim()) return
+    if (!clientFirst.trim() || saving) return
     const fullName = [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ")
     setSaving(true)
-    await onSave({
-      client_name: fullName,
-      client_first_name: clientFirst.trim(),
-      client_last_name: clientLast.trim() || null,
-      client_company: clientCompany.trim() || null,
-      client_phone: clientPhone, client_email: clientEmail,
-      property_address: address, line_items: lineItems, tax_rate: taxRate,
-    })
-    setSaving(false)
+    setSaveError(null)
+    try {
+      await onSave({
+        client_name: fullName,
+        client_first_name: clientFirst.trim(),
+        client_last_name: clientLast.trim() || null,
+        client_company: clientCompany.trim() || null,
+        client_phone: clientPhone,
+        client_email: clientEmail,
+        property_address: address,
+        line_items: lineItems,
+        tax_rate: taxRate,
+      })
+    } catch {
+      setSaveError("Could not save. Check the required fields and try again.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -541,7 +585,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
           <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>New Estimate</h2>
-          <button onClick={onClose} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>×</button>
+          <button onClick={onClose} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1, padding: "0 4px" }}>x</button>
         </div>
 
         {/* Client */}
@@ -589,12 +633,12 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
         {/* Line Items */}
         <div style={{ marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <p style={{ ...labelStyle, margin: 0 }}>Line Items</p>
+            <p style={{ ...labelStyle, margin: 0 }}>Work & pricing</p>
             <button onClick={() => setAddingItem(v => !v)} style={{
               padding: "5px 12px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`,
               backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN,
               fontSize: 12, fontWeight: 700, cursor: "pointer",
-            }}>+ Add Line</button>
+            }}>Add item</button>
           </div>
 
           {/* My Services quick-add */}
@@ -619,11 +663,13 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           {/* Manual add form */}
           {addingItem && (
             <div style={{ borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}33`, padding: 16, marginBottom: 12, backgroundColor: `${SIGNAL_GREEN}08` }}>
-              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Description *" style={{ ...inputStyle, marginBottom: 8 }} />
-              <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 100px", gap: 8, marginBottom: 8 }}>
-                <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" placeholder="Qty" style={inputStyle} />
-                <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder="Unit (sq ft, hr…)" style={inputStyle} />
-                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" placeholder="Price" style={inputStyle} />
+              <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="What are you doing?" style={{ ...inputStyle, marginBottom: 10 }} />
+              <div style={{ display: "grid", gridTemplateColumns: "76px 1fr 112px", gap: 8, marginBottom: 8 }}>
+                <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" inputMode="decimal" placeholder="Qty" style={inputStyle} />
+                <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>
+                  {UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}
+                </select>
+                <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" inputMode="decimal" placeholder="Price" style={inputStyle} />
               </div>
               <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
                 {(["labor", "materials", "other"] as const).map(c => (
@@ -655,11 +701,11 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
                     <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
-                      {item.quantity} {item.unit || "×"} {fmt(item.unit_price)}
+                      {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
                     </div>
                   </div>
                   <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>{fmt(item.quantity * item.unit_price)}</div>
-                  <button onClick={() => removeItem(i)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: "4px", fontSize: 18, lineHeight: 1 }}>×</button>
+                  <button onClick={() => removeItem(i)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", padding: "4px", fontSize: 18, lineHeight: 1 }}>x</button>
                 </div>
               ))}
             </div>
@@ -667,7 +713,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
 
           {lineItems.length === 0 && !addingItem && (
             <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>
-              No line items yet — tap "+ Add Line" above
+              No line items yet - tap "+ Add Line" above
             </div>
           )}
         </div>
@@ -685,11 +731,12 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input
-                type="number"
-                value={taxRate === 0 ? "" : (taxRate * 100).toFixed(2)}
-                onChange={e => setTaxRate(Number(e.target.value) / 100)}
-                placeholder="0"
-                style={{ ...inputStyle, width: 72, padding: "8px 12px", textAlign: "right" }}
+                type="text"
+                inputMode="decimal"
+                value={taxInput}
+                onChange={e => handleTaxInput(e.target.value)}
+                placeholder="8.7"
+                style={{ ...inputStyle, width: 86, padding: "8px 12px", textAlign: "right" }}
               />
               <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>%</span>
             </div>
@@ -714,6 +761,10 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
           )}
         </div>
 
+        {saveError && (
+          <div style={{ marginBottom: 12, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13 }}>{saveError}</div>
+        )}
+
         {/* Save */}
         <button
           onClick={handleSave}
@@ -725,7 +776,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
             fontSize: 16, fontWeight: 800, cursor: clientFirst.trim() ? "pointer" : "default",
           }}
         >
-          {saving ? "Saving…" : "Save Estimate"}
+          {saving ? "Saving..." : "Save Estimate"}
         </button>
       </div>
     </>
@@ -749,11 +800,13 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
   const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">("view")
   const [editItems, setEditItems] = useState<LineItem[]>([])
   const [editTax, setEditTax] = useState(0)
+  const [editTaxInput, setEditTaxInput] = useState("")
   const [editName, setEditName] = useState("")
   const [editPhone, setEditPhone] = useState("")
   const [editEmail, setEditEmail] = useState("")
   const [editAddress, setEditAddress] = useState("")
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
   const [sending, setSending] = useState<"email" | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -794,6 +847,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
   function startEdit() {
     setEditItems(items.map(i => ({ ...i })))
     setEditTax(est.tax_rate)
+    setEditTaxInput(taxInputFromRate(est.tax_rate))
     setEditName(est.client_name)
     setEditPhone(est.client_phone ?? "")
     setEditEmail(est.client_email ?? "")
@@ -813,12 +867,24 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
   function removeEditItem(i: number) { setEditItems(prev => prev.filter((_, idx) => idx !== i)) }
 
+  function handleEditTaxInput(value: string) {
+    setEditTaxInput(value)
+    setEditTax(taxRateFromInput(value))
+  }
+
   async function handleSaveEdit() {
+    if (saving) return
     setSaving(true)
-    await onUpdate({ client_name: editName, client_phone: editPhone, client_email: editEmail, property_address: editAddress, line_items: editItems, tax_rate: editTax })
-    setFullEstimate(prev => prev ? { ...prev, client_name: editName, client_phone: editPhone || null, client_email: editEmail || null, property_address: editAddress || null, tax_rate: editTax, estimate_line_items: editItems } : null)
-    setSaving(false)
-    setMode("view")
+    setSaveError(null)
+    try {
+      await onUpdate({ client_name: editName, client_phone: editPhone, client_email: editEmail, property_address: editAddress, line_items: editItems, tax_rate: editTax })
+      setFullEstimate(prev => prev ? { ...prev, client_name: editName, client_phone: editPhone || null, client_email: editEmail || null, property_address: editAddress || null, tax_rate: editTax, estimate_line_items: editItems } : null)
+      setMode("view")
+    } catch {
+      setSaveError("Could not save changes. Try again.")
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleSendOption(method: "email" | "sms" | "link") {
@@ -835,7 +901,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
     if (method === "sms") {
       const firstName = (est.client_name ?? "there").split(" ")[0]
       const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.total)
-      const msg = `Hi ${firstName}, I put together your estimate${est.property_address ? ` for ${est.property_address}` : ""} — ${totalFmt}. You can view all the details and approve it right here: ${link}`
+      const msg = `Hi ${firstName}, I put together your estimate${est.property_address ? ` for ${est.property_address}` : ""} - ${totalFmt}. You can view all the details and approve it right here: ${link}`
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       window.open(`sms:${est.client_phone}${isIOS ? "&" : "?"}body=${encodeURIComponent(msg)}`, "_self")
       await onSend("sms")
@@ -886,7 +952,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Send Estimate</h2>
-              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
+              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>x</button>
             </div>
 
             {/* Summary pill */}
@@ -932,7 +998,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{sending === "email" ? "Sending…" : "Email"}</div>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{sending === "email" ? "Sending..." : "Email"}</div>
                 <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{est.client_email ?? "No email on file"}</div>
               </div>
               {est.client_email && sending !== "email" && (
@@ -1087,8 +1153,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
                       <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {item.quantity} {item.unit || "×"} {fmt(item.unit_price)}
-                        {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>· {item.category}</span>}
+                        {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
+                        {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>}
                       </div>
                     </div>
                     <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
@@ -1161,7 +1227,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                   {est.accepted_at && (
                     <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
                       {new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
-                      {est.deposit_amount && est.deposit_paid_at ? ` · ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)} deposit received` : ""}
+                      {est.deposit_amount && est.deposit_paid_at ? ` - ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)} deposit received` : ""}
                     </div>
                   )}
                 </div>
@@ -1197,7 +1263,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Edit Estimate</h2>
-              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
+              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>x</button>
             </div>
 
             <div style={{ marginBottom: 20 }}>
@@ -1214,7 +1280,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <p style={{ ...labelStyle, margin: 0 }}>Line Items</p>
+                <p style={{ ...labelStyle, margin: 0 }}>Work & pricing</p>
                 <button onClick={() => setAddingItem(v => !v)} style={{ padding: "5px 12px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`, backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Add</button>
               </div>
               {rateSheet.length > 0 && (
@@ -1231,7 +1297,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                   <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Description *" style={{ ...inputStyle, marginBottom: 8 }} />
                   <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 100px", gap: 8, marginBottom: 8 }}>
                     <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" placeholder="Qty" style={inputStyle} />
-                    <input value={newUnit} onChange={e => setNewUnit(e.target.value)} placeholder="Unit" style={inputStyle} />
+                    <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>{UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}</select>
                     <input value={newPrice} onChange={e => setNewPrice(e.target.value)} type="number" placeholder="Price" style={inputStyle} />
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
@@ -1244,10 +1310,10 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 4 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ color: "white", fontSize: 14, fontWeight: 600 }}>{item.description}</div>
-                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{item.quantity} {item.unit || "×"} {fmt(item.unit_price)}</div>
+                    <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>{item.quantity} {item.unit || "x"} {fmt(item.unit_price)}</div>
                   </div>
                   <div style={{ color: "white", fontSize: 14, fontWeight: 700 }}>{fmt(item.quantity * item.unit_price)}</div>
-                  <button onClick={() => removeEditItem(i)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+                  <button onClick={() => removeEditItem(i)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.25)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>x</button>
                 </div>
               ))}
             </div>
@@ -1257,7 +1323,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 14, fontWeight: 600 }}>Tax rate</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <input type="number" value={editTax === 0 ? "" : (editTax * 100).toFixed(2)} onChange={e => setEditTax(Number(e.target.value) / 100)} placeholder="0" style={{ ...inputStyle, width: 72, padding: "8px 12px", textAlign: "right" }} />
+                  <input type="text" inputMode="decimal" value={editTaxInput} onChange={e => handleEditTaxInput(e.target.value)} placeholder="8.7" style={{ ...inputStyle, width: 86, padding: "8px 12px", textAlign: "right" }} />
                   <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>%</span>
                 </div>
               </div>
@@ -1271,10 +1337,13 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
               )}
             </div>
 
+            {saveError && (
+              <div style={{ marginBottom: 12, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13 }}>{saveError}</div>
+            )}
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setMode("view")} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleSaveEdit} disabled={saving || !editName.trim()} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: editName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: editName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                {saving ? "Saving…" : "Save Changes"}
+                {saving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </>
@@ -1337,7 +1406,7 @@ function ActivityTimeline({ estimate: est }: { estimate: Estimate }) {
 
   if (est.deposit_paid_at) {
     events.push({
-      label: `Deposit paid${est.deposit_amount ? ` — ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)}` : ""}`,
+      label: `Deposit paid${est.deposit_amount ? ` - ${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.deposit_amount)}` : ""}`,
       time: est.deposit_paid_at,
       color: "#30D158",
       icon: <svg {...iconProps} stroke="#30D158"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>,
@@ -1425,7 +1494,7 @@ function RateSheetManager({ items, onChange, onClose }: {
           <div style={{ borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}33`, padding: 16, marginBottom: 16, backgroundColor: `${SIGNAL_GREEN}08` }}>
             <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Service description *" style={{ ...inputStyle, marginBottom: 8 }} />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 120px", gap: 8, marginBottom: 8 }}>
-              <input value={unit} onChange={e => setUnit(e.target.value)} placeholder="Unit (sq ft, hr, each…)" style={inputStyle} />
+              <select value={unit} onChange={e => setUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>{UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}</select>
               <input value={price} onChange={e => setPrice(e.target.value)} type="number" placeholder="Price" style={inputStyle} />
             </div>
             <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
@@ -1454,10 +1523,10 @@ function RateSheetManager({ items, onChange, onClose }: {
                   <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
                   <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
                     {fmt(item.unit_price)} {item.unit ? `/ ${item.unit}` : ""}
-                    <span style={{ marginLeft: 6, textTransform: "capitalize" }}>· {item.category}</span>
+                    <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>
                   </div>
                 </div>
-                <button onClick={() => setLocal(prev => prev.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>×</button>
+                <button onClick={() => setLocal(prev => prev.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.2)", cursor: "pointer", fontSize: 18, lineHeight: 1 }}>x</button>
               </div>
             ))}
           </div>
@@ -1466,7 +1535,7 @@ function RateSheetManager({ items, onChange, onClose }: {
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={onClose} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
           <button onClick={handleSave} disabled={saving} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            {saving ? "Saving…" : "Save Services"}
+            {saving ? "Saving..." : "Save Services"}
           </button>
         </div>
       </div>

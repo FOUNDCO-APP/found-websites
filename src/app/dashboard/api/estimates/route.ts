@@ -12,7 +12,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("estimates")
-    .select("id, estimate_number, client_name, client_phone, client_email, title, property_address, status, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, stripe_payment_intent_id, created_at, updated_at")
+    .select("id, estimate_number, client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, paid_at, receipt_sent_at, stripe_payment_intent_id, created_at, updated_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
     .limit(200)
@@ -33,8 +33,9 @@ export async function POST(req: Request) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { client_name, client_phone, client_email, title, property_address, ai_prompt, line_items = [], tax_rate = 0 } = body
-  if (!client_name?.trim()) return NextResponse.json({ error: "Client name required" }, { status: 400 })
+  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, ai_prompt, line_items = [], tax_rate = 0 } = body
+  const fullName = String(client_name ?? [client_first_name, client_last_name].filter(Boolean).join(" ")).trim()
+  if (!fullName) return NextResponse.json({ error: "Client name required" }, { status: 400 })
 
   const items = line_items.map((item: Record<string, unknown>, i: number) => ({
     description: String(item.description ?? ""),
@@ -65,7 +66,10 @@ export async function POST(req: Request) {
     .from("estimates")
     .insert({
       company_id: company.id,
-      client_name: client_name.trim(),
+      client_name: fullName,
+      client_first_name: client_first_name?.trim() || null,
+      client_last_name: client_last_name?.trim() || null,
+      client_company: client_company?.trim() || null,
       client_phone: client_phone?.trim() || null,
       client_email: client_email?.trim() || null,
       title: title?.trim() || null,

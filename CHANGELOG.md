@@ -4,6 +4,33 @@
 
 ---
 
+## Session: July 2, 2026 - Estimates Replan: Payable Estimates First
+**AI:** Codex
+**Worked on:** Recovered Claude Code context, reviewed estimate implementation, held product/team planning session, and locked the next estimate rebuild sequence before continuing.
+
+### Completed
+- Reviewed current estimate system: dashboard builder, public `/q/[id]`, print/PDF page, accept/pay/decline APIs, Stripe deposit PaymentIntent, and webhook backup.
+- Confirmed current code only partially matches Shawn's intended Session 3: it supports `Accept & Pay [deposit] Deposit`, but does not yet support a quiet `Accept now, pay later`, payment-link email, customer receipt email from Found, accepted/unpaid state, or invoice mode.
+- Locked product direction: the estimate page is the emotional decision moment. Found should convert the customer's yes into payment immediately instead of defaulting to a separate invoice later.
+- Locked invoice direction: invoice mode is real, but should be a sibling mode inside the same estimates/payments tool after payable estimates are stable. Do not build a separate POS system yet.
+- Updated `DECISIONS.md` with payable-estimate and invoice-mode decisions.
+- Updated `TASKS.md` with Session 3, 4, 5, and later invoice/POS-lite handoff.
+- Implemented Session 3 core flow in code: split client fields persist through estimate create/update; public estimate CTA supports wallet-capable Stripe Payment Element with automatic payment methods; paid/deposit-paid states are recorded; customer receipt emails send after payment; owner gets paid/accepted notifications.
+- Implemented quiet `Accept now, pay later` link on the public estimate page. It marks the estimate accepted/unpaid, sends the customer a payment-link email, and keeps the same public estimate page payable.
+- Updated Stripe webhook backup so `payment_intent.succeeded` also records `payment_status`, `accepted_payment_choice`, `paid_at` for full payment, owner notification, and customer receipt when the webhook is the first confirmation path.
+- Applied migration 046 to Supabase on July 2, 2026 and verified the new estimate columns exist: split client fields, payment status, accepted payment choice, pay-later/payment-link timestamps, paid timestamp, and receipt timestamp.
+- Verified with `cmd /c npm run build` on July 2, 2026.
+- During live testing, fixed visibility/payment ambiguity: no-Stripe public estimates now show `Payments are not set up yet` and an explicit `Accept Without Paying` fallback instead of silently accepting like a payment flow happened.
+- Improved estimate builder test friction: tax accepts normal percent input like `8.7`, line-item unit is a common-unit dropdown with `No unit`, manual item prompt now asks `What are you doing?`, and save failures surface a visible error.
+- Restarted local dev server on port 3000 so localhost reflects current files.
+
+### Next Sessions
+1. **Immediate next step** - QA one public estimate end to end with Stripe test mode: create, send/open public page, Accept & Pay, receipt/owner email, paid public state.
+2. **Session 4: Dashboard payment-link polish** - show accepted/unpaid and paid/deposit-paid clearly in dashboard, add resend payment link, and polish receipt/payment-link copy.
+3. **Session 5: AI estimate builder** - prompt-to-line-items from My Services/future catalog, owner review required before send.
+4. **Later: Invoice mode / POS-lite** - invoice mode in the same tool for verbal approvals or completed work; POS-lite only after invoices prove the need.
+
+---
 ## Session: July 2, 2026 — Estimates: Session 2 (Client Autocomplete, Google Places, Default Tax, Services)
 **AI:** Claude Code (Sonnet 4.6)
 **Commit:** pending

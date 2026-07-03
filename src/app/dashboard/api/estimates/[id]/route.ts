@@ -40,16 +40,23 @@ export async function PATCH(req: Request, { params }: Params) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { client_name, client_phone, client_email, title, property_address, status, line_items, tax_rate, sent_at, accepted_at } = body
+  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, line_items, tax_rate, sent_at, accepted_at } = body
 
   const admin = createAdminClient()
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (client_name !== undefined) updates.client_name = client_name?.trim() || null
+  if (client_first_name !== undefined) updates.client_first_name = client_first_name?.trim() || null
+  if (client_last_name !== undefined) updates.client_last_name = client_last_name?.trim() || null
+  if (client_company !== undefined) updates.client_company = client_company?.trim() || null
   if (client_phone !== undefined) updates.client_phone = client_phone?.trim() || null
   if (client_email !== undefined) updates.client_email = client_email?.trim() || null
   if (title !== undefined) updates.title = title?.trim() || null
   if (property_address !== undefined) updates.property_address = property_address?.trim() || null
   if (status !== undefined) updates.status = status
+  if (payment_status !== undefined) updates.payment_status = payment_status
+  if (accepted_payment_choice !== undefined) updates.accepted_payment_choice = accepted_payment_choice
+  if (accepted_pay_later_at !== undefined) updates.accepted_pay_later_at = accepted_pay_later_at
+  if (payment_link_sent_at !== undefined) updates.payment_link_sent_at = payment_link_sent_at
   if (sent_at !== undefined) updates.sent_at = sent_at
   if (accepted_at !== undefined) updates.accepted_at = accepted_at
 

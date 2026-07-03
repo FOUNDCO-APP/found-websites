@@ -63,7 +63,7 @@ function stripeAppearance(color: string): StripeElementsOptions["appearance"] {
   }
 }
 
-// ── Payment form (inside Elements) ─────────────────────────────────────────────
+// Payment form inside Elements
 
 function PaymentForm({
   estimateId,
@@ -139,7 +139,7 @@ function PaymentForm({
           You&apos;re all set!
         </h3>
         <p style={{ margin: "0 0 6px", color: "#5F5F5A", fontSize: 15, lineHeight: 1.6 }}>
-          {fmt(depositAmount)} deposit received.
+          {remaining > 0 ? `${fmt(depositAmount)} deposit received.` : `${fmt(depositAmount)} payment received.`}
         </p>
         <p style={{ margin: "0 0 4px", color: "#777772", fontSize: 14, lineHeight: 1.6 }}>
           {companyName} has been notified and will be in touch to schedule your project.
@@ -165,7 +165,7 @@ function PaymentForm({
           {fmt(depositAmount)}
         </div>
         <div style={{ fontSize: 13, color: "#777772", marginTop: 8 }}>
-          Full estimate: {fmt(total)} &nbsp;·&nbsp; {fmt(remaining)} at completion
+          Full estimate: {fmt(total)} &nbsp;-&nbsp; {fmt(remaining)} at completion
         </div>
       </div>
 
@@ -189,7 +189,7 @@ function PaymentForm({
           letterSpacing: "-0.01em", transition: "all 0.15s ease",
         }}
       >
-        {paying ? "Processing…" : `Pay ${fmt(depositAmount)} Now`}
+        {paying ? "Processing..." : `Pay ${fmt(depositAmount)} Now`}
       </button>
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 14, marginBottom: 4 }}>
@@ -209,7 +209,7 @@ function PaymentForm({
   )
 }
 
-// ── Payment sheet wrapper ───────────────────────────────────────────────────────
+// Payment sheet wrapper
 
 function PaymentSheet({
   setup,
@@ -248,7 +248,7 @@ function PaymentSheet({
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <div>
             <h2 style={{ margin: "0 0 3px", color: "#111", fontSize: "1.125rem", fontWeight: 700, letterSpacing: "-0.01em" }}>
-              Complete Your Deposit
+              {setup.depositPct >= 100 ? "Complete Your Payment" : "Complete Your Deposit"}
             </h2>
             <p style={{ margin: 0, color: "#777772", fontSize: 13 }}>{companyName}</p>
           </div>
@@ -256,7 +256,7 @@ function PaymentSheet({
             onClick={onClose}
             style={{ width: 32, height: 32, borderRadius: 10, border: "1px solid #E8E8E2", backgroundColor: "white", color: "#777772", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, lineHeight: 1 }}
           >
-            ×
+            x
           </button>
         </div>
         <Elements stripe={stripePromise} options={{ clientSecret: setup.clientSecret, appearance: stripeAppearance(color) }}>
@@ -276,7 +276,7 @@ function PaymentSheet({
   )
 }
 
-// ── Main export ────────────────────────────────────────────────────────────────
+// Main export
 
 export default function AcceptButton({
   estimateId,
@@ -285,6 +285,7 @@ export default function AcceptButton({
   total,
   depositPct,
   companyName,
+  acceptedAlready = false,
 }: {
   estimateId: string
   color: string
@@ -292,13 +293,17 @@ export default function AcceptButton({
   total: number
   depositPct: number
   companyName: string
+  acceptedAlready?: boolean
 }) {
-  const [accepted, setAccepted] = useState(false)
+  const [accepted, setAccepted] = useState(acceptedAlready)
   const [loading, setLoading] = useState(false)
   const [paymentSetup, setPaymentSetup] = useState<PaymentSetup | null>(null)
+  const [payLaterAccepted, setPayLaterAccepted] = useState(false)
 
   const hasStripe = Boolean(stripeAccountId)
-  const depositAmount = total * (depositPct / 100)
+  const depositAmount = depositPct >= 100 ? total : total * (depositPct / 100)
+  const remainingAmount = Math.max(total - depositAmount, 0)
+  const primaryLabel = acceptedAlready ? `Pay ${fmt(depositAmount)}${remainingAmount > 0 ? " Deposit" : " Now"}` : (depositPct >= 100 ? `Accept & Pay Now` : `Accept & Pay ${fmt(depositAmount)} Deposit`)
 
   async function handleSimpleAccept() {
     if (loading || accepted) return
@@ -310,6 +315,21 @@ export default function AcceptButton({
     } catch { setLoading(false) }
   }
 
+  async function handlePayLater() {
+    if (loading || accepted || payLaterAccepted) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/accept-estimate/${estimateId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pay_later: true }),
+      })
+      if (!res.ok) throw new Error("Accept failed")
+      setPayLaterAccepted(true)
+    } catch {
+      setLoading(false)
+    }
+  }
   async function handleOpenPayment() {
     if (loading) return
     setLoading(true)
@@ -319,7 +339,7 @@ export default function AcceptButton({
       if (data.clientSecret) {
         setPaymentSetup(data)
       } else {
-        // Stripe not ready on server — fall back to plain accept
+        // Stripe not ready on server; fall back to plain accept.
         await handleSimpleAccept()
         return
       }
@@ -330,7 +350,16 @@ export default function AcceptButton({
     setLoading(false)
   }
 
-  if (accepted) {
+  if (payLaterAccepted) {
+    return (
+      <div style={{ borderRadius: 20, backgroundColor: `${color}12`, border: `1px solid ${color}30`, padding: "24px 22px", textAlign: "center", marginBottom: 16 }}>
+        <div style={{ color, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
+        <div style={{ color: "#777772", fontSize: 14, lineHeight: 1.55 }}>We sent a secure payment link to your email. You can still pay from this page when you&apos;re ready.</div>
+      </div>
+    )
+  }
+
+  if (accepted && !acceptedAlready) {
     return (
       <div style={{ borderRadius: 20, backgroundColor: `${color}12`, border: `1px solid ${color}30`, padding: "24px 22px", textAlign: "center", marginBottom: 16 }}>
         <div style={{ marginBottom: 10 }}>
@@ -340,6 +369,24 @@ export default function AcceptButton({
         </div>
         <div style={{ color, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
         <div style={{ color: "#777772", fontSize: 14 }}>Thank you! We&apos;ll be in touch shortly.</div>
+      </div>
+    )
+  }
+
+  if (!hasStripe) {
+    return (
+      <div style={{ borderRadius: 20, backgroundColor: "rgba(255,159,10,0.08)", border: "1px solid rgba(255,159,10,0.24)", padding: "20px 18px", textAlign: "center", marginBottom: 16 }}>
+        <div style={{ color: "#B87500", fontSize: 16, fontWeight: 800, marginBottom: 6 }}>Payments are not set up yet</div>
+        <div style={{ color: "#777772", fontSize: 14, lineHeight: 1.55 }}>This estimate can be accepted, but online payment is not available for this business yet.</div>
+        {!acceptedAlready && (
+          <button
+            onClick={handleSimpleAccept}
+            disabled={loading}
+            style={{ width: "100%", marginTop: 14, padding: "15px 0", borderRadius: 16, border: "none", backgroundColor: color, color: contrastColor(color), fontSize: 15, fontWeight: 800, cursor: loading ? "default" : "pointer", opacity: loading ? 0.7 : 1 }}
+          >
+            {loading ? "Confirming..." : "Accept Without Paying"}
+          </button>
+        )}
       </div>
     )
   }
@@ -359,11 +406,20 @@ export default function AcceptButton({
               letterSpacing: "-0.01em", opacity: loading ? 0.7 : 1, transition: "opacity 0.15s",
             }}
           >
-            {loading ? "Loading…" : `Accept & Pay ${fmt(depositAmount)} Deposit`}
+            {loading ? "Loading..." : primaryLabel}
           </button>
           <p style={{ margin: "10px 0 0", textAlign: "center", color: "#666", fontSize: 13 }}>
-            {depositPct}% deposit now &nbsp;·&nbsp; {fmt(total - depositAmount)} due at completion
+            {remainingAmount > 0 ? `${depositPct}% deposit now - ${fmt(remainingAmount)} due at completion` : "Pay securely now"}
           </p>
+          {!acceptedAlready && (
+            <button
+              onClick={handlePayLater}
+              disabled={loading || payLaterAccepted}
+              style={{ display: "block", width: "100%", marginTop: 12, border: "none", background: "transparent", color: "#777772", fontSize: 13, fontWeight: 600, cursor: loading ? "default" : "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}
+            >
+              Accept now, pay later
+            </button>
+          )}
         </>
       ) : (
         <>
@@ -378,7 +434,7 @@ export default function AcceptButton({
               letterSpacing: "-0.01em", opacity: loading ? 0.7 : 1, transition: "opacity 0.15s",
             }}
           >
-            {loading ? "Confirming…" : "Accept This Estimate"}
+            {loading ? "Confirming..." : "Accept This Estimate"}
           </button>
           <p style={{ margin: "10px 0 0", textAlign: "center", color: "#666", fontSize: 13 }}>
             By accepting, you agree to proceed with the work as described above.

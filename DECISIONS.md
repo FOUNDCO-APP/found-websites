@@ -288,6 +288,33 @@ Why: Contractors and service businesses live on quotes. This is their #1 admin t
 Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
 Why: Service businesses do not just send estimates. They need the full flow: quote, client approval, deposit, work, final invoice, final payment, receipt. Stripe should handle payments; Found should make the workflow simple.
 
+**[2026-07-02] - Payable estimates are the primary customer path; invoices are a fallback/sibling mode, not the default.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair + Marcus Webb
+Why: The customer's emotional decision happens when they read the estimate and decide "yes." Most estimating tools break that moment by sending a separate invoice later. Found should collapse that gap: the public estimate page must make the next step feel natural, immediate, and modern.
+
+Locked product direction:
+- The default customer CTA is **Accept & Pay** from the estimate page.
+- If a deposit is configured, copy is **Accept & Pay Deposit**.
+- If full payment is due, copy is **Accept & Pay Now**.
+- Stripe Payment Element should stay embedded so Apple Pay, Google Pay, and cards can appear in the same organic flow where Stripe/account/domain settings allow.
+- A quiet secondary text link, **Accept now, pay later**, exists for legitimate cases where the customer is ready to approve but cannot pay immediately.
+- Pay-later must not become the default invoice detour. It marks the estimate accepted, keeps the same public page payable, and sends a payment-link email.
+- Customer receives a clean receipt/payment confirmation after payment. Owner receives the "you got one" notification.
+
+Implementation principle:
+Build **payable estimates** first. Do not build a full invoice system before the estimate decision moment is solved.
+
+**[2026-07-02] - Invoice mode belongs inside the same estimates/payments tool, after payable estimates are stable.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: Some owners do the work after a verbal on-site yes and only need to collect payment. That is real, but it should reuse the same client, line item, tax, payment, receipt, and email engine. A separate POS product would be too much too early.
+
+Locked product direction:
+- Add invoice mode as a sibling to estimates: **Estimates | Invoices** or **New Estimate / New Invoice**.
+- Estimate means "approve this work."
+- Invoice means "this was agreed/done; pay this amount."
+- Invoice mode skips the accept step and sends or opens a payment page directly.
+- Do not call this POS yet. Future simple language: **Send Invoice**, **Collect Payment**, **Take Payment Now**.
+- POS-lite can come later for standing-at-the-counter payment, but the next product step is invoice mode sharing the estimate line-item/payment engine.
 **[2026-05-28] — Upgrade: Shopping Cart (simplified, not Shopify)**
 Approved by: Steve Jobs
 Why: T-shirt sellers, product makers, food businesses need to sell. Keep it elegant and simple.

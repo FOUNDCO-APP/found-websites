@@ -105,6 +105,9 @@ export default async function EstimateClientPage({
 
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
+  const paymentStatus = estimate.payment_status ?? (estimate.deposit_paid_at ? "deposit_paid" : "unpaid")
+  const isPaid = paymentStatus === "paid" || paymentStatus === "deposit_paid" || Boolean(estimate.deposit_paid_at)
+  const isAcceptedUnpaid = isAccepted && !isPaid
   let isExpired = estimate.status === "expired"
 
   if (!isAccepted && !isDeclined && !isExpired && estimate.valid_until && new Date(estimate.valid_until) < new Date()) {
@@ -112,7 +115,7 @@ export default async function EstimateClientPage({
     await admin.from("estimates").update({ status: "expired", updated_at: new Date().toISOString() }).eq("id", id)
   }
 
-  const isClosed = isAccepted || isDeclined || isExpired
+  const isClosed = (isAccepted && isPaid) || isDeclined || isExpired
 
   const clientDisplayName = estimate.client_company
     ? estimate.client_company
@@ -328,7 +331,7 @@ export default async function EstimateClientPage({
           )}
 
           {/* CTA */}
-          {!isClosed && (
+          {!isDeclined && !isExpired && !isPaid && (
             <div style={{ marginBottom: 16 }}>
               <AcceptButton
                 estimateId={id}
@@ -337,8 +340,9 @@ export default async function EstimateClientPage({
                 total={estimate.total}
                 depositPct={(estimate.deposit_pct as number) ?? 50}
                 companyName={company.name}
+                acceptedAlready={isAcceptedUnpaid}
               />
-              <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />
+              {!isAccepted && <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />}
             </div>
           )}
 

@@ -16,10 +16,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Found Business E2E retest** — verify More page order is My Site → My Dock → included/tools → My Plan, refresh no longer repeats display-name prompt, all included tools appear free, public Business tools work, checkout gates allow Business, and $69 intro rate still holds.
-2. **Fix issues found in Business test** — bugs, copy, UX gaps surfaced during the full customer flow.
-3. **Run migration 043 if needed** — `social_post_drafts` table for saved social post drafts.
-
+1. **QA payable estimates end to end** - migration 046 is applied. Test create -> send/open public page -> Accept & Pay -> receipt/owner email -> paid public state in Stripe test mode.
+2. **Estimates Session 4: Dashboard payment-link polish** - show `Accepted, unpaid`, `Deposit paid`, and `Paid`; add owner resend payment link; polish receipt/payment-link emails and dashboard actions.
+3. **Estimates Session 5: AI estimate builder** - owner types or speaks the job, Found drafts editable line items from My Services/future catalog, owner reviews/edits, then sends. AI never sends automatically.
 ---
 
 ## RECENTLY COMPLETED (June 24, 2026 — Codex + Claude session)
@@ -118,6 +117,53 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Display-name prompt save closes and does not return (carry from last session)
 
 ---
+
+## ESTIMATES REBUILD HANDOFF (July 2, 2026)
+
+### Product Goal
+The estimate page is the decision moment. Found should get the customer from "yes" to payment while the emotion is still warm. Do not force the standard estimate -> separate invoice -> later payment pathway unless the customer truly needs it.
+
+### Current State
+- Built: public estimate page, print/PDF page, decline flow, expiration, sequential estimate numbers, default tax, lead/client autocomplete, Google Places proxy, embedded Stripe Payment Element, pay-now/deposit flow, quiet pay-later acceptance, payment-link email, customer receipt email, owner notification, and webhook backup for paid deposits.
+- Missing: dashboard polish for `Accepted, unpaid` / `Deposit paid` / `Paid`, owner resend payment link, manual QA with Stripe test mode, invoice mode, and AI line-item generation.
+- Completed cleanup: builder split client fields now persist through estimate create/update APIs.
+
+### Session 3 - Modern Accept & Pay (Code Implemented, Needs Migration + QA)
+- Done: persist split client fields end to end.
+- Done in code and database: payment status fields for `unpaid`, `deposit_paid`, `paid`, accepted payment choice, pay-later time, payment-link sent time, paid time, and receipt sent time. Migration 046 was applied to Supabase on July 2, 2026 and verified against `information_schema.columns`.
+- Done: primary CTA on public estimate is `Accept & Pay Deposit` or `Accept & Pay Now`.
+- Done: embedded Stripe Payment Element uses Stripe automatic payment methods so wallet eligibility can surface Apple Pay, Google Pay, and card where available.
+- Done: on payment success, mark accepted and paid/deposit-paid, show a human success state, email receipt/confirmation to customer, notify owner. Webhook fallback mirrors this path.
+
+### Session 4 - Pay Later Without Making It The Default
+- Done: quiet secondary text link `Accept now, pay later` exists under the main payment CTA.
+- Done: pay-later marks estimate accepted/unpaid and sends the customer a payment-link email.
+- Done: public estimate page remains payable after accepted/unpaid until paid.
+- Dashboard shows `Accepted, unpaid` and lets owner resend payment link.
+- Keep invoice language as a fallback/admin convenience, not the default customer path.
+
+### Session 5 - AI Estimate Builder
+- Owner describes the job in natural language.
+- Found drafts line items from My Services and, later, the unified catalog.
+- Suggested quantities, units, descriptions, and prices are editable.
+- AI-generated items are marked internally.
+- Owner must review and send manually.
+
+### Test After Each Estimate Session
+1. Run `cmd /c npm run build` and confirm TypeScript plus page generation pass.
+2. Create a new estimate in the dashboard with first name, last name, email, phone, property/job address, tax, and at least two line items.
+3. Save, reopen, and confirm client split fields, totals, tax, deposit amount, and line items persisted.
+4. Open the public `/q/[id]` page on mobile width and desktop width.
+5. Test primary pay path in Stripe test mode: `Accept & Pay Deposit` or `Accept & Pay Now`, complete payment, confirm success state, customer receipt email, owner email, and public page no longer allows decline.
+6. Test secondary path on a fresh estimate: `Accept now, pay later`, confirm accepted/unpaid state, customer payment-link email, owner accepted email, and same public page still lets the customer pay.
+7. Check dashboard list/detail status labels for the touched estimate: draft/sent, accepted unpaid, deposit paid, paid, declined, expired as applicable.
+8. Run `git diff --check` and record the exact test result in `CHANGELOG.md` before ending the session.
+### Later - Invoice Mode / POS-Lite
+- Add invoice mode as a sibling inside the same tool: `Estimates | Invoices` or `New Estimate / New Invoice`.
+- Invoice means the work was verbally agreed/done and the owner needs payment now.
+- Reuse the same client, line-item, tax, payment, receipt, and email engine.
+- Do not build a separate POS system yet. Future simple language: `Send Invoice`, `Collect Payment`, `Take Payment Now`.
+
 ## BACKLOG
 
 ### Add-Ons & Monetization
