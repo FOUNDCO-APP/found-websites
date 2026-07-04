@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 3, 2026 - Payment Setup Route Fix
+**AI:** Codex
+**Worked on:** Shawn found that payment setup failed from both accepted estimate detail and More. The setup button was calling the wrong API path.
+
+### Completed
+- Fixed `PaymentSetupButton` to call `/dashboard/api/payments/connect`, which is the actual Stripe Connect setup route.
+- Preserved the Stripe Connect route, return paths, payment setup UI, estimate detail UI, and More page UI.
+- This should let the Set up payments buttons open Stripe Express onboarding instead of showing the generic setup error.
+
+### Must Test
+- From an accepted estimate detail, tap `Set up` under Online payments and confirm Stripe setup opens.
+- From More, tap `Set up deposit payments` and confirm Stripe setup opens.
+- Complete Stripe setup for the test slug, return to Found, then confirm the estimate detail no longer shows payments as off.
+- Open a public estimate link and confirm the Accept & Pay path appears when Stripe is connected.
+
+### Next
+1. Complete Stripe Express setup for the test business/slug.
+2. Test public Accept & Pay with Stripe test card `4242 4242 4242 4242` if the environment is using Stripe test keys.
+3. Verify dashboard status, activity, owner email, and customer receipt after payment.
+
+---
 ## Session: July 3, 2026 - Estimate Send Options Polish
 **AI:** Codex
 **Worked on:** Shawn approved the team direction to polish the Send/Resend Estimate options screen so the customer-send handoff feels clean, confident, and less like stacked database cards.
