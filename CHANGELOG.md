@@ -4,6 +4,36 @@
 
 ---
 
+## Session: July 3, 2026 - Stripe Connect Readiness Guard
+**AI:** Codex
+**Worked on:** Shawn found a false positive after opening Stripe onboarding and closing it. Found stored the Stripe Connect account ID immediately, then treated the business as payment-ready even though onboarding was not complete.
+
+### Team Decision
+- Jony/Steve: Never expose a customer payment path unless the business can actually take payment.
+- Craig: Separate "Stripe account created" from "Stripe payments ready" and make the server fail closed.
+- Priya: Readiness must come from Stripe account status, not from a local ID existing in Supabase.
+
+### Completed
+- Added a shared Stripe Connect readiness helper that requires the account to be submitted, charges-enabled, and capability-active.
+- Dashboard company status now returns `stripe_connect_ready` separately from `stripe_connect_account_id`.
+- Estimates and More now keep the setup prompt visible when onboarding was started but abandoned.
+- Public estimate pages only expose Accept & Pay when the connected account is actually ready.
+- Estimate payment creation now rejects incomplete Connect accounts server-side.
+- Online order, menu, and shop checkout entry points now use the same readiness rule.
+- Online order and shopping cart checkout APIs now reject incomplete Connect accounts before creating PaymentIntents.
+
+### Must Test
+- Start Stripe setup, close onboarding before finishing, return to Found, and confirm `Set up` is still visible.
+- Tap `Set up` again and confirm Stripe onboarding resumes for the existing account.
+- Open a public estimate before onboarding is complete and confirm the client cannot enter a card payment path.
+- Complete Stripe onboarding, refresh Found, and confirm the setup prompt disappears and Accept & Pay appears.
+
+### Next
+1. Complete the Stripe onboarding test once this deploy is live.
+2. Retest public estimate Accept & Pay with a Stripe test card if the environment is using test keys.
+3. Verify the owner dashboard, client page, order page, and shop page all agree on payment readiness.
+
+---
 ## Session: July 3, 2026 - Stripe Connect Setup 500 Fix
 **AI:** Codex
 **Worked on:** Shawn reported `Payment setup failed (500): No response body`. Craig traced the failure into the Stripe Connect setup route and fixed the likely Stripe account creation issue while making route failures return JSON.

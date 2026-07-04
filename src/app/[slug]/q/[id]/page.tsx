@@ -3,6 +3,7 @@ import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import AcceptButton from "./AcceptButton"
 import DeclineButton from "./DeclineButton"
+import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 export const dynamic = "force-dynamic"
 
@@ -83,6 +84,8 @@ export default async function EstimateClientPage({
 
   const items = [...(estimate.estimate_line_items ?? [])].sort((a, b) => a.sort_order - b.sort_order)
   const color = company.primary_color ?? "#30D158"
+  const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
+  const payableStripeAccountId = stripeConnect.ready ? company.stripe_connect_account_id : null
   const onColor = contrastColor(color)
   const isLight = onColor === "#000000"
   const companyDisplayName = (() => {
@@ -336,7 +339,7 @@ export default async function EstimateClientPage({
               <AcceptButton
                 estimateId={id}
                 color={color}
-                stripeAccountId={company.stripe_connect_account_id}
+                stripeAccountId={payableStripeAccountId}
                 total={estimate.total}
                 depositPct={(estimate.deposit_pct as number) ?? 50}
                 companyName={company.name}

@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import OnlineOrderClient from "../order/OnlineOrderClient"
+import { getStripeConnectStatus } from "@/lib/stripe/connect"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -54,6 +55,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     .eq("active", true)
     .maybeSingle()
   const onlineOrderingActive = hasAddonAccess(company.plan, "online_ordering", onlineOrderingAddon ? ["online_ordering"] : [])
+  const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 
   return (
     <>
@@ -98,7 +100,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
             slug={slug}
             primary={primary}
             categories={menuCategories}
-            paymentsReady={Boolean(company.stripe_connect_account_id)}
+            paymentsReady={stripeConnect.ready}
             mode="embedded"
           />
         </section>

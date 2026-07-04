@@ -247,7 +247,7 @@ export default function EstimatesPage() {
       }
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
-      setCompanyStripeReady(Boolean(sd.stripe_connect_account_id))
+      setCompanyStripeReady(Boolean(sd.stripe_connect_ready))
       setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
       setLocationBias([sd.city, sd.state].filter(Boolean).join(", "))
       setLeads((ld.leads ?? []).map((l: { id: string; name: string; phone: string | null; email: string | null }) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email })))

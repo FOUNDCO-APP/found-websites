@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import Stripe from "stripe"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
 
 type Params = { params: Promise<{ slug: string; id: string }> }
 
@@ -17,7 +17,11 @@ export async function POST(req: NextRequest, { params }: Params) {
   const connectAccountId = company.stripe_connect_account_id as string | null
   if (!connectAccountId) return NextResponse.json({ error: "No payment account" }, { status: 409 })
 
-  if (!process.env.STRIPE_SECRET_KEY) return NextResponse.json({ error: "Payments not configured" }, { status: 503 })
+  const stripe = getStripe()
+  if (!stripe) return NextResponse.json({ error: "Payments not configured" }, { status: 503 })
+
+  const stripeConnect = await getStripeConnectStatus(connectAccountId)
+  if (!stripeConnect.ready) return NextResponse.json({ error: "Payment account is not ready" }, { status: 409 })
 
   const admin = createAdminClient()
   const { data: estimate } = await admin
@@ -35,7 +39,6 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   if (depositCents < 50) return NextResponse.json({ error: "Deposit amount too small" }, { status: 400 })
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   const paymentIntent = await stripe.paymentIntents.create(
     {
       amount: depositCents,

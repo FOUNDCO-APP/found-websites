@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import OnlineOrderClient from "./OnlineOrderClient"
 import type { Metadata } from "next"
+import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -35,6 +36,8 @@ export default async function OnlineOrderPage({ params, searchParams }: {
 
   if (!hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [])) notFound()
 
+  const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
+
   return (
     <>
       {ordered === "1" && (
@@ -48,7 +51,7 @@ export default async function OnlineOrderPage({ params, searchParams }: {
         slug={slug}
         primary={company.primary_color}
         categories={company.website_config?.menu_items ?? []}
-        paymentsReady={Boolean(company.stripe_connect_account_id)}
+        paymentsReady={stripeConnect.ready}
       />
     </>
   )

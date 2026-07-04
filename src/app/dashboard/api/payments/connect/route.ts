@@ -1,16 +1,12 @@
 import { NextResponse } from "next/server"
-import Stripe from "stripe"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripe } from "@/lib/stripe/connect"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
 
-function getStripe() {
-  if (!process.env.STRIPE_SECRET_KEY) return null
-  return new Stripe(process.env.STRIPE_SECRET_KEY)
-}
 
 function cleanReturnPath(value: unknown) {
   if (typeof value !== "string" || !value.startsWith("/")) return "/more?payments=connected"

@@ -13,6 +13,7 @@ import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 const PLAN_META: Record<string, { label: string; intro: number; normal: number; color: string }> = {
   found:          { label: "Found Starter",  intro: 29, normal: 39,  color: GREEN },
@@ -162,6 +163,8 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const businessIncludedAddons = ALL_ADDONS.filter((a) => BUSINESS_INCLUDED_ADDONS.includes(a.slug))
   const availableAddons = plan === "found_business" ? [] : relevantAddons.filter((a) => !effectiveAddonSlugs.includes(a.slug))
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
+  const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
+  const paymentsReady = stripeConnect.ready
 
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
     const def = ALL_ADDONS.find(a => a.slug === slug)
@@ -238,7 +241,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       </section>
 
       {/* Get Paid Faster — high-value action, shown early */}
-      {company && !company.stripe_connect_account_id && (
+      {company && !paymentsReady && (
         <section style={{ marginBottom: 20 }}>
           <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}28`, backgroundColor: `${GREEN}10` }}>
             <p style={{ margin: "0 0 5px", ...TYPE.caption, fontWeight: 900, letterSpacing: "0.12em", textTransform: "uppercase", color: GREEN }}>
@@ -616,6 +619,3 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
     </main>
   )
 }
-
-
-

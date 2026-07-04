@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
+import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
 import type { MenuCategory } from "@/types/company"
 
 type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number }
@@ -19,7 +19,8 @@ function cleanText(value: unknown, max = 500) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.STRIPE_SECRET_KEY) {
+  const stripe = getStripe()
+  if (!stripe) {
     return NextResponse.json({ error: "Payments are not configured yet." }, { status: 500 })
   }
 
@@ -64,6 +65,11 @@ export async function POST(req: NextRequest) {
   const connectAccountId = company.stripe_connect_account_id as string | null
   if (!connectAccountId) {
     return NextResponse.json({ error: "This business still needs its payout account connected before paid orders can be accepted." }, { status: 409 })
+  }
+
+  const stripeConnect = await getStripeConnectStatus(connectAccountId)
+  if (!stripeConnect.ready) {
+    return NextResponse.json({ error: "This business still needs to finish payment setup before paid orders can be accepted." }, { status: 409 })
   }
 
   const productItems = ((company.website_config as { menu_items?: MenuCategory[] } | null)?.menu_items ?? [])
@@ -121,7 +127,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unable to create the order. Please try again." }, { status: 500 })
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   const paymentIntent = await stripe.paymentIntents.create({
     amount: subtotal,
     currency: "usd",
