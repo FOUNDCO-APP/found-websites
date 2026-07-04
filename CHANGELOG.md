@@ -28,6 +28,33 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate State Filters + Detail Polish
+**AI:** Codex
+**Worked on:** Shawn approved Jony/Steve's next design pass after live testing copy-link, resend, and accepted-state behavior.
+
+### Completed
+- Changed estimate filters from raw database statuses to business-facing state pills: `All`, `Open`, `Viewed`, `Accepted`, and `Declined` only when they have counts.
+- Added `Open` as the grouped state for draft/sent/viewed estimates that still need a decision.
+- Updated list row status behavior so accepted rows show a calm `Accepted` signal in `All`, but do not repeat it inside the `Accepted` filter.
+- Kept viewed rows labeled when they are in `All` or `Open`, while hiding redundant status when already filtered to `Viewed`.
+- Standardized copy action language to `Copy estimate link` across sent/viewed/accepted details.
+- Lightened line items on the detail view by removing the heavy rounded work-item container and using a quieter divider list.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates and confirm the visible pills are `All`, `Open`, `Viewed`, `Accepted`, and only existing states.
+- Tap `Open` and confirm it includes draft/sent/viewed estimates.
+- Tap `Accepted` and confirm accepted rows do not redundantly repeat `Accepted` in every row.
+- Confirm accepted rows still show `Accepted` when viewing `All`.
+- Open a viewed/sent estimate and confirm the copy action says `Copy estimate link`.
+- Open an accepted estimate and confirm the work items feel lighter and still show the correct amounts.
+
+### Next
+1. Shawn/Johnny/Steve approval on the state/filter behavior and lighter detail work items.
+2. Continue payable-estimate QA only after this visual/state pass is accepted.
+3. Keep AI estimate builder blocked until manual and payable estimate flow passes live QA.
+
+---
 ## Session: July 3, 2026 - Estimate Detail Action Hierarchy Correction
 **AI:** Codex
 **Worked on:** Shawn approved the team correction after testing the calmer estimate list and full-screen detail. Jony and Steve identified stale payment-link language and the missing accepted-estimate share/send action as the next blockers.
@@ -163,6 +190,33 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate State Filters + Detail Polish
+**AI:** Codex
+**Worked on:** Shawn approved Jony/Steve's next design pass after live testing copy-link, resend, and accepted-state behavior.
+
+### Completed
+- Changed estimate filters from raw database statuses to business-facing state pills: `All`, `Open`, `Viewed`, `Accepted`, and `Declined` only when they have counts.
+- Added `Open` as the grouped state for draft/sent/viewed estimates that still need a decision.
+- Updated list row status behavior so accepted rows show a calm `Accepted` signal in `All`, but do not repeat it inside the `Accepted` filter.
+- Kept viewed rows labeled when they are in `All` or `Open`, while hiding redundant status when already filtered to `Viewed`.
+- Standardized copy action language to `Copy estimate link` across sent/viewed/accepted details.
+- Lightened line items on the detail view by removing the heavy rounded work-item container and using a quieter divider list.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates and confirm the visible pills are `All`, `Open`, `Viewed`, `Accepted`, and only existing states.
+- Tap `Open` and confirm it includes draft/sent/viewed estimates.
+- Tap `Accepted` and confirm accepted rows do not redundantly repeat `Accepted` in every row.
+- Confirm accepted rows still show `Accepted` when viewing `All`.
+- Open a viewed/sent estimate and confirm the copy action says `Copy estimate link`.
+- Open an accepted estimate and confirm the work items feel lighter and still show the correct amounts.
+
+### Next
+1. Shawn/Johnny/Steve approval on the state/filter behavior and lighter detail work items.
+2. Continue payable-estimate QA only after this visual/state pass is accepted.
+3. Keep AI estimate builder blocked until manual and payable estimate flow passes live QA.
+
+---
 ## Session: July 3, 2026 - Estimate Detail Action Hierarchy Correction
 **AI:** Codex
 **Worked on:** Shawn approved the team correction after testing the calmer estimate list and full-screen detail. Jony and Steve identified stale payment-link language and the missing accepted-estimate share/send action as the next blockers.

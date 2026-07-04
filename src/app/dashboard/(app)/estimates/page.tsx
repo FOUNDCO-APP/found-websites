@@ -188,7 +188,7 @@ export default function EstimatesPage() {
   const [leads, setLeads] = useState<{ id: string; name: string; phone: string | null; email: string | null }[]>([])
   const [locationBias, setLocationBias] = useState("")
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<"all" | "draft" | "sent" | "viewed" | "accepted" | "declined">("all")
+  const [filter, setFilter] = useState<"all" | "open" | "viewed" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showRateSheet, setShowRateSheet] = useState(false)
@@ -233,9 +233,12 @@ export default function EstimatesPage() {
   const selected = estimates.find(e => e.id === selectedId) ?? null
   const [taxInput, setTaxInput] = useState(taxInputFromRate(defaultTaxRate))
 
+  const openStatuses = new Set<Estimate["status"]>(["draft", "sent", "viewed"])
   const filtered = filter === "all"
     ? estimates
-    : estimates.filter(e => e.status === filter)
+    : filter === "open"
+      ? estimates.filter(e => openStatuses.has(e.status))
+      : estimates.filter(e => e.status === filter)
 
   const counts: Record<string, number> = {}
   for (const e of estimates) counts[e.status] = (counts[e.status] ?? 0) + 1
@@ -343,22 +346,26 @@ export default function EstimatesPage() {
       {/* Status filters */}
       {estimates.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
-          {(["all", "draft", "sent", "viewed", "accepted", "declined"] as const).map(f => {
-            const active = filter === f
-            const color = f === "all" ? SIGNAL_GREEN : STATUS_COLORS[f]
-            const count = f === "all" ? estimates.length : (counts[f] ?? 0)
-            if (f !== "all" && !counts[f]) return null
+          {([
+            { key: "all" as const, label: "All", count: estimates.length, color: SIGNAL_GREEN },
+            { key: "open" as const, label: "Open", count: estimates.filter(e => openStatuses.has(e.status)).length, color: "rgba(255,255,255,0.62)" },
+            { key: "viewed" as const, label: "Viewed", count: counts.viewed ?? 0, color: STATUS_COLORS.viewed },
+            { key: "accepted" as const, label: "Accepted", count: counts.accepted ?? 0, color: SIGNAL_GREEN },
+            { key: "declined" as const, label: "Declined", count: counts.declined ?? 0, color: STATUS_COLORS.declined },
+          ]).map(f => {
+            if (f.key !== "all" && f.count === 0) return null
+            const active = filter === f.key
             return (
-              <button key={f} onClick={() => setFilter(f)} style={{
+              <button key={f.key} onClick={() => setFilter(f.key)} style={{
                 flexShrink: 0, display: "flex", alignItems: "center", gap: 6,
                 padding: "7px 14px", borderRadius: 100,
-                border: `1px solid ${active ? color : "rgba(255,255,255,0.1)"}`,
-                backgroundColor: active ? `${color}1A` : "transparent",
-                color: active ? color : "rgba(255,255,255,0.35)",
+                border: `1px solid ${active ? f.color : "rgba(255,255,255,0.1)"}`,
+                backgroundColor: active ? `${f.color}1A` : "transparent",
+                color: active ? f.color : "rgba(255,255,255,0.35)",
                 fontSize: 13, fontWeight: 700, cursor: "pointer",
               }}>
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-                <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.7 }}>{count}</span>
+                {f.label}
+                <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.7 }}>{f.count}</span>
               </button>
             )
           })}
@@ -398,6 +405,7 @@ export default function EstimatesPage() {
               key={est.id}
               estimate={est}
               companyStripeReady={companyStripeReady}
+              activeFilter={filter}
               onClick={() => setSelectedId(est.id)}
             />
           ))}
@@ -451,10 +459,10 @@ export default function EstimatesPage() {
 
 // ── Estimate Card ─────────────────────────────────────────────────────────────
 
-function EstimateCard({ estimate, companyStripeReady, onClick }: { estimate: Estimate; companyStripeReady: boolean; onClick: () => void }) {
+function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: "all" | "open" | "viewed" | "accepted" | "declined"; onClick: () => void }) {
   const displayStatus = estimateDisplayStatus(estimate)
   const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
-  const shouldShowStatus = estimate.status !== "accepted" || estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at
+  const shouldShowStatus = estimate.status === "accepted" ? activeFilter !== "accepted" : estimate.status !== activeFilter
   const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
 
   return (
@@ -1259,7 +1267,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{copied ? "Copied!" : "Copy Link"}</div>
+                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{copied ? "Copied" : "Copy Link"}</div>
                 <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Share anywhere</div>
               </div>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={copied ? SIGNAL_GREEN : "rgba(255,255,255,0.2)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1374,7 +1382,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                     </svg>
-                    {copied ? "Copied!" : "Copy Client Link"}
+                    {copied ? "Copied" : "Copy estimate link"}
                   </button>
                 )}
                 {/* Send for draft, Resend for sent/viewed */}
@@ -1464,11 +1472,11 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             {/* Line items */}
             {items.length > 0 && (
-              <div style={{ marginBottom: 20, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ marginBottom: 20, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                 {items.map((item, i) => (
                   <div key={i} style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
-                    padding: "12px 16px",
+                    padding: "13px 0",
                     borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                   }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
