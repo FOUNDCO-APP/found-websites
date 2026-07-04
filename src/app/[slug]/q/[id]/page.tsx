@@ -144,15 +144,15 @@ export default async function EstimateClientPage({
         }
         a { color: inherit; text-decoration: none; }
 
-        .eq-head { padding: 36px 24px 32px; }
+        .eq-head { padding: 30px 24px 26px; }
         .eq-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-        .eq-num { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 10px; }
+        .eq-num { font-size: 40px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
 
         @media (max-width: 480px) {
-          .eq-head { padding: 28px 20px 24px; }
+          .eq-head { padding: 24px 20px 22px; }
           .eq-head-row { flex-direction: column; gap: 14px; }
           .eq-head-right { text-align: left !important; }
-          .eq-num { font-size: 36px; }
+          .eq-num { font-size: 34px; }
         }
       `}</style>
 
@@ -221,27 +221,6 @@ export default async function EstimateClientPage({
         <div style={{ maxWidth: 560, margin: "0 auto", padding: "28px 20px 80px" }}>
 
           {/* Status banners */}
-          {isAccepted && (
-            <div style={{
-              background: "white", borderRadius: 16, border: `2px solid ${color}40`,
-              padding: "20px 22px", marginBottom: 20, display: "flex", alignItems: "center", gap: 14,
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: "50%",
-                background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 18, color, flexShrink: 0,
-              }}>✓</div>
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#111", marginBottom: 2 }}>Estimate Accepted</div>
-                <div style={{ fontSize: 13, color: "#777" }}>
-                  {estimate.accepted_at
-                    ? new Date(estimate.accepted_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                    : "Thank you for accepting."}
-                </div>
-              </div>
-            </div>
-          )}
-
           {isDeclined && (
             <div style={{ background: "white", borderRadius: 16, border: "1.5px solid rgba(255,69,58,0.25)", padding: "18px 22px", marginBottom: 20, textAlign: "center" }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: "#FF453A" }}>Estimate Declined</div>
@@ -297,34 +276,48 @@ export default async function EstimateClientPage({
           )}
 
           {/* Totals */}
-          <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 24 }}>
-            {estimate.tax_rate > 0 && (
-              <>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontSize: 14, color: "#888" }}>Subtotal</span>
-                  <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #F0F0EB" }}>
-                  <span style={{ fontSize: 14, color: "#888" }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
-                  <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
-                </div>
-              </>
-            )}
-            <div style={{
-              display: "flex", justifyContent: "space-between", alignItems: "baseline",
-              paddingTop: estimate.tax_rate > 0 ? 0 : 4,
-            }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>Total due</span>
-              <span style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
-            </div>
-            {estimate.deposit_paid_at && estimate.deposit_amount && (
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, padding: "10px 14px", background: "#F0FBF4", borderRadius: 8 }}>
-                <span style={{ fontSize: 13, color: "#16803C", fontWeight: 600 }}>✓ Deposit Paid</span>
-                <span style={{ fontSize: 13, color: "#16803C", fontWeight: 700 }}>{fmt(estimate.deposit_amount)}</span>
+          {(!payableStripeAccountId || isPaid || isDeclined || isExpired) && (
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 24 }}>
+              {estimate.tax_rate > 0 && (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                    <span style={{ fontSize: 14, color: "#888" }}>Subtotal</span>
+                    <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid #F0F0EB" }}>
+                    <span style={{ fontSize: 14, color: "#888" }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
+                    <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
+                  </div>
+                </>
+              )}
+              <div style={{
+                display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                paddingTop: estimate.tax_rate > 0 ? 0 : 4,
+              }}>
+                <span style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>Total due</span>
+                <span style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
               </div>
-            )}
-          </div>
+              {estimate.deposit_paid_at && estimate.deposit_amount && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, padding: "10px 14px", background: "#F0FBF4", borderRadius: 8 }}>
+                  <span style={{ fontSize: 13, color: "#16803C", fontWeight: 600 }}>Deposit paid</span>
+                  <span style={{ fontSize: 13, color: "#16803C", fontWeight: 700 }}>{fmt(estimate.deposit_amount)}</span>
+                </div>
+              )}
+            </div>
+          )}
 
+          {payableStripeAccountId && !isPaid && !isDeclined && !isExpired && estimate.tax_rate > 0 && (
+            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "16px 22px", marginBottom: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <span style={{ fontSize: 14, color: "#888" }}>Subtotal</span>
+                <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 14, color: "#888" }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
+                <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
+              </div>
+            </div>
+          )}
           {/* Notes */}
           {estimate.notes && (
             <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 20, borderLeft: `3px solid ${color}` }}>
@@ -356,9 +349,9 @@ export default async function EstimateClientPage({
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               width: "100%", padding: "14px 20px", borderRadius: 14,
-              border: `2px solid ${color}`,
-              color, background: "transparent",
-              fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 32,
+              border: "1.5px solid #D8D8D2",
+              color: "#555", background: "transparent",
+              fontSize: 14, fontWeight: 650, cursor: "pointer", marginBottom: 32,
               letterSpacing: "-0.01em",
             }}
           >

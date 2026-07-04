@@ -310,14 +310,14 @@ export default function AcceptButton({
   const [payLaterAccepted, setPayLaterAccepted] = useState(false)
 
   const hasStripe = Boolean(stripeAccountId)
-  const depositAmount = depositPct >= 100 ? total : total * (depositPct / 100)
-  const remainingAmount = Math.max(total - depositAmount, 0)
+  const depositCents = depositPct >= 100 ? Math.round(total * 100) : Math.round(total * depositPct)
+  const totalCents = Math.round(total * 100)
+  const depositAmount = depositCents / 100
+  const remainingAmount = Math.max(totalCents - depositCents, 0) / 100
   const depositPctLabel = `${Math.round(depositPct)}%`
-  const primaryLabel = remainingAmount > 0
-    ? (acceptedAlready ? `Pay ${fmt(depositAmount)} deposit` : `Accept & pay ${fmt(depositAmount)} deposit`)
-    : (acceptedAlready ? `Pay ${fmt(depositAmount)} now` : "Accept & pay now")
+  const primaryLabel = remainingAmount > 0 ? `Pay ${fmt(depositAmount)} deposit` : `Pay ${fmt(depositAmount)} now`
   const paymentSummary = remainingAmount > 0
-    ? `${depositPctLabel} deposit today. ${fmt(remainingAmount)} due when the work is complete.`
+    ? `${depositPctLabel} today. The rest is due when the work is complete.`
     : "Pay securely now."
 
   async function handleSimpleAccept() {
@@ -409,40 +409,44 @@ export default function AcceptButton({
     <div style={{ marginBottom: 16 }}>
       {hasStripe ? (
         <>
-          <div style={{
+          <section style={{
             borderRadius: 22,
             background: "white",
             border: "1px solid #E5E5E0",
-            padding: "18px 20px",
+            padding: "20px 22px",
             marginBottom: 14,
-            boxShadow: "0 10px 30px rgba(0,0,0,0.045)",
           }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, paddingBottom: 12, borderBottom: "1px solid #EFEFEB" }}>
-              <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Estimate total</span>
+            <div style={{ fontSize: 10, fontWeight: 850, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B8B8B2", marginBottom: 14 }}>
+              Payment
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, marginBottom: 12 }}>
+              <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Total estimate</span>
               <span style={{ color: "#111", fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(total)}</span>
             </div>
             {remainingAmount > 0 ? (
               <>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "14px 0" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, padding: "15px 0", borderTop: "1px solid #EFEFEB", borderBottom: "1px solid #EFEFEB" }}>
                   <div>
-                    <div style={{ color: "#111", fontSize: 18, fontWeight: 850, letterSpacing: "-0.02em" }}>{depositPctLabel} deposit</div>
-                    <div style={{ color: "#777772", fontSize: 13, marginTop: 3 }}>Due now to start the job</div>
+                    <div style={{ color: "#111", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>{depositPctLabel} deposit</div>
+                    <div style={{ color: "#777772", fontSize: 13, marginTop: 4 }}>Due today to start the job</div>
                   </div>
-                  <div style={{ color, fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em", whiteSpace: "nowrap" }}>{fmt(depositAmount)}</div>
+                  <div style={{ color, fontSize: 30, fontWeight: 900, letterSpacing: "-0.045em", whiteSpace: "nowrap", lineHeight: 1 }}>{fmt(depositAmount)}</div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, paddingTop: 12, borderTop: "1px solid #EFEFEB" }}>
-                  <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Due at completion</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, paddingTop: 12 }}>
+                  <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Balance after completion</span>
                   <span style={{ color: "#333", fontSize: 16, fontWeight: 800 }}>{fmt(remainingAmount)}</span>
                 </div>
               </>
             ) : (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, paddingTop: 14 }}>
-                <span style={{ color: "#111", fontSize: 18, fontWeight: 850 }}>Due now</span>
-                <span style={{ color, fontSize: 26, fontWeight: 900, letterSpacing: "-0.04em" }}>{fmt(depositAmount)}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, paddingTop: 15, borderTop: "1px solid #EFEFEB" }}>
+                <div>
+                  <div style={{ color: "#111", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>Due today</div>
+                  <div style={{ color: "#777772", fontSize: 13, marginTop: 4 }}>Secure payment</div>
+                </div>
+                <span style={{ color, fontSize: 30, fontWeight: 900, letterSpacing: "-0.045em", whiteSpace: "nowrap", lineHeight: 1 }}>{fmt(depositAmount)}</span>
               </div>
             )}
-          </div>
-
+          </section>
           <button
             onClick={handleOpenPayment}
             disabled={loading}

@@ -4,6 +4,33 @@
 
 ---
 
+## Session: July 4, 2026 - Public Estimate Payment Section Cleanup
+**AI:** Codex
+**Worked on:** Shawn stopped the public estimate page work because the approved team meeting was not shown before implementation. The team reviewed the client-facing estimate page and chose a simpler payment-first layout.
+
+### Team Decision
+- Jony: Remove the repeated accepted card and stop making multiple sections compete with the payment action.
+- Steve: The page must answer the client question in 5 seconds: accepted, deposit due today, balance later.
+- Angela: Present deposit terms in plain language, with the rest due at completion.
+- Craig: Keep the existing payment logic; change render order, hierarchy, and copy only.
+
+### Completed
+- Removed the duplicate `Estimate Accepted` card from the public estimate page.
+- Reduced the public estimate masthead height so the estimate content starts sooner.
+- Prevented payable estimates from showing a separate loud total card before the payment decision.
+- Reworked the payment area into one `Payment` section with total estimate, deposit due today, and balance after completion.
+- Changed the primary payment CTA to `Pay $X deposit` / `Pay $X now`.
+- Softened the `Download PDF` button so it reads as secondary.
+- Rounded displayed deposit/balance values by cents so the split is clean.
+
+### Must Test
+- Open a public accepted estimate with payments enabled and confirm there is no separate `Estimate Accepted` card below the masthead.
+- Confirm the page shows one clear `Payment` section with total estimate, deposit due today, and balance after completion.
+- Confirm the pay button is the only strong filled action and says `Pay $X deposit`.
+- Confirm `Download PDF` is visually secondary.
+- Tap the pay button and confirm the secure payment sheet still opens.
+
+---
 ## Session: July 4, 2026 - Estimate Total Hierarchy Cleanup
 **AI:** Codex
 **Worked on:** Shawn asked Jony and Steve to review the public estimate total because the filled `Total Due` treatment looked like another button before the pay action.
