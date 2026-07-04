@@ -4,6 +4,31 @@
 
 ---
 
+## Session: July 4, 2026 - Public Estimate Deposit Clarity and Print Terms
+**AI:** Codex
+**Worked on:** Shawn confirmed payment setup worked, then asked Jony and Steve to review the public estimate design because the 50% deposit ask was too small and unclear. Shawn also asked about proper print formatting.
+
+### Team Decision
+- Jony/Steve: The client-facing estimate needs a clear payment decision area, not a small deposit footnote.
+- Angela: Show the client exactly what is due now and what remains later.
+- Craig: Keep the existing payment architecture and improve presentation.
+- Jony: Treat print/PDF as a document format, not a printed app screen.
+
+### Completed
+- Added a payment summary card above the public estimate payment button.
+- The public estimate now shows estimate total, deposit percent, deposit due now, and balance due at completion before payment.
+- Changed the payment action copy to match the exact deposit amount.
+- Changed the payment sheet trust line to plain language: `Secure card payment`.
+- Hid the Stripe test badge on the public estimate payment sheet using the same pattern already used in other payment screens.
+- Added deposit/payment terms to the dedicated print/PDF estimate route.
+- Print/PDF now shows deposit due now, balance due at completion, and paid/deposit-paid status when applicable.
+
+### Must Test
+- Open a public estimate with payments on and confirm the bottom CTA clearly shows the 50% deposit and remaining balance.
+- Tap the payment button and confirm the payment sheet still opens and the Stripe test badge does not cover the estimate.
+- Open `Download PDF` / `/print` and confirm the printed document includes payment terms without app buttons.
+
+---
 ## Session: July 3, 2026 - Payment Setup Handoff Copy
 **AI:** Codex
 **Worked on:** Shawn asked whether secure payment setup should open in a pop-up/new tab and reminded the team that most owners do not know what Stripe is.

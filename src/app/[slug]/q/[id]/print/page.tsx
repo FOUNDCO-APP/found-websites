@@ -63,6 +63,12 @@ export default async function EstimatePrintPage({
     ? new Date(estimate.valid_until).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
     : null
 
+  const depositPct = (estimate.deposit_pct as number | null) ?? 50
+  const depositDue = depositPct >= 100 ? estimate.total : estimate.total * (depositPct / 100)
+  const balanceDue = Math.max(estimate.total - depositDue, 0)
+  const paymentStatus = estimate.payment_status ?? (estimate.deposit_paid_at ? "deposit_paid" : "unpaid")
+  const isPaid = paymentStatus === "paid" || Boolean(estimate.paid_at)
+  const isDepositPaid = paymentStatus === "deposit_paid" || Boolean(estimate.deposit_paid_at)
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
   const isExpired  = estimate.status === "expired"
@@ -354,10 +360,22 @@ export default async function EstimatePrintPage({
                       <span style={{ fontSize: 11, fontWeight: 800, color: textLow, letterSpacing: "0.14em", textTransform: "uppercase" }}>Total Due</span>
                       <span style={{ fontSize: 28, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em" }}>{fmt(estimate.total)}</span>
                     </div>
-                    {estimate.deposit_paid_at && estimate.deposit_amount && (
+                    {balanceDue > 0 && (
+                      <div style={{ marginTop: 10, border: "1px solid #EDEDED", borderRadius: 10, overflow: "hidden" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 14px", borderBottom: "1px solid #F0F0F0", background: "#FAFAFA" }}>
+                          <span style={{ fontSize: 13, color: "#777", fontWeight: 700 }}>{Math.round(depositPct)}% deposit due now</span>
+                          <span style={{ fontSize: 14, color: "#111", fontWeight: 800 }}>{fmt(depositDue)}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 14px", background: "white" }}>
+                          <span style={{ fontSize: 13, color: "#777", fontWeight: 700 }}>Balance due at completion</span>
+                          <span style={{ fontSize: 14, color: "#111", fontWeight: 800 }}>{fmt(balanceDue)}</span>
+                        </div>
+                      </div>
+                    )}
+                    {(isPaid || isDepositPaid) && (
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "#F0FBF4", borderRadius: 8, marginTop: 8 }}>
-                        <span style={{ fontSize: 13, color: "#16803C", fontWeight: 600 }}>✓ Deposit Paid</span>
-                        <span style={{ fontSize: 14, color: "#16803C", fontWeight: 700 }}>{fmt(estimate.deposit_amount)}</span>
+                        <span style={{ fontSize: 13, color: "#16803C", fontWeight: 600 }}>{isPaid ? "Payment received" : "Deposit paid"}</span>
+                        <span style={{ fontSize: 14, color: "#16803C", fontWeight: 700 }}>{fmt(isPaid ? estimate.total : (estimate.deposit_amount ?? depositDue))}</span>
                       </div>
                     )}
                   </div>
