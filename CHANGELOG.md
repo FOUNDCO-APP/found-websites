@@ -4,6 +4,31 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Close Icon Polish
+**AI:** Codex
+**Worked on:** Shawn approved Jony and Steve's direction to replace the typed close `x` with a quieter SVG close icon across the estimate system surfaces.
+
+### Completed
+- Added a reusable estimate-page `CloseIconButton` using the onboarding-style two-stroke SVG close icon.
+- Replaced the builder close text `x` with the new SVG close icon.
+- Replaced the send-options close text `x` with the new SVG close icon.
+- Replaced the estimate detail close text `x` with the new SVG close icon.
+- Replaced the edit-mode close text `x` with the new SVG close icon.
+- Preserved all close behavior, edit behavior, send/resend behavior, and payment behavior.
+
+### Must Test
+- Open the estimate builder and confirm the close control is the new quiet SVG icon.
+- Open a sent/viewed estimate detail and confirm the top-right close icon feels quieter and more modern.
+- Tap `Resend Estimate`; confirm the send-options sheet uses the same close icon.
+- Tap `Edit estimate`; confirm edit mode uses the same close icon and returns to view mode.
+- Confirm remove-item `x` controls still work where they are not sheet close buttons.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the new close icon.
+2. Continue send-options screen polish after close control approval.
+3. Continue payable-estimate QA after detail hierarchy approval.
+
+---
 ## Session: July 3, 2026 - Estimate Detail Header Control Polish
 **AI:** Codex
 **Worked on:** Shawn approved Jony and Steve's direction to fix the estimate detail top-right controls so Close is the only header action and destructive controls stop competing in the first viewport.

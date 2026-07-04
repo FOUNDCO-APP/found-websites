@@ -76,6 +76,29 @@ const STATUS_LABELS: Record<string, string> = {
   accepted: "Accepted", declined: "Declined", expired: "Expired",
 }
 
+const closeButtonStyle: React.CSSProperties = {
+  width: 38,
+  height: 38,
+  borderRadius: 19,
+  border: "1px solid rgba(255,255,255,0.075)",
+  backgroundColor: "rgba(255,255,255,0.028)",
+  color: "rgba(255,255,255,0.58)",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+}
+
+function CloseIconButton({ onClick, label = "Close" }: { onClick: () => void; label?: string }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label} style={closeButtonStyle}>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12" />
+      </svg>
+    </button>
+  )
+}
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
 }
@@ -754,11 +777,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
               <div style={{ color: SIGNAL_GREEN, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Estimate</div>
               <h2 style={{ margin: 0, color: "white", fontSize: 18, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0 }}>New estimate</h2>
             </div>
-            <button onClick={onClose} aria-label="Close" style={{
-              width: 38, height: 38, borderRadius: 19, border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.58)",
-              fontSize: 21, lineHeight: 1, cursor: "pointer", flexShrink: 0,
-            }}>x</button>
+            <CloseIconButton onClick={onClose} />
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 8 }}>
@@ -1180,7 +1199,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Send Estimate</h2>
-              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>x</button>
+              <CloseIconButton onClick={() => setMode("view")} />
             </div>
 
             {/* Summary pill */}
@@ -1330,7 +1349,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 <h2 style={{ margin: "0 0 6px", color: "white", ...TYPE.title }}>{est.client_name}</h2>
                 <StatusBadge status={est.status} label={displayStatus.label} color={displayStatus.color} />
               </div>
-              <button onClick={onClose} aria-label="Close estimate" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.58)", fontSize: 22, lineHeight: 1, cursor: "pointer", flexShrink: 0 }}>x</button>
+              <CloseIconButton onClick={onClose} label="Close estimate" />
             </div>
 
             {/* Details */}
@@ -1513,7 +1532,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Edit Estimate</h2>
-              <button onClick={() => setMode("view")} style={{ border: "none", background: "none", color: "rgba(255,255,255,0.4)", fontSize: 24, cursor: "pointer", lineHeight: 1 }}>x</button>
+              <CloseIconButton onClick={() => setMode("view")} />
             </div>
 
             <div style={{ marginBottom: 20 }}>
