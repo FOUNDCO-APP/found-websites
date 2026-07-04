@@ -4,6 +4,30 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Send Options Polish
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to polish the Send/Resend Estimate options screen so the customer-send handoff feels clean, confident, and less like stacked database cards.
+
+### Completed
+- Reworked the send-options estimate summary into a quiet header row with client, address, and total.
+- Changed Email, Text Message, and Copy Link from boxed cards into a cleaner action list.
+- Kept Email, Text Message, and Copy Link behavior unchanged.
+- Moved the Stripe/payment setup note below the send methods and made it quiet secondary context.
+- Preserved send, SMS, copy, payment, Stripe readiness, detail, edit, delete, and backend behavior.
+
+### Must Test
+- Open a sent/viewed estimate and tap `Resend Estimate`; confirm the send-options screen feels cleaner and less card-heavy.
+- Tap Email; confirm it still sends and returns to the detail screen.
+- Tap Text Message; confirm the SMS composer still opens with the estimate link.
+- Tap Copy Link; confirm the link copies and returns to the detail screen.
+- Confirm the online payments note is quiet and only appears when Stripe is not connected.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the send-options screen.
+2. Continue payable-estimate QA after the send handoff passes.
+3. Continue Stripe/Accept & Pay testing when payment setup is ready.
+
+---
 ## Session: July 3, 2026 - Estimate Secondary Action Demotion
 **AI:** Codex
 **Worked on:** Shawn approved the team direction to make edit and delete feel secondary because the estimate detail page should guide owners toward sending, collecting, and making money.

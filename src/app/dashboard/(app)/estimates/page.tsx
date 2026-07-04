@@ -1202,120 +1202,97 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
               <CloseIconButton onClick={() => setMode("view")} />
             </div>
 
-            {/* Summary pill */}
-            <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "16px 18px", marginBottom: 22, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{est.client_name}</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.total)}</div>
-              </div>
-              <div style={{ color: "rgba(255,255,255,0.2)", fontSize: 12, textAlign: "right" }}>
-                {est.property_address && <div>{est.property_address}</div>}
+            <div style={{ marginBottom: 22, paddingBottom: 18, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: "white", fontSize: 16, fontWeight: 760, marginBottom: 4 }}>{est.client_name}</div>
+                  {est.property_address && <div style={{ color: "rgba(255,255,255,0.34)", fontSize: 13, lineHeight: 1.35 }}>{est.property_address}</div>}
+                </div>
+                <div style={{ color: SIGNAL_GREEN, fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{fmt(est.total)}</div>
               </div>
             </div>
 
-            {/* Stripe setup nudge */}
-            {!companyStripeReady && (
-              <div style={{ padding: "13px 16px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.075)", marginBottom: 14, display: "flex", alignItems: "center", gap: 10 }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                <div style={{ flex: 1 }}>
-                  <span style={{ color: "white", fontSize: 13, fontWeight: 760 }}>Connect Stripe </span>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 13 }}>to let clients pay a deposit the moment they accept.</span>
-                </div>
-              </div>
-            )}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 11, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>Send by</div>
 
-            {/* Email option */}
-            <button
-              onClick={() => handleSendOption("email")}
-              disabled={!est.client_email || sending === "email"}
-              style={{
-                width: "100%", padding: "16px 18px", borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: sending === "email" ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)",
-                cursor: est.client_email ? "pointer" : "default",
-                opacity: est.client_email ? 1 : 0.4,
-                display: "flex", alignItems: "center", gap: 16, marginBottom: 10, textAlign: "left",
-              }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(0,122,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button
+                onClick={() => handleSendOption("email")}
+                disabled={!est.client_email || sending === "email"}
+                style={{
+                  width: "100%", padding: "15px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  backgroundColor: "transparent", cursor: est.client_email ? "pointer" : "default", opacity: est.client_email ? 1 : 0.38,
+                  display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                }}
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
                 </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{sending === "email" ? "Sending..." : "Email"}</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{est.client_email ?? "No email on file"}</div>
-              </div>
-              {est.client_email && sending !== "email" && (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: "white", fontSize: 15, fontWeight: 720 }}>{sending === "email" ? "Sending..." : "Email"}</div>
+                  <div style={{ color: "rgba(255,255,255,0.36)", fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{est.client_email ?? "No email on file"}</div>
+                </div>
+                {est.client_email && sending !== "email" && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                )}
+              </button>
+
+              {sendError && (
+                <div style={{ marginTop: 10, padding: "10px 0", borderBottom: "1px solid rgba(255,69,58,0.14)" }}>
+                  <p style={{ margin: 0, color: "#FF453A", fontSize: 13, lineHeight: 1.5 }}>{sendError}</p>
+                </div>
               )}
-            </button>
 
-            {/* Email error */}
-            {sendError && (
-              <div style={{ marginBottom: 10, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)" }}>
-                <p style={{ margin: 0, color: "#FF453A", fontSize: 13, lineHeight: 1.5 }}>{sendError}</p>
-              </div>
-            )}
-
-            {/* Text option */}
-            <button
-              onClick={() => handleSendOption("sms")}
-              disabled={!est.client_phone}
-              style={{
-                width: "100%", padding: "16px 18px", borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                cursor: est.client_phone ? "pointer" : "default",
-                opacity: est.client_phone ? 1 : 0.4,
-                display: "flex", alignItems: "center", gap: 16, marginBottom: 10, textAlign: "left",
-              }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(48,209,88,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#30D158" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button
+                onClick={() => handleSendOption("sms")}
+                disabled={!est.client_phone}
+                style={{
+                  width: "100%", padding: "15px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  backgroundColor: "transparent", cursor: est.client_phone ? "pointer" : "default", opacity: est.client_phone ? 1 : 0.38,
+                  display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                }}
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
                 </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>Text Message</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>{est.client_phone ?? "No phone on file"}</div>
-              </div>
-              {est.client_phone && (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              )}
-            </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: "white", fontSize: 15, fontWeight: 720 }}>Text Message</div>
+                  <div style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>{est.client_phone ?? "No phone on file"}</div>
+                </div>
+                {est.client_phone && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                )}
+              </button>
 
-            {/* Copy link option */}
-            <button
-              onClick={() => handleSendOption("link")}
-              style={{
-                width: "100%", padding: "16px 18px", borderRadius: 16,
-                border: "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                cursor: "pointer",
-                display: "flex", alignItems: "center", gap: 16, marginBottom: 22, textAlign: "left",
-              }}
-            >
-              <div style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <button
+                onClick={() => handleSendOption("link")}
+                style={{
+                  width: "100%", padding: "15px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.07)",
+                  backgroundColor: "transparent", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 12, textAlign: "left",
+                }}
+              >
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.48)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
                   <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
                 </svg>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ color: "white", fontSize: 15, fontWeight: 600 }}>{copied ? "Copied" : "Copy Link"}</div>
-                <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>Share anywhere</div>
-              </div>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={copied ? SIGNAL_GREEN : "rgba(255,255,255,0.2)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                {copied ? <polyline points="20 6 9 17 4 12"/> : <polyline points="9 18 15 12 9 6"/>}
-              </svg>
-            </button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: "white", fontSize: 15, fontWeight: 720 }}>{copied ? "Copied" : "Copy Link"}</div>
+                  <div style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>Share anywhere</div>
+                </div>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={copied ? SIGNAL_GREEN : "rgba(255,255,255,0.18)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                  {copied ? <polyline points="20 6 9 17 4 12"/> : <polyline points="9 18 15 12 9 6"/>}
+                </svg>
+              </button>
+            </div>
 
+            {!companyStripeReady && (
+              <div style={{ marginBottom: 18, color: "rgba(255,255,255,0.34)", fontSize: 12, lineHeight: 1.45 }}>
+                Online payments are off. Connect Stripe when you want clients to pay the moment they accept.
+              </div>
+            )}
             <button onClick={() => setMode("view")} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               Cancel
             </button>
