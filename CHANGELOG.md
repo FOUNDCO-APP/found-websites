@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 3, 2026 - Payment Setup Error Visibility
+**AI:** Codex
+**Worked on:** Shawn still saw the generic payment setup error after Craig's host-route correction, so the setup button needed to expose the actual server response for diagnosis.
+
+### Completed
+- Updated `PaymentSetupButton` to read the payment setup response as text before parsing JSON.
+- Payment setup failures now show `Payment setup failed (status): reason` instead of only the generic fallback.
+- Added a console error for the failed setup attempt.
+- Kept the setup route at `/api/payments/connect` and preserved Stripe setup behavior.
+
+### Must Test
+- After deploy, tap `Set up` / `Set up deposit payments` again.
+- If it fails, capture the full visible error text including the status code.
+- Use that status/reason to determine whether the remaining issue is auth, Stripe environment configuration, deployment routing, or company lookup.
+
+### Next
+1. Retest payment setup and report the exact visible error.
+2. If setup opens, complete Stripe Express onboarding for the test slug.
+3. Retest public Accept & Pay after Stripe Connect is attached.
+
+---
 ## Session: July 3, 2026 - Payment Setup Host Route Correction
 **AI:** Codex
 **Worked on:** Shawn retested payment setup and still saw the setup error. Craig reviewed the live host behavior and found the dashboard host exposes dashboard APIs at `/api/...`, not `/dashboard/api/...`.
