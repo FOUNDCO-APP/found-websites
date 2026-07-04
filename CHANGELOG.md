@@ -4,6 +4,33 @@
 
 ---
 
+## Session: July 4, 2026 - Universal Estimates Tool Entitlement
+**AI:** Codex
+**Worked on:** Shawn asked whether any owner who signs up through Found Business, Pro with quotes, or a quote/estimate add-on should be able to use Estimates across every industry. The team confirmed this as a product rule and Craig verified the remaining branch coverage.
+
+### Team Decision
+- Shawn: Industry awareness should choose the right default dock tools, while the rest stay available in More.
+- Craig: Entitlements determine available tools; industry determines default dock priority.
+- Steve: If we sell quotes or estimate payments, the Estimates tool must be usable immediately.
+- Jony: The dock remains a focused daily workspace; More is the complete available-tool library.
+- Angela: Labels/defaults can be industry-aware, but paid tools cannot disappear.
+- Priya: Business plan and quote add-on state are the source of truth for access.
+
+### Completed
+- Verified `quote_payments` is included for Found Business through `getEffectiveAddons`.
+- Confirmed non-food industries already expose Estimates when `quote_payments` is active.
+- Added Estimates to the food/restaurant available-tool branch when `quote_payments` is active.
+- Kept food default dock priority focused on orders/reservations while making Estimates available in More/My Dock.
+- Verified production build passes.
+
+### Must Test
+- Found Business + Events: Leads and Estimates both appear as expected.
+- Found Business + Food: Orders/Reservations remain prioritized, and Estimates is available in More/My Dock.
+- Found Pro or Starter with only `quote_payments`: Estimates appears without needing the Business plan.
+- Industry where default intent is estimate: no duplicate Estimates tab appears.
+- Existing dock customization still works after adding/removing tools.
+
+---
 ## Session: July 4, 2026 - Blue Luna Estimates Access Fix
 **AI:** Codex
 **Worked on:** Shawn found that Blue Luna Events is on Found Business and shows Quote & Estimate Payments as included, but the dashboard dock did not expose Estimates. Craig led the audit because the issue was navigation, plan entitlement, and industry-aware tool routing.
@@ -30,7 +57,8 @@
 - Tap Estimates and confirm the estimate system opens.
 - Confirm Leads still remains available for event inquiries.
 
----## Session: July 4, 2026 - Session 3A Payment Flow Verification
+---
+## Session: July 4, 2026 - Session 3A Payment Flow Verification
 **AI:** Codex
 **Worked on:** Shawn approved moving into Session 3A after the team agreed the next risk was payment reliability and state correctness, not more visual polish.
 

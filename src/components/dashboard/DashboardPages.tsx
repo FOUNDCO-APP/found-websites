@@ -37,6 +37,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
       hasCalendar
         ? { id: "reservations", label: "Reservations", path: "/leads?view=reservations" }
         : { id: "inbox", label: "Reservations", path: "/leads" },
+      ...(hasEstimates ? [{ id: "estimates", label: "Estimates", path: "/estimates" }] : []),
       PEOPLE,
       ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
       { id: "photos", label: "Photos", path: "/photos" },

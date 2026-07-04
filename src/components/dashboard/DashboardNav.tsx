@@ -61,6 +61,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
       hasCalendar
         ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
         : { id: "inbox", path: "/leads", label: "Reservations" },
+      ...(hasEstimates ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
       PEOPLE,
       ...(hasCalendar ? [SCHEDULE_TAB] : []),
       { id: "photos", path: "/photos", label: "Photos" },
