@@ -1,3 +1,35 @@
+## Session: July 4, 2026 - Activation Plan Choice Before Payment
+**AI:** Codex
+**Worked on:** Activation checkout flow after Steve/Jony/Angela/Craig/Priya team approval
+
+### Completed This Session
+- Added shared Found plan data in `src/lib/foundPlans.ts` for Starter, Pro, and Business.
+- Updated `ActivateOverlay` so site activation starts with a three-plan selector instead of jumping straight into the current `$29/mo` card form.
+- Preselects the requested/current plan, but lets the owner switch to Starter, Pro, or Business before secure payment starts.
+- Stripe setup is now created only after the owner confirms the plan choice.
+- Add-on activation still goes straight to secure payment because it is not a plan-selection flow.
+- Verified with `cmd /c npm run build`.
+
+### Still Pending
+| Item | Status | Notes |
+| --- | --- | --- |
+| More page plan-card visual reuse | Pending | This session created the shared data; next pass should align More page card styling with the same selector language. |
+| Live mobile QA | Pending | Needs user test on Molcas/another inactive slug after deploy. |
+
+### What To Test Next
+1. Open inactive Molcas and tap the top `Activate` entry point.
+2. Confirm it shows all three plans first, not the `$29/mo` payment form.
+3. Confirm Starter is preselected if Molcas is still on Starter.
+4. Tap Business and continue; payment form should show `$69/month`.
+5. Close, reopen, choose Pro; payment form should show `$39/month`.
+6. Confirm add-on activation still opens secure payment directly.
+
+### What To Work On Next (In Order)
+1. Deploy and test the inactive-site activation path on mobile.
+2. Align More page plan cards with the shared plan selector styling.
+3. Continue the tool/access audit for all Business/Pro/add-on tools.
+
+---
 # CHANGELOG.md — Found Co. / found-websites
 ### Every AI must update this file at the end of every session.
 ### Read this at the START of every session to know exactly where things left off.

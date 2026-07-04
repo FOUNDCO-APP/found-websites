@@ -6,18 +6,18 @@ import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup } from "@/app/activate/activateActions"
 import FoundWordmark from "@/components/FoundWordmark"
+import {
+  FOUND_PLAN_OPTIONS,
+  foundPlanDetails,
+  normalizeFoundPlan,
+  type FoundPlanKey,
+} from "@/lib/foundPlans"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
 
 // Module-level: Stripe.js starts loading the moment this chunk is prefetched.
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-
-function planDetails(plan?: string | null) {
-  if (plan === "found_business") return { price: 69, normal: 99 }
-  if (plan === "found_pro")      return { price: 39, normal: 69 }
-  return { price: 29, normal: 39 }
-}
 
 const stripeAppearance = {
   theme: "night" as const,
@@ -75,7 +75,9 @@ function CardForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-  const { price, normal } = planDetails(plan)
+  const selectedPlan = foundPlanDetails(plan)
+  const price = selectedPlan.price
+  const normal = selectedPlan.normalPrice
   const hasAddon = !!addonLabel && typeof addonPrice === "number"
 
   async function handleSubmit(e: React.FormEvent) {
@@ -159,12 +161,145 @@ function CardForm({
     </div>
   )
 }
-// Cinematic phases mirror page.tsx exactly:
-// "text" → glow + FINALLY + name fades in
-// "iris" → green circle expands from center (250ms)
-// "fading" → both layers fade out (700ms) — gated on stripeReady + minTimeReady
-// "done" → Stripe form shown
+
+function PlanChoice({
+  selectedPlan,
+  loading,
+  onSelect,
+  onContinue,
+}: {
+  selectedPlan: FoundPlanKey
+  loading: boolean
+  onSelect: (plan: FoundPlanKey) => void
+  onContinue: () => void
+}) {
+  const selected = foundPlanDetails(selectedPlan)
+
+  return (
+    <div style={{ width: "100%", maxWidth: 448, paddingBottom: 18, animation: "cinematic-word-in 600ms ease-out both" }}>
+      <div style={{ padding: "0 8px 18px" }}>
+        <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 900, letterSpacing: "0.22em", textTransform: "uppercase", color: SIGNAL_GREEN }}>
+          Best place to start
+        </p>
+        <h2 style={{ margin: "0 0 12px", fontSize: 34, lineHeight: 1.06, fontWeight: 300, letterSpacing: "-0.02em", color: "white" }}>
+          Most owners start with Pro.
+        </h2>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.52)" }}>
+          Starter gets your site live. Pro keeps leads warm. Business helps you book jobs and collect money.
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {FOUND_PLAN_OPTIONS.map((option) => {
+          const isSelected = option.key === selectedPlan
+          return (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => onSelect(option.key)}
+              style={{
+                width: "100%",
+                textAlign: "left",
+                borderRadius: 20,
+                padding: 20,
+                background: isSelected
+                  ? "linear-gradient(180deg, rgba(50,208,116,0.13), rgba(50,208,116,0.04))"
+                  : "rgba(255,255,255,0.035)",
+                border: isSelected ? `1px solid ${SIGNAL_GREEN}` : "1px solid rgba(255,255,255,0.1)",
+                color: "white",
+                cursor: "pointer",
+                boxShadow: option.featured && isSelected ? "0 0 34px rgba(50,208,116,0.1)" : "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                <span style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  flexShrink: 0,
+                  marginTop: 2,
+                  border: isSelected ? "none" : "1px solid rgba(255,255,255,0.17)",
+                  backgroundColor: isSelected ? SIGNAL_GREEN : "transparent",
+                  color: isSelected ? FOUND_BLACK : "transparent",
+                  fontSize: 18,
+                  fontWeight: 900,
+                }}>
+                  {isSelected ? "" : ""}
+                </span>
+                <span style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 20, fontWeight: 900 }}>{option.name}</span>
+                    <span style={{
+                      borderRadius: 999,
+                      padding: "5px 9px",
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      color: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
+                      fontSize: 10,
+                      fontWeight: 900,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                    }}>
+                      {option.badge}
+                    </span>
+                  </span>
+                  <span style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 30, fontWeight: 900 }}>${option.price}/mo</span>
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.42)" }}>
+                      regular <span style={{ textDecoration: "line-through" }}>${option.normalPrice}/mo</span>
+                    </span>
+                  </span>
+                  <span style={{ display: "block", marginTop: 8, fontSize: 15, lineHeight: 1.35, fontWeight: 900, color: SIGNAL_GREEN }}>
+                    {option.headline}
+                  </span>
+                  <span style={{ display: "grid", gap: 8, marginTop: 14 }}>
+                    {option.features.map((feature) => (
+                      <span key={feature} style={{ display: "grid", gridTemplateColumns: "18px 1fr", gap: 8, fontSize: 13, lineHeight: 1.42, fontWeight: 700, color: "rgba(255,255,255,0.68)" }}>
+                        <span style={{ color: SIGNAL_GREEN }}></span>
+                        <span>{feature}</span>
+                      </span>
+                    ))}
+                  </span>
+                </span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={onContinue}
+        disabled={loading}
+        style={{
+          width: "100%",
+          marginTop: 18,
+          borderRadius: 18,
+          padding: "18px 16px",
+          border: "none",
+          backgroundColor: SIGNAL_GREEN,
+          color: FOUND_BLACK,
+          fontSize: 13,
+          fontWeight: 900,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          cursor: loading ? "default" : "pointer",
+          opacity: loading ? 0.55 : 1,
+          position: "sticky",
+          bottom: 0,
+          boxShadow: "0 -18px 32px rgba(8,10,9,0.94)",
+        }}
+      >
+        {loading ? "Preparing secure payment..." : selected.cta}
+      </button>
+    </div>
+  )
+}
+
+// Cinematic phases mirror page.tsx exactly.
 type CinPhase = "text" | "iris" | "fading" | "done"
+type PaymentStep = "plans" | "loading" | "payment"
 
 export default function ActivateOverlay({
   slug,
@@ -185,46 +320,62 @@ export default function ActivateOverlay({
   skipIntro?: boolean
   onClose: () => void
 }) {
+  const isAddonFlow = !!targetAddonSlug
   const [cinPhase, setCinPhase] = useState<CinPhase>(skipIntro ? "done" : "text")
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
+  const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>(normalizeFoundPlan(targetPlan))
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>(isAddonFlow ? "loading" : "plans")
   const [loadError, setLoadError] = useState<string | null>(null)
+
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => { document.body.style.overflow = prev }
   }, [skipIntro])
 
-  // Fetch Stripe secret if not pre-created — runs in parallel with cinematic
+  async function preparePayment(nextPlan: FoundPlanKey = selectedPlan) {
+    setPaymentStep("loading")
+    setLoadError(null)
+    setClientSecret(null)
+    const result = await createActivationSetup(slug, nextPlan, targetAddonSlug)
+    if (!result) {
+      setLoadError("This site is already activated or could not be found.")
+      return
+    }
+
+    setClientSecret(result.clientSecret)
+    if (!companyName) setCompanyName(result.companyName)
+    if (result.plan) {
+      setPlan(result.plan)
+      setSelectedPlan(normalizeFoundPlan(result.plan))
+    } else {
+      setPlan(nextPlan)
+    }
+    setPaymentStep("payment")
+  }
+
+  // Add-ons skip plan choice. Site activation waits for the owner's plan decision.
   useEffect(() => {
-    createActivationSetup(slug, targetPlan, targetAddonSlug).then((result) => {
-      if (!result) {
-        setLoadError("This site is already activated or could not be found.")
-      } else {
-        setClientSecret(result.clientSecret)
-        if (!companyName) setCompanyName(result.companyName)
-        if (result.plan) setPlan(result.plan)
-      }
-    })
-  }, [slug, companyName, targetPlan, targetAddonSlug])
+    if (!isAddonFlow) return
+    void preparePayment(selectedPlan)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAddonFlow, slug, targetAddonSlug])
 
   // Mirror page.tsx timing exactly: iris 3000ms, fading 3300ms, done 4000ms
   useEffect(() => {
     if (skipIntro) return
-    const t1 = setTimeout(() => setCinPhase("iris"),   3000)
+    const t1 = setTimeout(() => setCinPhase("iris"), 3000)
     const t2 = setTimeout(() => setCinPhase("fading"), 3300)
-    const t3 = setTimeout(() => setCinPhase("done"),   4000)
+    const t3 = setTimeout(() => setCinPhase("done"), 4000)
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [skipIntro])
 
   return createPortal(
     <div style={{ position: "fixed", inset: 0, zIndex: 99999, backgroundColor: FOUND_BLACK }}>
-
-      {/* ── CINEMATIC LAYERS (text + iris) — mirrors page.tsx ── */}
       {cinPhase !== "done" && (
         <>
-          {/* Layer 1: black screen + breathing glow + text */}
           <div
             style={{
               position: "absolute", inset: 0,
@@ -235,7 +386,6 @@ export default function ActivateOverlay({
             }}
             aria-hidden="true"
           >
-            {/* Breathing SIGNAL_GREEN radial glow — exact copy from page.tsx */}
             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{
                 width: 480, height: 480,
@@ -245,14 +395,12 @@ export default function ActivateOverlay({
               }} />
             </div>
 
-            {/* Text — centered, scale contrast */}
             <div style={{
               position: "relative", zIndex: 1,
               display: "flex", flexDirection: "column", alignItems: "center",
               gap: "clamp(1rem, 3vw, 1.4rem)",
               textAlign: "center",
             }}>
-              {/* FINALLY */}
               <span style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
                 fontSize: "clamp(3.2rem, 11vw, 5rem)",
@@ -267,7 +415,6 @@ export default function ActivateOverlay({
                 Finally
               </span>
 
-              {/* [COMPANY NAME] IS READY! */}
               <span style={{
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
                 fontSize: "clamp(1.3rem, 4.5vw, 1.75rem)",
@@ -283,7 +430,6 @@ export default function ActivateOverlay({
               </span>
             </div>
 
-            {/* Close — subtle, always available */}
             <button
               onClick={onClose}
               aria-label="Close"
@@ -293,11 +439,10 @@ export default function ActivateOverlay({
                 color: "rgba(255,255,255,0.2)", fontSize: 28, lineHeight: 1, padding: 4,
                 zIndex: 2,
               }}>
-              ×
+              x
             </button>
           </div>
 
-          {/* Layer 2: SIGNAL_GREEN iris — expands from center, mirrors page.tsx exactly */}
           {(cinPhase === "iris" || cinPhase === "fading") && (
             <div
               style={{
@@ -322,7 +467,6 @@ export default function ActivateOverlay({
         </>
       )}
 
-      {/* ── STRIPE FORM — fades in after cinematic done ── */}
       {cinPhase === "done" && (
         <div style={{
           position: "absolute", inset: 0,
@@ -334,12 +478,10 @@ export default function ActivateOverlay({
           WebkitOverflowScrolling: "touch",
           animation: "cinematic-word-in 600ms ease-out both",
         }}>
-          {/* FOUND wordmark */}
           <div style={{ position: "absolute", left: 28, top: 28 }}>
             <FoundWordmark height={24} color="white" />
           </div>
 
-          {/* Close */}
           <button
             onClick={onClose}
             aria-label="Close"
@@ -348,16 +490,23 @@ export default function ActivateOverlay({
               background: "none", border: "none", cursor: "pointer",
               color: "rgba(255,255,255,0.25)", fontSize: 28, lineHeight: 1, padding: 4,
             }}>
-            ×
+            x
           </button>
 
           {loadError ? (
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: 18, fontWeight: 300, color: "white", marginBottom: 16 }}>{loadError}</p>
               <button onClick={onClose} style={{ fontSize: 12, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: SIGNAL_GREEN, background: "none", border: "none", cursor: "pointer" }}>
-                Go back →
+                Go back
               </button>
             </div>
+          ) : paymentStep === "plans" && !isAddonFlow ? (
+            <PlanChoice
+              selectedPlan={selectedPlan}
+              loading={false}
+              onSelect={setSelectedPlan}
+              onContinue={() => void preparePayment(selectedPlan)}
+            />
           ) : clientSecret ? (
             <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
               <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} />
@@ -371,7 +520,7 @@ export default function ActivateOverlay({
       )}
 
       <style>{`
-        /* Neutralize Stripe test-mode badge — goes away in production with live keys */
+        /* Neutralize Stripe test-mode badge - goes away in production with live keys */
         a[href*="stripe.com"],
         [class*="StripeElement-badge"],
         [class*="powered-by"],
@@ -384,3 +533,4 @@ export default function ActivateOverlay({
     document.body
   )
 }
+
