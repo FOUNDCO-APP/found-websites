@@ -4,6 +4,32 @@
 
 ---
 
+## Session: July 4, 2026 - In-App Business Upgrade Path for Starter Owners
+**AI:** Codex
+**Worked on:** Shawn found that Molcas, an inactive Starter restaurant account, could see a Pro recommendation but had no clear in-app path to upgrade the selected business to Found Business.
+
+### Team Decision
+- Steve: Owners inside Found should upgrade the selected business, not get sent back into the public purchase funnel.
+- Jony: Keep the recommendation clean: Pro as the next step, Business as a secondary operating-tools card.
+- Angela: Food businesses need food-aware Business copy: orders, reservations, guest tools, and payments.
+- Craig: Reuse the existing company-aware activation/checkout path so Molcas context stays attached.
+- Priya: Upgrade actions must target the selected company, not create a new account.
+
+### Completed
+- Added a secondary Found Business upgrade card for Starter accounts inside More.
+- Made Business copy industry-aware, with restaurant copy for food/home-based food businesses.
+- Business activation uses the existing `MoreActivateButton` overlay for inactive companies and `startUpgradeCheckout` for active subscriptions.
+- Changed the public plans link from `Compare all plans` to `Compare plan details` and opened it in a new tab so it is no longer the primary upgrade path.
+- Verified production build passes.
+
+### Must Test
+- Switch to Molcas on Found Starter and open More.
+- Confirm the Pro recommendation still appears.
+- Confirm a Business card appears underneath with restaurant-focused copy.
+- Tap `Activate Business for Molcas` and verify the activation overlay keeps the Molcas context.
+- Tap `Compare plan details` and confirm it opens separately without replacing the in-app upgrade flow.
+
+---
 ## Session: July 4, 2026 - Shared Dashboard Tool Policy and Entitlement Guards
 **AI:** Codex
 **Worked on:** Shawn approved Craig's team-led build order from the all-tools entitlement audit: centralize dashboard tool policy, wire both dock surfaces to it, add paid-tool guards, and fix the feature access over-grant.

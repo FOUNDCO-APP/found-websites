@@ -89,6 +89,45 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string;
   },
 }
 
+type BusinessUpgradeCopy = {
+  headline: string
+  body: string
+  features: string[]
+}
+
+function businessUpgradeCopy(industry: string): BusinessUpgradeCopy {
+  if (industry === "food" || industry === "home_based_food") {
+    return {
+      headline: "Take orders, reservations, and payments.",
+      body: "Business turns the restaurant site into a working front counter: orders, reservations, guest tools, and secure payments from the same account.",
+      features: [
+        "Online orders and cart tools",
+        "Reservations and guest management",
+        "Secure payment setup when you're ready",
+      ],
+    }
+  }
+  if (["wellness", "beauty", "fitness", "pet_services", "education", "healthcare"].includes(industry)) {
+    return {
+      headline: "Let clients book and pay without the back-and-forth.",
+      body: "Business adds booking, client tools, payments, and follow-up so the work keeps moving after someone is ready.",
+      features: [
+        "Booking calendar and client management",
+        "Online payment setup when you're ready",
+        "Email and follow-up tools included",
+      ],
+    }
+  }
+  return {
+    headline: "Run the job after the customer says yes.",
+    body: "Business adds the operating tools: estimates, deposits, booking, email, and client follow-up inside the same Found account.",
+    features: [
+      "Estimates and deposit payments",
+      "Booking and client management",
+      "Email marketing included",
+    ],
+  }
+}
 function paymentSetupCopy(industry: string, activeAddons: string[]) {
   if (industry === "retail" || industry === "makers_crafts" || activeAddons.includes("shopping_cart")) {
     return {
@@ -143,10 +182,12 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const hasIntroRate = !!company?.is_founding_member
   const useIntroPrice = !isActive || hasIntroRate
   const hasStripe = !!company?.stripe_customer_id
+  const industryCategory = company?.industry_category ?? ""
   const displayPrice = useIntroPrice ? meta.intro : meta.normal
   const upgradePrice = upgrade ? (useIntroPrice ? upgrade.introPrice : upgrade.normalPrice) : 0
+  const businessUpgrade = plan === "found_business" ? null : businessUpgradeCopy(industryCategory)
+  const businessPrice = useIntroPrice ? PLAN_META.found_business.intro : PLAN_META.found_business.normal
 
-  const industryCategory = company?.industry_category ?? ""
   const relevantAddons = getRelevantAddons(industryCategory)
 
   let activeAddonSlugs: string[] = []
@@ -508,6 +549,74 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
+      {businessUpgrade && plan === "found" && company?.id && (
+        <section style={{ marginBottom: 24 }}>
+          <div style={{
+            borderRadius: 18,
+            padding: "18px 20px",
+            backgroundColor: "rgba(255,255,255,0.035)",
+            border: "1px solid rgba(255,255,255,0.08)",
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 10 }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 6px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                  Run more of the business
+                </p>
+                <h2 style={{ margin: 0, ...TYPE.title, fontWeight: 360, lineHeight: 1.14, color: "white" }}>
+                  {businessUpgrade.headline}
+                </h2>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                <p style={{ margin: 0, ...TYPE.title, color: "white" }}>${businessPrice}</p>
+                <p style={{ margin: "-2px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
+              </div>
+            </div>
+            <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              {businessUpgrade.body}
+            </p>
+            <div style={{ display: "grid", gap: 8, marginBottom: 16 }}>
+              {businessUpgrade.features.map((f) => (
+                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 3 }}
+                    stroke={GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <span style={{ ...TYPE.footnote, fontWeight: 650, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
+                </div>
+              ))}
+            </div>
+            {isActive ? (
+              <form action={startUpgradeCheckout}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <input type="hidden" name="targetPlan" value="found_business" />
+                <button type="submit" style={{
+                  width: "100%",
+                  minHeight: 50,
+                  borderRadius: 999,
+                  padding: "0 18px",
+                  ...TYPE.subhead,
+                  fontWeight: 900,
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  color: GREEN,
+                  border: `1px solid ${GREEN}40`,
+                  cursor: "pointer",
+                }}>
+                  Upgrade to Business
+                </button>
+              </form>
+            ) : company?.slug ? (
+              <MoreActivateButton
+                slug={company.slug}
+                companyName={company.name}
+                targetPlan="found_business"
+                variant="black"
+              >
+                Activate Business for {company.name}
+              </MoreActivateButton>
+            ) : null}
+          </div>
+        </section>
+      )}
       {!upgrade && (
         <section style={{ marginBottom: 24 }}>
           <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}24`, backgroundColor: `${GREEN}08` }}>
@@ -550,14 +659,14 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       )}
 
       <div style={{ marginBottom: 24 }}>
-        <Link href="https://foundco.app/plans" style={{ textDecoration: "none", display: "block" }}>
+        <Link href="https://foundco.app/plans" target="_blank" rel="noreferrer" style={{ textDecoration: "none", display: "block" }}>
           <div style={{
             borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.06)",
             padding: "15px 18px",
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
-            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Compare all plans</span>
+            <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Compare plan details</span>
             <ChevronRight />
           </div>
         </Link>
