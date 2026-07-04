@@ -4,6 +4,36 @@
 
 ---
 
+## Session: July 4, 2026 - All Tools Entitlement Audit
+**AI:** Codex
+**Worked on:** Shawn asked Craig to lead a full team audit of whether every included or selected tool appears and works for Business, Pro with add-ons, and add-on purchase paths.
+
+### Team Decision
+- Shawn: Industry awareness should default the right tools into the dock and keep other entitled tools available in More.
+- Craig: Entitlements decide availability; industry decides default dock priority; route/API gates must enforce the same rules.
+- Steve: If an owner paid for a tool or the plan includes it, the owner must be able to find and use it.
+- Jony: The dock should stay focused; More/My Dock is the complete available-tool library.
+- Angela: Different industries need different default dock priorities, not one generic order.
+- Priya: Plan and add-on state must be the source of truth, and helper logic must not over-grant features.
+
+### Audit Findings
+- Business entitlements are modeled through `getEffectiveAddons()` and include online ordering, shopping cart, quote payments, reservation calendar, and email marketing.
+- Selected add-ons flow into dashboard navigation as `activeAddons`.
+- More/My Dock shows available dashboard tools from the same effective add-on list.
+- Public ordering, shop, and reserve pages check add-on access correctly.
+- Dashboard pages/APIs for estimates, schedule, and marketing are not consistently route-gated; a direct URL can open some tools even when the dock hides them.
+- `getFeatureAccess()` has a risky grouped case where `email_marketing` can unlock unrelated Business-only feature checks if future code uses it.
+- Dock policy is duplicated in `DashboardNav` and `DashboardPages`, which caused the earlier estimates drift.
+- Industry default priority is still too generic for some industries, especially wellness/beauty/pet/fitness where Schedule should likely outrank Estimates.
+
+### Recommended Next Session
+- Create a single shared dashboard tool policy helper for available tools and default pinned tools.
+- Use that helper in both bottom dock and More/My Dock.
+- Add route/API entitlement guards for paid dashboard tools.
+- Fix `getFeatureAccess()` so each add-on unlocks only its own feature.
+- Test Business, Pro plus one add-on, Starter plus one add-on, and default industry cases.
+
+---
 ## Session: July 4, 2026 - Universal Estimates Tool Entitlement
 **AI:** Codex
 **Worked on:** Shawn asked whether any owner who signs up through Found Business, Pro with quotes, or a quote/estimate add-on should be able to use Estimates across every industry. The team confirmed this as a product rule and Craig verified the remaining branch coverage.
