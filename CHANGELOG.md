@@ -28,6 +28,33 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Detail Hierarchy Polish
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to leave the list page alone and move to estimate detail hierarchy. Jony/Steve led the pass: make the detail answer total and next action faster without changing payment truth.
+
+### Completed
+- Reworked the detail totals area from a boxed accounting card into a quieter hero total with subtotal/tax below it.
+- Added stronger spacing after send/resend/copy actions so the next action separates from work details.
+- Removed the duplicate accepted amount from the accepted status section because the total is already the hero.
+- Kept accepted state positive and simple while preserving payment-link behavior behind Stripe readiness.
+- Added a quiet `Work` section header with item count before line items so the detail page scans in order.
+- Preserved list, backend, payment, and public estimate behavior.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open a sent/viewed estimate and confirm the detail reads customer/contact, total, actions, work, activity.
+- Confirm the total is the visual anchor and subtotal/tax remain correct.
+- Confirm `Copy estimate link` and `Resend Estimate` still work.
+- Open an accepted estimate and confirm the accepted section no longer duplicates the total amount.
+- Confirm the work section shows the item count and all line item amounts remain correct.
+- Confirm no payment link appears unless Stripe is connected.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the detail page hierarchy.
+2. Continue payable-estimate QA after visual approval.
+3. Keep AI estimate builder blocked until manual/payable estimate flow passes QA.
+
+---
 ## Session: July 3, 2026 - Missing Address Copy by Estimate State
 **AI:** Codex
 **Worked on:** Shawn approved the full team direction after Jony/Steve reviewed the live draft-row polish and flagged that accepted estimates should not show missing-address warning language.
@@ -256,6 +283,33 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Detail Hierarchy Polish
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to leave the list page alone and move to estimate detail hierarchy. Jony/Steve led the pass: make the detail answer total and next action faster without changing payment truth.
+
+### Completed
+- Reworked the detail totals area from a boxed accounting card into a quieter hero total with subtotal/tax below it.
+- Added stronger spacing after send/resend/copy actions so the next action separates from work details.
+- Removed the duplicate accepted amount from the accepted status section because the total is already the hero.
+- Kept accepted state positive and simple while preserving payment-link behavior behind Stripe readiness.
+- Added a quiet `Work` section header with item count before line items so the detail page scans in order.
+- Preserved list, backend, payment, and public estimate behavior.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open a sent/viewed estimate and confirm the detail reads customer/contact, total, actions, work, activity.
+- Confirm the total is the visual anchor and subtotal/tax remain correct.
+- Confirm `Copy estimate link` and `Resend Estimate` still work.
+- Open an accepted estimate and confirm the accepted section no longer duplicates the total amount.
+- Confirm the work section shows the item count and all line item amounts remain correct.
+- Confirm no payment link appears unless Stripe is connected.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the detail page hierarchy.
+2. Continue payable-estimate QA after visual approval.
+3. Keep AI estimate builder blocked until manual/payable estimate flow passes QA.
+
+---
 ## Session: July 3, 2026 - Missing Address Copy by Estimate State
 **AI:** Codex
 **Worked on:** Shawn approved the full team direction after Jony/Steve reviewed the live draft-row polish and flagged that accepted estimates should not show missing-address warning language.

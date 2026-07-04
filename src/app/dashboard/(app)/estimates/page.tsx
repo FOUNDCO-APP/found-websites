@@ -1371,29 +1371,28 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
 
             {/* Totals */}
-            <div style={{ marginBottom: 24, padding: "16px 18px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ marginBottom: 18, padding: "18px 0 16px", borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
+                <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 13, fontWeight: 760 }}>Total</span>
+                <span style={{ color: SIGNAL_GREEN, fontSize: 30, fontWeight: 780, letterSpacing: "-0.02em", lineHeight: 1 }}>{fmt(est.total)}</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Subtotal</span>
-                  <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600 }}>{fmt(est.subtotal)}</span>
+                  <span style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>Subtotal</span>
+                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600 }}>{fmt(est.subtotal)}</span>
                 </div>
                 {est.tax_rate > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 14 }}>Tax ({(est.tax_rate * 100).toFixed(2)}%)</span>
-                    <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 600 }}>{fmt(est.tax_amount)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>Tax ({(est.tax_rate * 100).toFixed(2)}%)</span>
+                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600 }}>{fmt(est.tax_amount)}</span>
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                  <span style={{ color: "white", fontSize: 17, fontWeight: 700 }}>Total</span>
-                  <span style={{ color: SIGNAL_GREEN, fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em" }}>{fmt(est.total)}</span>
-                </div>
               </div>
             </div>
 
-
             {/* Actions */}
             {(est.status === "draft" || est.status === "sent" || est.status === "viewed") && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
                 {(est.status === "sent" || est.status === "viewed") && (
                   <button onClick={copyLink} style={{
                     width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)",
@@ -1425,12 +1424,9 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             )}
 
             {est.status === "accepted" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
                 <div style={{ padding: "2px 0 4px" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 5 }}>
-                    <div style={{ color: SIGNAL_GREEN, fontSize: 14, fontWeight: 780 }}>Accepted</div>
-                    <div style={{ color: "white", fontSize: 15, fontWeight: 780 }}>{fmt(est.total)}</div>
-                  </div>
+                  <div style={{ color: SIGNAL_GREEN, fontSize: 14, fontWeight: 780, marginBottom: 5 }}>Accepted</div>
                   <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, lineHeight: 1.45 }}>
                     {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : (est.accepted_at ? new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "Estimate accepted")}
                     {(est.payment_status === "paid" || est.paid_at || est.deposit_paid_at || companyStripeReady) && est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
@@ -1495,6 +1491,10 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             {/* Line items */}
             {items.length > 0 && (
               <div style={{ marginBottom: 20, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0 2px" }}>
+                  <span style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, fontWeight: 780, letterSpacing: "0.08em", textTransform: "uppercase" }}>Work</span>
+                  <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, fontWeight: 650 }}>{items.length} {items.length === 1 ? "item" : "items"}</span>
+                </div>
                 {items.map((item, i) => (
                   <div key={i} style={{
                     display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
