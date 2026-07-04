@@ -1,3 +1,23 @@
+## Session: July 4, 2026 - Match Activation Plan Selector To Onboarding
+**AI:** Codex
+**Worked on:** Activation overlay plan selector after Shawn flagged it did not match the final website/onboarding selector
+
+### Completed This Session
+- Changed activation plan selection to use the same compact card structure as the final onboarding plan selector.
+- Matched the 24px radio circle, SVG checkmark, Pro `Recommended` pill, typography scale, compact spacing, green glow, and sticky CTA behavior.
+- Updated shared plan data to use the same `eyebrow`, `bullets`, and Business tool-group structure as onboarding.
+- Default activation selection now starts on Found Pro to guide owners toward the recommended plan; explicit Business upgrade CTAs still preselect Business.
+- Verified with `cmd /c npm run build`.
+
+### What To Test Next
+1. Open inactive `molcas` and tap the top `Activate` entry point.
+2. Confirm the selector visually matches the final website/onboarding plan selector.
+3. Confirm Found Pro is preselected by default.
+4. Tap Starter, Pro, and Business and confirm the selected radio/checkmark and CTA update.
+5. Continue with Pro and confirm the payment form says `$39/month`.
+6. Continue with Business and confirm the payment form says `$69/month`.
+
+---
 ## Session: July 4, 2026 - Activation Plan Choice Before Payment
 **AI:** Codex
 **Worked on:** Activation checkout flow after Steve/Jony/Angela/Craig/Priya team approval

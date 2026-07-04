@@ -8,6 +8,7 @@ import { createActivationSetup } from "@/app/activate/activateActions"
 import FoundWordmark from "@/components/FoundWordmark"
 import {
   FOUND_PLAN_OPTIONS,
+  defaultActivationPlan,
   foundPlanDetails,
   normalizeFoundPlan,
   type FoundPlanKey,
@@ -162,6 +163,14 @@ function CardForm({
   )
 }
 
+function CheckIcon({ color }: { color: string }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
 function PlanChoice({
   selectedPlan,
   loading,
@@ -176,127 +185,169 @@ function PlanChoice({
   const selected = foundPlanDetails(selectedPlan)
 
   return (
-    <div style={{ width: "100%", maxWidth: 448, paddingBottom: 18, animation: "cinematic-word-in 600ms ease-out both" }}>
-      <div style={{ padding: "0 8px 18px" }}>
-        <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 900, letterSpacing: "0.22em", textTransform: "uppercase", color: SIGNAL_GREEN }}>
+    <section style={{
+      position: "relative",
+      width: "100%",
+      maxWidth: 448,
+      minHeight: "100%",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      padding: "20px 0 0",
+      animation: "cinematic-word-in 600ms ease-out both",
+    }}>
+      <div style={{
+        pointerEvents: "none",
+        position: "absolute",
+        left: -28,
+        right: -28,
+        bottom: 0,
+        height: "66%",
+        background: "radial-gradient(ellipse 100% 70% at 50% 100%, rgba(50,208,116,0.16) 0%, transparent 70%)",
+      }} />
+
+      <div style={{ position: "relative", maxWidth: 512 }}>
+        <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 900, letterSpacing: "0.22em", textTransform: "uppercase", color: SIGNAL_GREEN }}>
           Best place to start
         </p>
-        <h2 style={{ margin: "0 0 12px", fontSize: 34, lineHeight: 1.06, fontWeight: 300, letterSpacing: "-0.02em", color: "white" }}>
+        <h1 style={{ margin: 0, whiteSpace: "nowrap", fontSize: "1.72rem", lineHeight: 1.04, fontWeight: 300, color: "white" }}>
           Most owners start with Pro.
-        </h2>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.52)" }}>
+        </h1>
+        <p style={{ margin: "12px 0 0", fontSize: 14, lineHeight: "24px", color: "rgba(255,255,255,0.58)" }}>
           Starter gets your site live. Pro keeps leads warm. Business helps you book jobs and collect money.
         </p>
       </div>
 
-      <div style={{ display: "grid", gap: 12 }}>
-        {FOUND_PLAN_OPTIONS.map((option) => {
-          const isSelected = option.key === selectedPlan
+      <div style={{ position: "relative", display: "grid", gap: 10, marginTop: 20, paddingBottom: 96 }}>
+        {FOUND_PLAN_OPTIONS.map((card) => {
+          const activePlan = selectedPlan === card.key
           return (
             <button
-              key={option.key}
+              key={card.key}
               type="button"
-              onClick={() => onSelect(option.key)}
+              onClick={() => onSelect(card.key)}
               style={{
                 width: "100%",
+                borderRadius: "1.2rem",
+                border: "1px solid",
+                padding: 16,
                 textAlign: "left",
-                borderRadius: 20,
-                padding: 20,
-                background: isSelected
-                  ? "linear-gradient(180deg, rgba(50,208,116,0.13), rgba(50,208,116,0.04))"
-                  : "rgba(255,255,255,0.035)",
-                border: isSelected ? `1px solid ${SIGNAL_GREEN}` : "1px solid rgba(255,255,255,0.1)",
+                transition: "transform 150ms ease, border-color 150ms ease, background 150ms ease",
+                borderColor: activePlan ? SIGNAL_GREEN : card.featured ? "rgba(50,208,116,0.34)" : "rgba(255,255,255,0.11)",
+                background: activePlan
+                  ? "linear-gradient(180deg, rgba(50,208,116,0.15) 0%, rgba(50,208,116,0.075) 100%)"
+                  : card.featured
+                    ? "rgba(50,208,116,0.065)"
+                    : "rgba(255,255,255,0.035)",
+                boxShadow: activePlan ? "0 20px 60px rgba(50,208,116,0.13)" : "none",
                 color: "white",
                 cursor: "pointer",
-                boxShadow: option.featured && isSelected ? "0 0 34px rgba(50,208,116,0.1)" : "none",
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+              <span style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
                 <span style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
                   marginTop: 2,
-                  border: isSelected ? "none" : "1px solid rgba(255,255,255,0.17)",
-                  backgroundColor: isSelected ? SIGNAL_GREEN : "transparent",
-                  color: isSelected ? FOUND_BLACK : "transparent",
-                  fontSize: 18,
-                  fontWeight: 900,
+                  display: "flex",
+                  height: 24,
+                  width: 24,
+                  flexShrink: 0,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "50%",
+                  border: "1px solid",
+                  borderColor: activePlan ? SIGNAL_GREEN : "rgba(255,255,255,0.2)",
+                  backgroundColor: activePlan ? SIGNAL_GREEN : "transparent",
                 }}>
-                  {isSelected ? "" : ""}
+                  {activePlan && <CheckIcon color={FOUND_BLACK} />}
                 </span>
+
                 <span style={{ minWidth: 0, flex: 1 }}>
-                  <span style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 20, fontWeight: 900 }}>{option.name}</span>
+                  <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: 8, rowGap: 4 }}>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: "white" }}>{card.name}</span>
                     <span style={{
                       borderRadius: 999,
-                      padding: "5px 9px",
-                      backgroundColor: "rgba(255,255,255,0.08)",
-                      color: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.45)",
-                      fontSize: 10,
+                      padding: "4px 10px",
+                      fontSize: 9,
                       fontWeight: 900,
-                      letterSpacing: "0.14em",
+                      letterSpacing: "0.12em",
                       textTransform: "uppercase",
+                      backgroundColor: card.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+                      color: card.featured ? FOUND_BLACK : "rgba(255,255,255,0.55)",
                     }}>
-                      {option.badge}
+                      {card.eyebrow}
                     </span>
                   </span>
-                  <span style={{ display: "flex", alignItems: "baseline", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 30, fontWeight: 900 }}>${option.price}/mo</span>
-                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.42)" }}>
-                      regular <span style={{ textDecoration: "line-through" }}>${option.normalPrice}/mo</span>
+
+                  <span style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", columnGap: 8, rowGap: 4, marginTop: 6 }}>
+                    <span style={{ fontSize: "1.35rem", lineHeight: 1, fontWeight: 900, color: "white" }}>${card.price}/mo</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.01em", color: "rgba(255,255,255,0.62)" }}>
+                      regular <span style={{ textDecoration: "line-through", textDecorationColor: "rgba(255,255,255,0.45)", textDecorationThickness: 2 }}>${card.normalPrice}/mo</span>
                     </span>
                   </span>
-                  <span style={{ display: "block", marginTop: 8, fontSize: 15, lineHeight: 1.35, fontWeight: 900, color: SIGNAL_GREEN }}>
-                    {option.headline}
+
+                  <span style={{ display: "block", marginTop: 8, fontSize: 14, lineHeight: "20px", fontWeight: 900, color: SIGNAL_GREEN }}>
+                    {card.headline}
                   </span>
-                  <span style={{ display: "grid", gap: 8, marginTop: 14 }}>
-                    {option.features.map((feature) => (
-                      <span key={feature} style={{ display: "grid", gridTemplateColumns: "18px 1fr", gap: 8, fontSize: 13, lineHeight: 1.42, fontWeight: 700, color: "rgba(255,255,255,0.68)" }}>
-                        <span style={{ color: SIGNAL_GREEN }}></span>
-                        <span>{feature}</span>
+
+                  <span style={{ display: "grid", gap: 6, marginTop: 12 }}>
+                    {card.bullets.map((bullet) => (
+                      <span key={bullet} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, lineHeight: "20px", fontWeight: 600, color: "rgba(255,255,255,0.62)" }}>
+                        <span style={{ marginTop: 2, flexShrink: 0 }}><CheckIcon color={SIGNAL_GREEN} /></span>
+                        {bullet}
                       </span>
                     ))}
+                    {card.toolGroup && (
+                      <span style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, lineHeight: "20px", fontWeight: 600, color: "rgba(255,255,255,0.62)" }}>
+                        <span style={{ marginTop: 2, flexShrink: 0 }}><CheckIcon color={SIGNAL_GREEN} /></span>
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ display: "block", fontWeight: 900, color: "rgba(255,255,255,0.75)" }}>{card.toolGroup.label}</span>
+                          <span style={{ display: "grid", gap: 4, marginTop: 6 }}>
+                            {card.toolGroup.items.map((item) => (
+                              <span key={item} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 11, lineHeight: "16px", fontWeight: 600, color: "rgba(255,255,255,0.52)" }}>
+                                <span style={{ marginTop: 7, height: 4, width: 4, flexShrink: 0, borderRadius: "50%", backgroundColor: SIGNAL_GREEN }} />
+                                {item}
+                              </span>
+                            ))}
+                          </span>
+                        </span>
+                      </span>
+                    )}
                   </span>
                 </span>
-              </div>
+              </span>
             </button>
           )
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={onContinue}
-        disabled={loading}
-        style={{
-          width: "100%",
-          marginTop: 18,
-          borderRadius: 18,
-          padding: "18px 16px",
-          border: "none",
-          backgroundColor: SIGNAL_GREEN,
-          color: FOUND_BLACK,
-          fontSize: 13,
-          fontWeight: 900,
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          cursor: loading ? "default" : "pointer",
-          opacity: loading ? 0.55 : 1,
-          position: "sticky",
-          bottom: 0,
-          boxShadow: "0 -18px 32px rgba(8,10,9,0.94)",
-        }}
-      >
-        {loading ? "Preparing secure payment..." : selected.cta}
-      </button>
-    </div>
+      <div style={{ position: "sticky", bottom: 0, zIndex: 10, marginTop: 20, paddingTop: 12, paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <button
+          type="button"
+          onClick={onContinue}
+          disabled={loading}
+          style={{
+            width: "100%",
+            borderRadius: 999,
+            padding: "16px 14px",
+            border: "none",
+            backgroundColor: SIGNAL_GREEN,
+            color: FOUND_BLACK,
+            boxShadow: "0 14px 34px rgba(0,0,0,0.36)",
+            fontSize: 14,
+            fontWeight: 900,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            whiteSpace: "nowrap",
+            cursor: loading ? "default" : "pointer",
+            opacity: loading ? 0.55 : 1,
+          }}
+        >
+          {loading ? "Preparing secure payment" : selected.cta}
+        </button>
+      </div>
+    </section>
   )
 }
-
 // Cinematic phases mirror page.tsx exactly.
 type CinPhase = "text" | "iris" | "fading" | "done"
 type PaymentStep = "plans" | "loading" | "payment"
@@ -325,7 +376,7 @@ export default function ActivateOverlay({
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
-  const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>(normalizeFoundPlan(targetPlan))
+  const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>(defaultActivationPlan(targetPlan))
   const [paymentStep, setPaymentStep] = useState<PaymentStep>(isAddonFlow ? "loading" : "plans")
   const [loadError, setLoadError] = useState<string | null>(null)
 
