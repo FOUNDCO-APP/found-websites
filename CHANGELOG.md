@@ -28,6 +28,29 @@
 
 ---
 
+## Session: July 3, 2026 - Draft Row Alignment + Finish State
+**AI:** Codex
+**Worked on:** Shawn flagged that incomplete draft rows looked broken: `Draft` was too hard to read, missing addresses made dates fall out of alignment, and `$0.00` was not helpful.
+
+### Completed
+- Made draft row labels more readable while keeping them secondary.
+- Added `Job address missing` fallback text so rows without an address keep the same second-line rhythm as other estimates.
+- Changed incomplete draft rows to show `Finish` instead of `$0.00`.
+- Added local list priority so sent/viewed estimates sort above drafts, with drafts still above accepted work in the all/open workflow.
+- Preserved accepted/payment behavior and did not touch payment logic.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open `All` and confirm sent/viewed estimates appear above incomplete drafts.
+- Confirm a draft missing address shows `Job address missing - Today` instead of only `Today` dropping out of alignment.
+- Confirm incomplete drafts show `Finish` on the right instead of `$0.00`.
+- Confirm accepted rows still stay quiet and payment-link behavior is unchanged.
+
+### Next
+1. Shawn/Johnny/Steve approval on draft row treatment.
+2. Continue estimate detail polish/payment QA after list behavior is accepted.
+
+---
 ## Session: July 3, 2026 - Accepted Row Label Quieting
 **AI:** Codex
 **Worked on:** Shawn approved Jony/Steve's refinement after reviewing the live state filters: accepted row labels became repetitive when many won estimates were visible in All.
@@ -210,6 +233,29 @@
 
 ---
 
+## Session: July 3, 2026 - Draft Row Alignment + Finish State
+**AI:** Codex
+**Worked on:** Shawn flagged that incomplete draft rows looked broken: `Draft` was too hard to read, missing addresses made dates fall out of alignment, and `$0.00` was not helpful.
+
+### Completed
+- Made draft row labels more readable while keeping them secondary.
+- Added `Job address missing` fallback text so rows without an address keep the same second-line rhythm as other estimates.
+- Changed incomplete draft rows to show `Finish` instead of `$0.00`.
+- Added local list priority so sent/viewed estimates sort above drafts, with drafts still above accepted work in the all/open workflow.
+- Preserved accepted/payment behavior and did not touch payment logic.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open `All` and confirm sent/viewed estimates appear above incomplete drafts.
+- Confirm a draft missing address shows `Job address missing - Today` instead of only `Today` dropping out of alignment.
+- Confirm incomplete drafts show `Finish` on the right instead of `$0.00`.
+- Confirm accepted rows still stay quiet and payment-link behavior is unchanged.
+
+### Next
+1. Shawn/Johnny/Steve approval on draft row treatment.
+2. Continue estimate detail polish/payment QA after list behavior is accepted.
+
+---
 ## Session: July 3, 2026 - Accepted Row Label Quieting
 **AI:** Codex
 **Worked on:** Shawn approved Jony/Steve's refinement after reviewing the live state filters: accepted row labels became repetitive when many won estimates were visible in All.

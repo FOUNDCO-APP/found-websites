@@ -63,7 +63,7 @@ type Estimate = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  draft:    "rgba(255,255,255,0.3)",
+  draft:    "rgba(255,255,255,0.48)",
   sent:     "#0A84FF",
   viewed:   "#FFD60A",
   accepted: "#30D158",
@@ -87,6 +87,17 @@ function timeAgo(iso: string) {
   if (d === 1) return "Yesterday"
   if (d < 7) return `${d}d ago`
   return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
+
+function isIncompleteDraft(est: Estimate) {
+  return est.status === "draft" && (est.total <= 0 || !(est.estimate_line_items?.length))
+}
+
+function estimateListPriority(est: Estimate) {
+  if (est.status === "sent" || est.status === "viewed") return 0
+  if (est.status === "draft") return 1
+  if (est.status === "accepted") return 2
+  return 3
 }
 
 const inputStyle: React.CSSProperties = {
@@ -239,6 +250,11 @@ export default function EstimatesPage() {
     : filter === "open"
       ? estimates.filter(e => openStatuses.has(e.status))
       : estimates.filter(e => e.status === filter)
+  const displayEstimates = [...filtered].sort((a, b) => {
+    const priority = estimateListPriority(a) - estimateListPriority(b)
+    if (priority !== 0) return priority
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   const counts: Record<string, number> = {}
   for (const e of estimates) counts[e.status] = (counts[e.status] ?? 0) + 1
@@ -400,7 +416,7 @@ export default function EstimatesPage() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          {filtered.map(est => (
+          {displayEstimates.map(est => (
             <EstimateCard
               key={est.id}
               estimate={est}
@@ -464,6 +480,9 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
   const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
   const shouldShowStatus = estimate.status === "accepted" ? false : estimate.status !== activeFilter
   const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
+  const incompleteDraft = isIncompleteDraft(estimate)
+  const hasAddress = Boolean(estimate.property_address?.trim())
+  const sublineText = hasAddress ? estimate.property_address! : "Job address missing"
 
   return (
     <button
@@ -491,20 +510,18 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
           )}
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
-          {estimate.property_address && (
-            <span style={{ color: "rgba(255,255,255,0.42)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
-              {estimate.property_address}
-            </span>
-          )}
-          {estimate.property_address && <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>}
+          <span style={{ color: hasAddress ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
+            {sublineText}
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>
           <span style={{ color: "rgba(255,255,255,0.30)", ...TYPE.footnote, textTransform: "none", whiteSpace: "nowrap" }}>
             {timeAgo(estimate.created_at)}
           </span>
         </div>
       </div>
       <div style={{ textAlign: "right", flexShrink: 0 }}>
-        <div style={{ color: "white", fontSize: 17, fontWeight: 760, letterSpacing: 0 }}>
-          {fmt(estimate.total)}
+        <div style={{ color: incompleteDraft ? SIGNAL_GREEN : "white", fontSize: incompleteDraft ? 15 : 17, fontWeight: 760, letterSpacing: 0 }}>
+          {incompleteDraft ? "Finish" : fmt(estimate.total)}
         </div>
         {paymentHint && paymentHint !== "Unpaid" && (
           <div style={{ color: displayStatus.color, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>{paymentHint}</div>
