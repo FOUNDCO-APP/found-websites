@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 3, 2026 - Payment Setup Host Route Correction
+**AI:** Codex
+**Worked on:** Shawn retested payment setup and still saw the setup error. Craig reviewed the live host behavior and found the dashboard host exposes dashboard APIs at `/api/...`, not `/dashboard/api/...`.
+
+### Completed
+- Reverted `PaymentSetupButton` to call `/api/payments/connect`, which is the correct route on `my.foundco.app`.
+- Confirmed live behavior before the fix: `/dashboard/api/payments/connect` returned HTML/405 on `my.foundco.app`, while `/api/payments/connect` returned JSON.
+- Preserved payment setup UI, Stripe Connect route logic, return paths, estimate detail, and More page behavior.
+
+### Must Test
+- Wait for deploy, then tap `Set up` from an accepted estimate detail.
+- Tap `Set up deposit payments` from More.
+- Confirm Stripe Express onboarding opens instead of the generic setup error.
+- If setup still fails, capture the exact error text because it should now be coming from the server route/auth/Stripe config rather than the wrong host path.
+
+### Next
+1. Complete Stripe Express setup for the test business/slug.
+2. Retest public Accept & Pay after the company has `stripe_connect_account_id`.
+3. Verify payment status, activity, owner email, and customer receipt.
+
+---
 ## Session: July 3, 2026 - Payment Setup Route Fix
 **AI:** Codex
 **Worked on:** Shawn found that payment setup failed from both accepted estimate detail and More. The setup button was calling the wrong API path.

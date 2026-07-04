@@ -31,7 +31,7 @@ export default function PaymentSetupButton({
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/dashboard/api/payments/connect", {
+      const res = await fetch("/api/payments/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ returnTo }),
