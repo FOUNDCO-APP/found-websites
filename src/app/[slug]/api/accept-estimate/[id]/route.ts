@@ -109,6 +109,14 @@ function customerReceiptHtml(args: {
 </body></html>`
 }
 
+function estimateDepositDue(total: number, depositPct: number | null | undefined, depositAmount: number | null | undefined) {
+  if (depositAmount && depositAmount > 0) return depositAmount
+  const pct = depositPct ?? 50
+  const totalCents = Math.round(Number(total ?? 0) * 100)
+  const depositCents = pct >= 100 ? totalCents : Math.round(totalCents * (pct / 100))
+  return depositCents / 100
+}
+
 function payLaterHtml(args: { companyName: string; clientName: string; color: string; estimateLink: string; amountDue: number }) {
   return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center">
@@ -145,7 +153,7 @@ export async function POST(req: Request, { params }: Params) {
   const admin = createAdminClient()
   const { data: estimate } = await admin
     .from("estimates")
-    .select("id, status, client_name, client_first_name, client_last_name, client_company, client_email, property_address, total, deposit_amount, deposit_paid_at, accepted_at, receipt_sent_at")
+    .select("id, status, client_name, client_first_name, client_last_name, client_company, client_email, property_address, total, deposit_pct, deposit_amount, deposit_paid_at, accepted_at, receipt_sent_at")
     .eq("id", id)
     .eq("company_id", company.id)
     .single()
@@ -159,9 +167,9 @@ export async function POST(req: Request, { params }: Params) {
   const clientName = clientDisplayName(estimate)
   const dashboardLink = `https://my.${ROOT_DOMAIN}/estimates?estimate=${id}`
   const estimateLink = `https://${company.slug}.${ROOT_DOMAIN}/q/${id}`
-  const depositAmount = Number(estimate.deposit_amount ?? 0)
   const total = Number(estimate.total ?? 0)
-  const amountPaid = body.paid ? (depositAmount || total) : 0
+  const depositAmount = estimateDepositDue(total, estimate.deposit_pct as number | null, estimate.deposit_amount as number | null)
+  const amountPaid = body.paid ? depositAmount : 0
   const remaining = Math.max(total - amountPaid, 0)
 
   const patch: Record<string, string> = {
@@ -217,7 +225,7 @@ export async function POST(req: Request, { params }: Params) {
     await sendEmail(
       estimate.client_email,
       `Payment link for ${companyName}`,
-      payLaterHtml({ companyName, clientName, color, estimateLink, amountDue: depositAmount || total }),
+      payLaterHtml({ companyName, clientName, color, estimateLink, amountDue: depositAmount }),
     )
   }
 

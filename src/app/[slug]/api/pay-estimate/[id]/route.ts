@@ -34,8 +34,9 @@ export async function POST(req: NextRequest, { params }: Params) {
   if (!estimate) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
   const depositPct = (estimate.deposit_pct as number) ?? 50
-  const depositAmount = estimate.total * (depositPct / 100)
-  const depositCents = Math.round(depositAmount * 100)
+  const totalCents = Math.round(Number(estimate.total ?? 0) * 100)
+  const depositCents = depositPct >= 100 ? totalCents : Math.round(totalCents * (depositPct / 100))
+  const depositAmount = depositCents / 100
 
   if (depositCents < 50) return NextResponse.json({ error: "Deposit amount too small" }, { status: 400 })
 

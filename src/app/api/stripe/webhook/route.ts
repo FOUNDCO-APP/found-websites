@@ -191,12 +191,13 @@ export async function POST(req: NextRequest) {
 
       if (estimate && !estimate.deposit_paid_at) {
         const now = new Date().toISOString()
-        const depositAmt = estimate.deposit_amount ?? (pi.amount_received ? pi.amount_received / 100 : 0)
+        const depositAmt = pi.amount_received ? pi.amount_received / 100 : (estimate.deposit_amount ?? 0)
         const total = estimate.total ?? 0
         const paymentStatus = total > 0 && depositAmt >= total ? "paid" : "deposit_paid"
 
         await supabase.from("estimates").update({
           deposit_paid_at: now,
+          deposit_amount: depositAmt,
           status: "accepted",
           accepted_at: now,
           accepted_payment_choice: "pay_now",

@@ -4,6 +4,34 @@
 
 ---
 
+## Session: July 4, 2026 - Session 3A Payment Flow Verification
+**AI:** Codex
+**Worked on:** Shawn approved moving into Session 3A after the team agreed the next risk was payment reliability and state correctness, not more visual polish.
+
+### Team Decision
+- Shawn: Confirm the payment flow cannot expose Found setup problems to clients and record clear test steps after the session.
+- Steve: No client should receive a payment link unless the business can actually take payment.
+- Jony: Keep client-facing payment language simple; do not add new visual complexity in this reliability pass.
+- Angela: Pay-later and payment-link emails must communicate the real amount due, not surprise clients with the full estimate.
+- Craig: Gate all payment-send paths on Stripe Connect readiness and trust webhook-confirmed payment amounts.
+- Priya: Store the actual Stripe amount received and keep deposit math cent-based.
+
+### Completed
+- Blocked dashboard payment-link sends unless Stripe Connect is fully ready, not just present on the company record.
+- Changed dashboard payment-link email amount due to use the deposit due amount instead of falling back to the full estimate total.
+- Changed pay-later acceptance emails to show the deposit due amount when a deposit is configured.
+- Changed public PaymentIntent creation to calculate deposit cents from the estimate total using cent-based math.
+- Changed the Stripe webhook to prefer `amount_received` from Stripe and persist that value back to `deposit_amount`.
+- Verified production build passes with these changes.
+
+### Must Test
+- With payments not fully set up, try sending a payment link from an accepted estimate and confirm it is blocked with setup messaging.
+- With payments ready, send or copy an estimate link and confirm the public estimate shows the deposit payment option.
+- Accept and choose pay later; confirm the client email/payment link asks for the deposit amount, not the full estimate total.
+- Pay the deposit in Stripe test mode and confirm the owner dashboard shows the accepted/deposit-paid state without asking for another payment.
+- Ignore the orange Stripe test badge for now; verify it disappears only when Stripe is switched to live mode.
+
+---
 ## Session: July 4, 2026 - Public Estimate CTA and PDF Fit
 **AI:** Codex
 **Worked on:** Shawn approved the team direction after reviewing the public estimate and print/PDF screenshots. The team focused on mobile CTA breathing room and making simple estimates print cleanly on one page.

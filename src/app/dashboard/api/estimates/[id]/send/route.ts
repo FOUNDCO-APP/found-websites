@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -15,6 +16,14 @@ function displayName(name: string) {
 
 function fmtCurrency(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+}
+
+function estimateDepositDue(total: number, depositPct: number | null | undefined, depositAmount: number | null | undefined) {
+  if (depositAmount && depositAmount > 0) return depositAmount
+  const pct = depositPct ?? 50
+  const totalCents = Math.round(Number(total ?? 0) * 100)
+  const depositCents = pct >= 100 ? totalCents : Math.round(totalCents * (pct / 100))
+  return depositCents / 100
 }
 
 function contrastColor(hex: string): string {
@@ -49,7 +58,7 @@ export async function POST(
 
   const { data: estimate } = await admin
     .from("estimates")
-    .select("id, status, client_name, client_email, client_phone, property_address, total, deposit_amount")
+    .select("id, status, client_name, client_email, client_phone, property_address, total, deposit_pct, deposit_amount")
     .eq("id", id)
     .eq("company_id", company.id)
     .single()
@@ -64,6 +73,10 @@ export async function POST(
     if (!companyExtra?.stripe_connect_account_id) {
       return NextResponse.json({ error: "Online payments are not set up yet" }, { status: 409 })
     }
+    const stripeConnect = await getStripeConnectStatus(companyExtra.stripe_connect_account_id as string)
+    if (!stripeConnect.ready) {
+      return NextResponse.json({ error: "Payment setup is not finished yet" }, { status: 409 })
+    }
     const resendKey = process.env.RESEND_API_KEY
     if (!resendKey) {
       console.error("[estimates/send] RESEND_API_KEY not set")
@@ -76,7 +89,7 @@ export async function POST(
     const color = company.primary_color ?? "#30D158"
     const btnTextColor = contrastColor(color)
     const companyName = displayName(company.name)
-    const amountDue = fmtCurrency(Number(estimate.deposit_amount ?? estimate.total))
+    const amountDue = fmtCurrency(estimateDepositDue(Number(estimate.total ?? 0), estimate.deposit_pct as number | null, estimate.deposit_amount as number | null))
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
