@@ -1,6 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { NextResponse } from "next/server"
 
 type Params = { params: Promise<{ id: string }> }
@@ -13,12 +11,9 @@ function calcTotals(items: { quantity: number; unit_price: number }[], taxRate: 
 
 export async function GET(req: Request, { params }: Params) {
   const { id } = await params
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-
-  const admin = createAdminClient()
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
+  const { admin, company } = guard
   const { data } = await admin
     .from("estimates")
     .select("*, estimate_line_items(id, sort_order, description, quantity, unit, unit_price, category, ai_generated)")
@@ -34,15 +29,14 @@ export async function GET(req: Request, { params }: Params) {
 
 export async function PATCH(req: Request, { params }: Params) {
   const { id } = await params
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
+  const { company } = guard
 
   const body = await req.json()
   const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, line_items, tax_rate, sent_at, accepted_at } = body
 
-  const admin = createAdminClient()
+  const { admin } = guard
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (client_name !== undefined) updates.client_name = client_name?.trim() || null
   if (client_first_name !== undefined) updates.client_first_name = client_first_name?.trim() || null
@@ -99,12 +93,9 @@ export async function PATCH(req: Request, { params }: Params) {
 
 export async function DELETE(req: Request, { params }: Params) {
   const { id } = await params
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-
-  const admin = createAdminClient()
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
+  const { admin, company } = guard
   await admin.from("estimates").delete().eq("id", id).eq("company_id", company.id)
   return NextResponse.json({ success: true })
 }

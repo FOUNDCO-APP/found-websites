@@ -80,12 +80,15 @@ export function getFeatureAccess(
     case "lead_tracking":
       return p === "found_pro" || p === "found_business"
 
-    // Business only (plan-gated)
+    // Business plan capabilities, or the matching paid add-on when one exists.
     case "booking":
+      return hasAddonAccess(p, "reservation_calendar", activeAddons)
     case "quotes":
+      return hasAddonAccess(p, "quote_payments", activeAddons)
     case "review_collection":
+      return p === "found_business"
     case "email_marketing":
-      return p === "found_business" || activeAddons.includes("email_marketing" as AddonSlug)
+      return hasAddonAccess(p, "email_marketing", activeAddons)
 
     // Add-ons — available on any plan with active subscription
     case "menu_display":

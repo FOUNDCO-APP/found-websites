@@ -1,15 +1,10 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ blocks: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ blocks: [] })
-
-  const admin = createAdminClient()
+  const guard = await requireDashboardAddonAccess("reservation_calendar")
+  if (!guard.ok) return guard.response
+  const { admin, company } = guard
   const { data } = await admin
     .from("availability_blocks")
     .select("id, block_date, range_start, range_end, label, created_at")

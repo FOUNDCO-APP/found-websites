@@ -1,15 +1,10 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ estimates: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ estimates: [] })
-
-  const admin = createAdminClient()
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
+  const { admin, company } = guard
   const { data } = await admin
     .from("estimates")
     .select("id, estimate_number, client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, paid_at, receipt_sent_at, stripe_payment_intent_id, created_at, updated_at")
@@ -27,10 +22,9 @@ function calcTotals(items: { quantity: number; unit_price: number }[], taxRate: 
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
+  const { company } = guard
 
   const body = await req.json()
   const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, ai_prompt, line_items = [], tax_rate = 0 } = body
@@ -50,7 +44,7 @@ export async function POST(req: Request) {
   const taxRate = Number(tax_rate ?? 0)
   const { subtotal, taxAmount, total } = calcTotals(items, taxRate)
 
-  const admin = createAdminClient()
+  const { admin } = guard
 
   // Sequential estimate number (per company)
   const { count } = await admin

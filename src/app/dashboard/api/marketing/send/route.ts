@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 
 function wrapEmail(body: string, companyName: string, unsubUrl: string): string {
   const htmlBody = body
@@ -27,7 +27,13 @@ function wrapEmail(body: string, companyName: string, unsubUrl: string): string 
 
 export async function POST(req: NextRequest) {
   try {
+    const guard = await requireDashboardAddonAccess("email_marketing")
+    if (!guard.ok) return guard.response
+
     const { companyId, templateSlug, subject, body, companySlug, rootDomain, filter } = await req.json()
+    if (!companyId || companyId !== guard.company.id) {
+      return NextResponse.json({ error: "Company not found." }, { status: 404 })
+    }
     if (!companyId || !subject || !body) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 })
     }
@@ -35,7 +41,7 @@ export async function POST(req: NextRequest) {
     const resendKey = process.env.RESEND_API_KEY
     if (!resendKey) return NextResponse.json({ error: "Email service not configured." }, { status: 503 })
 
-    const admin = createAdminClient()
+    const { admin } = guard
 
     const { data: company } = await admin
       .from("companies")

@@ -3,100 +3,10 @@
 import React, { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { TYPE, TEXT_OPACITY, GREEN, defaultFormIntentFor } from "@/lib/dashboard/typography"
-import { getBusinessModel } from "@/lib/getBusinessModel"
+import { TYPE, TEXT_OPACITY, GREEN } from "@/lib/dashboard/typography"
+import { getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashboardToolIds, type DashboardTool } from "@/lib/dashboard/toolPolicy"
 
-type PageDef = { id: string; label: string; path: string }
-
-function inboxLabelFor(industry: string | null | undefined): string {
-  switch (defaultFormIntentFor(industry)) {
-    case "booking":     return "Bookings"
-    case "appointment": return "Appointments"
-    case "estimate":    return "Estimates"
-    case "order":       return "Orders"
-    default:            return "Leads"
-  }
-}
-
-function peoplePageFor(industry: string | null | undefined): PageDef {
-  const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
-  return { id: "people", label, path: "/people" }
-}
-
-function allPagesFor(industry: string | null | undefined, activeAddons: string[]): PageDef[] {
-  const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
-  const hasEmail    = activeAddons.includes("email_marketing")
-  const hasEstimates = activeAddons.includes("quote_payments")
-  const PEOPLE      = peoplePageFor(industry)
-
-  if (industry === "food") {
-    return [
-      { id: "home", label: "Home", path: "/" },
-      ...(hasOrders ? [{ id: "orders", label: "Orders", path: "/leads?view=orders" }] : []),
-      hasCalendar
-        ? { id: "reservations", label: "Reservations", path: "/leads?view=reservations" }
-        : { id: "inbox", label: "Reservations", path: "/leads" },
-      ...(hasEstimates ? [{ id: "estimates", label: "Estimates", path: "/estimates" }] : []),
-      PEOPLE,
-      ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
-      { id: "photos", label: "Photos", path: "/photos" },
-      { id: "contacts", label: "Contacts", path: "/contacts" },
-      ...(hasEmail ? [{ id: "email", label: "Email", path: "/marketing" }] : []),
-      { id: "more", label: "More", path: "/more" },
-    ]
-  }
-
-  const inboxLabel = inboxLabelFor(industry)
-  const inboxPath = defaultFormIntentFor(industry) === "order"
-    ? "/leads?view=orders"
-    : defaultFormIntentFor(industry) === "estimate"
-      ? "/estimates"
-      : "/leads"
-  return [
-    { id: "home", label: "Home", path: "/" },
-    { id: "inbox", label: inboxLabel, path: inboxPath },
-    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", label: "Estimates", path: "/estimates" }] : []),
-    ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
-    PEOPLE,
-    { id: "photos", label: "Photos", path: "/photos" },
-    { id: "contacts", label: "Contacts", path: "/contacts" },
-    ...(hasEmail ? [{ id: "email", label: "Email", path: "/marketing" }] : []),
-    { id: "more", label: "More", path: "/more" },
-  ]
-}
-
-function defaultTabIdsFor(industry: string | null | undefined, activeAddons: string[]): string[] {
-  const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
-  const hasEmail    = activeAddons.includes("email_marketing")
-  const hasEstimates = activeAddons.includes("quote_payments")
-
-  if (industry === "food") {
-    const reservationId = hasCalendar ? "reservations" : "inbox"
-    const middle = [
-      ...(hasOrders ? ["orders"] : []),
-      reservationId,
-      "people",
-      ...(hasCalendar ? ["schedule"] : []),
-      ...(hasEmail ? ["email"] : []),
-      "photos",
-      "contacts",
-    ].slice(0, 3)
-    return ["home", ...middle, "more"]
-  }
-
-  const middle = [
-    "inbox",
-    ...(hasEstimates && defaultFormIntentFor(industry) !== "estimate" ? ["estimates"] : []),
-    ...(hasCalendar ? ["schedule"] : []),
-    "people",
-    ...(hasEmail ? ["email"] : []),
-    "photos",
-    "contacts",
-  ].slice(0, 3)
-  return ["home", ...middle, "more"]
-}
+type PageDef = DashboardTool
 
 export default function DashboardPages({
   companyName,
@@ -110,10 +20,10 @@ export default function DashboardPages({
   const pathname = usePathname()
   const prefix = pathname.startsWith("/dashboard") ? "/dashboard" : ""
   const addonKey = activeAddons.join("|")
-  const storageKey = `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${addonKey || "core"}`
+  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons)
 
-  const allPages = useMemo(() => allPagesFor(industry, activeAddons), [industry, addonKey])
-  const defaultIds = useMemo(() => defaultTabIdsFor(industry, activeAddons), [industry, addonKey])
+  const allPages = useMemo(() => getAvailableDashboardTools({ industry, activeAddons }), [industry, addonKey])
+  const defaultIds = useMemo(() => getDefaultDashboardToolIds({ industry, activeAddons }), [industry, addonKey])
 
   const [mode, setMode] = useState<"view" | "edit">("view")
   const [tabIds, setTabIds] = useState<string[]>(defaultIds)

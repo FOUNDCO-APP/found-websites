@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -37,17 +35,12 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const guard = await requireDashboardAddonAccess("quote_payments")
+  if (!guard.ok) return guard.response
 
   const { id } = await params
   const { method } = await req.json() as { method: "email" | "sms" | "link" | "payment_link" }
-
-  // Cookie-aware company lookup — same as all other dashboard routes
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
-
-  const admin = createAdminClient()
+  const { admin, company } = guard
 
   // Fetch extra fields getCompany doesn't include
   const { data: companyExtra } = await admin

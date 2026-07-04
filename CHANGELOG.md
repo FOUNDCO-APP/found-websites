@@ -4,6 +4,36 @@
 
 ---
 
+## Session: July 4, 2026 - Shared Dashboard Tool Policy and Entitlement Guards
+**AI:** Codex
+**Worked on:** Shawn approved Craig's team-led build order from the all-tools entitlement audit: centralize dashboard tool policy, wire both dock surfaces to it, add paid-tool guards, and fix the feature access over-grant.
+
+### Team Decision
+- Craig: One shared dashboard tool policy should decide available tools and default pinned tools.
+- Steve: If a tool is included or paid for, it must be usable; if it is not included, direct URLs and APIs should not bypass the plan.
+- Jony: Keep the dock focused by industry and put the full entitled library in More/My Dock.
+- Angela: Industry awareness should influence default order, especially schedule-first service businesses versus estimate-first job businesses.
+- Priya: Plan plus active add-ons must be the source of truth for both UI availability and backend enforcement.
+
+### Completed
+- Added `src/lib/dashboard/toolPolicy.ts` as the single source for available dashboard tools, default dock tools, and dock storage keys.
+- Rewired `DashboardNav` and `DashboardPages` to use the same shared tool policy.
+- Added `src/lib/dashboard/entitlements.ts` for plan/add-on checks backed by active add-on rows and Business included tools.
+- Added page-level entitlement layouts for Estimates, Schedule, and Marketing.
+- Added API guards for Estimates, Schedule, and Marketing send routes.
+- Tightened Schedule server actions so passed company ids cannot bypass the selected company or Booking Calendar entitlement.
+- Fixed `getFeatureAccess()` so `email_marketing` no longer unlocks booking, quotes, or unrelated Business checks.
+- Verified `npm run build` passes through `cmd /c npm run build`.
+
+### Must Test
+- Business plan company: Estimates, Schedule, and Email appear according to industry defaults and open normally.
+- Pro or Starter with only `quote_payments`: Estimates appears and APIs work; Schedule and Marketing direct URLs redirect/block.
+- Pro or Starter with only `reservation_calendar`: Schedule appears and APIs work; Estimates direct URL redirects/blocks.
+- Pro or Starter with only `email_marketing`: Email appears and send API works only for the selected company.
+- Food industry on Business: Orders/Reservations/Guests stay prioritized; Estimates remains available in More/My Dock.
+- Wellness/beauty/pet/fitness on Business: Schedule should appear before Estimates in the default dock.
+
+---
 ## Session: July 4, 2026 - All Tools Entitlement Audit
 **AI:** Codex
 **Worked on:** Shawn asked Craig to lead a full team audit of whether every included or selected tool appears and works for Business, Pro with add-ons, and add-on purchase paths.

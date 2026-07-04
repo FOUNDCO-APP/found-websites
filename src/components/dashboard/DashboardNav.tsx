@@ -3,139 +3,14 @@
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
-import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor, defaultFormIntentFor } from "@/lib/dashboard/typography"
-import { getBusinessModel } from "@/lib/getBusinessModel"
+import { GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, TEXT_OPACITY, TYPE, albumLabelFor, avatarColorFor } from "@/lib/dashboard/typography"
+import { getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashboardTools, type DashboardTool } from "@/lib/dashboard/toolPolicy"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import FoundWordmark from "@/components/FoundWordmark"
 
-type Tab = { path: string; label: string; id: string }
+type Tab = DashboardTool
 type Album = { id: string; name: string; cover_url: string | null }
 
-const BASE_TABS: Tab[] = [
-  { id: "home", path: "/", label: "Home" },
-  { id: "inbox", path: "/leads", label: "Inbox" },
-  { id: "photos", path: "/photos", label: "Photos" },
-  { id: "contacts", path: "/contacts", label: "Contacts" },
-  { id: "more", path: "/more", label: "More" },
-]
-
-const SCHEDULE_TAB: Tab  = { id: "schedule",  path: "/schedule",  label: "Schedule" }
-const EMAIL_TAB: Tab     = { id: "email",     path: "/marketing", label: "Email" }
-
-function peopleTab(industry: string | null | undefined): Tab {
-  // Food businesses (restaurants, bars, coffee shops) → Guests
-  // Other industries get their model-derived label
-  const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
-  return { id: "people", path: "/people", label }
-}
-
-function inboxLabelFor(industry: string | null | undefined): string {
-  switch (defaultFormIntentFor(industry)) {
-    case "booking":     return "Bookings"
-    case "appointment": return "Appointments"
-    case "estimate":    return "Estimates"
-    case "order":       return "Orders"
-    default:            return "Leads"
-  }
-}
-
-function inboxPathFor(industry: string | null | undefined): string {
-  const intent = defaultFormIntentFor(industry)
-  if (intent === "estimate") return "/estimates"
-  if (intent === "order") return "/leads?view=orders"
-  return "/leads"
-}
-
-// All possible tabs for an industry — used for byId mapping when loading from localStorage
-function allTabsFor(industry: string | null | undefined, activeAddons: string[]): Tab[] {
-  const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
-  const hasEmail    = activeAddons.includes("email_marketing")
-  const hasEstimates = activeAddons.includes("quote_payments")
-
-  if (industry === "food") {
-    const PEOPLE = peopleTab(industry)
-    return [
-      { id: "home", path: "/", label: "Home" },
-      ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
-      hasCalendar
-        ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
-        : { id: "inbox", path: "/leads", label: "Reservations" },
-      ...(hasEstimates ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
-      PEOPLE,
-      ...(hasCalendar ? [SCHEDULE_TAB] : []),
-      { id: "photos", path: "/photos", label: "Photos" },
-      { id: "contacts", path: "/contacts", label: "Contacts" },
-      ...(hasEmail ? [EMAIL_TAB] : []),
-      { id: "more", path: "/more", label: "More" },
-    ]
-  }
-
-  const inboxLabel = inboxLabelFor(industry)
-  const inboxPath = inboxPathFor(industry)
-  const PEOPLE = peopleTab(industry)
-  return [
-    { id: "home", path: "/", label: "Home" },
-    { id: "inbox", path: inboxPath, label: inboxLabel },
-    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
-    ...(hasCalendar ? [SCHEDULE_TAB] : []),
-    PEOPLE,
-    { id: "photos", path: "/photos", label: "Photos" },
-    { id: "contacts", path: "/contacts", label: "Contacts" },
-    ...(hasEmail ? [EMAIL_TAB] : []),
-    { id: "more", path: "/more", label: "More" },
-  ]
-}
-
-// Default 5-tab layout — Home locked first, More locked last
-function defaultTabsFor(industry: string | null | undefined, activeAddons: string[]) {
-  const hasCalendar = activeAddons.includes("reservation_calendar")
-  const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
-  const hasEmail    = activeAddons.includes("email_marketing")
-  const hasEstimates = activeAddons.includes("quote_payments")
-
-  if (industry === "food") {
-    const PEOPLE = peopleTab(industry)
-    const reservationsTab = hasCalendar
-      ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
-      : { id: "inbox", path: "/leads", label: "Reservations" }
-
-    const middle = [
-      ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
-      reservationsTab,
-      PEOPLE,
-      ...(hasCalendar ? [SCHEDULE_TAB] : []),
-      ...(hasEmail ? [EMAIL_TAB] : []),
-      { id: "photos", path: "/photos", label: "Photos" },
-      { id: "contacts", path: "/contacts", label: "Contacts" },
-    ].slice(0, 3)
-
-    return [
-      { id: "home", path: "/", label: "Home" },
-      ...middle,
-      { id: "more", path: "/more", label: "More" },
-    ]
-  }
-
-  const inboxLabel = inboxLabelFor(industry)
-  const inboxPath = inboxPathFor(industry)
-  const PEOPLE = peopleTab(industry)
-  const middle = [
-    { id: "inbox", path: inboxPath, label: inboxLabel },
-    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
-    ...(hasCalendar ? [SCHEDULE_TAB] : []),
-    PEOPLE,
-    ...(hasEmail ? [EMAIL_TAB] : []),
-    { id: "photos", path: "/photos", label: "Photos" },
-    { id: "contacts", path: "/contacts", label: "Contacts" },
-  ].slice(0, 3)
-
-  return [
-    { id: "home", path: "/", label: "Home" },
-    ...middle,
-    { id: "more", path: "/more", label: "More" },
-  ]
-}
 function HomeIcon({ active }: { active: boolean }) {
   const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
@@ -293,9 +168,9 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
   const addonKey = activeAddons.join("|")
-  const defaultTabs = defaultTabsFor(industry, activeAddons)
-  const allAvailable = allTabsFor(industry, activeAddons)
-  const storageKey = `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${addonKey || "core"}`
+  const defaultTabs = getDefaultDashboardTools({ industry, activeAddons })
+  const allAvailable = getAvailableDashboardTools({ industry, activeAddons })
+  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons)
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
 
   const [albums, setAlbums]                 = useState<Album[]>([])

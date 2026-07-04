@@ -1,7 +1,23 @@
 "use server"
 
+import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { getCompany } from "@/lib/dashboard/getCompany"
+import { companyHasAddonAccess } from "@/lib/dashboard/entitlements"
 import { createClient } from "@/lib/supabase/server"
 
+async function requireScheduleAccess(companyId?: string) {
+  const user = await getAuthUser()
+  if (!user) return { ok: false as const, error: "Unauthorized" }
+
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company) return { ok: false as const, error: "No company" }
+  if (companyId && companyId !== company.id) return { ok: false as const, error: "No company" }
+
+  const allowed = await companyHasAddonAccess(company, "reservation_calendar")
+  if (!allowed) return { ok: false as const, error: "Booking Calendar is not available on this plan." }
+
+  return { ok: true as const, company }
+}
 type DayConfig = {
   day_of_week: number
   is_working: boolean
@@ -12,6 +28,8 @@ type DayConfig = {
 }
 
 export async function saveAvailability(companyId: string, days: DayConfig[]) {
+  const access = await requireScheduleAccess(companyId)
+  if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
 
   // Upsert all 7 rows (one per day of week)
@@ -37,6 +55,8 @@ export async function saveAvailability(companyId: string, days: DayConfig[]) {
 }
 
 export async function blockDate(companyId: string, blockDate: string, label?: string) {
+  const access = await requireScheduleAccess(companyId)
+  if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
   const { error } = await supabase.from("availability_blocks").insert({
     company_id: companyId,
@@ -48,6 +68,8 @@ export async function blockDate(companyId: string, blockDate: string, label?: st
 }
 
 export async function blockRange(companyId: string, rangeStart: string, rangeEnd: string, label?: string) {
+  const access = await requireScheduleAccess(companyId)
+  if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
   const { error } = await supabase.from("availability_blocks").insert({
     company_id: companyId,
@@ -60,18 +82,23 @@ export async function blockRange(companyId: string, rangeStart: string, rangeEnd
 }
 
 export async function removeBlock(blockId: string) {
+  const access = await requireScheduleAccess()
+  if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
-  const { error } = await supabase.from("availability_blocks").delete().eq("id", blockId)
+  const { error } = await supabase.from("availability_blocks").delete().eq("id", blockId).eq("company_id", access.company.id)
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
 
 export async function cancelBooking(bookingId: string) {
+  const access = await requireScheduleAccess()
+  if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
   const { error } = await supabase
     .from("bookings")
     .update({ status: "cancelled" })
     .eq("id", bookingId)
+    .eq("company_id", access.company.id)
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
