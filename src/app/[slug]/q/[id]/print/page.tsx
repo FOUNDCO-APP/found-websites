@@ -64,8 +64,10 @@ export default async function EstimatePrintPage({
     : null
 
   const depositPct = (estimate.deposit_pct as number | null) ?? 50
-  const depositDue = depositPct >= 100 ? estimate.total : estimate.total * (depositPct / 100)
-  const balanceDue = Math.max(estimate.total - depositDue, 0)
+  const totalCents = Math.round(estimate.total * 100)
+  const depositCents = depositPct >= 100 ? totalCents : Math.round(estimate.total * depositPct)
+  const depositDue = depositCents / 100
+  const balanceDue = Math.max(totalCents - depositCents, 0) / 100
   const paymentStatus = estimate.payment_status ?? (estimate.deposit_paid_at ? "deposit_paid" : "unpaid")
   const isPaid = paymentStatus === "paid" || Boolean(estimate.paid_at)
   const isDepositPaid = paymentStatus === "deposit_paid" || Boolean(estimate.deposit_paid_at)
@@ -182,13 +184,13 @@ export default async function EstimatePrintPage({
             box-shadow: none !important;
             overflow: visible !important;
           }
-          .pg-head { padding: 44px 52px 40px !important; }
+          .pg-head { padding: 30px 42px 28px !important; }
           .pg-head-row { flex-direction: row !important; gap: 20px !important; }
           .pg-head-right { text-align: right !important; }
-          .pg-num { font-size: 54px !important; }
-          .pg-body { padding: 0 52px !important; }
-          .pg-foot { padding: 20px 52px !important; }
-          .pg-client-row { flex-direction: row !important; gap: 48px !important; padding: 32px 0 28px !important; }
+          .pg-num { font-size: 42px !important; }
+          .pg-body { padding: 0 42px !important; }
+          .pg-foot { padding: 10px 42px !important; page-break-before: avoid; break-before: avoid; }
+          .pg-client-row { flex-direction: row !important; gap: 36px !important; padding: 22px 0 18px !important; }
         }
 
         a { color: inherit; text-decoration: none; }
@@ -302,7 +304,7 @@ export default async function EstimatePrintPage({
 
             {/* Line items */}
             {items.length > 0 && (
-              <div style={{ marginTop: 28 }}>
+              <div style={{ marginTop: 18 }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr>
@@ -315,7 +317,7 @@ export default async function EstimatePrintPage({
                   <tbody>
                     {items.map((item, i) => (
                       <tr key={i} style={{ background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
-                        <td style={{ padding: "14px 0", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
+                        <td style={{ padding: "10px 0", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
                           <div style={{ fontSize: 14, fontWeight: 600, color: "#111", lineHeight: 1.45 }}>{item.description}</div>
                           {item.category && (
                             <div style={{ fontSize: 10, color: "#BBBBBB", marginTop: 3, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -323,14 +325,14 @@ export default async function EstimatePrintPage({
                             </div>
                           )}
                         </td>
-                        <td style={{ padding: "14px", textAlign: "center", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
+                        <td style={{ padding: "10px 14px", textAlign: "center", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
                           <span style={{ fontSize: 14, color: "#444" }}>{item.quantity}</span>
                           {item.unit && <div style={{ fontSize: 11, color: "#BBBBBB", marginTop: 2 }}>{item.unit}</div>}
                         </td>
-                        <td style={{ padding: "14px", textAlign: "right", fontSize: 14, color: "#666", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
+                        <td style={{ padding: "10px 14px", textAlign: "right", fontSize: 14, color: "#666", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
                           {fmt(item.unit_price)}
                         </td>
-                        <td style={{ padding: "14px 0", textAlign: "right", fontSize: 14, fontWeight: 700, color: "#111", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
+                        <td style={{ padding: "10px 0", textAlign: "right", fontSize: 14, fontWeight: 700, color: "#111", verticalAlign: "top", borderBottom: "1px solid #F2F2F2" }}>
                           {fmt(item.quantity * item.unit_price)}
                         </td>
                       </tr>
@@ -339,7 +341,7 @@ export default async function EstimatePrintPage({
                 </table>
 
                 {/* Totals */}
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, marginBottom: 44 }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 18, marginBottom: 22 }}>
                   <div style={{ minWidth: 280 }}>
                     {estimate.tax_rate > 0 && (
                       <>
@@ -355,19 +357,19 @@ export default async function EstimatePrintPage({
                     )}
                     <div style={{
                       display: "flex", justifyContent: "space-between", alignItems: "baseline",
-                      padding: "14px 0 4px",
+                      padding: "10px 0 4px",
                       borderBottom: `2px solid ${color}`,
                     }}>
                       <span style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>Total due</span>
-                      <span style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
+                      <span style={{ fontSize: 26, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
                     </div>
                     {balanceDue > 0 && (
                       <div style={{ marginTop: 10, border: "1px solid #EDEDED", borderRadius: 10, overflow: "hidden" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 14px", borderBottom: "1px solid #F0F0F0", background: "#FAFAFA" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 12px", borderBottom: "1px solid #F0F0F0", background: "#FAFAFA" }}>
                           <span style={{ fontSize: 13, color: "#777", fontWeight: 700 }}>{Math.round(depositPct)}% deposit due now</span>
                           <span style={{ fontSize: 14, color: "#111", fontWeight: 800 }}>{fmt(depositDue)}</span>
                         </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 14px", background: "white" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 12px", background: "white" }}>
                           <span style={{ fontSize: 13, color: "#777", fontWeight: 700 }}>Balance due at completion</span>
                           <span style={{ fontSize: 14, color: "#111", fontWeight: 800 }}>{fmt(balanceDue)}</span>
                         </div>
@@ -386,7 +388,7 @@ export default async function EstimatePrintPage({
 
             {/* Notes */}
             {estimate.notes && (
-              <div style={{ marginBottom: 40, padding: "18px 22px", background: "#FAFAFA", borderRadius: 10, borderLeft: `3px solid ${color}` }}>
+              <div style={{ marginBottom: 22, padding: "14px 18px", background: "#FAFAFA", borderRadius: 10, borderLeft: `3px solid ${color}` }}>
                 <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.16em", textTransform: "uppercase", color: "#C0C0C0", marginBottom: 10 }}>Notes</div>
                 <div style={{ fontSize: 13, color: "#555", lineHeight: 1.75, whiteSpace: "pre-wrap" }}>{estimate.notes}</div>
               </div>

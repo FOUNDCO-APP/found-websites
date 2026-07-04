@@ -4,6 +4,32 @@
 
 ---
 
+## Session: July 4, 2026 - Public Estimate CTA and PDF Fit
+**AI:** Codex
+**Worked on:** Shawn approved the team direction after reviewing the public estimate and print/PDF screenshots. The team focused on mobile CTA breathing room and making simple estimates print cleanly on one page.
+
+### Team Decision
+- Shawn: Approved the team changes and asked Codex to follow them explicitly.
+- Jony: Add bottom breathing room so the browser toolbar does not crowd the pay action.
+- Steve: Fix the PDF next; a one-line estimate should not spill into a blank second page.
+- Angela: Keep the deposit language clear and preserve the PDF as a polished client artifact.
+- Craig: Keep payment logic unchanged; tighten print-only spacing and safe-area layout.
+- Priya: Use cent-based deposit/balance math on the PDF so the split matches the estimate total.
+
+### Completed
+- Added mobile safe-area bottom padding to the public estimate page.
+- Increased the CTA stack bottom spacing so the pay button is less likely to sit under Safari browser chrome.
+- Changed the print/PDF deposit split to cent-based math.
+- Tightened print-only header, body, footer, client row, line item, totals, and notes spacing.
+- Reduced the print total amount size slightly to help simple estimates fit on one page.
+
+### Must Test
+- Open the public estimate on iPhone Safari and confirm the pay button has breathing room above the browser toolbar.
+- Tap `Pay $407.63 deposit` and confirm the secure payment sheet still opens.
+- Open `Download PDF` for a one-line estimate and confirm it no longer creates a mostly blank second page.
+- Confirm the PDF shows a $407.63 deposit and $407.62 balance for an $815.25 total.
+
+---
 ## Session: July 4, 2026 - Public Estimate One Payment Section Pass
 **AI:** Codex
 **Worked on:** Shawn approved the team direction to simplify the public estimate page further after seeing the updated screenshots. The goal was one estimate, one payment decision, with Shawn visible in the decision process.

@@ -218,7 +218,7 @@ export default async function EstimateClientPage({
         </div>
 
         {/* ── CONTENT ── */}
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "28px 20px 80px" }}>
+        <div style={{ maxWidth: 560, margin: "0 auto", padding: "28px 20px max(140px, calc(env(safe-area-inset-bottom, 0px) + 96px))" }}>
 
           {/* Status banners */}
           {isDeclined && (
@@ -316,7 +316,7 @@ export default async function EstimateClientPage({
 
           {/* CTA */}
           {!isDeclined && !isExpired && !isPaid && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 28 }}>
               <AcceptButton
                 estimateId={id}
                 color={color}
