@@ -455,7 +455,7 @@ function EstimateCard({ estimate, companyStripeReady, onClick }: { estimate: Est
   const displayStatus = estimateDisplayStatus(estimate)
   const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
   const shouldShowStatus = estimate.status !== "accepted" || estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at
-  const paymentHint = isAcceptedUnpaid && companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : displayStatus.detail
+  const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
 
   return (
     <button
@@ -1340,30 +1340,6 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             </div>
 
 
-            {/* Line items */}
-            {items.length > 0 && (
-              <div style={{ marginBottom: 20, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)" }}>
-                {items.map((item, i) => (
-                  <div key={i} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
-                    padding: "12px 16px",
-                    borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
-                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
-                        {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>}
-                      </div>
-                    </div>
-                    <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
-                      {fmt(item.quantity * item.unit_price)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* Totals */}
             <div style={{ marginBottom: 24, padding: "16px 18px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1383,6 +1359,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 </div>
               </div>
             </div>
+
 
             {/* Actions */}
             {(est.status === "draft" || est.status === "sent" || est.status === "viewed") && (
@@ -1425,10 +1402,22 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                     <div style={{ color: "white", fontSize: 15, fontWeight: 780 }}>{fmt(est.total)}</div>
                   </div>
                   <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, lineHeight: 1.45 }}>
-                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : "Accepted without online payments"}
-                    {est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
+                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : (est.accepted_at ? new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "Estimate accepted")}
+                    {(est.payment_status === "paid" || est.paid_at || est.deposit_paid_at || companyStripeReady) && est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
                   </div>
                 </div>
+
+                <button onClick={copyLink} style={{
+                  width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.72)",
+                  fontSize: 14, fontWeight: 760, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                  </svg>
+                  {copied ? "Copied" : "Copy estimate link"}
+                </button>
 
                 {isAcceptedUnpaid && companyStripeReady && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1471,6 +1460,33 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                 <div style={{ color: "#FF453A", fontSize: 14, fontWeight: 700 }}>Estimate Declined</div>
               </div>
             )}
+
+
+            {/* Line items */}
+            {items.length > 0 && (
+              <div style={{ marginBottom: 20, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)" }}>
+                {items.map((item, i) => (
+                  <div key={i} style={{
+                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
+                    padding: "12px 16px",
+                    borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
+                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+                        {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
+                        {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>}
+                      </div>
+                    </div>
+                    <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
+                      {fmt(item.quantity * item.unit_price)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+
 
             <div style={{ height: 22 }} />
             {/* Activity timeline */}

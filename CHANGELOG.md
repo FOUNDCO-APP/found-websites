@@ -28,6 +28,32 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Detail Action Hierarchy Correction
+**AI:** Codex
+**Worked on:** Shawn approved the team correction after testing the calmer estimate list and full-screen detail. Jony and Steve identified stale payment-link language and the missing accepted-estimate share/send action as the next blockers.
+
+### Completed
+- Stopped accepted estimate cards from showing stale `Payment link sent` when the company does not have online payments connected.
+- Kept payment-link labels/actions gated behind `companyStripeReady`, preserving the existing no-Stripe payment guard.
+- Added `Copy estimate link` to accepted estimate detail so owners still have a clear way to share/resend the accepted estimate without pretending there is a payment link.
+- Changed the no-payments accepted detail copy so the win reads as accepted/date first, instead of `Accepted without online payments`.
+- Reordered the detail hierarchy to show customer/contact, totals, next action/status, line items, then activity.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates on a company without Stripe connected and confirm no row shows `Payment link sent`.
+- Open an accepted estimate and confirm it shows accepted/date, not `Accepted without online payments`.
+- Confirm `Copy estimate link` appears on accepted estimates and copies the customer estimate URL.
+- Confirm there is still no `Send Payment Link` button when Stripe is not connected.
+- On a Stripe-connected company, confirm accepted unpaid estimates still show `Send Payment Link` / `Resend Payment Link`.
+- Confirm draft estimates still show `Send Estimate`, and sent/viewed estimates still show `Resend Estimate` plus copy link.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the revised detail hierarchy.
+2. Continue payable-estimate QA after visual approval.
+3. Do not start AI estimate builder until the manual estimate and payable flows pass live QA.
+
+---
 ## Session: July 3, 2026 - Estimate List + Full-Screen Detail Refinement
 **AI:** Codex
 **Worked on:** Shawn brought the latest screenshots back to the team. Jony led the decision, Steve second-reviewed, and Angela/Craig/Priya/Marcus/Chris added user, architecture, payment, public-flow, and mobile guidance.
@@ -137,6 +163,32 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Detail Action Hierarchy Correction
+**AI:** Codex
+**Worked on:** Shawn approved the team correction after testing the calmer estimate list and full-screen detail. Jony and Steve identified stale payment-link language and the missing accepted-estimate share/send action as the next blockers.
+
+### Completed
+- Stopped accepted estimate cards from showing stale `Payment link sent` when the company does not have online payments connected.
+- Kept payment-link labels/actions gated behind `companyStripeReady`, preserving the existing no-Stripe payment guard.
+- Added `Copy estimate link` to accepted estimate detail so owners still have a clear way to share/resend the accepted estimate without pretending there is a payment link.
+- Changed the no-payments accepted detail copy so the win reads as accepted/date first, instead of `Accepted without online payments`.
+- Reordered the detail hierarchy to show customer/contact, totals, next action/status, line items, then activity.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open Estimates on a company without Stripe connected and confirm no row shows `Payment link sent`.
+- Open an accepted estimate and confirm it shows accepted/date, not `Accepted without online payments`.
+- Confirm `Copy estimate link` appears on accepted estimates and copies the customer estimate URL.
+- Confirm there is still no `Send Payment Link` button when Stripe is not connected.
+- On a Stripe-connected company, confirm accepted unpaid estimates still show `Send Payment Link` / `Resend Payment Link`.
+- Confirm draft estimates still show `Send Estimate`, and sent/viewed estimates still show `Resend Estimate` plus copy link.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the revised detail hierarchy.
+2. Continue payable-estimate QA after visual approval.
+3. Do not start AI estimate builder until the manual estimate and payable flows pass live QA.
+
+---
 ## Session: July 3, 2026 - Estimate List + Full-Screen Detail Refinement
 **AI:** Codex
 **Worked on:** Shawn brought the latest screenshots back to the team. Jony led the decision, Steve second-reviewed, and Angela/Craig/Priya/Marcus/Chris added user, architecture, payment, public-flow, and mobile guidance.
