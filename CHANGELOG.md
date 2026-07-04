@@ -4,7 +4,33 @@
 
 ---
 
-## Session: July 4, 2026 - Session 3A Payment Flow Verification
+## Session: July 4, 2026 - Blue Luna Estimates Access Fix
+**AI:** Codex
+**Worked on:** Shawn found that Blue Luna Events is on Found Business and shows Quote & Estimate Payments as included, but the dashboard dock did not expose Estimates. Craig led the audit because the issue was navigation, plan entitlement, and industry-aware tool routing.
+
+### Team Decision
+- Shawn: A balloon decor/event business on Found Business should be able to create estimates.
+- Craig: Treat `quote_payments` as a first-class dashboard capability, not only as an industry form intent.
+- Steve: Keep Leads/Inquiries for event intake, but add Estimates as the work tool after the lead says yes.
+- Jony: Estimates must appear as a normal dashboard tool, not only as text under Included Business Tools.
+- Angela: The More page should match what the plan promises so owners are not confused.
+- Priya: No database migration needed; this was UI interpretation of existing entitlements.
+
+### Completed
+- Added an Estimates dashboard tab/page whenever `quote_payments` is included in active add-ons.
+- Kept Leads/Inquiries available for event businesses instead of replacing them.
+- Fixed the More-page dock list so estimate-intent industries point to `/estimates` correctly.
+- Updated dock localStorage keys to include industry and active tools so old saved dock layouts do not hide newly included tools.
+- Verified production build passes.
+
+### Must Test
+- Switch to Blue Luna Events and open More.
+- Confirm My Dock shows Estimates as an available/pinned tool.
+- Confirm the bottom dock defaults to Home, Leads, Estimates, Schedule, More for Blue Luna when Found Business tools are active.
+- Tap Estimates and confirm the estimate system opens.
+- Confirm Leads still remains available for event inquiries.
+
+---## Session: July 4, 2026 - Session 3A Payment Flow Verification
 **AI:** Codex
 **Worked on:** Shawn approved moving into Session 3A after the team agreed the next risk was payment reliability and state correctness, not more visual polish.
 

@@ -27,6 +27,7 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
   const hasCalendar = activeAddons.includes("reservation_calendar")
   const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
+  const hasEstimates = activeAddons.includes("quote_payments")
   const PEOPLE      = peoplePageFor(industry)
 
   if (industry === "food") {
@@ -46,10 +47,15 @@ function allPagesFor(industry: string | null | undefined, activeAddons: string[]
   }
 
   const inboxLabel = inboxLabelFor(industry)
-  const inboxPath = defaultFormIntentFor(industry) === "order" ? "/leads?view=orders" : "/leads"
+  const inboxPath = defaultFormIntentFor(industry) === "order"
+    ? "/leads?view=orders"
+    : defaultFormIntentFor(industry) === "estimate"
+      ? "/estimates"
+      : "/leads"
   return [
     { id: "home", label: "Home", path: "/" },
     { id: "inbox", label: inboxLabel, path: inboxPath },
+    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", label: "Estimates", path: "/estimates" }] : []),
     ...(hasCalendar ? [{ id: "schedule", label: "Schedule", path: "/schedule" }] : []),
     PEOPLE,
     { id: "photos", label: "Photos", path: "/photos" },
@@ -63,6 +69,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
   const hasCalendar = activeAddons.includes("reservation_calendar")
   const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
+  const hasEstimates = activeAddons.includes("quote_payments")
 
   if (industry === "food") {
     const reservationId = hasCalendar ? "reservations" : "inbox"
@@ -80,6 +87,7 @@ function defaultTabIdsFor(industry: string | null | undefined, activeAddons: str
 
   const middle = [
     "inbox",
+    ...(hasEstimates && defaultFormIntentFor(industry) !== "estimate" ? ["estimates"] : []),
     ...(hasCalendar ? ["schedule"] : []),
     "people",
     ...(hasEmail ? ["email"] : []),
@@ -101,7 +109,7 @@ export default function DashboardPages({
   const pathname = usePathname()
   const prefix = pathname.startsWith("/dashboard") ? "/dashboard" : ""
   const addonKey = activeAddons.join("|")
-  const storageKey = `found_dashboard_tabs_${companyName || "default"}`
+  const storageKey = `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${addonKey || "core"}`
 
   const allPages = useMemo(() => allPagesFor(industry, activeAddons), [industry, addonKey])
   const defaultIds = useMemo(() => defaultTabIdsFor(industry, activeAddons), [industry, addonKey])

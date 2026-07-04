@@ -51,6 +51,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
   const hasCalendar = activeAddons.includes("reservation_calendar")
   const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
+  const hasEstimates = activeAddons.includes("quote_payments")
 
   if (industry === "food") {
     const PEOPLE = peopleTab(industry)
@@ -75,6 +76,7 @@ function allTabsFor(industry: string | null | undefined, activeAddons: string[])
   return [
     { id: "home", path: "/", label: "Home" },
     { id: "inbox", path: inboxPath, label: inboxLabel },
+    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     PEOPLE,
     { id: "photos", path: "/photos", label: "Photos" },
@@ -89,6 +91,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
   const hasCalendar = activeAddons.includes("reservation_calendar")
   const hasOrders   = (activeAddons.includes("online_ordering") || activeAddons.includes("shopping_cart"))
   const hasEmail    = activeAddons.includes("email_marketing")
+  const hasEstimates = activeAddons.includes("quote_payments")
 
   if (industry === "food") {
     const PEOPLE = peopleTab(industry)
@@ -118,6 +121,7 @@ function defaultTabsFor(industry: string | null | undefined, activeAddons: strin
   const PEOPLE = peopleTab(industry)
   const middle = [
     { id: "inbox", path: inboxPath, label: inboxLabel },
+    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
     ...(hasCalendar ? [SCHEDULE_TAB] : []),
     PEOPLE,
     ...(hasEmail ? [EMAIL_TAB] : []),
@@ -290,7 +294,7 @@ export default function DashboardNav({
   const addonKey = activeAddons.join("|")
   const defaultTabs = defaultTabsFor(industry, activeAddons)
   const allAvailable = allTabsFor(industry, activeAddons)
-  const storageKey = `found_dashboard_tabs_${companyName || "default"}`
+  const storageKey = `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${addonKey || "core"}`
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
 
   const [albums, setAlbums]                 = useState<Album[]>([])
