@@ -1380,7 +1380,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
               )}
             </div>
 
-            <button onClick={startEdit} style={{ width: "100%", padding: "12px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.62)", fontSize: 14, fontWeight: 720, cursor: "pointer", marginBottom: 18 }}>Edit estimate</button>
+            <div style={{ margin: "-6px 0 18px", display: "flex" }}><button onClick={startEdit} style={{ border: "none", background: "transparent", color: "rgba(255,255,255,0.46)", fontSize: 13, fontWeight: 720, cursor: "pointer", padding: "4px 0" }}>Edit details</button></div>
 
             {/* Totals */}
             <div style={{ marginBottom: 18, padding: "18px 0 16px", borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1521,8 +1521,8 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             {/* Activity timeline */}
             <ActivityTimeline estimate={est} />
 
-            <div style={{ marginTop: 28, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <button onClick={() => setMode("confirm_delete")} style={{ width: "100%", padding: "12px 0", borderRadius: 14, border: "1px solid rgba(255,69,58,0.14)", backgroundColor: "transparent", color: "rgba(255,69,58,0.66)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Delete estimate</button>
+            <div style={{ marginTop: 26, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.05)", textAlign: "center" }}>
+              <button onClick={() => setMode("confirm_delete")} style={{ border: "none", backgroundColor: "transparent", color: "rgba(255,69,58,0.54)", fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "6px 10px" }}>Delete estimate</button>
             </div>
           </>
         )}

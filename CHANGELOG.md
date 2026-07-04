@@ -4,6 +4,29 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Secondary Action Demotion
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to make edit and delete feel secondary because the estimate detail page should guide owners toward sending, collecting, and making money.
+
+### Completed
+- Changed the full-width `Edit estimate` button into a quiet compact `Edit details` text action under contact details.
+- Changed the bottom `Delete estimate` from a full-width bordered danger button into a quiet red text action.
+- Kept the delete confirmation screen unchanged.
+- Kept close icon, resend/send, totals, work, activity, payment, and backend behavior unchanged.
+
+### Must Test
+- Open an estimate detail and confirm `Edit details` is compact and quiet under the contact information.
+- Tap `Edit details`; confirm edit mode still opens.
+- Confirm `Resend Estimate` remains the primary visible business action.
+- Scroll to the bottom and confirm `Delete estimate` is quiet text, not a large button.
+- Tap `Delete estimate`; confirm the confirmation screen still appears before deletion.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the demoted edit/delete actions.
+2. Continue send-options screen polish after detail actions pass.
+3. Continue payable-estimate QA after detail hierarchy approval.
+
+---
 ## Session: July 3, 2026 - Estimate Close Icon Polish
 **AI:** Codex
 **Worked on:** Shawn approved Jony and Steve's direction to replace the typed close `x` with a quieter SVG close icon across the estimate system surfaces.
