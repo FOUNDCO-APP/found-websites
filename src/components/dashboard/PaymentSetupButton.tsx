@@ -7,6 +7,7 @@ type PaymentSetupButtonProps = {
   returnTo?: string
   variant?: "green" | "amber" | "dark" | "subtle"
   compact?: boolean
+  handoffNote?: string | null
 }
 
 const COLORS = {
@@ -17,10 +18,11 @@ const COLORS = {
 }
 
 export default function PaymentSetupButton({
-  children = "Set up deposit payments",
+  children = "Continue secure setup",
   returnTo = "/more?payments=connected",
   variant = "green",
   compact = false,
+  handoffNote = "You will leave Found briefly for secure payment setup, then return here.",
 }: PaymentSetupButtonProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -78,8 +80,13 @@ export default function PaymentSetupButton({
           gap: 8,
         }}
       >
-        {loading ? "Opening setup..." : children}
+        {loading ? "Opening secure setup..." : children}
       </button>
+      {handoffNote && !compact && (
+        <p style={{ margin: "8px 0 0", color: "rgba(255,255,255,0.46)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>
+          {handoffNote}
+        </p>
+      )}
       {error && (
         <p style={{ margin: "8px 0 0", color: "#FF453A", fontSize: 12, lineHeight: 1.4 }}>
           {error}

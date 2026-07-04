@@ -4,6 +4,28 @@
 
 ---
 
+## Session: July 3, 2026 - Payment Setup Handoff Copy
+**AI:** Codex
+**Worked on:** Shawn asked whether secure payment setup should open in a pop-up/new tab and reminded the team that most owners do not know what Stripe is.
+
+### Team Decision
+- Jony/Steve: Keep the full-page handoff, but do not make the owner understand Stripe. Explain the action in Found language.
+- Angela: Set expectation before leaving Found and explain unfinished setup when the owner returns.
+- Craig: Keep the redirect flow because it is the most reliable mobile/PWA path.
+
+### Completed
+- Changed payment setup button language to `Continue secure setup`.
+- Changed loading text to `Opening secure setup...`.
+- Added a short note under the setup button explaining the owner will leave Found briefly and return.
+- Removed owner-facing `Connect Stripe` copy from the estimate detail path.
+- Added a More page return message for finished vs unfinished payment setup.
+
+### Must Test
+- Tap `Continue secure setup` from More and confirm the handoff text is visible before redirect.
+- Return from setup incomplete and confirm Found says payment setup is not finished yet.
+- Complete setup and confirm Found says payments are ready.
+
+---
 ## Session: July 3, 2026 - Stripe Connect Readiness Guard
 **AI:** Codex
 **Worked on:** Shawn found a false positive after opening Stripe onboarding and closing it. Found stored the Stripe Connect account ID immediately, then treated the business as payment-ready even though onboarding was not complete.

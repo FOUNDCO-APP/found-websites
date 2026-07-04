@@ -93,28 +93,28 @@ function paymentSetupCopy(industry: string, activeAddons: string[]) {
   if (industry === "retail" || industry === "makers_crafts" || activeAddons.includes("shopping_cart")) {
     return {
       headline: "Sell products online by card.",
-      body: "Customers can buy shirts, merch, packaged goods, or products from your site. Setup takes a few minutes, and Found handles the secure payment screen.",
-      button: "Set up online payments",
+      body: "Customers can buy shirts, merch, packaged goods, or products from your site. Secure setup takes a few minutes. Found will bring you right back when it is done.",
+      button: "Continue secure setup",
     }
   }
   if (industry === "food" || industry === "home_based_food" || activeAddons.includes("online_ordering")) {
     return {
       headline: "Accept paid orders by card.",
-      body: "Customers can place an order and pay electronically before pickup. Setup takes a few minutes, and Found handles the secure payment screen.",
-      button: "Set up order payments",
+      body: "Customers can place an order and pay electronically before pickup. Secure setup takes a few minutes. Found will bring you right back when it is done.",
+      button: "Continue secure setup",
     }
   }
   if (["wellness", "beauty", "fitness", "events", "pet_services", "automotive", "creative_services", "professional_services"].includes(industry)) {
     return {
       headline: "Let clients pay deposits by card.",
-      body: "Clients can book or approve work and pay electronically. Setup takes a few minutes, and Found handles the secure payment screen.",
-      button: "Set up card payments",
+      body: "Clients can book or approve work and pay electronically. Secure setup takes a few minutes. Found will bring you right back when it is done.",
+      button: "Continue secure setup",
     }
   }
   return {
     headline: "Make estimates payable by card.",
-    body: "Clients can accept an estimate and pay a deposit electronically. Setup takes a few minutes, and Found handles the secure payment screen.",
-    button: "Set up deposit payments",
+    body: "Clients can accept an estimate and pay a deposit electronically. Secure setup takes a few minutes. Found will bring you right back when it is done.",
+    button: "Continue secure setup",
   }
 }
 function ChevronRight() {
@@ -134,6 +134,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const sp = await searchParams
   const addonAdded = sp.addon_added ?? null
   const addonUnavailable = sp.addon_unavailable === "1"
+  const paymentReturnState = sp.payments ?? null
 
   const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
   const plan = company?.plan ?? "found"
@@ -183,6 +184,16 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: `${GREEN}18`, border: `1px solid ${GREEN}35` }}>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
             ✓ Add-on activated successfully
+          </p>
+        </div>
+      )}
+      {paymentReturnState && (
+        <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: paymentsReady ? `${GREEN}18` : "rgba(255,255,255,0.045)", border: paymentsReady ? `1px solid ${GREEN}35` : "1px solid rgba(255,255,255,0.08)" }}>
+          <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 760, color: paymentsReady ? GREEN : "white" }}>
+            {paymentsReady ? "Payments are ready" : "Payment setup is not finished yet"}
+          </p>
+          <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+            {paymentsReady ? "Clients can now pay online when the job calls for it." : "You can continue secure setup whenever you are ready."}
           </p>
         </div>
       )}

@@ -1290,7 +1290,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
 
             {!companyStripeReady && (
               <div style={{ marginBottom: 18, color: "rgba(255,255,255,0.34)", fontSize: 12, lineHeight: 1.45 }}>
-                Online payments are off. Connect Stripe when you want clients to pay the moment they accept.
+                Online payments are off. Finish secure setup when you want clients to pay the moment they accept.
               </div>
             )}
             <button onClick={() => setMode("view")} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: "transparent", color: "rgba(255,255,255,0.25)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -1449,9 +1449,9 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                   <div style={{ padding: "12px 0 0", borderTop: "1px solid rgba(255,255,255,0.07)", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 142px", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ color: "rgba(255,255,255,0.82)", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Online payments</div>
-                      <div style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, lineHeight: 1.45 }}>Set up payments when you want clients to pay online.</div>
+                      <div style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, lineHeight: 1.45 }}>Secure setup takes a few minutes. You will leave Found briefly, then come right back.</div>
                     </div>
-                    <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="subtle" compact>Set up</PaymentSetupButton>
+                    <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="subtle" compact>Continue</PaymentSetupButton>
                   </div>
                 )}
               </div>
