@@ -1,3 +1,27 @@
+## Session: July 4, 2026 - Activation Plan Sheet Fix
+**AI:** Codex
+**Worked on:** Fixed broken activation plan selector after team decision led by Craig and Steve
+
+### Completed This Session
+- Moved dashboard/site activation plan choice into a real slide-up sheet instead of a full-page overlay that collided with the first card.
+- Removed the overlapping FOUND wordmark from the plan-selection state.
+- Added `FoundPlanSelector` as a reusable selector component using the approved onboarding card language and visual system.
+- Activation now uses the shared selector with Found Pro selected by default.
+- Stripe setup still waits until the owner taps the plan CTA; opening the sheet does not create payment setup.
+- Payment form now opens inside the same sheet flow after plan confirmation.
+- Verified with `cmd /c npm run build`.
+
+### What To Test Next
+1. Open inactive `molcas` inside the dashboard/site flow.
+2. Tap the top `Activate` entry point.
+3. Confirm a slide-up sheet appears with clear top spacing, handle, and close button.
+4. Confirm no FOUND wordmark overlaps the first plan card.
+5. Confirm Found Pro is preselected.
+6. Select Starter, Pro, and Business and confirm the card selection updates cleanly.
+7. Continue with Pro and confirm the payment form appears in the same sheet with `$39/month`.
+8. Continue with Business and confirm `$69/month`.
+
+---
 ## Session: July 4, 2026 - Match Activation Plan Selector To Onboarding
 **AI:** Codex
 **Worked on:** Activation overlay plan selector after Shawn flagged it did not match the final website/onboarding selector
