@@ -1393,19 +1393,6 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             {/* Actions */}
             {(est.status === "draft" || est.status === "sent" || est.status === "viewed") && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
-                {(est.status === "sent" || est.status === "viewed") && (
-                  <button onClick={copyLink} style={{
-                    width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)",
-                    backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)",
-                    fontSize: 14, fontWeight: 700, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
-                    </svg>
-                    {copied ? "Copied" : "Copy estimate link"}
-                  </button>
-                )}
                 {/* Send for draft, Resend for sent/viewed */}
                 <button onClick={() => setMode("send_options")} style={{
                   width: "100%", padding: "15px 0", borderRadius: 14,

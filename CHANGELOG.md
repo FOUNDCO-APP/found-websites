@@ -4,6 +4,31 @@
 
 ---
 
+## Session: July 3, 2026 - Sent Detail Action Deduplication
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to remove duplicated sent/viewed estimate actions while preserving the send sheet options and accepted estimate copy behavior.
+
+### Completed
+- Removed the duplicate `Copy estimate link` button from sent/viewed estimate detail pages.
+- Kept `Resend Estimate` as the single visible sent/viewed action on the detail page.
+- Kept `Copy Link` inside the resend/send options sheet for owners who want to share manually.
+- Kept accepted estimates' `Copy estimate link` action unchanged.
+- Preserved backend, send, payment, Stripe readiness, public estimate, and list behavior.
+
+### Must Test
+- Open a sent or viewed estimate detail page; confirm only `Resend Estimate` appears in the main action area.
+- Tap `Resend Estimate`; confirm Email, Text Message, and Copy Link options still appear.
+- Open an accepted estimate; confirm `Copy estimate link` still appears.
+- Confirm no payment link behavior changes when Stripe is not connected.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the detail action cleanup.
+2. Continue send-options screen polish if the team approves it next.
+3. Continue payable-estimate QA after the current detail flow passes.
+
+---
+
+
 ## Session: July 3, 2026 - Estimate Builder Rail + Ending Polish
 **AI:** Codex
 **Worked on:** Followed Jony and Steve's direction after Shawn's live scroll screenshots: keep the new design direction, polish the behavior so the system feels like it knows where the owner is and what comes next.
