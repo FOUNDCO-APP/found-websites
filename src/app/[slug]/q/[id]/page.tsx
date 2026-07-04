@@ -144,15 +144,15 @@ export default async function EstimateClientPage({
         }
         a { color: inherit; text-decoration: none; }
 
-        .eq-head { padding: 30px 24px 26px; }
-        .eq-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-        .eq-num { font-size: 40px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; margin-bottom: 8px; }
+        .eq-head { padding: 24px 24px 22px; }
+        .eq-head-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+        .eq-num { font-size: 28px; font-weight: 850; letter-spacing: -0.035em; line-height: 1; margin-bottom: 6px; }
 
         @media (max-width: 480px) {
-          .eq-head { padding: 24px 20px 22px; }
-          .eq-head-row { flex-direction: column; gap: 14px; }
-          .eq-head-right { text-align: left !important; }
-          .eq-num { font-size: 34px; }
+          .eq-head { padding: 22px 20px 20px; }
+          .eq-head-row { flex-direction: row; gap: 16px; }
+          .eq-head-right { text-align: right !important; }
+          .eq-num { font-size: 26px; }
         }
       `}</style>
 
@@ -169,7 +169,7 @@ export default async function EstimateClientPage({
                   <img src={company.logo_url} alt={companyDisplayName ?? ""} style={{ height: 32, maxWidth: 150, objectFit: "contain", display: "block" }} />
                 </div>
               ) : (
-                <div style={{ fontSize: 22, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 10 }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: textHigh, letterSpacing: "-0.04em", lineHeight: 1.05, marginBottom: 8 }}>
                   {companyDisplayName}
                 </div>
               )}
@@ -178,18 +178,18 @@ export default async function EstimateClientPage({
                   <div style={{ fontSize: 14, fontWeight: 700, color: textHigh, marginBottom: 1 }}>{companyDisplayName}</div>
                 )}
                 {(company.city || company.state) && (
-                  <div style={{ fontSize: 13, color: textMid }}>{[company.city, company.state].filter(Boolean).join(", ")}</div>
+                  <div style={{ fontSize: 14, color: textMid }}>{[company.city, company.state].filter(Boolean).join(", ")}</div>
                 )}
               </div>
             </div>
 
             {/* Estimate number */}
             <div className="eq-head-right" style={{ textAlign: "right", flexShrink: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.2em", textTransform: "uppercase", color: textLow, marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: textLow, marginBottom: 6 }}>
                 Estimate
               </div>
               <div className="eq-num" style={{ color: textHigh }}>#{estimateNumber}</div>
-              <div style={{ fontSize: 13, color: textMid, lineHeight: 1.9 }}>
+              <div style={{ fontSize: 12, color: textMid, lineHeight: 1.75 }}>
                 <div>{dateFormatted}</div>
                 {validUntilFormatted && !isClosed && <div>Valid until {validUntilFormatted}</div>}
               </div>
@@ -306,18 +306,6 @@ export default async function EstimateClientPage({
             </div>
           )}
 
-          {payableStripeAccountId && !isPaid && !isDeclined && !isExpired && estimate.tax_rate > 0 && (
-            <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "16px 22px", marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontSize: 14, color: "#888" }}>Subtotal</span>
-                <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.subtotal)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 14, color: "#888" }}>Tax ({(estimate.tax_rate * 100).toFixed(2)}%)</span>
-                <span style={{ fontSize: 14, color: "#444", fontWeight: 600 }}>{fmt(estimate.tax_amount)}</span>
-              </div>
-            </div>
-          )}
           {/* Notes */}
           {estimate.notes && (
             <div style={{ background: "white", borderRadius: 16, border: "1px solid #E5E5E0", padding: "18px 22px", marginBottom: 20, borderLeft: `3px solid ${color}` }}>
@@ -334,6 +322,9 @@ export default async function EstimateClientPage({
                 color={color}
                 stripeAccountId={payableStripeAccountId}
                 total={estimate.total}
+                subtotal={estimate.subtotal}
+                taxAmount={estimate.tax_amount}
+                taxRate={estimate.tax_rate}
                 depositPct={(estimate.deposit_pct as number) ?? 50}
                 companyName={company.name}
                 acceptedAlready={isAcceptedUnpaid}

@@ -4,6 +4,33 @@
 
 ---
 
+## Session: July 4, 2026 - Public Estimate One Payment Section Pass
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to simplify the public estimate page further after seeing the updated screenshots. The goal was one estimate, one payment decision, with Shawn visible in the decision process.
+
+### Team Decision
+- Shawn: Move forward with the team decision explicitly.
+- Jony: Make the business name lead, reduce the estimate number, and remove the extra subtotal/tax box.
+- Steve: The client should reach the payment decision faster and understand deposit now / balance later immediately.
+- Angela: Keep the deposit wording plain and reassuring.
+- Craig: Keep payment behavior unchanged and move subtotal/tax into the existing Payment section.
+
+### Completed
+- Reduced the public estimate masthead again.
+- Made the business name visually stronger than the estimate number.
+- Removed the separate subtotal/tax card for payable estimates.
+- Passed subtotal, tax amount, and tax rate into the payment component.
+- Moved subtotal and tax inside the single `Payment` section above total/deposit/balance.
+- Kept the pay button and payment flow behavior unchanged.
+
+### Must Test
+- Open a public payable estimate and confirm the blue header is shorter.
+- Confirm the business name leads the header and `#0009` is secondary.
+- Confirm there is no separate subtotal/tax card before Payment.
+- Confirm the Payment section includes subtotal, tax, total estimate, 50% deposit, and balance after completion.
+- Tap the pay button and confirm the secure payment sheet still opens.
+
+---
 ## Session: July 4, 2026 - Public Estimate Payment Section Cleanup
 **AI:** Codex
 **Worked on:** Shawn stopped the public estimate page work because the approved team meeting was not shown before implementation. The team reviewed the client-facing estimate page and chose a simpler payment-first layout.

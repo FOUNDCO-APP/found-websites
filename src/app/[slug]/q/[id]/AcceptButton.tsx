@@ -292,6 +292,9 @@ export default function AcceptButton({
   color,
   stripeAccountId,
   total,
+  subtotal,
+  taxAmount,
+  taxRate,
   depositPct,
   companyName,
   acceptedAlready = false,
@@ -300,6 +303,9 @@ export default function AcceptButton({
   color: string
   stripeAccountId?: string | null
   total: number
+  subtotal?: number
+  taxAmount?: number
+  taxRate?: number
   depositPct: number
   companyName: string
   acceptedAlready?: boolean
@@ -419,7 +425,19 @@ export default function AcceptButton({
             <div style={{ fontSize: 10, fontWeight: 850, letterSpacing: "0.16em", textTransform: "uppercase", color: "#B8B8B2", marginBottom: 14 }}>
               Payment
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, marginBottom: 12 }}>
+            {typeof subtotal === "number" && taxRate && taxRate > 0 && (
+              <>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 8 }}>
+                  <span style={{ color: "#888", fontSize: 14, fontWeight: 600 }}>Subtotal</span>
+                  <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(subtotal)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 12 }}>
+                  <span style={{ color: "#888", fontSize: 14, fontWeight: 600 }}>Tax ({(taxRate * 100).toFixed(2)}%)</span>
+                  <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(taxAmount ?? 0)}</span>
+                </div>
+              </>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16, paddingTop: typeof subtotal === "number" && taxRate && taxRate > 0 ? 12 : 0, borderTop: typeof subtotal === "number" && taxRate && taxRate > 0 ? "1px solid #EFEFEB" : "none", marginBottom: 12 }}>
               <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Total estimate</span>
               <span style={{ color: "#111", fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(total)}</span>
             </div>
