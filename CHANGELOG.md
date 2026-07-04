@@ -28,6 +28,26 @@
 
 ---
 
+## Session: July 3, 2026 - Accepted Row Label Quieting
+**AI:** Codex
+**Worked on:** Shawn approved Jony/Steve's refinement after reviewing the live state filters: accepted row labels became repetitive when many won estimates were visible in All.
+
+### Completed
+- Removed repeated `Accepted` labels from estimate list rows in all filters.
+- Kept the `Accepted` filter pill count as the primary won-state signal.
+- Preserved attention labels for non-accepted states like `Draft`, `Sent`, and `Viewed` when they are not already inside their matching filter.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open `All` and confirm accepted estimates no longer repeat `Accepted` on every row.
+- Confirm `Draft`, `Sent`, and `Viewed` labels still appear where they help identify work needing attention.
+- Confirm the `Accepted` pill still shows the accepted count and the accepted tab still filters correctly.
+
+### Next
+1. Shawn/Johnny/Steve approval on the quieter list.
+2. Continue detail-page polish/payment QA after this list state is accepted.
+
+---
 ## Session: July 3, 2026 - Estimate State Filters + Detail Polish
 **AI:** Codex
 **Worked on:** Shawn approved Jony/Steve's next design pass after live testing copy-link, resend, and accepted-state behavior.
@@ -190,6 +210,26 @@
 
 ---
 
+## Session: July 3, 2026 - Accepted Row Label Quieting
+**AI:** Codex
+**Worked on:** Shawn approved Jony/Steve's refinement after reviewing the live state filters: accepted row labels became repetitive when many won estimates were visible in All.
+
+### Completed
+- Removed repeated `Accepted` labels from estimate list rows in all filters.
+- Kept the `Accepted` filter pill count as the primary won-state signal.
+- Preserved attention labels for non-accepted states like `Draft`, `Sent`, and `Viewed` when they are not already inside their matching filter.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Open `All` and confirm accepted estimates no longer repeat `Accepted` on every row.
+- Confirm `Draft`, `Sent`, and `Viewed` labels still appear where they help identify work needing attention.
+- Confirm the `Accepted` pill still shows the accepted count and the accepted tab still filters correctly.
+
+### Next
+1. Shawn/Johnny/Steve approval on the quieter list.
+2. Continue detail-page polish/payment QA after this list state is accepted.
+
+---
 ## Session: July 3, 2026 - Estimate State Filters + Detail Polish
 **AI:** Codex
 **Worked on:** Shawn approved Jony/Steve's next design pass after live testing copy-link, resend, and accepted-state behavior.

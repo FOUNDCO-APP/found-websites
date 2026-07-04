@@ -462,7 +462,7 @@ export default function EstimatesPage() {
 function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: "all" | "open" | "viewed" | "accepted" | "declined"; onClick: () => void }) {
   const displayStatus = estimateDisplayStatus(estimate)
   const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
-  const shouldShowStatus = estimate.status === "accepted" ? activeFilter !== "accepted" : estimate.status !== activeFilter
+  const shouldShowStatus = estimate.status === "accepted" ? false : estimate.status !== activeFilter
   const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
 
   return (
