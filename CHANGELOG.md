@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 4, 2026 - Estimate Total Hierarchy Cleanup
+**AI:** Codex
+**Worked on:** Shawn asked Jony and Steve to review the public estimate total because the filled `Total Due` treatment looked like another button before the pay action.
+
+### Team Decision
+- Jony: Only the payment action should use the strong filled brand-color treatment.
+- Steve: The total should read as information, not something tappable.
+- Craig: Keep the payment flow unchanged; adjust visual hierarchy only.
+
+### Completed
+- Removed the filled brand-color `Total Due` block from the public estimate page.
+- Replaced it with a quiet total row: `Total due` + brand-colored amount.
+- Applied the same document-style total treatment to the print/PDF estimate route.
+- Preserved subtotal, tax, deposit terms, payment CTA, and payment behavior.
+
+### Must Test
+- Open the public estimate and confirm the total no longer looks like a button.
+- Confirm the real payment button is now the only strong filled action before tapping pay.
+- Open the print/PDF route and confirm the total reads like a document total, not app UI.
+
+---
 ## Session: July 4, 2026 - Public Estimate Deposit Clarity and Print Terms
 **AI:** Codex
 **Worked on:** Shawn confirmed payment setup worked, then asked Jony and Steve to review the public estimate design because the 50% deposit ask was too small and unclear. Shawn also asked about proper print formatting.

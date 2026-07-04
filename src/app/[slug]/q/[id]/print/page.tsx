@@ -354,11 +354,12 @@ export default async function EstimatePrintPage({
                       </>
                     )}
                     <div style={{
-                      background: color, borderRadius: 10, padding: "16px 22px", marginTop: 10,
-                      display: "flex", justifyContent: "space-between", alignItems: "center",
+                      display: "flex", justifyContent: "space-between", alignItems: "baseline",
+                      padding: "14px 0 4px",
+                      borderBottom: `2px solid ${color}`,
                     }}>
-                      <span style={{ fontSize: 11, fontWeight: 800, color: textLow, letterSpacing: "0.14em", textTransform: "uppercase" }}>Total Due</span>
-                      <span style={{ fontSize: 28, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em" }}>{fmt(estimate.total)}</span>
+                      <span style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>Total due</span>
+                      <span style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
                     </div>
                     {balanceDue > 0 && (
                       <div style={{ marginTop: 10, border: "1px solid #EDEDED", borderRadius: 10, overflow: "hidden" }}>

@@ -311,11 +311,11 @@ export default async function EstimateClientPage({
               </>
             )}
             <div style={{
-              background: color, borderRadius: 10, padding: "14px 20px",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
+              display: "flex", justifyContent: "space-between", alignItems: "baseline",
+              paddingTop: estimate.tax_rate > 0 ? 0 : 4,
             }}>
-              <span style={{ fontSize: 11, fontWeight: 800, color: textLow, letterSpacing: "0.14em", textTransform: "uppercase" }}>Total Due</span>
-              <span style={{ fontSize: 26, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em" }}>{fmt(estimate.total)}</span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#111", letterSpacing: "-0.01em" }}>Total due</span>
+              <span style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: "-0.04em" }}>{fmt(estimate.total)}</span>
             </div>
             {estimate.deposit_paid_at && estimate.deposit_amount && (
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, padding: "10px 14px", background: "#F0FBF4", borderRadius: 8 }}>
