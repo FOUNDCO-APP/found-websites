@@ -4,6 +4,30 @@
 
 ---
 
+## Session: July 3, 2026 - Estimate Detail Header Control Polish
+**AI:** Codex
+**Worked on:** Shawn approved Jony and Steve's direction to fix the estimate detail top-right controls so Close is the only header action and destructive controls stop competing in the first viewport.
+
+### Completed
+- Removed Delete and Edit from the top-right detail header cluster.
+- Kept only the close `x` in the top-right of the detail view.
+- Moved `Edit estimate` into the body as a quiet secondary action below the contact details.
+- Moved `Delete estimate` out of the first viewport into a low-emphasis danger action after Activity.
+- Preserved the existing delete confirmation, edit mode, send/resend, payment, and public estimate behavior.
+
+### Must Test
+- Open any estimate detail and confirm the top-right only shows the close `x`.
+- Confirm `Edit estimate` appears below contact details and opens edit mode.
+- Confirm sent/viewed resend and accepted copy actions still work.
+- Scroll to the bottom and confirm `Delete estimate` is quiet and still opens the delete confirmation.
+- Confirm deleting still requires the confirmation screen.
+
+### Next
+1. Shawn/Johnny/Steve visual approval on the simplified detail header.
+2. Continue send-options screen polish if this header passes.
+3. Continue payable-estimate QA after detail hierarchy approval.
+
+---
 ## Session: July 3, 2026 - Sent Detail Action Deduplication
 **AI:** Codex
 **Worked on:** Shawn approved the team direction to remove duplicated sent/viewed estimate actions while preserving the send sheet options and accepted estimate copy behavior.
@@ -27,7 +51,6 @@
 3. Continue payable-estimate QA after the current detail flow passes.
 
 ---
-
 
 ## Session: July 3, 2026 - Estimate Builder Rail + Ending Polish
 **AI:** Codex

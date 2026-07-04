@@ -1325,20 +1325,12 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
         {/* View mode */}
         {mode === "view" && (
           <>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-              <div>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 20 }}>
+              <div style={{ minWidth: 0 }}>
                 <h2 style={{ margin: "0 0 6px", color: "white", ...TYPE.title }}>{est.client_name}</h2>
                 <StatusBadge status={est.status} label={displayStatus.label} color={displayStatus.color} />
               </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setMode("confirm_delete")} aria-label="Delete estimate" style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid rgba(255,69,58,0.2)", backgroundColor: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,69,58,0.82)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-                  </svg>
-                </button>
-                <button onClick={startEdit} style={{ padding: "8px 15px", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.62)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Edit</button>
-                <button onClick={onClose} aria-label="Close estimate" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.58)", fontSize: 22, lineHeight: 1, cursor: "pointer" }}>x</button>
-              </div>
+              <button onClick={onClose} aria-label="Close estimate" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.58)", fontSize: 22, lineHeight: 1, cursor: "pointer", flexShrink: 0 }}>x</button>
             </div>
 
             {/* Details */}
@@ -1369,6 +1361,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
               )}
             </div>
 
+            <button onClick={startEdit} style={{ width: "100%", padding: "12px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.62)", fontSize: 14, fontWeight: 720, cursor: "pointer", marginBottom: 18 }}>Edit estimate</button>
 
             {/* Totals */}
             <div style={{ marginBottom: 18, padding: "18px 0 16px", borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
@@ -1508,6 +1501,10 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
             <div style={{ height: 22 }} />
             {/* Activity timeline */}
             <ActivityTimeline estimate={est} />
+
+            <div style={{ marginTop: 28, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <button onClick={() => setMode("confirm_delete")} style={{ width: "100%", padding: "12px 0", borderRadius: 14, border: "1px solid rgba(255,69,58,0.14)", backgroundColor: "transparent", color: "rgba(255,69,58,0.66)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Delete estimate</button>
+            </div>
           </>
         )}
 
