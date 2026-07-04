@@ -28,6 +28,29 @@
 
 ---
 
+## Session: July 3, 2026 - Missing Address Copy by Estimate State
+**AI:** Codex
+**Worked on:** Shawn approved the full team direction after Jony/Steve reviewed the live draft-row polish and flagged that accepted estimates should not show missing-address warning language.
+
+### Completed
+- Kept `Job address missing` only for draft rows where the owner still needs to finish the estimate.
+- Changed sent/viewed missing-address fallback to softer `Address not added` copy.
+- Hid missing-address copy entirely for accepted rows, leaving date-only secondary text when no address exists.
+- Kept `Finish` for incomplete drafts.
+- Preserved payment, accepted-state, and detail behavior.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Confirm incomplete draft rows still show `Job address missing - Today` and `Finish`.
+- Confirm sent/viewed rows with no address show `Address not added - Today`.
+- Confirm accepted rows with no address show only `Today` or the relevant date, not missing-address copy.
+- Confirm payment-link behavior remains unchanged.
+
+### Next
+1. Shawn/Johnny/Steve approval on missing-address row treatment.
+2. Continue estimate detail polish/payment QA after list presentation is accepted.
+
+---
 ## Session: July 3, 2026 - Draft Row Alignment + Finish State
 **AI:** Codex
 **Worked on:** Shawn flagged that incomplete draft rows looked broken: `Draft` was too hard to read, missing addresses made dates fall out of alignment, and `$0.00` was not helpful.
@@ -233,6 +256,29 @@
 
 ---
 
+## Session: July 3, 2026 - Missing Address Copy by Estimate State
+**AI:** Codex
+**Worked on:** Shawn approved the full team direction after Jony/Steve reviewed the live draft-row polish and flagged that accepted estimates should not show missing-address warning language.
+
+### Completed
+- Kept `Job address missing` only for draft rows where the owner still needs to finish the estimate.
+- Changed sent/viewed missing-address fallback to softer `Address not added` copy.
+- Hid missing-address copy entirely for accepted rows, leaving date-only secondary text when no address exists.
+- Kept `Finish` for incomplete drafts.
+- Preserved payment, accepted-state, and detail behavior.
+- Verified with `cmd /c npm run build` on July 3, 2026.
+
+### Must Test
+- Confirm incomplete draft rows still show `Job address missing - Today` and `Finish`.
+- Confirm sent/viewed rows with no address show `Address not added - Today`.
+- Confirm accepted rows with no address show only `Today` or the relevant date, not missing-address copy.
+- Confirm payment-link behavior remains unchanged.
+
+### Next
+1. Shawn/Johnny/Steve approval on missing-address row treatment.
+2. Continue estimate detail polish/payment QA after list presentation is accepted.
+
+---
 ## Session: July 3, 2026 - Draft Row Alignment + Finish State
 **AI:** Codex
 **Worked on:** Shawn flagged that incomplete draft rows looked broken: `Draft` was too hard to read, missing addresses made dates fall out of alignment, and `$0.00` was not helpful.

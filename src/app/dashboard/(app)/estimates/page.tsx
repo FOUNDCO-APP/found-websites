@@ -482,7 +482,8 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
   const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
   const incompleteDraft = isIncompleteDraft(estimate)
   const hasAddress = Boolean(estimate.property_address?.trim())
-  const sublineText = hasAddress ? estimate.property_address! : "Job address missing"
+  const showMissingAddress = !hasAddress && estimate.status !== "accepted"
+  const sublineText = hasAddress ? estimate.property_address! : estimate.status === "draft" ? "Job address missing" : "Address not added"
 
   return (
     <button
@@ -510,10 +511,14 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
           )}
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
-          <span style={{ color: hasAddress ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
-            {sublineText}
-          </span>
-          <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>
+          {(hasAddress || showMissingAddress) && (
+            <>
+              <span style={{ color: hasAddress ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
+                {sublineText}
+              </span>
+              <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>
+            </>
+          )}
           <span style={{ color: "rgba(255,255,255,0.30)", ...TYPE.footnote, textTransform: "none", whiteSpace: "nowrap" }}>
             {timeAgo(estimate.created_at)}
           </span>
