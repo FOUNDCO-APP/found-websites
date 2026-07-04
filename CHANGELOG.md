@@ -4,6 +4,29 @@
 
 ---
 
+## Session: July 3, 2026 - Stripe Connect Setup 500 Fix
+**AI:** Codex
+**Worked on:** Shawn reported `Payment setup failed (500): No response body`. Craig traced the failure into the Stripe Connect setup route and fixed the likely Stripe account creation issue while making route failures return JSON.
+
+### Completed
+- Changed Stripe Connect account creation from `controller.losses.payments = "stripe"` to `"application"`, matching Stripe's Express account creation pattern.
+- Wrapped `/dashboard/api/payments/connect` in a try/catch so future server failures return JSON instead of an empty 500.
+- Kept the client button route at `/api/payments/connect`, which is correct on `my.foundco.app`.
+- Added an explicit `/api/payments/connect` route that reuses the dashboard payment setup handler so the endpoint exists directly in the app build.
+- Preserved payment setup UI, return paths, company lookup, Stripe account link flow, estimate detail, and More page behavior.
+
+### Must Test
+- After deploy, tap `Set up` from accepted estimate detail and confirm Stripe Express onboarding opens.
+- Also test `Set up deposit payments` from More.
+- If it still fails, capture the new visible JSON error message; it should no longer say `No response body`.
+- After onboarding, refresh Found and confirm the company is treated as payments-ready.
+
+### Next
+1. Complete Stripe Express onboarding for the test slug.
+2. Open a public estimate link and test Accept & Pay.
+3. Verify dashboard payment status, activity, owner email, and customer receipt.
+
+---
 ## Session: July 3, 2026 - Payment Setup Error Visibility
 **AI:** Codex
 **Worked on:** Shawn still saw the generic payment setup error after Craig's host-route correction, so the setup button needed to expose the actual server response for diagnosis.
