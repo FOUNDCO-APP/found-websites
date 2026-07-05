@@ -321,45 +321,26 @@ export default function HomeClient({
         </div>
       )}
 
-      {/* ── WELCOME — no leads yet ── */}
+      {/* ── WELCOME — no leads yet ──
+          Quiet status only. The actual Share action lives in the quick-action
+          tile below (tile2 === "share") — a big duplicate hero card here just
+          repeats that tile and eats the vertical space it needs to breathe. */}
       {isWelcome && (
-        <div style={{ padding: "20px 20px 0", ...fade(0.06) }}>
-          <div style={{ borderRadius: 24, padding: "22px 22px", background: "linear-gradient(160deg, rgba(50,208,116,0.10), rgba(50,208,116,0.03))", border: "1px solid rgba(50,208,116,0.18)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 10px ${GREEN}`, animation: "breathe 2s ease-in-out infinite" }}/>
-              <span style={{ color: GREEN, ...TYPE.caption }}>You&apos;re live</span>
-            </div>
-            <h2 style={{ margin: "0 0 8px", fontSize: "1.75rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em", lineHeight: 1.1 }}>
-              Share your site.
-            </h2>
-            <p style={{ margin: "0 0 22px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,0.5)`, lineHeight: 1.6 }}>
-              Your first lead could come from the next person you talk to.
-            </p>
-            <button onClick={handleShare} style={{ width: "100%", padding: "16px 0", borderRadius: 100, backgroundColor: GREEN, border: "none", cursor: "pointer", fontSize: "0.875rem", fontWeight: 900, color: BLACK, letterSpacing: "0.08em", textTransform: "uppercase" as const, boxShadow: `0 0 28px rgba(50,208,116,0.3)` }}>
-              {copied ? "Link Copied ✓" : "Share My Site →"}
-            </button>
+        <div style={{ padding: "20px 24px 0", ...fade(0.06) }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 100, backgroundColor: "rgba(50,208,116,0.08)", border: "1px solid rgba(50,208,116,0.15)" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, animation: "breathe 2s ease-in-out infinite" }}/>
+            <span style={{ ...TYPE.caption, color: GREEN, fontSize: "0.6875rem" }}>You&apos;re live</span>
           </div>
+          <p style={{ marginTop: 14, marginBottom: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,0.5)`, lineHeight: 1.6 }}>
+            Your first lead could come from the next person you talk to.
+          </p>
         </div>
       )}
 
-      {/* Business tools nudge */}
-      {businessTool && !hasNewLead && (
-        <div style={{ padding: "14px 20px 0", ...fade(0.1) }}>
-          <Link href="/more#business-tools" style={{ textDecoration: "none", display: "block" }}>
-            <div style={{ borderRadius: 20, padding: "16px 18px", background: "linear-gradient(160deg, rgba(50,208,116,0.11), rgba(50,208,116,0.035))", border: "1px solid rgba(50,208,116,0.18)" }}>
-              <p style={{ margin: "0 0 5px", ...TYPE.caption, color: GREEN }}>Business tools ready</p>
-              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                We turned on {businessTool.name} for you. View all included tools.
-              </p>
-            </div>
-          </Link>
-        </div>
-      )}
-      {/* ── RESPONSIVE SPACER — distributes empty space between card and tiles ── */}
-      <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />
-
-      {/* ── QUICK ACTIONS — Camera + context tile ── */}
-      <div style={{ padding: "0 20px 0", ...fade(0.12) }}>
+      {/* ── QUICK ACTIONS — Camera + context tile ──
+          Buttons sit right after status, close to the top. Only something
+          urgent (the new-lead alert above) is allowed to outrank them. */}
+      <div style={{ padding: "20px 20px 0", ...fade(0.12) }}>
         <div style={{ display: "flex", gap: 10 }}>
 
           {/* Camera — always */}
@@ -403,7 +384,7 @@ export default function HomeClient({
                 <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>
                   {copied ? "Link Copied ✓" : "Share My Site"}
                 </div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Send your link</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Get more leads</div>
               </div>
             </button>
           )}
@@ -457,7 +438,7 @@ export default function HomeClient({
       </div>
 
       {/* ── ROW 2 — My Contacts + Edit My Site ── */}
-      <div style={{ padding: "12px 20px calc(env(safe-area-inset-bottom, 0px) + 80px)", ...fade(0.18) }}>
+      <div style={{ padding: "12px 20px 0", ...fade(0.18) }}>
         <div style={{ display: "flex", gap: 10 }}>
 
           {/* My Contacts */}
@@ -504,6 +485,28 @@ export default function HomeClient({
 
         </div>
       </div>
+
+      {/* ── RESPONSIVE SPACER — distributes empty space between buttons and the nudge below ── */}
+      <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />
+
+      {/* Business tools nudge — demoted below the buttons. Informational, not
+          actionable, so it's the thing allowed to require a scroll, not the tools. */}
+      {businessTool && !hasNewLead && (
+        <div style={{ padding: "0 20px 0", ...fade(0.1) }}>
+          <Link href="/more#business-tools" style={{ textDecoration: "none", display: "block" }}>
+            <div style={{ borderRadius: 20, padding: "16px 18px", background: "linear-gradient(160deg, rgba(50,208,116,0.11), rgba(50,208,116,0.035))", border: "1px solid rgba(50,208,116,0.18)" }}>
+              <p style={{ margin: "0 0 5px", ...TYPE.caption, color: GREEN }}>Business tools ready</p>
+              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                We turned on {businessTool.name} for you. View all included tools.
+              </p>
+            </div>
+          </Link>
+        </div>
+      )}
+
+      {/* Trailing safe-area clearance above the bottom tab bar — always present,
+          regardless of whether the business tools nudge renders above it. */}
+      <div style={{ height: "calc(env(safe-area-inset-bottom, 0px) + 80px)", flexShrink: 0 }} />
 
       {/* ── Leads sheet ── */}
       {showSheet && (
