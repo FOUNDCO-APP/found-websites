@@ -331,9 +331,6 @@ export default function HomeClient({
             <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, animation: "breathe 2s ease-in-out infinite" }}/>
             <span style={{ ...TYPE.caption, color: GREEN, fontSize: "0.6875rem" }}>You&apos;re live</span>
           </div>
-          <p style={{ marginTop: 14, marginBottom: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,0.5)`, lineHeight: 1.6 }}>
-            Your first lead could come from the next person you talk to.
-          </p>
         </div>
       )}
 
