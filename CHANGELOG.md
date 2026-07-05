@@ -1,3 +1,21 @@
+## Session: July 5, 2026 - Home Mobile Bottom Clearance Fix
+**AI:** Codex
+**Worked on:** Fixed Home still hiding bottom tools on iPhone Safari after dashboard activation returned to my.foundco.app
+
+### Completed This Session
+- Read the latest brief, tasks, changelog, decisions, and design decisions before changing Home.
+- Confirmed the latest approved direction: Home must scroll as a safety net and the core action tiles must remain reachable.
+- Removed HomeClient negative bottom margin that could trap the last row under the fixed Found tab bar and Safari browser chrome.
+- Increased the trailing mobile safe-area spacer so the bottom tools can scroll fully above the bottom nav.
+- Verified with cmd /c npm run build.
+
+### What To Test Next
+1. Open my.foundco.app Home on the same iPhone/browser state shown in the screenshot.
+2. Confirm the Home tools can scroll fully above the Found bottom tab bar.
+3. Confirm Camera, Share My Site, My Contacts, and Edit My Site are reachable.
+4. Confirm the Business Tools Ready nudge no longer traps the bottom row.
+
+---
 ## Session: July 5, 2026 — Leads/Inquiries + Schedule Audit (NO CODE CHANGES — decisions pending)
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn reviewed Blue Luna Events (industry: events) live on `my.foundco.app` — 6 screenshots across Leads/Inquiries and Schedule pages — and flagged 4 issues. Team discussion held (Steve/Jony/Craig/Angela), grounded in the actual code. Shawn explicitly asked to see the team's take and decide before any code was written. Session ended before he answered the open questions.

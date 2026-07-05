@@ -245,11 +245,10 @@ export default function HomeClient({
       backgroundImage: AMBIENT[greeting] ?? AMBIENT.afternoon,
       // Fills the screen when content is short (the common case), but flows
       // and scrolls instead of clipping when a card pushes past one viewport.
-      // marginBottom cancels the layout wrapper's paddingBottom: 120 so the
-      // bottom safe-area clearance below only comes from Row 2's own padding,
-      // not doubled up with the parent wrapper's.
+      // Keep this as normal page flow. The dashboard wrapper and the trailing
+      // spacer below provide clearance for the fixed tab bar and mobile browser
+      // chrome; negative margins can make Safari trap the last row under the nav.
       minHeight: "calc(100dvh - 50px)",
-      marginBottom: -120,
     }}>
 
       {/* ── GREETING ── */}
@@ -503,7 +502,7 @@ export default function HomeClient({
 
       {/* Trailing safe-area clearance above the bottom tab bar — always present,
           regardless of whether the business tools nudge renders above it. */}
-      <div style={{ height: "calc(env(safe-area-inset-bottom, 0px) + 80px)", flexShrink: 0 }} />
+      <div style={{ height: "calc(env(safe-area-inset-bottom, 0px) + 132px)", flexShrink: 0 }} />
 
       {/* ── Leads sheet ── */}
       {showSheet && (
