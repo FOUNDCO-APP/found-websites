@@ -4,6 +4,22 @@
 
 ---
 
+## DASHBOARD HOME: BUTTONS OUTRANK INFORMATIONAL CARDS (APPROVED — July 5, 2026)
+
+**The four core action tiles (Camera, Share My Site, My Contacts, Edit My Site) sit near the top of Home, right after the greeting/status line. Only genuinely urgent content (the new-lead alert) is allowed to appear above them.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Craig Federighi + Angela Ahrendts
+
+**What changed:**
+- The welcome-state hero card ("You're Live" + "Share your site." headline + full paragraph + big button) duplicated the "Share My Site" quick-action tile directly below it — same action, twice, on one screen. Shrunk to a quiet status line (pill + one sentence), matching the same restrained treatment the "All caught up" state already used. No button — the one real Share action lives in the tile grid.
+- The "Business Tools Ready" nudge card moved from *above* the buttons to *below* them. It's an informational one-time announcement, not a tool the owner needs to act on — it should never outrank the actual tools.
+- The Share tile's subtitle changed from "Send your link" to "Get more leads" — benefit-first, not mechanical.
+
+**The rule going forward:** on Home (and any dashboard screen that composes a status area + action tiles + optional informational cards), action tiles are the anchor near the top. New informational/nudge cards get added *below* the tiles, never above, unless the content is genuinely urgent (a new lead, not a feature announcement). If a screen ever overflows one viewport, it should be the informational content that requires scrolling — never the core actions.
+
+Why: Shawn's own framing — "our buttons should always be closer to the top unless there's something very important that needs to be at the top." A business owner opens Found to do something (shoot a photo, share the site, check a contact, edit the site); a one-time nudge about a feature being turned on is not that. Related: see the July 5 scroll-as-safety-net decision above, which this builds on directly. Implemented in `src/components/dashboard/HomeClient.tsx`.
+
+---
+
 ## DASHBOARD HOME: SCROLL IS A SAFETY NET, NOT A REDESIGN (APPROVED — July 5, 2026)
 
 **Home may scroll when content overflows one screen. It must not hard-clip content.**

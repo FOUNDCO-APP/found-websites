@@ -1,3 +1,24 @@
+## Session: July 5, 2026 — Home Dashboard Reprioritization: Buttons Before Nudges
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Follow-on team discussion (Shawn + Steve/Jony/Craig/Angela) after the scroll fix — Shawn noticed the welcome-state hero card duplicated the Share tile below it and questioned why it was so large.
+
+### Completed
+- Confirmed in code: in the welcome state (`isWelcome`), the quick-action grid's second tile (`tile2`) was already hardcoded to "share" — meaning the big hero card above it and the compact tile below it both said "Share My Site" on the same screen. Pure duplication.
+- Shrunk the welcome-state card to a quiet status line (pill + one sentence, no headline, no duplicate button) — same restrained treatment as the existing "All caught up" state.
+- Reordered Home: the four core action tiles (Camera, Share My Site, My Contacts, Edit My Site) now render right after the status line, close to the top. The "Business Tools Ready" nudge — informational, not actionable — moved to *after* the buttons instead of before them.
+- Moved the responsive spacer (`clamp(16px, 8dvh, 72px)`) to sit between the buttons and the now-demoted nudge, instead of between the nudge and the buttons.
+- Moved the bottom safe-area clearance (`calc(env(safe-area-inset-bottom, 0px) + 80px)`) off Row 2 and onto a dedicated trailing spacer that always renders after the (optional) nudge, so bottom clearance above the tab bar is correct whether or not a company has a business-tool recommendation.
+- Renamed the Share tile's subtitle from "Send your link" to "Get more leads."
+- Verified with `npm run build` — clean. Pushed as `c3d7b40`.
+- Logged as a locked decision in `DESIGN_DECISIONS.md`.
+
+### Must Test
+- New Business-plan company (no leads yet, has a business-tool recommendation): confirm status line is quiet (no button), all four tiles appear near the top, and the Business Tools nudge appears below them, not above.
+- Confirm the "Get more leads" subtitle appears under Share My Site.
+- Confirm bottom clearance above the tab bar looks correct both with and without the Business Tools nudge showing.
+
+---
+
 ## Session: July 5, 2026 — Home Dashboard Scroll Fix
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn activated a new Business-plan restaurant and found Home's bottom row (My Contacts / Edit My Site) partially hidden with no way to scroll to it — brought to the team before fixing.
