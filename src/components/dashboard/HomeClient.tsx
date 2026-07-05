@@ -243,12 +243,13 @@ export default function HomeClient({
       flexDirection: "column",
       backgroundColor: BLACK,
       backgroundImage: AMBIENT[greeting] ?? AMBIENT.afternoon,
-      // Fill exactly the space between header and bottom of viewport.
-      // marginBottom: -120 cancels the layout wrapper's paddingBottom: 120
-      // so the total page height = 100dvh (no scroll on home).
-      height: "calc(100dvh - 50px)",
+      // Fills the screen when content is short (the common case), but flows
+      // and scrolls instead of clipping when a card pushes past one viewport.
+      // marginBottom cancels the layout wrapper's paddingBottom: 120 so the
+      // bottom safe-area clearance below only comes from Row 2's own padding,
+      // not doubled up with the parent wrapper's.
+      minHeight: "calc(100dvh - 50px)",
       marginBottom: -120,
-      overflow: "hidden",
     }}>
 
       {/* ── GREETING ── */}
