@@ -1,3 +1,20 @@
+## Session: July 5, 2026 — Home Dashboard Scroll Fix
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn activated a new Business-plan restaurant and found Home's bottom row (My Contacts / Edit My Site) partially hidden with no way to scroll to it — brought to the team before fixing.
+
+### Completed
+- Root cause: `HomeClient.tsx`'s `<main>` was a fixed-height (`calc(100dvh - 50px)`), `overflow: hidden` container by design — a flexible spacer absorbed slack so a fixed content budget always filled exactly one screen. The Business Tools nudge card (added in an earlier session) wasn't part of that budget; on Shawn's new Business-plan account it pushed Row 2 below the visible area with nothing to scroll to.
+- Team discussion (Steve, Jony, Craig) — landed on: scroll should be a safety net, not a redesign. Short content still fills one screen with no visible scroll (unchanged feel); long content now flows and scrolls instead of clipping.
+- Changed `height` → `minHeight`, removed `overflow: hidden`. Kept the `marginBottom: -120` cancellation of the layout wrapper's `paddingBottom: 120` so bottom safe-area clearance isn't doubled when the page does scroll.
+- Verified with `npm run build` — clean. Pushed as `8b3425d`.
+- Logged as a locked decision in `DESIGN_DECISIONS.md` — no dashboard screen composing optional cards should use a fixed-height/no-scroll trap going forward.
+
+### Must Test
+- Reload a Business-plan account with the Business Tools nudge showing (or any account with enough content to overflow one screen) and confirm Row 2 is now reachable by scrolling, not clipped.
+- Confirm a short-content account (no nudge card, no new leads) still looks identical to before — one screen, no visible scrollbar.
+
+---
+
 ## Session: July 4, 2026 - Dashboard Activation Return Target
 **AI:** Codex
 **Worked on:** Fixed internal Found activation return flow after Shawn confirmed Business activation from my.foundco.app landed on the public site

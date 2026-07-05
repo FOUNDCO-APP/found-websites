@@ -4,6 +4,19 @@
 
 ---
 
+## DASHBOARD HOME: SCROLL IS A SAFETY NET, NOT A REDESIGN (APPROVED — July 5, 2026)
+
+**Home may scroll when content overflows one screen. It must not hard-clip content.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Craig Federighi
+
+Home was originally built as a fixed-height, `overflow: hidden` container with a flexible spacer, so a fixed set of content (greeting + one alert state + quick actions + row 2 tiles) always filled exactly one screen with no scroll. That broke the first time additive content (the Business Tools nudge card) didn't fit the fixed budget — Row 2 got pushed off-screen with nothing to scroll to, and touch just rubber-banded back to hiding it.
+
+**The rule going forward:** Home's container uses `minHeight`, not a fixed `height`, and never `overflow: hidden`. When content is short (the common case today), it still fills exactly one screen with no visible scroll — same feel as before. When a legitimate card pushes past one viewport, the page flows and scrolls instead of silently clipping content. Do not re-add a fixed-height/no-scroll trap to Home or any other dashboard screen that composes optional cards — the content set will keep growing, and a hard-clipped layout breaks every time a new card doesn't fit.
+
+Why: Shawn found this live on a new Business-plan account — could only see half the "My Contacts" row, and scrolling bounced back instead of revealing the rest. The single-screen goal for Home is still right; the *enforcement mechanism* (hard clipping) was wrong. Implemented in `src/components/dashboard/HomeClient.tsx`.
+
+---
+
 ## ESTIMATE BUILDER SHELL: FLOWING SURFACE, NOT CARD-STACK (APPROVED — July 3, 2026)
 
 **The five estimate builder steps (Customer, Job, Work, Price, Review) do not each live in their own bordered/tinted box.**
