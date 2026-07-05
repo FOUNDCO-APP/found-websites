@@ -1,3 +1,22 @@
+## Session: July 5, 2026 — Leads/Inquiries + Schedule Audit (NO CODE CHANGES — decisions pending)
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn reviewed Blue Luna Events (industry: events) live on `my.foundco.app` — 6 screenshots across Leads/Inquiries and Schedule pages — and flagged 4 issues. Team discussion held (Steve/Jony/Craig/Angela), grounded in the actual code. Shawn explicitly asked to see the team's take and decide before any code was written. Session ended before he answered the open questions.
+
+### Findings (all confirmed against the live code, nothing implemented yet)
+1. **"Inquiries" language for events businesses** — `defaultFormIntentFor()` in `src/lib/dashboard/typography.ts` deliberately maps `events` (and 8 other industries: real_estate, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit) to `"inquiry"` intent. Not a bug — a prior product decision. Shawn wants events to say "Leads" instead. Team (Angela/Jony) does not want to blanket-flip all 9 — recommends an industry-by-industry look since some (photography, creative services) may genuinely fit "inquiry."
+2. **Temperature defaults to "Warm"** — `src/app/dashboard/(app)/leads/page.tsx` hardcodes `useState<"hot"|"warm"|"cold">("warm")` and resets to "warm" on cancel. Team agrees with Shawn this should require an explicit choice, no default.
+3. **Add-lead form is not an overlay — confirmed bug.** The `showAdd` form block renders as a plain inline `<div>` in normal page flow; the "Your first [lead] is coming." empty state below it has no awareness the form is open and renders regardless, so both appear stacked on screen (form on top, empty message pushed down). Every other "add" flow in the app (Home's leads sheet, onboarding's slug sheet) properly uses a `position: fixed` overlay. This one doesn't. Team recommends converting to match the existing sheet pattern.
+4. **Schedule page has no calendar.** `src/app/dashboard/(app)/schedule/page.tsx` opens on "My Hours" (availability settings) by default; "Bookings" tab is a flat list, not a calendar grid. Team agrees a real calendar view is needed and it's the owner's expected default view — but this is scoped as new work (its own session), not a quick fix.
+
+### Next — DO NOT CODE UNTIL SHAWN ANSWERS
+See `TASKS.md` → "LEADS/INQUIRIES AUDIT" section for the 4 open questions verbatim. In short:
+1. Confirm events → "Lead" language, and decide whether to audit the other 8 "inquiry" industries now or later.
+2. Green-light removing the Warm default (team already agrees, just needs the go-ahead).
+3. Green-light converting the add-lead form to a proper slide-up sheet (team already agrees, just needs the go-ahead).
+4. Decide whether to build the Schedule calendar now as its own session, or queue it.
+
+---
+
 ## Session: July 5, 2026 — Home Dashboard Reprioritization: Buttons Before Nudges
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Follow-on team discussion (Shawn + Steve/Jony/Craig/Angela) after the scroll fix — Shawn noticed the welcome-state hero card duplicated the Share tile below it and questioned why it was so large.

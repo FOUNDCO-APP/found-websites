@@ -16,9 +16,44 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
-2. **Session 5: AI estimate builder** - AI-assisted work/pricing only after the manual estimator + payment path passes live QA.
+1. **Leads/Inquiries page — 4 confirmed issues, NOT YET CODED, waiting on Shawn's answers (see "Leads/Inquiries Audit" below for full detail).**
+2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 3. **Invoice-now / POS planning** - decide whether this belongs as a toggle/tab inside Estimates or a separate POS/invoice mode for owners who already did the work from a verbal yes.
+
+*(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA — bumped off the top-3 to make room for the Leads audit above.)*
+
+---
+
+## LEADS/INQUIRIES AUDIT (July 5, 2026) — DECISIONS NEEDED BEFORE CODING
+
+**Read this first if you're picking this up.** Shawn reviewed live screenshots of Blue Luna Events (industry: events) on `my.foundco.app` and flagged 4 things. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code — nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.
+
+### 1. "Inquiries" vs "Leads" labeling — NOT a bug, a mapping someone chose on purpose
+- `src/lib/dashboard/typography.ts` → `defaultFormIntentFor()` maps industries to an intent, which drives the page title/vocab (Leads/Estimates/Inquiries/Bookings/Reservations/Orders/Appointments).
+- Currently mapped to `"inquiry"`: `real_estate, events, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit`.
+- Shawn believes events (his own Blue Luna Events business) should be `"lead"` intent instead — someone reaching out to book an event already has money on the table, that's a sales lead, not a general question.
+- **Team take:** don't blanket-flip all 9 industries. Angela/Jony want each one looked at individually — photography and creative services may genuinely get pre-sale general questions that read correctly as "inquiries." Events might not.
+- **OPEN QUESTION for Shawn:** (a) Confirm events → flip to "lead". (b) Do you want to go through the other 8 industries one by one, or leave them as-is for now?
+
+### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" — confirmed real issue
+- `src/app/dashboard/(app)/leads/page.tsx` line ~140: `useState<"hot"|"warm"|"cold">("warm")`, and it resets to `"warm"` on cancel too (line ~425).
+- Steve/Jony agree with Shawn: defaulting quietly fakes the data — an owner could save a lead as "Warm" without ever consciously choosing it.
+- **Team recommendation:** no pill selected by default; require an explicit tap before save.
+- **OPEN QUESTION for Shawn:** green-light this fix? (Low risk, no disagreement on the team — just needs your go-ahead since you asked to decide before any code.)
+
+### 3. Add-lead form pushes the empty state down instead of covering it — CONFIRMED BUG, not a design opinion
+- `src/app/dashboard/(app)/leads/page.tsx` — the "New Inquiry" form (`{showAdd && (...)}`, ~line 367) is a plain inline `<div>` in normal page flow.
+- The "Your first [lead] is coming." empty state (~line 472) has zero awareness the form is open — it renders unconditionally whenever there are no leads, so it appears *below* the form instead of being hidden behind it.
+- Every other "add" flow in this app (Home's leads sheet, onboarding's slug sheet) uses a proper `position: fixed` overlay/sheet. This one never got that treatment.
+- **Team recommendation:** convert to match the existing sheet pattern already used elsewhere in the app. Jony also flagged this as the "needs my eyes" fix — once it's a real sheet instead of an inline card, it stops reading as another cramped box on the page.
+- **OPEN QUESTION for Shawn:** green-light the sheet conversion? (Also no disagreement on the team — just needs your go-ahead.)
+
+### 4. Schedule page needs a calendar — confirmed, no calendar exists at all
+- `src/app/dashboard/(app)/schedule/page.tsx` — "My Schedule" opens straight into the "My Hours" tab (availability-editing toggles), with "Bookings" as a flat upcoming/past list. There is no calendar grid/view anywhere in this file or the codebase.
+- Angela: backwards — an owner opens a schedule page to see their week, not to edit their availability rules first.
+- Steve: this is real new work (a calendar component), not a relabel or a quick fix — should be its own session, not bundled with items 1–3 above.
+- **OPEN QUESTION for Shawn:** tackle now as its own session, or queue it?
+
 ---
 
 ## RECENTLY COMPLETED (July 3, 2026 - Codex Session 4)
