@@ -648,6 +648,7 @@ Launch my site
           slug={slug}
           companyName={name}
           targetPlan={plan}
+          returnTo="dashboard"
           skipIntro
           onClose={() => setActivating(false)}
         />

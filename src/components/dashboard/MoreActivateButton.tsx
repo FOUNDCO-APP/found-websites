@@ -72,6 +72,7 @@ export default function MoreActivateButton({
           targetAddonSlug={targetAddonSlug}
           targetAddonLabel={targetAddonLabel}
           targetAddonPrice={targetAddonPrice}
+          returnTo="dashboard"
           skipIntro
           onClose={() => setOpen(false)}
         />

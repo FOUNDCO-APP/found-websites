@@ -76,6 +76,7 @@ export default function ActivationBanner({
         <ActivateOverlay
           slug={slug}
           companyName={companyName ?? ""}
+          returnTo="dashboard"
           onClose={() => setActivating(false)}
         />
       )}

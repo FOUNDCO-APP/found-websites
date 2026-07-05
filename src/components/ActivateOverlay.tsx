@@ -62,12 +62,14 @@ function CardForm({
   plan,
   addonLabel,
   addonPrice,
+  returnTo = "site",
 }: {
   slug: string
   companyName: string
   plan?: string | null
   addonLabel?: string | null
   addonPrice?: number | null
+  returnTo?: "site" | "dashboard"
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -85,7 +87,7 @@ function CardForm({
     const { error: stripeError } = await stripe.confirmSetup({
       elements,
       confirmParams: {
-        return_url: `https://${rootDomain}/activate/confirm?slug=${slug}`,
+        return_url: `https://${rootDomain}/activate/confirm?slug=${slug}&returnTo=${returnTo}`,
       },
     })
     if (stripeError) {
@@ -150,6 +152,7 @@ export default function ActivateOverlay({
   targetAddonSlug,
   targetAddonLabel,
   targetAddonPrice,
+  returnTo = "site",
   skipIntro = false,
   onClose,
 }: {
@@ -159,6 +162,7 @@ export default function ActivateOverlay({
   targetAddonSlug?: string | null
   targetAddonLabel?: string | null
   targetAddonPrice?: number | null
+  returnTo?: "site" | "dashboard"
   skipIntro?: boolean
   onClose: () => void
 }) {
@@ -310,7 +314,7 @@ export default function ActivateOverlay({
               ) : clientSecret ? (
                 <div style={{ maxWidth: 448, margin: "0 auto", padding: "8px 0 8px" }}>
                   <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-                    <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} />
+                    <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} returnTo={returnTo} />
                   </Elements>
                 </div>
               ) : (

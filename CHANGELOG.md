@@ -1,3 +1,22 @@
+## Session: July 4, 2026 - Dashboard Activation Return Target
+**AI:** Codex
+**Worked on:** Fixed internal Found activation return flow after Shawn confirmed Business activation from my.foundco.app landed on the public site
+
+### Completed This Session
+- Added a dashboard return target to ActivateOverlay so activation launched from inside Found can identify itself as an internal dashboard flow.
+- Updated dashboard activation entry points and onboarding activation to pass returnTo="dashboard".
+- Updated /activate/confirm so successful dashboard activation redirects to https://my.{rootDomain}/?activated=true instead of the public business site.
+- Kept public website activation unchanged: public activation still returns to https://{slug}.{rootDomain}?activated=true.
+- Verified with cmd /c npm run build.
+
+### What To Test Next
+1. Open an inactive or upgradeable company inside my.foundco.app.
+2. Start activation from the dashboard or More page.
+3. Complete Stripe test activation.
+4. Confirm the success return lands back on Found dashboard home, not the public site.
+5. Confirm public-site activation still returns to the business website after activation.
+
+---
 ## Session: July 4, 2026 - Activation Plan Sheet Fix
 **AI:** Codex
 **Worked on:** Fixed broken activation plan selector after team decision led by Craig and Steve

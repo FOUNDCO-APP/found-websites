@@ -4,9 +4,9 @@ import { confirmActivation } from "../activateActions"
 export default async function ActivateConfirmPage({
   searchParams,
 }: {
-  searchParams: Promise<{ slug?: string; setup_intent?: string; redirect_status?: string }>
+  searchParams: Promise<{ slug?: string; setup_intent?: string; redirect_status?: string; returnTo?: string }>
 }) {
-  const { slug, setup_intent, redirect_status } = await searchParams
+  const { slug, setup_intent, redirect_status, returnTo } = await searchParams
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
   if (!slug || !setup_intent || redirect_status !== "succeeded") {
@@ -14,6 +14,10 @@ export default async function ActivateConfirmPage({
   }
 
   await confirmActivation(slug, setup_intent)
+
+  if (returnTo === "dashboard") {
+    redirect(`https://my.${rootDomain}/?activated=true`)
+  }
 
   redirect(`https://${slug}.${rootDomain}?activated=true`)
 }
