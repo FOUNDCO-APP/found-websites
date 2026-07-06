@@ -1,3 +1,21 @@
+## Session: July 6, 2026 - More Business Tool Groups
+**AI:** Codex
+**Worked on:** First build slice from the Wix-informed More / Manage IA plan.
+
+### Completed This Session
+- Extended the dashboard tool registry with business outcome groups and short owner-facing descriptions.
+- Changed the More page tool navigator from a flat list into grouped sections powered by the registry.
+- Current groups render as Website, Get Paid, Customers, Work & Schedule, Marketing, and Settings when matching tools are available.
+- Kept the Dock organizer behavior intact; this pass changes how tools are presented in More, not the saved Dock logic.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open Blue Luna Events and go to More.
+2. Confirm Business Tools is grouped and Requests/Estimates remain separate.
+3. Confirm pinned Dock tools show green icons while unpinned available tools are muted.
+4. Open a food profile and confirm Orders/Reservations/Guests still group correctly.
+
+---
 ## Session: July 6, 2026 - Wix Competitor Review + More IA Plan
 **AI:** Codex
 **Worked on:** Recorded Shawn's Wix screenshot review and the full team decision for what Found should learn from it.

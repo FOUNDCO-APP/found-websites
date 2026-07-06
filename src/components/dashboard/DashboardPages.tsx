@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN } from "@/lib/dashboard/typography"
-import { getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashboardToolIds, type DashboardTool } from "@/lib/dashboard/toolPolicy"
+import { DASHBOARD_TOOL_GROUP_LABELS, DASHBOARD_TOOL_GROUP_ORDER, getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashboardToolIds, type DashboardTool, type DashboardToolGroup } from "@/lib/dashboard/toolPolicy"
 import { DashboardToolIcon } from "@/components/dashboard/DashboardToolIcon"
 
 type PageDef = DashboardTool
@@ -81,39 +81,20 @@ export default function DashboardPages({
   const activeTabs = tabIds.map(id => byId.get(id)).filter(Boolean) as PageDef[]
   const inactiveTabs = allPages.filter(p => !tabIds.includes(p.id))
 
-  // View mode: full page navigator, green icons on pinned tabs
+  // View mode: grouped business navigator, powered by the tool registry
   if (mode === "view") {
-    const viewablePages = allPages.filter(p => p.id !== "more")
+    const viewablePages = allPages.filter(p => p.id !== "home" && p.id !== "more")
+    const groups = DASHBOARD_TOOL_GROUP_ORDER
+      .map((group) => ({
+        group,
+        pages: viewablePages.filter((page) => page.group === group),
+      }))
+      .filter((entry) => entry.pages.length > 0)
+
     return (
       <section style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <p style={{ margin: 0, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>My Dock</p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {viewablePages.map(page => {
-            const pinned = tabIds.includes(page.id)
-            return (
-              <Link key={page.id} href={`${prefix}${page.path}`} style={{ textDecoration: "none" }}>
-                <div style={{
-                  borderRadius: 14, padding: "15px 18px",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ width: 24, height: 24, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><DashboardToolIcon tool={page} active={pinned} muted={!pinned} size={21} /></span>
-                    <span style={{ ...TYPE.subhead, color: "white" }}>{page.label}</span>
-                  </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="9 18 15 12 9 6"/>
-                  </svg>
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
-          <span style={{ ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>(sort &amp; edit)</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+          <p style={{ margin: 0, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Business Tools</p>
           <button
             onClick={() => setMode("edit")}
             style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "none", cursor: "pointer", padding: "4px 0" }}
@@ -122,13 +103,49 @@ export default function DashboardPages({
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Organize my Dock</span>
+            <span style={{ ...TYPE.footnote, fontWeight: 700, color: GREEN }}>Organize Dock</span>
           </button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {groups.map(({ group, pages }: { group: DashboardToolGroup; pages: PageDef[] }) => (
+            <div key={group}>
+              <p style={{ margin: "0 0 7px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                {DASHBOARD_TOOL_GROUP_LABELS[group]}
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {pages.map(page => {
+                  const pinned = tabIds.includes(page.id)
+                  return (
+                    <Link key={page.id} href={`${prefix}${page.path}`} style={{ textDecoration: "none" }}>
+                      <div style={{
+                        borderRadius: 14, padding: "14px 18px",
+                        backgroundColor: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
+                          <span style={{ width: 24, height: 24, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><DashboardToolIcon tool={page} active={pinned} muted={!pinned} size={21} /></span>
+                          <span style={{ minWidth: 0 }}>
+                            <span style={{ display: "block", ...TYPE.subhead, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.label}</span>
+                            {page.description && (
+                              <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.description}</span>
+                            )}
+                          </span>
+                        </div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                          <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     )
   }
-
   // Edit mode: reorder / pin tabs inline
   return (
     <section style={{ marginBottom: 24 }}>
@@ -199,4 +216,3 @@ export default function DashboardPages({
     </section>
   )
 }
-

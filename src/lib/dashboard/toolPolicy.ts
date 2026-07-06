@@ -1,7 +1,15 @@
 import { defaultFormIntentFor } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
 
-export type DashboardTool = { id: string; path: string; label: string }
+export type DashboardToolGroup = "website" | "get_paid" | "customers" | "work_schedule" | "marketing" | "insights" | "settings"
+
+export type DashboardTool = {
+  id: string
+  path: string
+  label: string
+  group: DashboardToolGroup
+  description?: string
+}
 
 type DashboardToolPolicyInput = {
   industry?: string | null
@@ -9,8 +17,8 @@ type DashboardToolPolicyInput = {
   activeAddons?: string[]
 }
 
-const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule" }
-const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email" }
+const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
+const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
 
 const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "wellness",
@@ -38,7 +46,7 @@ function has(activeAddons: string[], addon: string) {
 
 function peopleTool(industry: string | null | undefined): DashboardTool {
   const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
-  return { id: "people", path: "/people", label }
+  return { id: "people", path: "/people", label, group: "customers", description: "Customer memory across work and requests" }
 }
 
 function inboxLabelFor(industry: string | null | undefined, subIndustry?: string | null): string {
@@ -70,18 +78,18 @@ function availableFoodTools(activeAddons: string[]): DashboardTool[] {
   const hasEstimates = has(activeAddons, "quote_payments")
 
   return [
-    { id: "home", path: "/", label: "Home" },
-    ...(hasOrders ? [{ id: "orders", path: "/leads?view=orders", label: "Orders" }] : []),
+    { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
+    ...(hasOrders ? ([{ id: "orders", path: "/leads?view=orders", label: "Orders", group: "get_paid", description: "Paid food, product, or cart requests" }] as DashboardTool[]) : []),
     hasCalendar
-      ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations" }
-      : { id: "inbox", path: "/leads", label: "Reservations" },
-    ...(hasEstimates ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
+      ? { id: "reservations", path: "/leads?view=reservations", label: "Reservations", group: "work_schedule", description: "Customers asking to reserve a time" }
+      : { id: "inbox", path: "/leads", label: "Reservations", group: "work_schedule", description: "Customers asking to reserve a time" },
+    ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     peopleTool("food"),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
-    { id: "photos", path: "/photos", label: "Photos" },
-    { id: "contacts", path: "/contacts", label: "Contacts" },
+    { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
+    { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
     ...(hasEmail ? [EMAIL_TOOL] : []),
-    { id: "more", path: "/more", label: "More" },
+    { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
   ]
 }
 
@@ -94,15 +102,15 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
 
   const inboxPath = inboxPathFor(industry, subIndustry)
   return [
-    { id: "home", path: "/", label: "Home" },
-    { id: "inbox", path: inboxPath, label: inboxLabelFor(industry, subIndustry) },
-    ...(hasEstimates && inboxPath !== "/estimates" ? [{ id: "estimates", path: "/estimates", label: "Estimates" }] : []),
+    { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
+    { id: "inbox", path: inboxPath, label: inboxLabelFor(industry, subIndustry), group: "customers", description: "Incoming customer requests" },
+    ...(hasEstimates && inboxPath !== "/estimates" ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     peopleTool(industry),
-    { id: "photos", path: "/photos", label: "Photos" },
-    { id: "contacts", path: "/contacts", label: "Contacts" },
+    { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
+    { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
     ...(hasEmail ? [EMAIL_TOOL] : []),
-    { id: "more", path: "/more", label: "More" },
+    { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
   ]
 }
 
@@ -163,9 +171,9 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
 
   const middle = middleIds.map(id => byId.get(id)).filter(Boolean).slice(0, 3) as DashboardTool[]
   return [
-    byId.get("home") ?? { id: "home", path: "/", label: "Home" },
+    byId.get("home") ?? { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
     ...middle,
-    byId.get("more") ?? { id: "more", path: "/more", label: "More" },
+    byId.get("more") ?? { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
   ]
 }
 
@@ -177,3 +185,22 @@ export function getDashboardToolStorageKey(companyName: string | null | undefine
   const addonKey = activeAddons.join("|")
   return `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${subIndustry || "general"}_${addonKey || "core"}`
 }
+export const DASHBOARD_TOOL_GROUP_LABELS: Record<DashboardToolGroup, string> = {
+  website: "Website",
+  get_paid: "Get Paid",
+  customers: "Customers",
+  work_schedule: "Work & Schedule",
+  marketing: "Marketing",
+  insights: "Insights",
+  settings: "Settings",
+}
+
+export const DASHBOARD_TOOL_GROUP_ORDER: DashboardToolGroup[] = [
+  "website",
+  "get_paid",
+  "customers",
+  "work_schedule",
+  "marketing",
+  "insights",
+  "settings",
+]
