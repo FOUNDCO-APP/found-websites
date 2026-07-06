@@ -1,14 +1,13 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getAllCompanies, type CompanyRow } from "@/lib/dashboard/getCompany"
+import { getAllCompanies } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import FoundWordmark from "@/components/FoundWordmark"
+import CompanyPicker from "@/components/dashboard/CompanyPicker"
 
 const FOUND_BLACK = "#080A09"
-const SIGNAL_GREEN = "#32D074"
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 async function selectCompany(formData: FormData) {
   "use server"
@@ -22,16 +21,6 @@ async function selectCompany(formData: FormData) {
     maxAge: 60 * 60 * 24 * 30,
   })
   redirect("/")
-}
-
-function planLabel(plan: string | null) {
-  if (plan === "found_pro") return "Pro"
-  if (plan === "found_business") return "Business"
-  return "Found"
-}
-
-function initial(name: string) {
-  return name.trim()[0]?.toUpperCase() ?? "?"
 }
 
 export default async function SelectPage() {
@@ -75,79 +64,7 @@ export default async function SelectPage() {
           You manage {companies.length} sites on Found.
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {companies.map((company: CompanyRow) => (
-            <form key={company.id} action={selectCompany}>
-              <input type="hidden" name="company_id" value={company.id} />
-              <button
-                type="submit"
-                style={{
-                  width: "100%",
-                  background: "none",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 16,
-                  padding: "16px 18px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  fontFamily: "inherit",
-                  transition: "background-color 150ms",
-                  textAlign: "left",
-                }}>
-                {/* Avatar */}
-                <div style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  backgroundColor: company.primary_color || SIGNAL_GREEN,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                  fontWeight: 700,
-                  color: "white",
-                  flexShrink: 0,
-                  opacity: 0.9,
-                }}>
-                  {initial(company.name)}
-                </div>
-
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    margin: "0 0 3px",
-                    fontSize: 15,
-                    fontWeight: 600,
-                    color: "white",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {company.name}
-                  </p>
-                  <p style={{
-                    margin: 0,
-                    fontSize: 12,
-                    color: "rgba(255,255,255,0.35)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {company.slug}.{ROOT_DOMAIN} · {planLabel(company.plan)}
-                  </p>
-                </div>
-
-                {/* Chevron */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="9 18 15 12 9 6"/>
-                </svg>
-              </button>
-            </form>
-          ))}
-        </div>
+        <CompanyPicker companies={companies} selectCompany={selectCompany} />
       </div>
       </main>
 
