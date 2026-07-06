@@ -1,3 +1,22 @@
+## Session: July 6, 2026 - More Dock Tool Icons
+**AI:** Codex
+**Worked on:** Jony-led polish for the More page so My Dock rows use the same icon language as the bottom dock.
+
+### Completed This Session
+- Replaced the My Dock status dots with the same tool icons used in the mobile dock and desktop sidebar.
+- Green icons now mean the tool is pinned in the Dock; muted icons mean the tool is available but not pinned.
+- Shared the icon renderer between `DashboardNav` and `DashboardPages` so Requests, Estimates, Schedule, Contacts, and other tools stay visually consistent.
+- Removed the old dot legend from More > My Dock.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open Blue Luna Events on `my.foundco.app` after deployment finishes.
+2. Go to More and confirm each My Dock row shows its tool icon instead of a dot.
+3. Confirm pinned tools use green icons and unpinned tools use muted icons.
+4. Confirm the bottom dock still shows `Requests` and the document icon for `Estimates`.
+
+---
+
 ## Session: July 6, 2026 - Estimates Nav Icon Fix
 **AI:** Codex
 **Worked on:** Jony-led icon correction so `Requests` and `Estimates` do not both use people icons.
