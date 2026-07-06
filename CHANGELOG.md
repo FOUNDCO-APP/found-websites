@@ -1,3 +1,22 @@
+## Session: July 6, 2026 — Camera Black Screen Fix (Permission State)
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn found the in-app camera opened to a black screen — traced it himself to a blocked camera permission in Safari (found the crossed-out camera icon in the address bar, tapping Allow fixed it). Brought to Craig for verification before any fix.
+
+### Completed
+- Verified two competing theories before touching code: (1) our full-screen black overlay visually covering the browser's native permission prompt — **ruled out**, native permission UI is rendered by the browser itself, outside the page, and cannot be covered by any page-level CSS/z-index. (2) our existing `getUserMedia` error handling not catching a blocked-permission case — **partially confirmed**: an explicit rejection *is* already caught and shown as an error message, but there's a documented WebKit quirk where a stale/blocked permission state can resolve the promise with a stream that never produces an actual video frame, without ever rejecting — which our code had zero handling for. This matches what Shawn saw exactly: black screen, no error message.
+- Added a proactive `navigator.permissions.query({name: "camera"})` check before opening the camera — best-effort (reliable on Chrome/Android, Safari support is inconsistent so this isn't load-bearing).
+- Added a platform-aware blocked-camera message — iOS Safari wording points at the address-bar camera icon; Android wording points at the lock/camera icon, matching the actual UI on each platform.
+- Added a 4-second frame-timeout safety net: if the stream resolves but `videoWidth` never becomes non-zero (no frame arrived), treat it the same as a blocked permission and show the guidance message instead of leaving the screen black indefinitely.
+- Confirmed: **no auto-allow / default-to-allow is possible** on any browser — this is a hard platform security boundary, not a Found limitation. Not attempted.
+- Verified with `npm run build` — clean. Pushed as `e9906d4`.
+
+### Must Test
+- On a device where camera was previously blocked for `my.foundco.app`, open the camera and confirm the new guidance message appears (not a black screen) with the correct platform-specific wording.
+- On a fresh device/browser that's never been asked, confirm the native permission prompt still appears normally and the camera works once allowed.
+- If possible, test on both iOS Safari and an Android browser to confirm the wording is right for each.
+
+---
+
 ## Session: July 6, 2026 - Schedule Hours UX Polish
 **AI:** Codex
 **Worked on:** Jony/Steve-led design pass after Shawn tested the new Schedule tabs.
