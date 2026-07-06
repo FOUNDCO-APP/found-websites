@@ -1,3 +1,21 @@
+## Session: July 6, 2026 — Company-Switching Speed Fix
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn reported switching between businesses under his profile "takes forever." Asked Craig to trace it.
+
+### Completed
+- Confirmed the `/select` page's own cookie-set + redirect is trivial and not the bottleneck.
+- Found the real cause in the two Server Components that render on every dashboard load after a switch: `src/app/dashboard/(app)/layout.tsx` and `src/app/dashboard/(app)/page.tsx` (Home) each ran two independent Supabase queries as separate sequential `await`s instead of concurrently — four extra full round trips stacked on top of the auth/company lookups on every single page load, not just after switching (switching just makes it very noticeable since it's a full cold navigation).
+- Layout: `newLeadCount` and `paidAddonSlugs` don't depend on each other — now run via `Promise.all`.
+- Home: found the same pattern (leads query, then a separate last-photo query) — parallelized. Also found a fully duplicate second `lastPhotoRow` query further down the same file that was never used differently from the first — removed it entirely.
+- No behavior/data changes — same queries, just concurrent instead of serial, plus one dead duplicate query removed.
+- Verified with `npm run build` — clean. Pushed as `c6b6b38`.
+
+### Must Test
+- Switch between businesses on an account with 2+ companies and confirm it feels noticeably faster than before.
+- Confirm Home's new-lead alert, lead count, and "photo this week" state still all render correctly (logic unchanged, just reordered).
+
+---
+
 ## Session: July 6, 2026 — Camera Black Screen Fix (Permission State)
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn found the in-app camera opened to a black screen — traced it himself to a blocked camera permission in Safari (found the crossed-out camera icon in the address bar, tapping Allow fixed it). Brought to Craig for verification before any fix.
