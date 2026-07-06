@@ -16,14 +16,13 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
-2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
-3. **Invoice-now / POS planning** - decide whether this belongs as a toggle/tab inside Estimates or a separate POS/invoice mode for owners who already did the work from a verbal yes.
+1. **More / Manage IA build** - implement the Wix-informed, Found-specific grouped More page from `MORE_MANAGE_IA_AUDIT.md`: Website, Get Paid, Customers, Work & Schedule, Marketing, Insights, Settings. Extend the tool registry first; do not hardcode a one-off page layout.
+2. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
+3. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 
-*(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA — bumped off the top-3 to make room for the Leads audit above.)*
+*(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA. Invoice-now / POS planning is still important but moves behind the More / Manage IA pass.)*
 
 ---
-
 ## LEADS/INQUIRIES AUDIT (July 5, 2026) - PARTIALLY IMPLEMENTED
 
 **Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code - nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.

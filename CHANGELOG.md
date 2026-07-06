@@ -1,3 +1,19 @@
+## Session: July 6, 2026 - Wix Competitor Review + More IA Plan
+**AI:** Codex
+**Worked on:** Recorded Shawn's Wix screenshot review and the full team decision for what Found should learn from it.
+
+### Completed This Session
+- Added `WIX_COMPETITOR_REVIEW.md` with team-by-team notes from Steve, Jony, Angela, Craig, Priya, Marcus, Chris, and Phil.
+- Added `MORE_MANAGE_IA_AUDIT.md` with the proposed Found grouping model: Website, Get Paid, Customers, Work & Schedule, Marketing, Insights, Settings.
+- Added the locked decision to `DECISIONS.md`: borrow Wix's grouped Manage structure, not Wix's admin design.
+- Updated `TASKS.md` so the next build is the More / Manage IA pass, starting with the tool registry.
+
+### Next Practical Step
+1. Extend the dashboard tool registry with More groups and owner-facing tool roles.
+2. Rebuild More from that registry instead of hardcoded rows.
+3. Test construction, Blue Luna Events / balloon decor, restaurant, booking, retail, and professional-service profiles.
+
+---
 ## Session: July 6, 2026 - More Dock Tool Icons
 **AI:** Codex
 **Worked on:** Jony-led polish for the More page so My Dock rows use the same icon language as the bottom dock.
