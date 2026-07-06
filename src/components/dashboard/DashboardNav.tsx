@@ -199,6 +199,10 @@ export default function DashboardNav({
       .catch(() => {})
   }, [prefix])
 
+  function mobileLabelFor(tab: Tab) {
+    return tab.label === "Estimate Requests" ? "Requests" : tab.label
+  }
+
   function buildTabs(ids: string[]): Tab[] {
     const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
     const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
@@ -418,7 +422,7 @@ export default function DashboardNav({
                 {(ICONS[tab.path] || ICONS[tab.id] || ICONS[pathOnly(tab.path)])(active)}
                 {showBadge && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
               </div>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{tab.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)", textTransform: "uppercase" }}>{mobileLabelFor(tab)}</span>
             </Link>
           )
         })}

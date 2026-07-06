@@ -1,4 +1,14 @@
-## Session: July 6, 2026 - Blue Luna Estimate Requests Tab Fix
+## Session: July 6, 2026 - Mobile Dock Request Label Polish
+**AI:** Codex
+**Worked on:** Jony-led design fix for `Estimate Requests` wrapping to two lines in the mobile bottom nav.
+
+### Completed This Session
+- Kept the product/page/tool name as `Estimate Requests`.
+- Shortened only the mobile bottom nav display label to `Requests`.
+- Desktop sidebar and More > Organize my Dock continue to show the full `Estimate Requests` label.
+- Verified with `cmd /c npm run build`.
+
+---## Session: July 6, 2026 - Blue Luna Estimate Requests Tab Fix
 **AI:** Codex
 **Worked on:** Fixed Blue Luna Events still showing `Leads` in the bottom tab after the Estimate Requests vocabulary change.
 
