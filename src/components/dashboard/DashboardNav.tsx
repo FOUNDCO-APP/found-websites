@@ -109,6 +109,20 @@ function MoreIcon({ active }: { active: boolean }) {
   )
 }
 
+
+function EstimateIcon({ active }: { active: boolean }) {
+  const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
+  const w = active ? 2.5 : 1.5
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={s} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+      <path d="M14 2v6h6"/>
+      <path d="M8 13h8"/>
+      <path d="M8 17h6"/>
+      <path d="M8 9h2"/>
+    </svg>
+  )
+}
 function PeopleIcon({ active }: { active: boolean }) {
   const s = active ? SIGNAL_GREEN : "rgba(255,255,255,0.72)"
   const w = active ? 2.5 : 1.5
@@ -134,7 +148,7 @@ function EmailIcon({ active }: { active: boolean }) {
 const ICONS: Record<string, (active: boolean) => React.ReactElement> = {
   "/":            (a) => <HomeIcon         active={a} />,
   "/leads":       (a) => <LeadsIcon        active={a} />,
-  "/estimates":   (a) => <LeadsIcon        active={a} />,
+  "/estimates":   (a) => <EstimateIcon     active={a} />,
   "/people":      (a) => <PeopleIcon       active={a} />,
   "people":       (a) => <PeopleIcon       active={a} />,
   "orders":       (a) => <OrdersIcon       active={a} />,

@@ -1,4 +1,13 @@
-## Session: July 6, 2026 - Mobile Dock Request Label Polish
+## Session: July 6, 2026 - Estimates Nav Icon Fix
+**AI:** Codex
+**Worked on:** Jony-led icon correction so `Requests` and `Estimates` do not both use people icons.
+
+### Completed This Session
+- Added a document/text-line icon for the `Estimates` tab.
+- Kept the people icon for `Requests` because it represents incoming customers.
+- Verified with `cmd /c npm run build`.
+
+---## Session: July 6, 2026 - Mobile Dock Request Label Polish
 **AI:** Codex
 **Worked on:** Jony-led design fix for `Estimate Requests` wrapping to two lines in the mobile bottom nav.
 
