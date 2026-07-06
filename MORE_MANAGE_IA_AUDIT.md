@@ -255,3 +255,14 @@ Implemented:
 - Time off remains available as a secondary Hours section.
 
 Next QA: test Schedule on profiles with no bookings, active bookings, restaurants, quote-first businesses, and appointment-first businesses.
+
+---
+
+## Implemented Slice - Schedule Tab Clarity (July 6, 2026)
+
+The Schedule tool now follows the More / Manage principle that daily work comes first and setup stays secondary:
+- Calendar is the default week view.
+- Bookings is the booking record/history view.
+- Hours is the setup view for availability, booking settings, and time off.
+- The Schedule tab switcher stays available while scrolling, but the title/header does not freeze.
+- Empty states now explain each tab's job instead of repeating generic no-data copy.

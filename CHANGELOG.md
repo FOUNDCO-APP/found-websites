@@ -3339,3 +3339,22 @@ At the end of every session add a new entry at the TOP:
 4. Confirm `Photos` still opens the photos page.
 5. Open Nanas or another Starter/Pro account and confirm `Add Features` still appears.
 6. Confirm My Plan is quieter on Business accounts.
+
+---
+## Session: July 6, 2026 - Schedule Sticky Tabs + Empty-State Clarity
+**AI:** Codex
+**Worked on:** Team-approved Schedule polish after Shawn's review of Calendar, Bookings, and Hours.
+
+### Completed This Session
+- Made the Calendar / Bookings / Hours switcher sticky while scrolling so owners can move between schedule views without returning to the top.
+- Clarified empty states so Calendar means this week's schedule and Bookings means booking history.
+- Separated the Weekly hours summary header from the day rows so Hours reads as a summary first, not a database list.
+- Changed Save Hours into a contextual Save Changes action that appears only while editing, changing settings, or after unsaved schedule changes.
+
+### Test Next
+1. Open Blue Luna Events and tap Schedule.
+2. Confirm Calendar says `No bookings this week` when empty.
+3. Tap Bookings and confirm it says `No booking history yet` when empty.
+4. Tap Hours, scroll down, and confirm the tab switcher stays available.
+5. Confirm the Weekly hours header feels separated from the day rows.
+6. Tap Edit, change a day/time, confirm `Save Changes` appears, save, and confirm it disappears after saving.

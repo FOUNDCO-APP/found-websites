@@ -87,6 +87,7 @@ export default function SchedulePage() {
   const [saving, setSaving]           = useState(false)
   const [saveMsg, setSaveMsg]         = useState("")
   const [tab, setTab]                 = useState<"calendar" | "bookings" | "hours">("calendar")
+  const [hasScheduleChanges, setHasScheduleChanges] = useState(false)
 
   // Block form
   const [blockType, setBlockType]     = useState<"single" | "range">("single")
@@ -123,10 +124,12 @@ export default function SchedulePage() {
   }, [prefix])
 
   function updateDay(dow: number, patch: Partial<DayConfig>) {
+    setHasScheduleChanges(true)
     setDays(prev => prev.map(d => d.day_of_week === dow ? { ...d, ...patch } : d))
   }
 
   function updateOpenDays(patch: Partial<DayConfig>) {
+    setHasScheduleChanges(true)
     setDays(prev => prev.map(d => d.is_working ? { ...d, ...patch } : d))
   }
 
@@ -137,6 +140,11 @@ export default function SchedulePage() {
     const result = await saveAvailability(companyId, days)
     setSaving(false)
     setSaveMsg(result.success ? "Saved!" : (result.error ?? "Error saving"))
+    if (result.success) {
+      setHasScheduleChanges(false)
+      setEditingHours(false)
+      setShowBookingSettings(false)
+    }
     setTimeout(() => setSaveMsg(""), 3000)
   }
 
@@ -214,7 +222,21 @@ export default function SchedulePage() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 4, marginBottom: 26, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 4 }}>
+      <div style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 20,
+        display: "flex",
+        gap: 4,
+        marginBottom: 26,
+        background: "rgba(8,10,9,0.88)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 14,
+        padding: 4,
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
+        boxShadow: "0 12px 28px rgba(0,0,0,0.18)",
+      }}>
         {(["calendar", "bookings", "hours"] as const).map(t => (
           <button
             key={t}
@@ -262,8 +284,8 @@ export default function SchedulePage() {
 
           {upcomingBookings.length === 0 ? (
             <div style={{ ...sectionCard, textAlign: "center", padding: "30px 20px" }}>
-              <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 850, color: "white" }}>No bookings yet.</p>
-              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>When customers reserve a time, the next booking will show here first.</p>
+              <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 850, color: "white" }}>No bookings this week.</p>
+              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>When someone reserves a time, it will show here first.</p>
             </div>
           ) : (
             <>
@@ -288,8 +310,17 @@ export default function SchedulePage() {
       {/* Hours */}
       {tab === "hours" && (
         <>
-          <div style={sectionCard}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 14 }}>
+          <div style={{ ...sectionCard, padding: "0 18px 20px", overflow: "hidden" }}>
+            <div style={{
+              display: "flex",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 14,
+              margin: "0 -18px 12px",
+              padding: "18px",
+              background: "rgba(255,255,255,0.025)",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+            }}>
               <div>
                 <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Weekly hours</p>
                 <p style={{ margin: 0, ...TYPE.headline, color: "white" }}>{openDays.length} open days</p>
@@ -380,23 +411,27 @@ export default function SchedulePage() {
             )}
           </div>
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
-              background: saving ? "rgba(255,255,255,0.1)" : GREEN,
-              color: saving ? `rgba(255,255,255,${TEXT_OPACITY.secondary})` : "#000",
-              fontWeight: 800, fontSize: 15, cursor: saving ? "default" : "pointer",
-              margin: "4px 0 18px",
-            }}
-          >
-            {saving ? "Saving..." : "Save Hours"}
-          </button>
-          {saveMsg && (
-            <p style={{ textAlign: "center", marginTop: -8, ...TYPE.footnote, color: saveMsg === "Saved!" ? GREEN : "#FF3B30" }}>
-              {saveMsg}
-            </p>
+          {(editingHours || showBookingSettings || hasScheduleChanges) && (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                style={{
+                  width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
+                  background: saving ? "rgba(255,255,255,0.1)" : GREEN,
+                  color: saving ? `rgba(255,255,255,${TEXT_OPACITY.secondary})` : "#000",
+                  fontWeight: 800, fontSize: 15, cursor: saving ? "default" : "pointer",
+                  margin: "4px 0 18px",
+                }}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+              {saveMsg && (
+                <p style={{ textAlign: "center", marginTop: -8, ...TYPE.footnote, color: saveMsg === "Saved!" ? GREEN : "#FF3B30" }}>
+                  {saveMsg}
+                </p>
+              )}
+            </>
           )}
         </>
       )}
@@ -477,7 +512,7 @@ export default function SchedulePage() {
                   <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "white" }}>
                     {b.block_date
                       ? formatBookingDate(b.block_date)
-                      : `${b.range_start ? formatBookingDate(b.range_start) : ""} – ${b.range_end ? formatBookingDate(b.range_end) : ""}`}
+                      : `${b.range_start ? formatBookingDate(b.range_start) : ""} - ${b.range_end ? formatBookingDate(b.range_end) : ""}`}
                   </p>
                   {b.label && <p style={{ margin: "2px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{b.label}</p>}
                 </div>
@@ -495,8 +530,8 @@ export default function SchedulePage() {
         <>
           {upcomingBookings.length === 0 && pastBookings.length === 0 && (
             <div style={{ ...sectionCard, textAlign: "center", padding: "30px 20px" }}>
-              <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No bookings yet.</p>
-              <p style={{ margin: 0, ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>When customers book through your site, they will appear here.</p>
+              <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No booking history yet.</p>
+              <p style={{ margin: 0, ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Every scheduled customer will appear here after they book.</p>
             </div>
           )}
 
@@ -547,4 +582,3 @@ export default function SchedulePage() {
     </div>
   )
 }
-

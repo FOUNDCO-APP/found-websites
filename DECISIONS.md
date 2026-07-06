@@ -725,3 +725,7 @@ Why: An early draft of the shared typography system made all large page titles b
 **[2026-07-06] - Active Business accounts should not repeat included tools on More.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
 Why: Business owners do not need to be resold tools they already have. More should show usable business tools, missing add-ons when relevant, and quiet account status. `Included Business Tools` is only useful as upgrade/add-on education before the owner has the tools.
+
+**[2026-07-06] - Schedule tabs stay available while scrolling; empty states define tab jobs.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+Why: Calendar, Bookings, and Hours are separate jobs. Owners should understand that Calendar is this week, Bookings is history/detail, and Hours is setup. The tab switcher can stay sticky, but the title should not freeze or crowd the work.

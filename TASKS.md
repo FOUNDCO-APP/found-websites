@@ -302,3 +302,9 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Portal name — "Found Studio" proposed, needs Steve/team sign-off
 - Inbox tab — currently redirects to Leads. Should it become a full conversation thread view?
 - Social posting — direct API vs save to camera roll (locked: camera roll for launch)
+
+### Schedule QA note - July 6, 2026
+- Verify sticky Calendar / Bookings / Hours tabs on mobile Safari.
+- Verify Calendar empty state says `No bookings this week`.
+- Verify Bookings empty state says `No booking history yet`.
+- Verify Hours shows a separated Weekly hours summary and `Save Changes` only when editing or unsaved changes exist.
