@@ -1,3 +1,30 @@
+## Session: July 5, 2026 - Industry Vocabulary vs Estimate Workflow Alignment
+**AI:** Codex
+**Worked on:** Shawn clarified the product model after reviewing the Blue Luna Events test profile. Team alignment was needed before any code changes because the repo was mixing customer intake vocabulary with the separate estimate/quote workflow.
+
+### Completed This Session
+- Confirmed Blue Luna Events is a test customer/profile/slug, not a reason to infer workflow from the business name.
+- Pulled the current repo sources for industry awareness:
+  - `src/lib/industryManifests.ts` stores industry/sub-industry intent and likely upgrades.
+  - `src/lib/dashboard/typography.ts` maps dashboard intake vocabulary.
+  - `src/lib/featureAccess.ts` controls paid tools/add-ons such as quote payments, booking calendar, ordering, cart, and email marketing.
+  - `src/types/company.ts` separates `industry_category`, `sub_industry`, `primary_intent`, and `secondary_intent`.
+- Recorded the locked distinction in `DECISIONS.md`: intake labels and Estimates/Quotes are separate systems.`r`n- Created `INDUSTRY_WORKFLOW_AUDIT.md` with the team audit matrix across industries, subcategories, intake labels, and separate tools.
+- No app code changed.
+
+### Team Alignment
+- Intake vocabulary: Leads, Inquiries, Quote Requests, Bookings, Reservations, Orders, Appointments.
+- Estimate workflow: Estimates/Quotes with pricing, approval, deposits, payment links, invoices, and receipts.
+- A business can have both. Balloon decor is the example: it may receive a lead/booking request first, then send a quote/estimate.
+
+### What To Do Next
+1. Audit industry and sub-industry vocabulary as two separate decisions:
+   - What is the intake tab called?
+   - Which business tools should be available/defaulted?
+2. Fix the existing mismatch where Events/balloon decor are quote-oriented in the manifest but dashboard wording currently falls back to Inquiries.
+3. Do not infer labels from business names or slugs.
+
+---
 ## Session: July 5, 2026 - Home Mobile Bottom Clearance Fix
 **AI:** Codex
 **Worked on:** Fixed Home still hiding bottom tools on iPhone Safari after dashboard activation returned to my.foundco.app
@@ -18,17 +45,17 @@
 ---
 ## Session: July 5, 2026 — Leads/Inquiries + Schedule Audit (NO CODE CHANGES — decisions pending)
 **AI:** Claude Code (Sonnet 5)
-**Worked on:** Shawn reviewed Blue Luna Events (industry: events) live on `my.foundco.app` — 6 screenshots across Leads/Inquiries and Schedule pages — and flagged 4 issues. Team discussion held (Steve/Jony/Craig/Angela), grounded in the actual code. Shawn explicitly asked to see the team's take and decide before any code was written. Session ended before he answered the open questions.
+**Worked on:** Shawn reviewed the Blue Luna Events test customer/profile live on `my.foundco.app` - 6 screenshots across Leads/Inquiries and Schedule pages - and flagged 4 issues. Blue Luna Events is the account/slug Shawn created for testing; do not infer workflow from the business name.
 
 ### Findings (all confirmed against the live code, nothing implemented yet)
-1. **"Inquiries" language for events businesses** — `defaultFormIntentFor()` in `src/lib/dashboard/typography.ts` deliberately maps `events` (and 8 other industries: real_estate, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit) to `"inquiry"` intent. Not a bug — a prior product decision. Shawn wants events to say "Leads" instead. Team (Angela/Jony) does not want to blanket-flip all 9 — recommends an industry-by-industry look since some (photography, creative services) may genuinely fit "inquiry."
+1. **"Inquiries" language on Blue Luna Events test profile** - `defaultFormIntentFor()` in `src/lib/dashboard/typography.ts` currently maps `events`, `event_planning`, `balloon_decor`, and several other industries to `"inquiry"` intent. Shawn clarified that the real issue is industry/sub-industry vocabulary, not the business name. Team (Angela/Jony) does not want to blanket-flip all inquiry industries without review; audit the label/intent model against real booking-oriented businesses.
 2. **Temperature defaults to "Warm"** — `src/app/dashboard/(app)/leads/page.tsx` hardcodes `useState<"hot"|"warm"|"cold">("warm")` and resets to "warm" on cancel. Team agrees with Shawn this should require an explicit choice, no default.
 3. **Add-lead form is not an overlay — confirmed bug.** The `showAdd` form block renders as a plain inline `<div>` in normal page flow; the "Your first [lead] is coming." empty state below it has no awareness the form is open and renders regardless, so both appear stacked on screen (form on top, empty message pushed down). Every other "add" flow in the app (Home's leads sheet, onboarding's slug sheet) properly uses a `position: fixed` overlay. This one doesn't. Team recommends converting to match the existing sheet pattern.
 4. **Schedule page has no calendar.** `src/app/dashboard/(app)/schedule/page.tsx` opens on "My Hours" (availability settings) by default; "Bookings" tab is a flat list, not a calendar grid. Team agrees a real calendar view is needed and it's the owner's expected default view — but this is scoped as new work (its own session), not a quick fix.
 
 ### Next — DO NOT CODE UNTIL SHAWN ANSWERS
 See `TASKS.md` → "LEADS/INQUIRIES AUDIT" section for the 4 open questions verbatim. In short:
-1. Confirm events → "Lead" language, and decide whether to audit the other 8 "inquiry" industries now or later.
+1. Confirm the correct owner-facing intake label for Blue Luna Events / balloon decor and similar booking-oriented profiles, while keeping Estimates/Quotes as a separate workflow when the business needs priced work.
 2. Green-light removing the Warm default (team already agrees, just needs the go-ahead).
 3. Green-light converting the add-lead form to a proper slide-up sheet (team already agrees, just needs the go-ahead).
 4. Decide whether to build the Schedule calendar now as its own session, or queue it.

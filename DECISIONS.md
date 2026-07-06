@@ -1,3 +1,36 @@
+## Decision: Intake vocabulary and estimate workflow are separate systems
+**Date:** July 5, 2026
+**Status:** Locked principle before industry vocabulary audit
+**Owner:** Steve leads; Jony, Angela, Craig, Priya, Marcus review
+
+Shawn clarified that `Estimates` / `Quotes` are not the same thing as `Leads`, `Inquiries`, `Quote Requests`, `Bookings`, `Reservations`, `Orders`, or `Appointments`.
+
+### Source-of-truth distinction
+- `industry_category` and `sub_industry` describe what kind of business this is. Do not infer workflow from the business name or slug.
+- `primary_intent` and `secondary_intent` describe the public website CTA, such as `quote`, `book`, `reserve`, `shop`, `contact`, `call`, or `visit`.
+- `form_intent` / dashboard intake vocabulary describes what incoming customer activity is called inside Found.
+- Paid tools/add-ons decide what workflows are available, such as `quote_payments`, `reservation_calendar`, `online_ordering`, `shopping_cart`, and `email_marketing`.
+
+### Vocabulary meanings
+- `Leads`: sales opportunities where the owner needs to follow up and convert the customer.
+- `Inquiries`: general questions or info requests where the customer is not necessarily ready to buy/book yet.
+- `Bookings`: requests to reserve a service, session, performer, provider, class, or appointment-style time.
+- `Reservations`: restaurant/time-slot requests, primarily food/venue-style time holding.
+- `Orders`: product, food, menu, cart, or purchase requests.
+- `Appointments`: healthcare/professional scheduled visits where the expected mental model is a formal appointment.
+- `Estimates` / `Quotes`: priced work documents with line items, totals, approval, deposits, payment links, invoices, and receipts. This is a separate tool/workflow, not just a label for intake.
+
+### Product rule
+A business can need both an intake pathway and an estimate pathway. Example: a balloon decor business may receive a lead, booking request, or quote request first, then send an estimate/quote with deposit payment. The dashboard must not collapse these into one tab or one data concept.
+
+### Current repo conflict found
+- `src/lib/industryManifests.ts` says the Events industry has `primaryIntent: "quote"` and includes sub-industries like `balloon decor` and `balloon garland`.
+- `src/lib/featureAccess.ts` says `quote_payments` is relevant to `events`.
+- `src/lib/dashboard/typography.ts` currently maps `events`, `event_planning`, and `balloon_decor` to dashboard `"inquiry"` language.
+
+This does not mean the business name "Blue Luna Events" should drive the label. It means the industry/sub-industry vocabulary and tool routing need an audit so each business type gets the right intake label and the right separate tools. See `INDUSTRY_WORKFLOW_AUDIT.md` for the current team audit matrix.
+
+---
 # DECISIONS.md — Found Co. Product Decisions
 ### Every approved product decision lives here. Written the moment it's decided. Never deleted.
 ### New AI: read this before suggesting anything. These are locked unless Steve reopens them.

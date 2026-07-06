@@ -16,7 +16,8 @@ Before you write a single line of code, make a single suggestion, or take any ac
 6. Read `DECISIONS.md` — every approved product decision, locked unless Steve reopens it
 7. Read `DESIGN_DECISIONS.md` — every approved visual/UX decision, locked unless Jony reopens it
 8. Read `ONBOARDING.md` — the full onboarding question flow, exact wording, tone, branching logic
-9. Read `INDUSTRY_MANIFESTS.md` — Jony-led industry section manifests, pending Shawn approval
+9. Read `INDUSTRY_MANIFESTS.md` - Jony-led industry section manifests
+10. Read `INDUSTRY_WORKFLOW_AUDIT.md` - Steve-led intake vocabulary vs business tools audit, pending Shawn approval
 
 If any required file is missing — stop and tell Shawn before proceeding.
 
@@ -131,7 +132,7 @@ When Shawn says **"Wrap up the session"** — do all of the following before clo
 | Every approved product decision | `DECISIONS.md` |
 | Every approved design/UX decision | `DESIGN_DECISIONS.md` |
 | Onboarding question flow + wording | `ONBOARDING.md` |
-| Industry section manifests | `INDUSTRY_MANIFESTS.md` |
+| Industry section manifests | `INDUSTRY_MANIFESTS.md`r`n10. INDUSTRY_WORKFLOW_AUDIT.md` |
 | Supabase project | mmctzloztgkbqvofmkou.supabase.co |
 | Domain | foundco.app |
 | Guinea pig site | barriobuilders.com |

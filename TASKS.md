@@ -26,14 +26,16 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## LEADS/INQUIRIES AUDIT (July 5, 2026) — DECISIONS NEEDED BEFORE CODING
 
-**Read this first if you're picking this up.** Shawn reviewed live screenshots of Blue Luna Events (industry: events) on `my.foundco.app` and flagged 4 things. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code — nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.
+**Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code - nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.
 
-### 1. "Inquiries" vs "Leads" labeling — NOT a bug, a mapping someone chose on purpose
-- `src/lib/dashboard/typography.ts` → `defaultFormIntentFor()` maps industries to an intent, which drives the page title/vocab (Leads/Estimates/Inquiries/Bookings/Reservations/Orders/Appointments).
-- Currently mapped to `"inquiry"`: `real_estate, events, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit`.
-- Shawn believes events (his own Blue Luna Events business) should be `"lead"` intent instead — someone reaching out to book an event already has money on the table, that's a sales lead, not a general question.
-- **Team take:** don't blanket-flip all 9 industries. Angela/Jony want each one looked at individually — photography and creative services may genuinely get pre-sale general questions that read correctly as "inquiries." Events might not.
-- **OPEN QUESTION for Shawn:** (a) Confirm events → flip to "lead". (b) Do you want to go through the other 8 industries one by one, or leave them as-is for now?
+### 1. "Inquiries" vs "Leads" labeling on the Blue Luna Events test profile - needs correction
+- `src/lib/dashboard/typography.ts` -> `defaultFormIntentFor()` maps industries to an intent, which drives the page title/vocab (Leads/Estimates/Inquiries/Bookings/Reservations/Orders/Appointments).
+- The live Blue Luna Events test profile was showing "inquiry" language on the Leads page. Shawn clarified that Blue Luna Events is the customer/profile name and slug used for testing; the note should not imply he was asking about generic "events" wording in isolation.
+- Current code maps these industries to `"inquiry"` by default: `real_estate, events, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit`.
+- **Team take:** audit the actual intent model and labels so a business on the Leads tool does not feel like it is in the wrong product. Do not blanket-flip all 9 industries without review, but Blue Luna Events should be checked as a real account/profile case.
+- **OPEN QUESTION for Shawn:** Confirm the desired label for Blue Luna Events and similar booking-oriented businesses: should the owner-facing page say "Leads" even if the public form intent was historically categorized as an inquiry?
+- **Shawn clarification:** Estimates/quotes are not the same thing as leads, inquiries, or bookings. Estimates are their own information pathway and should remain a separate tool/tab when the business needs to price work. A business can need both: one intake path for leads/bookings/inquiries and a separate estimates/quotes path for priced work.
+- **Product implication:** Do not use one single intent value to decide everything. We need at least two separate decisions: (1) what the incoming customer/intake tab is called (`Leads`, `Inquiries`, `Bookings`, `Reservations`, `Orders`, `Appointments`), and (2) whether the business also gets an `Estimates`/quotes workflow as a distinct tool.
 
 ### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" — confirmed real issue
 - `src/app/dashboard/(app)/leads/page.tsx` line ~140: `useState<"hot"|"warm"|"cold">("warm")`, and it resets to `"warm"` on cancel too (line ~425).
