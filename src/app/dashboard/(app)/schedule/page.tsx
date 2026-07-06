@@ -86,7 +86,7 @@ export default function SchedulePage() {
   const [loading, setLoading]         = useState(true)
   const [saving, setSaving]           = useState(false)
   const [saveMsg, setSaveMsg]         = useState("")
-  const [tab, setTab]                 = useState<"hours" | "blocks" | "bookings">("hours")
+  const [tab, setTab]                 = useState<"calendar" | "bookings" | "hours">("calendar")
 
   // Block form
   const [blockType, setBlockType]     = useState<"single" | "range">("single")
@@ -201,13 +201,13 @@ export default function SchedulePage() {
         <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Booking Calendar</p>
         <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>My Schedule</h1>
         <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Set your working hours and manage your bookings.
+          See what is booked, then adjust hours when you need to.
         </p>
       </div>
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 6, marginBottom: 24, background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 4 }}>
-        {(["hours", "blocks", "bookings"] as const).map(t => (
+        {(["calendar", "bookings", "hours"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -218,12 +218,66 @@ export default function SchedulePage() {
               fontWeight: 700, fontSize: 13, cursor: "pointer", textTransform: "capitalize",
             }}
           >
-            {t === "hours" ? "My Hours" : t === "blocks" ? "Time Off" : "Bookings"}
+            {t === "calendar" ? "Calendar" : t === "bookings" ? "Bookings" : "Hours"}
           </button>
         ))}
       </div>
 
-      {/* ── HOURS TAB ── */}
+      {/* Calendar */}
+      {tab === "calendar" && (
+        <>
+          <div style={{ ...sectionCard, padding: "18px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
+              <div>
+                <p style={{ margin: "0 0 3px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>This week</p>
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 850, color: "white" }}>{upcomingBookings.length} upcoming</p>
+              </div>
+              <button onClick={() => setTab("hours")} style={{ border: `1px solid ${GREEN}35`, background: `${GREEN}12`, color: GREEN, borderRadius: 999, padding: "9px 13px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>Hours</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+              {Array.from({ length: 7 }, (_, offset) => {
+                const d = new Date()
+                d.setDate(d.getDate() + offset)
+                const iso = d.toISOString().split("T")[0]
+                const count = upcomingBookings.filter(b => b.booking_date === iso).length
+                const isToday = offset === 0
+                return (
+                  <div key={iso} style={{ minHeight: 70, borderRadius: 14, padding: "9px 4px", textAlign: "center", background: isToday ? `${GREEN}18` : "rgba(255,255,255,0.035)", border: isToday ? `1px solid ${GREEN}45` : "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 800, color: isToday ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.disabled})`, textTransform: "uppercase" }}>{DAY_SHORT[d.getDay()]}</p>
+                    <p style={{ margin: 0, fontSize: 17, fontWeight: 850, color: "white" }}>{d.getDate()}</p>
+                    {count > 0 && <span style={{ display: "inline-block", marginTop: 6, width: 7, height: 7, borderRadius: "50%", background: GREEN, boxShadow: `0 0 8px ${GREEN}` }} />}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {upcomingBookings.length === 0 ? (
+            <div style={{ ...sectionCard, textAlign: "center", padding: "30px 20px" }}>
+              <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 850, color: "white" }}>No bookings yet.</p>
+              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>When customers reserve a time, the next booking will show here first.</p>
+            </div>
+          ) : (
+            <>
+              <p style={{ margin: "0 0 10px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Next up</p>
+              {upcomingBookings.slice(0, 4).map(b => (
+                <div key={b.id} style={sectionCard}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                    <div>
+                      <p style={{ margin: "0 0 3px", fontWeight: 850, fontSize: 16, color: "white" }}>{b.customer_name}</p>
+                      <p style={{ margin: "0 0 5px", ...TYPE.footnote, fontWeight: 760, color: GREEN }}>{formatBookingDate(b.booking_date)} at {formatTime12(b.start_time)}</p>
+                      {b.service_name && <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{b.service_name}</p>}
+                    </div>
+                    <button onClick={() => setTab("bookings")} style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, borderRadius: 10, padding: "8px 10px", fontSize: 12, fontWeight: 750, cursor: "pointer" }}>Details</button>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      )}
+
+      {/* HOURS TAB */}
       {tab === "hours" && (
         <>
           {days.map(day => (
@@ -298,8 +352,8 @@ export default function SchedulePage() {
         </>
       )}
 
-      {/* ── TIME OFF TAB ── */}
-      {tab === "blocks" && (
+      {/* Time off */}
+      {tab === "hours" && (
         <>
           <button
             onClick={() => setShowBlockForm(true)}
@@ -385,7 +439,7 @@ export default function SchedulePage() {
         </>
       )}
 
-      {/* ── BOOKINGS TAB ── */}
+      {/* BOOKINGS TAB */}
       {tab === "bookings" && (
         <>
           {upcomingBookings.length === 0 && pastBookings.length === 0 && (
@@ -441,3 +495,4 @@ export default function SchedulePage() {
     </div>
   )
 }
+

@@ -1,3 +1,22 @@
+## Session: July 6, 2026 - Schedule Opens To Calendar
+**AI:** Codex
+**Worked on:** Team-approved Schedule workflow redesign.
+
+### Completed This Session
+- Changed Schedule so it opens to a Calendar tab instead of the Hours editor.
+- Added a 7-day week strip with booking indicators and a next-up booking list.
+- Kept Bookings as the detail list for upcoming/past bookings.
+- Moved Hours into the third tab and kept Time Off controls inside Hours so existing availability/blocking logic remains intact.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open a Business profile such as Blue Luna Events and tap Schedule in the dock.
+2. Confirm the first tab is Calendar, not Hours.
+3. Confirm empty schedule copy appears when there are no bookings, or next-up cards appear when bookings exist.
+4. Tap Bookings and confirm the existing upcoming/past list still works.
+5. Tap Hours, edit/save availability, and confirm Block Time Off still works from that tab.
+
+---
 ## Session: July 6, 2026 - More Business Tool Groups
 **AI:** Codex
 **Worked on:** First build slice from the Wix-informed More / Manage IA plan.

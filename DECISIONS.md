@@ -1,3 +1,6 @@
+**[2026-07-06] - Schedule opens to Calendar; Hours is setup, not the main schedule.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+Why: Owners tap Schedule to see what is booked first. Availability rules and time off are important, but they are setup controls, not the primary daily schedule surface.
 **[2026-07-06] - Found will borrow Wix's grouped Manage structure, not Wix's admin design.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair + Marcus Webb + Chris Lattner + Phil Schiller
 Why: Wix shows useful breadth and grouped access to business tools, but the design feels like generic software. Found's Dock stays for daily work; More becomes an owner-focused operating map grouped by Website, Get Paid, Customers, Work & Schedule, Marketing, Insights, and Settings. See `WIX_COMPETITOR_REVIEW.md` and `MORE_MANAGE_IA_AUDIT.md`.

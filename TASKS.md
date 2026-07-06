@@ -16,8 +16,8 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Schedule page workflow redesign** - next team-approved slice: make Schedule open as a real work schedule surface with Calendar, Bookings, and Hours tabs. Current Hours editor works, but it should not be the whole Schedule experience.
-2. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
+1. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
+2. **Schedule calendar QA** - verify Calendar, Bookings, and Hours tabs on quote-first, restaurant, and booking-first profiles after deployment.
 3. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 
 *(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA. Invoice-now / POS planning is still important but moves behind the More / Manage IA pass.)*

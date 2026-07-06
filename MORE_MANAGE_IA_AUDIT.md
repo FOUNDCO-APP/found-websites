@@ -226,3 +226,16 @@ Implemented the first cleanup slice from the team review:
 - Business plan status is quieter and no longer repeats the full sales checklist.
 
 Next queued slice: Schedule should become a real schedule surface with `Calendar`, `Bookings`, and `Hours` instead of opening directly into working-hour setup.
+
+---
+
+## Implemented Slice: Schedule As Work Calendar (July 6, 2026)
+
+Team decision: Dock `Schedule` should open to a calendar-style work surface first. The owner wants to know what is booked before they adjust setup.
+
+Implemented:
+- `Schedule` opens to `Calendar`.
+- `Bookings` remains the detailed booking list.
+- `Hours` contains weekly availability and time-off blocking.
+
+Next QA: confirm this holds across Blue Luna Events, Molcas/restaurant, and any booking-first service profile.
