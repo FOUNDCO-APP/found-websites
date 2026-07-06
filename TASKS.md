@@ -16,7 +16,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Leads/Inquiries page — 4 confirmed issues, NOT YET CODED, waiting on Shawn's answers (see "Leads/Inquiries Audit" below for full detail).**
+1. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
 2. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 3. **Invoice-now / POS planning** - decide whether this belongs as a toggle/tab inside Estimates or a separate POS/invoice mode for owners who already did the work from a verbal yes.
 
@@ -24,7 +24,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
-## LEADS/INQUIRIES AUDIT (July 5, 2026) — DECISIONS NEEDED BEFORE CODING
+## LEADS/INQUIRIES AUDIT (July 5, 2026) - PARTIALLY IMPLEMENTED
 
 **Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code - nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.
 
@@ -33,7 +33,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - The live Blue Luna Events test profile was showing "inquiry" language on the Leads page. Shawn clarified that Blue Luna Events is the customer/profile name and slug used for testing; the note should not imply he was asking about generic "events" wording in isolation.
 - Current code maps these industries to `"inquiry"` by default: `real_estate, events, event_planning, balloon_decor, creative_services, photography, education, professional_services, childcare, nonprofit`.
 - **Team take:** audit the actual intent model and labels so a business on the Leads tool does not feel like it is in the wrong product. Do not blanket-flip all 9 industries without review, but Blue Luna Events should be checked as a real account/profile case.
-- **OPEN QUESTION for Shawn:** Confirm the desired label for Blue Luna Events and similar booking-oriented businesses: should the owner-facing page say "Leads" even if the public form intent was historically categorized as an inquiry?
+- **IMPLEMENTED July 6:** Quote-first businesses use `Estimate Requests` as intake and keep `Estimates` as a separate priced document workflow. Blue Luna Events / balloon decor now follows this model by industry/sub-industry, not by business name or slug.
 - **Shawn clarification:** Estimates/quotes are not the same thing as leads, inquiries, or bookings. Estimates are their own information pathway and should remain a separate tool/tab when the business needs to price work. A business can need both: one intake path for leads/bookings/inquiries and a separate estimates/quotes path for priced work.
 - **Product implication:** Do not use one single intent value to decide everything. We need at least two separate decisions: (1) what the incoming customer/intake tab is called (`Leads`, `Inquiries`, `Bookings`, `Reservations`, `Orders`, `Appointments`), and (2) whether the business also gets an `Estimates`/quotes workflow as a distinct tool.
 

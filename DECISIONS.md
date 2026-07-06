@@ -1,3 +1,7 @@
+
+**[2026-07-06] - Quote-first intake is called Estimate Requests; priced documents remain Estimates.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Craig Federighi
+Why: A customer asking for pricing is not the same object as a priced estimate document. Quote-first businesses need an intake queue for requests and a separate estimate workflow for line items, approval, deposits, payment links, invoices, and receipts. The owner path is: Estimate Request -> Create Estimate -> Send/Accept/Pay.
 ## Decision: Intake vocabulary and estimate workflow are separate systems
 **Date:** July 5, 2026
 **Status:** Locked principle before industry vocabulary audit

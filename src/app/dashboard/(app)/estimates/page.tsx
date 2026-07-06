@@ -219,11 +219,12 @@ export default function EstimatesPage() {
   const [companySlug, setCompanySlug] = useState("")
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [defaultTaxRate, setDefaultTaxRate] = useState(0)
-  const [leads, setLeads] = useState<{ id: string; name: string; phone: string | null; email: string | null }[]>([])
+  const [leads, setLeads] = useState<LeadSuggestion[]>([])
   const [locationBias, setLocationBias] = useState("")
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "open" | "viewed" | "accepted" | "declined">("all")
   const [showBuilder, setShowBuilder] = useState(false)
+  const [builderLead, setBuilderLead] = useState<LeadSuggestion | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showRateSheet, setShowRateSheet] = useState(false)
 
@@ -250,7 +251,17 @@ export default function EstimatesPage() {
       setCompanyStripeReady(Boolean(sd.stripe_connect_ready))
       setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
       setLocationBias([sd.city, sd.state].filter(Boolean).join(", "))
-      setLeads((ld.leads ?? []).map((l: { id: string; name: string; phone: string | null; email: string | null }) => ({ id: l.id, name: l.name, phone: l.phone, email: l.email })))
+      const mappedLeads: LeadSuggestion[] = (ld.leads ?? []).map((l: LeadSuggestion) => ({ id: l.id, name: l.name || "Unknown", phone: l.phone, email: l.email, message: l.message ?? null, partial_answers: l.partial_answers ?? null }))
+      setLeads(mappedLeads)
+      const fromLead = new URLSearchParams(window.location.search).get("fromLead")
+      if (fromLead) {
+        const match = mappedLeads.find(l => l.id === fromLead)
+        if (match) {
+          setBuilderLead(match)
+          setShowBuilder(true)
+          window.history.replaceState(null, "", "/estimates")
+        }
+      }
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -369,7 +380,7 @@ export default function EstimatesPage() {
             </svg>
             Services
           </button>
-          <button onClick={() => setShowBuilder(true)} style={{
+          <button onClick={() => { setBuilderLead(null); setShowBuilder(true) }} style={{
             width: 44, height: 44, borderRadius: "50%",
             backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -456,6 +467,7 @@ export default function EstimatesPage() {
         <BuilderSheet
           rateSheet={rateSheet}
           leads={leads}
+          initialLead={builderLead}
           defaultTaxRate={defaultTaxRate}
           locationBias={locationBias}
           onSave={handleCreate}
@@ -463,7 +475,7 @@ export default function EstimatesPage() {
             setDefaultTaxRate(rate)
             fetch("/api/company-slug", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ default_tax_rate: rate }) }).catch(() => {})
           }}
-          onClose={() => setShowBuilder(false)}
+          onClose={() => { setShowBuilder(false); setBuilderLead(null) }}
         />
       )}
 
@@ -561,11 +573,12 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
     </button>
   )
 }
-type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null }
+type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null; message?: string | null; partial_answers?: Record<string, unknown> | null }
 
-function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
+function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
   rateSheet: RateSheetItem[]
   leads: LeadSuggestion[]
+  initialLead?: LeadSuggestion | null
   defaultTaxRate: number
   locationBias?: string
   onSave: (data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) => Promise<void>
@@ -602,6 +615,7 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
   const STEP_LABELS = ["Customer", "Job", "Work", "Price", "Review"] as const
   const [activeStep, setActiveStep] = useState(0)
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
+  const initialLeadApplied = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const tapScrolling = useRef(false)
   const fieldStyle: React.CSSProperties = {
@@ -689,6 +703,16 @@ function BuilderSheet({ rateSheet, leads, defaultTaxRate, locationBias, onSave, 
     setSuggestions([])
   }
 
+
+  useEffect(() => {
+    if (!initialLead || initialLeadApplied.current === initialLead.id) return
+    initialLeadApplied.current = initialLead.id
+    selectSuggestion(initialLead)
+    const answers = initialLead.partial_answers ?? {}
+    const addressAnswer = ["job_address", "property_address", "address", "service_address", "event_address", "location"].map(key => answers[key]).find(value => typeof value === "string" && value.trim())
+    if (typeof addressAnswer === "string") setAddress(addressAnswer)
+    if (initialLead.message && !newDesc.trim()) setNewDesc(initialLead.message.trim())
+  }, [initialLead]) // eslint-disable-line react-hooks/exhaustive-deps
   function saveDefaultTax() {
     onSaveDefaultTax(taxRate)
     setTaxSaved(true)

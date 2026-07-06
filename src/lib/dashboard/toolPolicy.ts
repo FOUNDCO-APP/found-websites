@@ -46,8 +46,9 @@ function inboxLabelFor(industry: string | null | undefined): string {
       return "Bookings"
     case "appointment":
       return "Appointments"
+    case "estimate_request":
     case "estimate":
-      return "Estimates"
+      return "Estimate Requests"
     case "order":
       return "Orders"
     default:
@@ -57,7 +58,6 @@ function inboxLabelFor(industry: string | null | undefined): string {
 
 function inboxPathFor(industry: string | null | undefined): string {
   const intent = defaultFormIntentFor(industry)
-  if (intent === "estimate") return "/estimates"
   if (intent === "order") return "/leads?view=orders"
   return "/leads"
 }
@@ -140,7 +140,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   } else if (industry && ESTIMATE_WORKFLOW_INDUSTRIES.has(industry)) {
     middleIds = [
       "inbox",
-      ...(hasEstimates && defaultFormIntentFor(industry) !== "estimate" ? ["estimates"] : []),
+      ...(hasEstimates ? ["estimates"] : []),
       ...(hasCalendar ? ["schedule"] : []),
       "people",
       ...(hasEmail ? ["email"] : []),
@@ -150,7 +150,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   } else {
     middleIds = [
       "inbox",
-      ...(hasEstimates && defaultFormIntentFor(industry) !== "estimate" ? ["estimates"] : []),
+      ...(hasEstimates ? ["estimates"] : []),
       ...(hasCalendar ? ["schedule"] : []),
       "people",
       ...(hasEmail ? ["email"] : []),

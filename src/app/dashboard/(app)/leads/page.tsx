@@ -116,7 +116,7 @@ const TEMP_COLORS: Record<string, string> = {
 
 const INTENT_OPTIONS = [
   { key: "lead",        label: "Leads",        desc: "Sales pipeline, clients reaching out" },
-  { key: "estimate",    label: "Estimates",     desc: "Requests for quotes or pricing" },
+  { key: "estimate_request", label: "Estimate Requests", desc: "Customers asking for pricing" },
   { key: "inquiry",     label: "Inquiries",     desc: "General questions and info requests" },
   { key: "booking",     label: "Bookings",      desc: "Service appointments and sessions" },
   { key: "reservation", label: "Reservations",  desc: "Dining, events, and time slots" },
@@ -578,6 +578,7 @@ function LeadsPageInner() {
             updateStatusLocal(id, "open")
             setSelectedLead(prev => prev ? { ...prev, status: "open" } : null)
           }}
+          onCreateEstimate={(leadId) => router.push(`/estimates?fromLead=${leadId}`)}
         />
       )}
 
@@ -769,7 +770,7 @@ function LeadCard({
 
 type SheetMode = "view" | "edit" | "done"
 
-function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, onSaved, onMarkDone, onReopen }: {
+function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, onSaved, onMarkDone, onReopen, onCreateEstimate }: {
   lead: LeadRow
   intentLabel: FormIntentLabel
   industry: string | null
@@ -778,6 +779,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   onSaved: (lead: LeadRow) => void
   onMarkDone: (id: string) => void
   onReopen: (id: string) => void
+  onCreateEstimate: (id: string) => void
 }) {
   const [mode, setMode] = useState<SheetMode>("view")
   const [showContactSheet, setShowContactSheet] = useState(false)
@@ -803,6 +805,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   const shippingAddress = typeof lead.partial_answers?.shipping_address === "string" ? lead.partial_answers.shipping_address : ""
   const orderNotes = typeof lead.partial_answers?.notes === "string" ? lead.partial_answers.notes : ""
   const orderTotal = formatCents(lead.partial_answers?.subtotal_cents)
+  const isEstimateRequest = intentLabel.plural === "Estimate Requests"
 
   function printKitchenTicket() {
     const htmlEscape = (value: unknown) => String(value ?? "")
@@ -1022,6 +1025,13 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
                   </button>
                 )}
               </div>
+            )}
+
+            {isEstimateRequest && !onlineOrder && !isDone && (
+              <button onClick={() => onCreateEstimate(lead.id)} style={{ width: "100%", marginBottom: 24, padding: "15px 0", borderRadius: 16, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 850, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
+                Create Estimate
+              </button>
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 28 }}>

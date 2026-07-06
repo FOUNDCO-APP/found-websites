@@ -1,3 +1,24 @@
+## Session: July 6, 2026 - Estimate Requests Intake + Estimate Handoff
+**AI:** Codex
+**Worked on:** Implemented the team-approved split between quote/estimate customer intake and the separate Estimates document workflow.
+
+### Completed This Session
+- Added `estimate_request` as a dashboard intake intent with owner-facing labels: `Estimate Request`, `Estimate Requests`, `New Estimate Request`.
+- Kept legacy `estimate` intent as an alias so older saved settings still render as Estimate Requests instead of breaking.
+- Updated quote-first industries to default to Estimate Requests for intake: construction/contractors, home services, cleaning, landscaping, home/property, plumbing, electrical, events/event planning, and balloon decor.
+- Kept the actual `Estimates` workflow as its own tool/tab when `quote_payments` is active; quote-first intake no longer routes directly to `/estimates`.
+- Added a `Create Estimate` action inside Estimate Request details.
+- Wired `Create Estimate` to open `/estimates?fromLead=...` and prefill the estimate builder with the request customer's name, phone, email, message, and any address-like intake answer.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open a quote-first profile such as Blue Luna Events / balloon decor or a construction profile.
+2. Confirm the intake tab says `Estimate Requests` and the separate `Estimates` tab/tool still exists when quote payments are active.
+3. Open an Estimate Request and tap `Create Estimate`.
+4. Confirm the estimate builder opens with customer details prefilled.
+5. Add price/work details, save, and confirm the new estimate appears in Estimates.
+
+---
 ## Session: July 5, 2026 - Industry Vocabulary vs Estimate Workflow Alignment
 **AI:** Codex
 **Worked on:** Shawn clarified the product model after reviewing the Blue Luna Events test profile. Team alignment was needed before any code changes because the repo was mixing customer intake vocabulary with the separate estimate/quote workflow.

@@ -166,15 +166,15 @@ const LEAD_LABEL_MAP: Record<string, LeadLabel> = {
   beauty:                { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
   fitness:               { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
   healthcare:            { singular: "Appointment",   plural: "Appointments",   new: "New Appointment" },
-  home_services:         { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  cleaning:              { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  landscaping:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  automotive:            { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  home_property:         { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  home_services:         { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  cleaning:              { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  landscaping:           { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  automotive:            { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  home_property:         { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   real_estate:           { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
   retail:                { singular: "Order",         plural: "Orders",         new: "New Order" },
   home_based_food:       { singular: "Order",         plural: "Orders",         new: "New Order" },
-  events:                { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  events:                { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   creative_services:     { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
   education:             { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
   music_performance:     { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
@@ -188,14 +188,14 @@ const LEAD_LABEL_MAP: Record<string, LeadLabel> = {
   food_beverage:         { singular: "Order",         plural: "Orders",         new: "New Order" },
   salon:                 { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
   spa:                   { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
-  contractors:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  construction:          { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  plumbing:              { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  electrician:           { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
-  auto:                  { singular: "Estimate",      plural: "Estimates",      new: "New Estimate" },
+  contractors:           { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  construction:          { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  plumbing:              { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  electrician:           { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  auto:                  { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   music:                 { singular: "Booking",       plural: "Bookings",       new: "New Booking" },
-  event_planning:        { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
-  balloon_decor:         { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
+  event_planning:        { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  balloon_decor:         { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   photography:           { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
 }
 
@@ -214,7 +214,8 @@ export type FormIntentLabel = {
 
 const FORM_INTENT_LABEL_MAP: Record<string, FormIntentLabel> = {
   lead:        { singular: "Lead",        plural: "Leads",        new: "New Lead",        hasTemperature: true  },
-  estimate:    { singular: "Estimate",    plural: "Estimates",    new: "New Estimate",    hasTemperature: true  },
+  estimate_request: { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request", hasTemperature: true },
+  estimate:    { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request", hasTemperature: true },
   inquiry:     { singular: "Inquiry",     plural: "Inquiries",    new: "New Inquiry",     hasTemperature: true  },
   booking:     { singular: "Booking",     plural: "Bookings",     new: "New Booking",     hasTemperature: false },
   reservation: { singular: "Reservation", plural: "Reservations", new: "New Reservation", hasTemperature: false },
@@ -231,9 +232,9 @@ export function defaultFormIntentFor(industry: string | null | undefined): strin
   if (["food", "restaurant", "food_beverage"].includes(n)) return "reservation"
   if (["wellness", "beauty", "salon", "spa", "fitness", "music_performance", "music", "pet_services"].includes(n)) return "booking"
   if (["healthcare"].includes(n)) return "appointment"
-  if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "contractors", "construction", "plumbing", "electrician"].includes(n)) return "estimate"
+  if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "contractors", "construction", "plumbing", "electrician", "events", "event_planning", "balloon_decor"].includes(n)) return "estimate_request"
   if (["retail", "home_based_food", "makers_crafts"].includes(n)) return "order"
-  if (["real_estate", "events", "event_planning", "balloon_decor", "creative_services", "photography", "education", "professional_services", "childcare", "nonprofit"].includes(n)) return "inquiry"
+  if (["real_estate", "creative_services", "photography", "education", "professional_services", "childcare", "nonprofit"].includes(n)) return "inquiry"
   return "lead"
 }
 
