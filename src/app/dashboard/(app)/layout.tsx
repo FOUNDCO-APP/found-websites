@@ -25,24 +25,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
     hasMultipleCompanies(user.id, user.email ?? ""),
   ])
 
-  const newLeadCount = company?.id
-    ? await admin
-        .from("leads")
-        .select("id", { count: "exact", head: true })
-        .eq("company_id", company.id)
-        .neq("type", "onboarding_abandoned")
-        .gte("created_at", since)
-        .then(({ count }) => count ?? 0)
-    : 0
-
-  const paidAddonSlugs = company?.id
-    ? await admin
-        .from("addon_subscriptions")
-        .select("addon_slug")
-        .eq("company_id", company.id)
-        .eq("active", true)
-        .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug))
-    : []
+  const [newLeadCount, paidAddonSlugs] = company?.id
+    ? await Promise.all([
+        admin
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", company.id)
+          .neq("type", "onboarding_abandoned")
+          .gte("created_at", since)
+          .then(({ count }) => count ?? 0),
+        admin
+          .from("addon_subscriptions")
+          .select("addon_slug")
+          .eq("company_id", company.id)
+          .eq("active", true)
+          .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug)),
+      ])
+    : [0, [] as string[]]
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>

@@ -19,13 +19,22 @@ export default async function HomePage() {
 
   const admin = createAdminClient()
 
-  const { data: allLeadsRaw } = await admin
-    .from("leads")
-    .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
-    .eq("company_id", company.id)
-    .neq("type", "onboarding_abandoned")
-    .order("created_at", { ascending: false })
-    .limit(20)
+  const [{ data: allLeadsRaw }, { data: lastPhotoRow }] = await Promise.all([
+    admin
+      .from("leads")
+      .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
+      .eq("company_id", company.id)
+      .neq("type", "onboarding_abandoned")
+      .order("created_at", { ascending: false })
+      .limit(20),
+    admin
+      .from("photos")
+      .select("created_at")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
 
   // Deduplicate by phone → email → id (array is already ordered newest-first,
   // so first occurrence = most recent submission per unique person)
@@ -53,14 +62,6 @@ export default async function HomePage() {
     created_at: l.created_at ?? null,
     source: l.source ?? l.type ?? null,
   }))
-
-  const { data: lastPhotoRow } = await admin
-    .from("photos")
-    .select("created_at")
-    .eq("company_id", company.id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
