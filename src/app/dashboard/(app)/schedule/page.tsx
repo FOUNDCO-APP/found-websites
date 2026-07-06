@@ -96,6 +96,8 @@ export default function SchedulePage() {
   const [blockLabel, setBlockLabel]   = useState("")
   const [addingBlock, setAddingBlock] = useState(false)
   const [showBlockForm, setShowBlockForm] = useState(false)
+  const [editingHours, setEditingHours] = useState(false)
+  const [showBookingSettings, setShowBookingSettings] = useState(false)
 
   const prefix = typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard") ? "/dashboard" : ""
 
@@ -122,6 +124,10 @@ export default function SchedulePage() {
 
   function updateDay(dow: number, patch: Partial<DayConfig>) {
     setDays(prev => prev.map(d => d.day_of_week === dow ? { ...d, ...patch } : d))
+  }
+
+  function updateOpenDays(patch: Partial<DayConfig>) {
+    setDays(prev => prev.map(d => d.is_working ? { ...d, ...patch } : d))
   }
 
   async function handleSave() {
@@ -166,6 +172,8 @@ export default function SchedulePage() {
 
   const upcomingBookings = bookings.filter(b => b.status !== "cancelled" && b.booking_date >= new Date().toISOString().split("T")[0])
   const pastBookings = bookings.filter(b => b.booking_date < new Date().toISOString().split("T")[0] && b.status !== "cancelled")
+  const openDays = days.filter(d => d.is_working)
+  const primaryWorkingDay = openDays[0] ?? defaultDay(1)
 
   const inputStyle: React.CSSProperties = {
     background: "rgba(255,255,255,0.07)",
@@ -195,26 +203,26 @@ export default function SchedulePage() {
   }
 
   return (
-    <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 100px" }}>
+    <div style={{ maxWidth: 640, margin: "0 auto", padding: "28px 16px 112px" }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Booking Calendar</p>
-        <h1 style={{ margin: 0, fontSize: 26, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>My Schedule</h1>
-        <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          See what is booked, then adjust hours when you need to.
+      <div style={{ marginBottom: 26 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: GREEN }}>Schedule</p>
+        <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>My Schedule</h1>
+        <p style={{ margin: "10px 0 0", ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+          See what is booked. Adjust hours only when something changes.
         </p>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 24, background: "rgba(255,255,255,0.04)", borderRadius: 14, padding: 4 }}>
+      <div style={{ display: "flex", gap: 4, marginBottom: 26, background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: 4 }}>
         {(["calendar", "bookings", "hours"] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              flex: 1, padding: "10px 0", borderRadius: 10, border: "none",
-              background: tab === t ? GREEN : "transparent",
-              color: tab === t ? "#000" : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
+              flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${tab === t ? `${GREEN}55` : "transparent"}`,
+              background: tab === t ? `${GREEN}18` : "transparent",
+              color: tab === t ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
               fontWeight: 700, fontSize: 13, cursor: "pointer", textTransform: "capitalize",
             }}
           >
@@ -277,59 +285,100 @@ export default function SchedulePage() {
         </>
       )}
 
-      {/* HOURS TAB */}
+      {/* Hours */}
       {tab === "hours" && (
         <>
-          {days.map(day => (
-            <div key={day.day_of_week} style={sectionCard}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: day.is_working ? 16 : 0 }}>
-                {/* Toggle */}
-                <button
-                  onClick={() => updateDay(day.day_of_week, { is_working: !day.is_working })}
-                  style={{
-                    width: 44, height: 26, borderRadius: 999, border: "none", cursor: "pointer",
-                    background: day.is_working ? GREEN : "rgba(255,255,255,0.12)",
-                    position: "relative", transition: "background 0.2s", flexShrink: 0,
-                  }}
-                >
-                  <span style={{
-                    position: "absolute", top: 3, left: day.is_working ? 21 : 3,
-                    width: 20, height: 20, borderRadius: "50%", background: "white",
-                    transition: "left 0.2s",
-                  }} />
-                </button>
-                <span style={{ flex: 1, fontWeight: 700, fontSize: 15, color: day.is_working ? "white" : `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                  {DAY_NAMES[day.day_of_week]}
-                </span>
-                {!day.is_working && (
-                  <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Closed</span>
-                )}
+          <div style={sectionCard}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 14 }}>
+              <div>
+                <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Weekly hours</p>
+                <p style={{ margin: 0, ...TYPE.headline, color: "white" }}>{openDays.length} open days</p>
               </div>
-
-              {day.is_working && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  {/* Hours */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, minWidth: 36 }}>From</span>
-                    <input type="time" value={day.start_time} onChange={e => updateDay(day.day_of_week, { start_time: e.target.value })} style={inputStyle} />
-                    <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>to</span>
-                    <input type="time" value={day.end_time} onChange={e => updateDay(day.day_of_week, { end_time: e.target.value })} style={inputStyle} />
-                  </div>
-                  {/* Slot + buffer */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" as const }}>
-                    <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, minWidth: 36 }}>Slot</span>
-                    <select value={day.slot_duration_minutes} onChange={e => updateDay(day.day_of_week, { slot_duration_minutes: Number(e.target.value) })} style={{ ...inputStyle, cursor: "pointer" }}>
-                      {DURATION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                    <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Buffer</span>
-                    <select value={day.buffer_minutes} onChange={e => updateDay(day.day_of_week, { buffer_minutes: Number(e.target.value) })} style={{ ...inputStyle, cursor: "pointer" }}>
-                      {BUFFER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
-                </div>
-              )}
+              <button onClick={() => setEditingHours(v => !v)} style={{ border: "1px solid rgba(255,255,255,0.1)", background: editingHours ? `${GREEN}14` : "rgba(255,255,255,0.04)", color: editingHours ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, borderRadius: 999, padding: "8px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
+                {editingHours ? "Done" : "Edit"}
+              </button>
             </div>
-          ))}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {days.map(day => (
+                <div key={day.day_of_week} style={{ padding: "13px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    {editingHours && (
+                      <button
+                        onClick={() => updateDay(day.day_of_week, { is_working: !day.is_working })}
+                        style={{
+                          width: 42, height: 25, borderRadius: 999, border: "none", cursor: "pointer",
+                          background: day.is_working ? GREEN : "rgba(255,255,255,0.12)",
+                          position: "relative", transition: "background 0.2s", flexShrink: 0,
+                        }}
+                      >
+                        <span style={{
+                          position: "absolute", top: 3, left: day.is_working ? 20 : 3,
+                          width: 19, height: 19, borderRadius: "50%", background: "white",
+                          transition: "left 0.2s",
+                        }} />
+                      </button>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, ...TYPE.headline, fontSize: "1rem", color: day.is_working ? "white" : `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                        {DAY_NAMES[day.day_of_week]}
+                      </p>
+                      {!editingHours && (
+                        <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${day.is_working ? TEXT_OPACITY.secondary : TEXT_OPACITY.disabled})` }}>
+                          {day.is_working ? `${formatTime12(day.start_time)} - ${formatTime12(day.end_time)}` : "Closed"}
+                        </p>
+                      )}
+                    </div>
+                    {!editingHours && (
+                      <span style={{ ...TYPE.footnote, color: day.is_working ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                        {day.is_working ? "Open" : "Closed"}
+                      </span>
+                    )}
+                  </div>
+
+                  {editingHours && day.is_working && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                        Opens
+                        <input type="time" value={day.start_time} onChange={e => updateDay(day.day_of_week, { start_time: e.target.value })} style={inputStyle} />
+                      </label>
+                      <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                        Closes
+                        <input type="time" value={day.end_time} onChange={e => updateDay(day.day_of_week, { end_time: e.target.value })} style={inputStyle} />
+                      </label>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={sectionCard}>
+            <button onClick={() => setShowBookingSettings(v => !v)} style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, border: "none", background: "transparent", padding: 0, color: "inherit", cursor: "pointer", textAlign: "left" }}>
+              <div>
+                <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Booking settings</p>
+                <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{DURATION_OPTIONS.find(o => o.value === primaryWorkingDay.slot_duration_minutes)?.label ?? `${primaryWorkingDay.slot_duration_minutes} min`} appointments, {BUFFER_OPTIONS.find(o => o.value === primaryWorkingDay.buffer_minutes)?.label.toLowerCase() ?? `${primaryWorkingDay.buffer_minutes} min`} between bookings</p>
+              </div>
+              <span style={{ color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, fontSize: 22, lineHeight: 1 }}>{showBookingSettings ? "-" : "+"}</span>
+            </button>
+
+            {showBookingSettings && (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                  Appointment length
+                  <select value={primaryWorkingDay.slot_duration_minutes} onChange={e => updateOpenDays({ slot_duration_minutes: Number(e.target.value) })} style={{ ...inputStyle, cursor: "pointer" }}>
+                    {DURATION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                  Time between
+                  <select value={primaryWorkingDay.buffer_minutes} onChange={e => updateOpenDays({ buffer_minutes: Number(e.target.value) })} style={{ ...inputStyle, cursor: "pointer" }}>
+                    {BUFFER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                </label>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={handleSave}
@@ -339,22 +388,24 @@ export default function SchedulePage() {
               background: saving ? "rgba(255,255,255,0.1)" : GREEN,
               color: saving ? `rgba(255,255,255,${TEXT_OPACITY.secondary})` : "#000",
               fontWeight: 800, fontSize: 15, cursor: saving ? "default" : "pointer",
-              marginTop: 8,
+              margin: "4px 0 18px",
             }}
           >
-            {saving ? "Saving…" : "Save My Hours"}
+            {saving ? "Saving..." : "Save Hours"}
           </button>
           {saveMsg && (
-            <p style={{ textAlign: "center", marginTop: 10, ...TYPE.footnote, color: saveMsg === "Saved!" ? GREEN : "#FF3B30" }}>
+            <p style={{ textAlign: "center", marginTop: -8, ...TYPE.footnote, color: saveMsg === "Saved!" ? GREEN : "#FF3B30" }}>
               {saveMsg}
             </p>
           )}
         </>
       )}
-
       {/* Time off */}
       {tab === "hours" && (
         <>
+          <div style={{ margin: "8px 0 12px" }}>
+            <p style={{ margin: 0, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Time off</p>
+          </div>
           <button
             onClick={() => setShowBlockForm(true)}
             style={{
@@ -405,12 +456,12 @@ export default function SchedulePage() {
 
               <div style={{ marginBottom: 14 }}>
                 <label style={{ display: "block", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, marginBottom: 6 }}>Label (optional)</label>
-                <input type="text" value={blockLabel} onChange={e => setBlockLabel(e.target.value)} placeholder="e.g. Vacation, Holiday…" style={{ ...inputStyle, width: "100%", boxSizing: "border-box" as const }} />
+                <input type="text" value={blockLabel} onChange={e => setBlockLabel(e.target.value)} placeholder="e.g. Vacation, holiday" style={{ ...inputStyle, width: "100%", boxSizing: "border-box" as const }} />
               </div>
 
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setShowBlockForm(false)} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, fontWeight: 600, fontSize: 13, cursor: "pointer" }}>Cancel</button>
-                <button onClick={handleAddBlock} disabled={addingBlock} style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", background: GREEN, color: "#000", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>{addingBlock ? "Saving…" : "Block These Days"}</button>
+                <button onClick={handleAddBlock} disabled={addingBlock} style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", background: GREEN, color: "#000", fontWeight: 800, fontSize: 13, cursor: "pointer" }}>{addingBlock ? "Saving..." : "Block These Days"}</button>
               </div>
             </div>
           )}
@@ -443,9 +494,10 @@ export default function SchedulePage() {
       {tab === "bookings" && (
         <>
           {upcomingBookings.length === 0 && pastBookings.length === 0 && (
-            <p style={{ textAlign: "center", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, marginTop: 24 }}>
-              No bookings yet. Once customers book through your site, they&apos;ll appear here.
-            </p>
+            <div style={{ ...sectionCard, textAlign: "center", padding: "30px 20px" }}>
+              <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No bookings yet.</p>
+              <p style={{ margin: 0, ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>When customers book through your site, they will appear here.</p>
+            </div>
           )}
 
           {upcomingBookings.length > 0 && (
@@ -482,7 +534,7 @@ export default function SchedulePage() {
                   <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 15, color: "white" }}>{b.customer_name}</p>
                   <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
                     {formatBookingDate(b.booking_date)} at {formatTime12(b.start_time)}
-                    {b.service_name ? ` — ${b.service_name}` : ""}
+                    {b.service_name ? ` - ${b.service_name}` : ""}
                   </p>
                 </div>
               ))}

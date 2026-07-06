@@ -239,3 +239,19 @@ Implemented:
 - `Hours` contains weekly availability and time-off blocking.
 
 Next QA: confirm this holds across Blue Luna Events, Molcas/restaurant, and any booking-first service profile.
+
+---
+
+## Implemented Slice: Schedule Hours Polish (July 6, 2026)
+
+Team decision: Hours should not expose a technical settings form by default.
+
+Implemented:
+- Shared Found typography on the Schedule page header.
+- Quieter tab treatment.
+- Weekly hours summary first.
+- Explicit Edit mode for day toggles and open/close times.
+- Booking settings collapsed into one row for appointment length and buffer.
+- Time off remains available as a secondary Hours section.
+
+Next QA: test Schedule on profiles with no bookings, active bookings, restaurants, quote-first businesses, and appointment-first businesses.

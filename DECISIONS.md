@@ -1,3 +1,6 @@
+**[2026-07-06] - Hours shows a weekly summary first; editing is deliberate.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+Why: Working hours are business setup, not the main Schedule experience. Owners should see simple open/closed days first, then tap Edit when they actually need to change hours.
 **[2026-07-06] - Schedule opens to Calendar; Hours is setup, not the main schedule.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
 Why: Owners tap Schedule to see what is booked first. Availability rules and time off are important, but they are setup controls, not the primary daily schedule surface.

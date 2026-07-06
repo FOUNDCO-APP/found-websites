@@ -1,3 +1,25 @@
+## Session: July 6, 2026 - Schedule Hours UX Polish
+**AI:** Codex
+**Worked on:** Jony/Steve-led design pass after Shawn tested the new Schedule tabs.
+
+### Completed This Session
+- Aligned Schedule page header with the shared Found dashboard type system.
+- Quieted the Schedule segmented control so it feels like navigation, not three primary buttons.
+- Redesigned Hours from a dense settings form into a weekly summary with an explicit Edit mode.
+- Moved appointment length and buffer into a single Booking settings row instead of repeating them on every day.
+- Kept Time Off available inside Hours, but separated it as a secondary section.
+- Improved the Bookings empty state so it has a proper Found card treatment.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open Schedule and confirm the header typography matches the rest of Found.
+2. Tap Hours and confirm the first view is readable: days show Open/Closed and times.
+3. Tap Edit and confirm day toggles plus open/close times appear.
+4. Open Booking settings and confirm appointment length / time between bookings update open days.
+5. Save Hours and confirm the saved state remains after refresh.
+6. Confirm Block Time Off still opens and saves from the Time off section.
+
+---
 ## Session: July 6, 2026 - Schedule Opens To Calendar
 **AI:** Codex
 **Worked on:** Team-approved Schedule workflow redesign.
