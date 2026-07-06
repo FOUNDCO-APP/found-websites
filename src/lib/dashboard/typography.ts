@@ -227,11 +227,13 @@ export function formIntentLabelFor(formIntent: string | null | undefined): FormI
   return FORM_INTENT_LABEL_MAP[(formIntent ?? "").toLowerCase()] ?? FORM_INTENT_LABEL_MAP.lead
 }
 
-export function defaultFormIntentFor(industry: string | null | undefined): string {
+export function defaultFormIntentFor(industry: string | null | undefined, subIndustry?: string | null): string {
   const n = normalizeIndustry(industry)
+  const sub = normalizeIndustry(subIndustry)
   if (["food", "restaurant", "food_beverage"].includes(n)) return "reservation"
   if (["wellness", "beauty", "salon", "spa", "fitness", "music_performance", "music", "pet_services"].includes(n)) return "booking"
   if (["healthcare"].includes(n)) return "appointment"
+  if (["balloon_decor", "balloon_garland", "event_decor", "party_decor", "decor", "event_planning"].includes(sub)) return "estimate_request"
   if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "contractors", "construction", "plumbing", "electrician", "events", "event_planning", "balloon_decor"].includes(n)) return "estimate_request"
   if (["retail", "home_based_food", "makers_crafts"].includes(n)) return "order"
   if (["real_estate", "creative_services", "photography", "education", "professional_services", "childcare", "nonprofit"].includes(n)) return "inquiry"

@@ -11,19 +11,21 @@ type PageDef = DashboardTool
 export default function DashboardPages({
   companyName,
   industry,
+  subIndustry = null,
   activeAddons,
 }: {
   companyName: string | null
   industry: string | null
+  subIndustry?: string | null
   activeAddons: string[]
 }) {
   const pathname = usePathname()
   const prefix = pathname.startsWith("/dashboard") ? "/dashboard" : ""
   const addonKey = activeAddons.join("|")
-  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons)
+  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
 
-  const allPages = useMemo(() => getAvailableDashboardTools({ industry, activeAddons }), [industry, addonKey])
-  const defaultIds = useMemo(() => getDefaultDashboardToolIds({ industry, activeAddons }), [industry, addonKey])
+  const allPages = useMemo(() => getAvailableDashboardTools({ industry, subIndustry, activeAddons }), [industry, subIndustry, addonKey])
+  const defaultIds = useMemo(() => getDefaultDashboardToolIds({ industry, subIndustry, activeAddons }), [industry, subIndustry, addonKey])
 
   const [mode, setMode] = useState<"view" | "edit">("view")
   const [tabIds, setTabIds] = useState<string[]>(defaultIds)

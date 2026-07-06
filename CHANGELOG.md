@@ -1,4 +1,21 @@
-## Session: July 6, 2026 - Estimate Requests Intake + Estimate Handoff
+## Session: July 6, 2026 - Blue Luna Estimate Requests Tab Fix
+**AI:** Codex
+**Worked on:** Fixed Blue Luna Events still showing `Leads` in the bottom tab after the Estimate Requests vocabulary change.
+
+### Completed This Session
+- Verified the live database row for Blue Luna Events: `industry_category = events`, `sub_industry = balloon decor`, `form_intent = null`, `primary_intent = quote`.
+- Found root cause: dashboard nav only received `industry_category`; `sub_industry` was not selected by `getCompany()` or passed into `DashboardNav` / `DashboardPages`.
+- Added `sub_industry` to `getCompany()` and `/dashboard/api/company-slug`.
+- Passed `subIndustry` through dashboard layout, bottom nav, More > dock editor, and Leads page.
+- Updated intent policy so quote-first sub-industries like `balloon decor` resolve to `Estimate Requests`.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open Blue Luna Events on `my.foundco.app` after deployment finishes.
+2. Confirm the bottom tab says `Estimate Requests`, not `Leads`.
+3. Open More > Organize my Dock and confirm the available tool also says `Estimate Requests`.
+
+---## Session: July 6, 2026 - Estimate Requests Intake + Estimate Handoff
 **AI:** Codex
 **Worked on:** Implemented the team-approved split between quote/estimate customer intake and the separate Estimates document workflow.
 

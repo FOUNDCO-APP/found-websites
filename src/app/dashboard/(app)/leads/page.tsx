@@ -140,6 +140,7 @@ function LeadsPageInner() {
   const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold">("warm")
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
   const [industry, setIndustry] = useState<string | null>(null)
+  const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [formIntent, setFormIntent] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState("")
   const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
@@ -147,7 +148,7 @@ function LeadsPageInner() {
   const [showIntentPicker, setShowIntentPicker] = useState(false)
   const [search, setSearch] = useState("")
 
-  const effectiveIntent = formIntent ?? defaultFormIntentFor(industry)
+  const effectiveIntent = formIntent ?? defaultFormIntentFor(industry, subIndustry)
   const intentLabel = formIntentLabelFor(effectiveIntent)
   const { tabLabel: peopleLabel } = getBusinessModel(industry, null)
 
@@ -172,10 +173,11 @@ function LeadsPageInner() {
   useEffect(() => {
     Promise.all([
       fetch("/api/leads").then(r => r.json()),
-      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ industry: null, formIntent: null })),
+      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ industry: null, subIndustry: null, formIntent: null })),
     ]).then(([ld, sd]) => {
       setLeads(ld.leads ?? [])
       setIndustry(sd.industry ?? null)
+      setSubIndustry(sd.subIndustry ?? null)
       setFormIntent(sd.formIntent ?? null)
       setCompanyName(sd.name ?? "")
       setLoading(false)

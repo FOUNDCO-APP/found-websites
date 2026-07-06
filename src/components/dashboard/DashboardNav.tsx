@@ -152,11 +152,13 @@ export default function DashboardNav({
   companyName,
   newLeadCount = 0,
   industry = null,
+  subIndustry = null,
   activeAddons = [],
 }: {
   companyName?: string | null
   newLeadCount?: number
   industry?: string | null
+  subIndustry?: string | null
   activeAddons?: string[]
 }) {
   const pathname = usePathname()
@@ -168,9 +170,9 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
   const addonKey = activeAddons.join("|")
-  const defaultTabs = getDefaultDashboardTools({ industry, activeAddons })
-  const allAvailable = getAvailableDashboardTools({ industry, activeAddons })
-  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons)
+  const defaultTabs = getDefaultDashboardTools({ industry, subIndustry, activeAddons })
+  const allAvailable = getAvailableDashboardTools({ industry, subIndustry, activeAddons })
+  const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
 
   const [albums, setAlbums]                 = useState<Album[]>([])
@@ -218,7 +220,7 @@ export default function DashboardNav({
       const savedIds = JSON.parse(saved) as string[]
       setTabs(buildTabs(savedIds))
     } catch { setTabs(defaultTabs) }
-  }, [storageKey, industry, addonKey])
+  }, [storageKey, industry, subIndustry, addonKey])
 
   useEffect(() => {
     function onNavChanged() {
@@ -231,7 +233,7 @@ export default function DashboardNav({
     }
     window.addEventListener("found:dashboard-tabs-updated", onNavChanged)
     return () => window.removeEventListener("found:dashboard-tabs-updated", onNavChanged)
-  }, [storageKey, industry, addonKey])
+  }, [storageKey, industry, subIndustry, addonKey])
 
   // Home page quick-action "Camera" button opens this sheet
   useEffect(() => {

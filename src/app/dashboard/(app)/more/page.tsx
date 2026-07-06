@@ -183,6 +183,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const useIntroPrice = !isActive || hasIntroRate
   const hasStripe = !!company?.stripe_customer_id
   const industryCategory = company?.industry_category ?? ""
+  const subIndustry = company?.sub_industry ?? null
   const displayPrice = useIntroPrice ? meta.intro : meta.normal
   const upgradePrice = upgrade ? (useIntroPrice ? upgrade.introPrice : upgrade.normalPrice) : 0
   const businessUpgrade = plan === "found_business" ? null : businessUpgradeCopy(industryCategory)
@@ -284,6 +285,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       <DashboardPages
         companyName={company?.name ?? null}
         industry={industryCategory}
+        subIndustry={subIndustry}
         activeAddons={effectiveAddonSlugs}
       />
 
