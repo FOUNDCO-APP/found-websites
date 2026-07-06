@@ -15,6 +15,18 @@ const RATIOS = [
 
 type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string }
 
+// Address-bar/settings wording differs per platform — point at the right icon.
+function blockedCameraMessage(): string {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
+  if (/iPhone|iPad|iPod/.test(ua)) {
+    return "Camera is blocked. Tap the camera icon next to the address bar above and choose Allow."
+  }
+  if (/Android/.test(ua)) {
+    return "Camera is blocked. Tap the lock or camera icon next to the address bar and turn Camera on."
+  }
+  return "Camera access denied. Allow camera in your browser settings."
+}
+
 export type UploadedPhoto = {
   id: string; url: string; for_website: boolean; for_social: boolean
   website_section: string | null; album_id: string | null; created_at: string
@@ -55,11 +67,26 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   // Start / restart camera stream
   useEffect(() => {
     let alive = true
+    let frameTimeout: ReturnType<typeof setTimeout> | null = null
     ;(async () => {
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
       hwZoomRef.current = false
       setReady(false); setError(null); setTorchOn(false); setTorchOk(false)
+
+      // Proactive check where supported (Chrome/Android) — skips straight to
+      // guidance instead of showing a dead black screen if already blocked.
+      // Safari doesn't reliably support querying "camera", so this is a
+      // best-effort early exit, not something the rest of the flow depends on.
+      try {
+        const status = await navigator.permissions?.query?.({ name: "camera" as PermissionName })
+        if (status?.state === "denied") {
+          if (alive) setError(blockedCameraMessage())
+          return
+        }
+      } catch {
+        // Permissions API unsupported/unqueryable for "camera" — fall through to getUserMedia.
+      }
 
       const videoConstraints = { facingMode: facing, width: { ideal: 4096 }, height: { ideal: 3072 } }
       let stream: MediaStream
@@ -69,7 +96,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         try {
           stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false })
         } catch {
-          if (alive) setError("Camera access denied. Allow camera in your browser settings.")
+          if (alive) setError(blockedCameraMessage())
           return
         }
       }
@@ -78,12 +105,25 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       streamRef.current = stream
       if (videoRef.current) videoRef.current.srcObject = stream
 
+      // Safety net for a documented WebKit quirk: getUserMedia can resolve
+      // with a stream that never actually produces a frame when permission
+      // is in a stale/blocked state, without ever rejecting the promise.
+      // If onLoadedMetadata hasn't fired shortly after, treat it as blocked.
+      frameTimeout = setTimeout(() => {
+        if (alive && !videoRef.current?.videoWidth) {
+          setError(blockedCameraMessage())
+          streamRef.current?.getTracks().forEach(t => t.stop())
+          streamRef.current = null
+        }
+      }, 4000)
+
       const track = stream.getVideoTracks()[0]
       const caps = (track.getCapabilities?.() ?? {}) as Record<string, unknown>
       if (caps.torch) setTorchOk(true)
     })()
     return () => {
       alive = false
+      if (frameTimeout) clearTimeout(frameTimeout)
       streamRef.current?.getTracks().forEach(t => t.stop())
       streamRef.current = null
     }
