@@ -1,3 +1,18 @@
+## Session: July 6, 2026 — Instant Feedback on Business Switch
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Follow-on from the company-switching speed fix — Shawn noted the slight pause after tapping a business made him think the tap didn't register.
+
+### Completed
+- The `/dashboard/select` company list was a plain Server Action form with no client-side feedback at all — during the round trip, nothing on screen changed.
+- Extracted the list into a new client component, `src/components/dashboard/CompanyPicker.tsx`, which sets local state the instant a business is tapped (before the network round trip starts): the tapped card highlights green immediately, its chevron swaps to a spinner, and the other options dim + disable so there's no ambiguity about what's happening.
+- `src/app/dashboard/(auth)/select/page.tsx` now just fetches the companies and passes them + the existing `selectCompany` server action into `CompanyPicker` as props — same server action, same redirect flow, purely additive client-side feedback.
+- Verified with `npm run build` — clean. Pushed as `1d55ed1`.
+
+### Must Test
+- On an account with 2+ businesses, tap a business and confirm the immediate green highlight + spinner appear right away, and the other options visibly dim/disable during the switch.
+
+---
+
 ## Session: July 6, 2026 — Company-Switching Speed Fix
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn reported switching between businesses under his profile "takes forever." Asked Craig to trace it.
