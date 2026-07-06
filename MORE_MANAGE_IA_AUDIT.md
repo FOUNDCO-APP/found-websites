@@ -215,3 +215,14 @@ Proceed with a More/Manage IA redesign only after the registry map is defined. D
 4. Open More and verify tools are grouped by business outcome, not a flat list.
 5. Confirm each row uses the same icon language as the Dock.
 6. Confirm unpinned tools remain available without crowding the Dock.
+
+---
+## July 6 Build Update - Business Cleanup Slice
+
+Implemented the first cleanup slice from the team review:
+- Business plan accounts no longer show a redundant `Included Business Tools` list.
+- Missing tools still appear as `Add Features` for non-Business plans.
+- `Camera` is now a Website tool alongside Photos.
+- Business plan status is quieter and no longer repeats the full sales checklist.
+
+Next queued slice: Schedule should become a real schedule surface with `Calendar`, `Bookings`, and `Hours` instead of opening directly into working-hour setup.

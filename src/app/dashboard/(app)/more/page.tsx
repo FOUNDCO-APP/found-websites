@@ -11,7 +11,7 @@ import { openBillingPortal, startUpgradeCheckout } from "./actions"
 import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
-import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
+import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
@@ -203,7 +203,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   }
 
   const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs)
-  const businessIncludedAddons = ALL_ADDONS.filter((a) => BUSINESS_INCLUDED_ADDONS.includes(a.slug))
   const availableAddons = plan === "found_business" ? [] : relevantAddons.filter((a) => !effectiveAddonSlugs.includes(a.slug))
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
   const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
@@ -371,13 +370,13 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
       )}
 
       {/* Active Add-ons */}
-      {(plan === "found_business" ? businessIncludedAddons.length > 0 : activeAddonSlugs.length > 0) && (
-        <section id={plan === "found_business" ? "business-tools" : undefined} style={{ marginBottom: 20 }}>
+      {plan !== "found_business" && activeAddonSlugs.length > 0 && (
+        <section style={{ marginBottom: 20 }}>
           <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            {plan === "found_business" ? "Included Business Tools" : "My Add-ons"}
+            My Add-ons
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {(plan === "found_business" ? businessIncludedAddons.map(a => a.slug) : activeAddonSlugs).map((slug) => {
+            {activeAddonSlugs.map((slug) => {
               const def = ALL_ADDONS.find((a) => a.slug === slug)
               if (!def) return null
               return (
@@ -395,7 +394,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                     <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
                   </div>
                   <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    {plan === "found_business" ? "Included" : `Active - $${def.price}/mo`}
+                    {`Active - $${def.price}/mo`}
                   </span>
                 </div>
               )
@@ -409,68 +408,99 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
           My Plan
         </p>
-        <div style={{
-          borderRadius: 22,
-          overflow: "hidden",
-          border: `1px solid ${GREEN}24`,
-          background: "linear-gradient(180deg, rgba(50,208,116,0.10) 0%, rgba(255,255,255,0.035) 52%, rgba(255,255,255,0.025) 100%)",
-          boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
-        }}>
-          <div style={{ padding: "22px 20px 20px" }}>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 10px ${meta.color}`, flexShrink: 0 }} />
-                  <span style={{ ...TYPE.caption, color: meta.color }}>{meta.label}</span>
+        {plan === "found_business" && isActive ? (
+          <div style={{
+            borderRadius: 18,
+            padding: "18px 20px",
+            border: `1px solid ${GREEN}24`,
+            backgroundColor: `${GREEN}08`,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 10px ${GREEN}`, flexShrink: 0 }} />
+                  <span style={{ ...TYPE.caption, color: GREEN }}>{meta.label}</span>
                   {hasIntroRate && (
                     <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
                       Intro
                     </span>
                   )}
                 </div>
-                <h2 style={{ margin: 0, ...TYPE.title, fontWeight: 300, color: "white", letterSpacing: 0 }}>
-                  {PLAN_PROMISE[plan] ?? PLAN_PROMISE.found}
-                </h2>
+                <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 760, color: "white" }}>You have the top plan.</p>
+                <p style={{ margin: "4px 0 0", ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                  Booking, estimates, payments, email, contacts, and customer tools are active.
+                </p>
               </div>
               <div style={{ flexShrink: 0, textAlign: "right" as const }}>
-                <p style={{ margin: 0, ...TYPE.largeTitle, fontSize: "1.85rem", color: "white" }}>${displayPrice}</p>
+                <p style={{ margin: 0, ...TYPE.title, color: "white" }}>${displayPrice}</p>
                 <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
               </div>
             </div>
-
-            <p style={{ margin: "0 0 16px", ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-              {isActive
-                ? hasIntroRate
-                  ? `Your intro rate is locked in. You save $${meta.normal - meta.intro}/month compared with the regular $${meta.normal}/month price.`
-                  : "Your subscription is active."
-                : `Activate today to lock in $${meta.intro}/month before the regular $${meta.normal}/month price.`}
-            </p>
-
-            <div style={{ display: "grid", gap: 8 }}>
-              {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
-                <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 3 }}
-                    stroke={meta.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  <span style={{ ...TYPE.footnote, fontWeight: 500, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
-                </div>
-              ))}
-            </div>
-
-            {!isActive && company?.slug && (
-              <div style={{ marginTop: 18 }}>
-                <MoreActivateButton
-                  slug={company.slug}
-                  companyName={company.name}
-                  targetPlan={plan}
-                >
-                  Lock In My Rate - ${displayPrice}/mo
-                </MoreActivateButton>
-              </div>
-            )}
           </div>
-        </div>
+        ) : (
+          <div style={{
+            borderRadius: 22,
+            overflow: "hidden",
+            border: `1px solid ${GREEN}24`,
+            background: "linear-gradient(180deg, rgba(50,208,116,0.10) 0%, rgba(255,255,255,0.035) 52%, rgba(255,255,255,0.025) 100%)",
+            boxShadow: "0 22px 70px rgba(0,0,0,0.22)",
+          }}>
+            <div style={{ padding: "22px 20px 20px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: meta.color, boxShadow: `0 0 10px ${meta.color}`, flexShrink: 0 }} />
+                    <span style={{ ...TYPE.caption, color: meta.color }}>{meta.label}</span>
+                    {hasIntroRate && (
+                      <span style={{ ...TYPE.footnote, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: GREEN, backgroundColor: `${GREEN}15`, padding: "2px 7px", borderRadius: 20 }}>
+                        Intro
+                      </span>
+                    )}
+                  </div>
+                  <h2 style={{ margin: 0, ...TYPE.title, fontWeight: 300, color: "white", letterSpacing: 0 }}>
+                    {PLAN_PROMISE[plan] ?? PLAN_PROMISE.found}
+                  </h2>
+                </div>
+                <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                  <p style={{ margin: 0, ...TYPE.largeTitle, fontSize: "1.85rem", color: "white" }}>${displayPrice}</p>
+                  <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
+                </div>
+              </div>
+
+              <p style={{ margin: "0 0 16px", ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                {isActive
+                  ? hasIntroRate
+                    ? `Your intro rate is locked in. You save $${meta.normal - meta.intro}/month compared with the regular $${meta.normal}/month price.`
+                    : "Your subscription is active."
+                  : `Activate today to lock in $${meta.intro}/month before the regular $${meta.normal}/month price.`}
+              </p>
+
+              <div style={{ display: "grid", gap: 8 }}>
+                {(PLAN_FEATURES[plan] ?? PLAN_FEATURES.found).map((f) => (
+                  <div key={f} style={{ display: "flex", alignItems: "flex-start", gap: 9 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0, marginTop: 3 }}
+                      stroke={meta.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span style={{ ...TYPE.footnote, fontWeight: 500, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+
+              {!isActive && company?.slug && (
+                <div style={{ marginTop: 18 }}>
+                  <MoreActivateButton
+                    slug={company.slug}
+                    companyName={company.name}
+                    targetPlan={plan}
+                  >
+                    Lock In My Rate - ${displayPrice}/mo
+                  </MoreActivateButton>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Upgrade */}
@@ -616,16 +646,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 Activate Business for {company.name}
               </MoreActivateButton>
             ) : null}
-          </div>
-        </section>
-      )}
-      {!upgrade && (
-        <section style={{ marginBottom: 24 }}>
-          <div style={{ borderRadius: 18, padding: "18px 20px", border: `1px solid ${GREEN}24`, backgroundColor: `${GREEN}08` }}>
-            <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>You have the top plan.</p>
-            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-              Found Business includes every core upgrade: booking, estimates, review requests, client messaging, team access, and project galleries.
-            </p>
           </div>
         </section>
       )}

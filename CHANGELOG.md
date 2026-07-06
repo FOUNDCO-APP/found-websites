@@ -3277,3 +3277,24 @@ At the end of every session add a new entry at the TOP:
 
 *This file is the memory of the project.*
 *Read it before you start. Update it before you stop.*
+
+---
+## Session: July 6, 2026 - More Page Business Cleanup
+**AI:** Codex
+**Worked on:** Team-approved More page cleanup after reviewing Blue Luna Events, Molcas, and Nanas screenshots.
+
+### Completed This Session
+- Added `Camera` as a Website business tool in the registry, next to Photos.
+- Camera opens the existing in-app camera flow through `/photos?camera=1`.
+- Removed the redundant `Included Business Tools` block for Business plan accounts.
+- Kept `Add Features` for accounts missing add-ons, so Starter/Pro can still discover useful upgrades.
+- Changed active Business plan display into a quieter confirmation instead of a large repeated sales card.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+1. Open Blue Luna Events or Molcas on a Business plan and go to More.
+2. Confirm `Included Business Tools` is gone.
+3. Confirm `Camera` appears under Website and opens the camera flow.
+4. Confirm `Photos` still opens the photos page.
+5. Open Nanas or another Starter/Pro account and confirm `Add Features` still appears.
+6. Confirm My Plan is quieter on Business accounts.

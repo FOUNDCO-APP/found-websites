@@ -104,6 +104,13 @@ function PhotosPageInner() {
   useEffect(() => {
     const albumId = searchParams.get("album")
     const upload = searchParams.get("upload")
+    const camera = searchParams.get("camera")
+    if (camera === "1") {
+      if (albumId) pendingAlbumIdRef.current = albumId
+      setShowCamera(true)
+      router.replace("/photos")
+      return
+    }
     if (upload === "1") {
       if (albumId) pendingAlbumIdRef.current = albumId
       fileRef.current?.click()

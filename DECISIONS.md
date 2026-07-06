@@ -715,3 +715,7 @@ Why: Avatars were previously colored by lead temperature (hot/warm/cold). Since 
 **[2026-06-18] — Typography/contrast fixes must preserve Found's existing light/heavy weight brand voice, never flatten it toward generic system-UI bolding.**
 Approved by: Shawn
 Why: An early draft of the shared typography system made all large page titles bold (700 weight) in the name of "matching Apple's contrast." Shawn caught this immediately — Found's large titles being light-weight (300) paired with heavy-weight (800-900) uppercase tracked-out labels is an already-approved, deliberate brand signature (see DESIGN_DECISIONS.md), not a readability bug. The actual problems were font SIZE (too small, e.g. 8-13px in places that should be 15-20px) and OPACITY (too faint, e.g. 0.2-0.45 on body text that should never go below ~0.55), not font weight. Going forward: any contrast/legibility pass should fix size and opacity floors while explicitly preserving Found's existing weight personality, never bolding things "for contrast" as a substitute.
+
+**[2026-07-06] - Active Business accounts should not repeat included tools on More.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+Why: Business owners do not need to be resold tools they already have. More should show usable business tools, missing add-ons when relevant, and quiet account status. `Included Business Tools` is only useful as upgrade/add-on education before the owner has the tools.

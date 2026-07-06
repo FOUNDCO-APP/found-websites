@@ -16,7 +16,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **More / Manage IA build** - implement the Wix-informed, Found-specific grouped More page from `MORE_MANAGE_IA_AUDIT.md`: Website, Get Paid, Customers, Work & Schedule, Marketing, Insights, Settings. Extend the tool registry first; do not hardcode a one-off page layout.
+1. **Schedule page workflow redesign** - next team-approved slice: make Schedule open as a real work schedule surface with Calendar, Bookings, and Hours tabs. Current Hours editor works, but it should not be the whole Schedule experience.
 2. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
 3. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 
@@ -302,4 +302,3 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Portal name — "Found Studio" proposed, needs Steve/team sign-off
 - Inbox tab — currently redirects to Leads. Should it become a full conversation thread view?
 - Social posting — direct API vs save to camera roll (locked: camera roll for launch)
-

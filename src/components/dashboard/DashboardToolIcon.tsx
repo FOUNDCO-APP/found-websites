@@ -38,6 +38,9 @@ export function DashboardToolIcon({ tool, active, muted = false, size = 22 }: { 
   if (key === "reservations" || path === "/schedule" || key === "schedule") {
     return <svg {...common}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/>{path === "/schedule" || key === "schedule" ? <><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></> : <path d="M8 15h4"/>}</svg>
   }
+  if (key === "camera") {
+    return <svg {...common}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+  }
   if (path === "/photos" || key === "photos") {
     return <svg {...common}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
   }

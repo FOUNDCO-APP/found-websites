@@ -19,6 +19,7 @@ type DashboardToolPolicyInput = {
 
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
 const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
+const CAMERA_TOOL: DashboardTool = { id: "camera", path: "/photos?camera=1", label: "Camera", group: "website", description: "Shoot and sort later" }
 
 const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "wellness",
@@ -86,6 +87,7 @@ function availableFoodTools(activeAddons: string[]): DashboardTool[] {
     ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     peopleTool("food"),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
+    CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
     { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
     ...(hasEmail ? [EMAIL_TOOL] : []),
@@ -107,6 +109,7 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
     ...(hasEstimates && inboxPath !== "/estimates" ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     peopleTool(industry),
+    CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
     { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
     ...(hasEmail ? [EMAIL_TOOL] : []),
