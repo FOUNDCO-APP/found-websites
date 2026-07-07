@@ -1,122 +1,157 @@
-# BRIEF.md — Found Co. / found-websites
+# BRIEF.md - Found Co. / found-websites
 ### Say this to any AI at the start of any session: "Read BRIEF.md"
-### This file is the entry point. Read everything before touching anything.
+### This file is the entry point. Read this before touching anything.
 
 ---
 
-## STEP 1 — READ THESE FILES FIRST
+## STEP 1 - READ THESE FILES FIRST
 
-Before you write a single line of code, make a single suggestion, or take any action:
+Before you write code, make a product suggestion, or take action, read these files in order:
 
-1. Read `PROJECT.md` — what Found Co. is, tech stack, brand, database, current build status
-2. Read `CHANGELOG.md` — what was done last session, what is still pending, what's next
-3. Read `AGENTS.md` — the Apple team: Steve Jobs, Jony Ive, Phil, Craig, Priya, Marcus, Chris, Angela
-4. Read `TASKS.md` — current phase, what is NOW, NEXT, BACKLOG
-5. Read `PRODUCT_BRIEF.md` — the full Found Co. product vision, features, pricing, upgrades
-6. Read `DECISIONS.md` — every approved product decision, locked unless Steve reopens it
-7. Read `DESIGN_DECISIONS.md` — every approved visual/UX decision, locked unless Jony reopens it
-8. Read `ONBOARDING.md` — the full onboarding question flow, exact wording, tone, branching logic
-9. Read `INDUSTRY_MANIFESTS.md` - Jony-led industry section manifests
-10. Read `INDUSTRY_WORKFLOW_AUDIT.md` - Steve-led intake vocabulary vs business tools audit, pending Shawn approval
+1. `SESSION_HANDOFF.md` - current truth: what changed, what is open, and Shawn's test steps.
+2. `TASKS.md` - active task board: NOW, NEXT, BACKLOG.
+3. `CHANGELOG.md` - current session history only.
+4. `CHANGELOG_ARCHIVE.md` - older detailed history when needed.
+5. `AGENTS.md` - the Found team and approval rules.
+6. `PROJECT.md` - what Found is, stack, brand, database, build status.
+7. `PRODUCT_BRIEF.md` - product vision, features, pricing, upgrades.
+8. `DECISIONS.md` - approved product decisions, locked unless Steve reopens them.
+9. `DESIGN_DECISIONS.md` - approved visual/UX decisions, locked unless Jony reopens them.
+10. `ONBOARDING.md` - onboarding question flow, wording, tone, branching logic.
+11. `INDUSTRY_MANIFESTS.md` - industry section manifests.
+12. `INDUSTRY_WORKFLOW_AUDIT.md` - intake vocabulary vs business tools audit.
+13. `MORE_MANAGE_IA_AUDIT.md` - More / Manage IA decisions.
+14. `WIX_COMPETITOR_REVIEW.md` - Wix review and what Found should/should not borrow.
 
-If any required file is missing — stop and tell Shawn before proceeding.
+If a required file is missing, stop and tell Shawn before proceeding.
 
 ---
 
-## STEP 2 — CHECK WHAT'S PENDING BEFORE MOVING FORWARD
+## STEP 2 - START EVERY SESSION WITH CURRENT STATUS
 
-After reading CHANGELOG.md, your first message must include:
+After reading `SESSION_HANDOFF.md`, your first useful response must include:
 
-**"Here's where we left off:"**
-- ✅ What was completed last session
-- ⏳ What is still pending or unfinished
-- 🔜 What the next priority is
+**Here's where we left off:**
+- What changed / finished.
+- What is still pending or unfinished.
+- What Shawn needs to test next.
 
-**Then ask:** "Would you like to continue where we left off, or is there something new?"
+Then ask whether to continue where we left off or start something new.
 
 Never silently skip pending items.
 
 ---
 
-## STEP 3 — UNDERSTAND WHO YOU'RE WORKING WITH
+## STEP 3 - UNDERSTAND WHO YOU'RE WORKING WITH
 
-**Shawn Lopez** — Owner, Say It Marketing, Tucson AZ. In business since 1999.
+**Shawn Lopez** - Owner, Say It Marketing, Tucson AZ. In business since 1999.
 Web design, branding, SEO, hosting, social media, print brokerage.
 
 **How Shawn works:**
-- Works from his iPhone while multitasking — often voice-to-text
-- Direct and conversational — no jargon, no essays
-- Wants clear options and copy-paste ready output
-- Learns by doing — explain what you're doing and why in plain English
-- Gets excited about new ideas — your job is to keep him focused AND share the excitement
-- Does not waste time or money — every action must have a clear purpose
+- Works from his iPhone while multitasking, often using voice-to-text.
+- Direct and conversational.
+- Wants clear options and copy-paste ready output.
+- Learns by doing; explain what you are doing and why in plain English.
+- Gets excited about new ideas; help keep the work focused without killing momentum.
+- Does not waste time or money; every action must have a clear purpose.
 
-**Time = Money. Always.**
-
----
-
-## STEP 4 — THE APPROVAL RULE (NON-NEGOTIABLE)
-
-**No AI makes any decision without Shawn's approval first.**
-
-This includes: pushing code, modifying files, creating files, deleting anything, changing pricing or copy, installing dependencies, changing configuration.
-
-**The right pattern:**
-1. Recommend what you think should be done
-2. Explain why briefly
-3. Ask for approval
-4. Wait for a "yes" or "go ahead" before acting
-
-You may strongly recommend. You may push back. You may NOT act first and explain later.
+Time equals money. Always.
 
 ---
 
-## STEP 5 — THE REPO
+## STEP 4 - TEAM AND APPROVAL RULE
 
-**Repo:** `found-websites` (local: `C:\Users\SuperShawn\Documents\GitHub\found-websites`)
-**Hosting:** Vercel (NOT Netlify — switched May 29, 2026)
-**Stack:** Next.js 16 + Tailwind + Supabase + TypeScript
+No AI makes product, design, process, pricing, copy, data, or architecture decisions alone.
 
-This is a **multi-tenant platform**. One codebase. Every Found Co. client gets their own website at:
-- `[slug].foundco.app` (subdomain)
-- OR their own custom domain (e.g., barriobuilders.com)
+For product/design/process decisions, hold a visible team meeting before changing anything:
 
-**Barrio Builders = Instance #1** (the guinea pig that proves the platform works)
+- Steve leads product judgment and final product approval.
+- Jony leads visual/UX design.
+- Angela leads customer journey, onboarding, empty/error states, and test clarity.
+- Craig leads architecture and technical process.
+- Priya leads data, schema, RLS, and payment data safety.
+- Marcus leads website/template/integration behavior.
+- Chris leads PWA/mobile behavior.
+- Phil leads marketing, pricing, and upgrade copy.
+
+The pattern:
+
+1. Let the right team lead speak first.
+2. Let the rest of the team add concerns.
+3. Summarize the recommended direction.
+4. Wait for Shawn's approval.
+5. Only then implement.
+
+You may strongly recommend. You may push back. You may not act first and explain later.
 
 ---
 
-## STEP 6 — DESIGN RULES (NON-NEGOTIABLE)
+## STEP 5 - THE REPO
 
-Every decision goes through Jony Ive. Every site must look like Apple built it.
+**Repo:** `found-websites`
+**Local path:** `C:\Users\SuperShawn\Documents\GitHub\found-websites`
+**Hosting:** Vercel, not Netlify.
+**Stack:** Next.js 16 + Tailwind + Supabase + TypeScript.
 
-- Clean, minimal, nothing unnecessary
-- Mobile first — always
-- Typography logo as fallback (elegant, not cheap)
-- Pill-shaped buttons
-- Jony Ive color palettes as presets — custom hex option for existing brands
-- If it needs instructions, it's too complicated
+This is a multi-tenant platform. One codebase. Every Found client gets a website at:
+
+- `[slug].foundco.app`
+- or their own custom domain, such as `barriobuilders.com`
+
+Barrio Builders is Instance #1, the guinea pig that proves the platform works.
 
 ---
 
-## STEP 7 — END OF SESSION RULES
+## STEP 6 - DESIGN RULES
 
-When Shawn says **"Wrap up the session"** — do all of the following before closing:
+Every design decision goes through Jony. Every product decision goes through Steve.
 
-1. **Update CHANGELOG.md** — what was completed, what's pending, what's next
-2. **Update TASKS.md** — move tasks, add new ones to backlog
-3. **Remind Shawn** of any open critical items
-4. **Confirm** next steps are clear
+- Mobile first, always.
+- Clean, minimal, and direct.
+- The owner never sees the backend.
+- If a business owner needs instructions, the flow is too complicated.
+- Found should feel like one system, not many stitched-together tools.
+- Use the global Found visual language: spacing, typography, color, cards, controls, and motion.
+- Business owners need tools that make money and save time, not database screens.
 
-**No session ends without updated CHANGELOG and TASKS. No exceptions.**
+---
+
+## STEP 7 - DOCUMENTATION RULES
+
+`SESSION_HANDOFF.md` is the current source of truth. Keep it short.
+
+`TASKS.md` is the active work board. Keep it focused on what is now, next, and backlog.
+
+`CHANGELOG.md` is current session history. Keep a rolling current window plus anything still active.
+
+`CHANGELOG_ARCHIVE.md` is older detailed history. Move old completed history there so the current files stay readable.
+
+`DECISIONS.md` and `DESIGN_DECISIONS.md` are locked decision records. Do not bury final decisions only in a chat log.
+
+---
+
+## STEP 8 - END OF SESSION RULES
+
+Before ending meaningful work, update the docs:
+
+1. Update `SESSION_HANDOFF.md` with what changed, what is open, and Shawn's plain-English test steps.
+2. Update `TASKS.md` if priorities changed.
+3. Update `CHANGELOG.md` if code, QA, product, or process work changed.
+4. Move old completed history to `CHANGELOG_ARCHIVE.md` when current files get too heavy.
+5. Update `DECISIONS.md` or `DESIGN_DECISIONS.md` if a decision was approved.
+6. Tell Shawn exactly what changed and what to test next.
+
+No meaningful work session ends without the current handoff being updated.
 
 ---
 
 ## THE MISSION
 
-> Every small business owner deserves to look as big as Apple online.
-> Found makes that possible — from their phone, in minutes, for less than $40/month.
-> No developers. No drag-and-drop. No tech skills required.
-> Answer questions. See your site. Get found.
+Every small business owner deserves to look as big as Apple online.
+
+Found makes that possible from their phone, in minutes, without developers, drag-and-drop, or technical skills.
+
+Answer questions. See your site. Get found.
 
 ---
 
@@ -124,17 +159,22 @@ When Shawn says **"Wrap up the session"** — do all of the following before clo
 
 | What | Where |
 |---|---|
-| Product vision + features + pricing | `PRODUCT_BRIEF.md` |
-| Project context + tech stack + brand | `PROJECT.md` |
-| Session history + pending + next steps | `CHANGELOG.md` |
-| Agent team + roles | `AGENTS.md` |
-| Active tasks + backlog | `TASKS.md` |
-| Every approved product decision | `DECISIONS.md` |
-| Every approved design/UX decision | `DESIGN_DECISIONS.md` |
-| Onboarding question flow + wording | `ONBOARDING.md` |
-| Industry section manifests | `INDUSTRY_MANIFESTS.md`r`n10. INDUSTRY_WORKFLOW_AUDIT.md` |
-| Supabase project | mmctzloztgkbqvofmkou.supabase.co |
-| Domain | foundco.app |
-| Guinea pig site | barriobuilders.com |
-| GitHub repo | github.com/found-co/found-websites |
+| Current handoff: changed, open, tests | `SESSION_HANDOFF.md` |
+| Active tasks and backlog | `TASKS.md` |
+| Current session history | `CHANGELOG.md` |
+| Older detailed history | `CHANGELOG_ARCHIVE.md` |
+| Team and approval rules | `AGENTS.md` |
+| Project context and stack | `PROJECT.md` |
+| Product vision, features, pricing | `PRODUCT_BRIEF.md` |
+| Approved product decisions | `DECISIONS.md` |
+| Approved design/UX decisions | `DESIGN_DECISIONS.md` |
+| Onboarding flow and wording | `ONBOARDING.md` |
+| Industry manifests | `INDUSTRY_MANIFESTS.md` |
+| Industry workflow audit | `INDUSTRY_WORKFLOW_AUDIT.md` |
+| More / Manage IA audit | `MORE_MANAGE_IA_AUDIT.md` |
+| Wix competitor review | `WIX_COMPETITOR_REVIEW.md` |
+| Supabase project | `mmctzloztgkbqvofmkou.supabase.co` |
+| Domain | `foundco.app` |
+| Guinea pig site | `barriobuilders.com` |
+| GitHub repo | `github.com/found-co/found-websites` |
 | Hosting | Vercel |
