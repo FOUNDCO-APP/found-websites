@@ -22,10 +22,10 @@ History policy: keep the current working window and anything still active in cur
 ## Current Status
 
 - Repo is on `main`.
-- Latest known commit: `552b079` - `Consolidate July 6 session state - full changelog of what's left to test`.
-- Worktree was clean when this file was created.
+- Latest known commit: `15c19c8` - `Add git status check to BRIEF.md Step 1 - close the uncommitted-handoff loophole`.
+- Worktree is clean and pushed. This entire doc reorg (this file, `CHANGELOG_ARCHIVE.md`, and the edits to `BRIEF.md`/`CLAUDE.md`/`TASKS.md`/`CHANGELOG.md`) was found sitting uncommitted on disk when Codex ran out of credits mid-session, then verified and committed/pushed by Claude Code (`1c1c121`).
 - July 6 code is pushed, but not all live tests are confirmed by Shawn yet.
-- Documentation cleanup is in progress locally: current truth, active tasks, current changelog, and archived history are being separated.
+- `BRIEF.md` Step 1 now also instructs every AI to run `git status` before trusting this file — closing exactly the gap that just happened.
 
 ---
 
