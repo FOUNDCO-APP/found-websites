@@ -137,7 +137,7 @@ function LeadsPageInner() {
   const [newPhone, setNewPhone] = useState("")
   const [newEmail, setNewEmail] = useState("")
   const [newNotes, setNewNotes] = useState("")
-  const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold">("warm")
+  const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold" | null>(null)
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
   const [industry, setIndustry] = useState<string | null>(null)
   const [subIndustry, setSubIndustry] = useState<string | null>(null)
@@ -184,8 +184,10 @@ function LeadsPageInner() {
     }).catch(() => setLoading(false))
   }, [])
 
+  const canSaveLead = newName.trim().length > 0 && (!pageLabel.hasTemperature || !!newTemp)
+
   async function handleSaveLead() {
-    if (!newName.trim()) return
+    if (!canSaveLead) return
     setSaving(true)
     const body: Record<string, unknown> = { name: newName, phone: newPhone, email: newEmail, notes: newNotes }
     if (pageLabel.hasTemperature) body.temperature = newTemp
@@ -198,7 +200,7 @@ function LeadsPageInner() {
     if (data.lead) {
       setLeads(prev => [data.lead, ...prev])
       setShowAdd(false)
-      setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp("warm")
+      setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp(null)
     }
     setSaving(false)
   }
@@ -365,77 +367,96 @@ function LeadsPageInner() {
         </div>
       )}
 
-      {/* Add form */}
+      {/* Add form — slide-up sheet, matches IntentPickerSheet below */}
       {showAdd && (
-        <div style={{
-          borderRadius: 24, padding: 24, marginBottom: 24,
-          backgroundColor: "rgba(255,255,255,0.05)",
-          border: `1px solid ${SIGNAL_GREEN}33`,
-        }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{pageLabel.new}</div>
-
-          {pageLabel.hasTemperature && (
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>Temperature</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                {(["hot", "warm", "cold"] as const).map(t => {
-                  const active = newTemp === t
-                  const color = TEMP_COLORS[t]
-                  return (
-                    <button key={t} onClick={() => setNewTemp(t)} style={{
-                      flex: 1, padding: "10px 0", borderRadius: 14, border: "1px solid",
-                      borderColor: active ? color : "rgba(255,255,255,0.08)",
-                      backgroundColor: active ? `${color}18` : "transparent",
-                      cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                    }}>
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: active ? color : "rgba(255,255,255,0.25)", flexShrink: 0 }}/>
-                      <span style={{ ...TYPE.subhead, fontWeight: 700, color: active ? color : "rgba(255,255,255,0.3)" }}>
-                        {t === "hot" ? "Hot" : t === "warm" ? "Warm" : "Cold"}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
+        <>
+          <div
+            onClick={() => { setShowAdd(false); setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp(null) }}
+            style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}
+          />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+            backgroundColor: "#101411",
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "28px 28px 0 0",
+            maxHeight: "85dvh",
+            display: "flex", flexDirection: "column",
+          }}>
+            <div style={{ padding: "14px 22px 0", flexShrink: 0 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "white", marginBottom: 20 }}>{pageLabel.new}</div>
             </div>
-          )}
 
-          {[
-            { label: "Name", val: newName, set: setNewName, placeholder: "Their name", type: "text" },
-            { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number", type: "tel" },
-            { label: "Email", val: newEmail, set: setNewEmail, placeholder: "Email address", type: "email" },
-            { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "What are they looking for?", type: "text" },
-          ].map(({ label, val, set, placeholder, type }) => (
-            <div key={label} style={{ marginBottom: 14 }}>
-              <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 6, ...TYPE.caption }}>{label}</div>
-              <input
-                type={type}
-                value={val}
-                onChange={e => set(e.target.value)}
-                placeholder={placeholder}
-                style={{
-                  width: "100%", padding: "13px 16px", borderRadius: 14,
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "white", fontSize: 15, outline: "none", boxSizing: "border-box",
-                }}
-              />
+            <div style={{ overflowY: "auto", padding: "0 22px", flex: 1 }}>
+              {pageLabel.hasTemperature && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>Temperature</div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {(["hot", "warm", "cold"] as const).map(t => {
+                      const active = newTemp === t
+                      const color = TEMP_COLORS[t]
+                      return (
+                        <button key={t} onClick={() => setNewTemp(t)} style={{
+                          flex: 1, padding: "10px 0", borderRadius: 14, border: "1px solid",
+                          borderColor: active ? color : "rgba(255,255,255,0.08)",
+                          backgroundColor: active ? `${color}18` : "transparent",
+                          cursor: "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        }}>
+                          <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: active ? color : "rgba(255,255,255,0.25)", flexShrink: 0 }}/>
+                          <span style={{ ...TYPE.subhead, fontWeight: 700, color: active ? color : "rgba(255,255,255,0.3)" }}>
+                            {t === "hot" ? "Hot" : t === "warm" ? "Warm" : "Cold"}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {!newTemp && (
+                    <p style={{ margin: "8px 0 0", ...TYPE.footnote, color: "rgba(255,255,255,0.3)" }}>
+                      Pick one to save.
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {[
+                { label: "Name", val: newName, set: setNewName, placeholder: "Their name", type: "text" },
+                { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number", type: "tel" },
+                { label: "Email", val: newEmail, set: setNewEmail, placeholder: "Email address", type: "email" },
+                { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "What are they looking for?", type: "text" },
+              ].map(({ label, val, set, placeholder, type }) => (
+                <div key={label} style={{ marginBottom: 14 }}>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 6, ...TYPE.caption }}>{label}</div>
+                  <input
+                    type={type}
+                    value={val}
+                    onChange={e => set(e.target.value)}
+                    placeholder={placeholder}
+                    style={{
+                      width: "100%", padding: "13px 16px", borderRadius: 14,
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "white", fontSize: 15, outline: "none", boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
 
-          <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-            <button onClick={() => { setShowAdd(false); setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp("warm") }} style={{
-              flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 14, fontWeight: 600, cursor: "pointer",
-            }}>Cancel</button>
-            <button onClick={handleSaveLead} disabled={!newName.trim() || saving} style={{
-              flex: 2, padding: "14px 0", borderRadius: 14, border: "none",
-              backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
-              color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)",
-              fontSize: 14, fontWeight: 700, cursor: newName.trim() ? "pointer" : "default",
-            }}>{saving ? "Saving…" : `Save ${pageLabel.singular}`}</button>
+            <div style={{ display: "flex", gap: 10, padding: "16px 22px calc(env(safe-area-inset-bottom, 0px) + 16px)", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+              <button onClick={() => { setShowAdd(false); setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp(null) }} style={{
+                flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Cancel</button>
+              <button onClick={handleSaveLead} disabled={!canSaveLead || saving} style={{
+                flex: 2, padding: "14px 0", borderRadius: 14, border: "none",
+                backgroundColor: canSaveLead ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+                color: canSaveLead ? FOUND_BLACK : "rgba(255,255,255,0.2)",
+                fontSize: 14, fontWeight: 700, cursor: canSaveLead ? "pointer" : "default",
+              }}>{saving ? "Saving…" : `Save ${pageLabel.singular}`}</button>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Search results — replaces normal list when searching */}
