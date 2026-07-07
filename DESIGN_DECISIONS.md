@@ -4,6 +4,21 @@
 
 ---
 
+## PUBLIC ESTIMATE PAYMENT: BRANDED TO THE FOUND CLIENT, NOT TO FOUND (APPROVED — July 7, 2026)
+
+**The post-payment confirmation on a public estimate must feel custom to the Found client's own business — their logo, their color, their customer — not a generic Stripe or generic Found moment.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Craig Federighi
+
+Shawn tested a real payment end-to-end and found two things: the payment step felt generic, and the confirmation afterward was a thin "Estimate Accepted / Thank you" that didn't match the quality of the moment. Team ruled on both:
+
+**Payment method choice stays open.** `automatic_payment_methods` stays enabled — Cash App, Klarna, and similar rails are not restricted to card/bank only. Reasoning: it's the Found client's *own customer* paying, and that customer may only have Cash App, or may prefer a buy-now-pay-later option for a large job. Removing payment methods to make our UI look cleaner would cost a real client a real payment. This is a deliberate reversal of an earlier draft recommendation to restrict to card + bank only — do not re-propose that without new information.
+
+**The confirmation must be permanent and rich, not transient and thin.** Payment breakdown (amount paid, balance due at completion) previously only existed in a 2.2-second animated state before decaying into a bare "Thank you, we'll be in touch" — meaning anyone who left the page (including via an external payment redirect like Klarna) and came back saw the weaker version. The confirmation state is now the same rich content permanently: the client's own logo/name, a bigger branded success moment using their actual brand color, and the real payment numbers. Implemented in `src/app/[slug]/q/[id]/AcceptButton.tsx`.
+
+Why: every Found client's public-facing moments — including the ones Found itself builds, like this payment flow — should look like *their* business built it, not like a shared SaaS tool with their color swapped in. That's the same principle behind why generated client websites use each business's own branding throughout.
+
+---
+
 ## ESTIMATE REQUEST: THE NEXT ACTION IS NEVER MORE THAN ONE TAP AWAY (APPROVED — July 6, 2026)
 
 **An Estimate Request is a task, not a passive contact record. "Create Estimate" must never require more effort to find than the record itself.**

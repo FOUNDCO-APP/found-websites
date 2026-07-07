@@ -13,6 +13,24 @@
 
 ---
 
+## Session: July 7, 2026 — Live Test Results + Builder Gap + Payment Confirmation
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn live-tested all 6 July 6 items on `my.foundco.app`. 4 confirmed clean (Camera, Company Switching, Leads sheet, Schedule). 2 surfaced real issues, brought to Jony/Craig before fixing.
+
+### Completed
+- **Estimate builder header gap** — found the exact cause: the sticky header's canceling margin was a flat `-18px` while the outer container's top padding used `max(env(safe-area-inset-top), 18px)`, which resolves to the real (larger) safe-area value on notched phones. The two never fully canceled, leaving a gap above the header showing the page scrolling behind it. Fixed both to use the identical expression.
+- **Payment methods** — team decision: keep `automatic_payment_methods` enabled. Found clients' own customers may only have Cash App, or want a BNPL option for a large job — restricting to card/bank only would cost a real client a real payment. This reverses an earlier draft recommendation.
+- **Post-payment confirmation rebuilt** — was a thin, generic "Estimate Accepted / Thank you" using a flat accent color. Now shows the Found client's own logo (or name), a bigger branded success moment in their actual brand color, and the real payment breakdown (amount paid, balance due at completion) — permanently, not just for a 2.2-second animation that used to decay into the bare version.
+- Verified with `npm run build` — clean. Pushed as `2cb0c99`.
+- Logged as a locked decision in `DESIGN_DECISIONS.md`.
+
+### Must Test
+- Open an estimate builder on a phone with a notch/Dynamic Island — confirm no gap above the "ESTIMATE / New estimate" header, no page content visible behind it.
+- Complete a test payment on a Stripe-connected estimate — confirm the confirmation shows the client's logo/name, brand color, and correct amount paid / balance due, and that this state persists (not just visible for a couple seconds).
+- Confirm Cash App / Klarna / other automatic payment methods still appear as options in the payment step.
+
+---
+
 ## Session: July 6, 2026 - Source-of-Truth Cleanup
 **AI:** Codex
 **Worked on:** Shawn asked for a cleaner handoff process because he switches between Codex, Claude Code, and phone testing. The team agreed the docs need a current truth file, a current active changelog, and an archive for older history.

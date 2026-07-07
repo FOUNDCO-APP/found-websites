@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 6, 2026*
+*Last updated: July 7, 2026*
 
 ---
 
@@ -22,10 +22,9 @@ History policy: keep the current working window and anything still active in cur
 ## Current Status
 
 - Repo is on `main`.
-- Latest known commit: `15c19c8` - `Add git status check to BRIEF.md Step 1 - close the uncommitted-handoff loophole`.
-- Worktree is clean and pushed. This entire doc reorg (this file, `CHANGELOG_ARCHIVE.md`, and the edits to `BRIEF.md`/`CLAUDE.md`/`TASKS.md`/`CHANGELOG.md`) was found sitting uncommitted on disk when Codex ran out of credits mid-session, then verified and committed/pushed by Claude Code (`1c1c121`).
-- July 6 code is pushed, but not all live tests are confirmed by Shawn yet.
-- `BRIEF.md` Step 1 now also instructs every AI to run `git status` before trusting this file — closing exactly the gap that just happened.
+- Latest known commit: `2cb0c99` - `Fix estimate builder header gap, elevate post-payment confirmation`.
+- Worktree is clean and pushed.
+- Shawn live-tested all 6 July 6 items on `my.foundco.app` on July 7. Results: Camera, Company Switching, Leads/Requests sheet, Schedule all confirmed working. Estimate Requests confirmed working but surfaced a new bug (builder header gap). Estimates/Payments confirmed working but flagged 2 real issues (generic-looking payment step, weak post-payment confirmation) - see below, all now fixed.
 
 ---
 
@@ -49,13 +48,16 @@ History policy: keep the current working window and anything still active in cur
 - [x] Added `SESSION_HANDOFF.md` as the current source of truth for AI handoffs.
 - [x] Cleaned `BRIEF.md` so every AI starts from the handoff and team approval rules.
 - [x] Created `CHANGELOG_ARCHIVE.md` so older detailed history is preserved outside the current changelog.
+- [x] Added a `git status` check to `BRIEF.md` Step 1 to close the uncommitted-handoff gap.
+- [x] Fixed estimate builder header gap (safe-area margin mismatch on notched phones let the page show through above the header).
+- [x] Rebuilt the post-payment confirmation on the public estimate page: client's own logo/name, bigger branded success moment, actual payment breakdown (amount paid + balance due), permanent instead of a 2.2s animation that decayed into a bare "Thank you."
+- [x] Team decision: kept `automatic_payment_methods` enabled (Cash App, Klarna, etc. stay available) - Found clients' own customers may need those payment rails, so choice wasn't restricted to card/bank only.
 
 ---
 
 ## Still Needs Work
 
-- [ ] Live-test all July 6 changes on `my.foundco.app`.
-- [ ] After this docs cleanup, start the next AI session by saying `Read BRIEF.md` and confirm it reports changed/open/test status before making changes.
+- [ ] Live-test this session's 3 fixes (builder gap, confirmation redesign, confirm payment methods still show as expected) on `my.foundco.app`.
 - [ ] QA Schedule across quote-first, restaurant, and booking-first profiles.
 - [ ] Confirm whether sticky Schedule tabs are worth continuing. Shawn said it is okay if freeze/sticky tabs do not happen.
 - [ ] QA payable estimates end to end with Stripe-connected account:
