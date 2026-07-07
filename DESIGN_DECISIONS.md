@@ -4,6 +4,22 @@
 
 ---
 
+## ESTIMATE REQUEST: THE NEXT ACTION IS NEVER MORE THAN ONE TAP AWAY (APPROVED — July 6, 2026)
+
+**An Estimate Request is a task, not a passive contact record. "Create Estimate" must never require more effort to find than the record itself.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
+
+Shawn manually added himself as a test Estimate Request and described feeling lost afterward — no guidance toward the obvious next step. Separately, even an incoming (website-submitted) Estimate Request required opening the full detail sheet just to find the "Create Estimate" button buried among other info.
+
+**The rule:**
+- **Manual entry** — the moment an owner finishes typing in a new Estimate Request, that's peak intent. Don't return them to a flat list silently. Ask directly: "[Name] added. Create an estimate for them now?" with a clear CTA and a quiet "Not yet" to dismiss.
+- **Incoming leads** — do not force-interrupt the owner the moment a request arrives; they may want to review or call first. Instead, surface "Create Estimate" directly on the list row itself (not only inside the detail sheet), so it's visible without an extra click, but doesn't demand immediate action.
+- **Temperature question** — reworded from a form-field label ("Temperature") to an actual question ("How hot is this lead?"), and moved to the last question before Save, not the first thing the owner sees.
+
+Why: the owner shouldn't have to hunt for the one thing a given record exists to do. Manual entry and incoming leads get different treatment because they represent different owner intent at that moment — self-directed action vs. something that just arrived. Implemented in `src/app/dashboard/(app)/leads/page.tsx`.
+
+---
+
 ## DASHBOARD HOME: BUTTONS OUTRANK INFORMATIONAL CARDS (APPROVED — July 5, 2026)
 
 **The four core action tiles (Camera, Share My Site, My Contacts, Edit My Site) sit near the top of Home, right after the greeting/status line. Only genuinely urgent content (the new-lead alert) is allowed to appear above them.**

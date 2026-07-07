@@ -1,3 +1,21 @@
+## Session: July 6, 2026 — Guide Owners from Estimate Request to Create Estimate
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn manually tested adding an Estimate Request, felt lost after saving with no guidance toward the next step, and separately noted incoming leads required opening the detail sheet just to find "Create Estimate." Team discussion (Jony leading), then built once Shawn confirmed the direction.
+
+### Completed
+- **Manual entry:** after saving a new Estimate Request, instead of silently returning to the list, a prompt now appears — "[Name] added. Create an estimate for them now?" — with a direct "Create Estimate" CTA (routes to `/estimates?fromLead=...`) and a quiet "Not yet" dismiss. New `justSavedLead` state gates this, only fires when `pageLabel.plural === "Estimate Requests"`.
+- **Incoming leads:** `LeadCard` (the list-row component) now takes `isEstimateRequest` / `onCreateEstimate` props and renders "Create Estimate" as the primary action directly on the row for Estimate Request leads — previously only reachable by opening the detail sheet. The existing Call/Text/Email footer is now suppressed for estimate-request rows (Create Estimate is the one action shown there instead) to avoid two competing action rows.
+- **Temperature field:** moved from the top of the add-lead form to the bottom, right before Save, and reworded from "Temperature" to "How hot is this lead?"
+- Verified with `npm run build` — clean. Pushed as `0e59182`.
+- Logged as a locked decision in `DESIGN_DECISIONS.md`.
+
+### Must Test
+- Manually add a new Estimate Request lead — confirm the "added, create an estimate now?" prompt appears, both buttons work (Create Estimate routes to the prefilled estimate builder, Not yet dismisses cleanly).
+- On an Estimate-Request business with an incoming (non-manual) lead in the list, confirm "Create Estimate" now shows directly on the row without opening the detail sheet.
+- Confirm Call/Text/Email still work correctly for non-estimate-request lead types (unchanged).
+
+---
+
 ## Session: July 6, 2026 — Leads Audit: Last 2 Items Closed Out
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn gave the go-ahead on the two remaining items from the July 5 Leads/Inquiries audit (temperature default, add-form-as-sheet) — the team had already agreed on both, this was just building them.
