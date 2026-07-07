@@ -1,3 +1,19 @@
+## Session: July 6, 2026 — Leads Audit: Last 2 Items Closed Out
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn gave the go-ahead on the two remaining items from the July 5 Leads/Inquiries audit (temperature default, add-form-as-sheet) — the team had already agreed on both, this was just building them.
+
+### Completed
+- Temperature no longer defaults to "Warm" — `newTemp` starts `null`, resets to `null` on cancel/save. Save button is disabled until a temperature is explicitly picked (for temp-based intents), with a quiet "Pick one to save." hint appearing under the pills when nothing's chosen yet.
+- Converted the add-lead form from a plain inline `<div>` into a proper slide-up sheet (scrim + fixed bottom sheet), matching the `IntentPickerSheet` pattern already used elsewhere in the same file. Fixes the confirmed bug where the "Your first lead is coming" empty state rendered underneath the open form instead of being hidden behind it.
+- Verified with `npm run build` — clean. Pushed as `161716f`.
+- All 4 items from the July 5 Leads/Inquiries audit are now resolved — see `TASKS.md` for the full history of how each was actually closed out (2 by Codex on July 6, 2 in this session).
+
+### Must Test
+- Open the add-lead sheet on a temperature-based business (e.g. home services): confirm no pill is pre-selected, Save stays disabled until you tap one, and the hint text appears/disappears correctly.
+- Confirm the sheet now properly overlays the page — the "Your first lead is coming" empty state should never be visible behind/below an open form.
+
+---
+
 ## Session: July 6, 2026 — Instant Feedback on Business Switch
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Follow-on from the company-switching speed fix — Shawn noted the slight pause after tapping a business made him think the tap didn't register.

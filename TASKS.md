@@ -23,9 +23,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 *(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA. Invoice-now / POS planning is still important but moves behind the More / Manage IA pass.)*
 
 ---
-## LEADS/INQUIRIES AUDIT (July 5, 2026) - PARTIALLY IMPLEMENTED
+## LEADS/INQUIRIES AUDIT (July 5, 2026) - ALL 4 ITEMS RESOLVED (July 6)
 
-**Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), findings below are grounded in the actual code - nothing has been implemented yet. Shawn was about to answer 4 open questions (below) when the session ended.
+**Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), all 4 items are now shipped — see notes below on how each was actually resolved.
 
 ### 1. "Inquiries" vs "Leads" labeling on the Blue Luna Events test profile - needs correction
 - `src/lib/dashboard/typography.ts` -> `defaultFormIntentFor()` maps industries to an intent, which drives the page title/vocab (Leads/Estimates/Inquiries/Bookings/Reservations/Orders/Appointments).
@@ -36,18 +36,13 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - **Shawn clarification:** Estimates/quotes are not the same thing as leads, inquiries, or bookings. Estimates are their own information pathway and should remain a separate tool/tab when the business needs to price work. A business can need both: one intake path for leads/bookings/inquiries and a separate estimates/quotes path for priced work.
 - **Product implication:** Do not use one single intent value to decide everything. We need at least two separate decisions: (1) what the incoming customer/intake tab is called (`Leads`, `Inquiries`, `Bookings`, `Reservations`, `Orders`, `Appointments`), and (2) whether the business also gets an `Estimates`/quotes workflow as a distinct tool.
 
-### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" — confirmed real issue
-- `src/app/dashboard/(app)/leads/page.tsx` line ~140: `useState<"hot"|"warm"|"cold">("warm")`, and it resets to `"warm"` on cancel too (line ~425).
-- Steve/Jony agree with Shawn: defaulting quietly fakes the data — an owner could save a lead as "Warm" without ever consciously choosing it.
-- **Team recommendation:** no pill selected by default; require an explicit tap before save.
-- **OPEN QUESTION for Shawn:** green-light this fix? (Low risk, no disagreement on the team — just needs your go-ahead since you asked to decide before any code.)
+### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" — FIXED July 6
+- `src/app/dashboard/(app)/leads/page.tsx`: `newTemp` now starts `null`, resets to `null` on cancel/save. Save is disabled until a temperature is picked (for temp-based intents), with a quiet "Pick one to save." hint under the pills.
+- Pushed in `161716f`.
 
-### 3. Add-lead form pushes the empty state down instead of covering it — CONFIRMED BUG, not a design opinion
-- `src/app/dashboard/(app)/leads/page.tsx` — the "New Inquiry" form (`{showAdd && (...)}`, ~line 367) is a plain inline `<div>` in normal page flow.
-- The "Your first [lead] is coming." empty state (~line 472) has zero awareness the form is open — it renders unconditionally whenever there are no leads, so it appears *below* the form instead of being hidden behind it.
-- Every other "add" flow in this app (Home's leads sheet, onboarding's slug sheet) uses a proper `position: fixed` overlay/sheet. This one never got that treatment.
-- **Team recommendation:** convert to match the existing sheet pattern already used elsewhere in the app. Jony also flagged this as the "needs my eyes" fix — once it's a real sheet instead of an inline card, it stops reading as another cramped box on the page.
-- **OPEN QUESTION for Shawn:** green-light the sheet conversion? (Also no disagreement on the team — just needs your go-ahead.)
+### 3. Add-lead form pushes the empty state down instead of covering it — FIXED July 6
+- Converted the inline `{showAdd && (...)}` card into a real slide-up sheet (scrim + fixed bottom sheet), matching the `IntentPickerSheet` pattern already used elsewhere in this exact file (`#101411` background, same radius/z-index language). No longer shares document flow with the empty state below it.
+- Pushed in `161716f`.
 
 ### 4. Schedule page needs a calendar — confirmed, no calendar exists at all
 - `src/app/dashboard/(app)/schedule/page.tsx` — "My Schedule" opens straight into the "My Hours" tab (availability-editing toggles), with "Bookings" as a flat upcoming/past list. There is no calendar grid/view anywhere in this file or the codebase.
