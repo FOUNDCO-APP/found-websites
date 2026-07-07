@@ -1,6 +1,6 @@
 # TASKS.md — Found Co. / found-websites
 ### Execution board — single source of truth for active work
-*Last updated: June 20, 2026 — continuous session*
+*Last updated: July 6, 2026*
 
 ---
 
@@ -16,11 +16,23 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Estimate Requests intake QA** - verify quote-first businesses show Estimate Requests as intake, keep Estimates as a separate tool, and hand off to the estimate builder with client data prefilled.
+1. **Live-test everything shipped July 6** - see "JULY 6 SESSION — WHAT'S LEFT TO TEST" immediately below. Nothing from today has been confirmed working by Shawn on the live deploy yet.
 2. **Schedule QA across industries** - verify Calendar, Bookings, Hours summary/edit mode, booking settings, and time-off behavior on quote-first, restaurant, and booking-first profiles.
 3. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
 
 *(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA. Invoice-now / POS planning is still important but moves behind the More / Manage IA pass.)*
+
+---
+
+## JULY 6 SESSION — WHAT'S LEFT TO TEST
+
+**Read this first if you're picking this up — nothing below has been confirmed live by Shawn yet.** All code is pushed to `main` and builds clean; this is purely the live-verification gap. Commits referenced below are on `main`.
+
+1. **Camera black screen (`e9906d4`)** — if camera permission is blocked, confirm a clear guidance message appears (not a black screen), with iOS vs Android wording. Confirm normal camera flow still works on a device that's never been asked before.
+2. **Company-switch speed (`c6b6b38`)** — switch between businesses on an account with 2+ companies, confirm it feels noticeably faster (parallelized queries that were previously sequential).
+3. **Company-switch instant feedback (`1d55ed1`)** — confirm tapping a business highlights it green + shows a spinner immediately, and the other options dim/disable during the switch.
+4. **Leads: Warm default removed + form-as-sheet (`161716f`)** — open the add-lead form on a temperature-based business: confirm no pill is pre-selected, Save stays disabled until one is picked, and the empty state never shows through/under the open form.
+5. **Estimate Request guidance (`0e59182`)** — manually add a lead on an Estimate-Request business: confirm the "[Name] added. Create an estimate for them now?" prompt appears and both buttons work. On an existing Estimate Request in the list, confirm "Create Estimate" now shows directly on the row without opening the detail sheet. Confirm temperature question now reads "How hot is this lead?" and sits right before Save. Confirm Call/Text/Email still work normally for non-estimate-request lead types.
 
 ---
 ## LEADS/INQUIRIES AUDIT (July 5, 2026) - ALL 4 ITEMS RESOLVED (July 6)
@@ -44,11 +56,9 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Converted the inline `{showAdd && (...)}` card into a real slide-up sheet (scrim + fixed bottom sheet), matching the `IntentPickerSheet` pattern already used elsewhere in this exact file (`#101411` background, same radius/z-index language). No longer shares document flow with the empty state below it.
 - Pushed in `161716f`.
 
-### 4. Schedule page needs a calendar — confirmed, no calendar exists at all
-- `src/app/dashboard/(app)/schedule/page.tsx` — "My Schedule" opens straight into the "My Hours" tab (availability-editing toggles), with "Bookings" as a flat upcoming/past list. There is no calendar grid/view anywhere in this file or the codebase.
-- Angela: backwards — an owner opens a schedule page to see their week, not to edit their availability rules first.
-- Steve: this is real new work (a calendar component), not a relabel or a quick fix — should be its own session, not bundled with items 1–3 above.
-- **OPEN QUESTION for Shawn:** tackle now as its own session, or queue it?
+### 4. Schedule page needs a calendar — FIXED July 6 (Codex)
+- Codex rebuilt Schedule as its own session: tab order flipped to Calendar → Bookings → Hours (was Hours-first). Calendar shows a 7-day week strip with booking indicators. Hours redesigned into a read-first weekly summary (Open/Closed + times) with an explicit Edit mode, instead of a dense settings form by default.
+- Not yet confirmed live by Shawn — see "JULY 6 — STILL TO TEST" below.
 
 ---
 
