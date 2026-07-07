@@ -13,6 +13,27 @@
 
 ---
 
+## Session: July 7, 2026 (part 2) — Payment Reliability, Root Safe-Area Fix, Header Cleanup
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn found the builder gap persisted after the earlier fix, felt the payment sheet was weak, and — most seriously — found that after paying, the estimate page still showed the full unpaid balance. "Fix it all, we need to launch."
+
+### Completed
+- **Payment reliability (priority):** `handlePay()` in `AcceptButton.tsx` called our own "mark as paid" API exactly once, wrapped in an empty `catch {}`. If that single call failed for any reason, Stripe had already charged the customer successfully but our own database never recorded it — with nothing surfacing the failure anywhere. Now retries up to 3 times with backoff. Never tells the customer their payment failed once Stripe has confirmed it, and never re-prompts payment (no double-charge risk) — just gives our own record multiple chances to catch up.
+- **Root cause of the builder gap, actually found this time:** `viewport-fit=cover` was never set in the root viewport config (`src/app/layout.tsx`). Without it, `env(safe-area-inset-*)` resolves to `0` on iOS Safari everywhere in the app, not just this one header — meaning last session's margin-math fix was mathematically a no-op (both sides of the cancellation used the same flat fallback). Fixed at the root; this should also correct any other spot in the app relying on real safe-area insets, not just this one screen.
+- **Removed redundant header copy** — the green "ESTIMATE" eyebrow above "New estimate" said the same thing twice; removed it, kept one clear title.
+- **Verified the payment sheet's branding directly against Supabase** — queried the "Construction" test company's `primary_color`: it's `#1565C0`, a real blue. The payment theming is correctly applying it; the "generic Stripe" impression was a coincidence of this test company's actual brand color resembling Stripe's own, not a branding bug. No code change needed here.
+- Verified with `npm run build` — clean. Pushed as `0567b54`.
+
+### Not Fully Closed — Needs a Human
+- The Stripe webhook fallback (`payment_intent.succeeded`) needs someone with Stripe Dashboard access to confirm it's registered as a **Connect-scoped webhook** (listening to events from connected accounts), not just the platform's own direct webhook. This estimate payment is a Stripe Connect charge, and Connect events only reach a webhook endpoint that was explicitly set up to receive them. No AI in this session has Stripe Dashboard login access to verify this. The client-side retry fix covers the common case; this webhook is the safety net for the rare case where all 3 retries fail, and right now nobody has confirmed it actually fires for this payment type.
+
+### Must Test
+- Builder gap: open a new estimate on a phone with a notch/Dynamic Island, confirm no page content visible above the "New estimate" header.
+- Payment: complete a test deposit payment, confirm the estimate's balance updates correctly this time (not stuck showing the full unpaid amount).
+- Confirm "New estimate" header now shows one line, not two.
+
+---
+
 ## Session: July 7, 2026 — Live Test Results + Builder Gap + Payment Confirmation
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn live-tested all 6 July 6 items on `my.foundco.app`. 4 confirmed clean (Camera, Company Switching, Leads sheet, Schedule). 2 surfaced real issues, brought to Jony/Craig before fixing.
