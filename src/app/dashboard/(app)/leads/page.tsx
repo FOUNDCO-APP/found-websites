@@ -139,6 +139,7 @@ function LeadsPageInner() {
   const [newNotes, setNewNotes] = useState("")
   const [newTemp, setNewTemp] = useState<"hot" | "warm" | "cold" | null>(null)
   const [selectedLead, setSelectedLead] = useState<LeadRow | null>(null)
+  const [justSavedLead, setJustSavedLead] = useState<LeadRow | null>(null)
   const [industry, setIndustry] = useState<string | null>(null)
   const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [formIntent, setFormIntent] = useState<string | null>(null)
@@ -201,6 +202,9 @@ function LeadsPageInner() {
       setLeads(prev => [data.lead, ...prev])
       setShowAdd(false)
       setNewName(""); setNewPhone(""); setNewEmail(""); setNewNotes(""); setNewTemp(null)
+      // Manual entry is the moment intent is highest — ask the obvious next
+      // question instead of dropping the owner back into a flat list.
+      if (pageLabel.plural === "Estimate Requests") setJustSavedLead(data.lead)
     }
     setSaving(false)
   }
@@ -388,9 +392,33 @@ function LeadsPageInner() {
             </div>
 
             <div style={{ overflowY: "auto", padding: "0 22px", flex: 1 }}>
+              {[
+                { label: "Name", val: newName, set: setNewName, placeholder: "Their name", type: "text" },
+                { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number", type: "tel" },
+                { label: "Email", val: newEmail, set: setNewEmail, placeholder: "Email address", type: "email" },
+                { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "What are they looking for?", type: "text" },
+              ].map(({ label, val, set, placeholder, type }) => (
+                <div key={label} style={{ marginBottom: 14 }}>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 6, ...TYPE.caption }}>{label}</div>
+                  <input
+                    type={type}
+                    value={val}
+                    onChange={e => set(e.target.value)}
+                    placeholder={placeholder}
+                    style={{
+                      width: "100%", padding: "13px 16px", borderRadius: 14,
+                      backgroundColor: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      color: "white", fontSize: 15, outline: "none", boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+              ))}
+
+              {/* Temperature — last question before Save, asked as a question not a form field */}
               {pageLabel.hasTemperature && (
                 <div style={{ marginBottom: 20 }}>
-                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>Temperature</div>
+                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 10, ...TYPE.caption }}>How hot is this lead?</div>
                   <div style={{ display: "flex", gap: 8 }}>
                     {(["hot", "warm", "cold"] as const).map(t => {
                       const active = newTemp === t
@@ -418,29 +446,6 @@ function LeadsPageInner() {
                   )}
                 </div>
               )}
-
-              {[
-                { label: "Name", val: newName, set: setNewName, placeholder: "Their name", type: "text" },
-                { label: "Phone", val: newPhone, set: setNewPhone, placeholder: "Phone number", type: "tel" },
-                { label: "Email", val: newEmail, set: setNewEmail, placeholder: "Email address", type: "email" },
-                { label: "Notes", val: newNotes, set: setNewNotes, placeholder: "What are they looking for?", type: "text" },
-              ].map(({ label, val, set, placeholder, type }) => (
-                <div key={label} style={{ marginBottom: 14 }}>
-                  <div style={{ color: "white", opacity: TEXT_OPACITY.secondary, marginBottom: 6, ...TYPE.caption }}>{label}</div>
-                  <input
-                    type={type}
-                    value={val}
-                    onChange={e => set(e.target.value)}
-                    placeholder={placeholder}
-                    style={{
-                      width: "100%", padding: "13px 16px", borderRadius: 14,
-                      backgroundColor: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      color: "white", fontSize: 15, outline: "none", boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-              ))}
             </div>
 
             <div style={{ display: "flex", gap: 10, padding: "16px 22px calc(env(safe-area-inset-bottom, 0px) + 16px)", flexShrink: 0, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
@@ -459,6 +464,45 @@ function LeadsPageInner() {
         </>
       )}
 
+      {/* Post-save prompt — manual entry is the moment intent is highest */}
+      {justSavedLead && (
+        <>
+          <div
+            onClick={() => setJustSavedLead(null)}
+            style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}
+          />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70,
+            backgroundColor: "#101411",
+            borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "28px 28px 0 0",
+            padding: "22px 22px calc(env(safe-area-inset-bottom, 0px) + 22px)",
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "white", marginBottom: 6 }}>
+              {justSavedLead.name || "Lead"} added.
+            </div>
+            <p style={{ margin: "0 0 20px", ...TYPE.subhead, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+              Create an estimate for them now?
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setJustSavedLead(null)} style={{
+                flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Not yet</button>
+              <button onClick={() => router.push(`/estimates?fromLead=${justSavedLead.id}`)} style={{
+                flex: 2, padding: "14px 0", borderRadius: 14, border: "none",
+                backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 800, cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
+                Create Estimate
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Search results — replaces normal list when searching */}
       {searchActive && !loading && (
         searchResults.length === 0 ? (
@@ -469,7 +513,7 @@ function LeadsPageInner() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {searchResults.map(lead => (
-              <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+              <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
             ))}
             <p style={{ margin: "12px 0 0", textAlign: "center", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
               {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
@@ -526,7 +570,7 @@ function LeadsPageInner() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -539,7 +583,7 @@ function LeadsPageInner() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {items.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -575,7 +619,7 @@ function LeadsPageInner() {
           {showClosedSection && (
             <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 8 }}>
               {closedLeads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} />
+                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} />
               ))}
             </div>
           )}
@@ -618,7 +662,7 @@ function LeadsPageInner() {
 }
 
 function LeadCard({
-  lead, hasTemperature, industry, companyName, onSelect, onTempChange, onMarkDone,
+  lead, hasTemperature, industry, companyName, onSelect, onTempChange, onMarkDone, isEstimateRequest, onCreateEstimate,
 }: {
   lead: LeadRow
   hasTemperature: boolean
@@ -627,6 +671,8 @@ function LeadCard({
   onSelect: (lead: LeadRow) => void
   onTempChange: (id: string, temp: "hot" | "warm" | "cold") => void
   onMarkDone?: (id: string) => void
+  isEstimateRequest?: boolean
+  onCreateEstimate?: (id: string) => void
 }) {
   const [pickingTemp, setPickingTemp] = useState(false)
   const [showContactSheet, setShowContactSheet] = useState(false)
@@ -748,8 +794,22 @@ function LeadCard({
         </div>
       )}
 
+      {/* Estimate Request: the one obvious next action, right on the row */}
+      {isEstimateRequest && !isOnlineOrder(lead) && !isDone && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", padding: "10px 12px" }}>
+          <button onClick={e => { e.stopPropagation(); onCreateEstimate?.(lead.id) }} style={{
+            width: "100%", padding: "12px 0", borderRadius: 14, border: "none",
+            backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 14, fontWeight: 800, cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+          }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
+            Create Estimate
+          </button>
+        </div>
+      )}
+
       {/* Regular leads: Call / Text / Email inline actions */}
-      {!isOnlineOrder(lead) && !isDone && (phoneHref || emailHref) && (
+      {!isEstimateRequest && !isOnlineOrder(lead) && !isDone && (phoneHref || emailHref) && (
         <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)", padding: "0 4px 4px" }}>
           {phoneHref && (
             <a href={phoneHref} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 8px", textDecoration: "none", borderRadius: 14 }}>
