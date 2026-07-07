@@ -25,6 +25,8 @@ Before you write code, make a product suggestion, or take action, read these fil
 
 If a required file is missing, stop and tell Shawn before proceeding.
 
+**Also run `git status` before trusting any of the above as fully current.** `SESSION_HANDOFF.md` only reflects reality if it was actually committed. A prior session can end mid-work (a credit cutoff, a crash, Shawn closing the tab) before its doc updates ever reach git — the files on disk can be ahead of, or different from, the last commit. If `git status` shows uncommitted changes, read those first; they may be more current than `SESSION_HANDOFF.md` itself. This happened once already: a full documentation reorg sat uncommitted through a session cutoff and was almost lost.
+
 ---
 
 ## STEP 2 - START EVERY SESSION WITH CURRENT STATUS
