@@ -792,7 +792,11 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
       <div style={{ maxWidth: 680, margin: "0 auto" }}>
         <header style={{
           position: "sticky", top: 0, zIndex: 5,
-          margin: "-18px -18px 22px", padding: "max(env(safe-area-inset-top), 18px) 18px 12px",
+          // marginTop must cancel the outer container's top padding exactly -
+          // both use the real safe-area value on notched phones, not a flat
+          // 18px, or a gap opens above this header showing the page behind it.
+          margin: "calc(-1 * max(env(safe-area-inset-top), 18px)) -18px 22px",
+          padding: "max(env(safe-area-inset-top), 18px) 18px 12px",
           backgroundColor: "#0B0F0C",
           borderBottom: "1px solid rgba(255,255,255,0.045)",
         }}>

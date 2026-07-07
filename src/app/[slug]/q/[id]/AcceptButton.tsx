@@ -297,6 +297,7 @@ export default function AcceptButton({
   taxRate,
   depositPct,
   companyName,
+  logoUrl,
   acceptedAlready = false,
 }: {
   estimateId: string
@@ -308,6 +309,7 @@ export default function AcceptButton({
   taxRate?: number
   depositPct: number
   companyName: string
+  logoUrl?: string | null
   acceptedAlready?: boolean
 }) {
   const [accepted, setAccepted] = useState(acceptedAlready)
@@ -382,14 +384,70 @@ export default function AcceptButton({
 
   if (accepted && !acceptedAlready) {
     return (
-      <div style={{ borderRadius: 20, backgroundColor: `${color}12`, border: `1px solid ${color}30`, padding: "24px 22px", textAlign: "center", marginBottom: 16 }}>
-        <div style={{ marginBottom: 10 }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block" }}>
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+      <div style={{
+        position: "relative", overflow: "hidden",
+        borderRadius: 24, backgroundColor: "white",
+        border: `1px solid ${color}30`,
+        padding: "36px 26px 30px",
+        textAlign: "center", marginBottom: 16,
+        boxShadow: `0 20px 60px ${color}14`,
+      }}>
+        {/* Ambient brand-color wash - the client's own color, not a generic green */}
+        <div style={{
+          position: "absolute", top: -60, left: "50%", transform: "translateX(-50%)",
+          width: 280, height: 200, borderRadius: "50%",
+          background: `radial-gradient(ellipse, ${color}20 0%, transparent 70%)`,
+          pointerEvents: "none",
+        }} />
+
+        <div style={{ position: "relative" }}>
+          {logoUrl ? (
+            <img src={logoUrl} alt={companyName} style={{ height: 28, maxWidth: 160, objectFit: "contain", margin: "0 auto 22px", display: "block" }} />
+          ) : (
+            <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em", color: "#333", marginBottom: 22 }}>{companyName}</div>
+          )}
+
+          <div style={{
+            width: 72, height: 72, borderRadius: "50%",
+            background: `radial-gradient(circle, ${color}22 0%, transparent 72%)`,
+            border: `2px solid ${color}55`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 20px",
+            animation: "accept-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+
+          <h3 style={{ margin: "0 0 6px", color: "#111", fontSize: "1.5rem", fontWeight: 300, letterSpacing: "-0.03em" }}>
+            You&apos;re all set!
+          </h3>
+          <p style={{ margin: "0 0 22px", color: "#5F5F5A", fontSize: 14, lineHeight: 1.6 }}>
+            {companyName} has been notified and will be in touch to schedule your project.
+          </p>
+
+          <div style={{ borderRadius: 16, backgroundColor: "#FAFAF8", border: "1px solid #EFEFEB", padding: "16px 18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+              <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                {remainingAmount > 0 ? "Deposit paid" : "Amount paid"}
+              </span>
+              <span style={{ color, fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(depositAmount)}</span>
+            </div>
+            {remainingAmount > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #EFEFEB" }}>
+                <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700 }}>Due at completion</span>
+                <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(remainingAmount)}</span>
+              </div>
+            )}
+          </div>
+
+          <p style={{ margin: "16px 0 0", color: "#B8B8B2", fontSize: 12 }}>
+            A receipt has been sent to your email.
+          </p>
         </div>
-        <div style={{ color, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Estimate Accepted</div>
-        <div style={{ color: "#777772", fontSize: 14 }}>Thank you! We&apos;ll be in touch shortly.</div>
+
+        <style>{`@keyframes accept-pop { from { transform: scale(0.7); opacity: 0 } to { transform: scale(1); opacity: 1 } }`}</style>
       </div>
     )
   }

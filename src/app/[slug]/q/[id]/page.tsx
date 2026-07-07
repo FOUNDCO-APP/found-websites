@@ -327,6 +327,7 @@ export default async function EstimateClientPage({
                 taxRate={estimate.tax_rate}
                 depositPct={(estimate.deposit_pct as number) ?? 50}
                 companyName={company.name}
+                logoUrl={company.logo_url}
                 acceptedAlready={isAcceptedUnpaid}
               />
               {!isAccepted && <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />}
