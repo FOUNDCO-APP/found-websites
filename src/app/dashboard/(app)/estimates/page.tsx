@@ -618,6 +618,22 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
   const initialLeadApplied = useRef<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const tapScrolling = useRef(false)
+
+  // Header is genuinely position:fixed, never sticky-within-scroll - that
+  // approach was fragile on iOS (momentum/bounce scroll could visually
+  // desync a sticky element from true viewport top). Measure its real
+  // height instead of guessing, so the scroll content clears it exactly.
+  const headerRef = useRef<HTMLDivElement>(null)
+  const [headerHeight, setHeaderHeight] = useState(150)
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const update = () => setHeaderHeight(el.offsetHeight)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const fieldStyle: React.CSSProperties = {
     ...inputStyle,
     borderRadius: 16,
@@ -627,7 +643,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
     fontSize: 16,
   }
   const sectionBlockStyle: React.CSSProperties = {
-    scrollMarginTop: 118,
+    scrollMarginTop: headerHeight,
   }
   // Scroll-spy: the quiet progress rail follows whichever section is actually on screen.
   // Suppressed for a beat after a tap-to-jump so the target step doesn't flicker mid-scroll.
@@ -783,23 +799,17 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
   }
 
   return (
-    <div ref={scrollRef} onScroll={handleBuilderScroll} style={{
-      position: "fixed", inset: 0, zIndex: 70,
-      backgroundColor: "#0B0F0C", color: "white", overflowY: "auto",
-      padding: "max(env(safe-area-inset-top), 18px) 18px max(env(safe-area-inset-bottom), 28px)",
-      boxSizing: "border-box",
-    }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
-        <header style={{
-          position: "sticky", top: 0, zIndex: 5,
-          // marginTop must cancel the outer container's top padding exactly -
-          // both use the real safe-area value on notched phones, not a flat
-          // 18px, or a gap opens above this header showing the page behind it.
-          margin: "calc(-1 * max(env(safe-area-inset-top), 18px)) -18px 22px",
-          padding: "max(env(safe-area-inset-top), 18px) 18px 12px",
-          backgroundColor: "#0B0F0C",
-          borderBottom: "1px solid rgba(255,255,255,0.045)",
-        }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 70, backgroundColor: "#0B0F0C", color: "white" }}>
+      {/* Genuinely position:fixed, measured height - not sticky-within-scroll.
+          Sticky was unreliable on iOS during momentum/bounce scroll, letting
+          content above it show through. This can't desync from the top. */}
+      <header ref={headerRef} style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 10,
+        padding: "max(env(safe-area-inset-top), 18px) 18px 12px",
+        backgroundColor: "#0B0F0C",
+        borderBottom: "1px solid rgba(255,255,255,0.045)",
+      }}>
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 12 }}>
             <h2 style={{ margin: 0, color: "white", fontSize: 20, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0, minWidth: 0 }}>New estimate</h2>
             <CloseIconButton onClick={onClose} />
@@ -817,8 +827,15 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
               ))}
             </div>
           </div>
-        </header>
+        </div>
+      </header>
 
+      <div ref={scrollRef} onScroll={handleBuilderScroll} style={{
+        position: "absolute", inset: 0, overflowY: "auto",
+        padding: `${headerHeight}px 18px max(env(safe-area-inset-bottom), 28px)`,
+        boxSizing: "border-box",
+      }}>
+      <div style={{ maxWidth: 680, margin: "0 auto" }}>
         <section ref={el => { sectionRefs.current[0] = el }} style={sectionBlockStyle}>
           {sectionAnchor("1", "Customer")}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1038,6 +1055,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
             {saving ? "Saving..." : "Save Estimate"}
           </button>
         </div>
+      </div>
       </div>
     </div>
   )
