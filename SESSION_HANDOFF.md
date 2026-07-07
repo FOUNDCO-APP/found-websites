@@ -22,11 +22,11 @@ History policy: keep the current working window and anything still active in cur
 ## Current Status
 
 - Repo is on `main`.
-- Latest known commit: `0567b54` - `Fix payment reliability, root safe-area gap, redundant builder header`.
+- Latest known commit: `3be15cc` - `Rebuild estimate builder header as truly fixed, not sticky-in-scroll`.
 - Worktree is clean and pushed.
 - Shawn live-tested all 6 July 6 items on `my.foundco.app` on July 7. Results: Camera, Company Switching, Leads/Requests sheet, Schedule all confirmed working. Estimate Requests confirmed working but surfaced a new bug (builder header gap). Estimates/Payments confirmed working but flagged a serious one: after paying, the estimate still showed the full unpaid balance.
 - Traced the payment issue: the client-side "mark as paid" call had no error handling - if it failed, the customer's card was still charged successfully but our own record never updated, and nothing told anyone it happened. Now retries 3x. **Not fully closed** - see "Still Needs Work," the Stripe Dashboard webhook config needs a human to verify since no AI in this session has Stripe Dashboard access.
-- Also found the builder gap's real root cause: `viewport-fit=cover` was never set anywhere in the app, so `env(safe-area-inset-*)` has been resolving to `0` sitewide, not just in the estimate builder. Fixed at the root.
+- Builder gap took 3 attempts to actually fix. Attempt 1 (margin math) and attempt 2 (`viewport-fit=cover`, which turned out to already be set one layer down) both missed the real cause. Attempt 3: removed `position: sticky` entirely - it was likely desyncing from true viewport top during iOS momentum/bounce scroll. Header is now genuinely `position: fixed` with its real height measured via `ResizeObserver`, not guessed. This is a structurally different fix, not another parameter tweak - should actually be closed now, but treat it as unconfirmed until Shawn tests it live.
 
 ---
 
