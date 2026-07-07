@@ -160,20 +160,31 @@ async function handleOnlineOrderCheckout(
 
 export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature")
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  // Two separate Stripe event destinations point at this same URL: one for
+  // the platform's own account (subscriptions/plan activation), one scoped
+  // to Connected accounts (estimate deposit payments). Each Stripe endpoint
+  // signs with its own secret, so try both rather than assuming one.
+  const webhookSecrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_WEBHOOK_SECRET_CONNECT]
+    .filter((s): s is string => Boolean(s))
 
-  if (!sig || !webhookSecret || !process.env.STRIPE_SECRET_KEY) {
+  if (!sig || webhookSecrets.length === 0 || !process.env.STRIPE_SECRET_KEY) {
     return NextResponse.json({ error: "Not configured" }, { status: 400 })
   }
 
   const body = await req.text()
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  let event: Stripe.Event
-  try {
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret)
-  } catch (err) {
-    console.error("[Stripe webhook] signature verification failed:", err)
+  let event: Stripe.Event | null = null
+  for (const secret of webhookSecrets) {
+    try {
+      event = stripe.webhooks.constructEvent(body, sig, secret)
+      break
+    } catch {
+      // try the next secret
+    }
+  }
+  if (!event) {
+    console.error("[Stripe webhook] signature verification failed against all configured secrets")
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
