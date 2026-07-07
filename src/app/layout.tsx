@@ -22,6 +22,7 @@ const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-
 
 export const viewport: Viewport = {
   themeColor: "#080A09",
+  viewportFit: "cover",
 }
 
 export const metadata: Metadata = {

@@ -801,10 +801,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
           borderBottom: "1px solid rgba(255,255,255,0.045)",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ color: SIGNAL_GREEN, fontSize: 11, fontWeight: 850, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 4 }}>Estimate</div>
-              <h2 style={{ margin: 0, color: "white", fontSize: 18, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0 }}>New estimate</h2>
-            </div>
+            <h2 style={{ margin: 0, color: "white", fontSize: 20, lineHeight: 1.15, fontWeight: 800, letterSpacing: 0, minWidth: 0 }}>New estimate</h2>
             <CloseIconButton onClick={onClose} />
           </div>
           <div>

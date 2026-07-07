@@ -106,13 +106,22 @@ function PaymentForm({
       return
     }
 
-    try {
-      await fetch(`/api/accept-estimate/${estimateId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paid: true }),
-      })
-    } catch {}
+    // Stripe already confirmed the charge - never tell the customer it
+    // failed from here on, and never let them pay twice. But our own
+    // record of "this was paid" depends entirely on this call succeeding,
+    // so retry it instead of firing once and hoping. The webhook is a
+    // second safety net, not a substitute for trying properly here.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(`/api/accept-estimate/${estimateId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paid: true }),
+        })
+        if (res.ok) break
+      } catch {}
+      if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1000 * (attempt + 1)))
+    }
 
     setSuccess(true)
     setTimeout(onPaid, 2200)
