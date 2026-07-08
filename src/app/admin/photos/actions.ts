@@ -223,9 +223,14 @@ export async function deletePool(industry: string): Promise<{ success: boolean; 
 export async function adminLogin(key: string): Promise<boolean> {
   if (key === process.env.ADMIN_KEY) {
     const cookieStore = await cookies()
+    const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
     cookieStore.set("admin_key", key, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      // Scoped to the whole root domain, not just whichever host served the
+      // login form - without this, the cookie never reaches my.foundco.app
+      // and "View as" silently can't prove you're an admin once you get there.
+      domain: process.env.NODE_ENV === "production" ? `.${ROOT_DOMAIN}` : undefined,
       maxAge: 60 * 60 * 24 * 30,
       path: "/",
     })
