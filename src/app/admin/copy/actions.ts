@@ -1,5 +1,6 @@
 "use server"
 
+import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { getIndustryManifest } from "@/lib/industryManifests"
@@ -9,6 +10,14 @@ function getAdminClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
+}
+
+async function requireAdmin() {
+  const cookieStore = await cookies()
+  const adminKey = cookieStore.get("admin_key")?.value
+  if (!adminKey || !process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
+    throw new Error("Not authorized")
+  }
 }
 
 export type SiteNeedingCopy = {
@@ -26,6 +35,7 @@ export type SiteNeedingCopy = {
 }
 
 export async function getSitesNeedingCopy(): Promise<SiteNeedingCopy[]> {
+  await requireAdmin()
   const supabase = getAdminClient()
 
   const { data, error } = await supabase
@@ -77,10 +87,10 @@ export async function getSitesNeedingCopy(): Promise<SiteNeedingCopy[]> {
     })
 }
 
-export async function regenerateSiteCopy(companyId: string): Promise<{ success: boolean; error?: string }> {
+export async function regenerateSiteCopy(companyId: string): Promise<{ success: boolean; versionId?: string; error?: string }> {
+  await requireAdmin()
   const supabase = getAdminClient()
 
-  // Load the full company + config in parallel
   const [{ data: company, error: cErr }, { data: config, error: cfErr }] = await Promise.all([
     supabase
       .from("companies")
@@ -101,7 +111,6 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
   if (!manifest) return { success: false, error: "Unknown industry." }
 
   const services = Array.isArray(config.services) ? config.services : []
-
   const result = await generateWebsiteContent({
     name: company.name,
     description: config.about_text || "",
@@ -115,23 +124,43 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
     manifest,
   })
 
-  const { error: updateError } = await supabase
-    .from("website_config")
-    .update({
-      hero_title: result.heroTitle,
-      hero_subtitle: result.heroSubtitle,
-      about_text: result.aboutText,
-      tagline: result.tagline,
-      cta_headline: result.ctaHeadline,
-      services: result.services,
-      faq_items: result.faq_items ?? null,
-      copy_generated: result.copy_generated,
-    })
-    .eq("company_id", companyId)
+  const { data: versionId, error: publishError } = await supabase.rpc(
+    "publish_website_copy_with_snapshot",
+    {
+      p_company_id: companyId,
+      p_new_copy: {
+        hero_title: result.heroTitle,
+        hero_subtitle: result.heroSubtitle,
+        about_text: result.aboutText,
+        tagline: result.tagline,
+        cta_headline: result.ctaHeadline,
+        services: result.services,
+        faq_items: result.faq_items ?? null,
+        copy_generated: result.copy_generated,
+      },
+      p_created_by: "found_admin",
+    },
+  )
 
-  if (updateError) {
-    console.error("[admin/copy] update error:", updateError.message)
-    return { success: false, error: "Copy generated but DB update failed." }
+  if (publishError || typeof versionId !== "string") {
+    console.error("[admin/copy] atomic publish error:", publishError?.message)
+    return { success: false, error: "Nothing changed. The safety snapshot could not be saved." }
+  }
+
+  return { success: true, versionId }
+}
+
+export async function undoSiteCopy(versionId: string): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin()
+  const supabase = getAdminClient()
+  const { error } = await supabase.rpc("restore_website_copy_version", {
+    p_version_id: versionId,
+    p_created_by: "found_admin",
+  })
+
+  if (error) {
+    console.error("[admin/copy] restore error:", error.message)
+    return { success: false, error: "Undo failed. The current site was left unchanged." }
   }
 
   return { success: true }

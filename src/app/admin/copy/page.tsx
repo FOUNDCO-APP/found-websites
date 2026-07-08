@@ -59,7 +59,7 @@ export default async function AdminCopyPage() {
             How this works
           </p>
           <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Tap Regenerate on any site and Claude rewrites the hero, about text, tagline, and CTA — the site updates immediately. Sites marked AI show Claude-written copy; Fallback means the smart templates ran instead (Claude was unavailable at creation time).
+            Regeneration replaces the live hero, about text, tagline, CTA, services copy, and FAQs. Found saves the current version first, then provides View site and Undo changes. Sites marked AI use generated copy; Fallback means the templates ran because generation was unavailable.
           </p>
         </div>
 
