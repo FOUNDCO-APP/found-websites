@@ -11,7 +11,7 @@ export default async function AdminCopyPage() {
   const adminKey = cookieStore.get("admin_key")?.value
   const isAuthed = !!adminKey && adminKey === process.env.ADMIN_KEY
 
-  if (!isAuthed) redirect("/admin/photos")
+  if (!isAuthed) redirect("/admin")
 
   const sites = await getSitesNeedingCopy()
 
@@ -23,7 +23,7 @@ export default async function AdminCopyPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Link href="/admin/photos"
+              <Link href="/admin"
                 className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
                 style={{ color: "rgba(255,255,255,0.35)" }}>
                 ← Admin

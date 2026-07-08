@@ -37,7 +37,7 @@ export default async function AdminEmailPreviewPage({
 
   const cookieStore = await cookies()
   const adminKey = cookieStore.get("admin_key")?.value
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) redirect("/admin/photos")
+  if (!adminKey || adminKey !== process.env.ADMIN_KEY) redirect("/admin")
 
   const supabase = getAdminClient()
   const { data: company } = await supabase

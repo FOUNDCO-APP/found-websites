@@ -458,7 +458,7 @@ export default function PhotoCurator() {
 
       {/* Fixed bottom bar */}
       <div
-        className="fixed bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between"
+        className="fixed bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between found-hq-bottom-bar"
         style={{
           backgroundColor: justSaved && saveMode === "live" ? "#1a2e1a" : justSaved && saveMode === "team" ? "#252000" : "#1a1a1a",
           borderTop: justSaved && saveMode === "live" ? "1px solid #2E7D32" : justSaved && saveMode === "team" ? "1px solid #f5c842" : "1px solid #333",

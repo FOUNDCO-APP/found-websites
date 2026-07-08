@@ -26,7 +26,7 @@ export const metadata = { title: "Email Preview — Found Admin" }
 export default async function AdminEmailsPage() {
   const cookieStore = await cookies()
   const adminKey = cookieStore.get("admin_key")?.value
-  if (!adminKey || adminKey !== process.env.ADMIN_KEY) redirect("/admin/photos")
+  if (!adminKey || adminKey !== process.env.ADMIN_KEY) redirect("/admin")
 
   const supabase = getAdminClient()
   const { data: companies } = await supabase
@@ -43,7 +43,7 @@ export default async function AdminEmailsPage() {
         <div className="flex items-center justify-between mb-10">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Link href="/admin/photos"
+              <Link href="/admin"
                 className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
                 style={{ color: "rgba(255,255,255,0.35)" }}>
                 ← Admin
