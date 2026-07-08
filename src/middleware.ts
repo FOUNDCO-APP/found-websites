@@ -10,9 +10,22 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
   const APP_DOMAIN = `my.${ROOT_DOMAIN}`
+  const ADMIN_DOMAIN = `admin.${ROOT_DOMAIN}`
   const isDashboard = hostname === APP_DOMAIN
+  const isAdmin = hostname === ADMIN_DOMAIN
 
-  // ── app.foundco.app ─────────────────────────────────────────────────
+  if (isAdmin) {
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      const canonicalUrl = req.nextUrl.clone()
+      canonicalUrl.pathname = pathname === "/admin" ? "/" : pathname.slice("/admin".length)
+      return NextResponse.redirect(canonicalUrl)
+    }
+
+    const url = req.nextUrl.clone()
+    url.pathname = `/admin${pathname === "/" ? "" : pathname}`
+    return NextResponse.rewrite(url)
+  }
+  // Customer dashboard host.
   if (isDashboard) {
     // Login, auth callback, and API routes never need a session
     if (pathname === "/login" || pathname === "/select" || pathname.startsWith("/auth/") || pathname.startsWith("/api/")) {
@@ -81,7 +94,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // ── [slug].foundco.app or custom domain → client site ─────────────
+  // Customer subdomain or custom domain.
   const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
     ? hostname.slice(0, -(ROOT_DOMAIN.length + 1))
     : `__domain__${hostname.replace(/^www\./, "")}`
