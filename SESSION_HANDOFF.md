@@ -73,8 +73,16 @@ History policy: keep the current working window and anything still active in cur
   - Owner email.
   - Dashboard states: `Paid`, `Deposit paid`, `Accepted, unpaid`.
   - Public paid state.
+- [ ] **Sandbox test list for July 8 (Shawn confirmed "the list is good, keep it for tomorrow" - July 7):**
+  - Full onboarding -> activation, start to finish, on a brand-new business: pick a plan, enter a test card, land on the dashboard for the first time. Hasn't been walked through since the plan-selector redesign.
+  - Plan upgrades/downgrades and add-on purchases - confirm each transition re-gates the right tools correctly.
+  - The "Accept now, pay later" email path specifically (separate from the direct-pay path already tested) - different email, different dashboard state.
+  - All items above this one in this list (builder gap, payment retry, confirmation screen, header copy, webhook fallback, Schedule QA).
 - [ ] Keep AI estimate builder gated until manual estimate + payment flow passes live QA.
 - [ ] Invoice-now / POS-lite planning is still important, but behind live QA and More / Manage IA cleanup.
+- [ ] **New, from July 7 team discussion - not yet designed or built:**
+  - Promo/comp code system so Shawn can activate real businesses in Stripe live mode without a real charge (for demos, networking, commercial recordings). Team leaned toward an internal admin-controlled flag over a real Stripe coupon - open question: how does Shawn mark a business as "comp" *before* they've gone through onboarding, since there's no company record yet at that point?
+  - Found-operator admin/agency tooling - Shawn tried to check on a real customer (Nereida Lopez, Spa Mambo) and found he has zero visibility into her account; every dashboard is scoped strictly to whichever user_id/email owns that company, with no operator override. There's a shared-key-gated `/admin` area already (used today for email preview, photo curation, copy regen) that could be extended, but scope (read-only vs full "act as this business") is undecided. Shawn asked the team to think beyond just this one case - what does Found's own operator need at the founder-led beginning stage vs. later at growth/scaling stage.
 
 ---
 
