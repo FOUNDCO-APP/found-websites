@@ -21,9 +21,10 @@ History policy: keep the current working window and anything still active in cur
 
 ## Current Status
 
+- **New July 8:** Copy regeneration is now recoverable and admin-only. `Regenerate All` was removed. Every regeneration requires confirmation, atomically snapshots the eight affected live-copy fields in Supabase, and exposes `View site` plus one-tap `Undo changes`. Undo creates its own recovery snapshot before restoring. Migration 044 was applied and its permissions verified; rollback-only publish/restore testing passed. Code commit: `8825321`.
 - Repo is on `main`.
-- Latest known commit: `3ed70ae` - `Build Found HQ: unified admin dashboard with sidebar nav and stats home`.
-- Worktree is clean and pushed.
+- Latest functional commit: `8825321` - `Add safe copy regeneration undo`.
+- Copy safety code is committed; this handoff update is pending its documentation commit and push.
 - **New tonight:** Live-tested all 6 July 6 items directly against production (`my.foundco.app`), logged in as a real session via a minted Supabase magic link (no password needed) - all 5 testable flows (camera permission blocked/granted, company switching, leads add-sheet, estimate request -> create estimate handoff, schedule tabs) confirmed working with screenshots at every step. Left one obviously-labeled test lead ("TEST — Claude QA") on Blue Luna Events - safe to delete, not cleaned up automatically.
 - **New tonight:** Built "Found HQ" - one unified admin dashboard replacing the four separate `/admin/*` pages that each had their own login screen. See "Changed / Finished" and the July 8 (part 2) changelog entry for full detail. Two real bugs were found and fixed by scripted click-through testing (not just screenshots) before this shipped - most seriously, a mobile layout bug that would have silently made almost the entire admin app untappable on a phone.
 - Shawn live-tested all 6 July 6 items on `my.foundco.app` on July 7. Results: Camera, Company Switching, Leads/Requests sheet, Schedule all confirmed working. Estimate Requests confirmed working but surfaced a new bug (builder header gap). Estimates/Payments confirmed working but flagged a serious one: after paying, the estimate still showed the full unpaid balance.
@@ -63,6 +64,8 @@ History policy: keep the current working window and anything still active in cur
 - [x] Live-tested all 6 July 6 items directly on production - camera permission (blocked + granted), company switching, leads add-sheet, estimate request -> create estimate handoff, and Schedule (Calendar/Bookings/Hours) all confirmed working with screenshots.
 
 ---
+
+- [x] Made Found HQ Copy regeneration recoverable: removed bulk regeneration, added explicit confirmation, durable version history, atomic publish/restore functions, server-side admin checks, View site, and Undo changes. Migration 044 applied; build and rollback-only database test passed. Commit `8825321`.
 
 ## Still Needs Work
 
@@ -148,6 +151,19 @@ History policy: keep the current working window and anything still active in cur
 6. Confirm customer receipt and owner notification emails arrive.
 7. Repeat on a fresh estimate with Accept now, pay later.
 8. Confirm the dashboard state is correct after each path.
+
+---
+
+### 0B. Copy safety pass
+1. Use only a throwaway test business whose copy can safely change.
+2. Go to `admin.foundco.app/copy`.
+3. Confirm there is no `Regenerate All` button.
+4. Tap `Regenerate` and confirm the warning lists the live content that will change.
+5. Tap Cancel and confirm nothing changes.
+6. Reopen the warning, choose `Save and regenerate`, and wait for completion.
+7. Tap `View site` and confirm the test site shows the regenerated copy.
+8. Tap `Undo changes`, then refresh the public site and confirm the previous copy returns.
+9. Do not run this test on a real customer site.
 
 ---
 

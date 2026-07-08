@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 8, 2026 - Safe Copy Regeneration and Undo
+**AI:** Codex
+**Worked on:** Added the team-approved safety layer before allowing Found HQ to overwrite live customer website copy.
+
+### Completed
+- Removed `Regenerate All`.
+- Added per-site confirmation listing the live fields that will change.
+- Added explicit admin verification inside every Copy server action.
+- Added migration 044 with append-only copy snapshots and service-role-only atomic publish/restore functions.
+- Added `View site`, `Undo changes`, and a distinct retry path for failed Undo attempts.
+- Undo saves the generated version before restoring the prior version.
+- Applied and verified the production migration permissions.
+- Passed a transactionally rolled-back publish/restore database test and `npm run build`.
+- Code commit: `8825321`.
+
+### Test Next
+- Run the Copy safety pass from `SESSION_HANDOFF.md` using only a throwaway business.
+
+---
+
+
 ## Current History Policy
 
 - `SESSION_HANDOFF.md` is the first source of truth for what changed, what is open, and what Shawn tests next.
