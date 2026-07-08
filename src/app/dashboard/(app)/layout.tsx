@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany, hasMultipleCompanies } from "@/lib/dashboard/getCompany"
+import { getCompany, hasMultipleCompanies, isAdminOverrideActive } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
@@ -7,6 +7,7 @@ import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
 import { getEffectiveAddons } from "@/lib/featureAccess"
+import { exitAdminView } from "@/app/admin/businesses/actions"
 
 import { BLACK } from "@/lib/dashboard/typography"
 import FoundWordmark from "@/components/FoundWordmark"
@@ -20,10 +21,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const admin = createAdminClient()
   const since = new Date(Date.now() - 7 * 86400000).toISOString()
 
-  const [company, hasMultiple] = await Promise.all([
+  const [company, hasMultiple, adminKeyValid] = await Promise.all([
     getCompany(user.id, user.email ?? ""),
     hasMultipleCompanies(user.id, user.email ?? ""),
+    isAdminOverrideActive(),
   ])
+
+  // Only a real "viewing as" signal, not just "the admin cookie happens to
+  // be set" - Shawn could have that cookie while genuinely looking at his
+  // own business, and the banner should stay silent for that case.
+  const viewingAsAdmin = Boolean(
+    adminKeyValid && company && company.user_id !== user.id && company.email !== user.email
+  )
 
   const [newLeadCount, paidAddonSlugs] = company?.id
     ? await Promise.all([
@@ -100,6 +109,26 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </header>
 
+
+        {/* Viewing-as-admin banner - always visible while active, never silent */}
+        {viewingAsAdmin && company && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+            padding: "10px 20px", backgroundColor: "#FF9500", color: "#080A09",
+          }}>
+            <span style={{ fontSize: 12, fontWeight: 800 }}>
+              Viewing as {company.name} (Admin)
+            </span>
+            <form action={exitAdminView}>
+              <button type="submit" style={{
+                border: "none", background: "rgba(8,10,9,0.15)", color: "#080A09",
+                fontSize: 11, fontWeight: 800, padding: "5px 10px", borderRadius: 100, cursor: "pointer",
+              }}>
+                Exit
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Activation banner */}
         {company && company.subscription_status !== "active" && company.subscription_status !== "trialing" && (

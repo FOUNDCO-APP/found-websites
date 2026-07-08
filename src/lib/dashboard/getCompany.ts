@@ -23,10 +23,22 @@ export type CompanyRow = {
   form_intent: string | null
   primary_intent: string | null
   default_tax_rate: number | null
+  is_comp: boolean | null
+  admin_notes: string | null
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, industry_category, sub_industry, form_intent, primary_intent, default_tax_rate"
+  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, industry_category, sub_industry, form_intent, primary_intent, default_tax_rate, is_comp, admin_notes"
+
+// True only when both the selected-company cookie AND a server-verified
+// admin key are present - never trust the cookie alone. This is what lets
+// a Found operator view/act as any business for support, demos, and comp
+// activation without needing to be added as an owner on that company.
+export async function isAdminOverrideActive(): Promise<boolean> {
+  const cookieStore = await cookies()
+  const adminKey = cookieStore.get("admin_key")?.value
+  return Boolean(adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY)
+}
 
 export const getCompany = cache(async (
   userId: string,
@@ -37,12 +49,11 @@ export const getCompany = cache(async (
   const admin = createAdminClient()
 
   if (selectedId) {
-    const { data } = await admin
-      .from("companies")
-      .select(SELECT_FIELDS)
-      .eq("id", selectedId)
-      .or(`user_id.eq.${userId},email.eq.${userEmail}`)
-      .maybeSingle()
+    const adminOverride = await isAdminOverrideActive()
+    const query = admin.from("companies").select(SELECT_FIELDS).eq("id", selectedId)
+    const { data } = adminOverride
+      ? await query.maybeSingle()
+      : await query.or(`user_id.eq.${userId},email.eq.${userEmail}`).maybeSingle()
     if (data) return data as CompanyRow
   }
 
