@@ -34,6 +34,7 @@ type OnboardingInput = {
   vibe: string
   testimonials: string
   plan?: string
+  compToken?: string
 }
 
 type OnboardingResult = {
@@ -42,6 +43,7 @@ type OnboardingResult = {
   url?: string
   companyId?: string
   error?: string
+  comp?: boolean
 }
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -287,6 +289,11 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     manifest,
   })
 
+  // Comp link (?comp=<admin key> on the onboarding URL): validated here,
+  // server-side, against the real secret - the client only ever carries the
+  // raw value along, it never decides on its own whether comp applies.
+  const isComp = Boolean(input.compToken && process.env.ADMIN_KEY && input.compToken === process.env.ADMIN_KEY)
+
   const { error: companyError } = await supabase
     .from("companies")
     .insert({
@@ -316,6 +323,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       photo_keywords: subIndustry,
       plan: ["found", "found_pro", "found_business"].includes(input.plan ?? "") ? input.plan : "found",
       active: true,
+      ...(isComp ? { is_comp: true, subscription_status: "active" } : {}),
     })
 
   if (companyError) {
@@ -394,6 +402,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     slug,
     url: siteUrl,
     companyId,
+    comp: isComp,
   }
 }
 

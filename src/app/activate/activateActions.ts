@@ -2,6 +2,7 @@
 
 import Stripe from "stripe"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
 
 function getAdminClient() {
   return createAdminClient(
@@ -105,6 +106,33 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     console.error("[Activate] createActivationSetup failed:", err)
     return null
   }
+}
+
+// Skips Stripe entirely - for Shawn activating a business as a comp (demos,
+// networking, commercial recordings). Re-checks the admin cookie itself
+// server-side rather than trusting a client-passed flag; the httpOnly
+// admin_key cookie is sent automatically with this request even though
+// client JS can never read its value.
+export async function activateAsComp(slug: string, plan?: string | null): Promise<boolean> {
+  const cookieStore = await cookies()
+  const adminKey = cookieStore.get("admin_key")?.value
+  if (!adminKey || !process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) return false
+
+  const admin = getAdminClient()
+  const { data: company } = await admin.from("companies").select("id, plan").eq("slug", slug).single()
+  if (!company) return false
+
+  await admin
+    .from("companies")
+    .update({
+      subscription_status: "active",
+      is_comp: true,
+      pending_setup_intent_secret: null,
+      plan: plan || company.plan || "found",
+    })
+    .eq("slug", slug)
+
+  return true
 }
 
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {

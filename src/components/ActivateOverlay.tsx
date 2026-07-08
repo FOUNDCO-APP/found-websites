@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
-import { createActivationSetup } from "@/app/activate/activateActions"
+import { createActivationSetup, activateAsComp } from "@/app/activate/activateActions"
 import FoundPlanSelector from "@/components/FoundPlanSelector"
 import {
   defaultActivationPlan,
@@ -154,6 +154,7 @@ export default function ActivateOverlay({
   targetAddonPrice,
   returnTo = "site",
   skipIntro = false,
+  isAdminSession = false,
   onClose,
 }: {
   slug: string
@@ -164,6 +165,7 @@ export default function ActivateOverlay({
   targetAddonPrice?: number | null
   returnTo?: "site" | "dashboard"
   skipIntro?: boolean
+  isAdminSession?: boolean
   onClose: () => void
 }) {
   const isAddonFlow = !!targetAddonSlug
@@ -175,6 +177,22 @@ export default function ActivateOverlay({
   const [paymentStep, setPaymentStep] = useState<PaymentStep>(isAddonFlow ? "loading" : "plans")
   const [preparingPlan, setPreparingPlan] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [compActivating, setCompActivating] = useState(false)
+  const rootDomainForComp = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+
+  async function handleCompActivate() {
+    if (compActivating) return
+    setCompActivating(true)
+    const ok = await activateAsComp(slug, selectedPlan)
+    if (!ok) {
+      setCompActivating(false)
+      setLoadError("Comp activation failed - admin session may have expired.")
+      return
+    }
+    window.location.href = returnTo === "dashboard"
+      ? `https://my.${rootDomainForComp}/?activated=true`
+      : `https://${slug}.${rootDomainForComp}?activated=true`
+  }
 
   useEffect(() => {
     const prev = document.body.style.overflow
@@ -305,12 +323,29 @@ export default function ActivateOverlay({
                   </div>
                 </div>
               ) : paymentStep === "plans" && !isAddonFlow ? (
-                <FoundPlanSelector
-                  selectedPlan={selectedPlan}
-                  loading={preparingPlan}
-                  onSelect={setSelectedPlan}
-                  onContinue={() => void preparePayment(selectedPlan)}
-                />
+                <>
+                  <FoundPlanSelector
+                    selectedPlan={selectedPlan}
+                    loading={preparingPlan}
+                    onSelect={setSelectedPlan}
+                    onContinue={() => void preparePayment(selectedPlan)}
+                  />
+                  {isAdminSession && (
+                    <button
+                      onClick={handleCompActivate}
+                      disabled={compActivating}
+                      style={{
+                        display: "block", width: "100%", maxWidth: 448, margin: "14px auto 0",
+                        padding: "13px 0", borderRadius: 999, border: "1px dashed rgba(255,149,0,0.4)",
+                        backgroundColor: "rgba(255,149,0,0.08)", color: "#FF9500",
+                        fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.14em",
+                        cursor: compActivating ? "default" : "pointer",
+                      }}
+                    >
+                      {compActivating ? "Activating…" : "Activate as comp (Found team)"}
+                    </button>
+                  )}
+                </>
               ) : clientSecret ? (
                 <div style={{ maxWidth: 448, margin: "0 auto", padding: "8px 0 8px" }}>
                   <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>

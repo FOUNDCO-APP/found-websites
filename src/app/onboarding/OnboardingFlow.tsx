@@ -524,8 +524,8 @@ function GenerationErrorScreen({ message, onRetry, onBack }: {
     </main>
   )
 }
-function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan }: {
-  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string
+function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan, comp, isAdminSession }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string; comp?: boolean; isAdminSession?: boolean
 }) {
   const [iframeReady, setIframeReady] = useState(false)
   const [activating, setActivating] = useState(false)
@@ -617,8 +617,18 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
           </h1>
         </div>
 
-        {/* Activation comes after the reveal, not before it. */}
-        {slug ? (
+        {/* Activation comes after the reveal, not before it. Comp sessions
+            skip the payment step entirely - no card screen ever appears. */}
+        {slug && comp ? (
+          <div className="mt-8 w-full max-w-[300px] text-center" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
+            <a
+              href={`https://my.${process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "foundco.app"}/?activated=true`}
+              className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
+              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+              Go to dashboard
+            </a>
+          </div>
+        ) : slug ? (
           <div className="mt-8 w-full max-w-[300px] text-center" style={{ animation: "fade-up 0.6s 0.65s ease-out both" }}>
             <button
               type="button"
@@ -650,6 +660,7 @@ Launch my site
           targetPlan={plan}
           returnTo="dashboard"
           skipIntro
+          isAdminSession={isAdminSession}
           onClose={() => setActivating(false)}
         />
       )}
@@ -1186,20 +1197,31 @@ function PlanChoiceScreen({
   )
 }
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose, drawerMode, plan = "found", showPlanChoice = false }: { onClose?: () => void; drawerMode?: boolean; plan?: string; showPlanChoice?: boolean }) {
+export default function OnboardingFlow({ onClose, drawerMode, plan = "found", showPlanChoice = false, isAdminSession = false }: { onClose?: () => void; drawerMode?: boolean; plan?: string; showPlanChoice?: boolean; isAdminSession?: boolean }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
   const [currentPlan, setCurrentPlan] = useState(plan)
   useEffect(() => setCurrentPlan(plan), [plan])
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
-  const [result, setResult]         = useState<{ url?: string; companyId?: string; slug?: string; plan?: string; error?: string } | null>(null)
+  const [result, setResult]         = useState<{ url?: string; companyId?: string; slug?: string; plan?: string; error?: string; comp?: boolean } | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
 
   // Pre-generate the company ID so logo/hero uploads go to the permanent path
   const sessionId = useMemo(() => crypto.randomUUID(), [])
+
+  // Comp link: ?comp=<admin key> on the onboarding URL. Validated server-side
+  // in createOnboardingSite - this raw value is just carried along, never
+  // trusted on its own. When it checks out, the company is created already
+  // active and Reveal skips the payment step entirely.
+  const [compToken, setCompToken] = useState<string | null>(null)
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const token = new URLSearchParams(window.location.search).get("comp")
+    if (token) setCompToken(token)
+  }, [])
 
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoError, setLogoError]         = useState<string | null>(null)
@@ -1291,6 +1313,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
           navbarDark: answers.navbarDark,
           heroImageUrls: answers.heroImageUrls,
           plan: currentPlan,
+          compToken: compToken ?? undefined,
         }),
         uiTimeout,
       ])
@@ -1301,15 +1324,18 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       return
     }
     if (res.success && res.url && res.slug && res.companyId) {
-      setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan })
-      // Fire-and-forget - activate page has its own fallback if intent isn't ready yet
-      createSetupIntentForCompany({
-        companyId: res.companyId,
-        email: answers.email,
-        name: answers.name.trim(),
-        slug: res.slug,
-        plan: currentPlan,
-      }).catch(console.error)
+      setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan, comp: res.comp })
+      // Comped companies are already active - no Stripe setup needed at all.
+      if (!res.comp) {
+        // Fire-and-forget - activate page has its own fallback if intent isn't ready yet
+        createSetupIntentForCompany({
+          companyId: res.companyId,
+          email: answers.email,
+          name: answers.name.trim(),
+          slug: res.slug,
+          plan: currentPlan,
+        }).catch(console.error)
+      }
     } else {
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)
@@ -1547,6 +1573,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       companyId={result.companyId}
       slug={result.slug}
       plan={result.plan}
+      comp={result.comp}
+      isAdminSession={isAdminSession}
     />
   )
 
