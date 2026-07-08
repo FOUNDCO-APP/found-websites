@@ -144,7 +144,7 @@ export default async function AdminEmailPreviewPage({
               border: "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, fontWeight: 300 }}>?</span>
+            <span aria-hidden="true" style={{ fontSize: 19, lineHeight: 1, fontWeight: 600 }}>X</span>
           </Link>
           <h1 className="text-3xl font-black" style={{ color: "#ffffff" }}>{company.name}</h1>
           <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
