@@ -47,14 +47,26 @@ export const getCompany = cache(async (
 ): Promise<CompanyRow | null> => {
   const cookieStore = await cookies()
   const selectedId = cookieStore.get("found_company_id")?.value
+  const adminCompanyId = cookieStore.get("found_admin_company_id")?.value
   const admin = createAdminClient()
+  const adminOverride = await isAdminOverrideActive()
+
+  if (adminOverride && adminCompanyId) {
+    const { data } = await admin
+      .from("companies")
+      .select(SELECT_FIELDS)
+      .eq("id", adminCompanyId)
+      .maybeSingle()
+    if (data) return data as CompanyRow
+  }
 
   if (selectedId) {
-    const adminOverride = await isAdminOverrideActive()
-    const query = admin.from("companies").select(SELECT_FIELDS).eq("id", selectedId)
-    const { data } = adminOverride
-      ? await query.maybeSingle()
-      : await query.or(`user_id.eq.${userId},email.eq.${userEmail}`).maybeSingle()
+    const { data } = await admin
+      .from("companies")
+      .select(SELECT_FIELDS)
+      .eq("id", selectedId)
+      .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+      .maybeSingle()
     if (data) return data as CompanyRow
   }
 

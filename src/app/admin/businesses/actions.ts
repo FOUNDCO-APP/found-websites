@@ -44,6 +44,14 @@ export async function setViewAsCookie(companyId: string): Promise<{ success: boo
       maxAge: 60 * 60 * 8,
     })
   }
+  cookieStore.set("found_admin_company_id", companyId, {
+    path: "/",
+    domain,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 60 * 60 * 8,
+  })
   cookieStore.set("found_admin_view", "1", {
     path: "/",
     domain,
@@ -85,6 +93,7 @@ export async function exitAdminView() {
   } else {
     cookieStore.delete({ name: "found_company_id", path: "/", domain })
   }
+  cookieStore.delete({ name: "found_admin_company_id", path: "/", domain })
   cookieStore.delete({ name: "found_admin_view", path: "/", domain })
   cookieStore.delete({ name: "found_admin_previous_company_id", path: "/", domain })
   redirect(`https://my.${ROOT_DOMAIN}/`)
