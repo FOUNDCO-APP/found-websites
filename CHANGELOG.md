@@ -13,6 +13,24 @@
 
 ---
 
+## Session: July 8, 2026 — Comp Activation Before the Card Prompt
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn flagged that the first comp mechanism (mark comp *after* onboarding from `/admin/businesses`) still let the business see a real Stripe card screen before Shawn could intervene. Asked for team discussion, then asked for both options the team laid out rather than picking one.
+
+### Completed
+- **`activateAsComp(slug, plan)`** in `src/app/activate/activateActions.ts` — skips Stripe entirely, sets `subscription_status: "active"` + `is_comp: true` directly. Re-reads the `admin_key` cookie itself server-side rather than trusting any client-passed flag.
+- **`ActivateOverlay.tsx`** — new optional `isAdminSession` prop. When true, the plan-selection step shows an extra dashed-orange "Activate as comp (Found team)" button next to the real payment flow. Shared component, so this works from onboarding, the dashboard's `ActivationBanner`, `MoreActivateButton`, and `PreviewBanner` alike, though only the onboarding path threads the prop through for now.
+- **`src/app/onboarding/page.tsx`** — now an async Server Component reading the `admin_key` cookie server-side, passing down a single `isAdminSession` boolean. The actual secret never reaches client-side code.
+- **Comp link** — `OnboardingFlow.tsx` reads `?comp=<token>` from the URL on mount, carries it through the whole session, and passes it to `createOnboardingSite()`. `src/app/onboarding/actions.ts` validates the token server-side against `ADMIN_KEY`; when valid, the company is inserted already `is_comp: true, subscription_status: "active"`. The Reveal screen then shows "Go to dashboard" instead of "Launch my site" - no payment step renders at all.
+- Verified with `npm run build` — clean. `/onboarding` is now dynamically rendered (was static) since it reads cookies server-side, as expected.
+- Logged as a decision in `DECISIONS.md`, superseding the July 8 "comp after onboarding" entry.
+
+### Must Test
+- Comp link: start onboarding at `foundco.app/onboarding?comp=<admin key>`, complete a throwaway test business, confirm the payment screen never appears and Reveal shows "Go to dashboard."
+- In-flow fallback: log into `/admin/photos` first (sets the admin cookie), then go through normal onboarding *without* the comp link, confirm "Activate as comp (Found team)" appears on the real activation screen and works.
+
+---
+
 ## Session: July 8, 2026 — Found Operator Tooling (View As, Comp, Notes)
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn tried to check on a real customer's account (Nereida Lopez, Spa Mambo) and had zero visibility - every dashboard is scoped strictly to whoever owns that company. Team scoped a beginning-stage operator toolkit (see `DECISIONS.md` [2026-07-08]), built it end to end.
