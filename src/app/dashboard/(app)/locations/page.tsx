@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -6,11 +6,10 @@ import LocationsClient from "@/components/dashboard/LocationsClient"
 import type { LocationRow } from "@/components/dashboard/LocationsClient"
 
 export default async function LocationsPage() {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const user = await requireDashboardAccess()
 
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) redirect("/login")
+  const company = await getCompany(user?.id ?? "", user?.email ?? "")
+  if (!company) redirect(user ? "/login" : "/admin")
 
   const admin = createAdminClient()
 

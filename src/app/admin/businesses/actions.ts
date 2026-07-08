@@ -20,10 +20,15 @@ async function requireAdmin() {
 
 // Sets the same cookie the normal company-switcher uses, but scoped to the
 // whole root domain (not just whichever host served /admin) so it's read
-// correctly once redirected to my.foundco.app. Shorter lifetime than a
-// normal switch on purpose - this is a support/demo session, not a
-// permanent choice, and should naturally expire rather than linger.
-export async function viewAsCompany(companyId: string) {
+// correctly on my.foundco.app. Shorter lifetime than a normal switch on
+// purpose - this is a support/demo session, not a permanent choice, and
+// should naturally expire rather than linger.
+//
+// Does NOT redirect - the caller (a client component) opens a new tab on
+// the click itself, then points that tab here once this resolves. Keeping
+// the redirect server-side would navigate the *current* admin tab away,
+// which is exactly what Shawn asked not to happen.
+export async function setViewAsCookie(companyId: string): Promise<{ success: boolean }> {
   await requireAdmin()
   const cookieStore = await cookies()
   cookieStore.set("found_company_id", companyId, {
@@ -33,7 +38,7 @@ export async function viewAsCompany(companyId: string) {
     secure: true,
     maxAge: 60 * 60 * 8,
   })
-  redirect(`https://my.${ROOT_DOMAIN}/?admin_view=1`)
+  return { success: true }
 }
 
 export async function exitAdminView() {

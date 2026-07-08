@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany, hasMultipleCompanies, isAdminOverrideActive } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -15,23 +15,25 @@ import FoundWordmark from "@/components/FoundWordmark"
 export const metadata = { title: "Found" }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const user = await requireDashboardAccess()
 
   const admin = createAdminClient()
   const since = new Date(Date.now() - 7 * 86400000).toISOString()
 
   const [company, hasMultiple, adminKeyValid] = await Promise.all([
-    getCompany(user.id, user.email ?? ""),
-    hasMultipleCompanies(user.id, user.email ?? ""),
+    getCompany(user?.id ?? "", user?.email ?? ""),
+    user ? hasMultipleCompanies(user.id, user.email ?? "") : Promise.resolve(false),
     isAdminOverrideActive(),
   ])
 
+  if (!user && !company) redirect("/admin")
+
   // Only a real "viewing as" signal, not just "the admin cookie happens to
   // be set" - Shawn could have that cookie while genuinely looking at his
-  // own business, and the banner should stay silent for that case.
+  // own business, and the banner should stay silent for that case. An
+  // admin-only session (no personal login at all) is always "viewing as."
   const viewingAsAdmin = Boolean(
-    adminKeyValid && company && company.user_id !== user.id && company.email !== user.email
+    adminKeyValid && company && (!user || (company.user_id !== user.id && company.email !== user.email))
   )
 
   const [newLeadCount, paidAddonSlugs] = company?.id

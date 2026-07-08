@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
@@ -166,10 +166,9 @@ function ChevronRight() {
 }
 
 export default async function MorePage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const user = await requireDashboardAccess()
 
-  const company = await getCompany(user.id, user.email ?? "")
+  const company = await getCompany(user?.id ?? "", user?.email ?? "")
   const sp = await searchParams
   const addonAdded = sp.addon_added ?? null
   const addonUnavailable = sp.addon_unavailable === "1"
@@ -704,7 +703,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
           <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
             <div style={{ padding: "14px 18px", backgroundColor: "rgba(255,255,255,0.04)" }}>
               <p style={{ margin: "0 0 2px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Signed in as</p>
-              <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user.email}</p>
+              <p style={{ margin: 0, ...TYPE.subhead, color: "white" }}>{user?.email ?? "Found Admin (viewing as)"}</p>
             </div>
           </div>
           <Link href="/auth/set-password" style={{ textDecoration: "none", display: "block" }}>
