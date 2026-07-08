@@ -13,6 +13,26 @@
 
 ---
 
+## Session: July 8, 2026 — Found Operator Tooling (View As, Comp, Notes)
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn tried to check on a real customer's account (Nereida Lopez, Spa Mambo) and had zero visibility - every dashboard is scoped strictly to whoever owns that company. Team scoped a beginning-stage operator toolkit (see `DECISIONS.md` [2026-07-08]), built it end to end.
+
+### Completed
+- Migration applied directly to Supabase: `companies.is_comp` (boolean) and `companies.admin_notes` (text). Migration file kept local only since `scripts/` is gitignored in this repo (other scripts there carry hardcoded credentials).
+- `getCompany()` in `src/lib/dashboard/getCompany.ts` now has an admin override — when the selected-company cookie AND a server-verified `admin_key` cookie are both present, it fetches that company by ID without the normal ownership filter. Added `isAdminOverrideActive()` as a reusable check.
+- New `/admin/businesses` — same shared admin-key gate as the existing `/admin/photos` and `/admin/emails`. Lists every company, searchable, with a "View as" button per row (reuses the exact same `found_company_id` cookie the normal company switcher already uses), a comp toggle, and a notes textarea that saves on blur.
+- Comping a business also sets `subscription_status: "active"` in the same update, so every existing "is this account active" check across the app picks it up automatically instead of needing to touch each one.
+- Dashboard layout shows a persistent orange "Viewing as [Business] (Admin)" banner with an Exit button — but only when the override is genuinely resolving someone else's company, not just whenever the admin cookie happens to be present. Never silent about who Shawn is acting as.
+- Verified with `npm run build` — clean, `/admin/businesses` compiles.
+
+### Must Test
+- Log into `/admin/businesses` with the existing admin key, search for a real business, tap "View as," confirm the dashboard loads as that business with the orange banner visible.
+- Tap Exit and confirm it returns cleanly to Shawn's own account.
+- Toggle comp on a real inactive test account and confirm its activation banner disappears immediately (no page reload needed beyond normal navigation).
+- Confirm notes save correctly (type, click away, reload the page, confirm it persisted).
+
+---
+
 ## Session: July 7, 2026 (part 2) — Payment Reliability, Root Safe-Area Fix, Header Cleanup
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn found the builder gap persisted after the earlier fix, felt the payment sheet was weak, and — most seriously — found that after paying, the estimate page still showed the full unpaid balance. "Fix it all, we need to launch."

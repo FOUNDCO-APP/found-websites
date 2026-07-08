@@ -1,3 +1,9 @@
+**[2026-07-08] - Found operator tooling: build for the founder-led stage now, growth-stage tooling stays backlog.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: Shawn (as Found's operator, distinct from being a business owner himself) had zero visibility into a real customer's account (Nereida Lopez, Spa Mambo) - every dashboard is scoped strictly to whoever owns that company, with no operator override at all. Team scoped this deliberately in two tiers instead of building everything at once: **build now** - full "view as" for any business (genuine access, not read-only peeking), a comp/waive-billing toggle, and simple per-business notes, all inside the existing shared-admin-key `/admin` area. **Backlog, not built** - role-based permissions, an audit log of admin actions, billing/churn dashboards, support ticketing. The growth-stage items are real and will matter once there's a second person with admin access or real signup volume, but building them now for a single-operator platform with a handful of customers would be solving a problem that doesn't exist yet. Do not build the growth-stage tier without Steve reopening this decision.
+
+Related: comp accounts are activated by marking `is_comp` true on the company record *after* (or during, in a second browser tab) the business completes normal onboarding - not via a separate bypass inside the Stripe activation flow itself. This was a deliberate simplification, not an oversight - see `SESSION_HANDOFF.md` for the reasoning.
+
 **[2026-07-06] - Hours shows a weekly summary first; editing is deliberate.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
 Why: Working hours are business setup, not the main Schedule experience. Owners should see simple open/closed days first, then tap Edit when they actually need to change hours.
