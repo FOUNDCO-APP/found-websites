@@ -13,6 +13,28 @@
 
 ---
 
+## Session: July 8, 2026 (part 2) — Found HQ Admin Dashboard
+**AI:** Claude Code (Sonnet 5)
+**Worked on:** Shawn asked for "an official back end for myself" — one dashboard and menu to everything, instead of four separate `/admin/*` pages each with their own login screen. Approved to build overnight, unattended.
+
+### Completed
+- **`src/app/admin/layout.tsx`** — single auth gate for all of `/admin/*`. Checks the `admin_key` cookie once; shows the shared login screen bare if missing, otherwise wraps every page in the new `AdminShell`.
+- **`src/app/admin/AdminShell.tsx`** — persistent nav: sticky left sidebar on desktop, bottom nav bar on mobile (Home / Businesses / Photos / Emails / Copy / Sign out). `adminAuth.ts` holds the new `adminLogout()` action.
+- **`src/app/admin/page.tsx`** — new HQ home: total/active/comp/new-this-week stats, a card per tool, and the 6 most recent signups — reading the same `companies` table the other admin tools already use.
+- Repointed the four existing tools' now-stale `redirect("/admin/photos")` and `← Admin` breadcrumb links to `/admin` (`businesses`, `emails`, `emails/[companyId]`, `copy`). No functional changes to any of the four tools themselves.
+- **Two real integration bugs found and fixed via scripted click-through testing, not just screenshots:**
+  1. PhotoCurator's own fixed bottom action bar (`position:fixed` Approve bar) collided with the new sidebar on both breakpoints — text got clipped under the sidebar on desktop, and the bar sat exactly behind the bottom nav on mobile. Fixed with a sidebar z-index (desktop) and a `found-hq-bottom-bar` offset class (mobile) — no changes to PhotoCurator's own logic.
+  2. More serious: the mobile sidebar's height rule leaked in from the desktop version and silently covered the *entire screen* with an invisible tap-blocking layer — nothing but the nav itself was clickable on mobile. Only surfaced because an automated test tried to click a photo and Playwright reported the nav "intercepts pointer events." Screenshots alone looked completely normal the whole time.
+- Verified with `npm run build` (clean) plus scripted Playwright click-throughs on both desktop and mobile viewports, logged in for real, clicking through Home → Businesses → Photos → Emails → Copy and back. Pushed as `3ed70ae`.
+
+### Must Test
+- Log into `/admin` (same key as before) and confirm you land on the new stats home page, not `/admin/photos`.
+- Click through Businesses, Photos, Emails, and Copy from the sidebar (desktop) and bottom bar (mobile) — confirm each tool works exactly as before, just inside the new shell.
+- On Photos, select a few images and confirm the "N photos selected / Approve" bar is fully readable and clickable on both a laptop and a phone.
+- Sign out from the mobile bottom bar and confirm it correctly drops back to the login screen.
+
+---
+
 ## Session: July 8, 2026 — Comp Activation Before the Card Prompt
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn flagged that the first comp mechanism (mark comp *after* onboarding from `/admin/businesses`) still let the business see a real Stripe card screen before Shawn could intervene. Asked for team discussion, then asked for both options the team laid out rather than picking one.

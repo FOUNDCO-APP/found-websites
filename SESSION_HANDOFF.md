@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 7, 2026*
+*Last updated: July 8, 2026*
 
 ---
 
@@ -22,11 +22,13 @@ History policy: keep the current working window and anything still active in cur
 ## Current Status
 
 - Repo is on `main`.
-- Latest known commit: `3be15cc` - `Rebuild estimate builder header as truly fixed, not sticky-in-scroll`.
+- Latest known commit: `3ed70ae` - `Build Found HQ: unified admin dashboard with sidebar nav and stats home`.
 - Worktree is clean and pushed.
+- **New tonight:** Live-tested all 6 July 6 items directly against production (`my.foundco.app`), logged in as a real session via a minted Supabase magic link (no password needed) - all 5 testable flows (camera permission blocked/granted, company switching, leads add-sheet, estimate request -> create estimate handoff, schedule tabs) confirmed working with screenshots at every step. Left one obviously-labeled test lead ("TEST — Claude QA") on Blue Luna Events - safe to delete, not cleaned up automatically.
+- **New tonight:** Built "Found HQ" - one unified admin dashboard replacing the four separate `/admin/*` pages that each had their own login screen. See "Changed / Finished" and the July 8 (part 2) changelog entry for full detail. Two real bugs were found and fixed by scripted click-through testing (not just screenshots) before this shipped - most seriously, a mobile layout bug that would have silently made almost the entire admin app untappable on a phone.
 - Shawn live-tested all 6 July 6 items on `my.foundco.app` on July 7. Results: Camera, Company Switching, Leads/Requests sheet, Schedule all confirmed working. Estimate Requests confirmed working but surfaced a new bug (builder header gap). Estimates/Payments confirmed working but flagged a serious one: after paying, the estimate still showed the full unpaid balance.
 - Traced the payment issue: the client-side "mark as paid" call had no error handling - if it failed, the customer's card was still charged successfully but our own record never updated, and nothing told anyone it happened. Now retries 3x. **Not fully closed** - see "Still Needs Work," the Stripe Dashboard webhook config needs a human to verify since no AI in this session has Stripe Dashboard access.
-- Builder gap took 3 attempts to actually fix. Attempt 1 (margin math) and attempt 2 (`viewport-fit=cover`, which turned out to already be set one layer down) both missed the real cause. Attempt 3: removed `position: sticky` entirely - it was likely desyncing from true viewport top during iOS momentum/bounce scroll. Header is now genuinely `position: fixed` with its real height measured via `ResizeObserver`, not guessed. This is a structurally different fix, not another parameter tweak - should actually be closed now, but treat it as unconfirmed until Shawn tests it live.
+- Builder gap took 3 attempts to actually fix. Attempt 1 (margin math) and attempt 2 (`viewport-fit=cover`, which turned out to already be set one layer down) both missed the real cause. Attempt 3: removed `position: sticky` entirely - it was likely desyncing from true viewport top during iOS momentum/bounce scroll. Header is now genuinely `position: fixed` with its real height measured via `ResizeObserver`, not guessed. This is a structurally different fix, not another parameter tweak - confirmed fixed live on production July 8 (see Estimate Requests test above: no gap, single clean title).
 
 ---
 
@@ -57,13 +59,15 @@ History policy: keep the current working window and anything still active in cur
 - [x] Payment confirmation reliability - `handlePay()` in `AcceptButton.tsx` now retries the "mark as paid" call 3x with backoff instead of firing once with a silently-swallowed error.
 - [x] Removed the redundant "ESTIMATE" eyebrow above "New estimate" in the builder header - one clear title, not two lines saying the same thing.
 - [x] Verified directly against Supabase: the "Construction" test company's `primary_color` really is `#1565C0` (blue) - the payment sheet's branding is correctly applying it. Not a bug, just a test company whose real brand color happens to resemble Stripe's own blue.
+- [x] **Found HQ** - one admin dashboard (`/admin`) replaces four separate `/admin/*` login screens. Sidebar nav on desktop, bottom nav on mobile, home page shows live stats (total/active/comp/new-this-week) plus the 6 most recent signups. Businesses/Photos/Emails/Copy work exactly as before, just inside the shared shell. Pushed as `3ed70ae`.
+- [x] Live-tested all 6 July 6 items directly on production - camera permission (blocked + granted), company switching, leads add-sheet, estimate request -> create estimate handoff, and Schedule (Calendar/Bookings/Hours) all confirmed working with screenshots.
 
 ---
 
 ## Still Needs Work
 
 - [x] **Stripe Connect webhook gap - CLOSED July 7.** Confirmed via screenshots: the only registered endpoint listened to "Your account" events, not Connected accounts. Shawn created a second event destination in the Stripe Dashboard (sandbox) scoped to Connected accounts, Snapshot payload style, including `payment_intent.succeeded`. `src/app/api/stripe/webhook/route.ts` now tries both `STRIPE_WEBHOOK_SECRET` (platform) and `STRIPE_WEBHOOK_SECRET_CONNECT` (new) when verifying signatures, since each Stripe endpoint signs independently. New secret added to Vercel (production + preview) via API and to `.env.local`. Pushed as `31d34c0`. **Still needs:** the same Connect-scoped destination created in Stripe's *live* mode before actual launch - everything done so far was in the sandbox. Also a stray `empowering-bliss-thin` destination (wrong payload style, unused) should get deleted from the Stripe Dashboard - cleanup only, not blocking.
-- [ ] Live-test this session's fixes (builder gap actually gone, payment retry behavior, redundant header copy removed, and now the webhook fallback) on `my.foundco.app`.
+- [x] **Live-tested July 8** on production: builder gap is gone, redundant header copy is gone (single "New estimate" title), estimate request -> create estimate handoff prefills correctly. Payment retry behavior and the webhook fallback specifically still need a real Stripe test-mode payment run through end to end - not yet done.
 - [ ] QA Schedule across quote-first, restaurant, and booking-first profiles.
 - [ ] Confirm whether sticky Schedule tabs are worth continuing. Shawn said it is okay if freeze/sticky tabs do not happen.
 - [ ] QA payable estimates end to end with Stripe-connected account:
@@ -91,6 +95,14 @@ History policy: keep the current working window and anything still active in cur
 ---
 
 ## Shawn Test Steps
+
+### 0. Found HQ (new tonight)
+1. Go to `foundco.app/admin` (not `/admin/photos` anymore - just `/admin`).
+2. Log in with the same access key you've always used.
+3. Confirm you land on a new home page with numbers at the top (total businesses, active, comp accounts, new this week) and a card for each tool below.
+4. Tap Businesses, Photos, Emails, and Copy from the left menu (or bottom menu on your phone) and confirm each one opens and works like it always has.
+5. On Photos, select a few pictures and confirm the "Approve" bar at the bottom is fully readable and tappable - both on your laptop and your phone.
+6. On your phone, tap "Sign out" in the bottom bar and confirm you're dropped back to the login screen.
 
 ### 1. Camera Permission
 1. On a device/browser where camera permission is blocked, open Camera in Found.
