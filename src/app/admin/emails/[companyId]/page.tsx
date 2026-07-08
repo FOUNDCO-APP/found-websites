@@ -125,14 +125,27 @@ export default async function AdminEmailPreviewPage({
     <div className="min-h-screen" style={{ backgroundColor: "#080A09" }}>
       <div className="max-w-3xl mx-auto px-6 py-12">
 
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-2">
-            <Link href="/admin/emails"
-              className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
-              style={{ color: "rgba(255,255,255,0.35)" }}>
-              ← All Companies
-            </Link>
-          </div>
+        <div className="mb-10" style={{ position: "relative", paddingRight: 52 }}>
+          <Link
+            href="/admin/emails"
+            aria-label="Close email preview"
+            title="Close email preview"
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: 40,
+              height: 40,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: 10,
+              color: "rgba(255,255,255,0.72)",
+              backgroundColor: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, fontWeight: 300 }}>?</span>
+          </Link>
           <h1 className="text-3xl font-black" style={{ color: "#ffffff" }}>{company.name}</h1>
           <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
             {company.industry_category ?? "—"}
