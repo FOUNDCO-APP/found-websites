@@ -37,7 +37,8 @@ const SELECT_FIELDS =
 export async function isAdminOverrideActive(): Promise<boolean> {
   const cookieStore = await cookies()
   const adminKey = cookieStore.get("admin_key")?.value
-  return Boolean(adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY)
+  const adminView = cookieStore.get("found_admin_view")?.value
+  return Boolean(adminView === "1" && adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY)
 }
 
 export const getCompany = cache(async (

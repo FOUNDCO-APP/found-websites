@@ -31,11 +31,40 @@ async function requireAdmin() {
 export async function setViewAsCookie(companyId: string): Promise<{ success: boolean }> {
   await requireAdmin()
   const cookieStore = await cookies()
+  const domain = process.env.NODE_ENV === "production" ? `.${ROOT_DOMAIN}` : undefined
+  const currentCompanyId = cookieStore.get("found_company_id")?.value
+
+  if (currentCompanyId && currentCompanyId !== companyId) {
+    cookieStore.set("found_admin_previous_company_id", currentCompanyId, {
+      path: "/",
+      domain,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 60 * 60 * 8,
+    })
+  }
+  cookieStore.set("found_admin_view", "1", {
+    path: "/",
+    domain,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 60 * 60 * 8,
+  })
+  cookieStore.set("admin_key", process.env.ADMIN_KEY!, {
+    path: "/",
+    domain,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 60 * 60 * 8,
+  })
   cookieStore.set("found_company_id", companyId, {
     path: "/",
-    domain: `.${ROOT_DOMAIN}`,
+    domain,
     sameSite: "lax",
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 8,
   })
   return { success: true }
@@ -43,7 +72,21 @@ export async function setViewAsCookie(companyId: string): Promise<{ success: boo
 
 export async function exitAdminView() {
   const cookieStore = await cookies()
-  cookieStore.delete({ name: "found_company_id", path: "/", domain: `.${ROOT_DOMAIN}` })
+  const domain = process.env.NODE_ENV === "production" ? `.${ROOT_DOMAIN}` : undefined
+  const previousCompanyId = cookieStore.get("found_admin_previous_company_id")?.value
+  if (previousCompanyId) {
+    cookieStore.set("found_company_id", previousCompanyId, {
+      path: "/",
+      domain,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 30,
+    })
+  } else {
+    cookieStore.delete({ name: "found_company_id", path: "/", domain })
+  }
+  cookieStore.delete({ name: "found_admin_view", path: "/", domain })
+  cookieStore.delete({ name: "found_admin_previous_company_id", path: "/", domain })
   redirect(`https://my.${ROOT_DOMAIN}/`)
 }
 

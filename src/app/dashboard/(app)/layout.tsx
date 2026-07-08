@@ -28,13 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user && !company) redirect("/admin")
 
-  // Only a real "viewing as" signal, not just "the admin cookie happens to
-  // be set" - Shawn could have that cookie while genuinely looking at his
-  // own business, and the banner should stay silent for that case. An
-  // admin-only session (no personal login at all) is always "viewing as."
-  const viewingAsAdmin = Boolean(
-    adminKeyValid && company && (!user || (company.user_id !== user.id && company.email !== user.email))
-  )
+  const viewingAsAdmin = Boolean(adminKeyValid && company)
 
   const [newLeadCount, paidAddonSlugs] = company?.id
     ? await Promise.all([
@@ -57,10 +51,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
 
-      {/* Main content — shifts right of sidebar on desktop */}
+      {/* Main content Ã¢â‚¬â€ shifts right of sidebar on desktop */}
       <div className="found-dashboard-main">
 
-        {/* ── Header — hidden on desktop (sidebar carries wordmark + company name) ── */}
+        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â‚¬â€ hidden on desktop (sidebar carries wordmark + company name) Ã¢â€â‚¬Ã¢â€â‚¬ */}
         <header className="found-dashboard-header" style={{
           position: "sticky", top: 0, zIndex: 40,
           backgroundColor: "rgba(8,10,9,0.92)",
@@ -75,7 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             padding: "14px 20px",
             paddingTop: "max(env(safe-area-inset-top), 14px)",
           }}>
-            {/* FOUND wordmark — hidden on desktop (sidebar has it) */}
+            {/* FOUND wordmark Ã¢â‚¬â€ hidden on desktop (sidebar has it) */}
             <Link href="/" className="found-header-wordmark" style={{ textDecoration: "none" }}>
               <FoundWordmark height={18} color="white" />
             </Link>
