@@ -47,3 +47,8 @@
 
 .hq-filter-row { scrollbar-width: none; }
 .hq-filter-row::-webkit-scrollbar { display: none; }
+
+@media (max-width: 720px) {
+  .hq-filter-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: visible; }
+  .hq-filter-row button { width: 100%; padding-inline: 6px; }
+}
