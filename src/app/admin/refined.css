@@ -277,3 +277,7 @@
 }
 
 .found-hq-navlink { position: relative; }
+
+@media (max-width: 720px) {
+  .found-hq-sidebar { width: 100%; flex-basis: auto; }
+}
