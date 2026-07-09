@@ -21,9 +21,10 @@ History policy: keep the current working window and anything still active in cur
 
 ## Current Status
 
+- **New July 8:** Found HQ was redesigned as an operator workspace. Primary navigation is now Overview, Businesses, Quality, and More. Overview shows actionable setup/quality signals; Businesses is compact and filterable; Copy, Photos, and Email previews live under Quality; Sign out moved to More on mobile. Shared visual tokens and consistent specialist-tool framing shipped in code commit `2bc4fd0`.
 - **New July 8:** Copy regeneration is now recoverable and admin-only. `Regenerate All` was removed. Every regeneration requires confirmation, atomically snapshots the eight affected live-copy fields in Supabase, and exposes `View site` plus one-tap `Undo changes`. Undo creates its own recovery snapshot before restoring. Migration 044 was applied and its permissions verified; rollback-only publish/restore testing passed. Code commit: `8825321`.
 - Repo is on `main`.
-- Latest functional commit: `8825321` - `Add safe copy regeneration undo`.
+- Latest functional commit: `2bc4fd0` - `Redesign Found HQ operator workspace`.
 - Copy safety code is committed; this handoff update is pending its documentation commit and push.
 - **New tonight:** Live-tested all 6 July 6 items directly against production (`my.foundco.app`), logged in as a real session via a minted Supabase magic link (no password needed) - all 5 testable flows (camera permission blocked/granted, company switching, leads add-sheet, estimate request -> create estimate handoff, schedule tabs) confirmed working with screenshots at every step. Left one obviously-labeled test lead ("TEST — Claude QA") on Blue Luna Events - safe to delete, not cleaned up automatically.
 - **New tonight:** Built "Found HQ" - one unified admin dashboard replacing the four separate `/admin/*` pages that each had their own login screen. See "Changed / Finished" and the July 8 (part 2) changelog entry for full detail. Two real bugs were found and fixed by scripted click-through testing (not just screenshots) before this shipped - most seriously, a mobile layout bug that would have silently made almost the entire admin app untappable on a phone.
@@ -66,6 +67,8 @@ History policy: keep the current working window and anything still active in cur
 ---
 
 - [x] Made Found HQ Copy regeneration recoverable: removed bulk regeneration, added explicit confirmation, durable version history, atomic publish/restore functions, server-side admin checks, View site, and Undo changes. Migration 044 applied; build and rollback-only database test passed. Commit `8825321`.
+
+- [x] Rebuilt Found HQ around Steve and Jony's approved operator model: four-item navigation, actionable Overview, compact Businesses workspace, Quality hub, secondary More destination, and one shared responsive visual system. Commit `2bc4fd0`.
 
 ## Still Needs Work
 
@@ -164,6 +167,19 @@ History policy: keep the current working window and anything still active in cur
 7. Tap `View site` and confirm the test site shows the regenerated copy.
 8. Tap `Undo changes`, then refresh the public site and confirm the previous copy returns.
 9. Do not run this test on a real customer site.
+
+---
+
+### 0C. Found HQ redesign pass
+1. Open `admin.foundco.app` on your phone.
+2. Confirm the bottom navigation shows only Overview, Businesses, Quality, and More.
+3. On Overview, confirm attention rows and new businesses are readable and useful.
+4. Search for a business from Overview and confirm Businesses opens with that search.
+5. On Businesses, test All, Attention, Setup, No logo, and Payments filters.
+6. Confirm Site and View as still work. Open Manage and confirm notes and comp controls still work.
+7. Open Quality, then Website copy, Photo library, and Email previews.
+8. Open More and confirm Sign out is there, not in the mobile dock.
+9. Check that no content is hidden behind the bottom navigation.
 
 ---
 

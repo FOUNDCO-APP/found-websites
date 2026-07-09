@@ -4,6 +4,20 @@
 
 ---
 
+## July 8, 2026 - Found HQ Visual System
+
+**Status:** APPROVED by Shawn. Jony led visual direction.
+
+- Found HQ uses a quiet neutral charcoal foundation; green is reserved for primary actions and success.
+- Amber communicates warnings, blue communicates setup information, and red is reserved for errors.
+- Mobile navigation is limited to four stable destinations.
+- Operator screens favor compact rows, restrained panels, and information density over oversized cards.
+- Shared controls use consistent 7-8px radii, spacing, typography, badges, and interaction states.
+- Detail views retain an obvious close or return action.
+- Specialist tools inherit the shared Found HQ shell without changing their working behavior.
+
+---
+
 ## PUBLIC ESTIMATE PAYMENT: BRANDED TO THE FOUND CLIENT, NOT TO FOUND (APPROVED — July 7, 2026)
 
 **The post-payment confirmation on a public estimate must feel custom to the Found client's own business — their logo, their color, their customer — not a generic Stripe or generic Found moment.**

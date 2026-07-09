@@ -4,6 +4,27 @@
 
 ---
 
+## Session: July 8, 2026 - Found HQ Operator Redesign
+**AI:** Codex
+**Worked on:** Implemented Steve and Jony's approved redesign after reviewing seven live iPhone screenshots.
+
+### Completed
+- Replaced six-item mobile navigation with Overview, Businesses, Quality, and More.
+- Rebuilt Overview around actionable signals and recent business status.
+- Rebuilt Businesses as compact rows with meaningful filters and secondary Manage controls.
+- Removed the non-actionable No leads warning.
+- Grouped Copy, Photos, and Email previews under Quality.
+- Moved Sign out to More on mobile.
+- Added a shared Found HQ token system and aligned login, email detail, Copy, and Photos surfaces.
+- Verified with a clean production build.
+- Code commit: `2bc4fd0`.
+
+### Test Next
+- Run the Found HQ redesign pass in `SESSION_HANDOFF.md` on Shawn's iPhone.
+
+---
+
+
 ## Session: July 8, 2026 - Safe Copy Regeneration and Undo
 **AI:** Codex
 **Worked on:** Added the team-approved safety layer before allowing Found HQ to overwrite live customer website copy.

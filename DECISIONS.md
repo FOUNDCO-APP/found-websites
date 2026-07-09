@@ -52,6 +52,20 @@ A business can need both an intake pathway and an estimate pathway. Example: a b
 This does not mean the business name "Blue Luna Events" should drive the label. It means the industry/sub-industry vocabulary and tool routing need an audit so each business type gets the right intake label and the right separate tools. See `INDUSTRY_WORKFLOW_AUDIT.md` for the current team audit matrix.
 
 ---
+
+## July 8, 2026 - Found HQ Is an Operator Workspace
+
+**Status:** APPROVED by Shawn. Steve led product direction.
+
+- Found HQ exists to help the Found operator identify and resolve work, not expose an equal-weight catalog of internal tools.
+- Primary navigation is Overview, Businesses, Quality, and More.
+- Overview leads with actionable operating signals and new-business status.
+- Businesses is the primary support workspace.
+- Copy, Photos, and Email previews are grouped under Quality.
+- Sign out is secondary account behavior and does not occupy mobile primary navigation.
+- Existing working backend behavior and routes remain intact.
+
+---
 # DECISIONS.md — Found Co. Product Decisions
 ### Every approved product decision lives here. Written the moment it's decided. Never deleted.
 ### New AI: read this before suggesting anything. These are locked unless Steve reopens them.
