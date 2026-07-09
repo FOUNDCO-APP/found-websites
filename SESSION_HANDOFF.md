@@ -21,10 +21,11 @@ History policy: keep the current working window and anything still active in cur
 
 ## Current Status
 
+- **Phone QA follow-up:** Shawn's screenshots exposed question marks where Unicode chevrons, arrows, and separators should render. Replaced all affected admin UI glyphs with CSS-drawn indicators or ASCII-safe text, removed redundant Email previews from More, removed the explanatory Quality rule panel, and tightened Quality counts. Clean build passed. Commit `f3b3d4b`.
 - **New July 8:** Found HQ was redesigned as an operator workspace. Primary navigation is now Overview, Businesses, Quality, and More. Overview shows actionable setup/quality signals; Businesses is compact and filterable; Copy, Photos, and Email previews live under Quality; Sign out moved to More on mobile. Shared visual tokens and consistent specialist-tool framing shipped in code commit `2bc4fd0`.
 - **New July 8:** Copy regeneration is now recoverable and admin-only. `Regenerate All` was removed. Every regeneration requires confirmation, atomically snapshots the eight affected live-copy fields in Supabase, and exposes `View site` plus one-tap `Undo changes`. Undo creates its own recovery snapshot before restoring. Migration 044 was applied and its permissions verified; rollback-only publish/restore testing passed. Code commit: `8825321`.
 - Repo is on `main`.
-- Latest functional commit: `2bc4fd0` - `Redesign Found HQ operator workspace`.
+- Latest functional commit: `f3b3d4b` - `Fix Found HQ mobile glyph rendering`.
 - Copy safety code is committed; this handoff update is pending its documentation commit and push.
 - **New tonight:** Live-tested all 6 July 6 items directly against production (`my.foundco.app`), logged in as a real session via a minted Supabase magic link (no password needed) - all 5 testable flows (camera permission blocked/granted, company switching, leads add-sheet, estimate request -> create estimate handoff, schedule tabs) confirmed working with screenshots at every step. Left one obviously-labeled test lead ("TEST — Claude QA") on Blue Luna Events - safe to delete, not cleaned up automatically.
 - **New tonight:** Built "Found HQ" - one unified admin dashboard replacing the four separate `/admin/*` pages that each had their own login screen. See "Changed / Finished" and the July 8 (part 2) changelog entry for full detail. Two real bugs were found and fixed by scripted click-through testing (not just screenshots) before this shipped - most seriously, a mobile layout bug that would have silently made almost the entire admin app untappable on a phone.
@@ -69,6 +70,8 @@ History policy: keep the current working window and anything still active in cur
 - [x] Made Found HQ Copy regeneration recoverable: removed bulk regeneration, added explicit confirmation, durable version history, atomic publish/restore functions, server-side admin checks, View site, and Undo changes. Migration 044 applied; build and rollback-only database test passed. Commit `8825321`.
 
 - [x] Rebuilt Found HQ around Steve and Jony's approved operator model: four-item navigation, actionable Overview, compact Businesses workspace, Quality hub, secondary More destination, and one shared responsive visual system. Commit `2bc4fd0`.
+
+- [x] Fixed phone rendering defects from the first Found HQ redesign review: no visible question-mark glyphs, ASCII-safe metadata, CSS chevrons, and simplified Quality/More content. Commit `f3b3d4b`.
 
 ## Still Needs Work
 

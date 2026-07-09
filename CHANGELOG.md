@@ -4,6 +4,22 @@
 
 ---
 
+## Session: July 8, 2026 - Found HQ Phone QA Corrections
+**AI:** Codex
+**Worked on:** Corrected defects visible in Shawn's first live iPhone screenshots of the redesign.
+
+### Completed
+- Replaced broken question-mark chevrons with CSS-drawn indicators.
+- Replaced unsafe metadata separators and status glyphs with ASCII-safe text.
+- Removed duplicate Email previews from More.
+- Removed the explanatory Quality rule panel.
+- Simplified Quality badges to compact counts.
+- Ran a clean production build.
+- Code commit: `f3b3d4b`.
+
+---
+
+
 ## Session: July 8, 2026 - Found HQ Operator Redesign
 **AI:** Codex
 **Worked on:** Implemented Steve and Jony's approved redesign after reviewing seven live iPhone screenshots.
