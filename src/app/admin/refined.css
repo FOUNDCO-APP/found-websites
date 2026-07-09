@@ -281,3 +281,7 @@
 @media (max-width: 720px) {
   .found-hq-sidebar { width: 100%; flex-basis: auto; }
 }
+
+@media (max-width: 720px) {
+  .hq-business-toolbar { grid-template-columns: 1fr; }
+}
