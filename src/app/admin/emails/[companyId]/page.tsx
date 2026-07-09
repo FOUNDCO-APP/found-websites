@@ -147,9 +147,9 @@ export default async function AdminEmailPreviewPage({
           </Link>
           <div><p className="hq-eyebrow">Email preview</p><h1 className="hq-title">{company.name}</h1>
           <p className="hq-subtitle">
-            {company.industry_category ?? "—"}
-            {company.primary_intent ? ` · intent: ${company.primary_intent}` : ""}
-            {company.email ? ` · ${company.email}` : " · no owner email"}
+            {company.industry_category ?? "Not set"}
+            {company.primary_intent ? ` / intent: ${company.primary_intent}` : ""}
+            {company.email ? ` / ${company.email}` : " / no owner email"}
           </p></div>
         </header>
 

@@ -18,8 +18,8 @@ export default async function AdminEmailsPage() {
       <div className="hq-panel">
         {rows.map((company) => (
           <Link key={company.id} href={`/admin/emails/${company.id}`} className="hq-row hq-link-row">
-            <div style={{ minWidth: 0 }}><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{company.industry_category ?? "Uncategorized"} ? {intentLabels[company.primary_intent ?? ""] ?? company.primary_intent ?? "No intent"}{company.email ? ` ? ${company.email}` : " ? No owner email"}</p></div>
-            <span className="hq-chevron">?</span>
+            <div style={{ minWidth: 0 }}><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{company.industry_category ?? "Uncategorized"} / {intentLabels[company.primary_intent ?? ""] ?? company.primary_intent ?? "No intent"}{company.email ? ` / ${company.email}` : " / No owner email"}</p></div>
+            <span className="hq-chevron" aria-hidden="true" />
           </Link>
         ))}
       </div>

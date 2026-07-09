@@ -225,7 +225,7 @@ export default function PhotoCurator() {
         <div className="flex items-end justify-between gap-4">
           <h1 className="text-2xl font-black text-white">Photo library</h1>
           <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "#32D074" : "#555" }}>
-            {doneCount === INDUSTRIES.length ? "✓ All done!" : `${doneCount} / ${INDUSTRIES.length} complete`}
+            {doneCount === INDUSTRIES.length ? "All done" : `${doneCount} / ${INDUSTRIES.length} complete`}
           </p>
         </div>
 
@@ -294,19 +294,19 @@ export default function PhotoCurator() {
           </p>
           {activeOwner && (
             <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#333" }}>
-              · {activeOwner}
+              / {activeOwner}
             </p>
           )}
         </div>
         <div className="flex items-center gap-4">
           {currentPending > 0 && (
             <p className="text-xs font-black" style={{ color: "#f5c842" }}>
-              ⏳ {currentPending} pending Shawn
+              {currentPending} pending
             </p>
           )}
           {currentApproved > 0 && (
             <p className="text-xs font-black" style={{ color: "#32D074" }}>
-              ✓ {currentApproved} live
+              {currentApproved} live
             </p>
           )}
         </div>
@@ -318,7 +318,7 @@ export default function PhotoCurator() {
           type="text"
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
-          placeholder={`Search Pexels… e.g. "spa facial treatment"`}
+          placeholder={`Search Pexels... e.g. "spa facial treatment"`}
           className="flex-1 px-4 py-2.5 text-sm bg-white/8 text-white placeholder-white/30 rounded-lg border border-white/10 focus:outline-none focus:border-white/30"
           style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
         />
@@ -328,7 +328,7 @@ export default function PhotoCurator() {
           className="px-5 py-2.5 font-black text-xs uppercase tracking-widest rounded-lg disabled:opacity-40 transition-opacity shrink-0"
           style={{ backgroundColor: "#32D074", color: "#071109" }}
         >
-          {searching ? "…" : "Search"}
+          {searching ? "..." : "Search"}
         </button>
         {activeQuery && (
           <button
@@ -347,7 +347,7 @@ export default function PhotoCurator() {
         <div className="px-6 pb-3">
           <p className="text-xs" style={{ color: "#666" }}>
             Showing results for <span className="font-black" style={{ color: "#aaa" }}>"{activeQuery}"</span>
-            {" · "}
+            {" / "}
             <button onClick={clearSearch} className="underline" style={{ color: "#666" }}>
               back to defaults
             </button>
@@ -360,7 +360,7 @@ export default function PhotoCurator() {
         <div className="px-3 mb-6">
           <div className="flex items-center gap-3 mb-3 px-3">
             <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#f5c842" }}>
-              Pending Review — Jony&apos;s Picks
+              Pending review - team picks
             </p>
             <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black" style={{ backgroundColor: "#f5c842", color: "#000" }}>
               {pendingPhotos.length}
@@ -383,7 +383,7 @@ export default function PhotoCurator() {
                     style={{ backgroundColor: "rgba(0,0,0,0.75)", color: "#fff" }}
                     title="Remove this photo"
                   >
-                    {removingPending === photo.url ? "…" : "×"}
+                    {removingPending === photo.url ? "..." : "X"}
                   </button>
                 </div>
                 <div className="px-2 py-1.5" style={{ backgroundColor: "rgba(245,200,66,0.08)" }}>
@@ -400,7 +400,7 @@ export default function PhotoCurator() {
             ))}
           </div>
           <p className="text-xs mt-3 px-3" style={{ color: "#555" }}>
-            Remove any picks you don&apos;t want, then hit <span className="font-black" style={{ color: "#4caf50" }}>Approve → Go Live</span> when ready.
+            Remove unwanted picks, then approve when ready.
           </p>
         </div>
       )}
@@ -472,16 +472,16 @@ export default function PhotoCurator() {
               {saveMode === "live" ? (
                 <>
                   <p className="font-black text-sm" style={{ color: "#4caf50" }}>
-                    ✓ Live — {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
+                    Live - {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
-                    {activeQuery ? `Tagged as "${activeQuery}" — search another term or tap Next.` : "Tagged as general — works for any business in this category."}
+                    {activeQuery ? `Tagged as "${activeQuery}" - search another term or tap Next.` : "Tagged as general - works for any business in this category."}
                   </p>
                 </>
               ) : (
                 <>
                   <p className="font-black text-sm" style={{ color: "#f5c842" }}>
-                    ⏳ Submitted for Shawn's review — {currentPending} photos pending
+                    Submitted for review - {currentPending} photos pending
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: "#f5c842", opacity: 0.7 }}>
                     Not live yet. Shawn approves the final picks.
@@ -497,9 +497,9 @@ export default function PhotoCurator() {
                 else       { setSavedIndustry(null); setSaveMode(null) }
               }}
               className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full"
-              style={{ backgroundColor: saveMode === "live" ? "#32D074" : "#f5c842", color: saveMode === "live" ? "#fff" : "#000" }}
+              style={{ backgroundColor: saveMode === "live" ? "#32D074" : "#f5c842", color: "#071109" }}
             >
-              {INDUSTRIES.findIndex(i => i.key === activeIndustry) < INDUSTRIES.length - 1 ? "Next →" : "Done"}
+              {INDUSTRIES.findIndex(i => i.key === activeIndustry) < INDUSTRIES.length - 1 ? "Next" : "Done"}
             </button>
           </>
         ) : (
@@ -520,7 +520,7 @@ export default function PhotoCurator() {
                     className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
                     style={{ backgroundColor: "#333", color: "#f5c842", border: "1px solid #f5c842" }}
                   >
-                    {saving ? "Submitting…" : "Submit for Review"}
+                    {saving ? "Submitting..." : "Submit for review"}
                   </button>
                   {(currentPending > 0 || selectedCount > 0) && (
                     <button
@@ -529,7 +529,7 @@ export default function PhotoCurator() {
                       className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
                       style={{ backgroundColor: "#32D074", color: "#071109" }}
                     >
-                      {saving ? "Approving…" : `Approve → Go Live (${currentPending + selectedCount})`}
+                      {saving ? "Approving..." : `Approve and go live (${currentPending + selectedCount})`}
                     </button>
                   )}
                 </>
@@ -541,7 +541,7 @@ export default function PhotoCurator() {
                   className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
                   style={{ backgroundColor: "#32D074", color: "#071109" }}
                 >
-                  {saving ? "Saving…" : "Approve"}
+                  {saving ? "Saving..." : "Approve"}
                 </button>
               )}
             </div>

@@ -71,7 +71,7 @@ function BusinessItem({ row }: { row: BusinessRow }) {
             <h2>{row.name}</h2>
             <span className={`hq-badge ${active ? "hq-badge-success" : "hq-badge-warning"}`}>{comp ? "Comp" : active ? "Active" : "Setup"}</span>
           </div>
-          <p>{row.slug}.foundco.app ? {planLabel(row.plan)} ? {row.industry_category ?? "Uncategorized"}</p>
+          <p>{row.slug}.foundco.app / {planLabel(row.plan)} / {row.industry_category ?? "Uncategorized"}</p>
           {row.email && <p>{row.email}</p>}
           {row.issues.length > 0 && <div className="hq-business-issues">{row.issues.map((issue) => <IssueBadge key={issue} issue={issue} />)}</div>}
         </div>

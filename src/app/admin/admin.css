@@ -60,7 +60,7 @@
 .hq-stat-label { margin-top: 3px; color: var(--hq-muted); font-size: 11px; }
 .hq-link-row { color: inherit; text-decoration: none; }
 .hq-link-row:hover { background: rgba(255,255,255,.025); }
-.hq-chevron { color: var(--hq-dim); font-size: 18px; }
+.hq-chevron { width: 8px; height: 8px; flex: 0 0 8px; border-top: 1.5px solid var(--hq-dim); border-right: 1.5px solid var(--hq-dim); transform: rotate(45deg); }
 
 @media (max-width: 720px) {
   .found-hq-root { display: block; }

@@ -24,13 +24,12 @@ export default async function AdminQualityPage() {
           <Link key={tool.href} href={tool.href} className="hq-row hq-link-row" style={{ minHeight: 82 }}>
             <div><p className="hq-row-title">{tool.title}</p><p className="hq-row-meta">{tool.detail}</p></div>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <span className={`hq-badge hq-badge-${tool.tone}`}>{tool.count} {tool.action}</span>
-              <span className="hq-chevron">?</span>
+              <span className={`hq-badge hq-badge-${tool.tone}`}>{tool.count}</span>
+              <span className="hq-chevron" aria-hidden="true" />
             </div>
           </Link>
         ))}
       </div>
-      <section className="hq-section"><div className="hq-panel"><div className="hq-row"><div><p className="hq-row-title">Quality rule</p><p className="hq-row-meta">Review live customer changes individually. Bulk publishing stays disabled.</p></div></div></div></section>
     </div>
   )
 }

@@ -9,9 +9,8 @@ export default function AdminMorePage() {
       <section>
         <div className="hq-section-head"><h2 className="hq-section-title">Destinations</h2></div>
         <div className="hq-panel">
-          <a href="https://my.foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Customer dashboard</p><p className="hq-row-meta">Open the business-owner product</p></div><span className="hq-chevron">?</span></a>
-          <a href="https://foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Found website</p><p className="hq-row-meta">Open the public marketing site</p></div><span className="hq-chevron">?</span></a>
-          <Link href="/admin/emails" className="hq-row hq-link-row"><div><p className="hq-row-title">Email previews</p><p className="hq-row-meta">Secondary transactional template review</p></div><span className="hq-chevron">?</span></Link>
+          <a href="https://my.foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Customer dashboard</p><p className="hq-row-meta">Open the business-owner product</p></div><span className="hq-chevron" aria-hidden="true" /></a>
+          <a href="https://foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Found website</p><p className="hq-row-meta">Open the public marketing site</p></div><span className="hq-chevron" aria-hidden="true" /></a>
         </div>
       </section>
       <section className="hq-section">

@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import PhotoCurator from "./PhotoCurator"
 import AdminLogin from "./AdminLogin"
 
-export const metadata = { title: "Photo Curation — Found Admin" }
+export const metadata = { title: "Photo library - Found HQ" }
 
 export default async function AdminPhotosPage() {
   const cookieStore = await cookies()

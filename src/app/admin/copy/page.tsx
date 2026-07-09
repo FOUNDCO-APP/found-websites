@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getSitesNeedingCopy } from "./actions"
 import CopyRegenPanel from "./CopyRegenPanel"
 
-export const metadata = { title: "Copy Review — Found Admin" }
+export const metadata = { title: "Website copy - Found HQ" }
 
 export default async function AdminCopyPage() {
   const cookieStore = await cookies()

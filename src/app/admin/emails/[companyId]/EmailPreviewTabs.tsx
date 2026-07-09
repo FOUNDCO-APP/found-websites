@@ -71,7 +71,7 @@ export default function EmailPreviewTabs({ tabs }: { tabs: Tab[] }) {
       </div>
 
       <p style={{ margin: "12px 0 0", fontSize: 11, textAlign: "center", color: "rgba(255,255,255,0.2)" }}>
-        Rendered with sample lead data — Maria Santos, (520) 555-0142, maria@example.com
+        Rendered with sample lead data - Maria Santos, (520) 555-0142, maria@example.com
       </p>
     </div>
   )

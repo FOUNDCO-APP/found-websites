@@ -68,7 +68,7 @@ export default async function AdminOverviewPage() {
         <div className="hq-stat"><div className="hq-stat-value">{rows.length}</div><div className="hq-stat-label">Businesses</div></div>
         <div className="hq-stat"><div className="hq-stat-value">{active}</div><div className="hq-stat-label">Active</div></div>
         <div className="hq-stat"><div className="hq-stat-value">{newThisWeek}</div><div className="hq-stat-label">New this week</div></div>
-        <div className="hq-stat"><div className="hq-stat-value">{attention.reduce((sum, item) => sum + item.count, 0)}</div><div className="hq-stat-label">Open signals</div></div>
+        <div className="hq-stat"><div className="hq-stat-value">{attention.reduce((sum, item) => sum + item.count, 0)}</div><div className="hq-stat-label">Checks flagged</div></div>
       </div>
 
       <section className="hq-section">
@@ -84,7 +84,7 @@ export default async function AdminOverviewPage() {
               <div><p className="hq-row-title">{item.label}</p><p className="hq-row-meta">{item.detail}</p></div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span className={`hq-badge ${item.tone === "warning" ? "hq-badge-warning" : "hq-badge-info"}`}>{item.count}</span>
-                <span className="hq-chevron">?</span>
+                <span className="hq-chevron" aria-hidden="true" />
               </div>
             </Link>
           ))}
@@ -103,7 +103,7 @@ export default async function AdminOverviewPage() {
               <Link key={row.id} href={`/admin/businesses?q=${encodeURIComponent(row.name)}`} className="hq-row hq-link-row">
                 <div style={{ minWidth: 0 }}>
                   <p className="hq-row-title" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.name}</p>
-                  <p className="hq-row-meta">{row.slug}.foundco.app ? {planLabel(row.plan)} ? {ageLabel(row.created_at)}</p>
+                  <p className="hq-row-meta">{row.slug}.foundco.app / {planLabel(row.plan)} / {ageLabel(row.created_at)}</p>
                 </div>
                 <span className={`hq-badge ${isActive ? "hq-badge-success" : "hq-badge-warning"}`}>{isActive ? "Active" : "Setup"}</span>
               </Link>
