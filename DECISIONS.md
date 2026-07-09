@@ -1,3 +1,9 @@
+# Found HQ is a business operating system
+**Approved:** July 8, 2026
+
+Found HQ's primary navigation is Today, Sales, Clients, and More. Found Co prospects use dedicated admin-only sales records and never share the tenant customer-leads workflow. Subscription status remains a billing fact; client state is a separate relationship fact. Test accounts are explicitly classified and excluded from operational client views.
+
+---
 **[2026-07-08] - Found operator tooling: build for the founder-led stage now, growth-stage tooling stays backlog.**
 Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
 Why: Shawn (as Found's operator, distinct from being a business owner himself) had zero visibility into a real customer's account (Nereida Lopez, Spa Mambo) - every dashboard is scoped strictly to whoever owns that company, with no operator override at all. Team scoped this deliberately in two tiers instead of building everything at once: **build now** - full "view as" for any business (genuine access, not read-only peeking), a comp/waive-billing toggle, and simple per-business notes, all inside the existing shared-admin-key `/admin` area. **Backlog, not built** - role-based permissions, an audit log of admin actions, billing/churn dashboards, support ticketing. The growth-stage items are real and will matter once there's a second person with admin access or real signup volume, but building them now for a single-operator platform with a handful of customers would be solving a problem that doesn't exist yet. Do not build the growth-stage tier without Steve reopening this decision.

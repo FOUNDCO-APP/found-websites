@@ -4,6 +4,42 @@
 
 ---
 
+## Session: July 8, 2026 - Found HQ V2 Foundation
+**AI:** Codex
+**Worked on:** Implemented Shawn's approved reset from a software-monitoring admin into a client and growth operating system.
+
+### Completed
+- Replaced primary navigation with Today, Sales, Clients, and More.
+- Added prioritized Today work for sales follow-ups, proposals, payment risk, and launch blockers.
+- Added a Found Co sales pipeline with contact actions, stages, follow-up scheduling, loss reasons, and append-only activity logs.
+- Replaced Businesses with relationship-focused Clients, including client state, test classification, dated notes, and retained Site/View as controls.
+- Moved Copy, Photos, and Email previews under More.
+- Applied production migration 045 with admin-only sales/activity tables and conservative client-state backfill.
+- Kept tenant customer leads separate from Found Co prospects.
+- Passed the production build.
+
+### Test Next
+- Run the Found HQ V2 test pass in `SESSION_HANDOFF.md`.
+- Classify test companies before relying on client totals.
+
+---
+## Session: July 8, 2026 - Found HQ V2 Operating-System Audit
+**AI:** Codex
+**Worked on:** Audited the admin product and production data after Shawn said the redesign still felt weak and needed to help manage clients and bring in new business.
+
+### Completed
+- Reviewed the current Overview, Businesses, Quality, More, onboarding, billing, and lead data paths.
+- Ran a read-only production schema and aggregate-data audit.
+- Confirmed the abandoned-onboarding records are test/retry artifacts, not a usable sales pipeline.
+- Documented the team recommendation for Today, Sales, Clients, and More in `FOUND_HQ_V2_AUDIT.md`.
+- Defined separate prospect/activity records, explicit client state, test-account exclusion, and phased safety rules.
+- Made no production schema or UI changes.
+
+### Decision Needed
+- Approve the detailed V2 specification before schema or interface implementation begins.
+
+---
+
 ## Session: July 8, 2026 - Found HQ Phone QA Corrections
 **AI:** Codex
 **Worked on:** Corrected defects visible in Shawn's first live iPhone screenshots of the redesign.

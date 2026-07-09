@@ -198,3 +198,50 @@ Before ending any work session, update this file with:
 If there was a product or design decision, also update `DECISIONS.md` or `DESIGN_DECISIONS.md`.
 If there was meaningful code or QA work, also update `CHANGELOG.md`.
 If priorities changed, also update `TASKS.md`.
+
+---
+
+## July 8, 2026 - Found HQ V2 Reset Audit
+
+### What changed
+- Audited the current Found HQ product, schema, onboarding capture, and production aggregates.
+- Recorded the full recommendation in `FOUND_HQ_V2_AUDIT.md`.
+- No production behavior, schema, or UI changed.
+
+### Key findings
+- The current HQ is a useful support console but not a Found Co sales/client operating system.
+- All 10 abandoned-onboarding rows use one email and overlap an existing company; they are not a real prospect pipeline.
+- Stripe customer presence and subscription status are insufficient to represent client health.
+- The recommended primary navigation is Today, Sales, Clients, and More.
+
+### Next approval
+- Shawn reviews and approves the detailed V2 workflow and data model.
+- After approval, start Phase 1 with a migration and backfill dry run before touching production records.
+
+---
+
+## July 8, 2026 - Found HQ V2 Foundation
+
+### Shipped
+- Production schema for Found Co prospects, sales activities, client activities, client state, and test-account classification.
+- Primary navigation: Today, Sales, Clients, More.
+- Functional prospect creation, contact links, stage changes, follow-up scheduling, loss reasons, and activity logging.
+- Client filtering, relationship state, test classification, dated notes, Site, and View as.
+- Quality tools moved under More.
+
+### Important
+- Existing companies were conservatively classified as Active or Onboarding from subscription state.
+- Existing test companies are not guessed automatically. Mark them Test from Clients before trusting client totals.
+- The old tenant `leads` table was not repurposed or changed.
+
+### Shawn's test pass
+1. Open Found HQ on iPhone and confirm the dock reads Today, Sales, Clients, More.
+2. On Today, confirm setup blockers appear in priority order and each Resolve action opens the matching client.
+3. Open Sales and add one throwaway prospect with your own contact information.
+4. Confirm Call/Text/Email links appear for the information entered.
+5. Open Update, change the stage, schedule a follow-up, and log a note.
+6. Return to Today and confirm the prospect appears when it is new or due.
+7. Open Clients, find one known test company, open Manage relationship, and classify it Test.
+8. Add a dated note and confirm it appears as Latest after saving.
+9. Confirm Site and View as still work.
+10. Open More and confirm Website copy, Photo library, and Email previews still open.
