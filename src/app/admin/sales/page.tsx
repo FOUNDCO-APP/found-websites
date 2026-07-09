@@ -12,7 +12,7 @@ export default async function SalesPage() {
   return (
     <div className="hq-page">
       <header className="hq-header">
-        <div><p className="hq-eyebrow">Grow</p><h1 className="hq-title">Sales</h1><p className="hq-subtitle">Move every prospect toward a clear next step.</p></div>
+        <div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Sales</h1><p className="hq-subtitle">Move every prospect toward a clear next step.</p></div>
         <span className="hq-count">{open} open</span>
       </header>
       <SalesWorkspace prospects={prospects} />

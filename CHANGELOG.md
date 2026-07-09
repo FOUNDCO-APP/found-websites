@@ -4,6 +4,19 @@
 
 ---
 
+## Session: July 8, 2026 - Found HQ Brand Refinement
+**AI:** Codex
+**Worked on:** Rebuilt the visual language after Shawn said V2 looked cheap and unlike Found.
+
+### Completed
+- Removed the generic card-dashboard treatment from primary admin surfaces.
+- Restored Found Black, Found White, and restrained Signal Green usage.
+- Replaced pill-heavy status styling with quiet typography.
+- Reworked navigation, page hierarchy, lists, filters, inputs, and repeated actions.
+- Added a documented Found HQ brand system.
+- Preserved all V2 functionality and passed the production build.
+
+---
 ## Session: July 8, 2026 - Found HQ V2 Foundation
 **AI:** Codex
 **Worked on:** Implemented Shawn's approved reset from a software-monitoring admin into a client and growth operating system.

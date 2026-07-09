@@ -39,7 +39,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const realClients = rows.filter((row) => row.account_kind === "client").length
   return (
     <div className="hq-page">
-      <header className="hq-header"><div><p className="hq-eyebrow">Retain</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Protect each relationship, launch, and payment.</p></div><span className="hq-count">{realClients}</span></header>
+      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Protect each relationship, launch, and payment.</p></div><span className="hq-count">{realClients}</span></header>
       <ClientsWorkspace rows={rows} initialSearch={initialSearch} />
     </div>
   )

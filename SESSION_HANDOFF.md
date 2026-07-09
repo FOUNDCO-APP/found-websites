@@ -245,3 +245,18 @@ If priorities changed, also update `TASKS.md`.
 8. Add a dated note and confirm it appears as Latest after saving.
 9. Confirm Site and View as still work.
 10. Open More and confirm Website copy, Photo library, and Email previews still open.
+
+---
+
+## July 8, 2026 - Found HQ Brand Refinement
+
+### Changed
+- Applied Jony's Found HQ visual system across Today, Sales, Clients, More, and the shared shell.
+- Green now signals identity, selection, and commitment instead of filling repeated controls.
+- Primary operational content uses quiet separators and spacing instead of stacked cards.
+- Added `FOUND_HQ_BRAND_SYSTEM.md` as the implementation standard.
+
+### Test
+1. Compare Today, Sales, Clients, and More on iPhone.
+2. Confirm no filters scroll horizontally and no text overlaps.
+3. Confirm Site, View as, Manage relationship, Add prospect, and quality links still work.

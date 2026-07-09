@@ -1,3 +1,6 @@
+**[2026-07-08] - Found HQ uses a quiet editorial operating language, not generic dashboard cards.**
+Approved by: Shawn + Jony Ive + Steve Jobs
+Why: Repeated bordered cards, pills, and green-filled buttons made the private operator product feel inexpensive and visually unrelated to Found. Found HQ now uses Found Black, native system typography, hairline list separators, zero letter spacing, restrained 4px controls, and Signal Green only for identity, selection, and decisive action. The standard is documented in `FOUND_HQ_BRAND_SYSTEM.md`.
 # DESIGN_DECISIONS.md — Found Co. Visual & UX Decisions
 ### Jony Ive's approved design system. Every decision with the reasoning.
 ### New AI: do not override these without Jony explicitly reopening the decision. These are locked.
