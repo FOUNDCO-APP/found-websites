@@ -44,3 +44,6 @@
   .hq-inline-form label, .hq-inline-form .hq-form-grow { min-width: 0; }
   .hq-inline-form .hq-button { width: 100%; }
 }
+
+.hq-filter-row { scrollbar-width: none; }
+.hq-filter-row::-webkit-scrollbar { display: none; }
