@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import AdminShell from "./AdminShell"
 import AdminLogin from "./photos/AdminLogin"
+import "./admin.css"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()

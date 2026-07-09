@@ -215,16 +215,16 @@ export default function PhotoCurator() {
   const showBottomBar = selectedCount > 0 || justSaved
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#111111" }}>
+    <div className="min-h-screen hq-photo-page" style={{ backgroundColor: "var(--hq-bg)" }}>
 
       {/* Header + progress */}
       <div className="px-6 pt-8 pb-4">
-        <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#2E7D32" }}>
-          Found Co. Admin
+        <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#32D074" }}>
+          Quality
         </p>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="text-2xl font-black text-white">Photo Curation</h1>
-          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "#2E7D32" : "#555" }}>
+          <h1 className="text-2xl font-black text-white">Photo library</h1>
+          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "#32D074" : "#555" }}>
             {doneCount === INDUSTRIES.length ? "✓ All done!" : `${doneCount} / ${INDUSTRIES.length} complete`}
           </p>
         </div>
@@ -233,7 +233,7 @@ export default function PhotoCurator() {
         <div className="mt-3 h-1 rounded-full w-full" style={{ backgroundColor: "#222" }}>
           <div
             className="h-1 rounded-full transition-all duration-500"
-            style={{ backgroundColor: "#2E7D32", width: `${(doneCount / INDUSTRIES.length) * 100}%` }}
+            style={{ backgroundColor: "#32D074", width: `${(doneCount / INDUSTRIES.length) * 100}%` }}
           />
         </div>
       </div>
@@ -255,9 +255,9 @@ export default function PhotoCurator() {
                 onClick={() => setActiveIndustry(ind.key)}
                 className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: isActive ? "#2E7D32" : isDone ? "#1a2e1a" : hasPending ? "#2a2500" : "#222222",
+                  backgroundColor: isActive ? "#32D074" : isDone ? "#1a2e1a" : hasPending ? "#2a2500" : "#222222",
                   color: isActive ? "#ffffff" : isDone ? "#4caf50" : hasPending ? "#f5c842" : isNew ? "#555" : liveCount > 0 ? "#bbb" : "#555",
-                  border: isActive ? "none" : isDone ? "1px solid #2E7D32" : hasPending ? "1px solid #f5c842" : "1px solid #333",
+                  border: isActive ? "none" : isDone ? "1px solid #32D074" : hasPending ? "1px solid #f5c842" : "1px solid #333",
                 }}
               >
                 {isDone && !isActive && (
@@ -269,7 +269,7 @@ export default function PhotoCurator() {
                 {/* Live count badge */}
                 {liveCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
-                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "#2E7D32" : "#333", color: "#fff" }}>
+                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "#32D074" : "#333", color: "#fff" }}>
                     {liveCount}
                   </span>
                 )}
@@ -305,7 +305,7 @@ export default function PhotoCurator() {
             </p>
           )}
           {currentApproved > 0 && (
-            <p className="text-xs font-black" style={{ color: "#2E7D32" }}>
+            <p className="text-xs font-black" style={{ color: "#32D074" }}>
               ✓ {currentApproved} live
             </p>
           )}
@@ -326,7 +326,7 @@ export default function PhotoCurator() {
           type="submit"
           disabled={searching || !searchInput.trim()}
           className="px-5 py-2.5 font-black text-xs uppercase tracking-widest rounded-lg disabled:opacity-40 transition-opacity shrink-0"
-          style={{ backgroundColor: "#2E7D32", color: "#fff" }}
+          style={{ backgroundColor: "#32D074", color: "#071109" }}
         >
           {searching ? "…" : "Search"}
         </button>
@@ -424,7 +424,7 @@ export default function PhotoCurator() {
                   key={photo.id}
                   onClick={() => togglePhoto(activeIndustry, photo.id)}
                   className="relative aspect-video overflow-hidden rounded focus:outline-none"
-                  style={{ border: isSelected ? "3px solid #2E7D32" : "3px solid transparent" }}
+                  style={{ border: isSelected ? "3px solid #32D074" : "3px solid transparent" }}
                 >
                   <img
                     src={photo.thumb}
@@ -439,7 +439,7 @@ export default function PhotoCurator() {
                     <div className="absolute inset-0 flex items-center justify-center"
                       style={{ backgroundColor: "rgba(46,125,50,0.4)" }}>
                       <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg">
-                        <svg width="18" height="18" fill="none" stroke="#2E7D32" viewBox="0 0 24 24" strokeWidth={3}>
+                        <svg width="18" height="18" fill="none" stroke="#32D074" viewBox="0 0 24 24" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
@@ -461,7 +461,7 @@ export default function PhotoCurator() {
         className="fixed bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between found-hq-bottom-bar"
         style={{
           backgroundColor: justSaved && saveMode === "live" ? "#1a2e1a" : justSaved && saveMode === "team" ? "#252000" : "#1a1a1a",
-          borderTop: justSaved && saveMode === "live" ? "1px solid #2E7D32" : justSaved && saveMode === "team" ? "1px solid #f5c842" : "1px solid #333",
+          borderTop: justSaved && saveMode === "live" ? "1px solid #32D074" : justSaved && saveMode === "team" ? "1px solid #f5c842" : "1px solid #333",
           transform: showBottomBar ? "translateY(0)" : "translateY(100%)",
           transition: "transform 300ms ease, background-color 300ms ease, border-color 300ms ease",
         }}
@@ -497,7 +497,7 @@ export default function PhotoCurator() {
                 else       { setSavedIndustry(null); setSaveMode(null) }
               }}
               className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full"
-              style={{ backgroundColor: saveMode === "live" ? "#2E7D32" : "#f5c842", color: saveMode === "live" ? "#fff" : "#000" }}
+              style={{ backgroundColor: saveMode === "live" ? "#32D074" : "#f5c842", color: saveMode === "live" ? "#fff" : "#000" }}
             >
               {INDUSTRIES.findIndex(i => i.key === activeIndustry) < INDUSTRIES.length - 1 ? "Next →" : "Done"}
             </button>
@@ -527,7 +527,7 @@ export default function PhotoCurator() {
                       onClick={handlePromoteToLive}
                       disabled={saving}
                       className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-                      style={{ backgroundColor: "#2E7D32", color: "#fff" }}
+                      style={{ backgroundColor: "#32D074", color: "#071109" }}
                     >
                       {saving ? "Approving…" : `Approve → Go Live (${currentPending + selectedCount})`}
                     </button>
@@ -539,7 +539,7 @@ export default function PhotoCurator() {
                   onClick={handleApprove}
                   disabled={saving || selectedCount === 0}
                   className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-                  style={{ backgroundColor: "#2E7D32", color: "#ffffff" }}
+                  style={{ backgroundColor: "#32D074", color: "#071109" }}
                 >
                   {saving ? "Saving…" : "Approve"}
                 </button>

@@ -20,7 +20,7 @@ export default function EmailPreviewTabs({ tabs }: { tabs: Tab[] }) {
         gap: 2,
         marginBottom: 20,
         backgroundColor: "rgba(255,255,255,0.04)",
-        borderRadius: 14,
+        borderRadius: 7,
         padding: 4,
         border: "1px solid rgba(255,255,255,0.06)",
       }}>
@@ -31,7 +31,7 @@ export default function EmailPreviewTabs({ tabs }: { tabs: Tab[] }) {
             style={{
               flex: 1,
               padding: "10px 8px",
-              borderRadius: 10,
+              borderRadius: 5,
               border: "none",
               cursor: "pointer",
               backgroundColor: active === i ? "rgba(255,255,255,0.1)" : "transparent",
@@ -51,7 +51,7 @@ export default function EmailPreviewTabs({ tabs }: { tabs: Tab[] }) {
 
       {/* Preview iframe */}
       <div style={{
-        borderRadius: 16,
+        borderRadius: 8,
         overflow: "hidden",
         border: "1px solid rgba(255,255,255,0.08)",
         backgroundColor: "#f5f5f5",

@@ -1,6 +1,5 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import Link from "next/link"
 import { getSitesNeedingCopy } from "./actions"
 import CopyRegenPanel from "./CopyRegenPanel"
 
@@ -16,54 +15,15 @@ export default async function AdminCopyPage() {
   const sites = await getSitesNeedingCopy()
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#080A09" }}>
-      <div className="max-w-3xl mx-auto px-6 py-12">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Link href="/admin"
-                className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
-                style={{ color: "rgba(255,255,255,0.35)" }}>
-                ← Admin
-              </Link>
-              <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
-              <Link href="/admin/emails"
-                className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
-                style={{ color: "rgba(255,255,255,0.35)" }}>
-                Email Preview
-              </Link>
-            </div>
-            <h1 className="text-3xl font-black" style={{ color: "#ffffff" }}>Copy Review</h1>
-            <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-              All sites — regenerate copy on any of them at any time
-            </p>
-          </div>
-
-          {sites.length > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full"
-              style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-              <span className="text-sm font-black" style={{ color: "rgba(255,255,255,0.5)" }}>
-                {sites.length} {sites.length === 1 ? "site" : "sites"}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <CopyRegenPanel initialSites={sites} />
-
-        {/* What this means */}
-        <div className="mt-12 p-5 rounded-xl" style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
-            How this works
-          </p>
-          <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-            Regeneration replaces the live hero, about text, tagline, CTA, services copy, and FAQs. Found saves the current version first, then provides View site and Undo changes. Sites marked AI use generated copy; Fallback means the templates ran because generation was unavailable.
-          </p>
-        </div>
-
-      </div>
+    <div className="hq-page hq-page-narrow">
+      <header className="hq-header">
+        <div><p className="hq-eyebrow">Quality</p><h1 className="hq-title">Website copy</h1><p className="hq-subtitle">Review fallback content and safely regenerate one live site at a time.</p></div>
+        <span className="hq-count">{sites.length}</span>
+      </header>
+      <CopyRegenPanel initialSites={sites} />
+      <section className="hq-section">
+        <div className="hq-panel"><div className="hq-row"><div><p className="hq-row-title">Protected workflow</p><p className="hq-row-meta">Found saves the current version before publishing generated copy. Every change can be undone.</p></div></div></div>
+      </section>
     </div>
   )
 }

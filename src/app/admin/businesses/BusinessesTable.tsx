@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useTransition } from "react"
 import Link from "next/link"
+import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleComp, saveNotes } from "./actions"
 
-const SIGNAL_GREEN = "#32D074"
-const AMBER = "#f5c842"
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+export type BusinessFilter = "all" | "attention" | "inactive" | "logo" | "payments"
 
 export type BusinessRow = {
   id: string
@@ -29,49 +28,27 @@ function planLabel(plan: string | null) {
   return "No plan"
 }
 
-function statusLabel(status: string | null, isComp: boolean | null) {
-  if (isComp) return { text: "Comp", color: SIGNAL_GREEN }
-  if (status === "active" || status === "trialing") return { text: "Active", color: SIGNAL_GREEN }
-  return { text: "Inactive", color: "rgba(255,255,255,0.35)" }
-}
-
-// Opens a new tab immediately (before any await) so the browser still
-// treats it as a direct response to the click - waiting until after the
-// server action resolves gets the popup silently blocked. The tab starts
-// blank and only gets pointed at the dashboard once the admin cookie for
-// this company is actually set.
 async function openViewAs(companyId: string) {
   const tab = window.open("about:blank", "_blank")
   try {
     const result = await setViewAsCookie(companyId)
-    if (result.success && tab) {
-      tab.location.href = `https://my.${ROOT_DOMAIN}/?admin_view=1`
-    } else {
-      tab?.close()
-    }
-  } catch {
-    tab?.close()
-  }
+    if (result.success && tab) tab.location.href = `https://my.${ROOT_DOMAIN}/?admin_view=1`
+    else tab?.close()
+  } catch { tab?.close() }
 }
 
-function IssueChip({ issue }: { issue: string }) {
-  const style = {
-    fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 100,
-    backgroundColor: "rgba(245,200,66,0.12)", color: AMBER,
-    border: "1px solid rgba(245,200,66,0.25)", textDecoration: "none",
-  }
-  if (issue === "Fallback copy") {
-    return <Link href="/admin/copy" style={style}>{issue} →</Link>
-  }
-  return <span style={style}>{issue}</span>
+function IssueBadge({ issue }: { issue: string }) {
+  const className = issue === "Not active" ? "hq-badge hq-badge-warning" : issue === "Fallback copy" ? "hq-badge hq-badge-warning" : "hq-badge hq-badge-info"
+  if (issue === "Fallback copy") return <Link href="/admin/copy" className={className} style={{ textDecoration: "none" }}>{issue}</Link>
+  return <span className={className}>{issue}</span>
 }
 
-function BusinessRowItem({ row }: { row: BusinessRow }) {
+function BusinessItem({ row }: { row: BusinessRow }) {
   const [notes, setNotes] = useState(row.admin_notes ?? "")
   const [comp, setComp] = useState(Boolean(row.is_comp))
   const [savingNotes, setSavingNotes] = useState(false)
   const [pending, startTransition] = useTransition()
-  const status = statusLabel(row.subscription_status, comp)
+  const active = row.subscription_status === "active" || row.subscription_status === "trialing" || comp
 
   function handleCompToggle() {
     const next = !comp
@@ -87,131 +64,71 @@ function BusinessRowItem({ row }: { row: BusinessRow }) {
   }
 
   return (
-    <div style={{
-      borderRadius: 16, padding: "18px 20px", marginBottom: 8,
-      backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "white" }}>{row.name}</span>
-            <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: status.color }}>
-              {status.text}
-            </span>
+    <div className="hq-business-row">
+      <div className="hq-business-main">
+        <div className="hq-business-copy">
+          <div className="hq-business-name-line">
+            <h2>{row.name}</h2>
+            <span className={`hq-badge ${active ? "hq-badge-success" : "hq-badge-warning"}`}>{comp ? "Comp" : active ? "Active" : "Setup"}</span>
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)" }}>
-            {row.slug}.foundco.app · {planLabel(row.plan)} · {row.industry_category ?? "—"}
-            {row.email ? ` · ${row.email}` : ""}
-          </div>
+          <p>{row.slug}.foundco.app ? {planLabel(row.plan)} ? {row.industry_category ?? "Uncategorized"}</p>
+          {row.email && <p>{row.email}</p>}
+          {row.issues.length > 0 && <div className="hq-business-issues">{row.issues.map((issue) => <IssueBadge key={issue} issue={issue} />)}</div>}
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <a
-            href={`https://${row.slug}.${ROOT_DOMAIN}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              padding: "8px 14px", borderRadius: 100, cursor: "pointer", textDecoration: "none",
-              backgroundColor: "transparent", color: "rgba(255,255,255,0.5)",
-              border: "1px solid rgba(255,255,255,0.15)", fontSize: 12, fontWeight: 800,
-            }}
-          >
-            View site ↗
-          </a>
-          <button
-            type="button"
-            onClick={() => openViewAs(row.id)}
-            style={{
-              padding: "8px 14px", borderRadius: 100, border: "none", cursor: "pointer",
-              backgroundColor: SIGNAL_GREEN, color: "#080A09", fontSize: 12, fontWeight: 800,
-            }}
-          >
-            View as →
-          </button>
+        <div className="hq-business-actions">
+          <a className="hq-button hq-button-secondary" href={`https://${row.slug}.${ROOT_DOMAIN}`} target="_blank" rel="noopener noreferrer">Site</a>
+          <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(row.id)}>View as</button>
         </div>
       </div>
-
-      {row.issues.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
-          {row.issues.map(issue => <IssueChip key={issue} issue={issue} />)}
+      <details className="hq-business-manage">
+        <summary>Manage</summary>
+        <div className="hq-business-manage-body">
+          <label className="hq-business-note-label" htmlFor={`notes-${row.id}`}>Private note</label>
+          <textarea id={`notes-${row.id}`} value={notes} onChange={(event) => setNotes(event.target.value)} onBlur={handleNotesBlur} rows={2} placeholder="How you know them, account purpose, or follow-up details" />
+          <div className="hq-business-manage-footer">
+            <button type="button" onClick={handleCompToggle} disabled={pending} className="hq-button hq-button-secondary">{comp ? "Remove comp" : "Activate as comp"}</button>
+            <span>{savingNotes ? "Saving..." : "Notes save automatically"}</span>
+          </div>
         </div>
-      )}
-
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <button onClick={handleCompToggle} disabled={pending} style={{
-          display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 100,
-          border: `1px solid ${comp ? SIGNAL_GREEN : "rgba(255,255,255,0.15)"}`,
-          backgroundColor: comp ? `${SIGNAL_GREEN}18` : "transparent",
-          color: comp ? SIGNAL_GREEN : "rgba(255,255,255,0.4)",
-          fontSize: 11, fontWeight: 700, cursor: "pointer",
-        }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: comp ? SIGNAL_GREEN : "rgba(255,255,255,0.25)" }} />
-          {comp ? "Comp account" : "Mark as comp"}
-        </button>
-      </div>
-
-      <textarea
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
-        onBlur={handleNotesBlur}
-        placeholder="Notes — how you met them, what this account is for..."
-        rows={2}
-        style={{
-          width: "100%", padding: "10px 12px", borderRadius: 10,
-          backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)",
-          color: "white", fontSize: 13, outline: "none", resize: "vertical", boxSizing: "border-box",
-          fontFamily: "inherit",
-        }}
-      />
-      {savingNotes && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>Saving…</div>}
+      </details>
     </div>
   )
 }
 
-export default function BusinessesTable({ rows }: { rows: BusinessRow[] }) {
-  const [search, setSearch] = useState("")
-  const [needsAttentionOnly, setNeedsAttentionOnly] = useState(false)
+const FILTERS: Array<{ id: BusinessFilter; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "attention", label: "Attention" },
+  { id: "inactive", label: "Setup" },
+  { id: "logo", label: "No logo" },
+  { id: "payments", label: "Payments" },
+]
+
+export default function BusinessesTable({ rows, initialSearch = "", initialFilter = "all" }: { rows: BusinessRow[]; initialSearch?: string; initialFilter?: BusinessFilter }) {
+  const [search, setSearch] = useState(initialSearch)
+  const [filter, setFilter] = useState<BusinessFilter>(initialFilter)
   const q = search.toLowerCase().trim()
-
-  let filtered = q
-    ? rows.filter(r => r.name.toLowerCase().includes(q) || r.slug.toLowerCase().includes(q) || (r.email ?? "").toLowerCase().includes(q))
-    : rows
-  if (needsAttentionOnly) filtered = filtered.filter(r => r.issues.length > 0)
-
-  const attentionCount = rows.filter(r => r.issues.length > 0).length
+  const filtered = rows.filter((row) => {
+    const matchesSearch = !q || row.name.toLowerCase().includes(q) || row.slug.toLowerCase().includes(q) || (row.email ?? "").toLowerCase().includes(q)
+    if (!matchesSearch) return false
+    if (filter === "attention") return row.issues.length > 0
+    if (filter === "inactive") return row.issues.includes("Not active")
+    if (filter === "logo") return row.issues.includes("No logo")
+    if (filter === "payments") return row.issues.includes("No payment setup")
+    return true
+  })
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, slug, or email…"
-          style={{
-            flex: 1, padding: "12px 16px", borderRadius: 12,
-            backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
-            color: "white", fontSize: 14, outline: "none", boxSizing: "border-box", minWidth: 0,
-          }}
-        />
-        <button
-          type="button"
-          onClick={() => setNeedsAttentionOnly(v => !v)}
-          style={{
-            padding: "0 14px", borderRadius: 12, whiteSpace: "nowrap", cursor: "pointer",
-            border: `1px solid ${needsAttentionOnly ? AMBER : "rgba(255,255,255,0.08)"}`,
-            backgroundColor: needsAttentionOnly ? "rgba(245,200,66,0.12)" : "rgba(255,255,255,0.05)",
-            color: needsAttentionOnly ? AMBER : "rgba(255,255,255,0.5)",
-            fontSize: 12, fontWeight: 800,
-          }}
-        >
-          Needs attention{attentionCount > 0 ? ` (${attentionCount})` : ""}
-        </button>
+      <div className="hq-business-toolbar">
+        <input className="hq-input" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, site, or email" aria-label="Search businesses" />
+        <div className="hq-filter-row" aria-label="Filter businesses">
+          {FILTERS.map((item) => <button key={item.id} type="button" data-active={filter === item.id} onClick={() => setFilter(item.id)}>{item.label}</button>)}
+        </div>
       </div>
-      {filtered.map(row => <BusinessRowItem key={row.id} row={row} />)}
-      {filtered.length === 0 && (
-        <p style={{ textAlign: "center", padding: "40px 0", color: "rgba(255,255,255,0.3)", fontSize: 14 }}>
-          {needsAttentionOnly ? "Nothing needs attention right now." : `No businesses match "${search}".`}
-        </p>
-      )}
+      <div className="hq-business-list">
+        {filtered.map((row) => <BusinessItem key={row.id} row={row} />)}
+        {filtered.length === 0 && <div className="hq-business-empty">No businesses match this view.</div>}
+      </div>
     </div>
   )
 }

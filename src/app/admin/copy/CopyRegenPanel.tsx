@@ -48,7 +48,7 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
   const fallbackCount = sites.filter((site) => !site.copy_generated).length
 
   return (
-    <div>
+    <div className="hq-copy-panel">
       <p className="text-sm mb-8" style={{ color: "rgba(255,255,255,0.5)" }}>
         {fallbackCount > 0
           ? `${fallbackCount} site${fallbackCount !== 1 ? "s" : ""} used fallback copy. Review each site before regenerating.`
@@ -142,7 +142,7 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
       {confirming && (
         <div role="dialog" aria-modal="true" aria-labelledby="copy-confirm-title"
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 16, backgroundColor: "rgba(0,0,0,0.72)" }}>
-          <div style={{ width: "100%", maxWidth: 520, borderRadius: 16, padding: 24, backgroundColor: "#151816", border: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ width: "100%", maxWidth: 520, borderRadius: 8, padding: 24, backgroundColor: "#151816", border: "1px solid rgba(255,255,255,0.1)" }}>
             <h2 id="copy-confirm-title" style={{ margin: "0 0 8px", color: "white", fontSize: 20, fontWeight: 900 }}>
               Regenerate {confirming.company_name} copy?
             </h2>
@@ -151,11 +151,11 @@ export default function CopyRegenPanel({ initialSites }: { initialSites: SiteNee
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setConfirming(null)}
-                style={{ flex: 1, minHeight: 44, borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "white", fontWeight: 800 }}>
+                style={{ flex: 1, minHeight: 44, borderRadius: 7, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: "white", fontWeight: 800 }}>
                 Cancel
               </button>
               <button onClick={() => handleRegenerate(confirming)}
-                style={{ flex: 1, minHeight: 44, borderRadius: 10, border: "none", backgroundColor: "#32D074", color: "#080A09", fontWeight: 900 }}>
+                style={{ flex: 1, minHeight: 44, borderRadius: 7, border: "none", backgroundColor: "#32D074", color: "#080A09", fontWeight: 900 }}>
                 Save and regenerate
               </button>
             </div>

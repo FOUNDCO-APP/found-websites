@@ -122,10 +122,9 @@ export default async function AdminEmailPreviewPage({
   ]
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#080A09" }}>
-      <div className="max-w-3xl mx-auto px-6 py-12">
+    <div className="hq-page hq-page-narrow">
 
-        <div className="mb-10" style={{ position: "relative", paddingRight: 52 }}>
+        <header className="hq-header" style={{ position: "relative", paddingRight: 52 }}>
           <Link
             href="/admin/emails"
             aria-label="Close email preview"
@@ -138,7 +137,7 @@ export default async function AdminEmailPreviewPage({
               height: 40,
               display: "grid",
               placeItems: "center",
-              borderRadius: 10,
+              borderRadius: 7,
               color: "rgba(255,255,255,0.72)",
               backgroundColor: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.08)",
@@ -146,17 +145,17 @@ export default async function AdminEmailPreviewPage({
           >
             <span aria-hidden="true" style={{ fontSize: 19, lineHeight: 1, fontWeight: 600 }}>X</span>
           </Link>
-          <h1 className="text-3xl font-black" style={{ color: "#ffffff" }}>{company.name}</h1>
-          <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <div><p className="hq-eyebrow">Email preview</p><h1 className="hq-title">{company.name}</h1>
+          <p className="hq-subtitle">
             {company.industry_category ?? "—"}
             {company.primary_intent ? ` · intent: ${company.primary_intent}` : ""}
             {company.email ? ` · ${company.email}` : " · no owner email"}
-          </p>
-        </div>
+          </p></div>
+        </header>
 
         <EmailPreviewTabs tabs={tabs} />
 
-        <div className="mt-8 p-5 rounded-xl" style={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="hq-panel" style={{ marginTop: 24, padding: 16 }}>
           <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>
             How copy is generated
           </p>
@@ -168,7 +167,6 @@ export default async function AdminEmailPreviewPage({
           </p>
         </div>
 
-      </div>
     </div>
   )
 }
