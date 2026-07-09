@@ -4,6 +4,23 @@
 
 ---
 
+## Session: July 9, 2026 - Public Launch Readiness Audit
+**AI:** Codex
+**Worked on:** Audited the public Found site and launch path with the full Found Co. team filter.
+
+### Completed
+- Recorded Steve's launch verdict: no-go for open self-serve launch; controlled pilot only.
+- Verified the production build passes.
+- Verified production onboarding health returns healthy service/schema checks.
+- Verified public homepage, plans, onboarding, privacy, terms, robots, sitemap, and favicon return HTTP 200.
+- Identified four P0 launch gates: live Stripe Connect/payment QA, a fresh first-customer journey, sitemap cleanup, and truthful paid-plan claims.
+- Identified P1 readiness work: analytics, public write-route protection, security headers, safer comp tokens, SEO metadata, CTA timing, hero image optimization, and automated release tests.
+- Documented the full audit in `LAUNCH_READINESS_AUDIT_2026-07-09.md`.
+
+### Not Completed
+- Browser/device automation timed out, so a fresh visual iPhone walkthrough remains a launch gate.
+
+---
 ## Session: July 8, 2026 - Native iPhone Typography
 **AI:** Codex
 **Worked on:** Raised Found HQ's undersized mobile typography to a native iOS scale after Shawn's phone review.

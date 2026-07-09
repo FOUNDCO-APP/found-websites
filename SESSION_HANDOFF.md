@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 8, 2026*
+*Last updated: July 9, 2026*
 
 ---
 
@@ -21,6 +21,7 @@ History policy: keep the current working window and anything still active in cur
 
 ## Current Status
 
+- **Launch audit July 9:** Team verdict is no-go for open self-serve launch; controlled pilot only. Production health and build pass, but four P0 gates remain: live Stripe Connect destination/payment QA, a fresh onboarding-to-first-lead journey, sitemap exclusion of test/unready companies, and removal or completion of unverified paid-plan claims. Full findings: `LAUNCH_READINESS_AUDIT_2026-07-09.md`.
 - **Phone QA follow-up:** Shawn's screenshots exposed question marks where Unicode chevrons, arrows, and separators should render. Replaced all affected admin UI glyphs with CSS-drawn indicators or ASCII-safe text, removed redundant Email previews from More, removed the explanatory Quality rule panel, and tightened Quality counts. Clean build passed. Commit `f3b3d4b`.
 - **New July 8:** Found HQ was redesigned as an operator workspace. Primary navigation is now Overview, Businesses, Quality, and More. Overview shows actionable setup/quality signals; Businesses is compact and filterable; Copy, Photos, and Email previews live under Quality; Sign out moved to More on mobile. Shared visual tokens and consistent specialist-tool framing shipped in code commit `2bc4fd0`.
 - **New July 8:** Copy regeneration is now recoverable and admin-only. `Regenerate All` was removed. Every regeneration requires confirmation, atomically snapshots the eight affected live-copy fields in Supabase, and exposes `View site` plus one-tap `Undo changes`. Undo creates its own recovery snapshot before restoring. Migration 044 was applied and its permissions verified; rollback-only publish/restore testing passed. Code commit: `8825321`.

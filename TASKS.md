@@ -1,6 +1,6 @@
 # TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
-*Last updated: July 6, 2026*
+*Last updated: July 9, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
 
 ---
@@ -17,11 +17,11 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Live-test everything shipped July 6** - see "JULY 6 SESSION - WHAT'S LEFT TO TEST" below. Nothing from today has been confirmed working by Shawn on the live deploy yet.
-2. **Schedule QA across industries** - verify Calendar, Bookings, Hours summary/edit mode, booking settings, and time-off behavior on quote-first, restaurant, and booking-first profiles.
-3. **QA payable estimates end to end** - Stripe-connected Accept & Pay, pay-later, receipt email, owner email, dashboard `Paid` / `Deposit paid` / `Accepted, unpaid`, and public paid state.
+1. **Close the launch payment gate** - create/verify the Stripe Connect webhook destination in live mode, then run Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
+2. **Run the first-customer launch journey** - brand-new onboarding through plan choice, activation, publication, owner login, and first lead on a real iPhone.
+3. **Make the public promise truthful and indexable** - stop exposing test/unready companies in the sitemap, add Found's own public pages, and remove or complete any paid-plan claims that cannot be used today.
 
-*(Session 5: AI estimate builder stays gated until the manual estimator + payment path passes live QA. Invoice-now / POS planning is still important but moves behind the More / Manage IA pass.)*
+*Launch verdict and P1 work are recorded in `LAUNCH_READINESS_AUDIT_2026-07-09.md`. Open self-serve launch remains blocked; controlled pilot only.*
 
 ---
 
