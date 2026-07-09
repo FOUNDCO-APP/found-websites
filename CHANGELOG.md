@@ -4,6 +4,18 @@
 
 ---
 
+## Session: July 8, 2026 - Native iPhone Typography
+**AI:** Codex
+**Worked on:** Raised Found HQ's undersized mobile typography to a native iOS scale after Shawn's phone review.
+
+### Completed
+- Set mobile body and operational titles to 17-18px.
+- Raised secondary text to 13-15px and status text to 12-13px.
+- Raised page titles to 34px and dock labels to 11px.
+- Applied the scale to Today, Sales, Clients, More, forms, filters, and management controls.
+- Preserved 44px minimum interaction targets and passed the production build.
+
+---
 ## Session: July 8, 2026 - Found HQ Brand Refinement
 **AI:** Codex
 **Worked on:** Rebuilt the visual language after Shawn said V2 looked cheap and unlike Found.

@@ -260,3 +260,16 @@ If priorities changed, also update `TASKS.md`.
 1. Compare Today, Sales, Clients, and More on iPhone.
 2. Confirm no filters scroll horizontally and no text overlaps.
 3. Confirm Site, View as, Manage relationship, Add prospect, and quality links still work.
+
+---
+
+## July 8, 2026 - Native iPhone Typography
+
+### Changed
+- Found HQ mobile typography now follows a native iOS scale across every primary screen and form.
+- Body and row titles are 17-18px; supporting information is 13-15px; page titles are 34px.
+
+### Test
+1. Open Today, Sales, Clients, and More on iPhone.
+2. Confirm supporting text is comfortable without zooming.
+3. Confirm longer client metadata wraps cleanly and no controls overlap.

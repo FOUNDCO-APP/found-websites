@@ -18,10 +18,10 @@ Signal Green is reserved for identity, selection, and decisive actions. It is no
 ## Typography
 
 - Native Apple system stack.
-- Page title: 32px mobile, 36px desktop, restrained semibold.
-- Section title: 13px semibold.
-- Operational row title: 14-17px semibold.
-- Metadata: 10-11px regular.
+- Page title: 34px mobile, 36px desktop, restrained semibold.
+- Section title: 17px mobile, 13px desktop, semibold.
+- Operational row title: 17-18px mobile, 14-17px desktop, semibold.
+- Metadata: 13-15px mobile, 10-11px desktop, regular.
 - Letter spacing remains zero.
 
 ## Shape

@@ -285,3 +285,32 @@
 @media (max-width: 720px) {
   .hq-business-toolbar { grid-template-columns: 1fr; }
 }
+
+/* Native iOS type scale. Keep hierarchy through weight and space, not tiny text. */
+@media (max-width: 720px) {
+  .found-hq-root { -webkit-text-size-adjust: 100%; }
+  .found-hq-navlink { font-size: 11px; line-height: 1.2; }
+  .hq-eyebrow { font-size: 11px; line-height: 1.2; }
+  .hq-title { font-size: 34px; line-height: 1.08; }
+  .hq-subtitle { max-width: 330px; font-size: 17px; line-height: 1.45; }
+  .hq-count { font-size: 13px; }
+  .hq-section-title { font-size: 17px; line-height: 1.3; }
+  .hq-section-meta { font-size: 13px; line-height: 1.35; }
+  .hq-row-title { font-size: 17px; line-height: 1.3; }
+  .hq-row-meta { font-size: 14px; line-height: 1.45; }
+  .hq-today-summary strong { font-size: 34px; line-height: 1; }
+  .hq-today-summary span { font-size: 13px; line-height: 1.3; }
+  .hq-action-end > strong { font-size: 13px; line-height: 1.3; }
+  .hq-badge { font-size: 12px; line-height: 1.3; }
+  .hq-input { font-size: 17px; }
+  .hq-filter-row button { font-size: 13px; line-height: 1.2; }
+  .hq-business-name-line h2 { font-size: 18px; line-height: 1.25; }
+  .hq-business-copy p { font-size: 14px; line-height: 1.45; }
+  .hq-business-manage summary { font-size: 13px; line-height: 1.3; }
+  .hq-contact-actions a { font-size: 14px; }
+  .hq-button { font-size: 15px; }
+  .hq-create-form label, .hq-inline-form label { font-size: 13px; }
+  .hq-create-form input, .hq-create-form select, .hq-create-form textarea,
+  .hq-inline-form input, .hq-inline-form select { font-size: 16px; }
+  .hq-form-note, .hq-page-footnote { font-size: 13px; line-height: 1.45; }
+}
