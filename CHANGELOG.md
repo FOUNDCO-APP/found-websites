@@ -4,6 +4,21 @@
 
 ---
 
+## Session: July 10, 2026 - Secure Found Starter Promo Rotation
+**AI:** Codex
+**Worked on:** Renamed the live base Stripe product and replaced the guessable `$1` promo code.
+
+### Completed
+- Updated the protected Stripe setup route so the base product is named `Found Starter`.
+- Deployed production and reran the protected setup route in live mode.
+- Disabled the guessable `FOUND1` promotion code.
+- Created the secure one-use `$1` activation promo `FND-E8529646-AA9714`.
+- Verified a second setup call reused the secure promo, did not duplicate it, and did not reactivate `FOUND1`.
+
+### Test Next
+- Fresh onboarding, choose Found Starter, apply `FND-E8529646-AA9714`, activate, then verify the Stripe invoice/subscription and Found activation state.
+
+---
 ## Session: July 10, 2026 - Live Stripe Billing Bootstrap
 **AI:** Codex
 **Worked on:** Created the live Stripe billing objects and `$1` activation promo after Shawn activated the live Stripe account.
