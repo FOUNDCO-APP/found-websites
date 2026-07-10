@@ -1,15 +1,20 @@
+import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 
 // Protected setup route for live Stripe billing bootstrap. It creates/reuses
 // Found products, regular prices, intro prices, and a one-use $1 activation
-// promotion code for the base Found intro plan. Returns IDs only, never keys.
+// promotion code for the base Found Starter intro plan. Returns IDs only,
+// never keys.
+
+const ONE_DOLLAR_PROMO_METADATA = "found_1_first_invoice"
 
 const PLANS = [
   {
     key: "FOUND",
     plan: "found",
-    name: "Found",
+    name: "Found Starter",
+    legacyNames: ["Found"],
     description: "Professional website, photo pipeline, contact form, and mobile dashboard for a small business.",
     regularAmount: 3900,
     introAmount: 2900,
@@ -20,6 +25,7 @@ const PLANS = [
     key: "FOUND_PRO",
     plan: "found_pro",
     name: "Found Pro",
+    legacyNames: [],
     description: "Found website plus custom domain, expanded customer tools, and professional growth features.",
     regularAmount: 6900,
     introAmount: 3900,
@@ -30,6 +36,7 @@ const PLANS = [
     key: "FOUND_BUSINESS",
     plan: "found_business",
     name: "Found Business",
+    legacyNames: [],
     description: "Found Pro plus bookings, estimates, review tools, and business operations features.",
     regularAmount: 9900,
     introAmount: 6900,
@@ -44,18 +51,26 @@ async function getOrCreateProduct(stripe: Stripe, plan: (typeof PLANS)[number]) 
     limit: 1,
   })
 
-  if (products.data[0]) return products.data[0]
-
-  const byName = await stripe.products.list({ active: true, limit: 100 })
-  const existing = byName.data.find((product) => product.name === plan.name)
-  if (existing) {
-    if (existing.metadata?.found_plan !== plan.plan) {
-      return stripe.products.update(existing.id, {
+  const byMetadata = products.data[0]
+  if (byMetadata) {
+    if (byMetadata.name !== plan.name || byMetadata.description !== plan.description) {
+      return stripe.products.update(byMetadata.id, {
+        name: plan.name,
         description: plan.description,
-        metadata: { ...existing.metadata, found_plan: plan.plan },
+        metadata: { ...byMetadata.metadata, found_plan: plan.plan },
       })
     }
-    return existing
+    return byMetadata
+  }
+
+  const byName = await stripe.products.list({ active: true, limit: 100 })
+  const existing = byName.data.find((product) => product.name === plan.name || plan.legacyNames.includes(product.name))
+  if (existing) {
+    return stripe.products.update(existing.id, {
+      name: plan.name,
+      description: plan.description,
+      metadata: { ...existing.metadata, found_plan: plan.plan },
+    })
   }
 
   return stripe.products.create({
@@ -79,9 +94,20 @@ async function getOrCreateMonthlyPrice(stripe: Stripe, productId: string, amount
   })
 }
 
+function securePromoCode() {
+  return `FND-${crypto.randomBytes(4).toString("hex").toUpperCase()}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`
+}
+
+async function deactivateGuessableFoundPromo(stripe: Stripe) {
+  const existing = await stripe.promotionCodes.list({ code: "FOUND1", active: true, limit: 10 })
+  for (const promo of existing.data) {
+    await stripe.promotionCodes.update(promo.id, { active: false })
+  }
+  return existing.data.length
+}
+
 async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
-  const existingPromo = await stripe.promotionCodes.list({ code: "FOUND1", active: true, limit: 1 })
-  if (existingPromo.data[0]) return { promotionCode: existingPromo.data[0], created: false }
+  const disabledGuessableCount = await deactivateGuessableFoundPromo(stripe)
 
   let coupon: Stripe.Coupon
   try {
@@ -90,22 +116,33 @@ async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
   } catch {
     coupon = await stripe.coupons.create({
       id: "found_1_first_invoice",
-      name: "Found $1 first invoice",
+      name: "Found Starter $1 first invoice",
       amount_off: 2800,
       currency: "usd",
       duration: "once",
-      metadata: { found_promo: "found_1_first_invoice", leaves_due: "100" },
+      metadata: { found_promo: ONE_DOLLAR_PROMO_METADATA, leaves_due: "100" },
     })
   }
 
+  const activeCodes = await stripe.promotionCodes.list({ active: true, limit: 100 })
+  const existingSecure = activeCodes.data.find((promo) =>
+    promo.metadata?.found_promo === ONE_DOLLAR_PROMO_METADATA &&
+    promo.metadata?.plan === "found" &&
+    promo.code !== "FOUND1"
+  )
+
+  if (existingSecure) {
+    return { promotionCode: existingSecure, created: false, disabledGuessableCount }
+  }
+
   const promotionCode = await stripe.promotionCodes.create({
-    code: "FOUND1",
+    code: securePromoCode(),
     promotion: { type: "coupon", coupon: coupon.id },
     max_redemptions: 1,
-    metadata: { found_promo: "found_1_first_invoice", plan: "found" },
+    metadata: { found_promo: ONE_DOLLAR_PROMO_METADATA, plan: "found" },
   })
 
-  return { promotionCode, created: true }
+  return { promotionCode, created: true, disabledGuessableCount }
 }
 
 export async function GET(req: NextRequest) {
@@ -121,6 +158,7 @@ export async function GET(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
   const results: Record<string, {
     productId: string
+    productName: string
     regularPriceId: string
     introPriceId: string
   }> = {}
@@ -132,6 +170,7 @@ export async function GET(req: NextRequest) {
 
     results[plan.key] = {
       productId: product.id,
+      productName: product.name,
       regularPriceId: regular.id,
       introPriceId: intro.id,
     }
@@ -154,7 +193,8 @@ export async function GET(req: NextRequest) {
       code: promo.promotionCode.code,
       id: promo.promotionCode.id,
       created: promo.created,
-      leavesDue: "$1.00 on the Found intro plan first invoice",
+      disabledGuessableCount: promo.disabledGuessableCount,
+      leavesDue: "$1.00 on the Found Starter intro plan first invoice",
     },
     full: results,
   })
