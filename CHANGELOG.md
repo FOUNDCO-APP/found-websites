@@ -4,6 +4,21 @@
 
 ---
 
+## Session: July 10, 2026 - Simple Live Promo Code
+**AI:** Codex
+**Worked on:** Replaced the hard-to-type live `$1` promo with Shawn's simpler requested code.
+
+### Completed
+- Confirmed Stripe promotion codes cannot use `!`, so the live code is `F0UND1128`.
+- Updated and deployed the protected Stripe setup route.
+- Created the live one-use `F0UND1128` promo for Found Starter.
+- Disabled the previous active Found `$1` promo.
+- Verified a second setup call reused `F0UND1128` and did not create a duplicate.
+
+### Test Next
+- Fresh onboarding, choose Found Starter, apply `F0UND1128`, activate, then verify Stripe invoice/subscription and Found activation state.
+
+---
 ## Session: July 10, 2026 - Secure Found Starter Promo Rotation
 **AI:** Codex
 **Worked on:** Renamed the live base Stripe product and replaced the guessable `$1` promo code.
@@ -12,11 +27,11 @@
 - Updated the protected Stripe setup route so the base product is named `Found Starter`.
 - Deployed production and reran the protected setup route in live mode.
 - Disabled the guessable `FOUND1` promotion code.
-- Created the secure one-use `$1` activation promo `FND-E8529646-AA9714`.
+- Created the secure one-use `$1` activation promo `F0UND1128`.
 - Verified a second setup call reused the secure promo, did not duplicate it, and did not reactivate `FOUND1`.
 
 ### Test Next
-- Fresh onboarding, choose Found Starter, apply `FND-E8529646-AA9714`, activate, then verify the Stripe invoice/subscription and Found activation state.
+- Fresh onboarding, choose Found Starter, apply `F0UND1128`, activate, then verify the Stripe invoice/subscription and Found activation state.
 
 ---
 ## Session: July 10, 2026 - Live Stripe Billing Bootstrap
