@@ -4,6 +4,22 @@
 
 ---
 
+## Session: July 10, 2026 - Live Stripe Billing Bootstrap
+**AI:** Codex
+**Worked on:** Created the live Stripe billing objects and `$1` activation promo after Shawn activated the live Stripe account.
+
+### Completed
+- Upgraded the protected `/api/stripe/setup-products` route to create/reuse live products, regular monthly prices, intro monthly prices, and the `FOUND1` promotion code idempotently.
+- Ran the route in production with Vercel's live Stripe key; production reported `mode: live`.
+- Created or reused the live Found, Found Pro, and Found Business products/prices.
+- Created the one-use `FOUND1` promo for the base Found intro plan; it leaves `$1.00` due on the first invoice.
+- Updated Vercel production price environment variables to the returned live price IDs.
+- Redeployed production and verified a second setup call did not duplicate the promo.
+
+### Test Next
+- Fresh onboarding, choose Found, apply `FOUND1`, activate, then verify the Stripe invoice/subscription and Found activation state.
+
+---
 ## Session: July 9, 2026 - Activation Promo Codes
 **AI:** Codex
 **Worked on:** Added the team-approved Phase 1 promo-code path for live payment testing and sales discounts.

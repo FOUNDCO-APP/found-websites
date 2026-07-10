@@ -17,7 +17,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Close the launch payment gate** - create/verify the Stripe Connect webhook destination in live mode, create a live Stripe promo code for a small real activation charge, then run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
+1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live; now create/verify the Stripe Connect webhook destination in live mode, then run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
 2. **Run the first-customer launch journey** - brand-new onboarding through plan choice, activation, publication, owner login, and first lead on a real iPhone.
 3. **Make the public promise truthful and indexable** - stop exposing test/unready companies in the sitemap, add Found's own public pages, and remove or complete any paid-plan claims that cannot be used today.
 
