@@ -1,3 +1,9 @@
+# Activation promo codes are Stripe-native first
+**Approved:** July 9, 2026
+
+Phase 1 promo codes are created in Stripe Dashboard and entered on Found's activation screen. Found validates the active Stripe promotion code, shows the discounted monthly price, stores the promotion-code metadata on the SetupIntent, and applies the promotion code when creating the subscription. Do not build a custom coupon engine or fake-dollar charge path for launch testing. A Found HQ promo manager can come later after the live payment path is proven.
+
+---
 # Found HQ is a business operating system
 **Approved:** July 8, 2026
 

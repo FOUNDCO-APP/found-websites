@@ -22,11 +22,125 @@ function priceIdForPlan(plan: string, intro: boolean): string | undefined {
   return intro ? process.env.STRIPE_PRICE_ID_FOUND_FOUNDING : process.env.STRIPE_PRICE_ID_FOUND
 }
 
-export async function createActivationSetup(slug: string, targetPlan?: string | null, targetAddonSlug?: string | null): Promise<{
+type PromoSummary = {
+  code: string
+  promotionCodeId: string
+  couponId: string
+  couponName: string | null
+  discountLabel: string
+  originalAmount: number
+  discountedAmount: number
+  currency: string
+  duration: string
+}
+
+type ActivationPriceSummary = {
+  originalAmount: number
+  discountedAmount: number
+  currency: string
+  promo: PromoSummary | null
+}
+
+type ActivationSetupResult = {
   clientSecret: string
   companyName: string
   plan: string | null
-} | null> {
+  price: ActivationPriceSummary | null
+  promoError?: string
+}
+
+function normalizePromoCode(code?: string | null) {
+  return code?.trim().toUpperCase() || ""
+}
+
+function discountLabelFor(coupon: Stripe.Coupon) {
+  if (typeof coupon.percent_off === "number") return `${coupon.percent_off}% off`
+  if (typeof coupon.amount_off === "number" && coupon.currency) {
+    return `${formatCurrency(coupon.amount_off, coupon.currency)} off`
+  }
+  return coupon.name || "Discount applied"
+}
+
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
+  }).format(amount / 100)
+}
+
+function discountedAmountFor(amount: number, currency: string, coupon: Stripe.Coupon) {
+  if (typeof coupon.percent_off === "number") {
+    return Math.max(0, Math.round(amount * (100 - coupon.percent_off) / 100))
+  }
+
+  if (typeof coupon.amount_off === "number") {
+    if (coupon.currency && coupon.currency.toLowerCase() !== currency.toLowerCase()) return null
+    return Math.max(0, amount - coupon.amount_off)
+  }
+
+  return amount
+}
+
+async function priceSummaryFor(stripe: Stripe, priceId: string, promoCode?: string | null): Promise<{ price: ActivationPriceSummary | null; promoError?: string }> {
+  const price = await stripe.prices.retrieve(priceId)
+  const originalAmount = price.unit_amount ?? 0
+  const currency = price.currency || "usd"
+  const normalizedCode = normalizePromoCode(promoCode)
+
+  if (!normalizedCode) {
+    return {
+      price: { originalAmount, discountedAmount: originalAmount, currency, promo: null },
+    }
+  }
+
+  const promoCodes = await stripe.promotionCodes.list({
+    code: normalizedCode,
+    active: true,
+    limit: 1,
+    expand: ["data.promotion.coupon"],
+  })
+
+  const promotionCode = promoCodes.data[0]
+  const couponRef = promotionCode?.promotion?.coupon
+  const coupon = typeof couponRef === "string" ? await stripe.coupons.retrieve(couponRef) : couponRef
+
+  if (!promotionCode || !coupon || coupon.valid === false) {
+    return {
+      price: { originalAmount, discountedAmount: originalAmount, currency, promo: null },
+      promoError: "That promo code is not active.",
+    }
+  }
+
+  const discountedAmount = discountedAmountFor(originalAmount, currency, coupon)
+  if (discountedAmount === null) {
+    return {
+      price: { originalAmount, discountedAmount: originalAmount, currency, promo: null },
+      promoError: "That promo code is not valid for this currency.",
+    }
+  }
+
+  return {
+    price: {
+      originalAmount,
+      discountedAmount,
+      currency,
+      promo: {
+        code: promotionCode.code,
+        promotionCodeId: promotionCode.id,
+        couponId: coupon.id,
+        couponName: coupon.name,
+        discountLabel: discountLabelFor(coupon),
+        originalAmount,
+        discountedAmount,
+        currency,
+        duration: coupon.duration,
+      },
+    },
+  }
+}
+
+export async function createActivationSetup(slug: string, targetPlan?: string | null, targetAddonSlug?: string | null, promoCode?: string | null): Promise<ActivationSetupResult | null> {
   if (!process.env.STRIPE_SECRET_KEY) {
     console.error("[Activate] Missing STRIPE_SECRET_KEY")
     return null
@@ -50,20 +164,24 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     return null
   }
 
+  const normalizedPromoCode = normalizePromoCode(promoCode)
   const existingCustomerId = company.stripe_customer_id as string | null
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    const { price, promoError } = await priceSummaryFor(stripe, priceId, normalizedPromoCode)
+    const promotionCodeId = price?.promo?.promotionCodeId ?? ""
 
-    // Reuse a pre-created setup intent only if Stripe metadata still matches this exact base plan.
-    if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan)) {
+    // Reuse a pre-created setup intent only if Stripe metadata still matches this exact base plan and promo state.
+    if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan) && !promoError) {
       const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
       const existingIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
       const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
+      const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
-      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesIntroPrice && hasNoAddon) {
-        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan }
+      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon) {
+        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError }
       }
     }
 
@@ -75,11 +193,31 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
           metadata: { company_id: company.id, slug },
         })
 
+    const promoMetadata = price?.promo ? {
+      promotion_code_id: price.promo.promotionCodeId,
+      promotion_code: price.promo.code,
+      coupon_id: price.promo.couponId,
+      discount_label: price.promo.discountLabel,
+    } : {
+      promotion_code_id: "",
+      promotion_code: "",
+      coupon_id: "",
+      discount_label: "",
+    }
+
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
       payment_method_types: ["card"],
       usage: "off_session",
-      metadata: { company_id: company.id, slug, plan: requestedPlan, price_id: priceId, intro_rate: String(useIntroPrice), addon_slug: targetAddonSlug ?? "" },
+      metadata: {
+        company_id: company.id,
+        slug,
+        plan: requestedPlan,
+        price_id: priceId,
+        intro_rate: String(useIntroPrice),
+        addon_slug: targetAddonSlug ?? "",
+        ...promoMetadata,
+      },
     })
 
     if (!setupIntent.client_secret) {
@@ -101,7 +239,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       .update(companyUpdate)
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan }
+    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError }
   } catch (err) {
     console.error("[Activate] createActivationSetup failed:", err)
     return null
@@ -135,6 +273,29 @@ export async function activateAsComp(slug: string, plan?: string | null): Promis
   return true
 }
 
+async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminClient>, slug: string, companyUpdate: Record<string, string | boolean | null>) {
+  const { error } = await admin
+    .from("companies")
+    .update(companyUpdate)
+    .eq("slug", slug)
+
+  if (!error) return
+
+  const fallbackUpdate = { ...companyUpdate }
+  delete fallbackUpdate.applied_promotion_code_id
+  delete fallbackUpdate.applied_promotion_code
+  delete fallbackUpdate.applied_coupon_id
+  delete fallbackUpdate.applied_discount_label
+
+  const { error: fallbackError } = await admin
+    .from("companies")
+    .update(fallbackUpdate)
+    .eq("slug", slug)
+
+  if (fallbackError) throw fallbackError
+  console.warn("[Activate] Promo audit columns missing; activation saved without local promo audit fields.", error.message)
+}
+
 export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
   if (!process.env.STRIPE_SECRET_KEY) return false
 
@@ -160,12 +321,24 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     const priceId = setupIntent.metadata?.price_id ?? priceIdForPlan(plan, true)
     if (!priceId) return false
 
-    const subscription = await stripe.subscriptions.create({
+    const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
       metadata: { company_id: setupIntent.metadata?.company_id ?? "", slug, plan },
-    })
+    }
+
+    if (setupIntent.metadata?.promotion_code_id) {
+      subscriptionParams.discounts = [{ promotion_code: setupIntent.metadata.promotion_code_id }]
+      subscriptionParams.metadata = {
+        ...subscriptionParams.metadata,
+        promotion_code_id: setupIntent.metadata.promotion_code_id,
+        promotion_code: setupIntent.metadata.promotion_code ?? "",
+        coupon_id: setupIntent.metadata.coupon_id ?? "",
+      }
+    }
+
+    const subscription = await stripe.subscriptions.create(subscriptionParams)
 
     const admin = getAdminClient()
     const addonSlug = setupIntent.metadata?.addon_slug
@@ -199,11 +372,14 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       plan,
     }
     if (setupIntent.metadata?.intro_rate === "true") companyUpdate.is_founding_member = true
+    if (setupIntent.metadata?.promotion_code_id) {
+      companyUpdate.applied_promotion_code_id = setupIntent.metadata.promotion_code_id
+      companyUpdate.applied_promotion_code = setupIntent.metadata.promotion_code ?? null
+      companyUpdate.applied_coupon_id = setupIntent.metadata.coupon_id ?? null
+      companyUpdate.applied_discount_label = setupIntent.metadata.discount_label ?? null
+    }
 
-    await admin
-      .from("companies")
-      .update(companyUpdate)
-      .eq("slug", slug)
+    await updateCompanyAfterActivation(admin, slug, companyUpdate)
 
     return true
   } catch (err) {

@@ -4,6 +4,25 @@
 
 ---
 
+## Session: July 9, 2026 - Activation Promo Codes
+**AI:** Codex
+**Worked on:** Added the team-approved Phase 1 promo-code path for live payment testing and sales discounts.
+
+### Completed
+- Added a promo-code field to the activation payment card.
+- Validates active Stripe promotion codes server-side against the selected plan price.
+- Shows the discounted monthly price before card confirmation.
+- Stores the validated promotion-code metadata on the SetupIntent so the redirect-safe confirmation step can apply the same code.
+- Applies the Stripe promotion code when creating the subscription.
+- Added a company audit migration for applied promotion code, coupon, and discount label.
+- Kept the flow Stripe-native; no fake payment path or custom coupon engine.
+- Verified with `npm.cmd run build`.
+
+### Test Next
+- Create a live Stripe coupon + promotion code that leaves a small real charge due.
+- Run fresh onboarding, enter the promo on `/activate`, and confirm Stripe invoice/subscription plus Found activation state.
+
+---
 ## Session: July 9, 2026 - Public Launch Readiness Audit
 **AI:** Codex
 **Worked on:** Audited the public Found site and launch path with the full Found Co. team filter.
