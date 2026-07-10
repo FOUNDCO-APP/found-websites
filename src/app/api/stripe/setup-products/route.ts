@@ -1,4 +1,3 @@
-import crypto from "crypto"
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 
@@ -8,6 +7,7 @@ import Stripe from "stripe"
 // never keys.
 
 const ONE_DOLLAR_PROMO_METADATA = "found_1_first_invoice"
+const ONE_DOLLAR_PROMO_CODE = "F0UND1128"
 
 const PLANS = [
   {
@@ -94,20 +94,23 @@ async function getOrCreateMonthlyPrice(stripe: Stripe, productId: string, amount
   })
 }
 
-function securePromoCode() {
-  return `FND-${crypto.randomBytes(4).toString("hex").toUpperCase()}-${crypto.randomBytes(3).toString("hex").toUpperCase()}`
-}
+async function deactivateOtherFoundPromos(stripe: Stripe) {
+  const activeCodes = await stripe.promotionCodes.list({ active: true, limit: 100 })
+  const promosToDisable = activeCodes.data.filter((promo) =>
+    promo.metadata?.found_promo === ONE_DOLLAR_PROMO_METADATA &&
+    promo.metadata?.plan === "found" &&
+    promo.code !== ONE_DOLLAR_PROMO_CODE
+  )
 
-async function deactivateGuessableFoundPromo(stripe: Stripe) {
-  const existing = await stripe.promotionCodes.list({ code: "FOUND1", active: true, limit: 10 })
-  for (const promo of existing.data) {
+  for (const promo of promosToDisable) {
     await stripe.promotionCodes.update(promo.id, { active: false })
   }
-  return existing.data.length
+
+  return promosToDisable.length
 }
 
 async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
-  const disabledGuessableCount = await deactivateGuessableFoundPromo(stripe)
+  const disabledGuessableCount = await deactivateOtherFoundPromos(stripe)
 
   let coupon: Stripe.Coupon
   try {
@@ -124,19 +127,15 @@ async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
     })
   }
 
-  const activeCodes = await stripe.promotionCodes.list({ active: true, limit: 100 })
-  const existingSecure = activeCodes.data.find((promo) =>
-    promo.metadata?.found_promo === ONE_DOLLAR_PROMO_METADATA &&
-    promo.metadata?.plan === "found" &&
-    promo.code !== "FOUND1"
-  )
+  const existingCode = await stripe.promotionCodes.list({ code: ONE_DOLLAR_PROMO_CODE, active: true, limit: 1 })
+  const existingSecure = existingCode.data[0]
 
   if (existingSecure) {
     return { promotionCode: existingSecure, created: false, disabledGuessableCount }
   }
 
   const promotionCode = await stripe.promotionCodes.create({
-    code: securePromoCode(),
+    code: ONE_DOLLAR_PROMO_CODE,
     promotion: { type: "coupon", coupon: coupon.id },
     max_redemptions: 1,
     metadata: { found_promo: ONE_DOLLAR_PROMO_METADATA, plan: "found" },
