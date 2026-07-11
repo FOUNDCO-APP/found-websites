@@ -392,9 +392,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     from:    "Found <hello@foundco.app>",
     replyTo: "hello@foundco.app",
     to:      email,
-    subject: `${name} is live.`,
+    subject: `${name} is ready to activate.`,
     html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl: dashboardUrl }),
-    text:    `${name} is live.\n\nYour customers can find you now.\n\n→ ${siteUrl}\n\n───\n\n1. Pin it.\nAdd your link to your Instagram bio and Google Business profile today.\n\n2. Connect your domain.\nPoint your real domain here — takes 10 minutes.\n${appUrl}/connect-domain?slug=${slug}\n\n3. Set up deposit payments.\nLet clients accept an estimate and pay by card.\nhttps://my.${ROOT_DOMAIN}/more?setup_payments=1\n\n4. Send it to one person.\nYour best customer. Right now. See what they say.\n\n5. Open your dashboard — one tap, no login needed.\n${dashboardUrl}\n\n───\n\nReply to this email — we read every one.\n— The Found Team`,
+    text:    `${name} is ready to activate.\n\nYour site preview is built. Add payment to turn it on.\n\nActivate here:\n${appUrl}/activate?slug=${slug}\n\nPreview your site:\n${siteUrl}\n\nOpen your dashboard - one tap, no login needed.\n${dashboardUrl}\n\nReply to this email - we read every one.\n- The Found Team`,
   }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
@@ -422,6 +422,7 @@ function buildWelcomeEmail({
   const displayUrl = siteUrl.replace("https://", "")
   const connectUrl = `${appUrl}/connect-domain?slug=${slug}`
   const paymentsUrl = `https://my.${ROOT_DOMAIN}/more?setup_payments=1`
+  const activationUrl = `${appUrl}/activate?slug=${slug}`
 
   const step = (n: string, title: string, body: string, link?: { href: string; label: string }) => `
     <tr>
@@ -446,11 +447,11 @@ function buildWelcomeEmail({
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${name} is live.</title>
+  <title>${name} is ready to activate.</title>
 </head>
 <body style="margin:0;padding:0;background:#f2f2f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
   <!-- Preheader: controls inbox preview text — hidden from view -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#f2f2f0;">${name} is live. Your next steps are waiting — open to see them.&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;</div>
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#f2f2f0;">${name} is ready to activate. Your preview is built and waiting.&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;</div>
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f0;padding:40px 16px;">
     <tr><td align="center">
       <table width="100%" style="max-width:520px;">
@@ -465,12 +466,12 @@ function buildWelcomeEmail({
         <!-- Hero: business name + moment -->
         <tr>
           <td style="background:#ffffff;padding:44px 36px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#32D074;">Live now</p>
-            <h1 style="margin:0 0 10px;font-size:32px;font-weight:900;color:#080A09;line-height:1.1;">${name} is live.</h1>
-            <p style="margin:0 0 32px;font-size:16px;font-weight:400;color:#777777;line-height:1.5;">Your customers can find you now.</p>
+            <p style="margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#32D074;">Preview ready</p>
+            <h1 style="margin:0 0 10px;font-size:32px;font-weight:900;color:#080A09;line-height:1.1;">${name} is ready.</h1>
+            <p style="margin:0 0 32px;font-size:16px;font-weight:400;color:#777777;line-height:1.5;">Add payment to turn it on for customers.</p>
             <a href="${siteUrl}"
               style="display:block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;">
-              Open your site →
+              Preview your site →
             </a>
             <a href="${loginUrl}"
               style="display:block;margin-top:10px;background:transparent;color:#32D074;font-size:13px;font-weight:700;padding:14px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;border:1.5px solid #32D07440;">
@@ -486,12 +487,12 @@ function buildWelcomeEmail({
         <!-- Three steps -->
         <tr>
           <td style="background:#ffffff;border-radius:0 0 16px 16px;padding:32px 36px 36px;">
-            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do these four things</p>
+            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do this next</p>
             <table width="100%" cellpadding="0" cellspacing="0">
-              ${step("01", "Pin it.", "Add your link to your Instagram bio and Google Business profile today. That's where your next customer is looking.")}
+              ${step("01", "Activate it.", "Add payment first. Then Found turns the site on for customers.", { href: activationUrl, label: "Activate now" })}
               ${step("02", "Connect your domain.", "Point your real domain here — takes about 10 minutes.", { href: connectUrl, label: "Connect now" })}
               ${step("03", "Set up deposit payments.", "This lets clients accept an estimate and pay electronically by card. Setup takes a few minutes, and it makes the next yes easier to collect.", { href: paymentsUrl, label: "Set up payments" })}
-              ${step("04", "Send it to one person.", "Your best customer. Right now. See what they say.")}
+              ${step("04", "Share it after activation.", "Once payment is complete, send it to one trusted customer and see what they say.")}
             </table>
           </td>
         </tr>

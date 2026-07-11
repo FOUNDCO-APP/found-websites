@@ -24,9 +24,9 @@ function getBannerState(trialEndsAt: string | null): BannerState {
     return {
       accent: SIGNAL_GREEN,
       label: "Live preview",
-      headline: "Your site is live.",
-      detail: "Intro rate. Lock it in for 12 months.",
-      cta: "Activate my site →",
+      headline: "Your preview is ready.",
+      detail: "Add payment to turn it on for customers.",
+      cta: "Activate my site",
     }
   }
 
@@ -39,7 +39,7 @@ function getBannerState(trialEndsAt: string | null): BannerState {
       label: "Site paused",
       headline: "Your site is offline.",
       detail: "Add a card to bring it back. Takes 30 seconds.",
-      cta: "Reactivate →",
+      cta: "Reactivate",
     }
   }
 
@@ -49,16 +49,16 @@ function getBannerState(trialEndsAt: string | null): BannerState {
       label: `${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left`,
       headline: "Your trial is ending.",
       detail: "Add a card to keep your site live and remove this banner.",
-      cta: "Secure my site →",
+      cta: "Secure my site",
     }
   }
 
   return {
     accent: SIGNAL_GREEN,
     label: "Live preview",
-    headline: "Your site is live.",
-    detail: "Intro rate. Lock it in for 12 months.",
-    cta: "Activate my site →",
+    headline: "Your preview is ready.",
+    detail: "Add payment to turn it on for customers.",
+    cta: "Activate my site",
   }
 }
 

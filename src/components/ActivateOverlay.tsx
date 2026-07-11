@@ -17,6 +17,57 @@ const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+type PromoSummary = {
+  code: string
+  promotionCodeId: string
+  couponId: string
+  couponName: string | null
+  discountLabel: string
+  originalAmount: number
+  discountedAmount: number
+  currency: string
+  duration: string
+}
+
+type ActivationPriceSummary = {
+  originalAmount: number
+  discountedAmount: number
+  currency: string
+  promo: PromoSummary | null
+}
+
+type ActivationSetupResult = {
+  clientSecret: string
+  companyName: string
+  plan: string | null
+  price: ActivationPriceSummary | null
+  promoError?: string
+}
+
+function fallbackPlanSummary(plan?: string | null): ActivationPriceSummary {
+  const selectedPlan = foundPlanDetails(plan)
+  return {
+    originalAmount: selectedPlan.price * 100,
+    discountedAmount: selectedPlan.price * 100,
+    currency: "usd",
+    promo: null,
+  }
+}
+
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
+  }).format(amount / 100)
+}
+
+function promoDurationLabel(duration?: string) {
+  if (duration === "once") return "first invoice"
+  if (duration === "repeating") return "promo period"
+  if (duration === "forever") return "every invoice"
+  return "this subscription"
+}
 
 const stripeAppearance = {
   theme: "night" as const,
@@ -60,24 +111,65 @@ function CardForm({
   slug,
   companyName,
   plan,
+  priceSummary,
+  targetAddonSlug,
   addonLabel,
   addonPrice,
   returnTo = "site",
+  onSetupUpdated,
 }: {
   slug: string
   companyName: string
   plan?: string | null
+  priceSummary: ActivationPriceSummary | null
+  targetAddonSlug?: string | null
   addonLabel?: string | null
   addonPrice?: number | null
   returnTo?: "site" | "dashboard"
+  onSetupUpdated: (result: ActivationSetupResult) => void
 }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoDraft, setPromoDraft] = useState(priceSummary?.promo?.code ?? "")
+  const [promoMessage, setPromoMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
   const selectedPlan = foundPlanDetails(plan)
   const hasAddon = !!addonLabel && typeof addonPrice === "number"
+  const summary = priceSummary ?? fallbackPlanSummary(plan)
+  const hasPromo = !!summary.promo
+
+  async function handlePromoApply(e: React.FormEvent) {
+    e.preventDefault()
+    const code = promoDraft.trim()
+    if (!code) {
+      setPromoMessage("Enter a promo code first.")
+      return
+    }
+
+    setPromoLoading(true)
+    setPromoMessage(null)
+    setError(null)
+
+    const result = await createActivationSetup(slug, plan, targetAddonSlug, code)
+    setPromoLoading(false)
+
+    if (!result) {
+      setPromoMessage("Could not check that promo code. Try again.")
+      return
+    }
+
+    if (result.promoError || !result.price?.promo) {
+      setPromoMessage(result.promoError ?? "That promo code is not active.")
+      return
+    }
+
+    onSetupUpdated(result)
+    setPromoDraft(result.price.promo.code)
+    setPromoMessage(`${result.price.promo.code} applied.`)
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -101,15 +193,64 @@ function CardForm({
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
         <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
-          {hasAddon ? "Add feature" : "Intro rate"}
+          {hasAddon ? "Add feature" : hasPromo ? "Promo applied" : "Intro rate"}
         </span>
       </div>
       <p style={{ fontSize: 30, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.02em", color: "white", margin: "0 0 5px" }}>
-        {hasAddon ? addonLabel : `$${selectedPlan.price}/month.`}
+        {hasAddon ? addonLabel : `${formatCurrency(summary.discountedAmount, summary.currency)}/month.`}
       </p>
       <p style={{ fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.44)", margin: "0 0 24px" }}>
-        {hasAddon ? `+$${addonPrice}/month added to your Found plan. Cancel anytime.` : `Locked in for 12 months, then $${selectedPlan.normalPrice}/month. Cancel anytime.`}
+        {hasAddon ? `${formatCurrency(addonPrice * 100, "usd")}/month added to your Found plan. Cancel anytime.` : hasPromo ? `${summary.promo?.discountLabel} for ${promoDurationLabel(summary.promo?.duration)}. Regular intro rate is ${formatCurrency(summary.originalAmount, summary.currency)}/month.` : `Locked in for 12 months, then ${formatCurrency(selectedPlan.normalPrice * 100, "usd")}/month. Cancel anytime.`}
       </p>
+      {!hasAddon && (
+        <>
+          <form onSubmit={handlePromoApply} style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <input
+              value={promoDraft}
+              onChange={(e) => setPromoDraft(e.target.value.toUpperCase())}
+              placeholder="Promo code"
+              autoCapitalize="characters"
+              style={{
+                minWidth: 0,
+                flex: 1,
+                borderRadius: 14,
+                padding: "14px 15px",
+                backgroundColor: "#111111",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "white",
+                fontSize: 16,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={promoLoading}
+              style={{
+                borderRadius: 14,
+                padding: "0 15px",
+                backgroundColor: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "white",
+                fontSize: 11,
+                fontWeight: 900,
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                cursor: promoLoading ? "default" : "pointer",
+                opacity: promoLoading ? 0.45 : 1,
+              }}
+            >
+              {promoLoading ? "..." : "Apply"}
+            </button>
+          </form>
+          {promoMessage && (
+            <p style={{ fontSize: 12, fontWeight: 800, color: hasPromo ? SIGNAL_GREEN : "rgba(255,255,255,0.45)", margin: "0 0 18px" }}>
+              {promoMessage}
+            </p>
+          )}
+        </>
+      )}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
         {error && <p style={{ fontSize: 12, fontWeight: 900, color: "#F43F5E", margin: 0 }}>{error}</p>}
@@ -171,6 +312,7 @@ export default function ActivateOverlay({
   const isAddonFlow = !!targetAddonSlug
   const [cinPhase, setCinPhase] = useState<CinPhase>(skipIntro ? "done" : "text")
   const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [priceSummary, setPriceSummary] = useState<ActivationPriceSummary | null>(null)
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
   const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>(defaultActivationPlan(targetPlan))
@@ -200,6 +342,18 @@ export default function ActivateOverlay({
     return () => { document.body.style.overflow = prev }
   }, [])
 
+  function applySetupResult(result: ActivationSetupResult, fallbackPlan: FoundPlanKey = selectedPlan) {
+    setClientSecret(result.clientSecret)
+    if (!companyName) setCompanyName(result.companyName)
+    if (result.plan) {
+      setPlan(result.plan)
+      setSelectedPlan(normalizeFoundPlan(result.plan))
+    } else {
+      setPlan(fallbackPlan)
+    }
+    if (result.price) setPriceSummary(result.price)
+  }
+
   async function preparePayment(nextPlan: FoundPlanKey = selectedPlan) {
     setPreparingPlan(true)
     setPaymentStep("loading")
@@ -213,17 +367,9 @@ export default function ActivateOverlay({
       return
     }
 
-    setClientSecret(result.clientSecret)
-    if (!companyName) setCompanyName(result.companyName)
-    if (result.plan) {
-      setPlan(result.plan)
-      setSelectedPlan(normalizeFoundPlan(result.plan))
-    } else {
-      setPlan(nextPlan)
-    }
+    applySetupResult(result, nextPlan)
     setPaymentStep("payment")
   }
-
   useEffect(() => {
     if (!isAddonFlow) return
     void preparePayment(selectedPlan)
@@ -348,8 +494,8 @@ export default function ActivateOverlay({
                 </>
               ) : clientSecret ? (
                 <div style={{ maxWidth: 448, margin: "0 auto", padding: "8px 0 8px" }}>
-                  <Elements stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
-                    <CardForm slug={slug} companyName={companyName} plan={plan} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} returnTo={returnTo} />
+                  <Elements key={clientSecret} stripe={stripePromise} options={{ clientSecret, appearance: stripeAppearance }}>
+                    <CardForm slug={slug} companyName={companyName} plan={plan} priceSummary={priceSummary} targetAddonSlug={targetAddonSlug} addonLabel={targetAddonLabel} addonPrice={targetAddonPrice} returnTo={returnTo} onSetupUpdated={applySetupResult} />
                   </Elements>
                 </div>
               ) : (

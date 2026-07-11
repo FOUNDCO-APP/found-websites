@@ -609,11 +609,11 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
           </div>
         </div>
 
-        {/* [Name] is live. — two-beat reveal */}
+        {/* [Name] is ready. Two-beat reveal. */}
         <div className="mt-9 text-center">
           <h1 className={`${drawerMode ? "text-[2.2rem]" : "text-5xl md:text-6xl"} font-light leading-[1.05] tracking-tight text-white`}>
             <span className="block" style={{ animation: "fade-up 0.6s 0.3s ease-out both" }}>{name}</span>
-            <span className="block" style={{ animation: "fade-up 0.6s 0.45s ease-out both" }}>is live.</span>
+            <span className="block" style={{ animation: "fade-up 0.6s 0.45s ease-out both" }}>is ready.</span>
           </h1>
         </div>
 
@@ -635,7 +635,7 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
               onClick={() => setActivating(true)}
               className="flex w-full min-h-[52px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-Launch my site
+Activate my site
             </button>
           </div>
         ) : (
