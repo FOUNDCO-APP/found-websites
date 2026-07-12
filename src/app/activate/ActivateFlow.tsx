@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup } from "./activateActions"
 import FoundWordmark from "@/components/FoundWordmark"
 
@@ -133,6 +133,7 @@ function CardForm({
   const [promoDraft, setPromoDraft] = useState(priceSummary?.promo?.code ?? "")
   const [promoMessage, setPromoMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [expressCheckoutReady, setExpressCheckoutReady] = useState(false)
   const summary = priceSummary ?? fallbackPlanDetails(plan)
   const normal = normalPriceForPlan(plan)
   const hasPromo = !!summary.promo
@@ -186,6 +187,31 @@ function CardForm({
     }
   }
 
+  async function handleExpressConfirm() {
+    if (!stripe || !elements) return
+    setLoading(true)
+    setError(null)
+
+    const submitResult = await elements.submit()
+    if (submitResult.error) {
+      setError(submitResult.error.message ?? "Payment was not completed.")
+      setLoading(false)
+      return
+    }
+
+    const { error: stripeError } = await stripe.confirmSetup({
+      elements,
+      confirmParams: {
+        return_url: `https://${ROOT_DOMAIN}/activate/confirm?slug=${slug}`,
+      },
+    })
+
+    if (stripeError) {
+      setError(stripeError.message ?? "Something went wrong. Please try again.")
+      setLoading(false)
+    }
+  }
+
   return (
     <div
       className="flex w-full max-w-md flex-col overflow-hidden rounded-3xl"
@@ -220,6 +246,21 @@ function CardForm({
             </p>
           )}
         </div>
+
+        <div className={expressCheckoutReady ? "mb-5" : ""}>
+          <ExpressCheckoutElement
+            options={{ buttonHeight: 50, layout: { maxColumns: 1, maxRows: 2 } }}
+            onConfirm={() => void handleExpressConfirm()}
+            onAvailablePaymentMethodsChange={(event) => setExpressCheckoutReady(!!event.paymentMethods)}
+          />
+        </div>
+        {expressCheckoutReady && (
+          <div className="mb-5 flex items-center gap-3">
+            <span className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+            <span className="text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: "rgba(255,255,255,0.26)" }}>or enter card</span>
+            <span className="h-px flex-1" style={{ backgroundColor: "rgba(255,255,255,0.08)" }} />
+          </div>
+        )}
 
         <form onSubmit={handlePromoApply} className="mb-5 flex gap-2">
           <input

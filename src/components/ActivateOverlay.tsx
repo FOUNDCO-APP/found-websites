@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import { loadStripe } from "@stripe/stripe-js"
-import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup, activateAsComp } from "@/app/activate/activateActions"
 import FoundPlanSelector from "@/components/FoundPlanSelector"
 import {
@@ -135,6 +135,7 @@ function CardForm({
   const [promoDraft, setPromoDraft] = useState(priceSummary?.promo?.code ?? "")
   const [promoMessage, setPromoMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [expressCheckoutReady, setExpressCheckoutReady] = useState(false)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
   const selectedPlan = foundPlanDetails(plan)
   const hasAddon = !!addonLabel && typeof addonPrice === "number"
@@ -188,6 +189,31 @@ function CardForm({
     }
   }
 
+  async function handleExpressConfirm() {
+    if (!stripe || !elements) return
+    setLoading(true)
+    setError(null)
+
+    const submitResult = await elements.submit()
+    if (submitResult.error) {
+      setError(submitResult.error.message ?? "Payment was not completed.")
+      setLoading(false)
+      return
+    }
+
+    const { error: stripeError } = await stripe.confirmSetup({
+      elements,
+      confirmParams: {
+        return_url: `https://${rootDomain}/activate/confirm?slug=${slug}&returnTo=${returnTo}`,
+      },
+    })
+
+    if (stripeError) {
+      setError(stripeError.message ?? "Something went wrong - please try again.")
+      setLoading(false)
+    }
+  }
+
   return (
     <div style={{ width: "100%", animation: "cinematic-word-in 420ms ease-out both" }}>
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
@@ -202,6 +228,20 @@ function CardForm({
       <p style={{ fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.44)", margin: "0 0 24px" }}>
         {hasAddon ? `${formatCurrency(addonPrice * 100, "usd")}/month added to your Found plan. Cancel anytime.` : hasPromo ? `${summary.promo?.discountLabel} for ${promoDurationLabel(summary.promo?.duration)}. Regular intro rate is ${formatCurrency(summary.originalAmount, summary.currency)}/month.` : `Locked in for 12 months, then ${formatCurrency(selectedPlan.normalPrice * 100, "usd")}/month. Cancel anytime.`}
       </p>
+      <div style={{ marginBottom: expressCheckoutReady ? 18 : 0 }}>
+        <ExpressCheckoutElement
+          options={{ buttonHeight: 50, layout: { maxColumns: 1, maxRows: 2 } }}
+          onConfirm={() => void handleExpressConfirm()}
+          onAvailablePaymentMethodsChange={(event) => setExpressCheckoutReady(!!event.paymentMethods)}
+        />
+      </div>
+      {expressCheckoutReady && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "0 0 18px" }}>
+          <span style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.08)" }} />
+          <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.16em", color: "rgba(255,255,255,0.26)" }}>or enter card</span>
+          <span style={{ flex: 1, height: 1, backgroundColor: "rgba(255,255,255,0.08)" }} />
+        </div>
+      )}
       {!hasAddon && (
         <>
           <form onSubmit={handlePromoApply} style={{ display: "flex", gap: 8, marginBottom: 12 }}>

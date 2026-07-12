@@ -208,7 +208,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "link"],
       usage: "off_session",
       metadata: {
         company_id: company.id,
