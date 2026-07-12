@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   } catch {}
 
   if (!userId) {
-    // Not logged in — send to login (no stale cookie to worry about for new users)
+    // Not logged in - send to login (no stale cookie to worry about for new users)
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
@@ -44,7 +44,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 
-  const response = NextResponse.redirect(new URL("/", req.url))
+  const redirectUrl = new URL("/", req.url)
+  if (req.nextUrl.searchParams.get("activated") === "true") {
+    redirectUrl.searchParams.set("activated", "true")
+  }
+
+  const response = NextResponse.redirect(redirectUrl)
   response.cookies.set("found_company_id", id, {
     path: "/",
     sameSite: "lax",

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { confirmActivation } from "../activateActions"
 
 export default async function ActivateConfirmPage({
@@ -13,10 +14,23 @@ export default async function ActivateConfirmPage({
     redirect(`/activate?slug=${slug ?? ""}&error=payment_failed`)
   }
 
-  await confirmActivation(slug, setup_intent)
+  const activation = await confirmActivation(slug, setup_intent)
+
+  if (!activation.ok || !activation.companyId) {
+    redirect(`/activate?slug=${slug}&error=payment_failed`)
+  }
+
+  const cookieStore = await cookies()
+  cookieStore.set("found_company_id", activation.companyId, {
+    path: "/",
+    domain: `.${rootDomain}`,
+    sameSite: "lax",
+    secure: true,
+    maxAge: 60 * 60 * 24 * 30,
+  })
 
   if (returnTo === "dashboard") {
-    redirect(`https://my.${rootDomain}/?activated=true`)
+    redirect(`https://my.${rootDomain}/api/select-company?id=${activation.companyId}&activated=true`)
   }
 
   redirect(`https://${slug}.${rootDomain}?activated=true`)

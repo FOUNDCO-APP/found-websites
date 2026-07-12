@@ -176,11 +176,12 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan) && !promoError) {
       const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
       const existingIntent = setupIntentId ? await stripe.setupIntents.retrieve(setupIntentId) : null
+      const matchesCompany = existingIntent?.metadata?.company_id === company.id && existingIntent?.metadata?.slug === slug
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
       const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
       const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
-      if (existingIntent?.status === "requires_payment_method" && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon) {
+      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError }
       }
     }
@@ -296,12 +297,32 @@ async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminCli
   console.warn("[Activate] Promo audit columns missing; activation saved without local promo audit fields.", error.message)
 }
 
-export async function confirmActivation(slug: string, setupIntentId: string): Promise<boolean> {
-  if (!process.env.STRIPE_SECRET_KEY) return false
+export async function confirmActivation(slug: string, setupIntentId: string): Promise<{ ok: boolean; companyId?: string }> {
+  if (!process.env.STRIPE_SECRET_KEY) return { ok: false }
 
   try {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const setupIntent = await stripe.setupIntents.retrieve(setupIntentId)
+    const admin = getAdminClient()
+    const companyId = setupIntent.metadata?.company_id
+    const intentSlug = setupIntent.metadata?.slug
+
+    if (!companyId || !intentSlug || intentSlug !== slug) {
+      console.error("[Activate] SetupIntent metadata does not match activation slug", { slug, intentSlug, companyId })
+      return { ok: false }
+    }
+
+    const { data: company } = await admin
+      .from("companies")
+      .select("id, slug")
+      .eq("id", companyId)
+      .eq("slug", slug)
+      .maybeSingle()
+
+    if (!company) {
+      console.error("[Activate] No company matches paid SetupIntent", { slug, companyId })
+      return { ok: false }
+    }
 
     const customerId = typeof setupIntent.customer === "string"
       ? setupIntent.customer
@@ -311,7 +332,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       ? setupIntent.payment_method
       : (setupIntent.payment_method as Stripe.PaymentMethod | null)?.id
 
-    if (!customerId || !paymentMethodId) return false
+    if (!customerId || !paymentMethodId) return { ok: false }
 
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: paymentMethodId },
@@ -319,13 +340,13 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const plan = setupIntent.metadata?.plan ?? "found"
     const priceId = setupIntent.metadata?.price_id ?? priceIdForPlan(plan, true)
-    if (!priceId) return false
+    if (!priceId) return { ok: false }
 
     const subscriptionParams: Stripe.SubscriptionCreateParams = {
       customer: customerId,
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
-      metadata: { company_id: setupIntent.metadata?.company_id ?? "", slug, plan },
+      metadata: { company_id: companyId, slug, plan },
     }
 
     if (setupIntent.metadata?.promotion_code_id) {
@@ -340,11 +361,9 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const subscription = await stripe.subscriptions.create(subscriptionParams)
 
-    const admin = getAdminClient()
     const addonSlug = setupIntent.metadata?.addon_slug
-    const companyId = setupIntent.metadata?.company_id
 
-    if (addonSlug && companyId) {
+    if (addonSlug) {
       const { data: priceRow } = await admin
         .from("addon_stripe_prices")
         .select("stripe_price_id")
@@ -381,9 +400,9 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     await updateCompanyAfterActivation(admin, slug, companyUpdate)
 
-    return true
+    return { ok: true, companyId }
   } catch (err) {
     console.error("[Activate] confirmActivation failed:", err)
-    return false
+    return { ok: false }
   }
 }
