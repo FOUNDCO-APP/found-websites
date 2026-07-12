@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 
 // Protected setup route for live Stripe billing bootstrap. It creates/reuses
-// Found products, regular prices, intro prices, and a one-use $1 activation
+// Found products, regular prices, intro prices, and a limited-use $1 activation
 // promotion code for the base Found Starter intro plan. Returns IDs only,
 // never keys.
 
@@ -137,7 +137,7 @@ async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
   const promotionCode = await stripe.promotionCodes.create({
     code: ONE_DOLLAR_PROMO_CODE,
     promotion: { type: "coupon", coupon: coupon.id },
-    max_redemptions: 1,
+    max_redemptions: 25,
     metadata: { found_promo: ONE_DOLLAR_PROMO_METADATA, plan: "found" },
   })
 
