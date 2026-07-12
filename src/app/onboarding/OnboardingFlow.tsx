@@ -2362,7 +2362,13 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                               const active = answers.navbarDark === o.dark
                               return (
                                 <button key={String(o.dark)} type="button"
-                                  onClick={() => set("navbarDark", o.dark)}
+                                  onClick={() => {
+                                    if (answers.vibe) {
+                                      autoAdvance(() => set("navbarDark", o.dark))
+                                    } else {
+                                      set("navbarDark", o.dark)
+                                    }
+                                  }}
                                   className="border p-4 text-left transition-all duration-150"
                                   style={{ borderRadius: "8px", borderColor: tk.cardBorder(active), backgroundColor: tk.cardBg(active) }}>
                                   {/* Mini navbar preview */}
