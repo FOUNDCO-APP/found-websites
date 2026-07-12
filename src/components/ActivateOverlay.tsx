@@ -252,7 +252,7 @@ function CardForm({
         </>
       )}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
+        <PaymentElement options={{ layout: "tabs" }} />
         {error && <p style={{ fontSize: 12, fontWeight: 900, color: "#F43F5E", margin: 0 }}>{error}</p>}
         <button
           type="submit"

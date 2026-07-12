@@ -245,7 +245,7 @@ function CardForm({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          <PaymentElement options={{ layout: "tabs", paymentMethodOrder: ["card"], wallets: { link: "never" } }} />
+          <PaymentElement options={{ layout: "tabs" }} />
           {error && (
             <p className="text-xs font-black" style={{ color: "#F43F5E" }}>{error}</p>
           )}

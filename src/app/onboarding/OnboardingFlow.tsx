@@ -2338,7 +2338,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                             const active = answers.vibe === o.key
                             return (
                               <button key={o.key} type="button"
-                                onClick={() => autoAdvance(() => set("vibe", o.key))}
+                                onClick={() => set("vibe", o.key)}
                                 className="min-h-[7rem] border p-5 text-left transition-all duration-150"
                                 style={{ borderRadius: o.radius, borderColor: tk.cardBorder(active), backgroundColor: tk.cardBg(active) }}>
                                 <div className="mb-3 h-0.5 w-10" style={{ backgroundColor: answers.primaryColor }} />
