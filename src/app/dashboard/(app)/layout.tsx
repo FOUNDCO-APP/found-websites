@@ -30,15 +30,31 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const viewingAsAdmin = Boolean(adminKeyValid && company)
 
-  const [newLeadCount, paidAddonSlugs] = company?.id
+  const [leadCounts, paidAddonSlugs] = company?.id
     ? await Promise.all([
         admin
           .from("leads")
-          .select("id", { count: "exact", head: true })
+          .select("id, type, source")
           .eq("company_id", company.id)
-          .neq("type", "onboarding_abandoned")
           .gte("created_at", since)
-          .then(({ count }) => count ?? 0),
+          .then(({ data }) => {
+            const rows = (data ?? []).filter(row => row.type !== "onboarding_abandoned")
+            const isOrder = (lead: { type: string | null; source: string | null }) =>
+              lead.type === "online_order" ||
+              lead.source === "online_ordering" ||
+              lead.type === "shopping_order" ||
+              lead.source === "shopping_cart"
+            const isReservation = (lead: { type: string | null; source: string | null }) =>
+              lead.type === "reservation_request" ||
+              lead.source === "reservation" ||
+              lead.source === "reservations" ||
+              lead.source === "booking_calendar"
+            return {
+              leads: rows.filter(row => !isOrder(row) && !isReservation(row)).length,
+              orders: rows.filter(isOrder).length,
+              reservations: rows.filter(isReservation).length,
+            }
+          }),
         admin
           .from("addon_subscriptions")
           .select("addon_slug")
@@ -46,7 +62,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .eq("active", true)
           .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug)),
       ])
-    : [0, [] as string[]]
+    : [{ leads: 0, orders: 0, reservations: 0 }, [] as string[]]
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
@@ -144,7 +160,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <DashboardNav
         companyName={company?.name ?? null}
-        newLeadCount={newLeadCount}
+        newLeadCount={leadCounts.leads}
+        newOrderCount={leadCounts.orders}
+        newReservationCount={leadCounts.reservations}
         industry={company?.industry_category ?? null}
         subIndustry={company?.sub_industry ?? null}
         activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs)}

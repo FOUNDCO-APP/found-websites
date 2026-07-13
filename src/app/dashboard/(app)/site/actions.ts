@@ -5,6 +5,85 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
 
+
+type SiteConfigRecord = Record<string, unknown>
+type CompanyCopyContext = {
+  name: string | null
+  industry_category: string | null
+  sub_industry: string | null
+  city: string | null
+  state: string | null
+  vibe: string | null
+}
+
+function cleanText(value: unknown, fallback = "") {
+  return typeof value === "string" && value.trim() ? value.trim() : fallback
+}
+
+function locationLine(company: CompanyCopyContext) {
+  return [company.city, company.state].filter(Boolean).join(", ")
+}
+
+function serviceList(config: SiteConfigRecord) {
+  const services = Array.isArray(config.services) ? config.services : []
+  return services
+    .map(service => {
+      if (!service || typeof service !== "object") return null
+      const row = service as { name?: unknown; description?: unknown }
+      return {
+        name: cleanText(row.name, "Service"),
+        description: cleanText(row.description, "Thoughtful service shaped around what you need."),
+      }
+    })
+    .filter(Boolean) as { name: string; description: string }[]
+}
+
+function fallbackRewrite(section: "hero" | "about" | "services" | "tagline", company: CompanyCopyContext, config: SiteConfigRecord) {
+  const name = cleanText(company.name, "This business")
+  const industry = cleanText(company.sub_industry, cleanText(company.industry_category, "local business")).replace(/_/g, " ")
+  const industryLabel = industry.charAt(0).toUpperCase() + industry.slice(1)
+  const place = locationLine(company)
+  const placeSuffix = place ? ` in ${place}` : ""
+
+  if (section === "hero") {
+    return {
+      hero_title: `${name}, made simple`,
+      hero_subtitle: `A sharper ${industry} experience${placeSuffix}, built around clear service and easy next steps.`,
+    }
+  }
+
+  if (section === "about") {
+    return {
+      about_text: `${name} helps customers get what they need without friction. Every detail is handled with care, clear communication, and a focus on making the next step feel easy.`,
+    }
+  }
+
+  if (section === "services") {
+    const services = serviceList(config)
+    return {
+      services: (services.length ? services : [{ name: industryLabel, description: "Professional help shaped around what matters most." }]).map(service => ({
+        name: service.name,
+        description: `${service.name} handled with clear communication, careful work, and an easy path from first question to finished result.`,
+      })),
+    }
+  }
+
+  return {
+    tagline: "Clear. Local. Ready.",
+    cta_headline: "Start now",
+  }
+}
+
+function pickUpdates(parsed: Record<string, unknown>) {
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (typeof parsed.hero_title === "string") updates.hero_title = parsed.hero_title
+  if (typeof parsed.hero_subtitle === "string") updates.hero_subtitle = parsed.hero_subtitle
+  if (typeof parsed.about_text === "string") updates.about_text = parsed.about_text
+  if (Array.isArray(parsed.services)) updates.services = parsed.services
+  if (typeof parsed.tagline === "string") updates.tagline = parsed.tagline
+  if (typeof parsed.cta_headline === "string") updates.cta_headline = parsed.cta_headline
+  return updates
+}
 async function getContext() {
   const user = await getAuthUser()
   if (!user) return null
@@ -52,7 +131,7 @@ export async function regenerateSection(section: "hero" | "about" | "services" |
 
   const { data: company } = await ctx.admin
     .from("companies")
-    .select("name, industry_category, sub_industry, city, state, vibe, description, different")
+    .select("name, industry_category, sub_industry, city, state, vibe")
     .eq("id", ctx.company.id)
     .single()
 
@@ -63,8 +142,6 @@ export async function regenerateSection(section: "hero" | "about" | "services" |
 Business: ${company.name}
 Industry: ${company.industry_category} - ${company.sub_industry || ""}
 Location: ${company.city || ""}, ${company.state || ""}
-Description: ${company.description || ""}
-What makes them different: ${company.different || ""}
 Vibe: ${company.vibe || "bold"}
 Return ONLY valid JSON: {"hero_title": "short punchy headline 4-7 words", "hero_subtitle": "1-2 sentence description under 160 chars"}`,
 
@@ -72,8 +149,6 @@ Return ONLY valid JSON: {"hero_title": "short punchy headline 4-7 words", "hero_
 Business: ${company.name}
 Industry: ${company.industry_category} - ${company.sub_industry || ""}
 Location: ${company.city || ""}, ${company.state || ""}
-Description: ${company.description || ""}
-What makes them different: ${company.different || ""}
 Return ONLY valid JSON: {"about_text": "2-3 warm authentic sentences under 300 chars"}`,
 
     services: `You are a professional copywriter for small businesses. Rewrite these service descriptions.
@@ -88,41 +163,41 @@ Vibe: ${company.vibe || "bold"}
 Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline": "3-5 word action CTA"}`,
   }
 
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY!,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5",
-        max_tokens: 500,
-        messages: [{ role: "user", content: sectionPrompts[section] }],
-      }),
-    })
+  let generated: Record<string, unknown> | null = null
 
-    const data = await response.json()
-    const text = data.content?.[0]?.text ?? ""
-    const clean = text.replace(/```json|```/g, "").trim()
-    const parsed = JSON.parse(clean)
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": process.env.ANTHROPIC_API_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5",
+          max_tokens: 500,
+          messages: [{ role: "user", content: sectionPrompts[section] }],
+        }),
+      })
 
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
-    if (parsed.hero_title)    updates.hero_title = parsed.hero_title
-    if (parsed.hero_subtitle) updates.hero_subtitle = parsed.hero_subtitle
-    if (parsed.about_text)    updates.about_text = parsed.about_text
-    if (parsed.services)      updates.services = parsed.services
-    if (parsed.tagline)       updates.tagline = parsed.tagline
-    if (parsed.cta_headline)  updates.cta_headline = parsed.cta_headline
-
-    await ctx.admin.from("website_config").update(updates).eq("company_id", ctx.company.id)
-    revalidatePath(`/${ctx.company.slug}`)
-    return { success: true, updates }
-  } catch (err) {
-    console.error("[regenerate]", err)
-    return { error: "AI generation failed" }
+      if (!response.ok) throw new Error(`Anthropic ${response.status}`)
+      const data = await response.json()
+      const text = data.content?.[0]?.text ?? ""
+      const clean = text.replace(/```json|```/g, "").trim()
+      generated = JSON.parse(clean)
+    } catch (err) {
+      console.error("[regenerate] AI fallback used", err)
+    }
   }
+
+  const updates = pickUpdates(generated ?? fallbackRewrite(section, company, config))
+  const { error } = await ctx.admin.from("website_config").update(updates).eq("company_id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath("/dashboard/site")
+  return { success: true, updates }
 }
 
 export async function assignPhotoToSection(photoId: string, section: string | null) {

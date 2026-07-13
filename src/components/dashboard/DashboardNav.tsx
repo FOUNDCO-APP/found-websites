@@ -16,12 +16,16 @@ type Album = { id: string; name: string; cover_url: string | null }
 export default function DashboardNav({
   companyName,
   newLeadCount = 0,
+  newOrderCount = 0,
+  newReservationCount = 0,
   industry = null,
   subIndustry = null,
   activeAddons = [],
 }: {
   companyName?: string | null
   newLeadCount?: number
+  newOrderCount?: number
+  newReservationCount?: number
   industry?: string | null
   subIndustry?: string | null
   activeAddons?: string[]
@@ -115,6 +119,12 @@ export default function DashboardNav({
   useEffect(() => { setPendingSegment(null) }, [pathname])
 
   function pathOnly(tabPath: string) { return tabPath.split("?")[0] }
+  function badgeCountFor(tab: Tab) {
+    if (tab.path.includes("view=orders")) return newOrderCount
+    if (tab.path.includes("view=reservations")) return newReservationCount
+    if (pathOnly(tab.path) === "/leads") return newLeadCount
+    return 0
+  }
 
   function isActive(tabPath: string) {
     const cleanPath = pathOnly(tabPath)
@@ -275,7 +285,7 @@ export default function DashboardNav({
       }}>
         {tabs.map(tab => {
           const active    = isActive(tab.path)
-          const showBadge = pathOnly(tab.path) === "/leads" && newLeadCount > 0 && !active
+          const showBadge = badgeCountFor(tab) > 0 && !active
           return (
             <Link
               key={tab.path}
@@ -316,7 +326,7 @@ export default function DashboardNav({
               >
                 <div style={{ position: "relative" }}>
                   <DashboardToolIcon tool={tab} active={active} />
-                  {pathOnly(tab.path) === "/leads" && newLeadCount > 0 && !active && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
+                  {badgeCountFor(tab) > 0 && !active && <div style={{ position: "absolute", top: -2, right: -2, width: 8, height: 8, borderRadius: "50%", backgroundColor: "#FF3B30", border: "1.5px solid #080A09" }}/>}
                 </div>
                 <span style={{ ...TYPE.subhead, color: active ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, fontWeight: active ? 600 : 500 }}>{tab.label}</span>
               </Link>
