@@ -97,6 +97,26 @@ function humanIndustryLabel(context?: CopyPolishContext) {
   return HUMAN_INDUSTRY_LABELS[raw] || HUMAN_INDUSTRY_LABELS[raw.replace(/_shop$/, "")] || raw.replace(/_/g, " ") || "business"
 }
 
+
+function rawIndustryLabel(context?: CopyPolishContext) {
+  return (context?.subIndustry || context?.industry || "business").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+}
+
+function replaceRawIndustryLabels(value: string, context?: CopyPolishContext) {
+  const raw = rawIndustryLabel(context)
+  const human = humanIndustryLabel(context)
+  if (!raw || raw === human) return value
+  const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  return value
+    .replace(new RegExp(`\\blocal ${escaped}\\b`, "gi"), `local ${human}`)
+    .replace(new RegExp(`\\byour local ${escaped}\\b`, "gi"), `your local ${human}`)
+    .replace(new RegExp(`\\blocally owned ${escaped}\\b`, "gi"), `locally owned ${human}`)
+    .replace(new RegExp(`\\b${escaped} in\\b`, "gi"), `${human} in`)
+}
+
+function titleCaseHumanIndustry(value: string, context?: CopyPolishContext) {
+  return polishTitle(replaceRawIndustryLabels(value, context))
+}
 function locationLabel(context?: CopyPolishContext) {
   return [context?.city, context?.state].filter(Boolean).join(", ")
 }
@@ -110,8 +130,16 @@ function decapitalizeBodyTitleCase(value: string) {
 
 function sentenceFromFragments(value: string) {
   const parts = value.split(/,\s*/).map(part => part.trim()).filter(Boolean)
-  if (parts.length < 2 || parts.some(part => /\b(is|are|we|our|offer|offers|make|makes|serve|serves|provide|provides)\b/i.test(part))) return value
-  const normalized = parts.map(part => part.replace(/\.$/, "").toLowerCase())
+  if (parts.length < 2) return value
+
+  const normalized = parts.map(part => part
+    .replace(/\.$/, "")
+    .replace(/\s+options are available$/i, " options")
+    .replace(/^wholesale available$/i, "wholesale options")
+    .toLowerCase())
+
+  const fragmentLike = normalized.every(part => !/\b(is|are|we|our|offer|offers|make|makes|serve|serves|provide|provides)\b/i.test(part))
+  if (!fragmentLike) return value
   if (normalized.length === 2) return `We offer ${normalized[0]} and ${normalized[1]}.`
   return `We offer ${normalized.slice(0, -1).join(", ")}, and ${normalized[normalized.length - 1]}.`
 }
@@ -133,8 +161,8 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   const industry = humanIndustryLabel(context)
   const location = locationLabel(context)
 
-  cleaned = cleaned.replace(/\blocally owned ([a-z_ ]+?) in\b/i, `locally owned ${industry} in`)
-  cleaned = cleaned.replace(/\ba locally owned ([a-z_ ]+?)([,.])/i, `a locally owned ${industry}$2`)
+  cleaned = replaceRawIndustryLabels(cleaned, context)
+  cleaned = cleaned.replace(/\ba locally owned ([a-z_]+(?: [a-z_]+){0,2})([,.])/i, `a locally owned ${industry}$2`)
   cleaned = cleaned.replace(/\ba ([a-z_ ]+?) in Your Area\b/i, `a ${industry}${location ? ` in ${location}` : ""}`)
   cleaned = cleaned.replace(/\bWholesale available\b/gi, "wholesale options are available")
   cleaned = cleaned.replace(/\bSame-day\b/g, "same-day")
@@ -334,15 +362,27 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
   return categories
 }
 
+export function polishHeroCopy(value: unknown, context?: CopyPolishContext) {
+  if (typeof value !== "string") return ""
+  const cleaned = replaceRawIndustryLabels(applyKnownFixes(normalizeWhitespace(value)), context)
+  return polishSentence(cleaned)
+}
+
+export function polishHeroTitle(value: unknown, context?: CopyPolishContext) {
+  if (typeof value !== "string") return ""
+  return titleCaseHumanIndustry(applyKnownFixes(normalizeWhitespace(value)), context)
+}
 export function polishWebsiteField(field: string, value: unknown, context?: CopyPolishContext) {
   switch (field) {
     case "hero_title":
+      return polishHeroTitle(value, context)
     case "tagline":
     case "cta_headline":
       return polishShortCopy(value)
     case "hero_subtitle":
+      return polishHeroCopy(value, context)
     case "about_text":
-      return field === "about_text" ? polishAboutCopy(value, context) : polishSentence(value)
+      return polishAboutCopy(value, context)
     case "services":
       return polishServices(value)
     case "faq_items":
