@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.6.0",
