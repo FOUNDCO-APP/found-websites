@@ -1,4 +1,4 @@
-import { polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
+import { polishAboutCopy, polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
 import type { IndustryManifest } from "@/lib/industryManifests"
 import { getWebsiteJob, type WebsiteJob } from "@/lib/subIndustryVocabulary"
 
@@ -175,7 +175,7 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   return {
     heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : polishTitle(input.name),
     heroSubtitle: copy.heroSubtitle,
-    aboutText: copy.aboutText,
+    aboutText: polishAboutForInput(copy.aboutText, input),
     tagline: null,
     ctaHeadline: copy.ctaHeadline,
     copy_generated: false,
@@ -187,6 +187,16 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
           description: serviceFallback(industryLabel || "service"),
         }]),
   }
+}
+
+function polishAboutForInput(value: string, input: ContentGenerationInput) {
+  return polishAboutCopy(value, {
+    businessName: input.name,
+    industry: input.industry,
+    subIndustry: input.subIndustry,
+    city: input.city,
+    state: input.state,
+  })
 }
 
 function buildPrompt(input: ContentGenerationInput) {
@@ -263,7 +273,7 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
     return {
       heroTitle: polishShortCopy(limit(generated.heroTitle, fallback.heroTitle, 64)),
       heroSubtitle: polishSentence(limit(generated.heroSubtitle, fallback.heroSubtitle, 150)),
-      aboutText: polishSentence(limit(generated.aboutText, fallback.aboutText, 420)),
+      aboutText: polishAboutForInput(limit(generated.aboutText, fallback.aboutText, 420), input),
       tagline: typeof generated.tagline === "string" ? polishShortCopy(limit(generated.tagline, "", 80)) || null : null,
       ctaHeadline: typeof generated.ctaHeadline === "string" ? polishShortCopy(limit(generated.ctaHeadline, "", 90)) || null : null,
       copy_generated: true,

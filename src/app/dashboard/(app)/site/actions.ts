@@ -108,7 +108,14 @@ export async function updateSiteField(field: string, value: unknown) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
-  const polishedValue = polishWebsiteField(field, value)
+  const copyContext = {
+    businessName: ctx.company.name,
+    industry: ctx.company.industry_category,
+    subIndustry: ctx.company.sub_industry,
+    city: ctx.company.city,
+    state: ctx.company.state,
+  }
+  const polishedValue = polishWebsiteField(field, value, copyContext)
 
   const { error } = await ctx.admin
     .from("website_config")
@@ -194,7 +201,13 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
     }
   }
 
-  const updates = polishWebsiteUpdates(pickUpdates(generated ?? fallbackRewrite(section, company, config)))
+  const updates = polishWebsiteUpdates(pickUpdates(generated ?? fallbackRewrite(section, company, config)), {
+    businessName: company.name,
+    industry: company.industry_category,
+    subIndustry: company.sub_industry,
+    city: company.city,
+    state: company.state,
+  })
   const { error } = await ctx.admin.from("website_config").update(updates).eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 

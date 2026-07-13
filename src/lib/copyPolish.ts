@@ -59,6 +59,104 @@ const SERVICE_DESCRIPTION_PATTERNS = [
   "A straightforward way to get exactly what is needed without extra friction.",
 ]
 
+
+export type CopyPolishContext = {
+  businessName?: string | null
+  industry?: string | null
+  subIndustry?: string | null
+  city?: string | null
+  state?: string | null
+}
+
+const HUMAN_INDUSTRY_LABELS: Record<string, string> = {
+  apparel: "apparel shop",
+  clothing: "clothing shop",
+  retail: "retail shop",
+  food: "restaurant",
+  food_beverage: "food business",
+  home_based_food: "food business",
+  beauty: "beauty business",
+  wellness: "wellness studio",
+  fitness: "fitness business",
+  events: "event business",
+  home_services: "home service business",
+  cleaning: "cleaning business",
+  landscaping: "landscaping business",
+  automotive: "automotive business",
+  pet_services: "pet service business",
+  creative_services: "creative business",
+  professional_services: "professional service business",
+  real_estate: "real estate business",
+  healthcare: "healthcare practice",
+  education: "education business",
+  nonprofit: "nonprofit organization",
+}
+
+function humanIndustryLabel(context?: CopyPolishContext) {
+  const raw = (context?.subIndustry || context?.industry || "business").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "")
+  return HUMAN_INDUSTRY_LABELS[raw] || HUMAN_INDUSTRY_LABELS[raw.replace(/_shop$/, "")] || raw.replace(/_/g, " ") || "business"
+}
+
+function locationLabel(context?: CopyPolishContext) {
+  return [context?.city, context?.state].filter(Boolean).join(", ")
+}
+
+function decapitalizeBodyTitleCase(value: string) {
+  return value.replace(/([,;:]\s+)([A-Z][a-z]+(?:-[a-z]+)?)(?=\s|,|;|\.|$)/g, (_, prefix: string, word: string) => {
+    if (UPPERCASE_WORDS.has(word.toLowerCase())) return `${prefix}${word}`
+    return `${prefix}${word.charAt(0).toLowerCase()}${word.slice(1)}`
+  })
+}
+
+function sentenceFromFragments(value: string) {
+  const parts = value.split(/,\s*/).map(part => part.trim()).filter(Boolean)
+  if (parts.length < 2 || parts.some(part => /\b(is|are|we|our|offer|offers|make|makes|serve|serves|provide|provides)\b/i.test(part))) return value
+  const normalized = parts.map(part => part.replace(/\.$/, "").toLowerCase())
+  if (normalized.length === 2) return `We offer ${normalized[0]} and ${normalized[1]}.`
+  return `We offer ${normalized.slice(0, -1).join(", ")}, and ${normalized[normalized.length - 1]}.`
+}
+
+function splitLongCommaSentence(sentence: string) {
+  const commaCount = (sentence.match(/,/g) || []).length
+  if (sentence.length < 150 || commaCount < 3) return sentence
+  const firstComma = sentence.indexOf(",")
+  if (firstComma < 40) return sentence
+  return `${sentence.slice(0, firstComma).trim()}. ${sentence.slice(firstComma + 1).trim()}`
+}
+
+export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
+  if (typeof value !== "string") return ""
+  let cleaned = applyKnownFixes(normalizeWhitespace(value))
+  if (!cleaned) return ""
+
+  const businessName = context?.businessName ? polishTitle(context.businessName) : null
+  const industry = humanIndustryLabel(context)
+  const location = locationLabel(context)
+
+  cleaned = cleaned.replace(/\blocally owned ([a-z_ ]+?) in\b/i, `locally owned ${industry} in`)
+  cleaned = cleaned.replace(/\ba locally owned ([a-z_ ]+?)([,.])/i, `a locally owned ${industry}$2`)
+  cleaned = cleaned.replace(/\ba ([a-z_ ]+?) in Your Area\b/i, `a ${industry}${location ? ` in ${location}` : ""}`)
+  cleaned = cleaned.replace(/\bWholesale available\b/gi, "wholesale options are available")
+  cleaned = cleaned.replace(/\bSame-day\b/g, "same-day")
+  cleaned = decapitalizeBodyTitleCase(cleaned)
+
+  const sentences = cleaned
+    .split(/(?<=[.!?])\s+/)
+    .map(sentence => sentenceFromFragments(sentence.trim()))
+    .map(splitLongCommaSentence)
+    .filter(Boolean)
+
+  cleaned = sentences.join(" ")
+  cleaned = cleaned.replace(/\s+/g, " ").trim()
+  cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
+  if (!/[.!?]$/.test(cleaned)) cleaned += "."
+
+  if (businessName && !new RegExp(`^${businessName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(cleaned) && cleaned.length < 260) {
+    cleaned = `${businessName} is a ${location ? `${industry} in ${location}` : industry}. ${cleaned}`
+  }
+
+  return cleaned
+}
 const TEMPLATE_SMELL_PATTERNS = [
   /handled with clear communication/i,
   /careful work, and an easy path/i,
@@ -236,7 +334,7 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
   return categories
 }
 
-export function polishWebsiteField(field: string, value: unknown) {
+export function polishWebsiteField(field: string, value: unknown, context?: CopyPolishContext) {
   switch (field) {
     case "hero_title":
     case "tagline":
@@ -244,7 +342,7 @@ export function polishWebsiteField(field: string, value: unknown) {
       return polishShortCopy(value)
     case "hero_subtitle":
     case "about_text":
-      return polishSentence(value)
+      return field === "about_text" ? polishAboutCopy(value, context) : polishSentence(value)
     case "services":
       return polishServices(value)
     case "faq_items":
@@ -256,10 +354,10 @@ export function polishWebsiteField(field: string, value: unknown) {
   }
 }
 
-export function polishWebsiteUpdates<T extends Record<string, unknown>>(updates: T): T {
+export function polishWebsiteUpdates<T extends Record<string, unknown>>(updates: T, context?: CopyPolishContext): T {
   const polished: Record<string, unknown> = { ...updates }
   for (const field of ["hero_title", "hero_subtitle", "about_text", "tagline", "cta_headline", "services", "faq_items", "menu_items"]) {
-    if (field in polished) polished[field] = polishWebsiteField(field, polished[field])
+    if (field in polished) polished[field] = polishWebsiteField(field, polished[field], context)
   }
   return polished as T
 }

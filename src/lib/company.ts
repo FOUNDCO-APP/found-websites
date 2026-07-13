@@ -6,7 +6,13 @@ function polishCompanySiteCopy(company: Company | null): Company | null {
   if (!company?.website_config) return company
   return {
     ...company,
-    website_config: polishWebsiteUpdates(company.website_config as Record<string, unknown>) as Company["website_config"],
+    website_config: polishWebsiteUpdates(company.website_config as Record<string, unknown>, {
+      businessName: company.name,
+      industry: company.industry_category,
+      subIndustry: company.sub_industry,
+      city: company.city,
+      state: company.state,
+    }) as Company["website_config"],
   }
 }
 
