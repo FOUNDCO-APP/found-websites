@@ -277,7 +277,7 @@
                                             ],
                               "expectedHeroTitle":  "Church in Tucson",
                               "expectedHeroSubtitle":  "A church community in Tucson. Join us for worship, service, and connection.",
-                              "expectedAbout":  "FRCC is a church community in Tucson, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith, connection, and a place to belong."
+                              "expectedAbout":  "FRCC is a church community in Tucson, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith and connection."
                           },
                           {
                               "id":  "mosque-temple-fallback-copy",
@@ -293,7 +293,38 @@
                                             ],
                               "expectedHeroTitle":  "Mosque/Temple in Phoenix",
                               "expectedHeroSubtitle":  "A faith community in Phoenix. Join us for worship, service, and connection.",
-                              "expectedAbout":  "Faith Community is a faith community in Phoenix, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith, connection, and a place to belong."
+                              "expectedAbout":  "Faith Community is a faith community in Phoenix, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith and connection."
                           }
-                      ]
+                      ],
+    "aboutPageFixtures":  [
+                              {
+                                  "id":  "frcc-semantic-duplicate-intro",
+                                  "field":  "about_text",
+                                  "industry":  "nonprofit",
+                                  "subIndustry":  "church",
+                                  "businessName":  "frcc",
+                                  "city":  "Tucson",
+                                  "state":  "AZ",
+                                  "raw":  "Frcc is a church in Tucson, AZ. FRCC is a church community in Tucson, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith and connection.",
+                                  "expected":  "FRCC is a church community in Tucson, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith and connection."
+                              },
+                              {
+                                  "id":  "frcc-about-page-hero",
+                                  "field":  "about_hero",
+                                  "industry":  "nonprofit",
+                                  "subIndustry":  "church",
+                                  "businessName":  "frcc",
+                                  "city":  "Tucson",
+                                  "state":  "AZ",
+                                  "expectedTitle":  "About FRCC",
+                                  "expectedSubtitle":  "A church community in Tucson, AZ.",
+                                  "forbidden":  [
+                                                    "locally owned",
+                                                    "owned and operated",
+                                                    "bookings",
+                                                    "shows",
+                                                    "work speaks for itself"
+                                                ]
+                              }
+                          ]
 }

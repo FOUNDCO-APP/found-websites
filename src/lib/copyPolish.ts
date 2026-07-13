@@ -20,6 +20,7 @@ const KNOWN_FIXES: Record<string, string> = {
   calender: "calendar",
   comunication: "communication",
   definitly: "definitely",
+  frcc: "FRCC",
   seperate: "separate",
   recieve: "receive",
   recieved: "received",
@@ -301,7 +302,8 @@ function removeRedundantIntroSentences(sentences: string[], context?: CopyPolish
       const previousIntro = aboutIntroInfo(previous, context)
       const currentIntro = aboutIntroInfo(current, context)
       if (previousIntro && currentIntro) {
-        result[result.length - 1] = currentIntro.local && !previousIntro.local ? current : previous
+        const currentIsStronger = (currentIntro.local && !previousIntro.local) || currentIntro.descriptor.includes(previousIntro.descriptor) || currentIntro.descriptor.length > previousIntro.descriptor.length
+        result[result.length - 1] = currentIsStronger ? current : previous
         continue
       }
     }
@@ -455,6 +457,23 @@ function capitalizeWord(word: string, index: number, total: number) {
   return lower.charAt(0).toUpperCase() + lower.slice(1)
 }
 
+function isFaithContext(context?: CopyPolishContext) {
+  const label = `${context?.industry ?? ""} ${context?.subIndustry ?? ""}`.toLowerCase()
+  return /\b(church|mosque|temple|ministry|faith|congregation)\b/.test(label)
+}
+
+export function polishBusinessName(value: unknown, fallback = "") {
+  return polishTitle(value, fallback)
+}
+
+export function getAboutHeroSubtitle(context?: CopyPolishContext) {
+  const location = locationLabel(context)
+  if (isFaithContext(context)) {
+    const label = (context?.subIndustry ?? "").toLowerCase().includes("church") ? "church community" : "faith community"
+    return location ? `A ${label} in ${location}.` : `A ${label}.`
+  }
+  return location ? `Locally owned and operated in ${location}.` : "Local and independent."
+}
 export function polishTitle(value: unknown, fallback = "") {
   if (typeof value !== "string") return fallback
   const cleaned = applyKnownFixes(normalizeWhitespace(value))

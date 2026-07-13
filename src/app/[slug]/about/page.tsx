@@ -6,6 +6,7 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getAboutHeroSubtitle, polishBusinessName } from "@/lib/copyPolish"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -39,6 +40,14 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const industryDefs = getIndustryDefaults(company.industry_category)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
+  const displayName = polishBusinessName(company.name)
+  const aboutHeroSubtitle = getAboutHeroSubtitle({
+    businessName: company.name,
+    industry: company.industry_category,
+    subIndustry: company.sub_industry,
+    city: company.city,
+    state: company.state,
+  })
 
   return (
     <>
@@ -46,7 +55,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         {(uploaded(1) || img(0)) ? (
           <>
-            <img src={uploaded(1) ?? img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={uploaded(1) ?? img(0)!} alt={displayName} className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/68" />
           </>
         ) : (
@@ -58,11 +67,11 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           </p>
           <h1 className="text-5xl md:text-7xl font-black leading-none mb-8 text-balance text-white"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            About {company.name}
+            About {displayName}
           </h1>
-          {company.city && (
+          {aboutHeroSubtitle && (
             <p className="text-lg" style={{ color: "#cccccc" }}>
-              Locally owned and operated in {company.city}{company.state ? `, ${company.state}` : ""}.
+              {aboutHeroSubtitle}
             </p>
           )}
         </div>

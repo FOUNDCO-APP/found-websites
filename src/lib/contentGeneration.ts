@@ -156,7 +156,7 @@ function buildJobFamilyCopy(
       const faithLabel = ind.includes("mosque") || ind.includes("temple") ? "faith community" : "church community"
       return {
         heroSubtitle: `A ${faithLabel} in ${cityLabel}. Join us for worship, service, and connection.`,
-        aboutText: `${name} is a ${faithLabel} in ${locationPhrase}. ${diff}We gather for worship, serve our neighbors, and welcome people looking for faith, connection, and a place to belong.`,
+        aboutText: `${name} is a ${faithLabel} in ${locationPhrase}. ${diff}We gather for worship, serve our neighbors, and welcome people looking for faith and connection.`,
         ctaHeadline: "All are welcome",
       }
     }

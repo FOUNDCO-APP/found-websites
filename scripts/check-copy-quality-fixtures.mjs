@@ -43,7 +43,7 @@ function loadTsModule(modulePath, cache = new Map()) {
   return module.exports
 }
 
-const { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishServices } = loadTsModule("src/lib/copyPolish.ts")
+const { getAboutHeroSubtitle, polishAboutCopy, polishBusinessName, polishHeroCopy, polishHeroTitle, polishServices } = loadTsModule("src/lib/copyPolish.ts")
 const { buildFallbackWebsiteContent } = loadTsModule("src/lib/contentGeneration.ts")
 
 const rawLabelPatterns = [
@@ -160,6 +160,26 @@ for (const fixture of fixtures.serviceFixtures) {
   checks++
 }
 
+for (const fixture of fixtures.aboutPageFixtures ?? []) {
+  assert(fixture.id && fixture.field, "about page fixture missing required fields")
+  if (fixture.field === "about_text") {
+    const production = polishAboutCopy(fixture.raw, copyContext(fixture))
+    assert(production === fixture.expected, `${fixture.id}: semantic duplicate intro was not removed. Expected ${fixture.expected}, got ${production}`)
+    assertCleanPublicCopy(production, `${fixture.id}: production`)
+  } else if (fixture.field === "about_hero") {
+    const title = `About ${polishBusinessName(fixture.businessName)}`
+    const subtitle = getAboutHeroSubtitle(copyContext(fixture))
+    assert(title === fixture.expectedTitle, `${fixture.id}: about title mismatch. Expected ${fixture.expectedTitle}, got ${title}`)
+    assert(subtitle === fixture.expectedSubtitle, `${fixture.id}: about subtitle mismatch. Expected ${fixture.expectedSubtitle}, got ${subtitle}`)
+    const combined = `${title} ${subtitle}`.toLowerCase()
+    for (const phrase of fixture.forbidden) {
+      assert(!combined.includes(String(phrase).toLowerCase()), `${fixture.id}: forbidden about hero phrase leaked: ${phrase}`)
+    }
+  } else {
+    throw new Error(`${fixture.id}: unsupported about page fixture field ${fixture.field}`)
+  }
+  checks++
+}
 for (const fixture of fixtures.faithFixtures ?? []) {
   const result = buildFallbackWebsiteContent({
     name: fixture.name,
