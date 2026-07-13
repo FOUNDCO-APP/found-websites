@@ -264,6 +264,67 @@ function sentenceFromFragments(value: string, context?: CopyPolishContext) {
   return `We offer ${joinHumanList(normalized)} with care and clear next steps.`
 }
 
+function normalizeForIntroCompare(value: string) {
+  return applyKnownFixes(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function aboutIntroInfo(sentence: string, context?: CopyPolishContext) {
+  const normalized = normalizeForIntroCompare(sentence.replace(/[.!?]+$/g, ""))
+  const city = context?.city ? normalizeForIntroCompare(context.city) : ""
+  if (!city || !normalized.includes(city)) return null
+
+  const introMatch = normalized.match(/^(.+?)\s+is\s+(?:a|an)\s+(.+?)\s+in\s+(.+)$/)
+  if (!introMatch) return null
+
+  const subject = introMatch[1].trim()
+  const descriptor = introMatch[2].trim().replace(/^locally owned\s+/, "")
+  const local = /\blocally owned\b/.test(normalized)
+  return { local, normalized, subject, descriptor }
+}
+
+function removeRedundantIntroSentences(sentences: string[], context?: CopyPolishContext) {
+  if (sentences.length < 2) return sentences
+  const result: string[] = []
+
+  for (const sentence of sentences) {
+    const current = sentence.trim()
+    if (!current) continue
+
+    const previous = result[result.length - 1]
+    if (previous) {
+      const previousIntro = aboutIntroInfo(previous, context)
+      const currentIntro = aboutIntroInfo(current, context)
+      if (previousIntro && currentIntro) {
+        result[result.length - 1] = currentIntro.local && !previousIntro.local ? current : previous
+        continue
+      }
+    }
+
+    result.push(current)
+  }
+
+  return result
+}
+function collapseDuplicateIntroParagraph(value: string, context?: CopyPolishContext) {
+  if (!context?.businessName || !context.city) return value
+  const business = polishTitle(context.businessName)
+  const businessPattern = regexEscape(business).replace(/\ /g, "\\s+")
+  const cityPattern = regexEscape(context.city).replace(/\ /g, "\\s+")
+  const statePattern = context.state ? `(?:,\\s*${regexEscape(context.state)})?` : ""
+  const locationPattern = `${cityPattern}${statePattern}`
+  const genericIntro = `${businessPattern}\\s+is\\s+(?:a|an)\\s+(?!locally\\s+owned\\b)[^.]*?\\bin\\s+${locationPattern}`
+  const localIntro = `${businessPattern}\\s+is\\s+(?:a|an)\\s+locally\\s+owned\\s+[^.]*?\\bin\\s+${locationPattern}`
+
+  let cleaned = value.replace(new RegExp(`\\b${genericIntro}\\.\\s+(${localIntro})\\.`, "gi"), (_, local: string) => `${local.replace(new RegExp(`^${businessPattern}`, "i"), business)}.`)
+  cleaned = cleaned.replace(new RegExp(`\\b(${localIntro})\\.\\s+${genericIntro}\\.`, "gi"), (_, local: string) => `${local.replace(new RegExp(`^${businessPattern}`, "i"), business)}.`)
+  return cleaned
+}
 function splitLongCommaSentence(sentence: string) {
   const commaCount = (sentence.match(/,/g) || []).length
   if (sentence.length < 150 || commaCount < 3) return sentence
@@ -290,6 +351,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   cleaned = cleaned.replace(/\bWholesale available\b/gi, "wholesale options are available")
   cleaned = cleaned.replace(/\bSame-day\b/g, "same-day")
   cleaned = decapitalizeBodyTitleCase(cleaned)
+  cleaned = collapseDuplicateIntroParagraph(cleaned, context)
 
   const sentences = cleaned
     .split(/(?<=[.!?])\s+/)
@@ -297,7 +359,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
     .map(splitLongCommaSentence)
     .filter(Boolean)
 
-  cleaned = sentences.join(" ")
+  cleaned = removeRedundantIntroSentences(sentences, context).join(" ")
   cleaned = cleaned.replace(/\s+/g, " ").trim()
   cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
   if (!/[.!?]$/.test(cleaned)) cleaned += "."

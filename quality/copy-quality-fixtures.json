@@ -237,5 +237,29 @@
                                     "raw":  "Lucky is a locally owned apparel shop shop shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for.",
                                     "expected":  "Lucky is a locally owned apparel shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for."
                                 }
-                            ]
+                            ],
+    "redundancyFixtures":  [
+                               {
+                                   "id":  "molcas-duplicate-intro",
+                                   "field":  "about_text",
+                                   "industry":  "food",
+                                   "subIndustry":  null,
+                                   "businessName":  "Molcas Mexican",
+                                   "city":  "Tucson",
+                                   "state":  "AZ",
+                                   "raw":  "Molcas Mexican is a restaurant in Tucson, AZ. Molcas mexican is a locally owned restaurant in Tucson, AZ. We\u0027re proud of what we do and even prouder of the people we do it for.",
+                                   "expected":  "Molcas Mexican is a locally owned restaurant in Tucson, AZ. We\u0027re proud of what we do and even prouder of the people we do it for."
+                               },
+                               {
+                                   "id":  "nereidas-duplicate-intro",
+                                   "field":  "about_text",
+                                   "industry":  "beauty",
+                                   "subIndustry":  "esthetician",
+                                   "businessName":  "Nereidas Salón",
+                                   "city":  "Tucson",
+                                   "state":  "AZ",
+                                   "raw":  "Nereidas Salón is a esthetician in Tucson, AZ. Nereidas salón is a locally owned esthetician in Tucson, AZ. We take care of every detail so you can enjoy the experience.",
+                                   "expected":  "Nereidas Salón is a locally owned esthetician in Tucson, AZ. We take care of every detail so you can enjoy the experience."
+                               }
+                           ]
 }

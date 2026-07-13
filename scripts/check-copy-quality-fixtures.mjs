@@ -102,6 +102,14 @@ for (const fixture of fixtures.aboutFixtures) {
   checks++
 }
 
+for (const fixture of fixtures.redundancyFixtures ?? []) {
+  assert(fixture.id && fixture.field === "about_text" && fixture.raw && fixture.expected, "redundancy fixture missing required fields")
+  const production = polishAboutCopy(fixture.raw, copyContext(fixture))
+  assert(production === fixture.expected, `${fixture.id}: redundant intro was not removed. Expected ${fixture.expected}, got ${production}`)
+  assertCleanPublicCopy(production, `${fixture.id}: production`)
+  assert(sentenceCount(production) <= 3, `${fixture.id}: production about copy should stay short on mobile: ${production}`)
+  checks++
+}
 function polishFixtureField(fixture, value) {
   const context = copyContext(fixture)
   if (fixture.field === "hero_title") return polishHeroTitle(value, context)
