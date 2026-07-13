@@ -32,7 +32,7 @@ function loadCopyPolish() {
   return context.module.exports
 }
 
-const { polishAboutCopy, polishServices } = loadCopyPolish()
+const { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishServices } = loadCopyPolish()
 
 const rawLabelPatterns = [
   /\bhome_services\b/i,
@@ -51,6 +51,7 @@ const rawLabelPatterns = [
 
 const fragmentListPattern = /(?:^|\.\s+)[A-Z]?[a-z][^.!?]{0,28},\s*[A-Z]?[a-z][^.!?]{0,28},\s*[A-Z]?[a-z][^.!?]{0,28}(?:\.|$)/
 const randomBodyCapsPattern = /[,;:]\s+(Custom|Same-day|Wholesale|Weekly|Deep|Move|Haircuts|Color|Lashes|Massage|Facials|Balloons|Weddings|Birthdays|Taxes|Bookkeeping|Payroll)\b/
+const repeatedHumanLabelPattern = /\b(apparel shop)(?:\s+shop)+\b/i
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)
@@ -64,6 +65,7 @@ function assertCleanPublicCopy(text, id) {
   assert(!fragmentListPattern.test(text), `${id}: copy still reads like a fragment list: ${text}`)
   assert(!randomBodyCapsPattern.test(text), `${id}: copy has random body capitalization: ${text}`)
   assert((text.match(/,/g) || []).length <= 4, `${id}: copy is too comma-heavy for mobile: ${text}`)
+  assert(!repeatedHumanLabelPattern.test(text), `${id}: copy repeats a human industry label: ${text}`)
 }
 
 function sentenceCount(text) {
@@ -100,6 +102,23 @@ for (const fixture of fixtures.aboutFixtures) {
   checks++
 }
 
+function polishFixtureField(fixture, value) {
+  const context = copyContext(fixture)
+  if (fixture.field === "hero_title") return polishHeroTitle(value, context)
+  if (fixture.field === "hero_subtitle") return polishHeroCopy(value, context)
+  if (fixture.field === "about_text") return polishAboutCopy(value, context)
+  throw new Error(`${fixture.id}: unsupported idempotency field ${fixture.field}`)
+}
+
+for (const fixture of fixtures.idempotencyFixtures ?? []) {
+  assert(fixture.id && fixture.field && fixture.raw && fixture.expected, "idempotency fixture missing required fields")
+  const firstPass = polishFixtureField(fixture, fixture.raw)
+  const secondPass = polishFixtureField(fixture, firstPass)
+  assert(firstPass === fixture.expected, `${fixture.id}: first polish pass mismatch. Expected ${fixture.expected}, got ${firstPass}`)
+  assert(secondPass === fixture.expected, `${fixture.id}: second polish pass should be idempotent. Expected ${fixture.expected}, got ${secondPass}`)
+  assertCleanPublicCopy(firstPass, `${fixture.id}: production`)
+  checks++
+}
 for (const fixture of fixtures.serviceFixtures) {
   assert(Array.isArray(fixture.raw) && Array.isArray(fixture.expected), `${fixture.id}: service fixture needs raw and expected arrays`)
   assert(fixture.raw.length === fixture.expected.length, `${fixture.id}: service raw/expected length mismatch`)

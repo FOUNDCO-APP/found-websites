@@ -1,147 +1,241 @@
 {
-  "version": 1,
-  "standard": [
-    "Public copy must sound human and finished.",
-    "No raw internal industry labels in public copy.",
-    "No awkward locally-owned category phrasing.",
-    "No fragment lists in paragraphs.",
-    "No random body capitalization.",
-    "No repeated service descriptions.",
-    "No long comma-heavy mobile paragraphs."
-  ],
-  "aboutFixtures": [
-    {
-      "id": "apparel-retail",
-      "industry": "retail",
-      "subIndustry": "apparel",
-      "businessName": "Lucky",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Lucky is a locally owned apparel in Phoenix, AZ. Locally made, Custom orders, Same-day shipping, Wholesale available.",
-      "expected": "Lucky is a locally owned apparel shop in Phoenix, AZ. We offer locally made pieces, custom orders, same-day shipping, and wholesale options."
-    },
-    {
-      "id": "restaurant",
-      "industry": "food",
-      "businessName": "Molcas",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "Molcas is a locally owned food in Tucson. Tacos, catering, family owned, open late.",
-      "expected": "Molcas is a locally owned restaurant in Tucson. We serve tacos, offer catering, and keep things welcoming for families and late-night guests."
-    },
-    {
-      "id": "contractor",
-      "industry": "home_services",
-      "businessName": "Barrio Builders",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "Barrio Builders is a locally owned home_services in Tucson. Remodels, drywall, painting, free estimates.",
-      "expected": "Barrio Builders is a locally owned contractor in Tucson. We handle remodels, drywall, painting, and free estimates with clear communication from start to finish."
-    },
-    {
-      "id": "cleaning",
-      "industry": "cleaning",
-      "businessName": "Sparkle",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Sparkle is a locally owned cleaning in Phoenix. Weekly, deep cleans, move outs.",
-      "expected": "Sparkle is a locally owned cleaning business in Phoenix. We offer weekly cleaning, deep cleans, and move-out service for homes that need a reliable reset."
-    },
-    {
-      "id": "beauty-salon",
-      "industry": "beauty",
-      "businessName": "Nereida's Salon",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "Nereida's Salon is a locally owned beauty in Tucson. Haircuts, color, lashes.",
-      "expected": "Nereida's Salon is a locally owned beauty studio in Tucson. We offer haircuts, color, and lash services in a space built around care and confidence."
-    },
-    {
-      "id": "wellness-spa",
-      "industry": "wellness",
-      "businessName": "Desert Spa",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Desert Spa is a locally owned wellness in Phoenix. Massage, facials, relaxing.",
-      "expected": "Desert Spa is a locally owned wellness studio in Phoenix. We offer massage and facial services designed to help clients slow down and feel restored."
-    },
-    {
-      "id": "events",
-      "industry": "events",
-      "businessName": "Blue Luna Events",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "Blue Luna Events is a locally owned events in Tucson. Balloons, weddings, birthdays.",
-      "expected": "Blue Luna Events is a locally owned event studio in Tucson. We create balloon installs and event details for weddings, birthdays, and celebrations that need a polished touch."
-    },
-    {
-      "id": "photography",
-      "industry": "creative_services",
-      "subIndustry": "photography",
-      "businessName": "Lens Co",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Lens Co is a locally owned photography in Phoenix. Weddings, portraits, events.",
-      "expected": "Lens Co is a locally owned photography business in Phoenix. We photograph weddings, portraits, and events with a calm process and a clean final look."
-    },
-    {
-      "id": "real-estate",
-      "industry": "real_estate",
-      "businessName": "Catalina Homes",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "Catalina Homes is a locally owned real_estate in Tucson. Buyers, sellers, listings.",
-      "expected": "Catalina Homes is a real estate business in Tucson helping buyers and sellers move with clarity, local knowledge, and practical guidance."
-    },
-    {
-      "id": "pet-services",
-      "industry": "pet_services",
-      "businessName": "Happy Paws",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Happy Paws is a locally owned pet_services in Phoenix. Grooming, baths, nails.",
-      "expected": "Happy Paws is a locally owned pet care business in Phoenix. We offer grooming, baths, and nail care for pets who deserve gentle, reliable attention."
-    },
-    {
-      "id": "professional-services",
-      "industry": "professional_services",
-      "businessName": "Lopez Consulting",
-      "city": "Phoenix",
-      "state": "AZ",
-      "raw": "Lopez Consulting is a locally owned professional_services in Phoenix. Taxes, bookkeeping, payroll.",
-      "expected": "Lopez Consulting is a professional service business in Phoenix. We help with taxes, bookkeeping, and payroll so clients can stay organized and make better decisions."
-    },
-    {
-      "id": "nonprofit",
-      "industry": "nonprofit",
-      "businessName": "FRCC",
-      "city": "Tucson",
-      "state": "AZ",
-      "raw": "FRCC is a locally owned nonprofit in Tucson. Community, youth, donations.",
-      "expected": "FRCC is a nonprofit organization in Tucson supporting local youth, community programs, and the people who make that work possible."
-    }
-  ],
-  "serviceFixtures": [
-    {
-      "id": "apparel-services",
-      "raw": [
-        { "name": "apparell", "description": "apparell handled with clear communication, careful work, and an easy path from first question to finished result." },
-        { "name": "shirts", "description": "shirts handled with clear communication, careful work, and an easy path from first question to finished result." },
-        { "name": "hats", "description": "hats handled with clear communication, careful work, and an easy path from first question to finished result." }
-      ],
-      "expected": [
-        { "name": "Apparel", "description": "Everyday pieces selected for fit, comfort, and style." },
-        { "name": "Shirts", "description": "Clean staples for work, weekends, and everything between." },
-        { "name": "Hats", "description": "Finishing touches that make the whole look feel intentional." }
-      ]
-    }
-  ],
-  "ctaFixtures": [
-    { "industry": "food", "bad": "Shop now", "expectedPrimary": "Visit us", "expectedSecondary": "View menu" },
-    { "industry": "retail", "bad": "Book now", "expectedPrimary": "Shop the collection", "expectedSecondary": "Visit us" },
-    { "industry": "home_services", "bad": "Come see us", "expectedPrimary": "Request an estimate", "expectedSecondary": "See our work" },
-    { "industry": "beauty", "bad": "Shop now", "expectedPrimary": "Book an appointment", "expectedSecondary": "View services" },
-    { "industry": "events", "bad": "Shop now", "expectedPrimary": "Plan your event", "expectedSecondary": "See packages" },
-    { "industry": "nonprofit", "bad": "Shop now", "expectedPrimary": "Get involved", "expectedSecondary": "Support the mission" }
-  ]
+    "version":  1,
+    "standard":  [
+                     "Public copy must sound human and finished.",
+                     "No raw internal industry labels in public copy.",
+                     "No awkward locally-owned category phrasing.",
+                     "No fragment lists in paragraphs.",
+                     "No random body capitalization.",
+                     "No repeated service descriptions.",
+                     "No long comma-heavy mobile paragraphs."
+                 ],
+    "aboutFixtures":  [
+                          {
+                              "id":  "apparel-retail",
+                              "industry":  "retail",
+                              "subIndustry":  "apparel",
+                              "businessName":  "Lucky",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Lucky is a locally owned apparel in Phoenix, AZ. Locally made, Custom orders, Same-day shipping, Wholesale available.",
+                              "expected":  "Lucky is a locally owned apparel shop in Phoenix, AZ. We offer locally made pieces, custom orders, same-day shipping, and wholesale options."
+                          },
+                          {
+                              "id":  "restaurant",
+                              "industry":  "food",
+                              "businessName":  "Molcas",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "Molcas is a locally owned food in Tucson. Tacos, catering, family owned, open late.",
+                              "expected":  "Molcas is a locally owned restaurant in Tucson. We serve tacos, offer catering, and keep things welcoming for families and late-night guests."
+                          },
+                          {
+                              "id":  "contractor",
+                              "industry":  "home_services",
+                              "businessName":  "Barrio Builders",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "Barrio Builders is a locally owned home_services in Tucson. Remodels, drywall, painting, free estimates.",
+                              "expected":  "Barrio Builders is a locally owned contractor in Tucson. We handle remodels, drywall, painting, and free estimates with clear communication from start to finish."
+                          },
+                          {
+                              "id":  "cleaning",
+                              "industry":  "cleaning",
+                              "businessName":  "Sparkle",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Sparkle is a locally owned cleaning in Phoenix. Weekly, deep cleans, move outs.",
+                              "expected":  "Sparkle is a locally owned cleaning business in Phoenix. We offer weekly cleaning, deep cleans, and move-out service for homes that need a reliable reset."
+                          },
+                          {
+                              "id":  "beauty-salon",
+                              "industry":  "beauty",
+                              "businessName":  "Nereida\u0027s Salon",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "Nereida\u0027s Salon is a locally owned beauty in Tucson. Haircuts, color, lashes.",
+                              "expected":  "Nereida\u0027s Salon is a locally owned beauty studio in Tucson. We offer haircuts, color, and lash services in a space built around care and confidence."
+                          },
+                          {
+                              "id":  "wellness-spa",
+                              "industry":  "wellness",
+                              "businessName":  "Desert Spa",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Desert Spa is a locally owned wellness in Phoenix. Massage, facials, relaxing.",
+                              "expected":  "Desert Spa is a locally owned wellness studio in Phoenix. We offer massage and facial services designed to help clients slow down and feel restored."
+                          },
+                          {
+                              "id":  "events",
+                              "industry":  "events",
+                              "businessName":  "Blue Luna Events",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "Blue Luna Events is a locally owned events in Tucson. Balloons, weddings, birthdays.",
+                              "expected":  "Blue Luna Events is a locally owned event studio in Tucson. We create balloon installs and event details for weddings, birthdays, and celebrations that need a polished touch."
+                          },
+                          {
+                              "id":  "photography",
+                              "industry":  "creative_services",
+                              "subIndustry":  "photography",
+                              "businessName":  "Lens Co",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Lens Co is a locally owned photography in Phoenix. Weddings, portraits, events.",
+                              "expected":  "Lens Co is a locally owned photography business in Phoenix. We photograph weddings, portraits, and events with a calm process and a clean final look."
+                          },
+                          {
+                              "id":  "real-estate",
+                              "industry":  "real_estate",
+                              "businessName":  "Catalina Homes",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "Catalina Homes is a locally owned real_estate in Tucson. Buyers, sellers, listings.",
+                              "expected":  "Catalina Homes is a real estate business in Tucson helping buyers and sellers move with clarity, local knowledge, and practical guidance."
+                          },
+                          {
+                              "id":  "pet-services",
+                              "industry":  "pet_services",
+                              "businessName":  "Happy Paws",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Happy Paws is a locally owned pet_services in Phoenix. Grooming, baths, nails.",
+                              "expected":  "Happy Paws is a locally owned pet care business in Phoenix. We offer grooming, baths, and nail care for pets who deserve gentle, reliable attention."
+                          },
+                          {
+                              "id":  "professional-services",
+                              "industry":  "professional_services",
+                              "businessName":  "Lopez Consulting",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "raw":  "Lopez Consulting is a locally owned professional_services in Phoenix. Taxes, bookkeeping, payroll.",
+                              "expected":  "Lopez Consulting is a professional service business in Phoenix. We help with taxes, bookkeeping, and payroll so clients can stay organized and make better decisions."
+                          },
+                          {
+                              "id":  "nonprofit",
+                              "industry":  "nonprofit",
+                              "businessName":  "FRCC",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "raw":  "FRCC is a locally owned nonprofit in Tucson. Community, youth, donations.",
+                              "expected":  "FRCC is a nonprofit organization in Tucson supporting local youth, community programs, and the people who make that work possible."
+                          }
+                      ],
+    "serviceFixtures":  [
+                            {
+                                "id":  "apparel-services",
+                                "raw":  [
+                                            {
+                                                "name":  "apparell",
+                                                "description":  "apparell handled with clear communication, careful work, and an easy path from first question to finished result."
+                                            },
+                                            {
+                                                "name":  "shirts",
+                                                "description":  "shirts handled with clear communication, careful work, and an easy path from first question to finished result."
+                                            },
+                                            {
+                                                "name":  "hats",
+                                                "description":  "hats handled with clear communication, careful work, and an easy path from first question to finished result."
+                                            }
+                                        ],
+                                "expected":  [
+                                                 {
+                                                     "name":  "Apparel",
+                                                     "description":  "Everyday pieces selected for fit, comfort, and style."
+                                                 },
+                                                 {
+                                                     "name":  "Shirts",
+                                                     "description":  "Clean staples for work, weekends, and everything between."
+                                                 },
+                                                 {
+                                                     "name":  "Hats",
+                                                     "description":  "Finishing touches that make the whole look feel intentional."
+                                                 }
+                                             ]
+                            }
+                        ],
+    "ctaFixtures":  [
+                        {
+                            "industry":  "food",
+                            "bad":  "Shop now",
+                            "expectedPrimary":  "Visit us",
+                            "expectedSecondary":  "View menu"
+                        },
+                        {
+                            "industry":  "retail",
+                            "bad":  "Book now",
+                            "expectedPrimary":  "Shop the collection",
+                            "expectedSecondary":  "Visit us"
+                        },
+                        {
+                            "industry":  "home_services",
+                            "bad":  "Come see us",
+                            "expectedPrimary":  "Request an estimate",
+                            "expectedSecondary":  "See our work"
+                        },
+                        {
+                            "industry":  "beauty",
+                            "bad":  "Shop now",
+                            "expectedPrimary":  "Book an appointment",
+                            "expectedSecondary":  "View services"
+                        },
+                        {
+                            "industry":  "events",
+                            "bad":  "Shop now",
+                            "expectedPrimary":  "Plan your event",
+                            "expectedSecondary":  "See packages"
+                        },
+                        {
+                            "industry":  "nonprofit",
+                            "bad":  "Shop now",
+                            "expectedPrimary":  "Get involved",
+                            "expectedSecondary":  "Support the mission"
+                        }
+                    ],
+    "idempotencyFixtures":  [
+                                {
+                                    "id":  "apparel-hero-subtitle-idempotent",
+                                    "field":  "hero_subtitle",
+                                    "industry":  "retail",
+                                    "subIndustry":  "apparel",
+                                    "businessName":  "Lucky",
+                                    "city":  "Phoenix",
+                                    "state":  "AZ",
+                                    "raw":  "Your local apparel shop in Phoenix. Come see what we\u0027re all about.",
+                                    "expected":  "Your local apparel shop in Phoenix. Come see what we\u0027re all about."
+                                },
+                                {
+                                    "id":  "apparel-hero-subtitle-raw-once",
+                                    "field":  "hero_subtitle",
+                                    "industry":  "retail",
+                                    "subIndustry":  "apparel",
+                                    "businessName":  "Lucky",
+                                    "city":  "Phoenix",
+                                    "state":  "AZ",
+                                    "raw":  "Your local apparel in Phoenix. Come see what we\u0027re all about.",
+                                    "expected":  "Your local apparel shop in Phoenix. Come see what we\u0027re all about."
+                                },
+                                {
+                                    "id":  "apparel-about-idempotent",
+                                    "field":  "about_text",
+                                    "industry":  "retail",
+                                    "subIndustry":  "apparel",
+                                    "businessName":  "Lucky",
+                                    "city":  "Phoenix",
+                                    "state":  "AZ",
+                                    "raw":  "Lucky is a locally owned apparel shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for.",
+                                    "expected":  "Lucky is a locally owned apparel shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for."
+                                },
+                                {
+                                    "id":  "apparel-about-collapse-existing-bad",
+                                    "field":  "about_text",
+                                    "industry":  "retail",
+                                    "subIndustry":  "apparel",
+                                    "businessName":  "Lucky",
+                                    "city":  "Phoenix",
+                                    "state":  "AZ",
+                                    "raw":  "Lucky is a locally owned apparel shop shop shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for.",
+                                    "expected":  "Lucky is a locally owned apparel shop in Phoenix, AZ. We\u0027re proud of what we do and even prouder of the people we do it for."
+                                }
+                            ]
 }

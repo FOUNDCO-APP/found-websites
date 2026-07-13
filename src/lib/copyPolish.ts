@@ -106,32 +106,54 @@ function rawIndustryLabel(context?: CopyPolishContext) {
   return (context?.subIndustry || context?.industry || "business").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
 }
 
+function regexEscape(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function variantAlreadyHumanGuard(variant: string, human: string) {
+  const normalizedVariant = variant.toLowerCase().replace(/_/g, " ").replace(/\s+/g, " ").trim()
+  const normalizedHuman = human.toLowerCase().replace(/\s+/g, " ").trim()
+  if (!normalizedHuman.startsWith(`${normalizedVariant} `)) return ""
+  const suffix = normalizedHuman.slice(normalizedVariant.length).trim()
+  return suffix ? `(?!\\s+${regexEscape(suffix).replace(/\\ /g, "\\s+")}\\b)` : ""
+}
+
+function collapseRepeatedHumanLabels(value: string, context?: CopyPolishContext) {
+  const human = humanIndustryLabel(context)
+  const words = human.split(/\s+/).filter(Boolean)
+  if (words.length < 2) return value
+  const lastWord = regexEscape(words[words.length - 1])
+  const escapedHuman = regexEscape(human).replace(/\\ /g, "\\s+")
+  return value.replace(new RegExp(`\\b${escapedHuman}(?:\\s+${lastWord})+\\b`, "gi"), human)
+}
+
 function replaceRawIndustryLabels(value: string, context?: CopyPolishContext) {
   const raw = rawIndustryLabel(context)
   const human = humanIndustryLabel(context)
-  if (!raw || raw === human) return value
+  if (!raw || raw === human) return collapseRepeatedHumanLabels(value, context)
 
   const sourceLabels = Array.from(new Set([
     raw,
-    context?.industry?.toLowerCase() ?? "",
     context?.subIndustry?.toLowerCase() ?? "",
+    context?.subIndustry ? "" : context?.industry?.toLowerCase() ?? "",
   ]))
     .map(label => label.replace(/[^a-z0-9_ ]+/g, " ").trim())
     .filter(label => label && label !== human)
 
-  let cleaned = value
+  let cleaned = collapseRepeatedHumanLabels(value, context)
   for (const label of sourceLabels) {
     const variants = Array.from(new Set([label, label.replace(/_/g, " "), label.replace(/\s+/g, "_")])).filter(Boolean)
     for (const variant of variants) {
-      const escaped = variant.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      const escaped = regexEscape(variant)
+      const guarded = `${escaped}${variantAlreadyHumanGuard(variant, human)}`
       cleaned = cleaned
-        .replace(new RegExp(`\\blocal ${escaped}\\b`, "gi"), `local ${human}`)
-        .replace(new RegExp(`\\byour local ${escaped}\\b`, "gi"), `your local ${human}`)
-        .replace(new RegExp(`\\blocally owned ${escaped}\\b`, "gi"), `locally owned ${human}`)
-        .replace(new RegExp(`\\b${escaped} in\\b`, "gi"), `${human} in`)
+        .replace(new RegExp(`\\blocal ${guarded}\\b`, "gi"), `local ${human}`)
+        .replace(new RegExp(`\\byour local ${guarded}\\b`, "gi"), `your local ${human}`)
+        .replace(new RegExp(`\\blocally owned ${guarded}\\b`, "gi"), `locally owned ${human}`)
+        .replace(new RegExp(`\\b${guarded} in\\b`, "gi"), `${human} in`)
     }
   }
-  return cleaned
+  return collapseRepeatedHumanLabels(cleaned, context)
 }
 
 function titleCaseHumanIndustry(value: string, context?: CopyPolishContext) {
