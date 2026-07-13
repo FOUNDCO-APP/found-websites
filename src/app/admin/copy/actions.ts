@@ -138,6 +138,12 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
         services: result.services,
         faq_items: result.faq_items ?? null,
         copy_generated: result.copy_generated,
+      }, {
+        businessName: company.name,
+        industry: company.industry_category,
+        subIndustry: company.sub_industry,
+        city: company.city,
+        state: company.state,
       }),
       p_created_by: "found_admin",
     },

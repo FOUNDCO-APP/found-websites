@@ -1,8 +1,38 @@
 import fs from "node:fs"
 import path from "node:path"
+import vm from "node:vm"
+import { createRequire } from "node:module"
+
+const require = createRequire(import.meta.url)
+const ts = require("typescript")
 
 const fixturePath = path.resolve("quality/copy-quality-fixtures.json")
 const fixtures = JSON.parse(fs.readFileSync(fixturePath, "utf8"))
+
+function loadCopyPolish() {
+  const sourcePath = path.resolve("src/lib/copyPolish.ts")
+  const source = fs.readFileSync(sourcePath, "utf8")
+  const output = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      esModuleInterop: true,
+    },
+    fileName: sourcePath,
+  }).outputText
+
+  const exportsObject = {}
+  const context = {
+    exports: exportsObject,
+    module: { exports: exportsObject },
+    require,
+    console,
+  }
+  vm.runInNewContext(output, context, { filename: sourcePath })
+  return context.module.exports
+}
+
+const { polishAboutCopy, polishServices } = loadCopyPolish()
 
 const rawLabelPatterns = [
   /\bhome_services\b/i,
@@ -27,17 +57,27 @@ function assert(condition, message) {
 }
 
 function assertCleanPublicCopy(text, id) {
-  assert(typeof text === "string" && text.trim().length > 0, `${id}: expected copy must be non-empty`)
+  assert(typeof text === "string" && text.trim().length > 0, `${id}: copy must be non-empty`)
   for (const pattern of rawLabelPatterns) {
-    assert(!pattern.test(text), `${id}: expected copy contains raw or awkward industry language: ${text}`)
+    assert(!pattern.test(text), `${id}: copy contains raw or awkward industry language: ${text}`)
   }
-  assert(!fragmentListPattern.test(text), `${id}: expected copy still reads like a fragment list: ${text}`)
-  assert(!randomBodyCapsPattern.test(text), `${id}: expected copy has random body capitalization: ${text}`)
-  assert((text.match(/,/g) || []).length <= 4, `${id}: expected copy is too comma-heavy for mobile: ${text}`)
+  assert(!fragmentListPattern.test(text), `${id}: copy still reads like a fragment list: ${text}`)
+  assert(!randomBodyCapsPattern.test(text), `${id}: copy has random body capitalization: ${text}`)
+  assert((text.match(/,/g) || []).length <= 4, `${id}: copy is too comma-heavy for mobile: ${text}`)
 }
 
 function sentenceCount(text) {
   return text.split(/(?<=[.!?])\s+/).filter(Boolean).length
+}
+
+function copyContext(fixture) {
+  return {
+    businessName: fixture.businessName,
+    industry: fixture.industry,
+    subIndustry: fixture.subIndustry ?? null,
+    city: fixture.city,
+    state: fixture.state,
+  }
 }
 
 let checks = 0
@@ -45,31 +85,47 @@ let checks = 0
 for (const fixture of fixtures.aboutFixtures) {
   assert(fixture.id, "about fixture missing id")
   assert(fixture.raw && fixture.expected, `${fixture.id}: missing raw or expected`)
+
   assert(fixture.expected.includes(fixture.businessName), `${fixture.id}: expected copy should include business name`)
   assert(fixture.expected.includes(fixture.city), `${fixture.id}: expected copy should preserve city`)
-  assertCleanPublicCopy(fixture.expected, fixture.id)
+  assertCleanPublicCopy(fixture.expected, `${fixture.id}: expected`)
   assert(sentenceCount(fixture.expected) <= 3, `${fixture.id}: expected about copy should stay short on mobile`)
+
+  const production = polishAboutCopy(fixture.raw, copyContext(fixture))
+  assert(production !== fixture.raw, `${fixture.id}: production copy should improve the raw input`)
+  assert(production.includes(fixture.businessName), `${fixture.id}: production copy should include business name: ${production}`)
+  assert(production.includes(fixture.city), `${fixture.id}: production copy should preserve city: ${production}`)
+  assertCleanPublicCopy(production, `${fixture.id}: production`)
+  assert(sentenceCount(production) <= 3, `${fixture.id}: production about copy should stay short on mobile: ${production}`)
   checks++
 }
 
 for (const fixture of fixtures.serviceFixtures) {
   assert(Array.isArray(fixture.raw) && Array.isArray(fixture.expected), `${fixture.id}: service fixture needs raw and expected arrays`)
   assert(fixture.raw.length === fixture.expected.length, `${fixture.id}: service raw/expected length mismatch`)
+
+  const production = polishServices(fixture.raw)
+  assert(production.length === fixture.expected.length, `${fixture.id}: production service length mismatch`)
+
   const descriptions = new Set()
-  for (const item of fixture.expected) {
-    assert(item.name && item.description, `${fixture.id}: expected service item missing name/description`)
-    assert(!/^.+ handled with clear communication/i.test(item.description), `${fixture.id}: expected service still has template smell`)
-    assert(!descriptions.has(item.description), `${fixture.id}: duplicate expected service description: ${item.description}`)
-    descriptions.add(item.description)
+  for (let index = 0; index < fixture.expected.length; index++) {
+    const expected = fixture.expected[index]
+    const actual = production[index]
+    assert(expected.name && expected.description, `${fixture.id}: expected service item missing name/description`)
+    assert(actual.name === expected.name, `${fixture.id}: service name mismatch. Expected ${expected.name}, got ${actual.name}`)
+    assert(actual.description === expected.description, `${fixture.id}: service description mismatch for ${expected.name}. Expected ${expected.description}, got ${actual.description}`)
+    assert(!/^.+ handled with clear communication/i.test(actual.description), `${fixture.id}: production service still has template smell`)
+    assert(!descriptions.has(actual.description), `${fixture.id}: duplicate production service description: ${actual.description}`)
+    descriptions.add(actual.description)
   }
   checks++
 }
 
 for (const fixture of fixtures.ctaFixtures) {
   assert(fixture.industry && fixture.expectedPrimary && fixture.expectedSecondary, `cta fixture missing required fields`)
-  assert(fixture.bad !== fixture.expectedPrimary, `${fixture.industry}: bad CTA should not equal expected primary`)
-  assert(fixture.bad !== fixture.expectedSecondary, `${fixture.industry}: bad CTA should not equal expected secondary`)
+  assert(fixture.bad.toLowerCase() !== fixture.expectedPrimary.toLowerCase(), `${fixture.industry}: bad CTA should not equal expected primary`)
+  assert(fixture.bad.toLowerCase() !== fixture.expectedSecondary.toLowerCase(), `${fixture.industry}: bad CTA should not equal expected secondary`)
   checks++
 }
 
-console.log(`copy-quality fixtures ok: ${checks} fixture groups checked`)
+console.log(`copy-quality fixtures ok: ${checks} fixture groups checked against production polish`)

@@ -1,4 +1,4 @@
-import { polishAboutCopy, polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
+import { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
 import type { IndustryManifest } from "@/lib/industryManifests"
 import { getWebsiteJob, type WebsiteJob } from "@/lib/subIndustryVocabulary"
 
@@ -173,8 +173,8 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   const copy = buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
 
   return {
-    heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : polishTitle(input.name),
-    heroSubtitle: copy.heroSubtitle,
+    heroTitle: polishHeroTitle(input.subIndustry ? `${industryLabel} in ${cityLabel}` : polishTitle(input.name), copyContextForInput(input)),
+    heroSubtitle: polishHeroCopy(copy.heroSubtitle, copyContextForInput(input)),
     aboutText: polishAboutForInput(copy.aboutText, input),
     tagline: null,
     ctaHeadline: copy.ctaHeadline,
@@ -189,14 +189,18 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   }
 }
 
-function polishAboutForInput(value: string, input: ContentGenerationInput) {
-  return polishAboutCopy(value, {
+function copyContextForInput(input: ContentGenerationInput) {
+  return {
     businessName: input.name,
     industry: input.industry,
     subIndustry: input.subIndustry,
     city: input.city,
     state: input.state,
-  })
+  }
+}
+
+function polishAboutForInput(value: string, input: ContentGenerationInput) {
+  return polishAboutCopy(value, copyContextForInput(input))
 }
 
 function buildPrompt(input: ContentGenerationInput) {
@@ -271,8 +275,8 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
 
     const faqItems = sanitizeFaqItems(generated.faqItems)
     return {
-      heroTitle: polishShortCopy(limit(generated.heroTitle, fallback.heroTitle, 64)),
-      heroSubtitle: polishSentence(limit(generated.heroSubtitle, fallback.heroSubtitle, 150)),
+      heroTitle: polishHeroTitle(limit(generated.heroTitle, fallback.heroTitle, 64), copyContextForInput(input)),
+      heroSubtitle: polishHeroCopy(limit(generated.heroSubtitle, fallback.heroSubtitle, 150), copyContextForInput(input)),
       aboutText: polishAboutForInput(limit(generated.aboutText, fallback.aboutText, 420), input),
       tagline: typeof generated.tagline === "string" ? polishShortCopy(limit(generated.tagline, "", 80)) || null : null,
       ctaHeadline: typeof generated.ctaHeadline === "string" ? polishShortCopy(limit(generated.ctaHeadline, "", 90)) || null : null,
