@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { getIndustryManifest } from "@/lib/industryManifests"
+import { polishWebsiteUpdates } from "@/lib/copyPolish"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -128,7 +129,7 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
     "publish_website_copy_with_snapshot",
     {
       p_company_id: companyId,
-      p_new_copy: {
+      p_new_copy: polishWebsiteUpdates({
         hero_title: result.heroTitle,
         hero_subtitle: result.heroSubtitle,
         about_text: result.aboutText,
@@ -137,7 +138,7 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
         services: result.services,
         faq_items: result.faq_items ?? null,
         copy_generated: result.copy_generated,
-      },
+      }),
       p_created_by: "found_admin",
     },
   )

@@ -1,3 +1,4 @@
+import { polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
 import type { IndustryManifest } from "@/lib/industryManifests"
 import { getWebsiteJob, type WebsiteJob } from "@/lib/subIndustryVocabulary"
 
@@ -50,7 +51,7 @@ function limit(value: unknown, fallback: string, maxLength: number) {
 }
 
 function serviceFallback(name: string) {
-  return `Professional ${name.toLowerCase()} with clear communication, careful work, and a simple next step.`
+  return `Professional ${polishTitle(name).toLowerCase()} with clear communication, careful work, and a simple next step.`
 }
 
 function parseGeneratedJson(text: string): Record<string, unknown> | null {
@@ -73,10 +74,10 @@ function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
       if (!item || typeof item !== "object") return null
       const record = item as Record<string, unknown>
       const fallbackName = fallback[index]?.name || "Service"
-      const name = limit(record.name, fallbackName, 60)
+      const name = polishTitle(limit(record.name, fallbackName, 60), fallbackName)
       return {
         name,
-        description: limit(record.description, serviceFallback(name), 180),
+        description: polishSentence(limit(record.description, serviceFallback(name), 180), serviceFallback(name)),
       }
     })
     .filter(Boolean) as ServiceItem[]
@@ -92,10 +93,10 @@ function sanitizeFaqItems(value: unknown): { q: string; a: string }[] | null {
     .map((item) => {
       if (!item || typeof item !== "object") return null
       const record = item as Record<string, unknown>
-      const q = typeof record.q === "string" ? compact(record.q).slice(0, 160) : null
-      const a = typeof record.a === "string" ? compact(record.a).slice(0, 300) : null
+      const q = typeof record.q === "string" ? polishShortCopy(compact(record.q).slice(0, 160)).replace(/[.]+$/, "") : null
+      const a = typeof record.a === "string" ? polishSentence(compact(record.a).slice(0, 300)) : null
       if (!q || !a) return null
-      return { q, a }
+      return { q: /[?]$/.test(q) ? q : `${q}?`, a }
     })
     .filter((x): x is { q: string; a: string } => x !== null)
   return items.length > 0 ? items : null
@@ -162,7 +163,7 @@ function buildJobFamilyCopy(
 
 export function buildFallbackWebsiteContent(input: ContentGenerationInput): GeneratedWebsiteContent {
   const cityLabel = input.city || "Your Area"
-  const industryLabel = (input.subIndustry || input.industry).replace(/\b\w/g, (c) => c.toUpperCase())
+  const industryLabel = polishTitle((input.subIndustry || input.industry).replace(/_/g, " "))
   const locationPhrase = input.city
     ? `${input.city}${input.state ? `, ${input.state}` : ""}`
     : "Your Area"
@@ -172,7 +173,7 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   const copy = buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
 
   return {
-    heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : input.name,
+    heroTitle: input.subIndustry ? `${industryLabel} in ${cityLabel}` : polishTitle(input.name),
     heroSubtitle: copy.heroSubtitle,
     aboutText: copy.aboutText,
     tagline: null,
@@ -180,9 +181,9 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
     copy_generated: false,
     faq_items: null,
     services: input.services.length
-      ? input.services
+      ? polishServices(input.services)
       : [{
-          name: industryLabel || "Service",
+          name: polishTitle(industryLabel || "Service"),
           description: serviceFallback(industryLabel || "service"),
         }],
   }
@@ -258,11 +259,11 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
 
     const faqItems = sanitizeFaqItems(generated.faqItems)
     return {
-      heroTitle: limit(generated.heroTitle, fallback.heroTitle, 64),
-      heroSubtitle: limit(generated.heroSubtitle, fallback.heroSubtitle, 150),
-      aboutText: limit(generated.aboutText, fallback.aboutText, 420),
-      tagline: typeof generated.tagline === "string" ? limit(generated.tagline, "", 80) || null : null,
-      ctaHeadline: typeof generated.ctaHeadline === "string" ? limit(generated.ctaHeadline, "", 90) || null : null,
+      heroTitle: polishShortCopy(limit(generated.heroTitle, fallback.heroTitle, 64)),
+      heroSubtitle: polishSentence(limit(generated.heroSubtitle, fallback.heroSubtitle, 150)),
+      aboutText: polishSentence(limit(generated.aboutText, fallback.aboutText, 420)),
+      tagline: typeof generated.tagline === "string" ? polishShortCopy(limit(generated.tagline, "", 80)) || null : null,
+      ctaHeadline: typeof generated.ctaHeadline === "string" ? polishShortCopy(limit(generated.ctaHeadline, "", 90)) || null : null,
       copy_generated: true,
       faq_items: faqItems,
       services: sanitizeServices(generated.services, fallback.services),

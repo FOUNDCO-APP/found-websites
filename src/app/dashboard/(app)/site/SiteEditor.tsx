@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
+import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null }
@@ -59,11 +60,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function saveEdit(field: string) {
     const value = editValue.trim()
     if (!value) return
-    setConfig(prev => ({ ...prev, [field]: value }))
+    const polishedValue = polishWebsiteField(field, value)
+    setConfig(prev => ({ ...prev, [field]: polishedValue }))
     setEditing(null)
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
-    startTransition(async () => { await updateSiteField(field, value) })
+    startTransition(async () => { await updateSiteField(field, polishedValue) })
   }
 
   async function handleRegenerate(section: Section) {
@@ -76,9 +78,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function saveService(index: number, name: string, description: string) {
     const services = [...((config.services as Array<{name:string;description:string}>) ?? [])]
     services[index] = { name, description }
-    setConfig(prev => ({ ...prev, services }))
+    const polishedServices = polishServices(services)
+    setConfig(prev => ({ ...prev, services: polishedServices }))
     setEditingService(null)
-    startTransition(async () => { await updateSiteField("services", services) })
+    startTransition(async () => { await updateSiteField("services", polishedServices) })
   }
 
   async function removeService(index: number) {
@@ -92,11 +95,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if (!newServiceName.trim()) return
     const services = [...((config.services as Array<{name:string;description:string}>) ?? [])]
     services.push({ name: newServiceName.trim(), description: newServiceDesc.trim() })
-    setConfig(prev => ({ ...prev, services }))
+    const polishedServices = polishServices(services)
+    setConfig(prev => ({ ...prev, services: polishedServices }))
     setNewService(false)
     setNewServiceName("")
     setNewServiceDesc("")
-    startTransition(async () => { await updateSiteField("services", services) })
+    startTransition(async () => { await updateSiteField("services", polishedServices) })
   }
 
   async function saveIntent(intent: string) {
@@ -110,10 +114,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
 
   function persistMenuCats(cats: MenuCatData[]) {
-    setMenuCats(cats)
+    const polishedCats = polishMenuCategories(cats)
+    setMenuCats(polishedCats)
     setMenuSaved(true)
     setTimeout(() => setMenuSaved(false), 2500)
-    startTransition(async () => { await updateMenuItems(cats) })
+    startTransition(async () => { await updateMenuItems(polishedCats) })
   }
 
   function openEditMenuItem(catIdx: number, itemIdx: number | null) {

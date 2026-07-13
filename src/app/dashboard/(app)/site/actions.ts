@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
+import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -31,7 +32,7 @@ function serviceList(config: SiteConfigRecord) {
       if (!service || typeof service !== "object") return null
       const row = service as { name?: unknown; description?: unknown }
       return {
-        name: cleanText(row.name, "Service"),
+        name: polishTitle(row.name, "Service"),
         description: cleanText(row.description, "Thoughtful service shaped around what you need."),
       }
     })
@@ -39,9 +40,9 @@ function serviceList(config: SiteConfigRecord) {
 }
 
 function fallbackRewrite(section: "hero" | "about" | "services" | "tagline", company: CompanyCopyContext, config: SiteConfigRecord) {
-  const name = cleanText(company.name, "This business")
+  const name = polishTitle(company.name, "This business")
   const industry = cleanText(company.sub_industry, cleanText(company.industry_category, "local business")).replace(/_/g, " ")
-  const industryLabel = industry.charAt(0).toUpperCase() + industry.slice(1)
+  const industryLabel = polishTitle(industry)
   const place = locationLine(company)
   const placeSuffix = place ? ` in ${place}` : ""
 
@@ -107,9 +108,11 @@ export async function updateSiteField(field: string, value: unknown) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
+  const polishedValue = polishWebsiteField(field, value)
+
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ [field]: value, updated_at: new Date().toISOString() })
+    .update({ [field]: polishedValue, updated_at: new Date().toISOString() })
     .eq("company_id", ctx.company.id)
 
   if (error) return { error: error.message }
@@ -191,7 +194,7 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
     }
   }
 
-  const updates = pickUpdates(generated ?? fallbackRewrite(section, company, config))
+  const updates = polishWebsiteUpdates(pickUpdates(generated ?? fallbackRewrite(section, company, config)))
   const { error } = await ctx.admin.from("website_config").update(updates).eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -276,7 +279,7 @@ export async function updateMenuItems(categories: { category: string; items: { n
 
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ menu_items: categories, updated_at: new Date().toISOString() })
+    .update({ menu_items: polishMenuCategories(categories), updated_at: new Date().toISOString() })
     .eq("company_id", ctx.company.id)
 
   if (error) return { error: error.message }
