@@ -50,8 +50,8 @@ function limit(value: unknown, fallback: string, maxLength: number) {
   return cleaned.length > maxLength ? `${cleaned.slice(0, maxLength - 1).trim()}...` : cleaned
 }
 
-function serviceFallback(name: string) {
-  return `Professional ${polishTitle(name).toLowerCase()} with clear communication, careful work, and a simple next step.`
+function serviceFallback(_name: string) {
+  return "Clear options, thoughtful guidance, and an easy next step."
 }
 
 function parseGeneratedJson(text: string): Record<string, unknown> | null {
@@ -82,8 +82,8 @@ function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
     })
     .filter(Boolean) as ServiceItem[]
 
-  if (!generated.length) return fallback
-  return fallback.map((service, index) => generated[index] || service)
+  if (!generated.length) return polishServices(fallback)
+  return polishServices(fallback.map((service, index) => generated[index] || service))
 }
 
 function sanitizeFaqItems(value: unknown): { q: string; a: string }[] | null {
@@ -180,12 +180,12 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
     ctaHeadline: copy.ctaHeadline,
     copy_generated: false,
     faq_items: null,
-    services: input.services.length
-      ? polishServices(input.services)
+    services: polishServices(input.services.length
+      ? input.services
       : [{
           name: polishTitle(industryLabel || "Service"),
           description: serviceFallback(industryLabel || "service"),
-        }],
+        }]),
   }
 }
 
@@ -214,6 +214,8 @@ function buildPrompt(input: ContentGenerationInput) {
     "- Keep heroSubtitle under 150 characters.",
     "- Keep aboutText under 420 characters.",
     "- Keep each service description under 160 characters.",
+    "- Do not repeat the same sentence structure across service descriptions.",
+    "- Do not start every service description with the service name.",
     "- Preserve the provided service names unless they are unclear; lightly clean them only.",
     "- Do not invent license numbers, awards, prices, guarantees, credentials, or years in business.",
     "- Generate exactly 3 FAQ entries in faqItems. Questions and answers should sound like a real owner wrote them, specific to this business type and location.",
