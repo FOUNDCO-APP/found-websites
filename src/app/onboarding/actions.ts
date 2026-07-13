@@ -323,6 +323,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       photo_keywords: subIndustry,
       plan: ["found", "found_pro", "found_business"].includes(input.plan ?? "") ? input.plan : "found",
       active: true,
+      preview_completed_at: new Date().toISOString(),
       ...(isComp ? { is_comp: true, subscription_status: "active" } : {}),
     })
 
@@ -359,13 +360,11 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   }
 
   const siteUrl = `https://${slug}.${ROOT_DOMAIN}`
-  const appUrl  = process.env.NEXT_PUBLIC_APP_URL ?? `https://${ROOT_DOMAIN}`
 
   // Create or find the auth user and link them to this company.
   // generateLink handles both cases: creates the user if they don't exist,
-  // finds them if they do — and returns their user.id either way.
-  // Generate magic link — creates auth user if needed, links to company, AND gives us a one-tap dashboard URL
-  let dashboardUrl = `https://my.${ROOT_DOMAIN}/login`
+  // finds them if they do, and returns their user.id either way.
+  // Generate magic link - creates auth user if needed and links it to the company.
   try {
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",
@@ -378,24 +377,10 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       if (linkData?.user?.id) {
         await supabase.from("companies").update({ user_id: linkData.user.id }).eq("id", companyId)
       }
-      // Use the actual magic link so the welcome email is one-tap into the dashboard
-      if (linkData?.properties?.action_link) {
-        dashboardUrl = linkData.properties.action_link
-      }
     }
   } catch (err) {
     console.error("[onboarding] auth setup error:", err)
   }
-
-  // Fire-and-forget welcome email — failure doesn't block site creation
-  resend.emails.send({
-    from:    "Found <hello@foundco.app>",
-    replyTo: "hello@foundco.app",
-    to:      email,
-    subject: `${name} is ready to activate.`,
-    html:    buildWelcomeEmail({ name, siteUrl, slug, appUrl, loginUrl: dashboardUrl }),
-    text:    `${name} is ready to activate.\n\nYour site preview is built. Add payment to turn it on.\n\nActivate here:\n${appUrl}/activate?slug=${slug}\n\nPreview your site:\n${siteUrl}\n\nOpen your dashboard - one tap, no login needed.\n${dashboardUrl}\n\nReply to this email - we read every one.\n- The Found Team`,
-  }).catch((err: unknown) => console.error("[Resend] welcome email error:", err))
 
   return {
     success: true,
@@ -404,110 +389,4 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     companyId,
     comp: isComp,
   }
-}
-
-function buildWelcomeEmail({
-  name,
-  siteUrl,
-  slug,
-  appUrl,
-  loginUrl,
-}: {
-  name: string
-  siteUrl: string
-  slug: string
-  appUrl: string
-  loginUrl: string
-}) {
-  const displayUrl = siteUrl.replace("https://", "")
-  const connectUrl = `${appUrl}/connect-domain?slug=${slug}`
-  const paymentsUrl = `https://my.${ROOT_DOMAIN}/more?setup_payments=1`
-  const activationUrl = `${appUrl}/activate?slug=${slug}`
-
-  const step = (n: string, title: string, body: string, link?: { href: string; label: string }) => `
-    <tr>
-      <td style="padding:0 0 20px 0;">
-        <table width="100%" cellpadding="0" cellspacing="0">
-          <tr>
-            <td width="4" style="background:#32D074;border-radius:4px;">&nbsp;</td>
-            <td width="16">&nbsp;</td>
-            <td>
-              <p style="margin:0 0 3px;font-size:11px;font-weight:800;letter-spacing:2px;color:#32D074;">${n}</p>
-              <p style="margin:0 0 4px;font-size:16px;font-weight:900;color:#111111;line-height:1.3;">${title}</p>
-              <p style="margin:0${link ? " 0 10px" : ""};font-size:14px;color:#666666;line-height:1.6;">${body}</p>
-              ${link ? `<a href="${link.href}" style="font-size:13px;font-weight:900;color:#080A09;text-decoration:none;border-bottom:2px solid #32D074;padding-bottom:1px;">${link.label} →</a>` : ""}
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>`
-
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${name} is ready to activate.</title>
-</head>
-<body style="margin:0;padding:0;background:#f2f2f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;">
-  <!-- Preheader: controls inbox preview text — hidden from view -->
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#f2f2f0;">${name} is ready to activate. Your preview is built and waiting.&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;</div>
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f2f0;padding:40px 16px;">
-    <tr><td align="center">
-      <table width="100%" style="max-width:520px;">
-
-        <!-- FOUND wordmark header -->
-        <tr>
-          <td style="background:#080A09;border-radius:16px 16px 0 0;padding:28px 36px;text-align:center;">
-            <span style="font-size:22px;font-weight:200;color:#ffffff;letter-spacing:10px;text-transform:uppercase;">FOUND</span>
-          </td>
-        </tr>
-
-        <!-- Hero: business name + moment -->
-        <tr>
-          <td style="background:#ffffff;padding:44px 36px 36px;text-align:center;">
-            <p style="margin:0 0 10px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#32D074;">Preview ready</p>
-            <h1 style="margin:0 0 10px;font-size:32px;font-weight:900;color:#080A09;line-height:1.1;">${name} is ready.</h1>
-            <p style="margin:0 0 32px;font-size:16px;font-weight:400;color:#777777;line-height:1.5;">Add payment to turn it on for customers.</p>
-            <a href="${siteUrl}"
-              style="display:block;background:#32D074;color:#080A09;font-size:15px;font-weight:900;padding:18px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;">
-              Preview your site →
-            </a>
-            <a href="${loginUrl}"
-              style="display:block;margin-top:10px;background:transparent;color:#32D074;font-size:13px;font-weight:700;padding:14px 24px;border-radius:50px;text-decoration:none;letter-spacing:0.04em;border:1.5px solid #32D07440;">
-              Open My Dashboard →
-            </a>
-            <p style="margin:12px 0 0;font-size:12px;color:#aaaaaa;">${displayUrl}</p>
-          </td>
-        </tr>
-
-        <!-- Divider -->
-        <tr><td style="background:#ffffff;padding:0 36px;"><div style="height:1px;background:#eeeeee;"></div></td></tr>
-
-        <!-- Three steps -->
-        <tr>
-          <td style="background:#ffffff;border-radius:0 0 16px 16px;padding:32px 36px 36px;">
-            <p style="margin:0 0 24px;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#bbbbbb;">Do this next</p>
-            <table width="100%" cellpadding="0" cellspacing="0">
-              ${step("01", "Activate it.", "Add payment first. Then Found turns the site on for customers.", { href: activationUrl, label: "Activate now" })}
-              ${step("02", "Connect your domain.", "Point your real domain here — takes about 10 minutes.", { href: connectUrl, label: "Connect now" })}
-              ${step("03", "Set up deposit payments.", "This lets clients accept an estimate and pay electronically by card. Setup takes a few minutes, and it makes the next yes easier to collect.", { href: paymentsUrl, label: "Set up payments" })}
-              ${step("04", "Share it after activation.", "Once payment is complete, send it to one trusted customer and see what they say.")}
-            </table>
-          </td>
-        </tr>
-
-        <!-- Footer -->
-        <tr>
-          <td style="padding:24px 0 8px;text-align:center;">
-            <p style="margin:0 0 4px;font-size:13px;color:#999999;">Reply to this email — we read every one.</p>
-            <p style="margin:0;font-size:13px;font-weight:700;color:#555555;">— The Found Team</p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`
 }

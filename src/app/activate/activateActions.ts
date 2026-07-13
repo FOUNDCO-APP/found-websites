@@ -3,6 +3,7 @@
 import Stripe from "stripe"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
+import { sendSiteLiveEmailOnce } from "@/lib/activationEmails"
 
 function getAdminClient() {
   return createAdminClient(
@@ -399,6 +400,10 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     }
 
     await updateCompanyAfterActivation(admin, slug, companyUpdate)
+
+    await sendSiteLiveEmailOnce(admin as any, companyId).catch((err) => {
+      console.error("[Activate] site-live email failed:", err)
+    })
 
     return { ok: true, companyId }
   } catch (err) {
