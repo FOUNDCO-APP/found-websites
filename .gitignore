@@ -41,3 +41,5 @@ yarn-error.log*
 next-env.d.ts
 scripts/*
 !scripts/check-copy-quality-fixtures.mjs
+!scripts/audit-copy-quality.mjs
+quality/copy-audit-report.md

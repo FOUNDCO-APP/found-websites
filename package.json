@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs"
+    "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs",
+    "audit:copy-quality": "node scripts/audit-copy-quality.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.6.0",
