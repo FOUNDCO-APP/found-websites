@@ -11,6 +11,7 @@ export type WebsiteJob =
   | "order_from_me"
   | "trust_me"
   | "find_me"
+  | "faith_me"
 
 export type SubIndustryVocab = {
   servicesLabel: string     // Main section headline: "Our Services" → "The Menu" / "Services & Pricing"
@@ -1851,6 +1852,7 @@ const nonprofitVocab: Record<string, SubIndustryVocab> = {
     ctaBodyText: "all are welcome — come as you are",
     customerWord: "member",
     appointmentWord: "service",
+    websiteJob: "faith_me",
   },
   "mosque/temple": {
     ...nonprofitDefaults,
@@ -1861,6 +1863,7 @@ const nonprofitVocab: Record<string, SubIndustryVocab> = {
     reviewsOverline: "Community Voices",
     ctaBodyText: "all are welcome — come as you are",
     customerWord: "member",
+    websiteJob: "faith_me",
   },
   "nonprofit org": {
     ...nonprofitDefaults,

@@ -261,5 +261,39 @@
                                    "raw":  "Nereidas Salón is a esthetician in Tucson, AZ. Nereidas salón is a locally owned esthetician in Tucson, AZ. We take care of every detail so you can enjoy the experience.",
                                    "expected":  "Nereidas Salón is a locally owned esthetician in Tucson, AZ. We take care of every detail so you can enjoy the experience."
                                }
-                           ]
+                           ],
+    "faithFixtures":  [
+                          {
+                              "id":  "church-fallback-copy",
+                              "name":  "FRCC",
+                              "industry":  "nonprofit",
+                              "subIndustry":  "church",
+                              "city":  "Tucson",
+                              "state":  "AZ",
+                              "forbidden":  [
+                                                "shows",
+                                                "bookings",
+                                                "work speaks for itself"
+                                            ],
+                              "expectedHeroTitle":  "Church in Tucson",
+                              "expectedHeroSubtitle":  "A church community in Tucson. Join us for worship, service, and connection.",
+                              "expectedAbout":  "FRCC is a church community in Tucson, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith, connection, and a place to belong."
+                          },
+                          {
+                              "id":  "mosque-temple-fallback-copy",
+                              "name":  "Faith Community",
+                              "industry":  "nonprofit",
+                              "subIndustry":  "mosque/temple",
+                              "city":  "Phoenix",
+                              "state":  "AZ",
+                              "forbidden":  [
+                                                "shows",
+                                                "bookings",
+                                                "work speaks for itself"
+                                            ],
+                              "expectedHeroTitle":  "Mosque/Temple in Phoenix",
+                              "expectedHeroSubtitle":  "A faith community in Phoenix. Join us for worship, service, and connection.",
+                              "expectedAbout":  "Faith Community is a faith community in Phoenix, AZ. We gather for worship, serve our neighbors, and welcome people looking for faith, connection, and a place to belong."
+                          }
+                      ]
 }

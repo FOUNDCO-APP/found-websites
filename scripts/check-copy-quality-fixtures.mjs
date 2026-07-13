@@ -9,8 +9,11 @@ const ts = require("typescript")
 const fixturePath = path.resolve("quality/copy-quality-fixtures.json")
 const fixtures = JSON.parse(fs.readFileSync(fixturePath, "utf8"))
 
-function loadCopyPolish() {
-  const sourcePath = path.resolve("src/lib/copyPolish.ts")
+function loadTsModule(modulePath, cache = new Map()) {
+  let sourcePath = path.resolve(modulePath)
+  if (!fs.existsSync(sourcePath) && fs.existsSync(`${sourcePath}.ts`)) sourcePath = `${sourcePath}.ts`
+  if (!fs.existsSync(sourcePath) && fs.existsSync(path.join(sourcePath, "index.ts"))) sourcePath = path.join(sourcePath, "index.ts")
+  if (cache.has(sourcePath)) return cache.get(sourcePath).exports
   const source = fs.readFileSync(sourcePath, "utf8")
   const output = ts.transpileModule(source, {
     compilerOptions: {
@@ -21,18 +24,27 @@ function loadCopyPolish() {
     fileName: sourcePath,
   }).outputText
 
-  const exportsObject = {}
+  const module = { exports: {} }
+  cache.set(sourcePath, module)
+  const localRequire = (specifier) => {
+    if (specifier.startsWith("@/")) return loadTsModule(path.resolve("src", specifier.slice(2)), cache)
+    if (specifier.startsWith(".")) return loadTsModule(path.resolve(path.dirname(sourcePath), specifier), cache)
+    return require(specifier)
+  }
   const context = {
-    exports: exportsObject,
-    module: { exports: exportsObject },
-    require,
+    exports: module.exports,
+    module,
+    require: localRequire,
     console,
+    process,
+    URL,
   }
   vm.runInNewContext(output, context, { filename: sourcePath })
-  return context.module.exports
+  return module.exports
 }
 
-const { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishServices } = loadCopyPolish()
+const { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishServices } = loadTsModule("src/lib/copyPolish.ts")
+const { buildFallbackWebsiteContent } = loadTsModule("src/lib/contentGeneration.ts")
 
 const rawLabelPatterns = [
   /\bhome_services\b/i,
@@ -148,6 +160,28 @@ for (const fixture of fixtures.serviceFixtures) {
   checks++
 }
 
+for (const fixture of fixtures.faithFixtures ?? []) {
+  const result = buildFallbackWebsiteContent({
+    name: fixture.name,
+    description: "",
+    industry: fixture.industry,
+    subIndustry: fixture.subIndustry,
+    city: fixture.city,
+    state: fixture.state,
+    different: "",
+    services: [],
+    vibe: "bold",
+    manifest: { primaryJob: "", jonyNote: "", primaryIntent: "contact" },
+  })
+  assert(result.heroTitle === fixture.expectedHeroTitle, `${fixture.id}: hero title mismatch. Expected ${fixture.expectedHeroTitle}, got ${result.heroTitle}`)
+  assert(result.heroSubtitle === fixture.expectedHeroSubtitle, `${fixture.id}: hero subtitle mismatch. Expected ${fixture.expectedHeroSubtitle}, got ${result.heroSubtitle}`)
+  assert(result.aboutText === fixture.expectedAbout, `${fixture.id}: about copy mismatch. Expected ${fixture.expectedAbout}, got ${result.aboutText}`)
+  const combined = `${result.heroTitle} ${result.heroSubtitle} ${result.aboutText}`.toLowerCase()
+  for (const phrase of fixture.forbidden) {
+    assert(!combined.includes(String(phrase).toLowerCase()), `${fixture.id}: forbidden phrase leaked into faith copy: ${phrase}`)
+  }
+  checks++
+}
 for (const fixture of fixtures.ctaFixtures) {
   assert(fixture.industry && fixture.expectedPrimary && fixture.expectedSecondary, `cta fixture missing required fields`)
   assert(fixture.bad.toLowerCase() !== fixture.expectedPrimary.toLowerCase(), `${fixture.industry}: bad CTA should not equal expected primary`)
