@@ -49,6 +49,26 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   cleaning: "A reliable reset for the spaces customers use every day.",
   landscaping: "Outdoor work shaped around curb appeal, upkeep, and long-term use.",
   photography: "Images composed to feel natural, useful, and true to the moment.",
+  garlands: "A polished detail for entrances, tables, walls, or photo moments.",
+  arches: "A clear focal point that frames the celebration and anchors the room.",
+  backdrops: "A camera-ready setting built around the color, theme, and guest experience.",
+  delivery: "Arrival planned around the event schedule so setup feels calm and prepared.",
+  setup: "Installation handled with care so the space is ready before guests arrive.",
+  strike: "Post-event removal that keeps the close of the celebration simple.",
+  "custom colors": "Palette choices matched to the theme, brand, or moment being celebrated.",
+  weddings: "Celebration details shaped around the ceremony, reception, and guest experience.",
+  birthdays: "A festive setup designed around the age, theme, and people being celebrated.",
+  parties: "Decor and details that help the room feel ready when guests walk in.",
+  "balloon decor": "Custom balloon moments built around the event style, colors, and space.",
+  "balloon garland": "A flexible statement piece for entries, dessert tables, stages, or photo areas.",
+  "party rentals": "Event pieces selected to support the setup without overcomplicating the day.",
+  "event planning": "Practical coordination that keeps the event details moving in the right order.",
+  venue: "A ready setting for gatherings that need a clear place to come together.",
+  "quinceañera": "A celebration setup shaped around family, tradition, and the guest experience.",
+  "quinceañeras": "Celebration setups shaped around family, tradition, and the guest experience.",
+  portraits: "Clean, natural images that feel useful, personal, and easy to share.",
+  "senior portraits": "A relaxed portrait session built around personality, confidence, and milestone moments.",
+  events: "Coverage focused on the people, details, and moments that make the day matter.",
 }
 
 const SERVICE_DESCRIPTION_PATTERNS = [
@@ -286,7 +306,37 @@ function aboutIntroInfo(sentence: string, context?: CopyPolishContext) {
   const subject = introMatch[1].trim()
   const descriptor = introMatch[2].trim().replace(/^locally owned\s+/, "")
   const local = /\blocally owned\b/.test(normalized)
-  return { local, normalized, subject, descriptor }
+  return { local, normalized, subject, descriptor, location: introMatch[3].trim() }
+}
+
+function compactForCompare(value: string) {
+  return normalizeForIntroCompare(value).replace(/\s+/g, "")
+}
+
+function introSentencesOverlap(previousIntro: NonNullable<ReturnType<typeof aboutIntroInfo>>, currentIntro: NonNullable<ReturnType<typeof aboutIntroInfo>>, context?: CopyPolishContext) {
+  const sameSubject = previousIntro.subject === currentIntro.subject || compactForCompare(previousIntro.subject) === compactForCompare(currentIntro.subject)
+  const business = context?.businessName ? compactForCompare(context.businessName) : ""
+  const previousIsBusiness = business && compactForCompare(previousIntro.subject) === business
+  const currentIsBusiness = business && compactForCompare(currentIntro.subject) === business
+  const sameDescriptor = previousIntro.descriptor.includes(currentIntro.descriptor) || currentIntro.descriptor.includes(previousIntro.descriptor)
+  const sameLocation = previousIntro.location === currentIntro.location
+  return sameLocation && sameDescriptor && (sameSubject || previousIsBusiness || currentIsBusiness || compactForCompare(previousIntro.subject).includes(compactForCompare(currentIntro.subject)) || compactForCompare(currentIntro.subject).includes(compactForCompare(previousIntro.subject)))
+}
+
+function strongerIntro(previous: string, current: string, previousIntro: NonNullable<ReturnType<typeof aboutIntroInfo>>, currentIntro: NonNullable<ReturnType<typeof aboutIntroInfo>>, context?: CopyPolishContext) {
+  if (currentIntro.local && !previousIntro.local) return normalizeIntroBusinessName(current, context)
+  if (!currentIntro.local && previousIntro.local) return normalizeIntroBusinessName(previous, context)
+  if (currentIntro.descriptor.length > previousIntro.descriptor.length) return normalizeIntroBusinessName(current, context)
+  return normalizeIntroBusinessName(previous, context)
+}
+
+function normalizeIntroBusinessName(sentence: string, context?: CopyPolishContext) {
+  if (!context?.businessName) return sentence
+  const business = polishTitle(context.businessName)
+  const intro = aboutIntroInfo(sentence, context)
+  if (!intro) return sentence
+  const subjectPattern = regexEscape(intro.subject).replace(/\ /g, "\\s+")
+  return sentence.replace(new RegExp(`^${subjectPattern}\\b`, "i"), business)
 }
 
 function removeRedundantIntroSentences(sentences: string[], context?: CopyPolishContext) {
@@ -301,9 +351,8 @@ function removeRedundantIntroSentences(sentences: string[], context?: CopyPolish
     if (previous) {
       const previousIntro = aboutIntroInfo(previous, context)
       const currentIntro = aboutIntroInfo(current, context)
-      if (previousIntro && currentIntro) {
-        const currentIsStronger = (currentIntro.local && !previousIntro.local) || currentIntro.descriptor.includes(previousIntro.descriptor) || currentIntro.descriptor.length > previousIntro.descriptor.length
-        result[result.length - 1] = currentIsStronger ? current : previous
+      if (previousIntro && currentIntro && introSentencesOverlap(previousIntro, currentIntro, context)) {
+        result[result.length - 1] = strongerIntro(previous, current, previousIntro, currentIntro, context)
         continue
       }
     }
@@ -366,8 +415,16 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
   if (!/[.!?]$/.test(cleaned)) cleaned += "."
 
-  if (businessName && !new RegExp(`^${businessName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(cleaned) && cleaned.length < 260) {
-    cleaned = `${businessName} is a ${location ? `${industry} in ${location}` : industry}. ${cleaned}`
+  if (businessName) {
+    const firstSubject = cleaned.match(/^(.+?)\s+is\s+(?:a|an)\s+/i)?.[1] ?? ""
+    const businessPattern = regexEscape(businessName).replace(/\ /g, "\\s+")
+    const startsWithBusiness = new RegExp(`^${businessPattern}\\b`, "i").test(cleaned) || compactForCompare(firstSubject) === compactForCompare(businessName)
+    if (startsWithBusiness && firstSubject && firstSubject !== businessName) {
+      const subjectPattern = regexEscape(firstSubject).replace(/\ /g, "\\s+")
+      cleaned = cleaned.replace(new RegExp(`^${subjectPattern}\\b`, "i"), businessName)
+    } else if (!startsWithBusiness && cleaned.length < 260) {
+      cleaned = `${businessName} is a ${location ? `${industry} in ${location}` : industry}. ${cleaned}`
+    }
   }
 
   return cleaned

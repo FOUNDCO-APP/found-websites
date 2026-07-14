@@ -180,6 +180,24 @@ for (const fixture of fixtures.aboutPageFixtures ?? []) {
   }
   checks++
 }
+for (const fixture of fixtures.fallbackFixtures ?? []) {
+  const result = buildFallbackWebsiteContent({
+    name: fixture.name,
+    description: "",
+    industry: fixture.industry,
+    subIndustry: fixture.subIndustry,
+    city: fixture.city,
+    state: fixture.state,
+    different: "",
+    services: [],
+    vibe: "bold",
+    manifest: { primaryJob: "", jonyNote: "", primaryIntent: "contact" },
+  })
+  assert(result.aboutText === fixture.expectedAbout, `${fixture.id}: fallback about copy mismatch. Expected ${fixture.expectedAbout}, got ${result.aboutText}`)
+  assertCleanPublicCopy(result.aboutText, `${fixture.id}: fallback about`)
+  assert(sentenceCount(result.aboutText) <= 3, `${fixture.id}: fallback about copy should stay short on mobile: ${result.aboutText}`)
+  checks++
+}
 for (const fixture of fixtures.faithFixtures ?? []) {
   const result = buildFallbackWebsiteContent({
     name: fixture.name,
