@@ -15,6 +15,16 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
+## JULY 14 DASHBOARD INTEGRITY TEST
+
+- [ ] Switch between tshirts, Tacos, Taco Shop, Construction, and Musician from one login.
+- [ ] Confirm Home greeting, top-right company picker, More plan card, bottom tabs, and page titles always show the same selected company.
+- [ ] Confirm Musician shows bookings/schedule language and no Orders tab.
+- [ ] Confirm Construction still shows Estimates as the primary Business message.
+- [ ] Confirm restaurants show Reservations/Orders based on available tools and do not fall back to generic Inquiries when using the Reservations tab.
+
+---
+
 ## NOW (MAX 3)
 
 1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live; now create/verify the Stripe Connect webhook destination in live mode, then run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.

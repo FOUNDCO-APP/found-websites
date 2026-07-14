@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { revalidatePath } from "next/cache"
 
 export async function GET(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id")
@@ -49,7 +50,9 @@ export async function GET(req: NextRequest) {
     redirectUrl.searchParams.set("activated", "true")
   }
 
+  revalidatePath("/", "layout")
   const response = NextResponse.redirect(redirectUrl)
+  response.headers.set("Cache-Control", "no-store")
   response.cookies.set("found_company_id", id, {
     path: "/",
     sameSite: "lax",

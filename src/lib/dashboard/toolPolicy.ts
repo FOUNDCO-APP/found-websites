@@ -28,6 +28,8 @@ const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "pet_services",
   "education",
   "healthcare",
+  "music_performance",
+  "music",
 ])
 
 const ESTIMATE_WORKFLOW_INDUSTRIES = new Set([
@@ -41,6 +43,36 @@ const ESTIMATE_WORKFLOW_INDUSTRIES = new Set([
   "automotive",
 ])
 
+const ORDER_WORKFLOW_INDUSTRIES = new Set([
+  "food",
+  "home_based_food",
+  "retail",
+  "makers_crafts",
+])
+
+const ORDER_WORKFLOW_SUB_INDUSTRIES = new Set([
+  "apparel",
+  "restaurant",
+  "food_truck",
+  "bakery",
+  "cottage_baker",
+  "custom_cakes",
+  "meal_prep",
+])
+
+function normalize(value: string | null | undefined): string {
+  return (value ?? "").toLowerCase().trim().replace(/[\s-]+/g, "_")
+}
+
+function supportsOrderWorkflow(industry: string | null | undefined, subIndustry?: string | null): boolean {
+  const n = normalize(industry)
+  const sub = normalize(subIndustry)
+  return ORDER_WORKFLOW_INDUSTRIES.has(n) || ORDER_WORKFLOW_SUB_INDUSTRIES.has(sub)
+}
+
+function hasOrderAccess(activeAddons: string[], industry: string | null | undefined, subIndustry?: string | null): boolean {
+  return hasOrderWorkflow(activeAddons) && supportsOrderWorkflow(industry, subIndustry)
+}
 function has(activeAddons: string[], addon: string) {
   return activeAddons.includes(addon)
 }
@@ -82,7 +114,7 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
-  const hasOrders = hasOrderWorkflow(activeAddons)
+  const hasOrders = hasOrderAccess(activeAddons, industry, subIndustry)
 
   if (industry === "food") return availableFoodTools(activeAddons)
 
@@ -109,7 +141,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
-  const hasOrders = hasOrderWorkflow(activeAddons)
+  const hasOrders = hasOrderAccess(activeAddons, industry, input.subIndustry)
 
   let middleIds: string[]
 

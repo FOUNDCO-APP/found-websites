@@ -4,6 +4,28 @@
 
 ---
 
+
+## Session: July 14, 2026 - Dashboard Company and Tool Integrity
+**AI:** Codex
+**Worked on:** Fixed the dashboard inconsistencies Shawn found when switching between tshirts, Tacos, Taco Shop, Construction, and Musician.
+
+### Completed
+- Removed cookie-insensitive React caching from getCompany() so selected-company lookups are not memoized only by user ID/email.
+- Forced the dashboard shell to render dynamically and revalidate after company selection.
+- Added no-store handling to the select-company redirect path.
+- Made dashboard Orders visibility industry-aware so Business does not expose Orders for non-commerce businesses like musicians or contractors.
+- Added Music/Music Performance to the schedule-first dashboard path.
+- Rebuilt the Home smart next-step copy so every active business gets an industry-aware message, including Starter accounts.
+- Restaurant accounts now prioritize Reservations messaging; retail/cart accounts prioritize Orders; music accounts prioritize Bookings/Schedule; construction-style accounts prioritize Estimates.
+- Verified with cmd /c npm run build and git diff --check.
+
+### Test Next
+- Switch between tshirts, Tacos, Taco Shop, Construction, and Musician from the same login.
+- Confirm the top-right selected company, Home greeting, More plan card, bottom tabs, and page titles all match the same business.
+- Confirm Musician no longer shows Orders and its Home message talks about bookings/schedule instead of estimates.
+- Confirm Construction still shows estimates, and restaurants show Reservations/Orders according to available tools.
+
+---
 ## Session: July 10, 2026 - Simple Live Promo Code
 **AI:** Codex
 **Worked on:** Replaced the hard-to-type live `$1` promo with Shawn's simpler requested code.

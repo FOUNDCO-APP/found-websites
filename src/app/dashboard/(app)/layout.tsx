@@ -13,6 +13,8 @@ import { BLACK } from "@/lib/dashboard/typography"
 import FoundWordmark from "@/components/FoundWordmark"
 
 export const metadata = { title: "Found" }
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireDashboardAccess()
@@ -67,10 +69,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
 
-      {/* Main content Ã¢â‚¬â€ shifts right of sidebar on desktop */}
+      {/* Main content shifts right of sidebar on desktop */}
       <div className="found-dashboard-main">
 
-        {/* Ã¢â€â‚¬Ã¢â€â‚¬ Header Ã¢â‚¬â€ hidden on desktop (sidebar carries wordmark + company name) Ã¢â€â‚¬Ã¢â€â‚¬ */}
+        {/* Header hidden on desktop; sidebar carries wordmark and company name */}
         <header className="found-dashboard-header" style={{
           position: "sticky", top: 0, zIndex: 40,
           backgroundColor: "rgba(8,10,9,0.92)",
@@ -85,7 +87,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             padding: "14px 20px",
             paddingTop: "max(env(safe-area-inset-top), 14px)",
           }}>
-            {/* FOUND wordmark Ã¢â‚¬â€ hidden on desktop (sidebar has it) */}
+            {/* FOUND wordmark hidden on desktop; sidebar has it */}
             <Link href="/" className="found-header-wordmark" style={{ textDecoration: "none" }}>
               <FoundWordmark height={18} color="white" />
             </Link>
@@ -185,5 +187,3 @@ export default async function DashboardLayout({ children }: { children: React.Re
     </div>
   )
 }
-
-

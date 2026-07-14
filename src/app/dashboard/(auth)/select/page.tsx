@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getAllCompanies } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import FoundWordmark from "@/components/FoundWordmark"
 import CompanyPicker from "@/components/dashboard/CompanyPicker"
@@ -20,6 +21,7 @@ async function selectCompany(formData: FormData) {
     secure: true,
     maxAge: 60 * 60 * 24 * 30,
   })
+  revalidatePath("/", "layout")
   redirect("/")
 }
 

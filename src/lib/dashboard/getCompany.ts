@@ -1,4 +1,3 @@
-import { cache } from "react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { cookies } from "next/headers"
 
@@ -41,10 +40,10 @@ export async function isAdminOverrideActive(): Promise<boolean> {
   return Boolean(adminView === "1" && adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY)
 }
 
-export const getCompany = cache(async (
+export async function getCompany(
   userId: string,
   userEmail: string
-): Promise<CompanyRow | null> => {
+): Promise<CompanyRow | null> {
   const cookieStore = await cookies()
   const selectedId = cookieStore.get("found_company_id")?.value
   const adminCompanyId = cookieStore.get("found_admin_company_id")?.value
@@ -79,12 +78,12 @@ export const getCompany = cache(async (
     .maybeSingle()
 
   return (data as CompanyRow) ?? null
-})
+}
 
-export const getAllCompanies = cache(async (
+export async function getAllCompanies(
   userId: string,
   userEmail: string
-): Promise<CompanyRow[]> => {
+): Promise<CompanyRow[]> {
   const admin = createAdminClient()
   const { data } = await admin
     .from("companies")
@@ -92,16 +91,16 @@ export const getAllCompanies = cache(async (
     .or(`user_id.eq.${userId},email.eq.${userEmail}`)
     .order("created_at", { ascending: false })
   return (data ?? []) as CompanyRow[]
-})
+}
 
-export const hasMultipleCompanies = cache(async (
+export async function hasMultipleCompanies(
   userId: string,
   userEmail: string
-): Promise<boolean> => {
+): Promise<boolean> {
   const admin = createAdminClient()
   const { count } = await admin
     .from("companies")
     .select("id", { count: "exact", head: true })
     .or(`user_id.eq.${userId},email.eq.${userEmail}`)
   return (count ?? 0) > 1
-})
+}
