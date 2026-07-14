@@ -4,6 +4,19 @@
 
 ---
 
+## Session: July 14, 2026 - Public Commerce Fallback Safety
+**AI:** Codex
+**Worked on:** Removed public-facing setup language from unfinished shop and order flows across shared templates.
+
+### Completed
+- Shared `/[slug]/shop` now shows a polished coming-soon/contact fallback until payments and products are both ready.
+- Shared online ordering no longer exposes Stripe payout/setup wording to customers.
+- Shopping cart and online-order checkout APIs now return customer-safe fallback errors if setup is incomplete.
+
+### Test Next
+- Open a retail shop URL before products or payout setup are complete. Customers should see a coming-soon/contact path, not payout/account/product setup details.
+
+---
 
 ## Session: July 14, 2026 - Selected Company Cookie Selector
 **AI:** Codex

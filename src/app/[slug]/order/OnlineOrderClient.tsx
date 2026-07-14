@@ -286,7 +286,8 @@ export default function OnlineOrderClient({
   const cartItems = Object.values(cart)
   const subtotal = cartItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0)
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-  const canCheckout = paymentsReady && itemCount > 0 && name.trim() && phone.trim() && email.trim()
+  const orderReady = paymentsReady && items.length > 0
+  const canCheckout = orderReady && itemCount > 0 && name.trim() && phone.trim() && email.trim()
 
   function setQuantity(item: OrderableItem, nextQuantity: number) {
     setPaymentSetup(null)
@@ -365,7 +366,7 @@ export default function OnlineOrderClient({
         <section className="px-6 py-8" style={{ backgroundColor: "#FFF7E8" }}>
           <div className="max-w-5xl mx-auto">
             <p className="text-sm font-bold leading-relaxed" style={{ color: "#5C3A00" }}>
-              Online payments are almost ready. This business still needs its Stripe payout account connected before customers can place paid orders.
+              Online ordering is almost ready. Contact the business directly and they will help with what is available now.
             </p>
           </div>
         </section>
@@ -376,7 +377,7 @@ export default function OnlineOrderClient({
           {items.length === 0 ? (
             <div className="py-20 text-center">
               <p className="text-2xl font-black mb-3" style={{ color: "#111" }}>No orderable items yet.</p>
-              <p className="text-base" style={{ color: "#666" }}>Add prices to menu items before online ordering can accept payment.</p>
+              <p className="text-base" style={{ color: "#666" }}>Online ordering is coming soon. Contact the business directly and they will help with what is available now.</p>
             </div>
           ) : (
             categories.map((cat, catIndex) => {
@@ -502,7 +503,7 @@ export default function OnlineOrderClient({
                       className="w-full mt-5 py-4 font-black text-base disabled:opacity-40"
                       style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
                     >
-                      {!paymentsReady ? "Payment setup needed" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
+                      {!orderReady ? "Ordering coming soon" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
                     </button>
                   ) : (
                     <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />

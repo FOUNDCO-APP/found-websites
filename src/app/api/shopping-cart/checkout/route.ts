@@ -64,12 +64,12 @@ export async function POST(req: NextRequest) {
 
   const connectAccountId = company.stripe_connect_account_id as string | null
   if (!connectAccountId) {
-    return NextResponse.json({ error: "This business still needs its payout account connected before paid orders can be accepted." }, { status: 409 })
+    return NextResponse.json({ error: "Online checkout is not ready yet. Please contact the business to order." }, { status: 409 })
   }
 
   const stripeConnect = await getStripeConnectStatus(connectAccountId)
   if (!stripeConnect.ready) {
-    return NextResponse.json({ error: "This business still needs to finish payment setup before paid orders can be accepted." }, { status: 409 })
+    return NextResponse.json({ error: "Online checkout is not ready yet. Please contact the business to order." }, { status: 409 })
   }
 
   const productItems = ((company.website_config as { menu_items?: MenuCategory[] } | null)?.menu_items ?? [])

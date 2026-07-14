@@ -238,7 +238,8 @@ export default function ShopClient({
   const subtotal = cartItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0)
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const shippingReady = fulfillment === "pickup" || address.trim().length > 5
-  const canCheckout = paymentsReady && itemCount > 0 && name.trim() && phone.trim() && email.trim() && shippingReady
+  const shopReady = paymentsReady && items.length > 0
+  const canCheckout = shopReady && itemCount > 0 && name.trim() && phone.trim() && email.trim() && shippingReady
 
   function setQuantity(item: ProductItem, nextQuantity: number) {
     setPaymentSetup(null)
@@ -286,6 +287,40 @@ export default function ShopClient({
     window.setTimeout(() => orderPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50)
   }
 
+  if (!shopReady) {
+    return (
+      <div className="min-h-screen bg-white">
+        <section className="px-6 pb-9 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
+          <div className="mx-auto max-w-5xl">
+            <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop</p>
+            <h1 className="mb-4 text-4xl font-black leading-none text-white md:text-6xl">Shop {companyName}</h1>
+            <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">
+              Online shopping is coming soon. Reach out directly and the team will help with availability, sizing, and orders.
+            </p>
+          </div>
+        </section>
+
+        <main className="mx-auto max-w-5xl px-6 py-16">
+          <section className="rounded-xl border border-neutral-200 bg-white px-6 py-12 text-center shadow-sm">
+            <p className="mb-3 text-xs font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Coming soon</p>
+            <h2 className="mx-auto max-w-xl text-3xl font-black leading-tight text-neutral-950 md:text-4xl">Online shopping is almost ready.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">
+              {companyName} is getting the shop ready. Contact the business directly and they will help with what is available now.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <a href={`/${slug}/contact`} className="rounded-full px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white" style={{ backgroundColor: primary }}>
+                Contact us
+              </a>
+              <a href={`/${slug}/services`} className="rounded-full border border-neutral-200 px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-neutral-950">
+                See what we offer
+              </a>
+            </div>
+          </section>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <section className="px-6 pb-9 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
@@ -298,22 +333,12 @@ export default function ShopClient({
         </div>
       </section>
 
-      {!paymentsReady && (
-        <section className="bg-amber-50 px-6 py-8">
-          <div className="mx-auto max-w-5xl">
-            <p className="text-sm font-bold leading-relaxed text-amber-950">
-              Online payments are almost ready. This business still needs its payout account connected before customers can place paid orders.
-            </p>
-          </div>
-        </section>
-      )}
-
       <main className="mx-auto grid max-w-5xl items-start gap-8 px-6 py-10 lg:grid-cols-[1fr_360px]">
         <section>
           {items.length === 0 ? (
             <div className="py-20 text-center">
-              <p className="mb-3 text-2xl font-black text-neutral-950">No products yet.</p>
-              <p className="text-base text-neutral-600">Add priced products before the shop can accept orders.</p>
+              <p className="mb-3 text-2xl font-black text-neutral-950">Shop coming soon.</p>
+              <p className="text-base text-neutral-600">Contact the business directly and they will help with what is available now.</p>
             </div>
           ) : (
             categories.map((cat, catIndex) => {
@@ -401,7 +426,7 @@ export default function ShopClient({
 
                   {!paymentSetup ? (
                     <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full rounded-full py-4 text-base font-black text-white disabled:opacity-40" style={{ backgroundColor: primary }}>
-                      {!paymentsReady ? "Payment setup needed" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
+                      {!shopReady ? "Shopping coming soon" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
                     </button>
                   ) : (
                     <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
