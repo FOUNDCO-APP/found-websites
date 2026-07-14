@@ -432,6 +432,50 @@
       "state": "AZ",
       "raw": "Blue Luna Events is Tucson, AZ's go-to balloon decor. We offer full-service setup, custom designs, large events welcome, same-day delivery, and bilingual team with care and clear next steps. We give straight answers and fair prices — no guesswork, no surprises.",
       "expected": "Blue Luna Events is Tucson, AZ's go-to balloon decor. We offer full-service setup and custom designs for large events, with same-day delivery and bilingual support. We give straight answers and fair prices — no guesswork, no surprises."
+    },
+    {
+      "id": "restaurant-about-food-list-stays-natural",
+      "field": "about_text",
+      "industry": "food",
+      "subIndustry": "restaurant",
+      "businessName": "Taquero Mucho",
+      "city": "Phoenix",
+      "state": "AZ",
+      "raw": "Taquero Mucho is a locally owned restaurant in Phoenix, AZ. Family recipe, Made from scratch, Daily specials, Locally sourced, Gluten-free options. We're proud of what we do and even prouder of the people we do it for.",
+      "expected": "Taquero Mucho is a locally owned restaurant in Phoenix, AZ. We serve made-from-scratch food with family recipes, daily specials, local ingredients, and gluten-free options. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "event-about-slug-name-and-list-cleanup",
+      "field": "about_text",
+      "industry": "events",
+      "subIndustry": "balloon decor",
+      "businessName": "Blue Luna Events",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "bluelunaevents is Tucson, AZ's go-to balloon decor. Full-service setup, Custom designs, Large events welcome, Same-day delivery, Bilingual team. We give straight answers and fair prices — no guesswork, no surprises.",
+      "expected": "Blue Luna Events is Tucson, AZ's go-to balloon decor. We create full-service setup and custom designs for large events, with same-day delivery and bilingual support. We give straight answers and fair prices — no guesswork, no surprises."
+    },
+    {
+      "id": "music-about-list-stays-natural",
+      "field": "about_text",
+      "industry": "music_performance",
+      "subIndustry": "solo musician",
+      "businessName": "Musician",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "musician serves Tucson, AZ with dependable solo musician work. Available weekends, All genres, Sound system included, Bilingual, Family-friendly sets. We show up on time, do the job right, and leave things better than we found them.",
+      "expected": "Musician serves Tucson, AZ with dependable solo musician work. We bring weekend availability and a flexible song list, with sound system support and bilingual support for family-friendly events. We show up on time, do the job right, and leave things better than we found them."
+    },
+    {
+      "id": "state-abbreviation-normalized",
+      "field": "about_text",
+      "industry": "food",
+      "subIndustry": "restaurant",
+      "businessName": "Petes",
+      "city": "Catalina Island",
+      "state": "CA",
+      "raw": "Petes is a locally owned restaurant in Catalina Island, Ca. We're proud of what we do and even prouder of the people we do it for.",
+      "expected": "Petes is a locally owned restaurant in Catalina Island, CA. We're proud of what we do and even prouder of the people we do it for."
     }
   ],
   "faithFixtures": [

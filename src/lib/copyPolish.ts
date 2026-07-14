@@ -33,7 +33,7 @@ const KNOWN_FIXES: Record<string, string> = {
 }
 
 const LOWERCASE_TITLE_WORDS = new Set(["a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "nor", "of", "on", "or", "per", "the", "to", "vs", "with"])
-const UPPERCASE_WORDS = new Set(["ac", "ai", "api", "bbq", "cfo", "ceo", "cpa", "crm", "dj", "faq", "gps", "hvac", "it", "llc", "seo", "sms", "tv", "ui", "ux", "vip", "wifi"])
+const UPPERCASE_WORDS = new Set(["ac", "ai", "api", "az", "bbq", "ca", "cfo", "ceo", "cpa", "crm", "dj", "faq", "gps", "hvac", "it", "llc", "seo", "sms", "tv", "ui", "ux", "vip", "wifi"])
 const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   apparel: "Everyday pieces selected for fit, comfort, and style.",
   clothing: "Easy-to-wear pieces chosen to help the whole look come together.",
@@ -194,7 +194,7 @@ function locationLabel(context?: CopyPolishContext) {
 
 function decapitalizeBodyTitleCase(value: string) {
   return value.replace(/([,;:]\s+)([A-Z][a-z]+(?:-[a-z]+)?)(?=\s|,|;|\.|$)/g, (_, prefix: string, word: string) => {
-    if (UPPERCASE_WORDS.has(word.toLowerCase())) return `${prefix}${word}`
+    if (UPPERCASE_WORDS.has(word.toLowerCase())) return `${prefix}${word.toUpperCase()}`
     return `${prefix}${word.charAt(0).toLowerCase()}${word.slice(1)}`
   })
 }
@@ -219,7 +219,38 @@ function normalizeFragment(part: string) {
     .replace(/^facials$/i, "facial services")
     .replace(/^lashes$/i, "lash services")
     .replace(/^balloons$/i, "balloon installs")
+    .replace(/^available weekends$/i, "weekend availability")
+    .replace(/^all genres$/i, "a flexible song list")
+    .replace(/^sound system included$/i, "sound system support")
+    .replace(/^bilingual$/i, "bilingual support")
+    .replace(/^bilingual team (\d+\+? years experience)$/i, "$1 with bilingual support")
+    .replace(/^(\d+\+? years) experience with bilingual support$/i, "bilingual support and $1 of experience")
+    .replace(/^(\d+\+? years) experience$/i, "$1 of experience")
+    .replace(/^bilingual team$/i, "bilingual support")
+    .replace(/^family friendly sets$/i, "family-friendly sets")
+    .replace(/^large events welcome$/i, "large events")
+    .replace(/^full service setup$/i, "full-service setup")
+    .replace(/^custom designs$/i, "custom designs")
+    .replace(/^same day delivery$/i, "same-day delivery")
+    .replace(/^water smart designs$/i, "water-smart designs")
+    .replace(/^20\+ years experience$/i, "20+ years of experience")
+    .replace(/^family owned$/i, "family-owned service")
+    .replace(/^walk ins welcome$/i, "walk-ins")
+    .replace(/^award winning$/i, "award-winning work")
+    .replace(/^made from scratch$/i, "made-from-scratch food")
+    .replace(/^locally sourced$/i, "local ingredients")
+    .replace(/^family recipe$/i, "family recipes")
+    .replace(/^gluten free options$/i, "gluten-free options")
     .toLowerCase()
+}
+
+function hasMeaningfulList(parts: string[]) {
+  return parts.filter(part => part && !["family-owned service"].includes(part)).length >= 2
+}
+
+function removeFromList(parts: string[], removals: string[]) {
+  const removeSet = new Set(removals)
+  return parts.filter(part => !removeSet.has(part))
 }
 
 function sentenceFromFragments(value: string, context?: CopyPolishContext) {
@@ -230,46 +261,80 @@ function sentenceFromFragments(value: string, context?: CopyPolishContext) {
   const fragmentLike = normalized.every(part => !/\b(is|are|we|our|offer|offers|make|makes|serve|serves|provide|provides|handle|handles|help|helps)\b/i.test(part))
   if (!fragmentLike) return value
 
-  const industry = (context?.subIndustry || context?.industry || "").toLowerCase()
+  const industry = `${context?.industry ?? ""} ${context?.subIndustry ?? ""}`.toLowerCase()
   const familyOwned = normalized.includes("family owned")
   const openLate = normalized.includes("open late")
   const relaxing = normalized.includes("relaxing")
   const freeEstimates = normalized.includes("free estimates")
   const core = normalized.filter(part => !["family owned", "open late", "relaxing", "free estimates"].includes(part))
 
-  if (industry.includes("food")) {
-    const food = core.filter(part => part !== "catering")
+  if (industry.includes("food") || industry.includes("restaurant") || industry.includes("cafe") || industry.includes("taco")) {
+    const food = removeFromList(core, ["catering"])
     const actions = [
-      food.length ? `serve ${joinHumanList(food)}` : null,
+      hasMeaningfulList(food) ? `serve ${joinHumanList(food)}` : null,
       core.includes("catering") ? "offer catering" : null,
     ].filter(Boolean)
-    const extra = familyOwned || openLate ? " with a family-friendly feel and late hours" : ""
-    return `We ${joinHumanList(actions as string[])}${extra}.`
+    if (!actions.length) return value
+    if (food.includes("made-from-scratch food") && food.includes("family recipes")) {
+      const extras = food.filter(part => !["made-from-scratch food", "family recipes"].includes(part))
+      return `We serve made-from-scratch food with family recipes${extras.length ? `, ${joinHumanList(extras)}` : ""}.`
+    }
+    if (familyOwned && openLate) return `We ${joinHumanList(actions as string[])} and keep things welcoming for families and late-night guests.`
+    if (familyOwned) return `We ${joinHumanList(actions as string[])} with recipes shaped by family tradition.`
+    if (openLate) return `We ${joinHumanList(actions as string[])} with hours that work later in the day.`
+    return `We ${joinHumanList(actions as string[])}.`
   }
 
   if (industry.includes("home_services") || industry.includes("contract") || industry.includes("cleaning") || industry.includes("landscaping")) {
+    const detail = removeFromList(core, ["family-owned service", "free estimates"])
+    if (!hasMeaningfulList(detail)) return value
     const action = industry.includes("cleaning") ? "offer" : "handle"
     const tail = freeEstimates ? " with free estimates and clear communication from start to finish" : " with clear communication from start to finish"
-    return `We ${action} ${joinHumanList(core)}${tail}.`
+    return `We ${action} ${joinHumanList(detail)}${tail}.`
   }
 
   if (industry.includes("beauty")) {
+    if (!hasMeaningfulList(core)) return value
     return `We offer ${joinHumanList(core)} in a space built around care and confidence.`
   }
 
   if (industry.includes("wellness")) {
+    if (!hasMeaningfulList(core)) return value
     const tail = relaxing ? " designed to help clients slow down and feel restored" : " with a calm, thoughtful experience"
     return `We offer ${joinHumanList(core)}${tail}.`
   }
 
-  if (industry.includes("event")) {
-    const eventTypes = core.filter(part => part !== "balloon installs")
-    const lead = core.includes("balloon installs") ? "balloon installs and event details" : joinHumanList(core)
-    const tail = eventTypes.length ? ` for ${joinHumanList(eventTypes)}` : ""
-    return `We create ${lead}${tail} with a polished touch.`
+  if (industry.includes("photography")) {
+    if (!hasMeaningfulList(core)) return value
+    const experience = core.find(part => /years of experience/.test(part))
+    const subjects = core.filter(part => part !== experience)
+    if (experience) return `We photograph ${joinHumanList(subjects)} with ${experience}.`
+    return `We photograph ${joinHumanList(core)} with a calm process and a clean final look.`
   }
 
-  if (industry.includes("creative") || industry.includes("photography")) {
+  if (industry.includes("event")) {
+    const eventTypes = core.filter(part => /weddings|birthdays|parties|celebrations|large events/.test(part))
+    const details = core.filter(part => !eventTypes.includes(part))
+    if (!hasMeaningfulList(core)) return value
+    if (details.length && eventTypes.length) {
+      const [primary, secondary, ...rest] = details
+      const support = rest.length ? `, with ${joinHumanList(rest)}` : ""
+      return `We create ${primary}${secondary ? ` and ${secondary}` : ""} for ${joinHumanList(eventTypes)}${support}.`
+    }
+    return `We create ${joinHumanList(core)} with a polished touch.`
+  }
+
+  if (industry.includes("music")) {
+    if (!hasMeaningfulList(core)) return value
+    const familyFriendly = core.includes("family-friendly sets")
+    const details = removeFromList(core, ["family-friendly sets"])
+    const [primary, secondary, ...rest] = details
+    const support = rest.length ? `, with ${joinHumanList(rest)}` : ""
+    return `We bring ${primary}${secondary ? ` and ${secondary}` : ""}${support}${familyFriendly ? " for family-friendly events" : " to events that need a reliable live set"}.`
+  }
+
+  if (industry.includes("creative")) {
+    if (!hasMeaningfulList(core)) return value
     return `We photograph ${joinHumanList(core)} with a calm process and a clean final look.`
   }
 
@@ -384,6 +449,15 @@ function collapseDuplicateIntroParagraph(value: string, context?: CopyPolishCont
   cleaned = cleaned.replace(new RegExp(`\\b(${localIntro})\\.\\s+${genericIntro}\\.`, "gi"), (_, local: string) => `${local.replace(new RegExp(`^${businessPattern}`, "i"), business)}.`)
   return cleaned
 }
+function normalizeBusinessNameMentions(value: string, context?: CopyPolishContext) {
+  if (!context?.businessName) return value
+  const business = polishTitle(context.businessName)
+  const compactBusiness = compactForCompare(business)
+  return value.replace(/(^|[.!?]\s+)([A-Za-z0-9 '&.-]{2,80}?)(?=\s+(?:is|serves)\b)/g, (match, prefix: string, subject: string) => {
+    return compactForCompare(subject) === compactBusiness ? `${prefix}${business}` : match
+  })
+}
+
 function splitLongCommaSentence(sentence: string) {
   const commaCount = (sentence.match(/,/g) || []).length
   if (sentence.length < 120 || commaCount < 3) return sentence
@@ -420,6 +494,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   const location = locationLabel(context)
 
   cleaned = replaceRawIndustryLabels(cleaned, context)
+  cleaned = normalizeBusinessNameMentions(cleaned, context)
   cleaned = cleaned.replace(/\ba locally owned ([a-z_]+(?: [a-z_]+){0,2})([,.])/i, (match: string, label: string, punctuation: string) => {
     if (/\bin\b/i.test(label)) return match
     return `a locally owned ${industry}${punctuation}`
@@ -430,6 +505,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   cleaned = cleaned.replace(/,\s+and\s+with\s+/gi, " with ")
   cleaned = decapitalizeBodyTitleCase(cleaned)
   cleaned = collapseDuplicateIntroParagraph(cleaned, context)
+  cleaned = normalizeBusinessNameMentions(cleaned, context)
 
   const sentences = cleaned
     .split(/(?<=[.!?])\s+/)
