@@ -8,6 +8,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getAboutHeroSubtitle, polishBusinessName } from "@/lib/copyPolish"
 import { getAboutHighlights, getFullAboutCopy } from "@/lib/aboutContent"
+import { getLocationSection } from "@/lib/locationSection"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -51,10 +52,19 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     city: company.city,
     state: company.state,
   })
+  const locationSection = getLocationSection({
+    businessName: displayName,
+    industry: company.industry_category,
+    subIndustry: company.sub_industry,
+    primaryIntent: company.primary_intent,
+    city: company.city,
+    state: company.state,
+    serviceAreas,
+  })
 
   return (
     <>
-      {/* ── HEADER ── */}
+      {/* HEADER */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
         {(uploaded(1) || img(0)) ? (
           <>
@@ -80,7 +90,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </div>
       </section>
 
-      {/* ── ABOUT TEXT ── */}
+      {/* ABOUT TEXT */}
       {aboutCopy && (
         <section className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-8">
@@ -131,7 +141,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </section>
       )}
 
-      {/* ── VALUES STRIP ── */}
+      {/* VALUES STRIP */}
       <section className="py-20" style={{ backgroundColor: "#f7f7f7" }}>
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -148,19 +158,24 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </div>
       </section>
 
-      {/* ── SERVICE AREAS ── */}
-      {serviceAreas.length > 0 && (
-        <section className="py-20 bg-white">
-          <div className="max-w-6xl mx-auto px-8">
+      {/* Location / reach section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-8">
+          <div className="max-w-3xl">
             <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: primary }}>
-              Where We Work
+              {locationSection.overline}
             </p>
-            <h2 className="text-3xl md:text-4xl font-black mb-10"
+            <h2 className="text-3xl md:text-4xl font-black mb-6"
               style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-              Service Areas
+              {locationSection.heading}
             </h2>
+            <p className="text-lg leading-relaxed mb-10" style={{ color: "#555555" }}>
+              {locationSection.body}
+            </p>
+          </div>
+          {locationSection.areas.length > 0 && (
             <div className="flex flex-wrap gap-3">
-              {serviceAreas.map((area) => (
+              {locationSection.areas.map((area) => (
                 <span key={area}
                   className="px-5 py-2 text-sm font-black uppercase tracking-wide"
                   style={{
@@ -173,11 +188,11 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
                 </span>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
-      {/* ── SERVICES PREVIEW ── */}
+      {/* SERVICES PREVIEW */}
       {services.length > 0 && (
         <section className="relative py-20" style={{ backgroundColor: "#111111" }}>
           <div className="relative z-10 max-w-6xl mx-auto px-8">
@@ -190,7 +205,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
               <Link href="/services"
                 className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                 style={{ color: primary }}>
-                All Services →
+                All Services
               </Link>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -210,7 +225,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
         </section>
       )}
 
-      {/* ── FINAL CTA ── */}
+      {/* FINAL CTA */}
       <section className="relative py-28 text-center overflow-hidden">
         {img(2) ? (
           <>

@@ -3,6 +3,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
+import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -15,6 +16,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const aboutCopy = getHomepageAboutCopy(config)
+  const displayName = polishBusinessName(company.name)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -60,7 +62,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
               animation: "fade-up 900ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both",
             }}
           >
-            {config?.hero_title || company.name}
+            {config?.hero_title || displayName}
           </h1>
 
           {/* Color line — draws across */}
@@ -81,7 +83,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
               animation: "fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 750ms both",
             }}
           >
-            {config?.hero_subtitle || `Welcome to ${company.name}.`}
+            {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>
 
           {/* Buttons */}
@@ -191,7 +193,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
                     className="text-5xl md:text-7xl font-black text-white leading-none"
                     style={{ fontFamily: "var(--font-heading, inherit)" }}
                   >
-                    {company.name}
+                    {displayName}
                   </h2>
                   {config?.tagline && (
                     <p className="text-xl font-black mt-6" style={{ color: primary }}>

@@ -8,7 +8,8 @@
     "start": "next start",
     "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs",
     "audit:copy-quality": "node scripts/audit-copy-quality.mjs",
-    "repair:copy-quality": "node scripts/repair-copy-quality.mjs"
+    "repair:copy-quality": "node scripts/repair-copy-quality.mjs",
+    "test:location-section": "node scripts/check-location-section.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.6.0",

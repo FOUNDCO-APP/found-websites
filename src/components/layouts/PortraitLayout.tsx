@@ -3,6 +3,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
+import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -15,6 +16,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const aboutCopy = getHomepageAboutCopy(config)
+  const displayName = polishBusinessName(company.name)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -51,7 +53,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
               animation: "fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both",
             }}
           >
-            {config?.hero_title || company.name}
+            {config?.hero_title || displayName}
           </h1>
           <div className="w-10 h-1 mb-6"
             style={{
@@ -61,7 +63,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
             }} />
           <p className="text-lg max-w-lg mb-10 leading-relaxed"
             style={{ color: "#dddddd", animation: "fade-up 600ms ease-out 550ms both" }}>
-            {config?.hero_subtitle || `Welcome to ${company.name}.`}
+            {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>
           <div className="flex flex-col sm:flex-row gap-4"
             style={{ animation: "fade-in 500ms ease-out 700ms both" }}>
@@ -188,7 +190,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
                   className="text-3xl md:text-4xl font-black mb-5 leading-tight"
                   style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}
                 >
-                  {company.name}
+                  {displayName}
                 </h2>
                 {config?.tagline && (
                   <p className="text-lg font-black mb-5" style={{ color: primary }}>

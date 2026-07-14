@@ -5,6 +5,7 @@ import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
+import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -17,6 +18,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const aboutCopy = getHomepageAboutCopy(config)
+  const displayName = polishBusinessName(company.name)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -58,7 +60,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
               animation: "fade-up 900ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both",
             }}
           >
-            {config?.hero_title || company.name}
+            {config?.hero_title || displayName}
           </h1>
           <div className="w-12 h-0.5 mb-6 md:mb-8"
             style={{
@@ -68,7 +70,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
             }} />
           <p className="text-lg leading-relaxed mb-10 md:mb-12"
             style={{ color: "#666666", animation: "fade-up 700ms ease-out 830ms both" }}>
-            {config?.hero_subtitle || `Welcome to ${company.name}.`}
+            {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>
           <div className="flex flex-col sm:flex-row gap-4"
             style={{ animation: "fade-in 600ms ease-out 1020ms both" }}>

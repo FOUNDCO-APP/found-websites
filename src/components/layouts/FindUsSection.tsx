@@ -1,3 +1,4 @@
+import { polishBusinessName } from "@/lib/copyPolish"
 import type { Company } from "@/types/company"
 
 export type PublicLocation = {
@@ -22,6 +23,7 @@ export default function FindUsSection({
   primary: string
 }) {
   const primaryCity = [company.city, company.state].filter(Boolean).join(", ")
+  const displayName = polishBusinessName(company.name)
 
   return (
     <section style={{ padding: "80px 24px", backgroundColor: "#0a0c0b" }}>
@@ -56,7 +58,7 @@ export default function FindUsSection({
                 Main Location
               </p>
             </div>
-            <p style={{ margin: 0, fontSize: "1.0625rem", fontWeight: 700, color: "white" }}>{company.name}</p>
+            <p style={{ margin: 0, fontSize: "1.0625rem", fontWeight: 700, color: "white" }}>{displayName}</p>
             {primaryCity && (
               <p style={{ margin: 0, fontSize: "0.875rem", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>{primaryCity}</p>
             )}
