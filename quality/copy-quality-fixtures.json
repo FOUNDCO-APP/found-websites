@@ -476,6 +476,61 @@
       "state": "CA",
       "raw": "Petes is a locally owned restaurant in Catalina Island, Ca. We're proud of what we do and even prouder of the people we do it for.",
       "expected": "Petes is a locally owned restaurant in Catalina Island, CA. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "home-service-family-owned-years-natural",
+      "field": "about_text",
+      "industry": "home_services",
+      "subIndustry": "remodeling",
+      "businessName": "Construction",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "Construction is Tucson, AZ's go-to remodeling. Family owned, Free estimates, 20+ years experience. We give straight answers and fair prices — no guesswork, no surprises.",
+      "expected": "Construction is Tucson, AZ's go-to remodeling. Family-owned with 20+ years of experience, we provide free estimates and clear communication from start to finish. We give straight answers and fair prices — no guesswork, no surprises."
+    },
+    {
+      "id": "barber-walkins-years-natural",
+      "field": "about_text",
+      "industry": "beauty",
+      "subIndustry": "barber",
+      "businessName": "Barber",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "barber is a locally owned barber in Tucson, AZ. Walk-ins welcome, Master stylist, Award winning, 10+ years experience. We take care of every detail so you can enjoy the experience.",
+      "expected": "Barber is a locally owned barber in Tucson, AZ. We welcome walk-ins and bring 10+ years of experience to every appointment. We take care of every detail so you can enjoy the experience."
+    },
+    {
+      "id": "landscaping-list-natural",
+      "field": "about_text",
+      "industry": "landscaping",
+      "subIndustry": "Landscaping",
+      "businessName": "Landscaping",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "landscaping is Tucson, AZ's go-to landscaping. Free estimates, Bilingual crew, Water-smart designs, hardscapes,. We give straight answers and fair prices — no guesswork, no surprises.",
+      "expected": "Landscaping is Tucson, AZ's go-to landscaping. We handle water-smart designs and hardscape work with free estimates, steady follow-through, and bilingual support. We give straight answers and fair prices — no guesswork, no surprises."
+    },
+    {
+      "id": "retail-broken-create-sentence",
+      "field": "about_text",
+      "industry": "retail",
+      "subIndustry": "Retail",
+      "businessName": "Myshop",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "myshop is a locally owned retail in Tucson, AZ. We create, creative, and custom designs for all T-shirts, Custom orders. We're proud of what we do and even prouder of the people we do it for.",
+      "expected": "Myshop is a locally owned retail shop in Tucson, AZ. We create custom T-shirt designs and custom orders. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "apparel-online-retail-experience-natural",
+      "field": "about_text",
+      "industry": "retail",
+      "subIndustry": "apparel",
+      "businessName": "Mycart",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "mycart is a locally owned apparel in Tucson, AZ. 20 years online, Same-day shipping, Wholesale available. We're proud of what we do and even prouder of the people we do it for.",
+      "expected": "Mycart is a locally owned apparel shop in Tucson, AZ. We offer online retail experience, same-day shipping, and wholesale options. We're proud of what we do and even prouder of the people we do it for."
     }
   ],
   "faithFixtures": [

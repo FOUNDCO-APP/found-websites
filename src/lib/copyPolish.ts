@@ -208,7 +208,7 @@ function joinHumanList(parts: string[]) {
 
 function normalizeFragment(part: string) {
   return part
-    .replace(/\.$/, "")
+    .replace(/^[\s,.;:!?]+|[\s,.;:!?]+$/g, "")
     .replace(/\s+options are available$/i, " options")
     .replace(/^wholesale available$/i, "wholesale options")
     .replace(/^weekly$/i, "weekly cleaning")
@@ -223,19 +223,23 @@ function normalizeFragment(part: string) {
     .replace(/^all genres$/i, "a flexible song list")
     .replace(/^sound system included$/i, "sound system support")
     .replace(/^bilingual$/i, "bilingual support")
+    .replace(/^bilingual crew$/i, "bilingual support")
     .replace(/^bilingual team (\d+\+? years experience)$/i, "$1 with bilingual support")
     .replace(/^(\d+\+? years) experience with bilingual support$/i, "bilingual support and $1 of experience")
     .replace(/^(\d+\+? years) experience$/i, "$1 of experience")
     .replace(/^bilingual team$/i, "bilingual support")
     .replace(/^family friendly sets$/i, "family-friendly sets")
+    .replace(/^20 years online$/i, "online retail experience")
     .replace(/^large events welcome$/i, "large events")
     .replace(/^full service setup$/i, "full-service setup")
     .replace(/^custom designs$/i, "custom designs")
     .replace(/^same day delivery$/i, "same-day delivery")
     .replace(/^water smart designs$/i, "water-smart designs")
+    .replace(/^hardscapes$/i, "hardscape work")
+    .replace(/^master stylist$/i, "stylist experience")
     .replace(/^20\+ years experience$/i, "20+ years of experience")
     .replace(/^family owned$/i, "family-owned service")
-    .replace(/^walk ins welcome$/i, "walk-ins")
+    .replace(/^walk[- ]ins welcome$/i, "walk-ins")
     .replace(/^award winning$/i, "award-winning work")
     .replace(/^made from scratch$/i, "made-from-scratch food")
     .replace(/^locally sourced$/i, "local ingredients")
@@ -246,6 +250,10 @@ function normalizeFragment(part: string) {
 
 function hasMeaningfulList(parts: string[]) {
   return parts.filter(part => part && !["family-owned service"].includes(part)).length >= 2
+}
+
+function hasAnyMeaningfulDetail(parts: string[]) {
+  return parts.some(part => part && !["family-owned service", "free estimates"].includes(part))
 }
 
 function removeFromList(parts: string[], removals: string[]) {
@@ -287,21 +295,35 @@ function sentenceFromFragments(value: string, context?: CopyPolishContext) {
 
   if (industry.includes("home_services") || industry.includes("contract") || industry.includes("cleaning") || industry.includes("landscaping")) {
     const detail = removeFromList(core, ["family-owned service", "free estimates"])
-    if (!hasMeaningfulList(detail)) return value
+    if (!hasAnyMeaningfulDetail(detail)) return value
     const action = industry.includes("cleaning") ? "offer" : "handle"
-    const tail = freeEstimates ? " with free estimates and clear communication from start to finish" : " with clear communication from start to finish"
-    return `We ${action} ${joinHumanList(detail)}${tail}.`
+    const familyOwnedService = core.includes("family-owned service")
+    const support = detail.includes("bilingual support") ? " with bilingual support" : ""
+    const work = removeFromList(detail, ["bilingual support"])
+    if (!hasAnyMeaningfulDetail(work)) return value
+    if (familyOwnedService && work.length === 1 && /years of experience/.test(work[0])) {
+      return `Family-owned with ${work[0]}, we provide ${freeEstimates ? "free estimates and " : ""}clear communication from start to finish.`
+    }
+    const supportTail = support ? ", and bilingual support" : ""
+    const tail = freeEstimates ? ` with free estimates, steady follow-through${supportTail}` : ` with clear communication and steady follow-through${supportTail}`
+    return `We ${action} ${joinHumanList(work)}${tail}.`
   }
 
   if (industry.includes("beauty")) {
     if (!hasMeaningfulList(core)) return value
-    return `We offer ${joinHumanList(core)} in a space built around care and confidence.`
+    const years = core.find(part => /years of experience/.test(part))
+    const walkIns = core.includes("walk-ins")
+    const details = removeFromList(core, ["walk-ins", years ?? ""])
+    if (walkIns && years) return `We welcome walk-ins and bring ${years} to every appointment.`
+    return `We offer ${joinHumanList(details.length ? details : core)} in a space built around care and confidence.`
   }
 
   if (industry.includes("wellness")) {
     if (!hasMeaningfulList(core)) return value
-    const tail = relaxing ? " designed to help clients slow down and feel restored" : " with a calm, thoughtful experience"
-    return `We offer ${joinHumanList(core)}${tail}.`
+    const details = core.includes("bilingual support") && core.length > 1 ? removeFromList(core, ["bilingual support"]) : core
+    const support = core.includes("bilingual support") ? " with bilingual support" : ""
+    const tail = relaxing ? " designed to help clients slow down and feel restored" : ` in a calm, thoughtful setting${support}`
+    return `We offer ${joinHumanList(details)}${tail}.`
   }
 
   if (industry.includes("photography")) {
@@ -449,6 +471,14 @@ function collapseDuplicateIntroParagraph(value: string, context?: CopyPolishCont
   cleaned = cleaned.replace(new RegExp(`\\b(${localIntro})\\.\\s+${genericIntro}\\.`, "gi"), (_, local: string) => `${local.replace(new RegExp(`^${businessPattern}`, "i"), business)}.`)
   return cleaned
 }
+function normalizeBrokenRetailSentence(value: string) {
+  return value
+    .replace(/\bWe create,\s*creative,\s*and\s*custom designs for all T-shirts,\s*custom orders\./i, "We create custom T-shirt designs and custom orders.")
+    .replace(/\bWe offer online retail experience,\s*same-day shipping,\s*and wholesale options with care and clear next steps\./i, "We offer online retail experience, same-day shipping, and wholesale options.")
+    .replace(/water-smart designs,\s*hardscape work/gi, "water-smart designs and hardscape work")
+    .replace(/\bWe have been in selling in\b/i, "We have been selling in")
+}
+
 function normalizeBusinessNameMentions(value: string, context?: CopyPolishContext) {
   if (!context?.businessName) return value
   const business = polishTitle(context.businessName)
@@ -461,6 +491,9 @@ function normalizeBusinessNameMentions(value: string, context?: CopyPolishContex
 function splitLongCommaSentence(sentence: string) {
   const commaCount = (sentence.match(/,/g) || []).length
   if (sentence.length < 120 || commaCount < 3) return sentence
+  const firstCommaIndex = sentence.indexOf(",")
+  const firstAndIndex = sentence.indexOf(" and ")
+  if (commaCount <= 4 && firstAndIndex !== -1 && (firstCommaIndex === -1 || firstAndIndex < firstCommaIndex) && /\swith\s/i.test(sentence)) return sentence
 
   const offerMatch = sentence.match(/^(We (?:offer|handle|create) )(.+?)(?: with (.+))?\.$/i)
   if (offerMatch) {
@@ -493,6 +526,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   const industry = humanIndustryLabel(context)
   const location = locationLabel(context)
 
+  cleaned = normalizeBrokenRetailSentence(cleaned)
   cleaned = replaceRawIndustryLabels(cleaned, context)
   cleaned = normalizeBusinessNameMentions(cleaned, context)
   cleaned = cleaned.replace(/\ba locally owned ([a-z_]+(?: [a-z_]+){0,2})([,.])/i, (match: string, label: string, punctuation: string) => {
@@ -505,7 +539,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   cleaned = cleaned.replace(/,\s+and\s+with\s+/gi, " with ")
   cleaned = decapitalizeBodyTitleCase(cleaned)
   cleaned = collapseDuplicateIntroParagraph(cleaned, context)
-  cleaned = normalizeBusinessNameMentions(cleaned, context)
+  cleaned = normalizeBusinessNameMentions(normalizeBrokenRetailSentence(cleaned), context)
 
   const sentences = cleaned
     .split(/(?<=[.!?])\s+/)
@@ -513,7 +547,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
     .map(splitLongCommaSentence)
     .filter(Boolean)
 
-  cleaned = removeRedundantIntroSentences(sentences, context).join(" ")
+  cleaned = normalizeBrokenRetailSentence(removeRedundantIntroSentences(sentences, context).join(" "))
   cleaned = cleaned.replace(/,?\s+and\s+with\s+/gi, " with ")
   cleaned = cleaned.replace(/\s+/g, " ").trim()
   cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
@@ -617,6 +651,7 @@ function capitalizeWord(word: string, index: number, total: number) {
   if (UPPERCASE_WORDS.has(lower)) return lower.toUpperCase()
   if (index > 0 && index < total - 1 && LOWERCASE_TITLE_WORDS.has(lower)) return lower
   if (/^[A-Z0-9&.'-]+$/.test(word) && word.length > 1 && word !== lower) return word
+  if (/[a-z][A-Z]/.test(word)) return word
   return lower.charAt(0).toUpperCase() + lower.slice(1)
 }
 
