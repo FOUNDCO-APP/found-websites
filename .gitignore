@@ -43,5 +43,6 @@ scripts/*
 !scripts/check-copy-quality-fixtures.mjs
 !scripts/audit-copy-quality.mjs
 !scripts/repair-copy-quality.mjs
+!scripts/migration-045-about-content-model.sql
 quality/copy-audit-report.md
 quality/copy-repair-plan.md

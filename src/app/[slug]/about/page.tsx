@@ -7,6 +7,7 @@ import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getAboutHeroSubtitle, polishBusinessName } from "@/lib/copyPolish"
+import { getAboutHighlights, getFullAboutCopy } from "@/lib/aboutContent"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -41,6 +42,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
   const displayName = polishBusinessName(company.name)
+  const aboutCopy = getFullAboutCopy(config)
+  const aboutHighlights = getAboutHighlights(config)
   const aboutHeroSubtitle = getAboutHeroSubtitle({
     businessName: company.name,
     industry: company.industry_category,
@@ -78,7 +81,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
       </section>
 
       {/* ── ABOUT TEXT ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
@@ -96,8 +99,22 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
               </div>
               <div className="flex flex-col gap-8">
                 <p className="text-lg leading-relaxed" style={{ color: "#444444" }}>
-                  {config.about_text}
+                  {aboutCopy}
                 </p>
+                {aboutHighlights.length > 0 && (
+                  <div className="grid grid-cols-1 gap-5">
+                    {aboutHighlights.map((item) => (
+                      <div key={item.title} className="border-l-4 pl-5" style={{ borderColor: primary }}>
+                        <h3 className="text-sm font-black uppercase tracking-wide mb-2" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
+                          {item.title}
+                        </h3>
+                        <p className="text-sm leading-relaxed" style={{ color: "#666666" }}>
+                          {item.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link href={ctaHref} className="btn text-white"
                     style={{ backgroundColor: primary, borderColor: primary }}>

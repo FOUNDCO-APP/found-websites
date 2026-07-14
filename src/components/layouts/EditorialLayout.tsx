@@ -4,6 +4,7 @@ import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -15,6 +16,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
   const services = config?.services || []
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
+  const aboutCopy = getHomepageAboutCopy(config)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -96,14 +98,14 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
       </section>
 
       {/* ── ABOUT — brand story ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="py-28 bg-white">
           <InView distance={20}>
             <div className="max-w-2xl mx-auto px-8 text-center">
               <p className="text-xs font-black tracking-[0.2em] uppercase mb-8" style={{ color: primary }}>
                 {vocab.aboutLabel}
               </p>
-              {config.tagline ? (
+              {config?.tagline ? (
                 <h2
                   className="text-3xl md:text-4xl mb-8"
                   style={{
@@ -113,13 +115,13 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
                     fontWeight: 700,
                   }}
                 >
-                  {config.tagline}
+                  {config?.tagline}
                 </h2>
               ) : null}
               <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
-              {config.about_text && (
+              {aboutCopy && (
                 <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
-                  {config.about_text}
+                  {aboutCopy}
                 </p>
               )}
               <Link href="/about" className="btn text-white"

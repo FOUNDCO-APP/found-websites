@@ -8,6 +8,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import OnlineOrderClient from "../order/OnlineOrderClient"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 import type { Metadata } from "next"
@@ -31,6 +32,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const primary = company.primary_color
   const gradient = heroGradient(primary)
   const vocab = getVocab(company.sub_industry, company.industry_category)
+  const aboutCopy = getHomepageAboutCopy(config)
   const industryDefs = getIndustryDefaults(company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
   const ctaHref = company.primary_intent === "call"
@@ -188,7 +190,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
         </>
       )}
       {/* ── ABOUT STRIP (if they have about text) ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="py-20" style={{ backgroundColor: "#F9F8F6" }}>
           <div className="max-w-4xl mx-auto px-8">
             <div className="flex flex-col md:flex-row gap-16 items-center">
@@ -209,7 +211,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
                   {company.name}
                 </h2>
                 <p className="text-lg leading-relaxed" style={{ color: "#555555" }}>
-                  {config.about_text}
+                  {aboutCopy}
                 </p>
               </div>
             </div>

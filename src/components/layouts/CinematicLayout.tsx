@@ -2,6 +2,7 @@ import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -13,6 +14,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
   const services = config?.services || []
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
+  const aboutCopy = getHomepageAboutCopy(config)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -177,7 +179,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
       )}
 
       {/* ── ABOUT — solid dark, no competing photo (CTA owns the final image) ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
           <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
           <div className="relative z-10 max-w-6xl mx-auto px-8">
@@ -191,15 +193,15 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
                   >
                     {company.name}
                   </h2>
-                  {config.tagline && (
+                  {config?.tagline && (
                     <p className="text-xl font-black mt-6" style={{ color: primary }}>
-                      {config.tagline}
+                      {config?.tagline}
                     </p>
                   )}
                 </div>
                 <div>
                   <p className="text-lg leading-relaxed mb-10" style={{ color: "#cccccc" }}>
-                    {config.about_text}
+                    {aboutCopy}
                   </p>
                   <Link href="/about" className="btn text-white"
                     style={{ backgroundColor: primary, borderColor: primary }}>

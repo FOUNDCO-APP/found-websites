@@ -2,6 +2,7 @@ import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -13,6 +14,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
   const services = config?.services || []
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
+  const aboutCopy = getHomepageAboutCopy(config)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -116,7 +118,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
       )}
 
       {/* ── ABOUT STRIP ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
           {img(1) ? (
             <>
@@ -138,12 +140,12 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
                   </h2>
                   {config?.tagline && (
                     <p className="text-lg font-black mt-5 leading-snug" style={{ color: primary }}>
-                      {config.tagline}
+                      {config?.tagline}
                     </p>
                   )}
                 </div>
                 <div>
-                  <p className="text-lg leading-relaxed mb-8" style={{ color: "#cccccc" }}>{config.about_text}</p>
+                  <p className="text-lg leading-relaxed mb-8" style={{ color: "#cccccc" }}>{aboutCopy}</p>
                   <Link href="/about" className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>
                     {vocab.aboutLabel}
                   </Link>

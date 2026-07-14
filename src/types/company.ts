@@ -21,6 +21,11 @@ export type MenuCategory = {
   items: MenuItem[]
 }
 
+export type AboutHighlight = {
+  title: string
+  body: string
+}
+
 export type WebsiteConfig = {
   id: string
   hero_title: string | null
@@ -30,6 +35,9 @@ export type WebsiteConfig = {
   hero_images: string[] | null
   stock_images: string[]
   about_text: string | null
+  about_preview: string | null
+  about_story: string | null
+  about_highlights: AboutHighlight[] | null
   tagline: string | null
   cta_headline: string | null
   services: ServiceItem[]

@@ -6,6 +6,7 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { SCHEDULING_CTA } from "@/lib/industryCTAs"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import ReservationForm from "./ReservationForm"
 import BookingCalendar from "@/components/public/BookingCalendar"
@@ -43,6 +44,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
     : await getCompanyBySlug(slug)
   if (!company) notFound()
 
+  const aboutCopy = getHomepageAboutCopy(company.website_config)
   const admin = createAdminClient()
 
   // Check if reservation_calendar add-on is active
@@ -176,7 +178,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
                   ))}
                 </ul>
               </div>
-              {company.website_config?.about_text && img(1) && (
+              {aboutCopy && img(1) && (
                 <div className="overflow-hidden" style={{ borderRadius: "var(--card-radius, 10px)" }}>
                   <img src={img(1)!} alt={company.name} className="w-full h-48 object-cover" />
                 </div>

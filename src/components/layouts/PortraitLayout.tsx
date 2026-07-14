@@ -2,6 +2,7 @@ import Link from "next/link"
 import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -13,6 +14,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
   const services = config?.services || []
   const testimonials = config?.testimonials || []
   const vocab = getVocab(company.sub_industry, company.industry_category)
+  const aboutCopy = getHomepageAboutCopy(config)
 
   const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
   const primaryHref = company.primary_intent === "call"
@@ -167,7 +169,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
       )}
 
       {/* ── ABOUT — split, photo bleeds to edge ── */}
-      {config?.about_text && (
+      {aboutCopy && (
         <section className="flex flex-col md:flex-row" style={{ minHeight: "520px" }}>
           <div className="relative w-full md:w-1/2 h-72 md:h-auto">
             {img(4) ? (
@@ -188,14 +190,14 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
                 >
                   {company.name}
                 </h2>
-                {config.tagline && (
+                {config?.tagline && (
                   <p className="text-lg font-black mb-5" style={{ color: primary }}>
-                    {config.tagline}
+                    {config?.tagline}
                   </p>
                 )}
                 <div className="w-10 h-1 mb-6" style={{ backgroundColor: primary }} />
                 <p className="text-lg leading-relaxed mb-10" style={{ color: "#555555" }}>
-                  {config.about_text}
+                  {aboutCopy}
                 </p>
                 <Link href="/about" className="btn text-white self-start"
                   style={{ backgroundColor: primary, borderColor: primary }}>
