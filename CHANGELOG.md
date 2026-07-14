@@ -5,6 +5,21 @@
 ---
 
 
+## Session: July 14, 2026 - Selected Company Cookie Selector
+**AI:** Codex
+**Worked on:** Fixed the remaining stuck-business switch by avoiding ambiguous duplicate selected-company cookies.
+
+### Completed
+- getCompany() now prefers the new ound_selected_company_id cookie and falls back to legacy ound_company_id.
+- If duplicate selected-company cookies are present, it reads all matching cookies and uses the last value instead of cookies().get().
+- The select-company API writes both the legacy and new selected-company cookies for compatibility.
+- Verified with cmd /c npm run build.
+
+### Test Next
+- Switch Tacos -> tshirts and tshirts -> Tacos. The selected business should now actually change.
+
+---
+
 ## Session: July 14, 2026 - Selected Company Cookie Scope
 **AI:** Codex
 **Worked on:** Fixed the case where hard switching could still leave the dashboard on the previous business.

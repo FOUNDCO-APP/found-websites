@@ -64,8 +64,13 @@ export async function GET(req: NextRequest) {
   }
 
   response.cookies.set("found_company_id", id, cookieOptions)
+  response.cookies.set("found_selected_company_id", id, cookieOptions)
   if (shouldSetRootCookie) {
     response.cookies.set("found_company_id", id, {
+      ...cookieOptions,
+      domain: `.${rootDomain}`,
+    })
+    response.cookies.set("found_selected_company_id", id, {
       ...cookieOptions,
       domain: `.${rootDomain}`,
     })

@@ -45,8 +45,17 @@ export async function getCompany(
   userEmail: string
 ): Promise<CompanyRow | null> {
   const cookieStore = await cookies()
-  const selectedId = cookieStore.get("found_company_id")?.value
-  const adminCompanyId = cookieStore.get("found_admin_company_id")?.value
+  const selectedCompanyV2Cookies = cookieStore.getAll("found_selected_company_id")
+  const selectedCompanyCookies = selectedCompanyV2Cookies.length > 0
+    ? selectedCompanyV2Cookies
+    : cookieStore.getAll("found_company_id")
+  const selectedId = selectedCompanyCookies.length > 0
+    ? selectedCompanyCookies[selectedCompanyCookies.length - 1]?.value
+    : undefined
+  const adminCompanyCookies = cookieStore.getAll("found_admin_company_id")
+  const adminCompanyId = adminCompanyCookies.length > 0
+    ? adminCompanyCookies[adminCompanyCookies.length - 1]?.value
+    : undefined
   const admin = createAdminClient()
   const adminOverride = await isAdminOverrideActive()
 
