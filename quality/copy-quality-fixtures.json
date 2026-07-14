@@ -531,6 +531,17 @@
       "state": "AZ",
       "raw": "mycart is a locally owned apparel in Tucson, AZ. 20 years online, Same-day shipping, Wholesale available. We're proud of what we do and even prouder of the people we do it for.",
       "expected": "Mycart is a locally owned apparel shop in Tucson, AZ. We offer online retail experience, same-day shipping, and wholesale options. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "retail-single-fragment-becomes-sentence",
+      "field": "about_text",
+      "industry": "retail",
+      "subIndustry": "Retail",
+      "businessName": "Shirts",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "shirts is a locally owned retail in Tucson, AZ. Custom orders. We're proud of what we do and even prouder of the people we do it for.",
+      "expected": "Shirts is a locally owned retail shop in Tucson, AZ. We handle custom orders. We're proud of what we do and even prouder of the people we do it for."
     }
   ],
   "faithFixtures": [

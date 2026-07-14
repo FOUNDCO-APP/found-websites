@@ -263,6 +263,13 @@ function removeFromList(parts: string[], removals: string[]) {
 
 function sentenceFromFragments(value: string, context?: CopyPolishContext) {
   const parts = value.split(/,\s*/).map(part => part.trim()).filter(Boolean)
+  if (parts.length === 1) {
+    const single = normalizeFragment(parts[0])
+    if (single === "custom orders") return "We handle custom orders."
+    if (single === "wholesale options") return "Wholesale options are available."
+    if (single === "same-day shipping") return "Same-day shipping is available."
+    return value
+  }
   if (parts.length < 2) return value
 
   const normalized = parts.map(normalizeFragment)
