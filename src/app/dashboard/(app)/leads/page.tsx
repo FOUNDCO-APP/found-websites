@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, formIntentLabelFor, defaultFormIntentFor, FormIntentLabel } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, formIntentLabelFor, FormIntentLabel } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
 import { addContact } from "../contacts/actions"
 import LeadContactSheet from "@/components/dashboard/LeadContactSheet"
+import { dashboardInboxIntentFor, isOrderRequest, isReservationRequest } from "@/lib/dashboard/requestKinds"
 
 type LeadRow = {
   id: string
@@ -23,11 +24,11 @@ type LeadRow = {
 
 
 function isOnlineOrder(lead: LeadRow) {
-  return lead.type === "online_order" || lead.source === "online_ordering" || lead.type === "shopping_order" || lead.source === "shopping_cart"
+  return isOrderRequest(lead)
 }
 
 function isReservationLead(lead: LeadRow) {
-  return lead.type === "reservation_request" || lead.source === "reservation" || lead.source === "reservations"
+  return isReservationRequest(lead)
 }
 
 function orderItems(lead: LeadRow) {
@@ -149,7 +150,7 @@ function LeadsPageInner() {
   const [showIntentPicker, setShowIntentPicker] = useState(false)
   const [search, setSearch] = useState("")
 
-  const effectiveIntent = formIntent ?? defaultFormIntentFor(industry, subIndustry)
+  const effectiveIntent = dashboardInboxIntentFor(industry, subIndustry, formIntent)
   const intentLabel = formIntentLabelFor(effectiveIntent)
   const { tabLabel: peopleLabel } = getBusinessModel(industry, null)
 

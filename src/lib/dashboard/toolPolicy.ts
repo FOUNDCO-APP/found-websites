@@ -1,5 +1,5 @@
-import { defaultFormIntentFor } from "@/lib/dashboard/typography"
 import { getBusinessModel } from "@/lib/getBusinessModel"
+import { dashboardInboxLabelFor, hasOrderWorkflow } from "@/lib/dashboard/requestKinds"
 
 export type DashboardToolGroup = "website" | "get_paid" | "customers" | "work_schedule" | "marketing" | "insights" | "settings"
 
@@ -45,9 +45,6 @@ function has(activeAddons: string[], addon: string) {
   return activeAddons.includes(addon)
 }
 
-function hasOrderWorkflow(activeAddons: string[]) {
-  return has(activeAddons, "online_ordering") || has(activeAddons, "shopping_cart")
-}
 
 function peopleTool(industry: string | null | undefined): DashboardTool {
   const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
@@ -55,19 +52,7 @@ function peopleTool(industry: string | null | undefined): DashboardTool {
 }
 
 function inboxLabelFor(industry: string | null | undefined, subIndustry?: string | null): string {
-  switch (defaultFormIntentFor(industry, subIndustry)) {
-    case "booking":
-      return "Bookings"
-    case "appointment":
-      return "Appointments"
-    case "estimate_request":
-    case "estimate":
-      return "Estimate Requests"
-    case "order":
-      return "Inquiries"
-    default:
-      return "Leads"
-  }
+  return dashboardInboxLabelFor(industry, subIndustry).plural
 }
 
 function availableFoodTools(activeAddons: string[]): DashboardTool[] {

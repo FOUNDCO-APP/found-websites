@@ -8,6 +8,7 @@ import {
   buildReservationEmail,
   buildReservationAutoReply,
 } from "@/lib/emailBuilders"
+import { normalizeSubmittedRequestSource, normalizeSubmittedRequestType } from "@/lib/dashboard/requestKinds"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -108,6 +109,8 @@ export async function submitLead(_: unknown, formData: FormData) {
   const email = (formData.get("email") as string)?.trim()
   const service = (formData.get("service") as string)?.trim()
   const message = (formData.get("message") as string)?.trim()
+  const requestType = normalizeSubmittedRequestType(formData.get("request_type"))
+  const requestSource = normalizeSubmittedRequestSource(formData.get("request_source"))
 
   if (!companyId || !name || !phone) {
     return { success: false, error: "Name and phone number are required." }
@@ -138,6 +141,9 @@ export async function submitLead(_: unknown, formData: FormData) {
       email: email || null,
       service: service || null,
       message: message || null,
+      type: requestType,
+      source: requestSource,
+      status: "open",
       reply_token: replyToken,
       partial_answers: Object.keys(partialAnswers).length > 0 ? partialAnswers : null,
     })

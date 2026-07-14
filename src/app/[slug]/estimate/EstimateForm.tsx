@@ -91,6 +91,8 @@ export default function EstimateForm({
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="company_id" value={companyId} />
+      <input type="hidden" name="request_type" value="estimate_request" />
+      <input type="hidden" name="request_source" value="estimate_form" />
 
       {/* Name + Phone */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

@@ -35,6 +35,8 @@ export default function ContactForm({
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="company_id" value={companyId} />
+      <input type="hidden" name="request_type" value="inquiry" />
+      <input type="hidden" name="request_source" value="contact_form" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
