@@ -7,7 +7,9 @@ const require = createRequire(import.meta.url)
 const ts = require("typescript")
 const { createClient } = require("@supabase/supabase-js")
 const reportPath = path.resolve("quality/copy-repair-plan.md")
-const copyFields = ["hero_title", "hero_subtitle", "about_text", "tagline", "cta_headline", "services", "faq_items"]
+const applySafeFields = ["hero_title", "hero_subtitle", "cta_headline", "services", "faq_items"]
+const reviewOnlyFields = ["about_text"]
+const copyFields = [...applySafeFields, ...reviewOnlyFields]
 
 function loadEnv(file) {
   const envPath = path.resolve(file)
@@ -111,7 +113,7 @@ function changedFields(rawConfig, polishedConfig) {
   return changes
 }
 
-function renderReport({ generatedAt, apply, companies, repairs, applied, skipped }) {
+function renderReport({ generatedAt, apply, companies, repairs, reviewOnlyRepairs, applied, skipped }) {
   const lines = [
     "# Copy Repair Plan",
     "",
@@ -119,9 +121,9 @@ function renderReport({ generatedAt, apply, companies, repairs, applied, skipped
     `Mode: ${apply ? "APPLY" : "DRY RUN"}`,
     `Businesses scanned: ${companies.length}`,
     `Businesses with copy changes: ${repairs.length}`,
-    `Fields that would change: ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)}`,
+    `Apply-safe fields: ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)}`,
     "",
-    "This plan only includes copy fields that the shared production copy polish layer changes. It does not invent new copy, fill empty taglines, touch menu data, or touch non-copy fields.",
+    "This plan separates apply-safe cleanup from review-only copy. It does not invent new copy, fill empty taglines, touch menu data, or touch non-copy fields.",
     "",
   ]
 
@@ -131,11 +133,13 @@ function renderReport({ generatedAt, apply, companies, repairs, applied, skipped
     lines.push("")
   } else {
     lines.push("No Supabase writes were performed.")
-    lines.push("To apply later, rerun with: npm.cmd run repair:copy-quality -- --apply --confirm=APPLY_COPY_REPAIRS")
+    lines.push("To apply only the safe cleanup fields later, rerun with: npm.cmd run repair:copy-quality -- --apply --confirm=APPLY_COPY_REPAIRS")
     lines.push("")
   }
 
-  lines.push("## Businesses")
+  lines.push(`Review-only fields: ${reviewOnlyRepairs.reduce((sum, repair) => sum + repair.changes.length, 0)}`)
+  lines.push("")
+  lines.push("## Apply-Safe Businesses")
   lines.push("")
   lines.push("| Business | Industry | Fields |")
   lines.push("| --- | --- | --- |")
@@ -144,11 +148,24 @@ function renderReport({ generatedAt, apply, companies, repairs, applied, skipped
   }
 
   lines.push("")
-  lines.push("## Field Changes")
+  lines.push("## Apply-Safe Field Changes")
   lines.push("")
   lines.push("| Business | Field | Before | After |")
   lines.push("| --- | --- | --- | --- |")
   for (const repair of repairs) {
+    for (const change of repair.changes) {
+      lines.push(`| ${escapeMarkdown(repair.slug)} | ${escapeMarkdown(change.field)} | ${escapeMarkdown(summarize(change.before))} | ${escapeMarkdown(summarize(change.after))} |`)
+    }
+  }
+
+  lines.push("")
+  lines.push("## Review-Only Field Changes")
+  lines.push("")
+  lines.push("These are intentionally excluded from apply mode because they need better copy judgment before touching live records.")
+  lines.push("")
+  lines.push("| Business | Field | Before | After |")
+  lines.push("| --- | --- | --- | --- |")
+  for (const repair of reviewOnlyRepairs) {
     for (const change of repair.changes) {
       lines.push(`| ${escapeMarkdown(repair.slug)} | ${escapeMarkdown(change.field)} | ${escapeMarkdown(summarize(change.before))} | ${escapeMarkdown(summarize(change.after))} |`)
     }
@@ -180,6 +197,7 @@ async function main() {
 
   const companies = data ?? []
   const repairs = []
+  const reviewOnlyRepairs = []
 
   for (const company of companies) {
     const rawConfig = Array.isArray(company.website_config) ? company.website_config[0] : company.website_config
@@ -190,14 +208,28 @@ async function main() {
     const changes = changedFields(rawCopy, polishedCopy)
     if (!changes.length) continue
 
-    repairs.push({
+    const baseRepair = {
       companyId: company.id,
       configId: rawConfig.id,
       slug: company.slug,
       industry: [company.industry_category, company.sub_industry].filter(Boolean).join(" / ") || "unknown",
-      updates: Object.fromEntries(changes.map(change => [change.field, change.after])),
-      changes,
-    })
+    }
+    const safeChanges = changes.filter(change => applySafeFields.includes(change.field))
+    const reviewChanges = changes.filter(change => reviewOnlyFields.includes(change.field))
+    if (safeChanges.length) {
+      repairs.push({
+        ...baseRepair,
+        updates: Object.fromEntries(safeChanges.map(change => [change.field, change.after])),
+        changes: safeChanges,
+      })
+    }
+    if (reviewChanges.length) {
+      reviewOnlyRepairs.push({
+        ...baseRepair,
+        updates: Object.fromEntries(reviewChanges.map(change => [change.field, change.after])),
+        changes: reviewChanges,
+      })
+    }
   }
 
   let applied = 0
@@ -219,8 +251,8 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(reportPath, renderReport({ generatedAt: new Date().toISOString(), apply, companies, repairs, applied, skipped }), "utf8")
-  console.log(`copy repair ${apply ? "apply" : "dry-run"}: ${companies.length} businesses scanned, ${repairs.length} businesses with changes, ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)} fields ${apply ? "changed" : "planned"}`)
+  fs.writeFileSync(reportPath, renderReport({ generatedAt: new Date().toISOString(), apply, companies, repairs, reviewOnlyRepairs, applied, skipped }), "utf8")
+  console.log(`copy repair ${apply ? "apply" : "dry-run"}: ${companies.length} businesses scanned, ${repairs.length} businesses with safe changes, ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)} safe fields ${apply ? "changed" : "planned"}, ${reviewOnlyRepairs.reduce((sum, repair) => sum + repair.changes.length, 0)} review-only fields`)
   console.log(`report: ${path.relative(process.cwd(), reportPath)}`)
 }
 
