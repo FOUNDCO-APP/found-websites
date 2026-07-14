@@ -164,6 +164,7 @@ function LeadsPageInner() {
     : isReservationsView
       ? { singular: "Reservation", plural: "Reservations", new: "New Reservation", hasTemperature: false }
       : intentLabel
+  const titleReady = loading === false || isOrdersView || isReservationsView
 
   useEffect(() => {
     if (searchParams.get("add") === "1") {
@@ -279,9 +280,10 @@ function LeadsPageInner() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h1 style={{ margin: 0, color: "white", ...TYPE.largeTitle }}>
-              {pageLabel.plural}
+            <h1 style={{ margin: 0, color: "white", visibility: titleReady ? "visible" : "hidden", ...TYPE.largeTitle }}>
+              {titleReady ? pageLabel.plural : "Leads"}
             </h1>
+            {titleReady && (
             <button onClick={() => setShowIntentPicker(true)} style={{
               border: "none", background: "none", padding: "4px", cursor: "pointer",
               color: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center",
@@ -291,6 +293,7 @@ function LeadsPageInner() {
                 <path d="M19.07 4.93l-1.41 1.41M5.34 17.66l-1.41 1.41M2 12h2M20 12h2M19.07 19.07l-1.41-1.41M5.34 6.34L3.93 4.93M12 2v2M12 20v2"/>
               </svg>
             </button>
+            )}
           </div>
           {(openLeads.length > 0 || closedLeads.length > 0) && (
             <p style={{ margin: "6px 0 0", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.caption }}>
