@@ -113,12 +113,12 @@ function changedFields(rawConfig, polishedConfig) {
   return changes
 }
 
-function renderReport({ generatedAt, apply, companies, repairs, reviewOnlyRepairs, applied, skipped }) {
+function renderReport({ generatedAt, apply, applyAbout, companies, repairs, reviewOnlyRepairs, applied, skipped }) {
   const lines = [
     "# Copy Repair Plan",
     "",
     `Generated: ${generatedAt}`,
-    `Mode: ${apply ? "APPLY" : "DRY RUN"}`,
+    `Mode: ${applyAbout ? "APPLY ABOUT" : apply ? "APPLY SAFE" : "DRY RUN"}`,
     `Businesses scanned: ${companies.length}`,
     `Businesses with copy changes: ${repairs.length}`,
     `Apply-safe fields: ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)}`,
@@ -127,13 +127,14 @@ function renderReport({ generatedAt, apply, companies, repairs, reviewOnlyRepair
     "",
   ]
 
-  if (apply) {
+  if (apply || applyAbout) {
     lines.push(`Applied updates: ${applied}`)
     lines.push(`Skipped updates: ${skipped}`)
     lines.push("")
   } else {
     lines.push("No Supabase writes were performed.")
     lines.push("To apply only the safe cleanup fields later, rerun with: npm.cmd run repair:copy-quality -- --apply --confirm=APPLY_COPY_REPAIRS")
+    lines.push("To apply reviewed about copy later, rerun with: npm.cmd run repair:copy-quality -- --apply-about --confirm=APPLY_ABOUT_REPAIRS")
     lines.push("")
   }
 
@@ -161,7 +162,7 @@ function renderReport({ generatedAt, apply, companies, repairs, reviewOnlyRepair
   lines.push("")
   lines.push("## Review-Only Field Changes")
   lines.push("")
-  lines.push("These are intentionally excluded from apply mode because they need better copy judgment before touching live records.")
+  lines.push(applyAbout ? "These reviewed about copy changes were included in this apply mode." : "These are intentionally excluded from safe apply mode because they need better copy judgment before touching live records.")
   lines.push("")
   lines.push("| Business | Field | Before | After |")
   lines.push("| --- | --- | --- | --- |")
@@ -181,9 +182,17 @@ async function main() {
   if (!url || !key) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY")
 
   const apply = process.argv.includes("--apply")
+  const applyAbout = process.argv.includes("--apply-about")
   const confirmed = process.argv.includes("--confirm=APPLY_COPY_REPAIRS")
+  const confirmedAbout = process.argv.includes("--confirm=APPLY_ABOUT_REPAIRS")
+  if (apply && applyAbout) {
+    throw new Error("Refusing to combine safe copy apply and about copy apply in one run")
+  }
   if (apply && !confirmed) {
     throw new Error("Refusing to apply without --confirm=APPLY_COPY_REPAIRS")
+  }
+  if (applyAbout && !confirmedAbout) {
+    throw new Error("Refusing to apply about copy without --confirm=APPLY_ABOUT_REPAIRS")
   }
 
   const supabase = createClient(url, key)
@@ -234,8 +243,9 @@ async function main() {
 
   let applied = 0
   let skipped = 0
-  if (apply) {
-    for (const repair of repairs) {
+  if (apply || applyAbout) {
+    const applyRepairs = applyAbout ? reviewOnlyRepairs : repairs
+    for (const repair of applyRepairs) {
       const { error: updateError } = await supabase
         .from("website_config")
         .update({ ...repair.updates, updated_at: new Date().toISOString() })
@@ -251,8 +261,11 @@ async function main() {
     }
   }
 
-  fs.writeFileSync(reportPath, renderReport({ generatedAt: new Date().toISOString(), apply, companies, repairs, reviewOnlyRepairs, applied, skipped }), "utf8")
-  console.log(`copy repair ${apply ? "apply" : "dry-run"}: ${companies.length} businesses scanned, ${repairs.length} businesses with safe changes, ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)} safe fields ${apply ? "changed" : "planned"}, ${reviewOnlyRepairs.reduce((sum, repair) => sum + repair.changes.length, 0)} review-only fields`)
+  fs.writeFileSync(reportPath, renderReport({ generatedAt: new Date().toISOString(), apply, applyAbout, companies, repairs, reviewOnlyRepairs, applied, skipped }), "utf8")
+  const mode = applyAbout ? "apply-about" : apply ? "apply-safe" : "dry-run"
+  const safeVerb = apply ? "changed" : "planned"
+  const aboutVerb = applyAbout ? "changed" : "review-only fields"
+  console.log(`copy repair ${mode}: ${companies.length} businesses scanned, ${repairs.length} businesses with safe changes, ${repairs.reduce((sum, repair) => sum + repair.changes.length, 0)} safe fields ${safeVerb}, ${reviewOnlyRepairs.reduce((sum, repair) => sum + repair.changes.length, 0)} ${aboutVerb}`)
   console.log(`report: ${path.relative(process.cwd(), reportPath)}`)
 }
 
