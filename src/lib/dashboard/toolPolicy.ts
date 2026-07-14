@@ -45,6 +45,10 @@ function has(activeAddons: string[], addon: string) {
   return activeAddons.includes(addon)
 }
 
+function hasOrderWorkflow(activeAddons: string[]) {
+  return has(activeAddons, "online_ordering") || has(activeAddons, "shopping_cart")
+}
+
 function peopleTool(industry: string | null | undefined): DashboardTool {
   const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
   return { id: "people", path: "/people", label, group: "customers", description: "Customer memory across work and requests" }
@@ -60,21 +64,15 @@ function inboxLabelFor(industry: string | null | undefined, subIndustry?: string
     case "estimate":
       return "Estimate Requests"
     case "order":
-      return "Orders"
+      return "Inquiries"
     default:
       return "Leads"
   }
 }
 
-function inboxPathFor(industry: string | null | undefined, subIndustry?: string | null): string {
-  const intent = defaultFormIntentFor(industry, subIndustry)
-  if (intent === "order") return "/leads?view=orders"
-  return "/leads"
-}
-
 function availableFoodTools(activeAddons: string[]): DashboardTool[] {
   const hasCalendar = has(activeAddons, "reservation_calendar")
-  const hasOrders = has(activeAddons, "online_ordering") || has(activeAddons, "shopping_cart")
+  const hasOrders = hasOrderWorkflow(activeAddons)
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
 
@@ -99,14 +97,15 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
+  const hasOrders = hasOrderWorkflow(activeAddons)
 
   if (industry === "food") return availableFoodTools(activeAddons)
 
-  const inboxPath = inboxPathFor(industry, subIndustry)
   return [
     { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
-    { id: "inbox", path: inboxPath, label: inboxLabelFor(industry, subIndustry), group: "customers", description: "Incoming customer requests" },
-    ...(hasEstimates && inboxPath !== "/estimates" ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
+    { id: "inbox", path: "/leads", label: inboxLabelFor(industry, subIndustry), group: "customers", description: "Incoming customer requests" },
+    ...(hasOrders ? ([{ id: "orders", path: "/leads?view=orders", label: "Orders", group: "get_paid", description: "Paid product and cart requests" }] as DashboardTool[]) : []),
+    ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     peopleTool(industry),
     CAMERA_TOOL,
@@ -121,17 +120,17 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   const available = getAvailableDashboardTools(input)
   const byId = new Map(available.map(tool => [tool.id, tool]))
   const industry = input.industry ?? null
-  const subIndustry = input.subIndustry ?? null
   const activeAddons = input.activeAddons ?? []
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
+  const hasOrders = hasOrderWorkflow(activeAddons)
 
   let middleIds: string[]
 
   if (industry === "food") {
     middleIds = [
-      ...(has(activeAddons, "online_ordering") || has(activeAddons, "shopping_cart") ? ["orders"] : []),
+      ...(hasOrders ? ["orders"] : []),
       hasCalendar ? "reservations" : "inbox",
       "people",
       ...(hasCalendar ? ["schedule"] : []),
@@ -163,6 +162,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   } else {
     middleIds = [
       "inbox",
+      ...(hasOrders ? ["orders"] : []),
       ...(hasEstimates ? ["estimates"] : []),
       ...(hasCalendar ? ["schedule"] : []),
       "people",
@@ -188,6 +188,7 @@ export function getDashboardToolStorageKey(companyName: string | null | undefine
   const addonKey = activeAddons.join("|")
   return `found_dashboard_tabs_${companyName || "default"}_${industry || "general"}_${subIndustry || "general"}_${addonKey || "core"}`
 }
+
 export const DASHBOARD_TOOL_GROUP_LABELS: Record<DashboardToolGroup, string> = {
   website: "Website",
   get_paid: "Get Paid",

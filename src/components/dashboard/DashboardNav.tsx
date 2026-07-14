@@ -119,10 +119,24 @@ export default function DashboardNav({
   useEffect(() => { setPendingSegment(null) }, [pathname])
 
   function pathOnly(tabPath: string) { return tabPath.split("?")[0] }
+  function isGeneralLeadTab(tab: Tab) {
+    return pathOnly(tab.path) === "/leads" && !tab.path.includes("view=orders") && !tab.path.includes("view=reservations")
+  }
   function badgeCountFor(tab: Tab) {
     if (tab.path.includes("view=orders")) return newOrderCount
     if (tab.path.includes("view=reservations")) return newReservationCount
-    if (pathOnly(tab.path) === "/leads") return newLeadCount
+    if (isGeneralLeadTab(tab)) return newLeadCount
+
+    const hasVisibleGeneralLeadTab = tabs.some(isGeneralLeadTab)
+    const hasVisibleOrderTab = tabs.some(t => t.path.includes("view=orders"))
+    const hasVisibleReservationTab = tabs.some(t => t.path.includes("view=reservations"))
+
+    if (tab.id === "people") {
+      return (hasVisibleGeneralLeadTab ? 0 : newLeadCount) +
+        (hasVisibleOrderTab ? 0 : newOrderCount) +
+        (hasVisibleReservationTab ? 0 : newReservationCount)
+    }
+
     return 0
   }
 
