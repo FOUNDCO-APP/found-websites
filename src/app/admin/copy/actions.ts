@@ -100,7 +100,7 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
       .maybeSingle(),
     supabase
       .from("website_config")
-      .select("about_text, services")
+      .select("about_text, about_preview, about_story, services")
       .eq("company_id", companyId)
       .maybeSingle(),
   ])
@@ -133,6 +133,9 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
         hero_title: result.heroTitle,
         hero_subtitle: result.heroSubtitle,
         about_text: result.aboutText,
+        about_preview: result.aboutPreview,
+        about_story: result.aboutStory,
+        about_highlights: result.aboutHighlights,
         tagline: result.tagline,
         cta_headline: result.ctaHeadline,
         services: result.services,

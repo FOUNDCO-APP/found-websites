@@ -800,6 +800,20 @@ export function polishHeroTitle(value: unknown, context?: CopyPolishContext) {
   if (typeof value !== "string") return ""
   return titleCaseHumanIndustry(applyKnownFixes(normalizeWhitespace(value)), context)
 }
+export function polishAboutHighlights(value: unknown): { title: string; body: string }[] | null {
+  if (!Array.isArray(value)) return null
+  const items = value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null
+      const row = item as { title?: unknown; body?: unknown; text?: unknown; description?: unknown }
+      const title = polishShortCopy(row.title).replace(/[.]+$/, "")
+      const body = polishSentence(row.body ?? row.text ?? row.description)
+      return title && body ? { title, body } : null
+    })
+    .filter((item): item is { title: string; body: string } => item !== null)
+  return items.length ? items.slice(0, 3) : null
+}
+
 export function polishWebsiteField(field: string, value: unknown, context?: CopyPolishContext) {
   switch (field) {
     case "hero_title":
@@ -810,7 +824,11 @@ export function polishWebsiteField(field: string, value: unknown, context?: Copy
     case "hero_subtitle":
       return polishHeroCopy(value, context)
     case "about_text":
+    case "about_preview":
+    case "about_story":
       return polishAboutCopy(value, context)
+    case "about_highlights":
+      return polishAboutHighlights(value)
     case "services":
       return polishServices(value)
     case "faq_items":
@@ -824,7 +842,7 @@ export function polishWebsiteField(field: string, value: unknown, context?: Copy
 
 export function polishWebsiteUpdates<T extends Record<string, unknown>>(updates: T, context?: CopyPolishContext): T {
   const polished: Record<string, unknown> = { ...updates }
-  for (const field of ["hero_title", "hero_subtitle", "about_text", "tagline", "cta_headline", "services", "faq_items", "menu_items"]) {
+  for (const field of ["hero_title", "hero_subtitle", "about_text", "about_preview", "about_story", "about_highlights", "tagline", "cta_headline", "services", "faq_items", "menu_items"]) {
     if (field in polished) polished[field] = polishWebsiteField(field, polished[field], context)
   }
   return polished as T

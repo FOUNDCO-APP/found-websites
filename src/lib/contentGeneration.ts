@@ -7,6 +7,11 @@ type ServiceItem = {
   description: string
 }
 
+type AboutHighlight = {
+  title: string
+  body: string
+}
+
 export type ContentGenerationInput = {
   name: string
   description: string
@@ -24,6 +29,9 @@ export type GeneratedWebsiteContent = {
   heroTitle: string
   heroSubtitle: string
   aboutText: string
+  aboutPreview: string
+  aboutStory: string
+  aboutHighlights: AboutHighlight[] | null
   tagline: string | null
   ctaHeadline: string | null
   services: ServiceItem[]
@@ -102,6 +110,54 @@ function sanitizeFaqItems(value: unknown): { q: string; a: string }[] | null {
   return items.length > 0 ? items : null
 }
 
+function sanitizeAboutHighlights(value: unknown, fallback: AboutHighlight[] | null) {
+  if (!Array.isArray(value)) return fallback
+  const items = value
+    .slice(0, 3)
+    .map((item) => {
+      if (!item || typeof item !== "object") return null
+      const record = item as Record<string, unknown>
+      const title = typeof record.title === "string" ? polishShortCopy(compact(record.title).slice(0, 60)).replace(/[.]+$/, "") : ""
+      const body = typeof record.body === "string" ? polishSentence(compact(record.body).slice(0, 170)) : ""
+      return title && body ? { title, body } : null
+    })
+    .filter((item): item is AboutHighlight => item !== null)
+  return items.length > 0 ? items : fallback
+}
+
+function highlightsForJob(job: WebsiteJob): AboutHighlight[] | null {
+  switch (job) {
+    case "book_me":
+      return [
+        { title: "Personal Care", body: "Appointments are handled with attention to comfort, timing, and the details that matter." },
+        { title: "Easy Booking", body: "Customers can book online and know what to expect before they arrive." },
+      ]
+    case "hire_me":
+      return [
+        { title: "Clear Scope", body: "Customers know what is included before work begins." },
+        { title: "Steady Follow-through", body: "The work is planned around showing up, finishing cleanly, and respecting the property." },
+      ]
+    case "quote_me":
+      return [
+        { title: "Straight Answers", body: "Customers get practical guidance before committing to the work." },
+        { title: "No Guesswork", body: "Estimates are designed to make the next step clear." },
+      ]
+    case "visit_me":
+      return [
+        { title: "Local Shop", body: "Customers can stop in, look around, and find something that fits the moment." },
+        { title: "Thoughtful Selection", body: "The experience is shaped around useful choices instead of clutter." },
+      ]
+    case "faith_me":
+      return [
+        { title: "Worship", body: "A regular place to gather, pray, and grow in faith together." },
+        { title: "Community", body: "People are welcomed with care, connection, and a sense of belonging." },
+        { title: "Service", body: "The mission extends into practical care for neighbors and the local community." },
+      ]
+    default:
+      return null
+  }
+}
+
 function buildJobFamilyCopy(
   name: string,
   industryLabel: string,
@@ -109,7 +165,7 @@ function buildJobFamilyCopy(
   locationPhrase: string,
   differentiator: string | null,
   job: WebsiteJob,
-): { heroSubtitle: string; aboutText: string; ctaHeadline: string } {
+): { heroSubtitle: string; aboutPreview: string; aboutStory: string; aboutHighlights: AboutHighlight[] | null; ctaHeadline: string } {
   const ind = industryLabel.toLowerCase()
   const diff = differentiator
     ? differentiator.charAt(0).toUpperCase() + differentiator.slice(1).replace(/\.?\s*$/, ".") + " "
@@ -118,52 +174,68 @@ function buildJobFamilyCopy(
   switch (job) {
     case "book_me":
       return {
-        heroSubtitle: `${industryLabel} in ${cityLabel}. Book online — easy scheduling, real results.`,
-        aboutText: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We take care of every detail so you can enjoy the experience.`,
+        heroSubtitle: `${industryLabel} in ${cityLabel}. Book online - easy scheduling, real results.`,
+        aboutPreview: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We take care of every detail so you can enjoy the experience.`,
+        aboutStory: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}Appointments are shaped around comfort, detail, and a simple path from booking to feeling taken care of.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Ready to book?",
       }
     case "hire_me":
       return {
         heroSubtitle: `Trusted ${ind} serving ${cityLabel}. We show up, do the work right, and stand behind it.`,
-        aboutText: `${name} serves ${locationPhrase} with dependable ${ind} work. ${diff}We show up on time, do the job right, and leave things better than we found them.`,
+        aboutPreview: `${name} serves ${locationPhrase} with dependable ${ind} work. ${diff}We show up on time, do the job right, and leave things better than we found them.`,
+        aboutStory: `${name} serves ${locationPhrase} with dependable ${ind} work. ${diff}Every project is built around clear expectations, steady communication, and work that holds up after the job is done.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Get your free estimate",
       }
     case "quote_me":
       return {
         heroSubtitle: `Fast, honest estimates from ${cityLabel}'s trusted ${ind} team.`,
-        aboutText: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}We give straight answers and fair prices — no guesswork, no surprises.`,
+        aboutPreview: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}We give straight answers and fair prices - no guesswork, no surprises.`,
+        aboutStory: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}The process is built around clear estimates, practical guidance, and work customers can understand before they say yes.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Request a free quote",
       }
     case "visit_me":
       return {
         heroSubtitle: `Your local ${ind} in ${cityLabel}. Come see what we're all about.`,
-        aboutText: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We're proud of what we do and even prouder of the people we do it for.`,
+        aboutPreview: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}We're proud of what we do and even prouder of the people we do it for.`,
+        aboutStory: `${name} is a locally owned ${ind} in ${locationPhrase}. ${diff}The shop is built around useful choices, a welcoming visit, and the kind of details that make customers want to come back.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Come see us",
       }
     case "order_from_me":
       return {
         heroSubtitle: `Fresh ${ind} from ${cityLabel}. Made with care in every order.`,
-        aboutText: `${name} is a small-batch ${ind} in ${locationPhrase}. ${diff}We stay small on purpose — it's how we keep the quality up.`,
+        aboutPreview: `${name} is a small-batch ${ind} in ${locationPhrase}. ${diff}We stay small on purpose - it's how we keep the quality up.`,
+        aboutStory: `${name} is a small-batch ${ind} in ${locationPhrase}. ${diff}Orders are handled with care, consistency, and a focus on keeping the customer experience simple.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Place an order",
       }
     case "trust_me":
       return {
         heroSubtitle: `Experienced ${ind} in ${cityLabel}. Every client gets the full attention they deserve.`,
-        aboutText: `${name} serves ${locationPhrase} with the expertise and care that only comes from real experience. ${diff}We take your situation seriously.`,
+        aboutPreview: `${name} serves ${locationPhrase} with the expertise and care that only comes from real experience. ${diff}We take your situation seriously.`,
+        aboutStory: `${name} serves ${locationPhrase} with experience, care, and a process built around listening first. ${diff}Clients get clear guidance and attention that respects the situation in front of them.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Let's talk",
       }
     case "faith_me": {
       const faithLabel = ind.includes("mosque") || ind.includes("temple") ? "faith community" : "church community"
       return {
         heroSubtitle: `A ${faithLabel} in ${cityLabel}. Join us for worship, service, and connection.`,
-        aboutText: `${name} is a ${faithLabel} in ${locationPhrase}. ${diff}We gather for worship, serve our neighbors, and welcome people looking for faith and connection.`,
+        aboutPreview: `${name} is a ${faithLabel} in ${locationPhrase}. ${diff}We gather for worship, serve our neighbors, and welcome people looking for faith and connection.`,
+        aboutStory: `${name} is a ${faithLabel} in ${locationPhrase}. ${diff}Our community gathers for worship, serves neighbors with care, and creates room for people looking for faith, connection, and a place to belong.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "All are welcome",
       }
     }
     case "find_me":
       return {
         heroSubtitle: `${industryLabel} based in ${cityLabel}. Shows, bookings, and everything in between.`,
-        aboutText: `${name} is a ${ind} in ${locationPhrase}. ${diff}The work speaks for itself — take a look.`,
+        aboutPreview: `${name} is a ${ind} in ${locationPhrase}. ${diff}The work speaks for itself - take a look.`,
+        aboutStory: `${name} is a ${ind} in ${locationPhrase}. ${diff}The work is shaped around the audience, the setting, and the details that make the experience feel complete.`,
+        aboutHighlights: highlightsForJob(job),
         ctaHeadline: "Get in touch",
       }
   }
@@ -179,11 +251,16 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
 
   const job = getWebsiteJob(input.subIndustry || null, input.industry)
   const copy = buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
+  const aboutPreview = polishAboutForInput(copy.aboutPreview, input)
+  const aboutStory = polishAboutForInput(copy.aboutStory, input)
 
   return {
     heroTitle: polishHeroTitle(input.subIndustry ? `${industryLabel} in ${cityLabel}` : polishTitle(input.name), copyContextForInput(input)),
     heroSubtitle: polishHeroCopy(copy.heroSubtitle, copyContextForInput(input)),
-    aboutText: polishAboutForInput(copy.aboutText, input),
+    aboutText: aboutPreview,
+    aboutPreview,
+    aboutStory,
+    aboutHighlights: sanitizeAboutHighlights(copy.aboutHighlights, null),
     tagline: null,
     ctaHeadline: copy.ctaHeadline,
     copy_generated: false,
@@ -213,10 +290,10 @@ function polishAboutForInput(value: string, input: ContentGenerationInput) {
 
 function buildPrompt(input: ContentGenerationInput) {
   return [
-    "Create concise homepage copy for a small business website generated by Found Co.",
+    "Create concise website copy for a small business website generated by Found Co.",
     "Write like Apple would for a local business: clear, human, premium, and simple. No hype. No jargon. No emojis.",
     "Return JSON only with this exact shape:",
-    '{"heroTitle":"string","heroSubtitle":"string","aboutText":"string","tagline":"string or null","ctaHeadline":"string or null","services":[{"name":"string","description":"string"}],"faqItems":[{"q":"string","a":"string"},{"q":"string","a":"string"},{"q":"string","a":"string"}]}',
+    '{"heroTitle":"string","heroSubtitle":"string","aboutPreview":"string","aboutStory":"string","aboutHighlights":[{"title":"string","body":"string"},{"title":"string","body":"string"}],"tagline":"string or null","ctaHeadline":"string or null","services":[{"name":"string","description":"string"}],"faqItems":[{"q":"string","a":"string"},{"q":"string","a":"string"},{"q":"string","a":"string"}]}',
     "",
     `Business name: ${input.name}`,
     `What they do: ${input.description || "Not provided"}`,
@@ -225,8 +302,8 @@ function buildPrompt(input: ContentGenerationInput) {
     `Location: ${[input.city, input.state].filter(Boolean).join(", ") || "Not provided"}`,
     `What makes them different: ${input.different || "Not provided"}`,
     `Selected vibe: ${input.vibe}`,
-    `Design direction (internal brief — never copy this text into output): ${input.manifest.primaryJob}`,
-    `Voice and feel (internal — never copy this text into output): ${input.manifest.jonyNote}`,
+    `Design direction (internal brief - never copy this text into output): ${input.manifest.primaryJob}`,
+    `Voice and feel (internal - never copy this text into output): ${input.manifest.jonyNote}`,
     `Primary call to action intent: ${input.manifest.primaryIntent}`,
     `Secondary call to action intent: ${input.manifest.secondaryIntent || "none"}`,
     `Services to keep in this order: ${input.services.map((service) => service.name).join(", ") || "Create one general service"}`,
@@ -234,7 +311,9 @@ function buildPrompt(input: ContentGenerationInput) {
     "Rules:",
     "- Keep heroTitle under 64 characters.",
     "- Keep heroSubtitle under 150 characters.",
-    "- Keep aboutText under 420 characters.",
+    "- aboutPreview is for the homepage. Keep it under 320 characters and make it a concise preview, not the full story.",
+    "- aboutStory is for the About page. Keep it under 650 characters and make it richer than aboutPreview without repeating the same paragraph.",
+    "- aboutHighlights are 2-3 short proof points for the About page. Use title/body pairs.",
     "- Keep each service description under 160 characters.",
     "- Do not repeat the same sentence structure across service descriptions.",
     "- Do not start every service description with the service name.",
@@ -282,10 +361,16 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
     if (!generated) return fallback
 
     const faqItems = sanitizeFaqItems(generated.faqItems)
+    const aboutPreview = polishAboutForInput(limit(generated.aboutPreview ?? generated.aboutText, fallback.aboutPreview, 320), input)
+    const aboutStory = polishAboutForInput(limit(generated.aboutStory ?? generated.aboutText, fallback.aboutStory, 650), input)
+
     return {
       heroTitle: polishHeroTitle(limit(generated.heroTitle, fallback.heroTitle, 64), copyContextForInput(input)),
       heroSubtitle: polishHeroCopy(limit(generated.heroSubtitle, fallback.heroSubtitle, 150), copyContextForInput(input)),
-      aboutText: polishAboutForInput(limit(generated.aboutText, fallback.aboutText, 420), input),
+      aboutText: aboutPreview,
+      aboutPreview,
+      aboutStory,
+      aboutHighlights: sanitizeAboutHighlights(generated.aboutHighlights, fallback.aboutHighlights),
       tagline: typeof generated.tagline === "string" ? polishShortCopy(limit(generated.tagline, "", 80)) || null : null,
       ctaHeadline: typeof generated.ctaHeadline === "string" ? polishShortCopy(limit(generated.ctaHeadline, "", 90)) || null : null,
       copy_generated: true,
