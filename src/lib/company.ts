@@ -1,18 +1,22 @@
 import { cache } from 'react'
 import { createClient } from './supabase/server'
 import type { Company } from '@/types/company'
-import { polishWebsiteUpdates } from '@/lib/copyPolish'
+import { polishBusinessName, polishWebsiteUpdates } from '@/lib/copyPolish'
 function polishCompanySiteCopy(company: Company | null): Company | null {
-  if (!company?.website_config) return company
+  if (!company) return company
+  const displayName = polishBusinessName(company.name, company.name ?? '')
   return {
     ...company,
-    website_config: polishWebsiteUpdates(company.website_config as Record<string, unknown>, {
-      businessName: company.name,
-      industry: company.industry_category,
-      subIndustry: company.sub_industry,
-      city: company.city,
-      state: company.state,
-    }) as Company["website_config"],
+    name: displayName,
+    website_config: company.website_config
+      ? polishWebsiteUpdates(company.website_config as Record<string, unknown>, {
+          businessName: displayName,
+          industry: company.industry_category,
+          subIndustry: company.sub_industry,
+          city: company.city,
+          state: company.state,
+        }) as Company["website_config"]
+      : company.website_config,
   }
 }
 

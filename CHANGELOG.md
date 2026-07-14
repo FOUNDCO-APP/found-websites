@@ -4,6 +4,20 @@
 
 ---
 
+## Session: July 14, 2026 - Public Business Name Polish Guard
+**AI:** Codex
+**Worked on:** Fixed raw lowercase company names leaking across public pages.
+
+### Completed
+- Public company loader now polishes `company.name` before templates receive it.
+- This covers shared public slug/domain pages including home, shop, order, menu, contact, reserve, gallery, subscribe, quote, nav, footer, and metadata.
+- Existing known fixes now apply to business display names, including `tshirts` -> `T-shirts` and `frcc` -> `FRCC`.
+- Verified with `cmd /c npm run build`.
+
+### Test Next
+- Reopen `https://tshirts.foundco.app/shop` after deploy. The card copy should say `T-shirts`, not `tshirts`.
+
+---
 ## Session: July 14, 2026 - Public Commerce Fallback Safety
 **AI:** Codex
 **Worked on:** Removed public-facing setup language from unfinished shop and order flows across shared templates.
