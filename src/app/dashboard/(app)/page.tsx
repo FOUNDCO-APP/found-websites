@@ -3,13 +3,10 @@ import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import HomeClient from "@/components/dashboard/HomeClient"
+import { getCompanyActiveAddonSlugs } from "@/lib/dashboard/entitlements"
+import { getEffectiveAddons } from "@/lib/featureAccess"
+import { smartNextStepFor } from "@/lib/dashboard/smartNextStep"
 
-function recommendedBusinessTool(industry: string | null): { name: string; path: string } {
-  if (industry === "food" || industry === "home_based_food") return { name: "online ordering", path: "/leads?view=orders" }
-  if (industry === "retail" || industry === "makers_crafts") return { name: "shopping cart", path: "/leads?view=orders" }
-  if (["wellness", "beauty", "fitness", "pet_services", "education", "healthcare"].includes(industry ?? "")) return { name: "booking calendar", path: "/schedule" }
-  return { name: "estimates", path: "/estimates" }
-}
 export default async function HomePage() {
   const user = await requireDashboardAccess()
 
@@ -66,6 +63,13 @@ export default async function HomePage() {
   const greeting = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening"
   const businessName = (company.name ?? "").trim() || "there"
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
+  const paidAddonSlugs = await getCompanyActiveAddonSlugs(company.id)
+  const effectiveAddons = getEffectiveAddons(company.plan, paidAddonSlugs)
+  const smartNextStep = isActive ? smartNextStepFor({
+    industry: company.industry_category ?? null,
+    subIndustry: company.sub_industry ?? null,
+    activeAddons: effectiveAddons,
+  }) : null
 
   return (
     <HomeClient
@@ -80,7 +84,7 @@ export default async function HomePage() {
       recentLeads={recentLeads}
       lastPhotoAt={lastPhotoRow?.created_at ?? null}
       industry={company.industry_category ?? null}
-      businessTool={company.plan === "found_business" ? recommendedBusinessTool(company.industry_category ?? null) : null}
+      smartNextStep={smartNextStep}
     />
   )
 }

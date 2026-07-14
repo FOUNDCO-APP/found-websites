@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK, avatarColorFor } from "@/lib/dashboard/typography"
+import type { SmartNextStep } from "@/lib/dashboard/smartNextStep"
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -44,7 +45,7 @@ type Props = {
   recentLeads: RecentLead[]
   lastPhotoAt: string | null
   industry: string | null
-  businessTool: { name: string; path: string } | null
+  smartNextStep: SmartNextStep | null
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 export default function HomeClient({
   businessName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads, lastPhotoAt, industry, businessTool,
+  siteSlug, isActive, recentLeads, lastPhotoAt, industry, smartNextStep,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -485,16 +486,29 @@ export default function HomeClient({
       {/* ── RESPONSIVE SPACER — distributes empty space between buttons and the nudge below ── */}
       <div style={{ flex: 1, minHeight: 16, maxHeight: "clamp(16px, 8dvh, 72px)" }} />
 
-      {/* Business tools nudge — demoted below the buttons. Informational, not
-          actionable, so it's the thing allowed to require a scroll, not the tools. */}
-      {businessTool && !hasNewLead && (
-        <div style={{ padding: "0 20px 0", ...fade(0.1) }}>
-          <Link href="/more#business-tools" style={{ textDecoration: "none", display: "block" }}>
-            <div style={{ borderRadius: 20, padding: "16px 18px", background: "linear-gradient(160deg, rgba(50,208,116,0.11), rgba(50,208,116,0.035))", border: "1px solid rgba(50,208,116,0.18)" }}>
-              <p style={{ margin: "0 0 5px", ...TYPE.caption, color: GREEN }}>Business tools ready</p>
-              <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                We turned on {businessTool.name} for you. View all included tools.
+      {/* Smart Next Step: a business-specific action, not a system alert. */}
+      {smartNextStep && !hasNewLead && (
+        <div style={{ padding: "0 24px 0", ...fade(0.1) }}>
+          <Link href={smartNextStep.path} style={{ textDecoration: "none", display: "block" }}>
+            <div style={{
+              padding: "19px 2px 2px",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+            }}>
+              <p style={{ margin: "0 0 8px", ...TYPE.caption, color: GREEN }}>
+                {smartNextStep.eyebrow}
               </p>
+              <h2 style={{ margin: "0 0 7px", color: "white", fontSize: "1.3125rem", fontWeight: 700, letterSpacing: "-0.015em", lineHeight: 1.12 }}>
+                {smartNextStep.headline}
+              </h2>
+              <p style={{ margin: "0 0 14px", ...TYPE.subhead, fontWeight: 400, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                {smartNextStep.body}
+              </p>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: GREEN, ...TYPE.subhead, fontWeight: 800 }}>
+                {smartNextStep.action}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                </svg>
+              </span>
             </div>
           </Link>
         </div>
