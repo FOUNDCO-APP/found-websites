@@ -18,13 +18,10 @@ function initial(name: string) {
 
 export default function CompanyPicker({
   companies,
-  selectCompany,
 }: {
   companies: CompanyRow[]
-  selectCompany: (formData: FormData) => void
 }) {
-  // Set the moment a business is tapped — before the server round trip even
-  // starts — so there's never a dead pause that reads as "did that register?"
+  // Set the moment a business is tapped before the hard navigation starts.
   const [pendingId, setPendingId] = useState<string | null>(null)
 
   return (
@@ -33,12 +30,14 @@ export default function CompanyPicker({
         const isPending  = pendingId === company.id
         const isDisabled = pendingId !== null && !isPending
         return (
-          <form key={company.id} action={selectCompany}>
-            <input type="hidden" name="company_id" value={company.id} />
-            <button
-              type="submit"
-              disabled={isDisabled}
-              onClick={() => setPendingId(company.id)}
+          <button
+            key={company.id}
+            type="button"
+            disabled={isDisabled}
+            onClick={() => {
+              setPendingId(company.id)
+              window.location.assign(`/api/select-company?id=${encodeURIComponent(company.id)}`)
+            }}
               style={{
                 width: "100%",
                 background: "none",
@@ -94,11 +93,11 @@ export default function CompanyPicker({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                 }}>
-                  {company.slug}.{ROOT_DOMAIN} · {planLabel(company.plan)}
+                  {company.slug}.{ROOT_DOMAIN} - {planLabel(company.plan)}
                 </p>
               </div>
 
-              {/* Chevron — swaps to a spinner the instant this one is picked */}
+              {/* Chevron swaps to a spinner the instant this one is picked */}
               {isPending ? (
                 <div style={{
                   width: 16,
@@ -115,8 +114,7 @@ export default function CompanyPicker({
                   <polyline points="9 18 15 12 9 6"/>
                 </svg>
               )}
-            </button>
-          </form>
+          </button>
         )
       })}
 

@@ -3,27 +3,10 @@
 import { createClient } from "@/lib/supabase/server"
 import { getAllCompanies } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
-import { revalidatePath } from "next/cache"
-import { cookies } from "next/headers"
 import FoundWordmark from "@/components/FoundWordmark"
 import CompanyPicker from "@/components/dashboard/CompanyPicker"
 
 const FOUND_BLACK = "#080A09"
-
-async function selectCompany(formData: FormData) {
-  "use server"
-  const id = formData.get("company_id") as string
-  if (!id) return
-  const cookieStore = await cookies()
-  cookieStore.set("found_company_id", id, {
-    path: "/",
-    sameSite: "lax",
-    secure: true,
-    maxAge: 60 * 60 * 24 * 30,
-  })
-  revalidatePath("/", "layout")
-  redirect("/")
-}
 
 export default async function SelectPage() {
   const supabase = await createClient()
@@ -66,7 +49,7 @@ export default async function SelectPage() {
           You manage {companies.length} sites on Found.
         </p>
 
-        <CompanyPicker companies={companies} selectCompany={selectCompany} />
+        <CompanyPicker companies={companies} />
       </div>
       </main>
 

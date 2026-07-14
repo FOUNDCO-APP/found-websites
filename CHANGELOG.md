@@ -5,6 +5,22 @@
 ---
 
 
+## Session: July 14, 2026 - Hard Business Switch Boundary
+**AI:** Codex
+**Worked on:** Fixed the remaining stale dashboard body after Shawn switched from tshirts to Tacos.
+
+### Completed
+- Changed the company picker from a soft server-action transition to a hard browser navigation through /api/select-company.
+- The selected-company API still verifies ownership, sets the selected company cookie, and redirects home, but now the browser performs a full document load so cached page bodies do not survive the business switch.
+- Removed the now-unused select-page server action and cleaned the picker separator text.
+- Verified with cmd /c npm run build.
+
+### Test Next
+- Switch from tshirts to Tacos again, then open Home, Reservations, Guests, and More.
+- Confirm every screen says Tacos and no page body still shows tshirts plan/name data.
+
+---
+
 ## Session: July 14, 2026 - Dashboard Company and Tool Integrity
 **AI:** Codex
 **Worked on:** Fixed the dashboard inconsistencies Shawn found when switching between tshirts, Tacos, Taco Shop, Construction, and Musician.
