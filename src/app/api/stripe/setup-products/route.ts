@@ -8,6 +8,8 @@ import Stripe from "stripe"
 
 const ONE_DOLLAR_PROMO_METADATA = "found_1_first_invoice"
 const ONE_DOLLAR_PROMO_CODE = "F0UND1128"
+const BUSINESS_ONE_DOLLAR_PROMO_METADATA = "found_business_1_first_invoice"
+const BUSINESS_ONE_DOLLAR_PROMO_CODE = "F0UND1168"
 
 const PLANS = [
   {
@@ -144,6 +146,47 @@ async function getOrCreateFoundOneDollarPromo(stripe: Stripe) {
   return { promotionCode, created: true, disabledGuessableCount }
 }
 
+
+async function getOrCreateFoundBusinessOneDollarPromo(stripe: Stripe, productId: string) {
+  const couponId = "found_business_1_first_invoice_68_off"
+  let coupon: Stripe.Coupon
+
+  try {
+    coupon = await stripe.coupons.retrieve(couponId)
+    if (coupon.deleted) throw new Error("Coupon was deleted")
+    const allowedProducts = coupon.applies_to?.products ?? []
+    if (coupon.amount_off !== 6800 || coupon.currency !== "usd" || coupon.duration !== "once" || !allowedProducts.includes(productId)) {
+      throw new Error("Existing Found Business coupon does not match the expected $68 Business-only setup")
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("does not match")) throw error
+    coupon = await stripe.coupons.create({
+      id: couponId,
+      name: "Found Business $1 first invoice",
+      amount_off: 6800,
+      currency: "usd",
+      duration: "once",
+      applies_to: { products: [productId] },
+      metadata: { found_promo: BUSINESS_ONE_DOLLAR_PROMO_METADATA, plan: "found_business", leaves_due: "100" },
+    })
+  }
+
+  const existingCode = await stripe.promotionCodes.list({ code: BUSINESS_ONE_DOLLAR_PROMO_CODE, active: true, limit: 1 })
+  const existingSecure = existingCode.data[0]
+
+  if (existingSecure) {
+    return { promotionCode: existingSecure, created: false }
+  }
+
+  const promotionCode = await stripe.promotionCodes.create({
+    code: BUSINESS_ONE_DOLLAR_PROMO_CODE,
+    promotion: { type: "coupon", coupon: coupon.id },
+    max_redemptions: 25,
+    metadata: { found_promo: BUSINESS_ONE_DOLLAR_PROMO_METADATA, plan: "found_business", leaves_due: "100" },
+  })
+
+  return { promotionCode, created: true }
+}
 export async function GET(req: NextRequest) {
   const provided = req.nextUrl.searchParams.get("key")
   if (!process.env.ADMIN_KEY || provided !== process.env.ADMIN_KEY) {
@@ -176,6 +219,7 @@ export async function GET(req: NextRequest) {
   }
 
   const promo = await getOrCreateFoundOneDollarPromo(stripe)
+  const businessPromo = await getOrCreateFoundBusinessOneDollarPromo(stripe, results.FOUND_BUSINESS.productId)
 
   return NextResponse.json({
     message: "Stripe billing setup complete.",
@@ -194,6 +238,12 @@ export async function GET(req: NextRequest) {
       created: promo.created,
       disabledGuessableCount: promo.disabledGuessableCount,
       leavesDue: "$1.00 on the Found Starter intro plan first invoice",
+    },
+    businessPromo: {
+      code: businessPromo.promotionCode.code,
+      id: businessPromo.promotionCode.id,
+      created: businessPromo.created,
+      leavesDue: "$1.00 on the Found Business intro plan first invoice",
     },
     full: results,
   })

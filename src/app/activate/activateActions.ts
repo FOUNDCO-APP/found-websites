@@ -113,6 +113,15 @@ async function priceSummaryFor(stripe: Stripe, priceId: string, promoCode?: stri
     }
   }
 
+  const productId = typeof price.product === "string" ? price.product : price.product.id
+  const allowedProducts = coupon.applies_to?.products ?? []
+  if (allowedProducts.length > 0 && !allowedProducts.includes(productId)) {
+    return {
+      price: { originalAmount, discountedAmount: originalAmount, currency, promo: null },
+      promoError: "That promo code is not valid for this plan.",
+    }
+  }
+
   const discountedAmount = discountedAmountFor(originalAmount, currency, coupon)
   if (discountedAmount === null) {
     return {
