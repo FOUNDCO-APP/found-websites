@@ -5,6 +5,20 @@
 ---
 
 
+## Session: July 14, 2026 - Selected Company Cookie Scope
+**AI:** Codex
+**Worked on:** Fixed the case where hard switching could still leave the dashboard on the previous business.
+
+### Completed
+- Updated /dashboard/api/select-company to write ound_company_id to both the host cookie and the root-domain cookie when running on Found domains.
+- This removes ambiguity when an older .foundco.app cookie and a newer my.foundco.app cookie both exist.
+- Verified with cmd /c npm run build.
+
+### Test Next
+- Switch from tshirts to Tacos again and confirm the dashboard leaves tshirts.
+
+---
+
 ## Session: July 14, 2026 - Hard Business Switch Boundary
 **AI:** Codex
 **Worked on:** Fixed the remaining stale dashboard body after Shawn switched from tshirts to Tacos.

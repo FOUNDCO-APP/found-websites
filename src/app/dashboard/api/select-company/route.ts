@@ -5,6 +5,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 
 export async function GET(req: NextRequest) {
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+  const hostname = req.nextUrl.hostname
+  const shouldSetRootCookie = hostname === rootDomain || hostname.endsWith(`.${rootDomain}`)
   const id = req.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.redirect(new URL("/", req.url))
 
@@ -53,11 +56,19 @@ export async function GET(req: NextRequest) {
   revalidatePath("/", "layout")
   const response = NextResponse.redirect(redirectUrl)
   response.headers.set("Cache-Control", "no-store")
-  response.cookies.set("found_company_id", id, {
+  const cookieOptions = {
     path: "/",
-    sameSite: "lax",
+    sameSite: "lax" as const,
     secure: true,
     maxAge: 60 * 60 * 24 * 30,
-  })
+  }
+
+  response.cookies.set("found_company_id", id, cookieOptions)
+  if (shouldSetRootCookie) {
+    response.cookies.set("found_company_id", id, {
+      ...cookieOptions,
+      domain: `.${rootDomain}`,
+    })
+  }
   return response
 }
