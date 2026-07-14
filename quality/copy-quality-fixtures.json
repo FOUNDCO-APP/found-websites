@@ -215,6 +215,60 @@
           "description": "Palette choices matched to the theme, brand, or moment being celebrated."
         }
       ]
+    },
+    {
+      "id": "generic-service-fallbacks-feel-finished",
+      "raw": [
+        {
+          "name": "Service",
+          "description": "Clear options, thoughtful guidance, and an easy next step."
+        },
+        {
+          "name": "Restaurant",
+          "description": "Clear options, thoughtful guidance, and an easy next step."
+        },
+        {
+          "name": "Remodeling",
+          "description": "Clear options, thoughtful guidance, and an easy next step."
+        },
+        {
+          "name": "Church",
+          "description": "Clear options, thoughtful guidance, and an easy next step."
+        }
+      ],
+      "expected": [
+        {
+          "name": "Service",
+          "description": "Practical help shaped around the details customers care about most."
+        },
+        {
+          "name": "Restaurant",
+          "description": "Food, service, and timing handled so guests know what to expect."
+        },
+        {
+          "name": "Remodeling",
+          "description": "Project work planned around clear scope, clean execution, and lasting use."
+        },
+        {
+          "name": "Church",
+          "description": "Worship, service, and community life for people looking for connection."
+        }
+      ]
+    },
+    {
+      "id": "single-generic-service-description-replaced",
+      "raw": [
+        {
+          "name": "Church",
+          "description": "Clear options, thoughtful guidance, and an easy next step."
+        }
+      ],
+      "expected": [
+        {
+          "name": "Church",
+          "description": "Worship, service, and community life for people looking for connection."
+        }
+      ]
     }
   ],
   "ctaFixtures": [
@@ -265,7 +319,7 @@
       "city": "Phoenix",
       "state": "AZ",
       "raw": "Your local apparel shop in Phoenix. Come see what we're all about.",
-      "expected": "Your local apparel shop in Phoenix. Come see what we're all about."
+      "expected": "A local apparel shop in Phoenix with pieces selected for everyday style."
     },
     {
       "id": "apparel-hero-subtitle-raw-once",
@@ -276,7 +330,7 @@
       "city": "Phoenix",
       "state": "AZ",
       "raw": "Your local apparel in Phoenix. Come see what we're all about.",
-      "expected": "Your local apparel shop in Phoenix. Come see what we're all about."
+      "expected": "A local apparel shop in Phoenix with pieces selected for everyday style."
     },
     {
       "id": "apparel-about-idempotent",
@@ -299,6 +353,28 @@
       "state": "AZ",
       "raw": "Lucky is a locally owned apparel shop shop shop in Phoenix, AZ. We're proud of what we do and even prouder of the people we do it for.",
       "expected": "Lucky is a locally owned apparel shop in Phoenix, AZ. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "restaurant-hero-removes-come-see-filler",
+      "field": "hero_subtitle",
+      "industry": "food",
+      "subIndustry": "restaurant",
+      "businessName": "Molcas",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "Your local restaurant in Tucson. Come see what we're all about.",
+      "expected": "A local restaurant in Tucson serving food made for the neighborhood."
+    },
+    {
+      "id": "beauty-hero-removes-real-results-filler",
+      "field": "hero_subtitle",
+      "industry": "beauty",
+      "subIndustry": "esthetician",
+      "businessName": "Nereidas Sal�n",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "Esthetician in Tucson. Book online — easy scheduling, real results.",
+      "expected": "Esthetician in Tucson with calm scheduling and careful personal care."
     }
   ],
   "redundancyFixtures": [
@@ -345,6 +421,17 @@
       "state": "AZ",
       "raw": "RC Bicycles is a bike shop in Tucson, AZ. RC bicycles is a locally owned bike shop in Tucson, AZ. We're proud of what we do and even prouder of the people we do it for.",
       "expected": "RC Bicycles is a locally owned bike shop in Tucson, AZ. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "events-about-splits-comma-heavy-list",
+      "field": "about_text",
+      "industry": "events",
+      "subIndustry": "balloon decor",
+      "businessName": "Blue Luna Events",
+      "city": "Tucson",
+      "state": "AZ",
+      "raw": "Blue Luna Events is Tucson, AZ's go-to balloon decor. We offer full-service setup, custom designs, large events welcome, same-day delivery, and bilingual team with care and clear next steps. We give straight answers and fair prices — no guesswork, no surprises.",
+      "expected": "Blue Luna Events is Tucson, AZ's go-to balloon decor. We offer full-service setup and custom designs for large events, with same-day delivery and bilingual support. We give straight answers and fair prices — no guesswork, no surprises."
     }
   ],
   "faithFixtures": [

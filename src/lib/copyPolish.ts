@@ -56,6 +56,14 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   setup: "Installation handled with care so the space is ready before guests arrive.",
   strike: "Post-event removal that keeps the close of the celebration simple.",
   "custom colors": "Palette choices matched to the theme, brand, or moment being celebrated.",
+  service: "Practical help shaped around the details customers care about most.",
+  restaurant: "Food, service, and timing handled so guests know what to expect.",
+  remodeling: "Project work planned around clear scope, clean execution, and lasting use.",
+  church: "Worship, service, and community life for people looking for connection.",
+  esthetician: "Personal care shaped around comfort, detail, and a calm appointment flow.",
+  barber: "Cuts and grooming handled with care, consistency, and respect for the schedule.",
+  painting: "Surface prep and finish work planned for clean lines and lasting results.",
+  "graphic designer": "Visual work shaped around clarity, polish, and the way the brand needs to be seen.",
   weddings: "Celebration details shaped around the ceremony, reception, and guest experience.",
   birthdays: "A festive setup designed around the age, theme, and people being celebrated.",
   parties: "Decor and details that help the room feel ready when guests walk in.",
@@ -72,12 +80,12 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
 }
 
 const SERVICE_DESCRIPTION_PATTERNS = [
-  "Clear options, thoughtful guidance, and an easy next step.",
-  "Practical help shaped around what the customer needs most.",
-  "A focused option for customers who want the details handled well.",
-  "Simple, well-presented service built to make the decision easier.",
+  "Practical help shaped around the details customers care about most.",
+  "Focused support that makes the next step easier to understand.",
+  "A useful option for customers who want the important details handled well.",
+  "A simple service built around clear expectations and steady follow-through.",
   "Careful attention to the small choices that affect the final result.",
-  "A straightforward way to get exactly what is needed without extra friction.",
+  "A straightforward way to get what is needed without extra friction.",
 ]
 
 
@@ -378,7 +386,25 @@ function collapseDuplicateIntroParagraph(value: string, context?: CopyPolishCont
 }
 function splitLongCommaSentence(sentence: string) {
   const commaCount = (sentence.match(/,/g) || []).length
-  if (sentence.length < 150 || commaCount < 3) return sentence
+  if (sentence.length < 120 || commaCount < 3) return sentence
+
+  const offerMatch = sentence.match(/^(We (?:offer|handle|create) )(.+?)(?: with (.+))?\.$/i)
+  if (offerMatch) {
+    const prefix = offerMatch[1]
+    const listText = offerMatch[2].replace(/,?\s+and\s+/i, ", ")
+    const tail = offerMatch[3]
+    const parts = listText
+      .split(/,\s*/)
+      .map(part => part.trim().replace(/\s+welcome$/i, "").replace(/^bilingual team$/i, "bilingual support"))
+      .filter(Boolean)
+    if (parts.length >= 4) {
+      const first = parts.slice(0, 3)
+      const rest = parts.slice(3)
+      if (first.length === 3) return `${prefix}${first[0]} and ${first[1]} for ${first[2]}, with ${joinHumanList(rest)}.`
+      return `${prefix}${joinHumanList(first)}${rest.length ? `, with ${joinHumanList(rest)}` : ""}.`
+    }
+  }
+
   const firstComma = sentence.indexOf(",")
   if (firstComma < 40) return sentence
   return `${sentence.slice(0, firstComma).trim()}. ${sentence.slice(firstComma + 1).trim()}`
@@ -401,6 +427,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   cleaned = cleaned.replace(/\ba ([a-z_ ]+?) in Your Area\b/i, `a ${industry}${location ? ` in ${location}` : ""}`)
   cleaned = cleaned.replace(/\bWholesale available\b/gi, "wholesale options are available")
   cleaned = cleaned.replace(/\bSame-day\b/g, "same-day")
+  cleaned = cleaned.replace(/,\s+and\s+with\s+/gi, " with ")
   cleaned = decapitalizeBodyTitleCase(cleaned)
   cleaned = collapseDuplicateIntroParagraph(cleaned, context)
 
@@ -411,6 +438,7 @@ export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
     .filter(Boolean)
 
   cleaned = removeRedundantIntroSentences(sentences, context).join(" ")
+  cleaned = cleaned.replace(/,?\s+and\s+with\s+/gi, " with ")
   cleaned = cleaned.replace(/\s+/g, " ").trim()
   cleaned = cleaned.replace(/(^|[.!?]\s+)([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
   if (!/[.!?]$/.test(cleaned)) cleaned += "."
@@ -434,6 +462,8 @@ const TEMPLATE_SMELL_PATTERNS = [
   /careful work, and an easy path/i,
   /from first question to finished result/i,
   /professional .+ with clear communication/i,
+  /clear options, thoughtful guidance/i,
+  /easy next step/i,
 ]
 
 function serviceKey(name: string) {
@@ -623,10 +653,29 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
   return categories
 }
 
+function improvedHeroSubtitle(value: string, context?: CopyPolishContext) {
+  const location = context?.city || "your area"
+  const industry = humanIndustryLabel(context)
+  const label = `${context?.industry ?? ""} ${context?.subIndustry ?? ""}`.toLowerCase()
+
+  if (/come see what we're all about/i.test(value)) {
+    if (/restaurant|food|cafe|coffee|taco/.test(label)) return `A local restaurant in ${location} serving food made for the neighborhood.`
+    if (/apparel|retail|shop|clothing/.test(label)) return `A local ${industry} in ${location} with pieces selected for everyday style.`
+    return `A local ${industry} in ${location} with a clear reason to visit.`
+  }
+
+  if (/real results/i.test(value)) {
+    if (/beauty|barber|esthetician|salon|spa|wellness/.test(label)) return `${polishTitle(context?.subIndustry || context?.industry || "Care")} in ${location} with calm scheduling and careful personal care.`
+    return `${polishTitle(context?.subIndustry || context?.industry || "Service")} in ${location} with simple scheduling and dependable follow-through.`
+  }
+
+  return value
+}
+
 export function polishHeroCopy(value: unknown, context?: CopyPolishContext) {
   if (typeof value !== "string") return ""
   const cleaned = replaceRawIndustryLabels(applyKnownFixes(normalizeWhitespace(value)), context)
-  return polishSentence(cleaned)
+  return polishSentence(improvedHeroSubtitle(cleaned, context))
 }
 
 export function polishHeroTitle(value: unknown, context?: CopyPolishContext) {
