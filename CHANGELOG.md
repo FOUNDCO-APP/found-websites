@@ -4,6 +4,19 @@
 
 ---
 
+## Session: July 15, 2026 - Stripe Connect Merchant Responsibility
+**AI:** Codex
+**Worked on:** Updated business-owner payout setup so connected merchants, not Found, carry the payment-fee/loss controller model.
+
+### Completed
+- Changed new Express connected account creation to `fees.payer = account` and `losses.payments = stripe`.
+- Kept Stripe-hosted requirement collection and Express dashboard access.
+- Stopped exposing raw Stripe API errors in the business-owner dashboard while preserving server-side logs.
+
+### Test Next
+- On `my.foundco.app`, select `T-Shirts`, open More, and tap `Continue secure setup`. It should open Stripe onboarding instead of returning the platform-loss review error.
+
+---
 ## Session: July 14, 2026 - Public Business Name Polish Guard
 **AI:** Codex
 **Worked on:** Fixed raw lowercase company names leaking across public pages.

@@ -39,14 +39,14 @@ export default function PaymentSetupButton({
         body: JSON.stringify({ returnTo }),
       })
       const raw = await res.text()
-      let data: { url?: string; error?: string } = {}
+      let data: { url?: string; error?: string; code?: string } = {}
       try {
         data = raw ? JSON.parse(raw) : {}
       } catch {}
 
       if (!res.ok || !data.url) {
-        const detail = data.error || raw.slice(0, 160).trim() || res.statusText || "No response body"
-        throw new Error(`Payment setup failed (${res.status}): ${detail}`)
+        const detail = data.error || "Payment setup could not start. Please try again in a minute or contact Found support."
+        throw new Error(detail)
       }
 
       window.location.href = data.url

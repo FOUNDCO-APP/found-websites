@@ -20,6 +20,18 @@ function errorMessage(err: unknown) {
   return "Payment setup failed"
 }
 
+function paymentSetupErrorResponse(err: unknown) {
+  const rawMessage = errorMessage(err)
+  const platformActionNeeded = /platform-profile|signed up for Connect|responsibilities of managing losses|dashboard\.stripe\.com\/settings\/connect/i.test(rawMessage)
+
+  return NextResponse.json({
+    code: platformActionNeeded ? "stripe_connect_platform_review_needed" : "payment_setup_failed",
+    error: platformActionNeeded
+      ? "Payment setup needs one more review from Found support before it can continue."
+      : "Payment setup could not start. Please try again in a minute or contact Found support.",
+  }, { status: platformActionNeeded ? 503 : 500 })
+}
+
 export async function POST(req: Request) {
   try {
     const user = await getAuthUser()
@@ -50,8 +62,8 @@ export async function POST(req: Request) {
           transfers: { requested: true },
         },
         controller: {
-          fees: { payer: "application" },
-          losses: { payments: "application" },
+          fees: { payer: "account" },
+          losses: { payments: "stripe" },
           requirement_collection: "stripe",
           stripe_dashboard: { type: "express" },
         },
@@ -81,6 +93,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: accountLink.url })
   } catch (err) {
     console.error("[payments/connect] setup failed", err)
-    return NextResponse.json({ error: errorMessage(err) }, { status: 500 })
+    return paymentSetupErrorResponse(err)
   }
 }
