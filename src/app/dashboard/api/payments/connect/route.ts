@@ -62,8 +62,8 @@ export async function POST(req: Request) {
           transfers: { requested: true },
         },
         controller: {
-          fees: { payer: "account" },
-          losses: { payments: "stripe" },
+          fees: { payer: "application" },
+          losses: { payments: "application" },
           requirement_collection: "stripe",
           stripe_dashboard: { type: "express" },
         },
