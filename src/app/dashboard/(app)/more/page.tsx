@@ -7,9 +7,10 @@ import InstallButton from "@/components/dashboard/InstallButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
-import { openBillingPortal, startUpgradeCheckout } from "./actions"
+import { openBillingPortal } from "./actions"
 import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
+import PlanUpgradeButton from "@/components/dashboard/PlanUpgradeButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -552,25 +553,14 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               ))}
             </div>
             {isActive ? (
-              <form action={startUpgradeCheckout}>
-                <input type="hidden" name="companyId" value={company.id} />
-                <input type="hidden" name="targetPlan" value={upgrade.plan} />
-                <button type="submit" style={{
-                  width: "100%",
-                  minHeight: 52,
-                  borderRadius: 999,
-                  padding: "0 18px",
-                  ...TYPE.subhead,
-                  fontWeight: 900,
-                  backgroundColor: BLACK,
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 12px 34px rgba(8,10,9,0.22)",
-                }}>
-                  Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
-                </button>
-              </form>
+              <PlanUpgradeButton
+                companyId={company.id}
+                targetPlan={upgrade.plan}
+                targetLabel={upgrade.label}
+                variant="black"
+              >
+                Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
+              </PlanUpgradeButton>
             ) : company?.slug ? (
               <MoreActivateButton
                 slug={company.slug}
@@ -627,24 +617,14 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
               ))}
             </div>
             {isActive ? (
-              <form action={startUpgradeCheckout}>
-                <input type="hidden" name="companyId" value={company.id} />
-                <input type="hidden" name="targetPlan" value="found_business" />
-                <button type="submit" style={{
-                  width: "100%",
-                  minHeight: 50,
-                  borderRadius: 999,
-                  padding: "0 18px",
-                  ...TYPE.subhead,
-                  fontWeight: 900,
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  color: GREEN,
-                  border: `1px solid ${GREEN}40`,
-                  cursor: "pointer",
-                }}>
-                  Upgrade to Business
-                </button>
-              </form>
+              <PlanUpgradeButton
+                companyId={company.id}
+                targetPlan="found_business"
+                targetLabel="Found Business"
+                variant="black"
+              >
+                Upgrade to Business
+              </PlanUpgradeButton>
             ) : company?.slug ? (
               <MoreActivateButton
                 slug={company.slug}
@@ -674,17 +654,13 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
             <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
               You're paying <strong style={{ color: "white" }}>${totalMonthly}/month</strong> with add-ons. {upgrade.label} is <strong style={{ color: "white" }}>${upgradePrice}/month</strong> and keeps it all in one plan.
             </p>
-            <form action={startUpgradeCheckout}>
-              <input type="hidden" name="companyId" value={company.id} />
-              <input type="hidden" name="targetPlan" value={upgrade.plan} />
-              <button type="submit" style={{
-                width: "100%", padding: "12px 0", borderRadius: 999,
-                backgroundColor: GREEN, color: BLACK, border: "none",
-                ...TYPE.subhead, fontWeight: 800, cursor: "pointer",
-              }}>
-                Switch to {upgrade.label}
-              </button>
-            </form>
+            <PlanUpgradeButton
+              companyId={company.id}
+              targetPlan={upgrade.plan}
+              targetLabel={upgrade.label}
+            >
+              Switch to {upgrade.label}
+            </PlanUpgradeButton>
           </div>
         </section>
       )}

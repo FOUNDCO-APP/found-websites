@@ -212,6 +212,210 @@ function regularPriceId(plan: string): string | undefined {
   return process.env.STRIPE_PRICE_ID_FOUND
 }
 
+function normalizePromoCode(code?: string | null) {
+  return code?.trim().toUpperCase() || ""
+}
+
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
+  }).format(amount / 100)
+}
+
+function discountLabelFor(coupon: Stripe.Coupon) {
+  if (typeof coupon.percent_off === "number") return `${coupon.percent_off}% off`
+  if (typeof coupon.amount_off === "number" && coupon.currency) return `${formatCurrency(coupon.amount_off, coupon.currency)} off`
+  return coupon.name || "Discount applied"
+}
+
+function discountedAmountFor(amount: number, currency: string, coupon: Stripe.Coupon) {
+  if (typeof coupon.percent_off === "number") return Math.max(0, Math.round(amount * (100 - coupon.percent_off) / 100))
+  if (typeof coupon.amount_off === "number") {
+    if (coupon.currency && coupon.currency.toLowerCase() !== currency.toLowerCase()) return null
+    return Math.max(0, amount - coupon.amount_off)
+  }
+  return amount
+}
+
+type UpgradePreview = {
+  ok: boolean
+  error?: string
+  companyName?: string
+  currentPlan?: string
+  targetPlan?: string
+  currency?: string
+  originalAmount?: number
+  discountedAmount?: number
+  discountLabel?: string | null
+  promotionCodeId?: string | null
+  promoCode?: string | null
+  nextBillingDate?: string | null
+  paymentMethodLabel?: string | null
+}
+
+type UpgradeResult = {
+  ok: boolean
+  error?: string
+  requiresAction?: boolean
+  hostedInvoiceUrl?: string | null
+}
+
+async function promotionCodeFor(stripe: Stripe, price: Stripe.Price, promoCode?: string | null) {
+  const normalizedCode = normalizePromoCode(promoCode)
+  if (!normalizedCode) return { promotionCodeId: null, promoCode: null, discountLabel: null, discountedAmount: price.unit_amount ?? 0, promoError: null }
+
+  const promoCodes = await stripe.promotionCodes.list({
+    code: normalizedCode,
+    active: true,
+    limit: 1,
+    expand: ["data.promotion.coupon"],
+  })
+
+  const promotionCode = promoCodes.data[0]
+  const couponRef = promotionCode?.promotion?.coupon
+  const coupon = typeof couponRef === "string" ? await stripe.coupons.retrieve(couponRef) : couponRef
+  const originalAmount = price.unit_amount ?? 0
+  const currency = price.currency || "usd"
+
+  if (!promotionCode || !coupon || coupon.valid === false) {
+    return { promotionCodeId: null, promoCode: null, discountLabel: null, discountedAmount: originalAmount, promoError: "That promo code is not active." }
+  }
+
+  const productId = typeof price.product === "string" ? price.product : price.product.id
+  const allowedProducts = coupon.applies_to?.products ?? []
+  if (allowedProducts.length > 0 && !allowedProducts.includes(productId)) {
+    return { promotionCodeId: null, promoCode: null, discountLabel: null, discountedAmount: originalAmount, promoError: "That promo code is not valid for this plan." }
+  }
+
+  const discountedAmount = discountedAmountFor(originalAmount, currency, coupon)
+  if (discountedAmount === null) {
+    return { promotionCodeId: null, promoCode: null, discountLabel: null, discountedAmount: originalAmount, promoError: "That promo code is not valid for this currency." }
+  }
+
+  return {
+    promotionCodeId: promotionCode.id,
+    promoCode: promotionCode.code,
+    discountLabel: discountLabelFor(coupon),
+    discountedAmount,
+    promoError: null,
+  }
+}
+
+function paymentMethodLabel(paymentMethod: Stripe.PaymentMethod | null | undefined) {
+  const card = paymentMethod?.card
+  if (!card) return null
+  const brand = card.brand ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1) : "Card"
+  return `${brand} ending ${card.last4}`
+}
+
+async function getActiveSubscription(stripe: Stripe, customerId: string) {
+  const subs = await stripe.subscriptions.list({
+    customer: customerId,
+    status: "all",
+    limit: 10,
+    expand: ["data.items.data.price", "data.default_payment_method"],
+  })
+  return subs.data.find((s) => s.status === "active" || s.status === "trialing") ?? null
+}
+
+async function resolveUpgradeContext(companyId: string, targetPlan: string) {
+  const stripe = getStripe()
+  if (!stripe || !companyId || !targetPlan) return { error: "Payments are not ready yet." as const }
+
+  const admin = createAdminClient()
+  const { data: company } = await admin
+    .from("companies")
+    .select("id, stripe_customer_id, slug, is_founding_member, name, email, plan")
+    .eq("id", companyId)
+    .single()
+
+  if (!company?.stripe_customer_id) return { error: "No active billing account was found." as const }
+
+  const hasIntroRate = !!company.is_founding_member
+  const priceId = hasIntroRate ? introPriceId(targetPlan) : regularPriceId(targetPlan)
+  if (!priceId) return { error: "That plan is not available yet." as const }
+
+  const [price, sub] = await Promise.all([
+    stripe.prices.retrieve(priceId),
+    getActiveSubscription(stripe, company.stripe_customer_id),
+  ])
+
+  if (!sub) return { error: "No active subscription was found." as const }
+  const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
+  if (!baseItem) return { error: "This subscription needs Found support before it can change plans." as const }
+
+  return { stripe, admin, company, price, sub, baseItem, priceId }
+}
+
+export async function previewPlanUpgrade(companyId: string, targetPlan: string, promoCode?: string | null): Promise<UpgradePreview> {
+  try {
+    const ctx = await resolveUpgradeContext(companyId, targetPlan)
+    if ("error" in ctx) return { ok: false, error: ctx.error }
+
+    const promo = await promotionCodeFor(ctx.stripe, ctx.price, promoCode)
+    if (promo.promoError) return { ok: false, error: promo.promoError }
+
+    return {
+      ok: true,
+      companyName: ctx.company.name ?? "Found",
+      currentPlan: ctx.company.plan ?? "found",
+      targetPlan,
+      currency: ctx.price.currency || "usd",
+      originalAmount: ctx.price.unit_amount ?? 0,
+      discountedAmount: promo.discountedAmount,
+      discountLabel: promo.discountLabel,
+      promotionCodeId: promo.promotionCodeId,
+      promoCode: promo.promoCode,
+      nextBillingDate: new Date(ctx.baseItem.current_period_end * 1000).toISOString(),
+      paymentMethodLabel: paymentMethodLabel(ctx.sub.default_payment_method as Stripe.PaymentMethod | null),
+    }
+  } catch (err) {
+    console.error("[more] upgrade preview error:", err)
+    return { ok: false, error: "Plan upgrade could not be prepared." }
+  }
+}
+
+export async function confirmPlanUpgrade(companyId: string, targetPlan: string, promoCode?: string | null): Promise<UpgradeResult> {
+  try {
+    const ctx = await resolveUpgradeContext(companyId, targetPlan)
+    if ("error" in ctx) return { ok: false, error: ctx.error }
+
+    const promo = await promotionCodeFor(ctx.stripe, ctx.price, promoCode)
+    if (promo.promoError) return { ok: false, error: promo.promoError }
+
+    const updateParams: Stripe.SubscriptionUpdateParams = {
+      items: [{ id: ctx.baseItem.id, price: ctx.priceId }],
+      proration_behavior: ctx.sub.status === "trialing" ? "none" : "always_invoice",
+      payment_behavior: "pending_if_incomplete",
+      metadata: {
+        ...ctx.sub.metadata,
+        company_id: ctx.company.id,
+        slug: ctx.company.slug ?? "",
+        plan: targetPlan,
+      },
+      expand: ["latest_invoice.payment_intent"],
+    }
+
+    if (promo.promotionCodeId) updateParams.discounts = [{ promotion_code: promo.promotionCodeId }]
+
+    const subscription = await ctx.stripe.subscriptions.update(ctx.sub.id, updateParams)
+    const latestInvoice = typeof subscription.latest_invoice === "string" ? null : subscription.latest_invoice
+    const invoiceWithPaymentIntent = latestInvoice as (Stripe.Invoice & { payment_intent?: string | Stripe.PaymentIntent | null }) | null
+    const paymentIntent: Stripe.PaymentIntent | null = invoiceWithPaymentIntent && typeof invoiceWithPaymentIntent.payment_intent !== "string" ? invoiceWithPaymentIntent.payment_intent ?? null : null
+
+    if (paymentIntent && ["requires_action", "requires_payment_method", "requires_confirmation"].includes(paymentIntent.status)) {
+      return { ok: false, requiresAction: true, hostedInvoiceUrl: latestInvoice?.hosted_invoice_url ?? null, error: "Stripe needs one more payment step." }
+    }
+
+    return { ok: true }
+  } catch (err) {
+    console.error("[more] custom plan upgrade error:", err)
+    return { ok: false, error: "Plan upgrade could not be completed." }
+  }
+}
+
 // Opens Stripe Customer Portal — handles cancel, update payment method
 export async function openBillingPortal(formData: FormData) {
   const companyId = formData.get("companyId") as string
