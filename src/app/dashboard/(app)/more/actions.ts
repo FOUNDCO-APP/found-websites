@@ -192,7 +192,8 @@ export async function openBillingPortal(formData: FormData) {
   redirect(session.url)
 }
 
-// Upgrades an existing subscription or creates a new checkout for the target plan
+// Opens Stripe's hosted upgrade confirmation. Stripe must remain the source of
+// truth for plan changes; Supabase is updated only by subscription webhooks.
 export async function startUpgradeCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const targetPlan = formData.get("targetPlan") as string
@@ -212,26 +213,39 @@ export async function startUpgradeCheckout(formData: FormData) {
   const priceId = hasIntroRate ? introPriceId(targetPlan) : regularPriceId(targetPlan)
   if (!priceId) return
 
-  // Already has a Stripe subscription — update the price directly
   if (company.stripe_customer_id) {
     const subs = await stripe.subscriptions.list({
       customer: company.stripe_customer_id,
-      limit: 1,
+      status: "all",
+      limit: 10,
+      expand: ["data.items.data.price"],
     })
 
-    if (subs.data.length > 0) {
-      const sub = subs.data[0]
+    const sub = subs.data.find((s) => s.status === "active" || s.status === "trialing")
+    if (sub) {
       const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
-      if (!baseItem) return
+      if (!baseItem) redirect("/more?billing_update=1")
 
-      await stripe.subscriptions.update(sub.id, {
-        items: [{ id: baseItem.id, price: priceId }],
-        proration_behavior: sub.status === "trialing" ? "none" : "create_prorations",
-        metadata: { company_id: companyId, plan: targetPlan },
+      const hasAddonItems = sub.items.data.some((item) => item.id !== baseItem.id)
+      const flowData = hasAddonItems ? undefined : {
+        type: "subscription_update_confirm" as const,
+        subscription_update_confirm: {
+          subscription: sub.id,
+          items: [{ id: baseItem.id, price: priceId }],
+        },
+        after_completion: {
+          type: "redirect" as const,
+          redirect: { return_url: `${APP_BASE}/more?billing_update=1` },
+        },
+      }
+
+      const session = await stripe.billingPortal.sessions.create({
+        customer: company.stripe_customer_id,
+        return_url: `${APP_BASE}/more`,
+        ...(flowData ? { flow_data: flowData } : {}),
       })
-      await admin.from("companies").update({ plan: targetPlan }).eq("id", companyId)
-      redirect("/more?upgraded=1")
-      return
+
+      redirect(session.url)
     }
   }
   // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
