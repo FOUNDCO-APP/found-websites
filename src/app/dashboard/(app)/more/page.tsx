@@ -173,6 +173,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const addonAdded = sp.addon_added ?? null
   const addonUnavailable = sp.addon_unavailable === "1"
   const paymentReturnState = sp.payments ?? null
+  const billingUpdateIssue = sp.billing_update === "1"
 
   const isActive = company?.subscription_status === "active" || company?.subscription_status === "trialing"
   const plan = company?.plan ?? "found"
@@ -244,7 +245,16 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
           </p>
         </div>
       )}
-
+      {billingUpdateIssue && (
+        <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: "rgba(255,59,48,0.1)", border: "1px solid rgba(255,59,48,0.3)" }}>
+          <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 760, color: "#FF3B30" }}>
+            Plan upgrade could not open.
+          </p>
+          <p style={{ margin: 0, ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+            Found support needs to finish one Stripe billing setting before this plan can change.
+          </p>
+        </div>
+      )}
       {/* My Site */}
       <section style={{ marginBottom: 12 }}>
         <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>

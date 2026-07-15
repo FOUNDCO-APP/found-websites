@@ -29,6 +29,54 @@ const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
 ].filter(Boolean) as string[])
 
+async function getUpgradePortalConfiguration(stripe: Stripe) {
+  const priceIds = Array.from(PLAN_PRICE_IDS)
+  const signature = priceIds.sort().join(",")
+  const existing = await stripe.billingPortal.configurations.list({ active: true, limit: 100 })
+  const reusable = existing.data.find((config) =>
+    config.metadata?.found_config === "plan_upgrade_v1" &&
+    config.metadata?.price_signature === signature
+  )
+  if (reusable) return reusable.id
+
+  const prices = await Promise.all(priceIds.map((priceId) => stripe.prices.retrieve(priceId)))
+  const grouped = new Map<string, string[]>()
+  for (const price of prices) {
+    const productId = typeof price.product === "string" ? price.product : price.product.id
+    grouped.set(productId, [...(grouped.get(productId) ?? []), price.id])
+  }
+
+  const configuration = await stripe.billingPortal.configurations.create({
+    business_profile: {
+      headline: "Manage your Found plan",
+    },
+    features: {
+      customer_update: {
+        enabled: true,
+        allowed_updates: ["email", "address", "phone"],
+      },
+      invoice_history: { enabled: true },
+      payment_method_update: { enabled: true },
+      subscription_cancel: { enabled: false },
+      subscription_update: {
+        enabled: true,
+        default_allowed_updates: ["price", "promotion_code"],
+        proration_behavior: "create_prorations",
+        products: Array.from(grouped.entries()).map(([product, pricesForProduct]) => ({
+          product,
+          prices: pricesForProduct,
+        })),
+      },
+    },
+    metadata: {
+      found_config: "plan_upgrade_v1",
+      price_signature: signature,
+    },
+  })
+
+  return configuration.id
+}
+
 export async function purchaseAddon(companyId: string, addonSlug: string): Promise<{ success: boolean; error?: string }> {
   const stripe = getStripe()
   if (!stripe || !companyId || !addonSlug) return { success: false, error: "Missing required fields." }
@@ -239,13 +287,22 @@ export async function startUpgradeCheckout(formData: FormData) {
         },
       }
 
-      const session = await stripe.billingPortal.sessions.create({
-        customer: company.stripe_customer_id,
-        return_url: `${APP_BASE}/more`,
-        ...(flowData ? { flow_data: flowData } : {}),
-      })
+      let sessionUrl: string | null = null
+      try {
+        const configuration = await getUpgradePortalConfiguration(stripe)
+        const session = await stripe.billingPortal.sessions.create({
+          customer: company.stripe_customer_id,
+          return_url: `${APP_BASE}/more`,
+          configuration,
+          ...(flowData ? { flow_data: flowData } : {}),
+        })
+        sessionUrl = session.url
+      } catch (err) {
+        console.error("[more] upgrade portal session error:", err)
+      }
 
-      redirect(session.url)
+      if (!sessionUrl) redirect("/more?billing_update=1")
+      redirect(sessionUrl)
     }
   }
   // No active subscription yet. Payment collection happens in Found's branded activation overlay, not Stripe Checkout.
