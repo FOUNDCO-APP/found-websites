@@ -29,9 +29,8 @@ const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
 ].filter(Boolean) as string[])
 
-async function getUpgradePortalConfiguration(stripe: Stripe) {
-  const priceIds = Array.from(PLAN_PRICE_IDS)
-  const signature = priceIds.sort().join(",")
+async function getUpgradePortalConfiguration(stripe: Stripe, targetPriceId: string) {
+  const signature = targetPriceId
   const existing = await stripe.billingPortal.configurations.list({ active: true, limit: 100 })
   const reusable = existing.data.find((config) =>
     config.metadata?.found_config === "plan_upgrade_v1" &&
@@ -39,12 +38,8 @@ async function getUpgradePortalConfiguration(stripe: Stripe) {
   )
   if (reusable) return reusable.id
 
-  const prices = await Promise.all(priceIds.map((priceId) => stripe.prices.retrieve(priceId)))
-  const grouped = new Map<string, string[]>()
-  for (const price of prices) {
-    const productId = typeof price.product === "string" ? price.product : price.product.id
-    grouped.set(productId, [...(grouped.get(productId) ?? []), price.id])
-  }
+  const price = await stripe.prices.retrieve(targetPriceId)
+  const productId = typeof price.product === "string" ? price.product : price.product.id
 
   const configuration = await stripe.billingPortal.configurations.create({
     business_profile: {
@@ -62,10 +57,10 @@ async function getUpgradePortalConfiguration(stripe: Stripe) {
         enabled: true,
         default_allowed_updates: ["price", "promotion_code"],
         proration_behavior: "create_prorations",
-        products: Array.from(grouped.entries()).map(([product, pricesForProduct]) => ({
-          product,
-          prices: pricesForProduct,
-        })),
+        products: [{
+          product: productId,
+          prices: [targetPriceId],
+        }],
       },
     },
     metadata: {
@@ -289,7 +284,7 @@ export async function startUpgradeCheckout(formData: FormData) {
 
       let sessionUrl: string | null = null
       try {
-        const configuration = await getUpgradePortalConfiguration(stripe)
+        const configuration = await getUpgradePortalConfiguration(stripe, priceId)
         const session = await stripe.billingPortal.sessions.create({
           customer: company.stripe_customer_id,
           return_url: `${APP_BASE}/more`,
