@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import type { StripeElementsOptions } from "@stripe/stripe-js"
@@ -270,6 +270,7 @@ export default function OnlineOrderClient({
   }, [categories])
 
   const [cart, setCart] = useState<Record<string, CartItem>>({})
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
@@ -279,7 +280,6 @@ export default function OnlineOrderClient({
   const [error, setError] = useState<string | null>(null)
   const [paymentSetup, setPaymentSetup] = useState<PaymentSetup | null>(null)
   const [paid, setPaid] = useState(false)
-  const orderPanelRef = useRef<HTMLElement | null>(null)
   const pickupOptions = useMemo(() => pickupTimeOptions(), [])
 
   const isEmbedded = mode === "embedded"
@@ -339,9 +339,7 @@ export default function OnlineOrderClient({
     setPaid(true)
     setPaymentSetup(null)
     setCart({})
-    window.setTimeout(() => {
-      orderPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
-    }, 50)
+    setCheckoutOpen(true)
   }
 
   return (
@@ -372,7 +370,7 @@ export default function OnlineOrderClient({
         </section>
       )}
 
-      <main className={`max-w-5xl mx-auto px-6 ${isEmbedded ? "py-0" : "py-10"} grid lg:grid-cols-[1fr_360px] gap-8 items-start`}>
+      <main className={`max-w-5xl mx-auto px-6 ${isEmbedded ? "py-0" : "py-10"} pb-32`}>
         <section>
           {items.length === 0 ? (
             <div className="py-20 text-center">
@@ -435,85 +433,84 @@ export default function OnlineOrderClient({
           )}
         </section>
 
-        <aside ref={orderPanelRef} className="lg:sticky lg:top-6 border border-neutral-200 p-5" style={{ borderRadius: 8 }}>
-          <h2 className="text-xl font-black mb-4" style={{ color: "#111" }}>Your order</h2>
-
-          {paid ? (
-            <div className="p-5" style={{ borderRadius: 12, backgroundColor: "#F8FAF9", border: `1px solid ${primary}33` }}>
-              <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Order paid</p>
-              <p className="mt-3 text-lg font-black leading-tight" style={{ color: "#111" }}>Your order was sent to {companyName}.</p>
-              <p className="mt-2 text-sm leading-relaxed" style={{ color: "#555" }}>A confirmation email is on the way to {email}.</p>
+      </main>
+      {cartItems.length > 0 && !paid && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-5xl items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
+              <p className="mt-0.5 truncate text-xs font-bold" style={{ color: "#666" }}>Ready for checkout</p>
             </div>
-          ) : (
-            <>
-              {cartItems.length === 0 ? (
-                <p className="text-sm mb-6" style={{ color: "#666" }}>Add items from the menu to start.</p>
-              ) : (
-                <div className="flex flex-col gap-3 mb-5">
+            <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-6 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
+          </div>
+        </div>
+      )}
+
+      {cartItems.length > 0 && !paid && (
+        <div className="fixed bottom-6 left-1/2 z-40 hidden w-[min(720px,calc(100%-48px))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur md:block">
+          <div className="flex items-center gap-4">
+            <div className="min-w-0 flex-1 px-3">
+              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
+              <p className="truncate text-xs font-bold" style={{ color: "#666" }}>Ready for checkout</p>
+            </div>
+            <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-7 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
+          </div>
+        </div>
+      )}
+
+      {(checkoutOpen || paid) && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
+          <section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[34px] bg-white p-6 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Checkout</p>
+                <h2 className="mt-2 text-3xl font-black leading-tight" style={{ color: "#111" }}>Your order</h2>
+              </div>
+              <button type="button" onClick={() => setCheckoutOpen(false)} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500">×</button>
+            </div>
+
+            {paid ? (
+              <div className="p-5" style={{ borderRadius: 22, backgroundColor: "#F8FAF9", border: `1px solid ${primary}33` }}>
+                <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Order paid</p>
+                <p className="mt-3 text-lg font-black leading-tight" style={{ color: "#111" }}>Your order was sent to {companyName}.</p>
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: "#555" }}>A confirmation email is on the way to {email}.</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-5 flex flex-col gap-3">
                   {cartItems.map((item) => (
                     <div key={item.key} className="flex justify-between gap-3 text-sm">
                       <span style={{ color: "#333" }}>{item.quantity}x {item.name}</span>
                       <span className="font-bold" style={{ color: "#111" }}>{formatMoney(item.unitAmount * item.quantity)}</span>
                     </div>
                   ))}
-                  <div className="pt-4 mt-2 border-t border-neutral-200 flex justify-between">
+                  <div className="mt-2 flex justify-between border-t border-neutral-200 pt-4">
                     <span className="font-black" style={{ color: "#111" }}>Subtotal</span>
                     <span className="font-black" style={{ color: "#111" }}>{formatMoney(subtotal)}</span>
                   </div>
                 </div>
-              )}
 
-              {cartItems.length > 0 && (
-                <>
-                  <div className="flex flex-col gap-4">
-                    <label className="block">
-                      <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Name</span>
-                      <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-                    </label>
-                    <label className="block">
-                      <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Phone</span>
-                      <input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-                    </label>
-                    <label className="block">
-                      <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Email</span>
-                      <input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full px-4 py-3 border border-neutral-200 text-base" style={{ borderRadius: 8, color: "#111" }} />
-                    </label>
-                    <label className="block">
-                      <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Pickup time</span>
-                      <select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="w-full px-4 py-3 border border-neutral-200 text-base bg-white" style={{ borderRadius: 8, color: pickupTime ? "#111" : "#777", appearance: "auto" }}>
-                        <option value="">Select pickup time</option>
-                        {pickupOptions.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="block">
-                      <span className="block text-xs font-black uppercase tracking-[0.14em] mb-2" style={{ color: "#555" }}>Notes</span>
-                      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full px-4 py-3 border border-neutral-200 text-base resize-none" style={{ borderRadius: 8, color: "#111" }} />
-                    </label>
-                  </div>
+                <div className="flex flex-col gap-4">
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em]" style={{ color: "#555" }}>Name</span><input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base" style={{ color: "#111" }} /></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em]" style={{ color: "#555" }}>Phone</span><input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base" style={{ color: "#111" }} /></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em]" style={{ color: "#555" }}>Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base" style={{ color: "#111" }} /></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em]" style={{ color: "#555" }}>Pickup time</span><select value={pickupTime} onChange={(e) => setPickupTime(e.target.value)} className="w-full rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base" style={{ color: pickupTime ? "#111" : "#777", appearance: "auto" }}><option value="">Select pickup time</option>{pickupOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}</select></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em]" style={{ color: "#555" }}>Notes</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base" style={{ color: "#111" }} /></label>
+                </div>
 
-                  {error && <p className="mt-4 text-sm font-bold" style={{ color: "#B42318" }}>{error}</p>}
+                {error && <p className="mt-4 text-sm font-bold" style={{ color: "#B42318" }}>{error}</p>}
 
-                  {!paymentSetup ? (
-                    <button
-                      type="button"
-                      disabled={!canCheckout || loading}
-                      onClick={startPayment}
-                      className="w-full mt-5 py-4 font-black text-base disabled:opacity-40"
-                      style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
-                    >
-                      {!orderReady ? "Ordering coming soon" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}
-                    </button>
-                  ) : (
-                    <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
-                  )}
-                </>
-              )}
-            </>
-          )}
-        </aside>
-      </main>
+                {!paymentSetup ? (
+                  <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full py-4 text-base font-black disabled:opacity-40" style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}>{!orderReady ? "Ordering coming soon" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}</button>
+                ) : (
+                  <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
+                )}
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   )
 }

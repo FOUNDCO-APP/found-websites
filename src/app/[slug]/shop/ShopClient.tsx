@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import type { StripeElementsOptions } from "@stripe/stripe-js"
@@ -178,6 +178,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const [cart, setCart] = useState<Record<string, CartItem>>({})
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
@@ -188,7 +189,6 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const [error, setError] = useState<string | null>(null)
   const [paymentSetup, setPaymentSetup] = useState<PaymentSetup | null>(null)
   const [paid, setPaid] = useState(false)
-  const orderPanelRef = useRef<HTMLElement | null>(null)
 
   const cartItems = Object.values(cart)
   const subtotal = cartItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0)
@@ -244,7 +244,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
     setPaid(true)
     setPaymentSetup(null)
     setCart({})
-    window.setTimeout(() => orderPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50)
+    setCheckoutOpen(true)
   }
 
   if (!shopReady) {
@@ -269,6 +269,74 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             </div>
           </section>
         </main>
+      {cartItems.length > 0 && !paid && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-5xl items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-neutral-950">{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
+              <p className="mt-0.5 truncate text-xs font-bold text-neutral-500">Ready for checkout</p>
+            </div>
+            <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-6 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
+          </div>
+        </div>
+      )}
+
+      {cartItems.length > 0 && !paid && (
+        <div className="fixed bottom-6 left-1/2 z-40 hidden w-[min(720px,calc(100%-48px))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur md:block">
+          <div className="flex items-center gap-4">
+            <div className="min-w-0 flex-1 px-3">
+              <p className="text-sm font-black text-neutral-950">{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
+              <p className="truncate text-xs font-bold text-neutral-500">Ready for checkout</p>
+            </div>
+            <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-7 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
+          </div>
+        </div>
+      )}
+
+      {(checkoutOpen || paid) && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
+          <section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[34px] bg-white p-6 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Checkout</p>
+                <h2 className="mt-2 text-3xl font-black leading-tight text-neutral-950">Your cart</h2>
+              </div>
+              <button type="button" onClick={() => setCheckoutOpen(false)} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500">×</button>
+            </div>
+
+            {paid ? (
+              <div className="rounded-[22px] border p-5" style={{ borderColor: `${primary}33`, backgroundColor: "#F8FAF9" }}>
+                <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Order paid</p>
+                <p className="mt-3 text-lg font-black leading-tight text-neutral-950">Your order was sent to {companyName}.</p>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">A confirmation email is on the way to {email}.</p>
+              </div>
+            ) : (
+              <>
+                <div className="mb-5 flex flex-col gap-3">
+                  {cartItems.map((item) => <div key={item.key} className="flex justify-between gap-3 text-sm"><span className="text-neutral-700">{item.quantity}x {item.name}</span><span className="font-bold text-neutral-950">{formatMoney(item.unitAmount * item.quantity)}</span></div>)}
+                  <div className="mt-2 flex justify-between border-t border-neutral-200 pt-4"><span className="font-black text-neutral-950">Subtotal</span><span className="font-black text-neutral-950">{formatMoney(subtotal)}</span></div>
+                </div>
+
+                <div className="flex flex-col gap-4">
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Name</span><input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Phone</span><input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
+                  <div><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Delivery</span><div className="grid grid-cols-2 gap-2">{(["pickup", "shipping"] as const).map((option) => <button key={option} type="button" onClick={() => { setFulfillment(option); setPaymentSetup(null) }} className="rounded-[16px] border px-3 py-3 text-sm font-black capitalize" style={{ borderColor: fulfillment === option ? primary : "#e5e5e5", color: fulfillment === option ? primary : "#555", backgroundColor: fulfillment === option ? `${primary}12` : "white" }}>{option}</button>)}</div></div>
+                  {fulfillment === "shipping" && <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Shipping address</span><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>}
+                  <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Notes</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
+                </div>
+
+                {error && <p className="mt-4 text-sm font-bold text-red-700">{error}</p>}
+
+                {!paymentSetup ? (
+                  <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full rounded-full py-4 text-base font-black text-white disabled:opacity-40" style={{ backgroundColor: primary }}>{loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}</button>
+                ) : <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />}
+              </>
+            )}
+          </section>
+        </div>
+      )}
       </div>
     )
   }
@@ -283,7 +351,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
         </div>
       </section>
 
-      <main className="mx-auto grid max-w-6xl items-start gap-8 px-6 py-10 lg:grid-cols-[1fr_380px]">
+      <main className="mx-auto max-w-6xl px-6 py-10 pb-32">
         <section>
           {categories.map((cat, catIndex) => {
             const categoryItems = items.filter((item) => item.catIndex === catIndex)
@@ -324,44 +392,6 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           })}
         </section>
 
-        <aside ref={orderPanelRef} className="rounded-[28px] border border-neutral-200 p-5 lg:sticky lg:top-6">
-          <h2 className="mb-4 text-xl font-black text-neutral-950">Your cart</h2>
-          {paid ? (
-            <div className="rounded-[22px] border p-5" style={{ borderColor: `${primary}33`, backgroundColor: "#F8FAF9" }}>
-              <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Order paid</p>
-              <p className="mt-3 text-lg font-black leading-tight text-neutral-950">Your order was sent to {companyName}.</p>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">A confirmation email is on the way to {email}.</p>
-            </div>
-          ) : (
-            <>
-              {cartItems.length === 0 ? <p className="mb-6 text-sm text-neutral-600">Add products to start.</p> : (
-                <div className="mb-5 flex flex-col gap-3">
-                  {cartItems.map((item) => <div key={item.key} className="flex justify-between gap-3 text-sm"><span className="text-neutral-700">{item.quantity}x {item.name}</span><span className="font-bold text-neutral-950">{formatMoney(item.unitAmount * item.quantity)}</span></div>)}
-                  <div className="mt-2 flex justify-between border-t border-neutral-200 pt-4"><span className="font-black text-neutral-950">Subtotal</span><span className="font-black text-neutral-950">{formatMoney(subtotal)}</span></div>
-                </div>
-              )}
-
-              {cartItems.length > 0 && (
-                <>
-                  <div className="flex flex-col gap-4">
-                    <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Name</span><input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
-                    <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Phone</span><input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
-                    <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
-                    <div><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Delivery</span><div className="grid grid-cols-2 gap-2">{(["pickup", "shipping"] as const).map((option) => <button key={option} type="button" onClick={() => { setFulfillment(option); setPaymentSetup(null) }} className="rounded-[16px] border px-3 py-3 text-sm font-black capitalize" style={{ borderColor: fulfillment === option ? primary : "#e5e5e5", color: fulfillment === option ? primary : "#555", backgroundColor: fulfillment === option ? `${primary}12` : "white" }}>{option}</button>)}</div></div>
-                    {fulfillment === "shipping" && <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Shipping address</span><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>}
-                    <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Notes</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
-                  </div>
-
-                  {error && <p className="mt-4 text-sm font-bold text-red-700">{error}</p>}
-
-                  {!paymentSetup ? (
-                    <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full rounded-full py-4 text-base font-black text-white disabled:opacity-40" style={{ backgroundColor: primary }}>{loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}</button>
-                  ) : <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />}
-                </>
-              )}
-            </>
-          )}
-        </aside>
       </main>
 
       {selectedProduct && (
@@ -386,7 +416,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                   {selectedProduct.shipping_note && <DetailRow label="Pickup and shipping" value={selectedProduct.shipping_note} />}
                   {selectedProduct.details?.map((detail) => <DetailRow key={`${detail.label}-${detail.value}`} label={detail.label} value={detail.value} />)}
                 </div>
-                <button onClick={() => { setQuantity(selectedProduct, (cart[selectedProduct.key]?.quantity ?? 0) + 1); setSelectedProduct(null); window.setTimeout(() => orderPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 50) }} className="mt-7 w-full rounded-full py-4 text-base font-black text-white" style={{ backgroundColor: primary }}>Add to cart</button>
+                <button onClick={() => { setQuantity(selectedProduct, (cart[selectedProduct.key]?.quantity ?? 0) + 1); setSelectedProduct(null) }} className="mt-7 w-full rounded-full py-4 text-base font-black text-white" style={{ backgroundColor: primary }}>Add to cart</button>
               </div>
             </div>
           </section>
