@@ -324,14 +324,15 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                 {category.items.map((item, itemIndex) => {
                   const images = uniqueImages(item)
                   return (
-                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "none", padding: "14px 18px", backgroundColor: "rgba(8,10,9,0.72)", display: "flex", alignItems: "center", gap: 13, textAlign: "left", cursor: "pointer" }}>
-                      {images[0] ? <img src={images[0]} alt="" style={{ width: 68, height: 68, borderRadius: 16, objectFit: "cover", flexShrink: 0 }} /> : <div style={{ width: 68, height: 68, borderRadius: 16, backgroundColor: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }} />}
-                      <span style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ display: "block", ...TYPE.subhead, fontWeight: 820, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
-                        {item.description && <span style={{ display: "block", marginTop: 3, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</span>}
-                        {isProducts && images.length > 1 && <span style={{ display: "block", marginTop: 5, ...TYPE.footnote, color: GREEN, fontWeight: 800 }}>{images.length} photos</span>}
+                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "none", padding: "16px 18px", backgroundColor: "rgba(8,10,9,0.72)", display: "grid", gridTemplateColumns: "72px minmax(0, 1fr) auto", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer" }}>
+                      {images[0] ? <img src={images[0]} alt="" style={{ width: 72, height: 72, borderRadius: 18, objectFit: "contain", backgroundColor: "rgba(255,255,255,0.96)", flexShrink: 0 }} /> : <div style={{ width: 72, height: 72, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.34)", ...TYPE.footnote, fontWeight: 850 }}>Photo</div>}
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: "block", ...TYPE.subhead, fontWeight: 850, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
+                        <span style={{ display: "block", marginTop: 6, ...TYPE.footnote, color: images.length ? GREEN : "#FFB340", fontWeight: 850 }}>
+                          {images.length ? `${images.length} ${images.length === 1 ? "photo" : "photos"}` : "Needs photo"}
+                        </span>
                       </span>
-                      {item.price && <span style={{ flexShrink: 0, ...TYPE.subhead, fontWeight: 850, color: GREEN }}>{priceLabel(item.price)}</span>}
+                      <span style={{ flexShrink: 0, textAlign: "right", ...TYPE.subhead, fontWeight: 900, color: item.price ? GREEN : "rgba(255,255,255,0.42)", whiteSpace: "nowrap" }}>{item.price ? priceLabel(item.price) : "No price"}</span>
                     </button>
                   )
                 })}
