@@ -269,6 +269,63 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             </div>
           </section>
         </main>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <section className="px-6 pb-10 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
+        <div className="mx-auto max-w-5xl">
+          <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop Online</p>
+          <h1 className="mb-4 text-5xl font-black leading-none text-white md:text-7xl">Shop {companyName}</h1>
+          <p className="max-w-xl text-lg leading-relaxed text-white/72">Choose what you want. {companyName} will receive the order and help with the next step.</p>
+        </div>
+      </section>
+
+      <main className="mx-auto max-w-6xl px-6 py-10 pb-32">
+        <section>
+          {categories.map((cat, catIndex) => {
+            const categoryItems = items.filter((item) => item.catIndex === catIndex)
+            if (categoryItems.length === 0) return null
+            return (
+              <div key={cat.category} className={catIndex > 0 ? "mt-14" : ""}>
+                <h2 className="mb-5 text-3xl font-black text-neutral-950">{cat.category}</h2>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {categoryItems.map((item) => {
+                    const quantity = cart[item.key]?.quantity ?? 0
+                    const images = productImages(item)
+                    return (
+                      <article key={item.key} className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.07)]">
+                        <button type="button" onClick={() => openProduct(item)} className="block w-full text-left">
+                          <div className="relative aspect-[4/3] bg-neutral-100">
+                            {images[0] ? <img src={images[0]} alt={item.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm font-black uppercase tracking-[0.18em] text-neutral-400">Product</div>}
+                            <div className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-2 text-sm font-black text-neutral-950 shadow-lg">{formatMoney(item.unitAmount)}</div>
+                          </div>
+                          <div className="p-5">
+                            <h3 className="text-2xl font-black leading-tight text-neutral-950">{item.name}</h3>
+                            {item.description && <p className="mt-2 line-clamp-2 text-base leading-relaxed text-neutral-600">{item.description}</p>}
+                            <p className="mt-4 text-xs font-black uppercase tracking-[0.16em]" style={{ color: primary }}>View details</p>
+                          </div>
+                        </button>
+                        <div className="flex items-center justify-between border-t border-neutral-100 p-4">
+                          <span className="text-sm font-bold text-neutral-500">{quantity ? `${quantity} in cart` : "Ready to add"}</span>
+                          <div className="flex items-center gap-3">
+                            <button type="button" onClick={() => setQuantity(item, quantity - 1)} disabled={quantity === 0} className="h-10 w-10 rounded-full border border-neutral-200 font-black text-neutral-950 disabled:opacity-30" aria-label={`Remove ${item.name}`}>-</button>
+                            <button type="button" onClick={() => setQuantity(item, quantity + 1)} className="h-10 w-10 rounded-full font-black text-white" style={{ backgroundColor: primary }} aria-label={`Add ${item.name}`}>+</button>
+                          </div>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </section>
+
+      </main>
+
       {cartItems.length > 0 && !paid && (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-5xl items-center gap-4">
@@ -337,62 +394,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           </section>
         </div>
       )}
-      </div>
-    )
-  }
 
-  return (
-    <div className="min-h-screen bg-white">
-      <section className="px-6 pb-10 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
-        <div className="mx-auto max-w-5xl">
-          <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop Online</p>
-          <h1 className="mb-4 text-5xl font-black leading-none text-white md:text-7xl">Shop {companyName}</h1>
-          <p className="max-w-xl text-lg leading-relaxed text-white/72">Choose what you want. {companyName} will receive the order and help with the next step.</p>
-        </div>
-      </section>
-
-      <main className="mx-auto max-w-6xl px-6 py-10 pb-32">
-        <section>
-          {categories.map((cat, catIndex) => {
-            const categoryItems = items.filter((item) => item.catIndex === catIndex)
-            if (categoryItems.length === 0) return null
-            return (
-              <div key={cat.category} className={catIndex > 0 ? "mt-14" : ""}>
-                <h2 className="mb-5 text-3xl font-black text-neutral-950">{cat.category}</h2>
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {categoryItems.map((item) => {
-                    const quantity = cart[item.key]?.quantity ?? 0
-                    const images = productImages(item)
-                    return (
-                      <article key={item.key} className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.07)]">
-                        <button type="button" onClick={() => openProduct(item)} className="block w-full text-left">
-                          <div className="relative aspect-[4/3] bg-neutral-100">
-                            {images[0] ? <img src={images[0]} alt={item.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm font-black uppercase tracking-[0.18em] text-neutral-400">Product</div>}
-                            <div className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-2 text-sm font-black text-neutral-950 shadow-lg">{formatMoney(item.unitAmount)}</div>
-                          </div>
-                          <div className="p-5">
-                            <h3 className="text-2xl font-black leading-tight text-neutral-950">{item.name}</h3>
-                            {item.description && <p className="mt-2 line-clamp-2 text-base leading-relaxed text-neutral-600">{item.description}</p>}
-                            <p className="mt-4 text-xs font-black uppercase tracking-[0.16em]" style={{ color: primary }}>View details</p>
-                          </div>
-                        </button>
-                        <div className="flex items-center justify-between border-t border-neutral-100 p-4">
-                          <span className="text-sm font-bold text-neutral-500">{quantity ? `${quantity} in cart` : "Ready to add"}</span>
-                          <div className="flex items-center gap-3">
-                            <button type="button" onClick={() => setQuantity(item, quantity - 1)} disabled={quantity === 0} className="h-10 w-10 rounded-full border border-neutral-200 font-black text-neutral-950 disabled:opacity-30" aria-label={`Remove ${item.name}`}>-</button>
-                            <button type="button" onClick={() => setQuantity(item, quantity + 1)} className="h-10 w-10 rounded-full font-black text-white" style={{ backgroundColor: primary }} aria-label={`Add ${item.name}`}>+</button>
-                          </div>
-                        </div>
-                      </article>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </section>
-
-      </main>
 
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm md:items-center md:justify-center" onClick={() => setSelectedProduct(null)}>
