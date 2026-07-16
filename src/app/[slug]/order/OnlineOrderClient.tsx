@@ -288,6 +288,17 @@ export default function OnlineOrderClient({
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const orderReady = paymentsReady && items.length > 0
   const canCheckout = orderReady && itemCount > 0 && name.trim() && phone.trim() && email.trim()
+  const checkoutActionLabel = loading
+    ? "Preparing payment..."
+    : !orderReady
+      ? "Ordering coming soon"
+      : !name.trim()
+        ? "Add your name"
+        : !phone.trim()
+          ? "Add your phone"
+          : !email.trim()
+            ? "Add your email"
+            : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`
 
   function setQuantity(item: OrderableItem, nextQuantity: number) {
     setPaymentSetup(null)
@@ -438,8 +449,8 @@ export default function OnlineOrderClient({
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
-              <p className="mt-0.5 truncate text-xs font-bold" style={{ color: "#666" }}>Ready for checkout</p>
+              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} ready</p>
+              <p className="mt-0.5 truncate text-xs font-bold" style={{ color: "#666" }}>{formatMoney(subtotal)} total</p>
             </div>
             <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-6 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
           </div>
@@ -450,8 +461,8 @@ export default function OnlineOrderClient({
         <div className="fixed bottom-6 left-1/2 z-40 hidden w-[min(720px,calc(100%-48px))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur md:block">
           <div className="flex items-center gap-4">
             <div className="min-w-0 flex-1 px-3">
-              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} · {formatMoney(subtotal)}</p>
-              <p className="truncate text-xs font-bold" style={{ color: "#666" }}>Ready for checkout</p>
+              <p className="text-sm font-black" style={{ color: "#111" }}>{itemCount} {itemCount === 1 ? "item" : "items"} ready</p>
+              <p className="truncate text-xs font-bold" style={{ color: "#666" }}>{formatMoney(subtotal)} total</p>
             </div>
             <button type="button" onClick={() => setCheckoutOpen(true)} className="rounded-full px-7 py-3 text-sm font-black text-white" style={{ backgroundColor: primary }}>Checkout</button>
           </div>
@@ -459,15 +470,16 @@ export default function OnlineOrderClient({
       )}
 
       {(checkoutOpen || paid) && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/55 backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
-          <section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[34px] bg-white p-6 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
+          <section className="max-h-[calc(100dvh-88px)] w-full overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.18em]" style={{ color: primary }}>Checkout</p>
                 <h2 className="mt-2 text-3xl font-black leading-tight" style={{ color: "#111" }}>Your order</h2>
+                <p className="mt-2 text-sm font-semibold leading-relaxed" style={{ color: "#666" }}>{companyName} will receive this order directly.</p>
               </div>
-              <button type="button" onClick={() => setCheckoutOpen(false)} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500">×</button>
+              <button type="button" onClick={() => setCheckoutOpen(false)} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500">x</button>
             </div>
 
             {paid ? (
@@ -502,7 +514,7 @@ export default function OnlineOrderClient({
                 {error && <p className="mt-4 text-sm font-bold" style={{ color: "#B42318" }}>{error}</p>}
 
                 {!paymentSetup ? (
-                  <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full py-4 text-base font-black disabled:opacity-40" style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}>{!orderReady ? "Ordering coming soon" : loading ? "Preparing payment..." : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`}</button>
+                  <button type="button" disabled={!canCheckout || loading} onClick={startPayment} className="mt-5 w-full py-4 text-base font-black transition disabled:cursor-not-allowed" style={{ borderRadius: 999, backgroundColor: canCheckout && !loading ? primary : "#D8E3F2", color: canCheckout && !loading ? "#fff" : "#5D718C" }}>{checkoutActionLabel}</button>
                 ) : (
                   <ClientPaymentElement setup={paymentSetup} companyId={companyId} slug={slug} total={subtotal} primary={primary} onPaid={handlePaid} />
                 )}
