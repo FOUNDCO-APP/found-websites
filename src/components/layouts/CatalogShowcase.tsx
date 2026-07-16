@@ -56,20 +56,18 @@ export default function CatalogShowcase({ company }: { company: Company }) {
       </div>
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white to-transparent md:w-28" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white to-transparent md:w-28" />
+
+
         <div className={items.length >= 4 ? "flex w-max gap-4 px-6 catalog-showcase-track md:gap-5 md:px-8" : "flex gap-4 overflow-x-auto px-6 pb-2 md:gap-5 md:px-8"}>
           {loop.map((item, index) => {
             const image = itemImage(item)
             return (
               <Link key={`${item.category}-${item.name}-${index}`} href={href} className="group block w-[74vw] max-w-[320px] shrink-0 overflow-hidden rounded-[28px] border border-neutral-200 bg-white text-left shadow-[0_18px_50px_rgba(0,0,0,0.08)] md:w-[300px]" style={{ textDecoration: "none" }}>
                 <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
-                  {image && <img src={image} alt={item.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />}
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-4 pt-16">
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/72">{item.category}</p>
-                  </div>
+                  {image && <img src={image} alt={item.name} className="h-full w-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.03]" />}
                 </div>
                 <div className="p-5">
+                  <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: primary }}>{item.category}</p>
                   <div className="flex items-start justify-between gap-4">
                     <h3 className="text-xl font-black leading-tight text-neutral-950" style={{ fontFamily: "var(--font-heading, inherit)" }}>{item.name}</h3>
                     {item.price && <p className="shrink-0 text-sm font-black" style={{ color: primary }}>{parsePrice(item.price)}</p>}
