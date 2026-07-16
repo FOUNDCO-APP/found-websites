@@ -199,7 +199,7 @@ function estimateDisplayStatus(est: Estimate) {
       return { label: "Balance due", color: PAYMENT_PENDING, detail: `Paid ${fmt(paidAmount(est))} - Balance ${fmt(balanceDue(est))}` }
     }
     if (est.payment_link_sent_at) {
-      return { label: "Payment sent", color: PAYMENT_SENT, detail: `Payment link sent - ${fmt(balanceDue(est))} due` }
+      return { label: "Request sent", color: PAYMENT_SENT, detail: `Payment request sent - ${fmt(balanceDue(est))} due` }
     }
     return { label: "Ready to collect", color: PAYMENT_PENDING, detail: `Ready to collect ${fmt(balanceDue(est))}` }
   }
@@ -603,7 +603,7 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
         )}
         {needsPayment(estimate) && paid <= 0 && (
           <div style={{ color: estimate.payment_link_sent_at ? PAYMENT_SENT : PAYMENT_PENDING, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>
-            {estimate.payment_link_sent_at ? `Payment sent - ${fmt(balance)} due` : companyStripeReady ? `Ready to collect ${fmt(balance)}` : `${fmt(balance)} due`}
+            {estimate.payment_link_sent_at ? `Payment request sent - ${fmt(balance)} due` : companyStripeReady ? `Ready to collect ${fmt(balance)}` : `${fmt(balance)} due`}
           </div>
         )}
       </div>
@@ -1519,7 +1519,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
                         fontSize: 15, fontWeight: 800, cursor: est.client_email && sending !== "payment_link" ? "pointer" : "default",
                       }}
                     >
-                      {sending === "payment_link" ? "Sending..." : est.payment_link_sent_at ? "Resend Payment Link" : "Send Payment Link"}
+                      {sending === "payment_link" ? "Sending..." : est.payment_link_sent_at ? "Resend Payment Request" : "Send Payment Request"}
                     </button>
                     {!est.client_email && (
                       <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>Add an email to send a payment link.</div>
