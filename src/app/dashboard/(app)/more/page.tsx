@@ -316,7 +316,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
             <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.55, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
               {paymentCopy.body}
             </p>
-            <PaymentSetupButton returnTo="/more?payments=connected">{paymentCopy.button}</PaymentSetupButton>
+            <PaymentSetupButton returnTo="/more?payments=connected" businessName={company.name}>{paymentCopy.button}</PaymentSetupButton>
           </div>
         </section>
       )}

@@ -217,6 +217,7 @@ export default function EstimatesPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([])
   const [rateSheet, setRateSheet] = useState<RateSheetItem[]>([])
   const [companySlug, setCompanySlug] = useState("")
+  const [companyName, setCompanyName] = useState("")
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [defaultTaxRate, setDefaultTaxRate] = useState(0)
   const [leads, setLeads] = useState<LeadSuggestion[]>([])
@@ -248,6 +249,7 @@ export default function EstimatesPage() {
       }
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
+      setCompanyName(sd.name ?? "")
       setCompanyStripeReady(Boolean(sd.stripe_connect_ready))
       setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
       setLocationBias([sd.city, sd.state].filter(Boolean).join(", "))
@@ -484,6 +486,7 @@ export default function EstimatesPage() {
         <DetailSheet
           estimate={selected}
           companySlug={companySlug}
+          companyName={companyName}
           companyStripeReady={companyStripeReady}
           locationBias={locationBias}
           rateSheet={rateSheet}
@@ -1062,9 +1065,10 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
 }
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
+function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
+  companyName: string
   companyStripeReady: boolean
   locationBias?: string
   rateSheet: RateSheetItem[]
@@ -1494,7 +1498,7 @@ function DetailSheet({ estimate, companySlug, companyStripeReady, locationBias, 
                       <div style={{ color: "rgba(255,255,255,0.82)", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Online payments</div>
                       <div style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, lineHeight: 1.45 }}>Secure setup takes a few minutes. You will leave Found briefly, then come right back.</div>
                     </div>
-                    <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="subtle" compact>Continue</PaymentSetupButton>
+                    <PaymentSetupButton returnTo={`/estimates?estimate=${est.id}`} variant="subtle" compact businessName={companyName}>Continue</PaymentSetupButton>
                   </div>
                 )}
               </div>
