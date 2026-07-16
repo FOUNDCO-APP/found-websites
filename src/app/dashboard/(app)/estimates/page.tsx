@@ -539,14 +539,12 @@ export default function EstimatesPage() {
 // ── Estimate Card ─────────────────────────────────────────────────────────────
 
 function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: EstimateFilter; onClick: () => void }) {
-  const displayStatus = estimateDisplayStatus(estimate)
   const incompleteDraft = isIncompleteDraft(estimate)
   const hasAddress = Boolean(estimate.property_address?.trim())
   const showMissingAddress = !hasAddress && estimate.status !== "accepted"
   const sublineText = hasAddress ? estimate.property_address! : estimate.status === "draft" ? "Job address missing" : "Address not added"
   const paid = paidAmount(estimate)
   const balance = balanceDue(estimate)
-  const showStatus = activeFilter === "all" || (activeFilter === "open" && !isOpenEstimate(estimate))
 
   return (
     <button
@@ -567,11 +565,6 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
           <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {estimate.client_name}
           </span>
-          {showStatus && (
-            <span style={{ color: displayStatus.color, fontSize: 11, fontWeight: 760, flexShrink: 0 }}>
-              {displayStatus.label}
-            </span>
-          )}
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
           {(hasAddress || showMissingAddress) && (
@@ -1162,6 +1155,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
   const est = fullEstimate ?? estimate
   const displayStatus = estimateDisplayStatus(est)
   const paymentStillDue = needsPayment(est)
+  const hasPartialPayment = paymentStillDue && paidAmount(est) > 0
   const items = est.estimate_line_items ?? []
   const link = shareUrl(estimate.id, companySlug)
 
@@ -1519,7 +1513,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
                         fontSize: 15, fontWeight: 800, cursor: est.client_email && sending !== "payment_link" ? "pointer" : "default",
                       }}
                     >
-                      {sending === "payment_link" ? "Sending..." : est.payment_link_sent_at ? "Resend Payment Request" : "Send Payment Request"}
+                      {sending === "payment_link" ? "Sending..." : hasPartialPayment ? "Collect Remaining Balance" : est.payment_link_sent_at ? "Resend Payment Request" : "Send Payment Request"}
                     </button>
                     {!est.client_email && (
                       <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>Add an email to send a payment link.</div>
