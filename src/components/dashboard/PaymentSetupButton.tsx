@@ -36,12 +36,16 @@ export default function PaymentSetupButton({
     if (loading) return
     setLoading(true)
     setError(null)
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 18000)
     try {
       const res = await fetch("/api/payments/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ returnTo }),
+        signal: controller.signal,
       })
+      window.clearTimeout(timeout)
       const raw = await res.text()
       let data: { url?: string; error?: string; code?: string } = {}
       try {
@@ -56,7 +60,12 @@ export default function PaymentSetupButton({
       window.location.href = data.url
     } catch (err) {
       console.error("[PaymentSetupButton] setup failed", err)
-      setError(err instanceof Error ? err.message : "Payment setup could not start.")
+      window.clearTimeout(timeout)
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Stripe setup is taking too long to open. Check your connection and try again.")
+      } else {
+        setError(err instanceof Error ? err.message : "Payment setup could not start.")
+      }
       setLoading(false)
     }
   }
@@ -171,6 +180,11 @@ export default function PaymentSetupButton({
             <p style={{ margin: "0 0 18px", color: "rgba(255,255,255,0.54)", fontSize: 14, lineHeight: 1.5, fontWeight: 480 }}>
               You may see Payments by Found because Found powers your payment tools. Payouts still belong to {payoutOwner}.
             </p>
+            {error && (
+              <p style={{ margin: "0 0 14px", color: "#FF453A", fontSize: 13, lineHeight: 1.45, fontWeight: 650 }}>
+                {error}
+              </p>
+            )}
             <button
               type="button"
               onClick={startSetup}
