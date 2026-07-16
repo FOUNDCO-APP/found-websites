@@ -60,6 +60,8 @@ type Estimate = {
   estimate_line_items?: LineItem[]
 }
 
+type EstimateFilter = "open" | "needs_payment" | "paid" | "all"
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
@@ -99,6 +101,9 @@ function CloseIconButton({ onClick, label = "Close" }: { onClick: () => void; la
     </button>
   )
 }
+const PAYMENT_PENDING = "#FFB340"
+const PAYMENT_SENT = "#64A8FF"
+
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
 }
@@ -116,13 +121,35 @@ function isIncompleteDraft(est: Estimate) {
   return est.status === "draft" && (est.total <= 0 || !(est.estimate_line_items?.length))
 }
 
-function estimateListPriority(est: Estimate) {
-  if (est.status === "sent" || est.status === "viewed") return 0
-  if (est.status === "draft") return 1
-  if (est.status === "accepted") return 2
-  return 3
+function paidAmount(est: Estimate) {
+  if (est.payment_status === "paid" || est.paid_at) return est.total
+  if (est.payment_status === "deposit_paid" || est.deposit_paid_at) return Math.min(est.deposit_amount ?? 0, est.total)
+  return 0
 }
 
+function balanceDue(est: Estimate) {
+  return Math.max(est.total - paidAmount(est), 0)
+}
+
+function isPaidEstimate(est: Estimate) {
+  return est.payment_status === "paid" || Boolean(est.paid_at) || (est.status === "accepted" && est.total > 0 && balanceDue(est) <= 0)
+}
+
+function needsPayment(est: Estimate) {
+  return est.status === "accepted" && !isPaidEstimate(est) && balanceDue(est) > 0
+}
+
+function isOpenEstimate(est: Estimate) {
+  return est.status === "draft" || est.status === "sent" || est.status === "viewed"
+}
+
+function estimateListPriority(est: Estimate) {
+  if (needsPayment(est)) return 0
+  if (isOpenEstimate(est)) return 1
+  if (isPaidEstimate(est)) return 2
+  if (est.status === "declined" || est.status === "expired") return 3
+  return 4
+}
 const inputStyle: React.CSSProperties = {
   width: "100%", padding: "13px 16px", borderRadius: 14,
   backgroundColor: "rgba(255,255,255,0.06)",
@@ -164,22 +191,17 @@ function taxRateFromInput(value: string) {
 }
 
 function estimateDisplayStatus(est: Estimate) {
-  if (est.payment_status === "paid" || est.paid_at) {
+  if (isPaidEstimate(est)) {
     return { label: "Paid", color: SIGNAL_GREEN, detail: "Paid in full" }
   }
-  if (est.payment_status === "deposit_paid" || est.deposit_paid_at) {
-    return {
-      label: "Deposit paid",
-      color: SIGNAL_GREEN,
-      detail: est.deposit_amount ? `${fmt(est.deposit_amount)} received` : "Deposit received",
+  if (needsPayment(est)) {
+    if (paidAmount(est) > 0) {
+      return { label: "Balance due", color: PAYMENT_PENDING, detail: `Paid ${fmt(paidAmount(est))} - Balance ${fmt(balanceDue(est))}` }
     }
-  }
-  if (est.status === "accepted" && (est.payment_status === "unpaid" || est.accepted_payment_choice === "pay_later" || est.accepted_pay_later_at)) {
-    return {
-      label: "Accepted",
-      color: SIGNAL_GREEN,
-      detail: est.payment_link_sent_at ? "Payment link sent" : "Unpaid",
+    if (est.payment_link_sent_at) {
+      return { label: "Payment sent", color: PAYMENT_SENT, detail: `Payment link sent - ${fmt(balanceDue(est))} due` }
     }
+    return { label: "Ready to collect", color: PAYMENT_PENDING, detail: `Ready to collect ${fmt(balanceDue(est))}` }
   }
   return {
     label: STATUS_LABELS[est.status] ?? est.status,
@@ -187,7 +209,6 @@ function estimateDisplayStatus(est: Estimate) {
     detail: null,
   }
 }
-
 // ── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, label, color }: { status: string; label?: string; color?: string }) {
@@ -223,7 +244,7 @@ export default function EstimatesPage() {
   const [leads, setLeads] = useState<LeadSuggestion[]>([])
   const [locationBias, setLocationBias] = useState("")
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<"all" | "open" | "viewed" | "accepted" | "declined">("all")
+  const [filter, setFilter] = useState<EstimateFilter>("all")
   const [showBuilder, setShowBuilder] = useState(false)
   const [builderLead, setBuilderLead] = useState<LeadSuggestion | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -280,21 +301,26 @@ export default function EstimatesPage() {
   const selected = estimates.find(e => e.id === selectedId) ?? null
   const [taxInput, setTaxInput] = useState(taxInputFromRate(defaultTaxRate))
 
-  const openStatuses = new Set<Estimate["status"]>(["draft", "sent", "viewed"])
   const filtered = filter === "all"
     ? estimates
     : filter === "open"
-      ? estimates.filter(e => openStatuses.has(e.status))
-      : estimates.filter(e => e.status === filter)
+      ? estimates.filter(isOpenEstimate)
+      : filter === "needs_payment"
+        ? estimates.filter(needsPayment)
+        : estimates.filter(isPaidEstimate)
+
   const displayEstimates = [...filtered].sort((a, b) => {
     const priority = estimateListPriority(a) - estimateListPriority(b)
     if (priority !== 0) return priority
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 
-  const counts: Record<string, number> = {}
-  for (const e of estimates) counts[e.status] = (counts[e.status] ?? 0) + 1
-
+  const counts = {
+    open: estimates.filter(isOpenEstimate).length,
+    needsPayment: estimates.filter(needsPayment).length,
+    paid: estimates.filter(isPaidEstimate).length,
+    won: estimates.filter((e) => e.status === "accepted").length,
+  }
   async function handleCreate(data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) {
     const res = await fetch("/api/estimates", {
       method: "POST",
@@ -363,8 +389,8 @@ export default function EstimatesPage() {
           <h1 style={{ margin: "0 0 4px", color: "white", ...TYPE.largeTitle }}>Estimates</h1>
           {estimates.length > 0 && (
             <p style={{ margin: 0, color: "white", opacity: TEXT_OPACITY.disabled, ...TYPE.footnote }}>
-              {estimates.filter(e => e.status === "draft" || e.status === "sent" || e.status === "viewed").length} active
-              {counts.accepted ? ` - ${counts.accepted} won` : ""}
+              {counts.open} open
+              {counts.needsPayment ? ` - ${counts.needsPayment} need payment` : counts.won ? ` - ${counts.won} won` : ""}
             </p>
           )}
         </div>
@@ -399,11 +425,10 @@ export default function EstimatesPage() {
       {estimates.length > 0 && (
         <div style={{ display: "flex", gap: 8, marginBottom: 24, overflowX: "auto", paddingBottom: 2 }}>
           {([
-            { key: "all" as const, label: "All", count: estimates.length, color: SIGNAL_GREEN },
-            { key: "open" as const, label: "Open", count: estimates.filter(e => openStatuses.has(e.status)).length, color: "rgba(255,255,255,0.62)" },
-            { key: "viewed" as const, label: "Viewed", count: counts.viewed ?? 0, color: STATUS_COLORS.viewed },
-            { key: "accepted" as const, label: "Accepted", count: counts.accepted ?? 0, color: SIGNAL_GREEN },
-            { key: "declined" as const, label: "Declined", count: counts.declined ?? 0, color: STATUS_COLORS.declined },
+            { key: "open" as const, label: "Open", count: counts.open, color: "rgba(255,255,255,0.62)" },
+            { key: "needs_payment" as const, label: "Needs payment", count: counts.needsPayment, color: PAYMENT_PENDING },
+            { key: "paid" as const, label: "Paid", count: counts.paid, color: SIGNAL_GREEN },
+            { key: "all" as const, label: "All", count: estimates.length, color: "rgba(255,255,255,0.62)" },
           ]).map(f => {
             if (f.key !== "all" && f.count === 0) return null
             const active = filter === f.key
@@ -444,7 +469,7 @@ export default function EstimatesPage() {
             </svg>
           </div>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
-            {filter === "all" ? "Your first estimate is ready to build." : `No ${filter} estimates.`}
+            {filter === "all" ? "Your first estimate is ready to build." : filter === "needs_payment" ? "Nobody needs payment right now." : `No ${filter.replace("_", " ")} estimates.`}
           </p>
           <p style={{ margin: "0 0 28px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
             {filter === "all" ? "Tap + to create your first professional quote." : ""}
@@ -513,15 +538,15 @@ export default function EstimatesPage() {
 
 // ── Estimate Card ─────────────────────────────────────────────────────────────
 
-function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: "all" | "open" | "viewed" | "accepted" | "declined"; onClick: () => void }) {
+function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: EstimateFilter; onClick: () => void }) {
   const displayStatus = estimateDisplayStatus(estimate)
-  const isAcceptedUnpaid = estimate.status === "accepted" && !(estimate.payment_status === "paid" || estimate.paid_at || estimate.payment_status === "deposit_paid" || estimate.deposit_paid_at)
-  const shouldShowStatus = estimate.status === "accepted" ? false : estimate.status !== activeFilter
-  const paymentHint = isAcceptedUnpaid ? (companyStripeReady ? (estimate.payment_link_sent_at ? "Payment sent" : "Ready to collect") : null) : displayStatus.detail
   const incompleteDraft = isIncompleteDraft(estimate)
   const hasAddress = Boolean(estimate.property_address?.trim())
   const showMissingAddress = !hasAddress && estimate.status !== "accepted"
   const sublineText = hasAddress ? estimate.property_address! : estimate.status === "draft" ? "Job address missing" : "Address not added"
+  const paid = paidAmount(estimate)
+  const balance = balanceDue(estimate)
+  const showStatus = activeFilter === "all" || (activeFilter === "open" && !isOpenEstimate(estimate))
 
   return (
     <button
@@ -542,7 +567,7 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
           <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {estimate.client_name}
           </span>
-          {shouldShowStatus && (
+          {showStatus && (
             <span style={{ color: displayStatus.color, fontSize: 11, fontWeight: 760, flexShrink: 0 }}>
               {displayStatus.label}
             </span>
@@ -566,8 +591,20 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
         <div style={{ color: incompleteDraft ? SIGNAL_GREEN : "white", fontSize: incompleteDraft ? 15 : 17, fontWeight: 760, letterSpacing: 0 }}>
           {incompleteDraft ? "Finish" : fmt(estimate.total)}
         </div>
-        {paymentHint && paymentHint !== "Unpaid" && (
-          <div style={{ color: displayStatus.color, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>{paymentHint}</div>
+        {isPaidEstimate(estimate) && (
+          <div style={{ color: SIGNAL_GREEN, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>Paid in full</div>
+        )}
+        {needsPayment(estimate) && paid > 0 && (
+          <div style={{ marginTop: 4, whiteSpace: "nowrap", fontSize: 11, fontWeight: 720 }}>
+            <span style={{ color: SIGNAL_GREEN }}>Paid {fmt(paid)}</span>
+            <span style={{ color: "rgba(255,255,255,0.28)" }}> - </span>
+            <span style={{ color: PAYMENT_PENDING }}>Balance {fmt(balance)}</span>
+          </div>
+        )}
+        {needsPayment(estimate) && paid <= 0 && (
+          <div style={{ color: estimate.payment_link_sent_at ? PAYMENT_SENT : PAYMENT_PENDING, fontSize: 11, fontWeight: 720, marginTop: 4, whiteSpace: "nowrap" }}>
+            {estimate.payment_link_sent_at ? `Payment sent - ${fmt(balance)} due` : companyStripeReady ? `Ready to collect ${fmt(balance)}` : `${fmt(balance)} due`}
+          </div>
         )}
       </div>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.16)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -576,6 +613,7 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
     </button>
   )
 }
+
 type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null; message?: string | null; partial_answers?: Record<string, unknown> | null }
 
 function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
@@ -1123,7 +1161,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
 
   const est = fullEstimate ?? estimate
   const displayStatus = estimateDisplayStatus(est)
-  const isAcceptedUnpaid = est.status === "accepted" && !(est.payment_status === "paid" || est.paid_at || est.payment_status === "deposit_paid" || est.deposit_paid_at)
+  const paymentStillDue = needsPayment(est)
   const items = est.estimate_line_items ?? []
   const link = shareUrl(estimate.id, companySlug)
 
@@ -1449,10 +1487,10 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
             {est.status === "accepted" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
                 <div style={{ padding: "2px 0 4px" }}>
-                  <div style={{ color: SIGNAL_GREEN, fontSize: 14, fontWeight: 780, marginBottom: 5 }}>Accepted</div>
+                  <div style={{ color: displayStatus.color, fontSize: 14, fontWeight: 780, marginBottom: 5 }}>{displayStatus.label}</div>
                   <div style={{ color: "rgba(255,255,255,0.42)", fontSize: 13, lineHeight: 1.45 }}>
-                    {est.payment_status === "paid" || est.paid_at ? "Paid in full" : est.deposit_paid_at ? "Deposit received" : companyStripeReady ? (est.payment_link_sent_at ? "Payment link sent" : "Ready to collect payment") : (est.accepted_at ? new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "Estimate accepted")}
-                    {(est.payment_status === "paid" || est.paid_at || est.deposit_paid_at || companyStripeReady) && est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
+                    {displayStatus.detail ?? (est.accepted_at ? `Accepted ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : "Estimate accepted")}
+                    {displayStatus.detail && est.accepted_at ? ` - ${new Date(est.accepted_at).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}` : ""}
                   </div>
                 </div>
 
@@ -1468,7 +1506,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
                   {copied ? "Copied" : "Copy estimate link"}
                 </button>
 
-                {isAcceptedUnpaid && companyStripeReady && (
+                {paymentStillDue && companyStripeReady && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                     <button
                       onClick={handlePaymentLinkSend}
@@ -1492,7 +1530,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
                   </div>
                 )}
 
-                {isAcceptedUnpaid && !companyStripeReady && (
+                {paymentStillDue && !companyStripeReady && (
                   <div style={{ padding: "12px 0 0", borderTop: "1px solid rgba(255,255,255,0.07)", display: "grid", gridTemplateColumns: "minmax(0, 1fr) 142px", alignItems: "center", gap: 12 }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ color: "rgba(255,255,255,0.82)", fontSize: 13, fontWeight: 760, marginBottom: 2 }}>Online payments</div>
