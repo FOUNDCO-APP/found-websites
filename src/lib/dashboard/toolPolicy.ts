@@ -20,7 +20,8 @@ type DashboardToolPolicyInput = {
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
 const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
 const CAMERA_TOOL: DashboardTool = { id: "camera", path: "/photos?camera=1", label: "Camera", group: "website", description: "Shoot and sort later" }
-const PRODUCTS_TOOL: DashboardTool = { id: "products", path: "/site", label: "Products", group: "website", description: "Add what you sell online" }
+const PRODUCTS_TOOL: DashboardTool = { id: "products", path: "/products", label: "Products", group: "website", description: "Add what you sell online" }
+const MENU_TOOL: DashboardTool = { id: "menu", path: "/menu", label: "Menu", group: "website", description: "Edit the items guests can order" }
 
 const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "wellness",
@@ -105,6 +106,7 @@ function availableFoodTools(activeAddons: string[]): DashboardTool[] {
       : { id: "inbox", path: "/leads", label: "Reservations", group: "work_schedule", description: "Customers asking to reserve a time" },
     ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     peopleTool("food"),
+    MENU_TOOL,
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
