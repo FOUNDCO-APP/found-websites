@@ -456,3 +456,22 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.15 !important;
   }
 }
+.catalog-showcase-track {
+  animation: catalog-showcase-scroll 34s linear infinite;
+}
+
+.catalog-showcase-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes catalog-showcase-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 10px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-showcase-track {
+    animation: none;
+    overflow-x: auto;
+  }
+}

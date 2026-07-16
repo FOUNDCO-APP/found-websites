@@ -7,6 +7,7 @@ import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
+import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
 export default function CinematicLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, locations = [] }: LayoutProps) {
@@ -113,6 +114,8 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
           </svg>
         </div>
       </section>
+
+      <CatalogShowcase company={company} />
 
       {/* ── SERVICES — swipe on mobile, grid on desktop ── */}
       {services.length > 0 && (

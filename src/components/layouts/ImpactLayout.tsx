@@ -7,6 +7,7 @@ import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
+import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
 export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, locations = [] }: LayoutProps) {
@@ -71,6 +72,8 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
           </div>
         </div>
       </section>
+
+      <CatalogShowcase company={company} />
 
       {/* ── SERVICES TEASER ── */}
       {services.length > 0 && (

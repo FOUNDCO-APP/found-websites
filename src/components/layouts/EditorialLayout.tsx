@@ -9,6 +9,7 @@ import { polishBusinessName } from "@/lib/copyPolish"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
+import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
 export default function EditorialLayout({ company, supportingCTA, imgs, gradient, heroImage, locations = [] }: LayoutProps) {
@@ -98,6 +99,8 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
           )}
         </div>
       </section>
+
+      <CatalogShowcase company={company} />
 
       {/* ── ABOUT — brand story ── */}
       {aboutCopy && (
