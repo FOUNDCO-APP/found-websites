@@ -109,8 +109,10 @@ export default async function EstimateClientPage({
   const isAccepted = estimate.status === "accepted"
   const isDeclined = estimate.status === "declined"
   const paymentStatus = estimate.payment_status ?? (estimate.deposit_paid_at ? "deposit_paid" : "unpaid")
-  const isPaid = paymentStatus === "paid" || paymentStatus === "deposit_paid" || Boolean(estimate.deposit_paid_at)
-  const isAcceptedUnpaid = isAccepted && !isPaid
+  const isPaid = paymentStatus === "paid" || Boolean(estimate.paid_at)
+  const paidAmount = isPaid ? Number(estimate.total ?? 0) : estimate.deposit_paid_at ? Number(estimate.deposit_amount ?? 0) : 0
+  const balanceDue = Math.max(Number(estimate.total ?? 0) - paidAmount, 0)
+  const isAcceptedUnpaid = isAccepted && !isPaid && balanceDue > 0
   let isExpired = estimate.status === "expired"
 
   if (!isAccepted && !isDeclined && !isExpired && estimate.valid_until && new Date(estimate.valid_until) < new Date()) {
@@ -329,6 +331,8 @@ export default async function EstimateClientPage({
                 companyName={company.name}
                 logoUrl={company.logo_url}
                 acceptedAlready={isAcceptedUnpaid}
+                paidAmount={paidAmount}
+                balanceDue={balanceDue}
               />
               {!isAccepted && <DeclineButton estimateId={id} companyName={companyDisplayName ?? company.name} />}
             </div>

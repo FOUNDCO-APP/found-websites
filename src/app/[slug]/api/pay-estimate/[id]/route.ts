@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: Params) {
   const admin = createAdminClient()
   const { data: estimate } = await admin
     .from("estimates")
-    .select("id, status, total, deposit_pct, client_name, client_email")
+    .select("id, status, total, deposit_pct, deposit_amount, deposit_paid_at, payment_status, paid_at, client_name, client_email")
     .eq("id", id)
     .eq("company_id", company.id)
     .single()
@@ -35,24 +35,33 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const depositPct = (estimate.deposit_pct as number) ?? 50
   const totalCents = Math.round(Number(estimate.total ?? 0) * 100)
+  const paidCents = estimate.payment_status === "paid" || estimate.paid_at
+    ? totalCents
+    : estimate.deposit_paid_at
+      ? Math.round(Number(estimate.deposit_amount ?? 0) * 100)
+      : 0
+  const balanceCents = Math.max(totalCents - paidCents, 0)
+  const isBalancePayment = paidCents > 0 && balanceCents > 0
   const depositCents = depositPct >= 100 ? totalCents : Math.round(totalCents * (depositPct / 100))
-  const depositAmount = depositCents / 100
+  const amountCents = isBalancePayment ? balanceCents : depositCents
+  const amountDue = amountCents / 100
+  const responsePct = isBalancePayment ? 100 : depositPct
 
-  if (depositCents < 50) return NextResponse.json({ error: "Deposit amount too small" }, { status: 400 })
+  if (amountCents < 50) return NextResponse.json({ error: "Payment amount too small" }, { status: 400 })
 
   const paymentIntent = await stripe.paymentIntents.create(
     {
-      amount: depositCents,
+      amount: amountCents,
       currency: "usd",
       receipt_email: (estimate.client_email as string) ?? undefined,
       description: `${company.name} — ${depositPct}% deposit · ${estimate.client_name}`,
       automatic_payment_methods: { enabled: true },
-      application_fee_amount: Math.round(depositCents * 0.005),
+      application_fee_amount: Math.round(amountCents * 0.005),
       metadata: {
-        kind: "estimate_deposit",
+        kind: isBalancePayment ? "estimate_balance" : "estimate_deposit",
         company_id: company.id,
         estimate_id: id,
-        deposit_pct: String(depositPct),
+        deposit_pct: String(responsePct),
       },
     },
     { stripeAccount: connectAccountId }
@@ -60,14 +69,14 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   await admin.from("estimates").update({
     stripe_payment_intent_id: paymentIntent.id,
-    deposit_amount: depositAmount,
+    deposit_amount: isBalancePayment ? (estimate.deposit_amount ?? 0) : amountDue,
     updated_at: new Date().toISOString(),
   }).eq("id", id)
 
   return NextResponse.json({
     clientSecret: paymentIntent.client_secret,
     stripeAccountId: connectAccountId,
-    depositAmount,
-    depositPct,
+    depositAmount: amountDue,
+    depositPct: responsePct,
   })
 }

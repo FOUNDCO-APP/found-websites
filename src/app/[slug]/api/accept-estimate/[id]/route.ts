@@ -153,7 +153,7 @@ export async function POST(req: Request, { params }: Params) {
   const admin = createAdminClient()
   const { data: estimate } = await admin
     .from("estimates")
-    .select("id, status, client_name, client_first_name, client_last_name, client_company, client_email, property_address, total, deposit_pct, deposit_amount, deposit_paid_at, accepted_at, receipt_sent_at")
+    .select("id, status, client_name, client_first_name, client_last_name, client_company, client_email, property_address, total, deposit_pct, deposit_amount, deposit_paid_at, payment_status, paid_at, accepted_at, receipt_sent_at")
     .eq("id", id)
     .eq("company_id", company.id)
     .single()
@@ -169,7 +169,8 @@ export async function POST(req: Request, { params }: Params) {
   const estimateLink = `https://${company.slug}.${ROOT_DOMAIN}/q/${id}`
   const total = Number(estimate.total ?? 0)
   const depositAmount = estimateDepositDue(total, estimate.deposit_pct as number | null, estimate.deposit_amount as number | null)
-  const amountPaid = body.paid ? depositAmount : 0
+  const hadDeposit = Boolean(estimate.deposit_paid_at) || estimate.payment_status === "deposit_paid"
+  const amountPaid = body.paid ? (hadDeposit ? total : depositAmount) : 0
   const remaining = Math.max(total - amountPaid, 0)
 
   const patch: Record<string, string> = {
@@ -179,10 +180,10 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   if (body.paid) {
-    patch.deposit_paid_at = estimate.deposit_paid_at ?? now
+    if (!hadDeposit) patch.deposit_paid_at = estimate.deposit_paid_at ?? now
     patch.accepted_payment_choice = "pay_now"
     patch.payment_status = amountPaid >= total ? "paid" : "deposit_paid"
-    if (amountPaid >= total) patch.paid_at = now
+    if (amountPaid >= total) patch.paid_at = estimate.paid_at ?? now
   }
 
   if (body.pay_later) {

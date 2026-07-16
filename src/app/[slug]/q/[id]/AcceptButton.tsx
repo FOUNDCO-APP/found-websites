@@ -282,7 +282,7 @@ function PaymentSheet({
             estimateId={estimateId}
             depositAmount={setup.depositAmount}
             depositPct={setup.depositPct}
-            total={total}
+            total={setup.depositPct >= 100 ? setup.depositAmount : total}
             color={color}
             companyName={companyName}
             onPaid={onPaid}
@@ -308,6 +308,8 @@ export default function AcceptButton({
   companyName,
   logoUrl,
   acceptedAlready = false,
+  paidAmount = 0,
+  balanceDue,
 }: {
   estimateId: string
   color: string
@@ -320,22 +322,29 @@ export default function AcceptButton({
   companyName: string
   logoUrl?: string | null
   acceptedAlready?: boolean
+  paidAmount?: number
+  balanceDue?: number
 }) {
   const [accepted, setAccepted] = useState(acceptedAlready)
   const [loading, setLoading] = useState(false)
   const [paymentSetup, setPaymentSetup] = useState<PaymentSetup | null>(null)
   const [payLaterAccepted, setPayLaterAccepted] = useState(false)
+  const [paymentCompleted, setPaymentCompleted] = useState(false)
 
   const hasStripe = Boolean(stripeAccountId)
-  const depositCents = depositPct >= 100 ? Math.round(total * 100) : Math.round(total * depositPct)
   const totalCents = Math.round(total * 100)
+  const depositCents = depositPct >= 100 ? totalCents : Math.round(total * depositPct)
   const depositAmount = depositCents / 100
-  const remainingAmount = Math.max(totalCents - depositCents, 0) / 100
+  const isBalancePayment = acceptedAlready && paidAmount > 0 && (balanceDue ?? 0) > 0
+  const amountDueNow = isBalancePayment ? (balanceDue ?? 0) : depositAmount
+  const remainingAmount = isBalancePayment ? 0 : Math.max(totalCents - depositCents, 0) / 100
   const depositPctLabel = `${Math.round(depositPct)}%`
-  const primaryLabel = remainingAmount > 0 ? `Pay ${fmt(depositAmount)} deposit` : `Pay ${fmt(depositAmount)} now`
-  const paymentSummary = remainingAmount > 0
-    ? `${depositPctLabel} today. The rest is due when the work is complete.`
-    : "Pay securely now."
+  const primaryLabel = isBalancePayment ? `Pay ${fmt(amountDueNow)} balance` : remainingAmount > 0 ? `Pay ${fmt(depositAmount)} deposit` : `Pay ${fmt(depositAmount)} now`
+  const paymentSummary = isBalancePayment
+    ? "Pay the remaining balance securely now."
+    : remainingAmount > 0
+      ? `${depositPctLabel} today. The rest is due when the work is complete.`
+      : "Pay securely now."
 
   async function handleSimpleAccept() {
     if (loading || accepted) return
@@ -391,7 +400,7 @@ export default function AcceptButton({
     )
   }
 
-  if (accepted && !acceptedAlready) {
+  if (accepted && (!acceptedAlready || paymentCompleted)) {
     return (
       <div style={{
         position: "relative", overflow: "hidden",
@@ -439,11 +448,11 @@ export default function AcceptButton({
           <div style={{ borderRadius: 16, backgroundColor: "#FAFAF8", border: "1px solid #EFEFEB", padding: "16px 18px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
               <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                {remainingAmount > 0 ? "Deposit paid" : "Amount paid"}
+                {paymentCompleted && isBalancePayment ? "Balance paid" : remainingAmount > 0 ? "Deposit paid" : "Amount paid"}
               </span>
-              <span style={{ color, fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(depositAmount)}</span>
+              <span style={{ color, fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(paymentCompleted && isBalancePayment ? amountDueNow : depositAmount)}</span>
             </div>
-            {remainingAmount > 0 && (
+            {!paymentCompleted && remainingAmount > 0 && (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #EFEFEB" }}>
                 <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700 }}>Due at completion</span>
                 <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(remainingAmount)}</span>
@@ -508,7 +517,7 @@ export default function AcceptButton({
               <span style={{ color: "#777772", fontSize: 14, fontWeight: 650 }}>Total estimate</span>
               <span style={{ color: "#111", fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(total)}</span>
             </div>
-            {remainingAmount > 0 ? (
+            {!isBalancePayment && remainingAmount > 0 ? (
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, padding: "15px 0", borderTop: "1px solid #EFEFEB", borderBottom: "1px solid #EFEFEB" }}>
                   <div>
@@ -525,10 +534,10 @@ export default function AcceptButton({
             ) : (
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, paddingTop: 15, borderTop: "1px solid #EFEFEB" }}>
                 <div>
-                  <div style={{ color: "#111", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>Due today</div>
+                  <div style={{ color: "#111", fontSize: 20, fontWeight: 900, letterSpacing: "-0.03em" }}>{isBalancePayment ? "Remaining balance" : "Due today"}</div>
                   <div style={{ color: "#777772", fontSize: 13, marginTop: 4 }}>Secure payment</div>
                 </div>
-                <span style={{ color, fontSize: 30, fontWeight: 900, letterSpacing: "-0.045em", whiteSpace: "nowrap", lineHeight: 1 }}>{fmt(depositAmount)}</span>
+                <span style={{ color, fontSize: 30, fontWeight: 900, letterSpacing: "-0.045em", whiteSpace: "nowrap", lineHeight: 1 }}>{fmt(amountDueNow)}</span>
               </div>
             )}
           </section>
@@ -584,9 +593,9 @@ export default function AcceptButton({
           setup={paymentSetup}
           color={color}
           estimateId={estimateId}
-          total={total}
+          total={paymentSetup.depositPct >= 100 ? paymentSetup.depositAmount : total}
           companyName={companyName}
-          onPaid={() => { setAccepted(true); setPaymentSetup(null) }}
+          onPaid={() => { setAccepted(true); setPaymentCompleted(true); setPaymentSetup(null) }}
           onClose={() => setPaymentSetup(null)}
         />
       )}
