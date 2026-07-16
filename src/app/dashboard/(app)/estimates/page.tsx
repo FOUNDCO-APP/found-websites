@@ -1513,10 +1513,13 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
                         fontSize: 15, fontWeight: 800, cursor: est.client_email && sending !== "payment_link" ? "pointer" : "default",
                       }}
                     >
-                      {sending === "payment_link" ? "Sending..." : hasPartialPayment ? "Collect Remaining Balance" : est.payment_link_sent_at ? "Resend Payment Request" : "Send Payment Request"}
+                      {sending === "payment_link" ? "Sending..." : est.payment_link_sent_at ? "Resend Payment Request" : hasPartialPayment ? "Collect Remaining Balance" : "Send Payment Request"}
                     </button>
                     {!est.client_email && (
                       <div style={{ color: "rgba(255,255,255,0.38)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>Add an email to send a payment link.</div>
+                    )}
+                    {est.payment_link_sent_at && !sendError && (
+                      <div style={{ color: "rgba(255,255,255,0.48)", fontSize: 12, lineHeight: 1.45, textAlign: "center" }}>Payment request sent. We emailed {est.client_name} a link to pay the remaining balance.</div>
                     )}
                     {sendError && (
                       <div style={{ padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13, lineHeight: 1.45 }}>{sendError}</div>
