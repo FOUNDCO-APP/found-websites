@@ -49,6 +49,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [editingMenuCatIdx, setEditingMenuCatIdx] = useState<number | null>(null)
   const [menuCatDraftName, setMenuCatDraftName] = useState('')
   const [menuSaved, setMenuSaved] = useState(false)
+  const [menuSaving, setMenuSaving] = useState(false)
+  const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
 
@@ -113,22 +115,33 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setTimeout(() => setIntentSaved(false), 2500)
   }
 
-  function persistMenuCats(cats: MenuCatData[]) {
+  async function persistMenuCats(cats: MenuCatData[]) {
+    const previousCats = menuCats
     const polishedCats = polishMenuCategories(cats)
+    setMenuError(null)
+    setMenuSaving(true)
     setMenuCats(polishedCats)
+    const result = await updateMenuItems(polishedCats)
+    setMenuSaving(false)
+    if ("error" in result) {
+      setMenuCats(previousCats)
+      setMenuError(result.error || "Menu could not be saved. Try again.")
+      return false
+    }
     setMenuSaved(true)
     setTimeout(() => setMenuSaved(false), 2500)
-    startTransition(async () => { await updateMenuItems(polishedCats) })
+    return true
   }
 
   function openEditMenuItem(catIdx: number, itemIdx: number | null) {
     const item = itemIdx !== null ? menuCats[catIdx]?.items[itemIdx] : null
+    setMenuError(null)
     setMenuItemDraft({ name: item?.name ?? '', price: item?.price ?? '', description: item?.description ?? '', photo_url: item?.photo_url ?? '' })
     setEditingMenuItem({ catIdx, itemIdx })
   }
 
-  function saveMenuItem() {
-    if (!editingMenuItem) return
+  async function saveMenuItem() {
+    if (!editingMenuItem || menuSaving) return
     const { catIdx, itemIdx } = editingMenuItem
     const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: menuItemDraft.price.trim() || null, photo_url: menuItemDraft.photo_url || null }
     if (!newItem.name) return
@@ -139,20 +152,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       else items[itemIdx] = newItem
       return { ...c, items }
     })
-    setEditingMenuItem(null)
-    persistMenuCats(cats)
+    const ok = await persistMenuCats(cats)
+    if (ok) setEditingMenuItem(null)
   }
 
-  function removeMenuItem(catIdx: number, itemIdx: number) {
+  async function removeMenuItem(catIdx: number, itemIdx: number) {
+    if (menuSaving) return
     const cats = menuCats.map((c, ci) => {
       if (ci !== catIdx) return c
       const items = [...c.items]; items.splice(itemIdx, 1)
       return { ...c, items }
     })
-    setEditingMenuItem(null)
-    persistMenuCats(cats)
+    const ok = await persistMenuCats(cats)
+    if (ok) setEditingMenuItem(null)
   }
-
   async function handleMenuPhotoUpload(file: File) {
     setUploadingMenuPhoto(true)
     const fd = new FormData(); fd.append('file', file)
@@ -161,26 +174,27 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if ('url' in result) setMenuItemDraft(prev => ({ ...prev, photo_url: result.url }))
   }
 
-  function addMenuCategory() {
-    if (!newMenuCatName.trim()) return
+  async function addMenuCategory() {
+    if (!newMenuCatName.trim() || menuSaving) return
     const cats = [...menuCats, { category: newMenuCatName.trim(), items: [] }]
-    setNewMenuCatName(''); setAddingMenuCat(false)
-    persistMenuCats(cats)
+    const ok = await persistMenuCats(cats)
+    if (ok) { setNewMenuCatName(''); setAddingMenuCat(false) }
   }
 
-  function removeMenuCategory(catIdx: number) {
+  async function removeMenuCategory(catIdx: number) {
+    if (menuSaving) return
     const cats = [...menuCats]; cats.splice(catIdx, 1)
-    persistMenuCats(cats)
+    await persistMenuCats(cats)
   }
 
-  function saveMenuCatName(catIdx: number) {
+  async function saveMenuCatName(catIdx: number) {
+    if (menuSaving) return
     const name = menuCatDraftName.trim()
     if (!name) { setEditingMenuCatIdx(null); return }
     const cats = menuCats.map((c, ci) => ci === catIdx ? { ...c, category: name } : c)
-    setEditingMenuCatIdx(null)
-    persistMenuCats(cats)
+    const ok = await persistMenuCats(cats)
+    if (ok) setEditingMenuCatIdx(null)
   }
-
   function handleAssignPhoto(photoId: string, section: string | null) {
     // Optimistic update — move photo immediately in local state
     setLocalPhotos(prev => prev.map(p => p.id === photoId ? { ...p, website_section: section } : p))
@@ -712,7 +726,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       {editingMenuItem !== null && (
         <>
           <div onClick={() => setEditingMenuItem(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 40, backdropFilter: "blur(4px)" }}/>
-          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50, backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "24px 24px 0 0", padding: "20px 20px 44px" }}>
+          <div style={{ position: "fixed", left: 12, right: 12, bottom: "calc(84px + env(safe-area-inset-bottom))", zIndex: 50, maxHeight: "min(78dvh, 620px)", minHeight: "52dvh", overflowY: "auto" as const, backgroundColor: "#111613", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "22px 20px 24px", boxShadow: "0 -28px 80px rgba(0,0,0,0.55)" }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 18px" }}/>
             <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
               {editingMenuItem.itemIdx === null ? "Add Item" : "Edit Item"}
@@ -760,21 +774,26 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none" as const, boxSizing: "border-box" as const, marginBottom: 14, fontFamily: "inherit", lineHeight: 1.5 }}
             />
 
+            {menuError && (
+              <p style={{ margin: "0 0 12px", padding: "11px 12px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.12)", border: "1px solid rgba(255,69,58,0.28)", color: "#FF453A", fontSize: 13, fontWeight: 700, lineHeight: 1.35 }}>{menuError}</p>
+            )}
+
             <div style={{ display: "flex", gap: 8 }}>
               {editingMenuItem.itemIdx !== null && (
                 <button
-                  onClick={() => removeMenuItem(editingMenuItem.catIdx, editingMenuItem.itemIdx!)}
-                  style={{ padding: "13px 16px", borderRadius: 12, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.1)", color: "rgba(255,100,100,0.8)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  onClick={() => void removeMenuItem(editingMenuItem.catIdx, editingMenuItem.itemIdx!)}
+                  disabled={menuSaving}
+                  style={{ padding: "13px 16px", borderRadius: 12, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.1)", color: "rgba(255,100,100,0.8)", fontSize: 13, fontWeight: 700, cursor: menuSaving ? "default" : "pointer", opacity: menuSaving ? 0.5 : 1 }}>
                   Remove
                 </button>
               )}
-              <button onClick={() => setEditingMenuItem(null)}
-                style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button onClick={() => setEditingMenuItem(null)} disabled={menuSaving}
+                style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: menuSaving ? "default" : "pointer", opacity: menuSaving ? 0.5 : 1 }}>
                 Cancel
               </button>
-              <button onClick={saveMenuItem} disabled={!menuItemDraft.name.trim()}
-                style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: menuItemDraft.name.trim() ? GREEN : "rgba(255,255,255,0.08)", color: menuItemDraft.name.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: menuItemDraft.name.trim() ? "pointer" : "default" }}>
-                Save to Menu
+              <button onClick={() => void saveMenuItem()} disabled={!menuItemDraft.name.trim() || menuSaving}
+                style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: menuItemDraft.name.trim() && !menuSaving ? GREEN : "rgba(255,255,255,0.08)", color: menuItemDraft.name.trim() && !menuSaving ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: menuItemDraft.name.trim() && !menuSaving ? "pointer" : "default" }}>
+                {menuSaving ? "Saving..." : "Save to Menu"}
               </button>
             </div>
           </div>
