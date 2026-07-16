@@ -20,6 +20,7 @@ type DashboardToolPolicyInput = {
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
 const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
 const CAMERA_TOOL: DashboardTool = { id: "camera", path: "/photos?camera=1", label: "Camera", group: "website", description: "Shoot and sort later" }
+const PRODUCTS_TOOL: DashboardTool = { id: "products", path: "/site", label: "Products", group: "website", description: "Add what you sell online" }
 
 const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "wellness",
@@ -73,6 +74,9 @@ function supportsOrderWorkflow(industry: string | null | undefined, subIndustry?
 function hasOrderAccess(activeAddons: string[], industry: string | null | undefined, subIndustry?: string | null): boolean {
   return hasOrderWorkflow(activeAddons) && supportsOrderWorkflow(industry, subIndustry)
 }
+function hasProductCatalog(activeAddons: string[], industry: string | null | undefined, subIndustry?: string | null): boolean {
+  return activeAddons.includes("shopping_cart") || normalize(industry) === "retail" || normalize(industry) === "makers_crafts" || normalize(subIndustry) === "apparel"
+}
 function has(activeAddons: string[], addon: string) {
   return activeAddons.includes(addon)
 }
@@ -115,6 +119,7 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
   const hasOrders = hasOrderAccess(activeAddons, industry, subIndustry)
+  const hasProducts = hasProductCatalog(activeAddons, industry, subIndustry)
 
   if (industry === "food") return availableFoodTools(activeAddons)
 
@@ -125,6 +130,7 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
     ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     peopleTool(industry),
+    ...(hasProducts ? [PRODUCTS_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
     { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },

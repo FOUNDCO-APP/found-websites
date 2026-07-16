@@ -17,11 +17,12 @@ type Props = {
   mediaPhotos: { id: string; url: string }[]
   primaryIntent: string
   industryCategory: string
+  activeAddons: string[]
   plan: string | null
   subscriptionStatus: string | null
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, plan, subscriptionStatus }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus }: Props) {
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -37,7 +38,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [savingIntent, setSavingIntent] = useState(false)
   const [intentSaved, setIntentSaved] = useState(false)
 
-  // Menu state (food only)
+  // Shared sellable item catalog. Food sees Menu; retail/shop sees Products.
   type MenuItemDraft = { name: string; price: string; description: string; photo_url: string }
   type MenuCatData = { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null }[] }
   const [menuCats, setMenuCats] = useState<MenuCatData[]>((initialConfig?.menu_items as MenuCatData[]) ?? [])
@@ -53,6 +54,36 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
+  const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
+  const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
+  const showCatalog = isFoodCatalog || isShopCatalog
+  const catalogCopy = isFoodCatalog
+    ? {
+        pageLabel: "Menu Page",
+        href: `https://${company.slug}.foundco.app/menu`,
+        savedLabel: "Saved",
+        addCategoryLabel: "Add a menu category",
+        categoryPlaceholder: "e.g. Tacos, Plates, Drinks...",
+        addItemLabel: "Add menu item",
+        sheetAddLabel: "Add Menu Item",
+        sheetEditLabel: "Edit Menu Item",
+        itemPlaceholder: "Menu item name *",
+        descriptionPlaceholder: "Description (optional) - ingredients, allergens, what makes it special...",
+        saveLabel: "Save to Menu",
+      }
+    : {
+        pageLabel: "Products",
+        href: `https://${company.slug}.foundco.app/shop`,
+        savedLabel: "Saved",
+        addCategoryLabel: "Add a product category",
+        categoryPlaceholder: "e.g. Shirts, Hats, Featured...",
+        addItemLabel: "Add product",
+        sheetAddLabel: "Add Product",
+        sheetEditLabel: "Edit Product",
+        itemPlaceholder: "Product name *",
+        descriptionPlaceholder: "Description (optional) - size, material, pickup, shipping, or what makes it special...",
+        saveLabel: "Save Product",
+      }
 
   function startEdit(field: string, value: string) {
     setEditing(field)
@@ -467,11 +498,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       {/* ══════════════════════════════════════════
           MENU PAGE (food) / SERVICES PAGE (everyone else)
       ══════════════════════════════════════════ */}
-      {industryCategory === 'food' ? (
+      {showCatalog && (
       <div style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <PageTab label="Menu Page" href={`https://${company.slug}.foundco.app/menu`} />
-          {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>✓ Saved</div>}
+          <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
+          {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
         </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -525,11 +556,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 </div>
               ))}
 
-              {/* Add item row */}
+              {/* {catalogCopy.addItemLabel} row */}
               <button onClick={() => openEditMenuItem(catIdx, null)}
                 style={{ width: "100%", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: 13, color: `${GREEN}88`, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add item
+                {catalogCopy.addItemLabel}
               </button>
             </div>
           ))}
@@ -539,7 +570,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ borderRadius: 16, padding: 16, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}08` }}>
               <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Category Name</div>
               <input
-                placeholder="e.g. Appetizers, Entrees, Drinks…"
+                placeholder={catalogCopy.categoryPlaceholder}
                 value={newMenuCatName}
                 onChange={e => setNewMenuCatName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && addMenuCategory()}
@@ -563,12 +594,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add a menu category
+              {catalogCopy.addCategoryLabel}
             </button>
           )}
         </div>
       </div>
-      ) : (
+      )}
+
+      {showCatalog && !isFoodCatalog && <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>}
+
+      {!isFoodCatalog && (
       <div style={{ padding: "0 20px" }}>
         <PageTab label="Services Page" href={`https://${company.slug}.foundco.app/services`} />
 
@@ -722,14 +757,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      {/* ── MENU ITEM EDIT SHEET ── */}
+      {/* -- CATALOG ITEM EDIT SHEET -- */}
       {editingMenuItem !== null && (
         <>
           <div onClick={() => setEditingMenuItem(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 40, backdropFilter: "blur(4px)" }}/>
           <div style={{ position: "fixed", left: 12, right: 12, bottom: "calc(84px + env(safe-area-inset-bottom))", zIndex: 50, maxHeight: "min(78dvh, 620px)", minHeight: "52dvh", overflowY: "auto" as const, backgroundColor: "#111613", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "22px 20px 24px", boxShadow: "0 -28px 80px rgba(0,0,0,0.55)" }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 18px" }}/>
             <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
-              {editingMenuItem.itemIdx === null ? "Add Item" : "Edit Item"}
+              {editingMenuItem.itemIdx === null ? catalogCopy.sheetAddLabel : catalogCopy.sheetEditLabel}
             </div>
 
             {/* Photo + name/price row */}
@@ -752,7 +787,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </label>
               <div style={{ flex: 1, display: "flex", flexDirection: "column" as const, gap: 8 }}>
                 <input
-                  placeholder="Item name *"
+                  placeholder={catalogCopy.itemPlaceholder}
                   value={menuItemDraft.name}
                   onChange={e => setMenuItemDraft(prev => ({ ...prev, name: e.target.value }))}
                   style={{ padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}33`, color: "white", fontSize: 15, outline: "none", fontFamily: "inherit" }}
@@ -767,7 +802,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
 
             <textarea
-              placeholder="Description (optional) — ingredients, allergens, what makes it special…"
+              placeholder={catalogCopy.descriptionPlaceholder}
               value={menuItemDraft.description}
               onChange={e => setMenuItemDraft(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
@@ -793,7 +828,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </button>
               <button onClick={() => void saveMenuItem()} disabled={!menuItemDraft.name.trim() || menuSaving}
                 style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: menuItemDraft.name.trim() && !menuSaving ? GREEN : "rgba(255,255,255,0.08)", color: menuItemDraft.name.trim() && !menuSaving ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: menuItemDraft.name.trim() && !menuSaving ? "pointer" : "default" }}>
-                {menuSaving ? "Saving..." : "Save to Menu"}
+                {menuSaving ? "Saving..." : catalogCopy.saveLabel}
               </button>
             </div>
           </div>

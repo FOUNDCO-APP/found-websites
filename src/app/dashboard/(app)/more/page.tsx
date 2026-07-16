@@ -208,7 +208,11 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
   const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
   const paymentsReady = stripeConnect.ready
-
+  const siteEditorDescription = industryCategory === "food" || industryCategory === "home_based_food" || effectiveAddonSlugs.includes("online_ordering")
+    ? "Words, photos, menu items"
+    : industryCategory === "retail" || industryCategory === "makers_crafts" || effectiveAddonSlugs.includes("shopping_cart")
+      ? "Words, photos, products"
+      : "Words, photos, services"
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
     const def = ALL_ADDONS.find(a => a.slug === slug)
     return sum + (def?.price ?? 0)
@@ -281,7 +285,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 </div>
                 <div>
                   <p style={{ margin: "0 0 2px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>Edit My Site</p>
-                  <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Words, photos, services · Rewrite for me</p>
+                  <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{siteEditorDescription} - Rewrite for me</p>
                 </div>
               </div>
               <ChevronRight />
