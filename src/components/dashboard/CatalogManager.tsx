@@ -121,6 +121,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   const [addingCategory, setAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [editingCategoryIndex, setEditingCategoryIndex] = useState<number | null>(null)
+  const [categoryActionIndex, setCategoryActionIndex] = useState<number | null>(null)
   const [categoryDraftName, setCategoryDraftName] = useState("")
   const [editingItem, setEditingItem] = useState<{ catIndex: number; itemIndex: number | null } | null>(null)
   const [itemDraft, setItemDraft] = useState<ItemDraft>(EMPTY_DRAFT)
@@ -164,6 +165,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     if (saving) return
     const next = [...categories]
     next.splice(index, 1)
+    setCategoryActionIndex(null)
     await persist(next)
   }
 
@@ -307,17 +309,23 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
 
           {categories.map((category, catIndex) => (
             <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.07)" }}>
-              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {editingCategoryIndex === catIndex ? (
                     <input value={categoryDraftName} onChange={(event) => setCategoryDraftName(event.target.value)} onBlur={() => void saveCategoryName(catIndex)} onKeyDown={(event) => event.key === "Enter" && void saveCategoryName(catIndex)} autoFocus style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "white", ...TYPE.title, fontWeight: 820 }} />
                   ) : (
-                    <button onClick={() => { setCategoryDraftName(category.category); setEditingCategoryIndex(catIndex) }} style={{ display: "block", width: "100%", padding: 0, border: "none", background: "none", color: "white", textAlign: "left", ...TYPE.title, fontWeight: 820, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{category.category}</button>
+                    <button onClick={() => { setCategoryDraftName(category.category); setEditingCategoryIndex(catIndex); setCategoryActionIndex(null) }} style={{ display: "block", width: "100%", padding: 0, border: "none", background: "none", color: "white", textAlign: "left", ...TYPE.title, fontWeight: 820, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{category.category}</button>
                   )}
                   <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{category.items.length} {category.items.length === 1 ? copy.itemNoun : `${copy.itemNoun}s`}</p>
                 </div>
                 <button onClick={() => openItem(catIndex, null)} style={{ border: "none", borderRadius: 999, padding: "10px 13px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 850 }}>{copy.addItem}</button>
-                <button onClick={() => void removeCategory(catIndex)} style={{ border: "none", background: "none", color: "rgba(255,100,100,0.68)", ...TYPE.footnote, fontWeight: 800 }}>Remove</button>
+                <button aria-label={`Category actions for ${category.category}`} onClick={() => setCategoryActionIndex(categoryActionIndex === catIndex ? null : catIndex)} style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.035)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 850, lineHeight: 1, cursor: "pointer" }}>...</button>
+                {categoryActionIndex === catIndex && (
+                  <div style={{ position: "absolute", right: 18, top: 58, zIndex: 5, width: 188, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#151917", boxShadow: "0 18px 45px rgba(0,0,0,0.38)" }}>
+                    <button onClick={() => { setCategoryActionIndex(null); setCategoryDraftName(category.category); setEditingCategoryIndex(catIndex) }} style={{ width: "100%", border: "none", padding: "13px 14px", background: "none", color: "white", textAlign: "left", ...TYPE.footnote, fontWeight: 800 }}>Rename category</button>
+                    <button onClick={() => void removeCategory(catIndex)} style={{ width: "100%", border: "none", borderTop: "1px solid rgba(255,255,255,0.07)", padding: "13px 14px", background: "none", color: "rgba(255,100,100,0.76)", textAlign: "left", ...TYPE.footnote, fontWeight: 800 }}>Remove category</button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "grid", gap: 1, backgroundColor: "rgba(255,255,255,0.035)" }}>
