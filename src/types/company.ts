@@ -14,6 +14,11 @@ export type MenuItem = {
   description: string
   price: string | null
   photo_url?: string | null
+  images?: string[] | null
+  details?: { label: string; value: string }[] | null
+  sizes?: string | null
+  materials?: string | null
+  shipping_note?: string | null
 }
 
 export type MenuCategory = {

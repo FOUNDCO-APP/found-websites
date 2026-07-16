@@ -5,7 +5,7 @@ export type ServiceCopyItem = {
 
 export type MenuCopyCategory = {
   category: string
-  items: { name: string; description: string; price: string | null; photo_url?: string | null }[]
+  items: { name: string; description: string; price: string | null; photo_url?: string | null; images?: string[] | null; details?: { label: string; value: string }[] | null; sizes?: string | null; materials?: string | null; shipping_note?: string | null }[]
 }
 
 const KNOWN_FIXES: Record<string, string> = {
@@ -752,13 +752,37 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
 
     for (const item of sourceItems) {
       if (!item || typeof item !== "object") continue
-      const menuItem = item as { name?: unknown; description?: unknown; price?: unknown; photo_url?: unknown }
+      const menuItem = item as { name?: unknown; description?: unknown; price?: unknown; photo_url?: unknown; images?: unknown; details?: unknown; sizes?: unknown; materials?: unknown; shipping_note?: unknown }
       const name = polishTitle(menuItem.name, "Item")
+      const images = Array.isArray(menuItem.images)
+        ? menuItem.images.filter((image): image is string => typeof image === "string" && image.trim().length > 0).map(image => image.trim()).slice(0, 6)
+        : []
+      const primaryPhoto = typeof menuItem.photo_url === "string" && menuItem.photo_url.trim()
+        ? menuItem.photo_url.trim()
+        : images[0] ?? null
+      const details = Array.isArray(menuItem.details)
+        ? menuItem.details
+          .map(detail => {
+            if (!detail || typeof detail !== "object") return null
+            const row = detail as { label?: unknown; value?: unknown }
+            const label = polishShortCopy(row.label).replace(/[.]+$/, "")
+            const value = polishSentence(row.value, "")
+            return label && value ? { label, value } : null
+          })
+          .filter((detail): detail is { label: string; value: string } => detail !== null)
+          .slice(0, 6)
+        : []
+
       items.push({
         name,
         description: polishSentence(menuItem.description, ""),
         price: typeof menuItem.price === "string" && menuItem.price.trim() ? menuItem.price.trim() : null,
-        photo_url: typeof menuItem.photo_url === "string" && menuItem.photo_url.trim() ? menuItem.photo_url.trim() : null,
+        photo_url: primaryPhoto,
+        images: images.length ? images : primaryPhoto ? [primaryPhoto] : null,
+        details: details.length ? details : null,
+        sizes: typeof menuItem.sizes === "string" && menuItem.sizes.trim() ? polishShortCopy(menuItem.sizes).replace(/[.]+$/, "") : null,
+        materials: typeof menuItem.materials === "string" && menuItem.materials.trim() ? polishShortCopy(menuItem.materials).replace(/[.]+$/, "") : null,
+        shipping_note: typeof menuItem.shipping_note === "string" && menuItem.shipping_note.trim() ? polishSentence(menuItem.shipping_note, "") : null,
       })
     }
 

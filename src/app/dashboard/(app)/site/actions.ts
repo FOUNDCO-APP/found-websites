@@ -286,7 +286,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   return { success: true }
 }
 
-export async function updateMenuItems(categories: { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null }[] }[]) {
+export async function updateMenuItems(categories: { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null; images?: string[] | null; details?: { label: string; value: string }[] | null; sizes?: string | null; materials?: string | null; shipping_note?: string | null }[] }[]) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
@@ -298,6 +298,7 @@ export async function updateMenuItems(categories: { category: string; items: { n
   if (error) return { error: error.message }
 
   revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}`)
   return { success: true }
 }
@@ -324,6 +325,7 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
     .getPublicUrl(path)
 
   revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
   return { url: publicUrl }
 }
 
