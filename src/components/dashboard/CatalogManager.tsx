@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import React, { useState } from "react"
 import Link from "next/link"
@@ -458,42 +458,49 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
           )}
 
           {categories.map((category, catIndex) => (
-            <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.07)" }}>
-              <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10, position: "relative" }}>
+            <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.07)", padding: "18px 18px 20px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, position: "relative", marginBottom: 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {editingCategoryIndex === catIndex ? (
                     <input value={categoryDraftName} onChange={(event) => setCategoryDraftName(event.target.value)} onBlur={() => void saveCategoryName(catIndex)} onKeyDown={(event) => event.key === "Enter" && void saveCategoryName(catIndex)} autoFocus style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "white", ...TYPE.title, fontWeight: 820 }} />
                   ) : (
                     <button onClick={() => { setCategoryDraftName(category.category); setEditingCategoryIndex(catIndex); setCategoryActionIndex(null) }} style={{ display: "block", width: "100%", padding: 0, border: "none", background: "none", color: "white", textAlign: "left", ...TYPE.title, fontWeight: 820, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{category.category}</button>
                   )}
-                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{category.items.length} {category.items.length === 1 ? copy.itemNoun : `${copy.itemNoun}s`}</p>
+                  <p style={{ margin: "5px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{category.items.length} {category.items.length === 1 ? copy.itemNoun : `${copy.itemNoun}s`}</p>
                 </div>
-                <button onClick={() => openItem(catIndex, null)} style={{ border: "none", borderRadius: 999, padding: "10px 13px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 850 }}>{copy.addItem}</button>
-                <button aria-label={`Category actions for ${category.category}`} onClick={() => setCategoryActionIndex(categoryActionIndex === catIndex ? null : catIndex)} style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.035)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 850, lineHeight: 1, cursor: "pointer" }}>...</button>
+                <button aria-label={`Category actions for ${category.category}`} onClick={() => setCategoryActionIndex(categoryActionIndex === catIndex ? null : catIndex)} style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.035)", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.subhead, fontWeight: 850, lineHeight: 1, cursor: "pointer" }}>...</button>
                 {categoryActionIndex === catIndex && (
-                  <div style={{ position: "absolute", right: 18, top: 58, zIndex: 5, width: 188, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#151917", boxShadow: "0 18px 45px rgba(0,0,0,0.38)" }}>
+                  <div style={{ position: "absolute", right: 0, top: 44, zIndex: 5, width: 188, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#151917", boxShadow: "0 18px 45px rgba(0,0,0,0.38)" }}>
                     <button onClick={() => { setCategoryActionIndex(null); setCategoryDraftName(category.category); setEditingCategoryIndex(catIndex) }} style={{ width: "100%", border: "none", padding: "13px 14px", background: "none", color: "white", textAlign: "left", ...TYPE.footnote, fontWeight: 800 }}>Rename category</button>
                     <button onClick={() => void removeCategory(catIndex)} style={{ width: "100%", border: "none", borderTop: "1px solid rgba(255,255,255,0.07)", padding: "13px 14px", background: "none", color: "rgba(255,100,100,0.76)", textAlign: "left", ...TYPE.footnote, fontWeight: 800 }}>Remove category</button>
                   </div>
                 )}
               </div>
 
-              <div style={{ display: "grid", gap: 1, backgroundColor: "rgba(255,255,255,0.035)" }}>
+              <div style={{ display: "grid", gap: 10 }}>
                 {category.items.map((item, itemIndex) => {
                   const images = uniqueImages(item)
+                  const variants = normalizeVariants(item.options ?? [], item.variants, Boolean(item.inventory_tracking))
+                  const tracked = Boolean(item.inventory_tracking && variants.length)
+                  const totalStock = tracked ? variants.reduce((sum, variant) => sum + (variant.stock ?? 0), 0) : null
+                  const optionCount = normalizeOptions(item.options).reduce((sum, option) => sum + option.choices.length, 0)
+                  const status = tracked ? `${totalStock} in stock` : optionCount ? `${optionCount} choices` : images.length ? `${images.length} ${images.length === 1 ? "photo" : "photos"}` : "Needs photo"
                   return (
-                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "none", padding: "16px 18px", backgroundColor: "rgba(8,10,9,0.72)", display: "grid", gridTemplateColumns: "72px minmax(0, 1fr) auto", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer" }}>
-                      {images[0] ? <img src={images[0]} alt="" style={{ width: 72, height: 72, borderRadius: 18, objectFit: "contain", backgroundColor: "rgba(255,255,255,0.96)", flexShrink: 0 }} /> : <div style={{ width: 72, height: 72, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.34)", ...TYPE.footnote, fontWeight: 850 }}>Photo</div>}
+                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "1px solid rgba(255,255,255,0.075)", borderRadius: 22, padding: 12, background: "linear-gradient(135deg, rgba(255,255,255,0.052), rgba(255,255,255,0.018))", display: "grid", gridTemplateColumns: "88px minmax(0, 1fr) auto", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer", boxShadow: "0 14px 34px rgba(0,0,0,0.12)" }}>
+                      {images[0] ? <img src={images[0]} alt="" style={{ width: 88, height: 88, borderRadius: 20, objectFit: "contain", backgroundColor: "rgba(255,255,255,0.96)", flexShrink: 0 }} /> : <div style={{ width: 88, height: 88, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.34)", ...TYPE.footnote, fontWeight: 850 }}>Photo</div>}
                       <span style={{ minWidth: 0 }}>
-                        <span style={{ display: "block", ...TYPE.subhead, fontWeight: 850, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
-                        <span style={{ display: "block", marginTop: 6, ...TYPE.footnote, color: images.length ? GREEN : "#FFB340", fontWeight: 850 }}>
-                          {images.length ? `${images.length} ${images.length === 1 ? "photo" : "photos"}` : "Needs photo"}
-                        </span>
+                        <span style={{ display: "block", ...TYPE.subhead, fontWeight: 900, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
+                        {item.description && <span style={{ display: "block", marginTop: 5, ...TYPE.footnote, lineHeight: 1.35, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</span>}
+                        <span style={{ display: "inline-flex", marginTop: 9, borderRadius: 999, padding: "5px 9px", backgroundColor: tracked ? `${GREEN}14` : "rgba(255,255,255,0.055)", color: tracked ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.footnote, fontWeight: 850 }}>{status}</span>
                       </span>
-                      <span style={{ flexShrink: 0, textAlign: "right", ...TYPE.subhead, fontWeight: 900, color: item.price ? GREEN : "rgba(255,255,255,0.42)", whiteSpace: "nowrap" }}>{item.price ? priceLabel(item.price) : "No price"}</span>
+                      <span style={{ display: "grid", justifyItems: "end", gap: 7, flexShrink: 0 }}>
+                        <span style={{ ...TYPE.subhead, fontWeight: 950, color: item.price ? GREEN : "rgba(255,255,255,0.42)", whiteSpace: "nowrap" }}>{item.price ? priceLabel(item.price) : "No price"}</span>
+                        <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontWeight: 850 }}>Edit</span>
+                      </span>
                     </button>
                   )
                 })}
+                <button onClick={() => openItem(catIndex, null)} style={{ border: "1px dashed rgba(49,209,88,0.28)", borderRadius: 20, padding: "15px 16px", backgroundColor: `${GREEN}0B`, color: GREEN, textAlign: "left", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
               </div>
             </div>
           ))}
