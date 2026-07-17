@@ -433,7 +433,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
       </main>
 
       {cartItems.length > 0 && !paid && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-neutral-200 bg-white/95 px-5 pb-[calc(18px+env(safe-area-inset-bottom))] pt-4 shadow-[0_-18px_50px_rgba(0,0,0,0.14)] backdrop-blur md:hidden">
+        <div className="fixed inset-x-4 bottom-[calc(18px+env(safe-area-inset-bottom))] z-[70] rounded-[26px] border border-neutral-200 bg-white/95 px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black text-neutral-950">{itemCount} {itemCount === 1 ? "item" : "items"} ready</p>
