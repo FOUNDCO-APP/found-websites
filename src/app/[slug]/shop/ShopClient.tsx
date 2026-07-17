@@ -130,6 +130,18 @@ function variantStock(item: ProductItem, selectedOptions: Record<string, string>
   const variant = selectedVariant(item, selectedOptions)
   return variant?.stock ?? null
 }
+function choiceSoldOut(item: ProductItem, optionLabel: string, choice: string, selectedOptions: Record<string, string>) {
+  if (!item.inventory_tracking || !(item.variants ?? []).length) return false
+  const candidates = (item.variants ?? []).filter((variant) => {
+    if (variant.options?.[optionLabel] !== choice) return false
+    return Object.entries(selectedOptions).every(([label, value]) => {
+      if (!value || label === optionLabel) return true
+      return variant.options?.[label] === value
+    })
+  })
+  if (!candidates.length) return false
+  return candidates.every((variant) => variant.stock === 0)
+}
 function ClientPaymentElement({ setup, companyId, slug, total, primary, onPaid }: { setup: PaymentSetup; companyId: string; slug: string; total: number; primary: string; onPaid: () => void }) {
   const stripePromise = useMemo(() => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, { stripeAccount: setup.stripeAccountId }), [setup.stripeAccountId])
 
@@ -515,7 +527,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                         <div className="flex flex-wrap gap-2">
                           {option.choices.map((choice) => {
                             const active = selectedOptions[option.label] === choice
-                            return <button key={choice} type="button" onClick={() => setSelectedOptions((current) => ({ ...current, [option.label]: choice }))} className="rounded-full border px-4 py-2 text-sm font-black" style={{ borderColor: active ? primary : "#e5e5e5", backgroundColor: active ? primary : "white", color: active ? "white" : "#111" }}>{choice}</button>
+                            const soldOut = choiceSoldOut(selectedProduct, option.label, choice, selectedOptions)
+                            return <button key={choice} type="button" disabled={soldOut} aria-label={soldOut ? `${choice} sold out` : choice} onClick={() => setSelectedOptions((current) => ({ ...current, [option.label]: choice }))} className="rounded-full border px-4 py-2 text-sm font-black transition disabled:cursor-not-allowed" style={{ borderColor: soldOut ? "#d4d4d4" : active ? primary : "#e5e5e5", backgroundColor: soldOut ? "#f1f1f1" : active ? primary : "white", color: soldOut ? "#8a8a8a" : active ? "white" : "#111", textDecoration: soldOut ? "line-through" : "none", opacity: soldOut ? 0.72 : 1 }}>{choice}{soldOut ? <span className="ml-1 text-[10px] uppercase tracking-[0.12em]">Out</span> : null}</button>
                           })}
                         </div>
                       </div>
