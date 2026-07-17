@@ -16,6 +16,7 @@ export type MenuItem = {
   photo_url?: string | null
   images?: string[] | null
   details?: { label: string; value: string }[] | null
+  options?: { label: string; choices: string[] }[] | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null

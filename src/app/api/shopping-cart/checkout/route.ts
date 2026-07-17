@@ -4,7 +4,7 @@ import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
 import type { MenuCategory } from "@/types/company"
 
-type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number }
+type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number; selectedOptions?: Record<string, unknown> | null }
 
 function parsePriceCents(price: string | null | undefined) {
   if (!price) return null
@@ -16,6 +16,27 @@ function parsePriceCents(price: string | null | undefined) {
 
 function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
+}
+
+function cleanSelectedOptions(product: MenuCategory["items"][number], selectedOptions: Record<string, unknown> | null | undefined) {
+  const productOptions = (product.options ?? [])
+    .map((option) => ({
+      label: cleanText(option.label, 80),
+      choices: Array.from(new Set((option.choices ?? []).map(choice => cleanText(choice, 80)).filter(Boolean))),
+    }))
+    .filter((option) => option.label && option.choices.length)
+
+  const selected: Record<string, string> = {}
+  for (const option of productOptions) {
+    const value = cleanText(selectedOptions?.[option.label], 80)
+    if (!value || !option.choices.includes(value)) return null
+    selected[option.label] = value
+  }
+  return Object.keys(selected).length ? selected : null
+}
+
+function optionText(selectedOptions: Record<string, string> | null | undefined) {
+  return Object.entries(selectedOptions ?? {}).map(([label, value]) => `${label}: ${value}`).join(" - ")
 }
 
 export async function POST(req: NextRequest) {
@@ -73,18 +94,23 @@ export async function POST(req: NextRequest) {
   }
 
   const productItems = ((company.website_config as { menu_items?: MenuCategory[] } | null)?.menu_items ?? [])
-  const orderSummary: { name: string; quantity: number; unit_amount: number; price: string }[] = []
+  const orderSummary: { name: string; quantity: number; unit_amount: number; price: string; selected_options: Record<string, string> | null }[] = []
 
   for (const input of requestedItems.slice(0, 30)) {
     const quantity = Math.max(1, Math.min(Number(input.quantity) || 0, 20))
     const product = productItems[input.catIndex]?.items?.[input.itemIndex]
     const unitAmount = parsePriceCents(product?.price)
     if (!product || !unitAmount || quantity <= 0) continue
+    const selectedOptions = cleanSelectedOptions(product, input.selectedOptions)
+    if ((product.options ?? []).length && !selectedOptions) {
+      return NextResponse.json({ error: `Please choose options for ${product.name}.` }, { status: 400 })
+    }
     orderSummary.push({
       name: product.name,
       quantity,
       unit_amount: unitAmount,
       price: product.price || `$${(unitAmount / 100).toFixed(2)}`,
+      selected_options: selectedOptions,
     })
   }
 
@@ -95,7 +121,7 @@ export async function POST(req: NextRequest) {
   const subtotal = orderSummary.reduce((sum, item) => sum + item.unit_amount * item.quantity, 0)
   const leadId = crypto.randomUUID()
   const replyToken = crypto.randomUUID()
-  const summaryText = orderSummary.map((item) => `${item.quantity}x ${item.name}`).join(", ")
+  const summaryText = orderSummary.map((item) => `${item.quantity}x ${item.name}${optionText(item.selected_options) ? ` (${optionText(item.selected_options)})` : ""}`).join(", ")
   const fulfillmentLine = fulfillment === "shipping" ? `Ship to: ${address}` : "Pickup order"
 
   const partialAnswers = {

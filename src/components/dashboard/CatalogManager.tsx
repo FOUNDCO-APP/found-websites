@@ -6,6 +6,7 @@ import { updateMenuItems, uploadMenuItemPhoto } from "@/app/dashboard/(app)/site
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type CatalogDetail = { label: string; value: string }
+type CatalogOption = { label: string; choices: string[] }
 type CatalogItem = {
   name: string
   description: string
@@ -13,6 +14,7 @@ type CatalogItem = {
   photo_url?: string | null
   images?: string[] | null
   details?: CatalogDetail[] | null
+  options?: CatalogOption[] | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null
@@ -29,6 +31,7 @@ type ItemDraft = {
   materials: string
   shipping_note: string
   details: CatalogDetail[]
+  options: CatalogOption[]
 }
 
 type Props = {
@@ -77,10 +80,20 @@ const COPY = {
   },
 } as const
 
-const EMPTY_DRAFT: ItemDraft = { name: "", price: "", description: "", photo_url: "", images: [], sizes: "", materials: "", shipping_note: "", details: [] }
+const EMPTY_DRAFT: ItemDraft = { name: "", price: "", description: "", photo_url: "", images: [], sizes: "", materials: "", shipping_note: "", details: [], options: [] }
 
 function uniqueImages(item: CatalogItem | ItemDraft) {
   return Array.from(new Set([item.photo_url || "", ...(item.images ?? [])].map(image => image.trim()).filter(Boolean))).slice(0, 6)
+}
+
+function normalizeOptions(options: CatalogOption[] | null | undefined) {
+  return (options ?? [])
+    .map((option) => ({
+      label: option.label.trim(),
+      choices: Array.from(new Set((option.choices ?? []).map(choice => choice.trim()).filter(Boolean))).slice(0, 12),
+    }))
+    .filter(option => option.label && option.choices.length)
+    .slice(0, 4)
 }
 
 function normalizeCategories(categories: CatalogCategory[]) {
@@ -95,6 +108,7 @@ function normalizeCategories(categories: CatalogCategory[]) {
         photo_url: images[0] ?? null,
         images: images.length ? images : null,
         details: item.details?.filter(detail => detail.label.trim() && detail.value.trim()) ?? null,
+        options: normalizeOptions(item.options).length ? normalizeOptions(item.options) : null,
         sizes: item.sizes?.trim() || null,
         materials: item.materials?.trim() || null,
         shipping_note: item.shipping_note?.trim() || null,
@@ -184,7 +198,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     const item = itemIndex !== null ? categories[catIndex]?.items[itemIndex] : null
     const images = item ? uniqueImages(item) : []
     setError(null)
-    setShowDetails(Boolean(item?.sizes || item?.materials || item?.shipping_note || item?.details?.length))
+    setShowDetails(Boolean(item?.options?.length || item?.sizes || item?.materials || item?.shipping_note || item?.details?.length))
     setItemDraft({
       name: item?.name ?? "",
       price: item?.price ?? "",
@@ -195,6 +209,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
       materials: item?.materials ?? "",
       shipping_note: item?.shipping_note ?? "",
       details: item?.details ?? [],
+      options: normalizeOptions(item?.options),
     })
     setEditingItem({ catIndex, itemIndex })
   }
@@ -205,6 +220,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     if (!name) return
     const images = uniqueImages(itemDraft)
     const details = itemDraft.details.filter(detail => detail.label.trim() && detail.value.trim())
+    const options = normalizeOptions(itemDraft.options)
     const nextItem: CatalogItem = {
       name,
       price: itemDraft.price.trim() || null,
@@ -212,6 +228,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
       photo_url: images[0] ?? null,
       images: images.length ? images : null,
       details: details.length ? details : null,
+      options: options.length ? options : null,
       sizes: itemDraft.sizes.trim() || null,
       materials: itemDraft.materials.trim() || null,
       shipping_note: itemDraft.shipping_note.trim() || null,
@@ -251,6 +268,23 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
         return { ...prev, photo_url: prev.photo_url || result.url, images }
       })
     } else setError(result.error || "Photo could not upload.")
+  }
+
+  function updateDraftOption(index: number, patch: Partial<CatalogOption>) {
+    setItemDraft((prev) => {
+      const options = [...prev.options]
+      options[index] = { ...(options[index] ?? { label: "", choices: [] }), ...patch }
+      return { ...prev, options }
+    })
+  }
+
+  function addDraftOption() {
+    setItemDraft((prev) => ({ ...prev, options: [...prev.options, { label: "", choices: [] }].slice(0, 4) }))
+    setShowDetails(true)
+  }
+
+  function removeDraftOption(index: number) {
+    setItemDraft((prev) => ({ ...prev, options: prev.options.filter((_, optionIndex) => optionIndex !== index) }))
   }
 
   function removeDraftImage(image: string) {
@@ -388,7 +422,23 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                 </button>
                 {showDetails && (
                   <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-                    <input value={itemDraft.sizes} onChange={(event) => setItemDraft((prev) => ({ ...prev, sizes: event.target.value }))} placeholder="Sizes or options, e.g. Small to XL" style={inputStyle()} />
+                    <div style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", padding: 12 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: itemDraft.options.length ? 10 : 0 }}>
+                        <div>
+                          <p style={{ margin: 0, ...TYPE.footnote, color: "white", fontWeight: 850 }}>Customer choices</p>
+                          <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Sizes, colors, or options customers must choose.</p>
+                        </div>
+                        <button type="button" onClick={addDraftOption} disabled={itemDraft.options.length >= 4} style={{ border: "none", borderRadius: 999, padding: "9px 12px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 850, opacity: itemDraft.options.length >= 4 ? 0.45 : 1 }}>Add choice</button>
+                      </div>
+                      {itemDraft.options.map((option, index) => (
+                        <div key={index} style={{ display: "grid", gridTemplateColumns: "0.75fr 1fr auto", gap: 8, marginTop: index === 0 ? 0 : 8 }}>
+                          <input value={option.label} onChange={(event) => updateDraftOption(index, { label: event.target.value })} placeholder="Size" style={inputStyle()} />
+                          <input value={option.choices.join(", ")} onChange={(event) => updateDraftOption(index, { choices: event.target.value.split(",") })} placeholder="Small, Medium, Large, XL" style={inputStyle()} />
+                          <button type="button" onClick={() => removeDraftOption(index)} aria-label="Remove choice" style={{ width: 48, borderRadius: 14, border: "1px solid rgba(255,70,70,0.18)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,105,105,0.9)", ...TYPE.subhead, fontWeight: 900 }}>x</button>
+                        </div>
+                      ))}
+                    </div>
+                    <input value={itemDraft.sizes} onChange={(event) => setItemDraft((prev) => ({ ...prev, sizes: event.target.value }))} placeholder="Sizes shown as product info, e.g. Small to XL" style={inputStyle()} />
                     <input value={itemDraft.materials} onChange={(event) => setItemDraft((prev) => ({ ...prev, materials: event.target.value }))} placeholder="Material, finish, or what it is made from" style={inputStyle()} />
                     <input value={itemDraft.shipping_note} onChange={(event) => setItemDraft((prev) => ({ ...prev, shipping_note: event.target.value }))} placeholder="Pickup or shipping note" style={inputStyle()} />
                     <div style={{ display: "grid", gap: 8 }}>

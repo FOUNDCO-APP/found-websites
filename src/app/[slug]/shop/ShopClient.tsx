@@ -7,6 +7,7 @@ import type { StripeElementsOptions } from "@stripe/stripe-js"
 import type { MenuCategory } from "@/types/company"
 
 type ProductDetail = { label: string; value: string }
+type ProductOption = { label: string; choices: string[] }
 type CartItem = {
   key: string
   catIndex: number
@@ -16,6 +17,8 @@ type CartItem = {
   photo_url?: string | null
   images?: string[] | null
   details?: ProductDetail[] | null
+  options?: ProductOption[] | null
+  selectedOptions?: Record<string, string> | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null
@@ -24,7 +27,7 @@ type CartItem = {
   quantity: number
 }
 
-type ProductItem = Omit<CartItem, "quantity">
+type ProductItem = Omit<CartItem, "quantity" | "selectedOptions">
 
 type PaymentSetup = {
   clientSecret: string
@@ -72,6 +75,34 @@ function formatMoney(cents: number) {
 
 function productImages(item: Pick<ProductItem, "photo_url" | "images">) {
   return Array.from(new Set([item.photo_url || "", ...(item.images ?? [])].filter(Boolean))).slice(0, 6)
+}
+
+function normalizeProductOptions(options: ProductOption[] | null | undefined) {
+  return (options ?? [])
+    .map((option) => ({
+      label: option.label.trim(),
+      choices: Array.from(new Set((option.choices ?? []).map(choice => choice.trim()).filter(Boolean))).slice(0, 12),
+    }))
+    .filter(option => option.label && option.choices.length)
+    .slice(0, 4)
+}
+
+function selectedOptionPairs(item: ProductItem, selectedOptions: Record<string, string>) {
+  return normalizeProductOptions(item.options)
+    .map((option) => ({ label: option.label, value: selectedOptions[option.label]?.trim() || "" }))
+    .filter((option) => option.value)
+}
+
+function selectedOptionLabel(selectedOptions: Record<string, string> | null | undefined) {
+  const entries = Object.entries(selectedOptions ?? {}).filter(([, value]) => value)
+  return entries.map(([label, value]) => `${label}: ${value}`).join(" - ")
+}
+
+function cartKeyFor(item: ProductItem, selectedOptions: Record<string, string> = {}) {
+  const optionKey = selectedOptionPairs(item, selectedOptions)
+    .map((option) => `${option.label}:${option.value}`)
+    .join("|")
+  return optionKey ? `${item.key}::${optionKey}` : item.key
 }
 
 function ClientPaymentElement({ setup, companyId, slug, total, primary, onPaid }: { setup: PaymentSetup; companyId: string; slug: string; total: number; primary: string; onPaid: () => void }) {
@@ -164,6 +195,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           photo_url: item.photo_url,
           images: item.images,
           details: item.details,
+          options: normalizeProductOptions(item.options),
           sizes: item.sizes,
           materials: item.materials,
           shipping_note: item.shipping_note,
@@ -178,6 +210,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const [cart, setCart] = useState<Record<string, CartItem>>({})
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
@@ -209,21 +242,35 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             : !shippingReady
               ? "Add shipping address"
               : `Continue to payment ${subtotal > 0 ? formatMoney(subtotal) : ""}`
+  const selectedProductOptions = selectedProduct ? normalizeProductOptions(selectedProduct.options) : []
+  const missingSelectedOption = selectedProductOptions.find((option) => !selectedOptions[option.label])
+  const selectedProductCartKey = selectedProduct ? cartKeyFor(selectedProduct, selectedOptions) : ""
+  const selectedProductQuantity = selectedProductCartKey ? cart[selectedProductCartKey]?.quantity ?? 0 : 0
 
-  function setQuantity(item: ProductItem, nextQuantity: number) {
+  function productQuantity(item: ProductItem) {
+    return cartItems
+      .filter((cartItem) => cartItem.catIndex === item.catIndex && cartItem.itemIndex === item.itemIndex)
+      .reduce((sum, cartItem) => sum + cartItem.quantity, 0)
+  }
+
+  function setQuantity(item: ProductItem, nextQuantity: number, options: Record<string, string> = {}) {
     setPaymentSetup(null)
     setPaid(false)
+    const key = cartKeyFor(item, options)
+    const cleanOptions = Object.fromEntries(selectedOptionPairs(item, options).map((option) => [option.label, option.value]))
     setCart((current) => {
       const next = { ...current }
-      if (nextQuantity <= 0) delete next[item.key]
-      else next[item.key] = { ...item, quantity: Math.min(nextQuantity, 20) }
+      if (nextQuantity <= 0) delete next[key]
+      else next[key] = { ...item, key, selectedOptions: Object.keys(cleanOptions).length ? cleanOptions : null, quantity: Math.min(nextQuantity, 20) }
       return next
     })
   }
 
   function openProduct(item: ProductItem) {
     const images = productImages(item)
+    const defaultOptions = Object.fromEntries(normalizeProductOptions(item.options).map((option) => [option.label, ""]))
     setSelectedImage(images[0] ?? null)
+    setSelectedOptions(defaultOptions)
     setSelectedProduct(item)
   }
 
@@ -240,7 +287,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           companyId,
           slug,
           customer: { name, phone, email, fulfillment, address, notes },
-          items: cartItems.map((item) => ({ catIndex: item.catIndex, itemIndex: item.itemIndex, quantity: item.quantity })),
+          items: cartItems.map((item) => ({ catIndex: item.catIndex, itemIndex: item.itemIndex, quantity: item.quantity, selectedOptions: item.selectedOptions ?? null })),
         }),
       })
       const data = await res.json()
@@ -306,7 +353,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                 <h2 className="mb-5 text-3xl font-black text-neutral-950">{cat.category}</h2>
                 <div className="grid gap-5 sm:grid-cols-2">
                   {categoryItems.map((item) => {
-                    const quantity = cart[item.key]?.quantity ?? 0
+                    const quantity = productQuantity(item)
+                    const hasOptions = normalizeProductOptions(item.options).length > 0
                     const images = productImages(item)
                     return (
                       <article key={item.key} className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.07)]">
@@ -324,8 +372,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                         <div className="flex items-center justify-between border-t border-neutral-100 p-4">
                           <span className="text-sm font-bold text-neutral-500">{quantity ? `${quantity} in cart` : "Ready to add"}</span>
                           <div className="flex items-center gap-3">
-                            <button type="button" onClick={() => setQuantity(item, quantity - 1)} disabled={quantity === 0} className="h-10 w-10 rounded-full border border-neutral-200 font-black text-neutral-950 disabled:opacity-30" aria-label={`Remove ${item.name}`}>-</button>
-                            <button type="button" onClick={() => setQuantity(item, quantity + 1)} className="h-10 w-10 rounded-full font-black text-white" style={{ backgroundColor: primary }} aria-label={`Add ${item.name}`}>+</button>
+                            <button type="button" onClick={() => { const firstMatch = cartItems.find((cartItem) => cartItem.catIndex === item.catIndex && cartItem.itemIndex === item.itemIndex); if (firstMatch) setQuantity(item, firstMatch.quantity - 1, firstMatch.selectedOptions ?? {}) }} disabled={quantity === 0} className="h-10 w-10 rounded-full border border-neutral-200 font-black text-neutral-950 disabled:opacity-30" aria-label={`Remove ${item.name}`}>-</button>
+                            <button type="button" onClick={() => hasOptions ? openProduct(item) : setQuantity(item, quantity + 1)} className="h-10 w-10 rounded-full font-black text-white" style={{ backgroundColor: primary }} aria-label={`Add ${item.name}`}>+</button>
                           </div>
                         </div>
                       </article>
@@ -385,7 +433,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             ) : (
               <>
                 <div className="mb-5 flex flex-col gap-3">
-                  {cartItems.map((item) => <div key={item.key} className="flex justify-between gap-3 text-sm"><span className="text-neutral-700">{item.quantity}x {item.name}</span><span className="font-bold text-neutral-950">{formatMoney(item.unitAmount * item.quantity)}</span></div>)}
+                  {cartItems.map((item) => <div key={item.key} className="flex justify-between gap-3 text-sm"><span className="text-neutral-700"><span>{item.quantity}x {item.name}</span>{selectedOptionLabel(item.selectedOptions) && <span className="mt-1 block text-xs font-bold text-neutral-500">{selectedOptionLabel(item.selectedOptions)}</span>}</span><span className="font-bold text-neutral-950">{formatMoney(item.unitAmount * item.quantity)}</span></div>)}
                   <div className="mt-2 flex justify-between border-t border-neutral-200 pt-4"><span className="font-black text-neutral-950">Subtotal</span><span className="font-black text-neutral-950">{formatMoney(subtotal)}</span></div>
                 </div>
 
@@ -426,13 +474,28 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                 <h2 className="text-4xl font-black leading-none text-neutral-950">{selectedProduct.name}</h2>
                 <p className="mt-4 text-2xl font-black" style={{ color: primary }}>{formatMoney(selectedProduct.unitAmount)}</p>
                 {selectedProduct.description && <p className="mt-5 text-lg leading-relaxed text-neutral-600">{selectedProduct.description}</p>}
+                {selectedProductOptions.length > 0 && (
+                  <div className="mt-6 grid gap-4 rounded-[22px] border border-neutral-200 bg-neutral-50 p-4">
+                    {selectedProductOptions.map((option) => (
+                      <div key={option.label}>
+                        <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-neutral-500">Choose {option.label}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {option.choices.map((choice) => {
+                            const active = selectedOptions[option.label] === choice
+                            return <button key={choice} type="button" onClick={() => setSelectedOptions((current) => ({ ...current, [option.label]: choice }))} className="rounded-full border px-4 py-2 text-sm font-black" style={{ borderColor: active ? primary : "#e5e5e5", backgroundColor: active ? primary : "white", color: active ? "white" : "#111" }}>{choice}</button>
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-6 grid gap-3">
                   {selectedProduct.sizes && <DetailRow label="Sizes" value={selectedProduct.sizes} />}
                   {selectedProduct.materials && <DetailRow label="Material" value={selectedProduct.materials} />}
                   {selectedProduct.shipping_note && <DetailRow label="Pickup and shipping" value={selectedProduct.shipping_note} />}
                   {selectedProduct.details?.map((detail) => <DetailRow key={`${detail.label}-${detail.value}`} label={detail.label} value={detail.value} />)}
                 </div>
-                <button onClick={() => { setQuantity(selectedProduct, (cart[selectedProduct.key]?.quantity ?? 0) + 1); setSelectedProduct(null) }} className="mt-7 w-full rounded-full py-4 text-base font-black text-white" style={{ backgroundColor: primary }}>Add to cart</button>
+                <button onClick={() => { if (missingSelectedOption) return; setQuantity(selectedProduct, selectedProductQuantity + 1, selectedOptions); setSelectedProduct(null) }} disabled={Boolean(missingSelectedOption)} className="mt-7 w-full rounded-full py-4 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-45" style={{ backgroundColor: primary }}>{missingSelectedOption ? `Choose ${missingSelectedOption.label}` : "Add to cart"}</button>
               </div>
             </div>
           </section>
