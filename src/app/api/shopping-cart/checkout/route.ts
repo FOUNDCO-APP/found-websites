@@ -175,7 +175,6 @@ export async function POST(req: NextRequest) {
   const paymentIntent = await stripe.paymentIntents.create({
     amount: subtotal,
     currency: "usd",
-    receipt_email: email,
     description: `${company.name || "Found"} shop order`,
     payment_method_types: ["card"],
     application_fee_amount: Math.round(subtotal * 0.03),
