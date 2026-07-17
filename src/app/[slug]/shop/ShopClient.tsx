@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import type { StripeElementsOptions } from "@stripe/stripe-js"
@@ -54,7 +54,7 @@ function paymentAppearance(primary: string): StripeElementsOptions["appearance"]
       colorTextSecondary: "#555555",
       colorTextPlaceholder: "rgba(17,17,17,0.38)",
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      fontSizeBase: "15px",
+      fontSizeBase: "16px",
       borderRadius: "12px",
     },
     rules: {
@@ -352,6 +352,40 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
     setCheckoutOpen(true)
   }
 
+  function closeCheckout() {
+    if (loading) return
+    setCheckoutOpen(false)
+    setPaid(false)
+  }
+
+  useEffect(() => {
+    if (!checkoutOpen && !paid && !selectedProduct) return
+    const scrollY = window.scrollY
+    const previous = {
+      bodyPosition: document.body.style.position,
+      bodyTop: document.body.style.top,
+      bodyWidth: document.body.style.width,
+      bodyOverflow: document.body.style.overflow,
+      htmlOverflow: document.documentElement.style.overflow,
+      htmlOverflowX: document.documentElement.style.overflowX,
+    }
+    document.documentElement.style.overflow = "hidden"
+    document.documentElement.style.overflowX = "hidden"
+    document.body.style.position = "fixed"
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.width = "100%"
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.documentElement.style.overflow = previous.htmlOverflow
+      document.documentElement.style.overflowX = previous.htmlOverflowX
+      document.body.style.position = previous.bodyPosition
+      document.body.style.top = previous.bodyTop
+      document.body.style.width = previous.bodyWidth
+      document.body.style.overflow = previous.bodyOverflow
+      window.scrollTo(0, scrollY)
+    }
+  }, [checkoutOpen, paid, selectedProduct])
+
   if (!shopReady) {
     return (
       <div className="min-h-screen bg-white">
@@ -457,8 +491,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
       )}
 
       {(checkoutOpen || paid) && (
-        <div className="fixed inset-0 z-[90] flex items-end bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
-          <section className="max-h-[calc(100dvh-88px)] w-full overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[90] flex w-[100svw] touch-pan-y items-end overflow-hidden bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={closeCheckout}>
+          <section className="box-border max-h-[calc(100svh-88px)] w-full max-w-[100svw] overscroll-contain overflow-x-hidden overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
@@ -466,7 +500,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                 <h2 className="mt-2 text-3xl font-black leading-tight text-neutral-950">Your cart</h2>
                 <p className="mt-2 text-sm font-semibold leading-relaxed text-neutral-500">{companyName} will receive this order directly.</p>
               </div>
-              <button type="button" onClick={() => setCheckoutOpen(false)} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500">x</button>
+              <button type="button" onClick={closeCheckout} className="h-10 w-10 rounded-full border border-neutral-200 text-xl font-black text-neutral-500" aria-label="Close checkout">x</button>
             </div>
 
             {paid ? (
@@ -504,8 +538,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
 
 
       {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/60 backdrop-blur-sm md:items-center md:justify-center" onClick={() => setSelectedProduct(null)}>
-          <section className="max-h-[88dvh] w-full overflow-y-auto rounded-t-[34px] bg-white shadow-2xl md:max-w-3xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex w-[100svw] items-end overflow-hidden bg-black/60 backdrop-blur-sm md:items-center md:justify-center" onClick={() => setSelectedProduct(null)}>
+          <section className="box-border max-h-[88svh] w-full max-w-[100svw] overscroll-contain overflow-x-hidden overflow-y-auto rounded-t-[34px] bg-white shadow-2xl md:max-w-3xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
             <div className="grid md:grid-cols-[1.05fr_0.95fr]">
               <div className="bg-neutral-100 p-4">
                 <div className="aspect-square overflow-hidden rounded-[26px] bg-neutral-200">
