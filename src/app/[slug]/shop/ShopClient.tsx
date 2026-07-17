@@ -457,7 +457,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
       )}
 
       {(checkoutOpen || paid) && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
+        <div className="fixed inset-0 z-[90] flex items-end bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={() => { if (!loading) setCheckoutOpen(false) }}>
           <section className="max-h-[calc(100dvh-88px)] w-full overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
             <div className="mb-5 flex items-start justify-between gap-4">
