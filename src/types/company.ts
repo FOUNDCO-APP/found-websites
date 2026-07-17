@@ -9,6 +9,22 @@ export type Testimonial = {
   quote: string
 }
 
+export type CatalogSettings = {
+  fulfillment?: "pickup" | "shipping" | "both" | "unavailable" | null
+  payment_behavior?: "online_required" | "pay_later" | null
+}
+
+export type CatalogOption = {
+  label: string
+  choices: string[]
+}
+
+export type CatalogVariant = {
+  id: string
+  options: Record<string, string>
+  stock: number | null
+}
+
 export type MenuItem = {
   name: string
   description: string
@@ -16,7 +32,11 @@ export type MenuItem = {
   photo_url?: string | null
   images?: string[] | null
   details?: { label: string; value: string }[] | null
-  options?: { label: string; choices: string[] }[] | null
+  options?: CatalogOption[] | null
+  variants?: CatalogVariant[] | null
+  inventory_tracking?: boolean | null
+  fulfillment?: "inherit" | "pickup" | "shipping" | "both" | "unavailable" | null
+  availability?: "active" | "hidden" | "sold_out" | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null

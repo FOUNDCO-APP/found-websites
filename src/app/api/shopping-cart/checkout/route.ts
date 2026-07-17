@@ -4,7 +4,7 @@ import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
 import type { MenuCategory } from "@/types/company"
 
-type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number; selectedOptions?: Record<string, unknown> | null }
+type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number; selectedOptions?: Record<string, unknown> | null; variantId?: string | null }
 
 function parsePriceCents(price: string | null | undefined) {
   if (!price) return null
@@ -35,6 +35,15 @@ function cleanSelectedOptions(product: MenuCategory["items"][number], selectedOp
   return Object.keys(selected).length ? selected : null
 }
 
+function variantId(options: Record<string, string>) {
+  return Object.entries(options).map(([label, value]) => `${label}:${value}`).join("|")
+}
+
+function selectedVariant(product: MenuCategory["items"][number], selectedOptions: Record<string, string> | null | undefined) {
+  if (!selectedOptions) return null
+  const id = variantId(selectedOptions)
+  return (product.variants ?? []).find((variant) => variant.id === id || variantId(variant.options) === id) ?? null
+}
 function optionText(selectedOptions: Record<string, string> | null | undefined) {
   return Object.entries(selectedOptions ?? {}).map(([label, value]) => `${label}: ${value}`).join(" - ")
 }
@@ -94,7 +103,7 @@ export async function POST(req: NextRequest) {
   }
 
   const productItems = ((company.website_config as { menu_items?: MenuCategory[] } | null)?.menu_items ?? [])
-  const orderSummary: { name: string; quantity: number; unit_amount: number; price: string; selected_options: Record<string, string> | null }[] = []
+  const orderSummary: { cat_index: number; item_index: number; variant_id: string | null; name: string; quantity: number; unit_amount: number; price: string; selected_options: Record<string, string> | null }[] = []
 
   for (const input of requestedItems.slice(0, 30)) {
     const quantity = Math.max(1, Math.min(Number(input.quantity) || 0, 20))
@@ -105,7 +114,17 @@ export async function POST(req: NextRequest) {
     if ((product.options ?? []).length && !selectedOptions) {
       return NextResponse.json({ error: `Please choose options for ${product.name}.` }, { status: 400 })
     }
+    const variant = selectedVariant(product, selectedOptions)
+    if ((product.options ?? []).length && (product.variants ?? []).length && !variant) {
+      return NextResponse.json({ error: `Please choose an available option for ${product.name}.` }, { status: 400 })
+    }
+    if (product.inventory_tracking && variant?.stock !== null && variant?.stock !== undefined && quantity > variant.stock) {
+      return NextResponse.json({ error: variant.stock <= 0 ? `${product.name} is sold out.` : `Only ${variant.stock} left for ${product.name}.` }, { status: 409 })
+    }
     orderSummary.push({
+      cat_index: input.catIndex,
+      item_index: input.itemIndex,
+      variant_id: variant?.id ?? null,
       name: product.name,
       quantity,
       unit_amount: unitAmount,

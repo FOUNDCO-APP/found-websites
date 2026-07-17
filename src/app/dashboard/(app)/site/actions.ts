@@ -5,6 +5,7 @@ import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
+import type { MenuCategory } from "@/types/company"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -286,7 +287,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   return { success: true }
 }
 
-export async function updateMenuItems(categories: { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null; images?: string[] | null; details?: { label: string; value: string }[] | null; sizes?: string | null; materials?: string | null; shipping_note?: string | null }[] }[]) {
+export async function updateMenuItems(categories: MenuCategory[]) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 

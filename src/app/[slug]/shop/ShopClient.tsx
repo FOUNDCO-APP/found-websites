@@ -8,6 +8,7 @@ import type { MenuCategory } from "@/types/company"
 
 type ProductDetail = { label: string; value: string }
 type ProductOption = { label: string; choices: string[] }
+type ProductVariant = { id: string; options: Record<string, string>; stock: number | null }
 type CartItem = {
   key: string
   catIndex: number
@@ -19,6 +20,10 @@ type CartItem = {
   details?: ProductDetail[] | null
   options?: ProductOption[] | null
   selectedOptions?: Record<string, string> | null
+  variantId?: string | null
+  variants?: ProductVariant[] | null
+  inventory_tracking?: boolean | null
+  availability?: "active" | "hidden" | "sold_out" | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null
@@ -78,15 +83,20 @@ function productImages(item: Pick<ProductItem, "photo_url" | "images">) {
 }
 
 function normalizeProductOptions(options: ProductOption[] | null | undefined) {
-  return (options ?? [])
-    .map((option) => ({
-      label: option.label.trim(),
-      choices: Array.from(new Set((option.choices ?? []).map(choice => choice.trim()).filter(Boolean))).slice(0, 12),
-    }))
-    .filter(option => option.label && option.choices.length)
-    .slice(0, 4)
+  const map = new Map<string, { label: string; choices: string[] }>()
+  for (const option of options ?? []) {
+    const label = String(option.label || "").trim().replace(/\s+/g, " ").replace(/\b\w/g, char => char.toUpperCase())
+    if (!label) continue
+    const key = label.toLowerCase()
+    const current = map.get(key) ?? { label, choices: [] }
+    for (const choice of option.choices ?? []) {
+      const clean = String(choice || "").trim().replace(/\s+/g, " ")
+      if (clean && !current.choices.some(existing => existing.toLowerCase() === clean.toLowerCase())) current.choices.push(clean)
+    }
+    map.set(key, current)
+  }
+  return Array.from(map.values()).filter(option => option.choices.length).slice(0, 4)
 }
-
 function selectedOptionPairs(item: ProductItem, selectedOptions: Record<string, string>) {
   return normalizeProductOptions(item.options)
     .map((option) => ({ label: option.label, value: selectedOptions[option.label]?.trim() || "" }))
@@ -105,6 +115,21 @@ function cartKeyFor(item: ProductItem, selectedOptions: Record<string, string> =
   return optionKey ? `${item.key}::${optionKey}` : item.key
 }
 
+function variantId(options: Record<string, string>) {
+  return Object.entries(options).map(([label, value]) => `${label}:${value}`).join("|")
+}
+
+function selectedVariant(item: ProductItem, selectedOptions: Record<string, string>) {
+  const cleanOptions = Object.fromEntries(selectedOptionPairs(item, selectedOptions).map((option) => [option.label, option.value]))
+  const id = variantId(cleanOptions)
+  return (item.variants ?? []).find((variant) => variant.id === id || variantId(variant.options) === id) ?? null
+}
+
+function variantStock(item: ProductItem, selectedOptions: Record<string, string>) {
+  if (!item.inventory_tracking) return null
+  const variant = selectedVariant(item, selectedOptions)
+  return variant?.stock ?? null
+}
 function ClientPaymentElement({ setup, companyId, slug, total, primary, onPaid }: { setup: PaymentSetup; companyId: string; slug: string; total: number; primary: string; onPaid: () => void }) {
   const stripePromise = useMemo(() => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!, { stripeAccount: setup.stripeAccountId }), [setup.stripeAccountId])
 
@@ -196,6 +221,9 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           images: item.images,
           details: item.details,
           options: normalizeProductOptions(item.options),
+          variants: item.variants ?? null,
+          inventory_tracking: Boolean(item.inventory_tracking),
+          availability: item.availability ?? "active",
           sizes: item.sizes,
           materials: item.materials,
           shipping_note: item.shipping_note,
@@ -246,6 +274,9 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const missingSelectedOption = selectedProductOptions.find((option) => !selectedOptions[option.label])
   const selectedProductCartKey = selectedProduct ? cartKeyFor(selectedProduct, selectedOptions) : ""
   const selectedProductQuantity = selectedProductCartKey ? cart[selectedProductCartKey]?.quantity ?? 0 : 0
+  const selectedProductStock = selectedProduct ? variantStock(selectedProduct, selectedOptions) : null
+  const selectedProductSoldOut = selectedProduct?.inventory_tracking && selectedProductStock === 0
+  const selectedProductAtLimit = selectedProduct?.inventory_tracking && selectedProductStock !== null && selectedProductQuantity >= selectedProductStock
 
   function productQuantity(item: ProductItem) {
     return cartItems
@@ -258,14 +289,16 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
     setPaid(false)
     const key = cartKeyFor(item, options)
     const cleanOptions = Object.fromEntries(selectedOptionPairs(item, options).map((option) => [option.label, option.value]))
+    const variant = selectedVariant(item, cleanOptions)
+    const stock = item.inventory_tracking ? variant?.stock ?? null : null
+    const cappedQuantity = stock === null ? Math.min(nextQuantity, 20) : Math.min(nextQuantity, stock)
     setCart((current) => {
       const next = { ...current }
-      if (nextQuantity <= 0) delete next[key]
-      else next[key] = { ...item, key, selectedOptions: Object.keys(cleanOptions).length ? cleanOptions : null, quantity: Math.min(nextQuantity, 20) }
+      if (cappedQuantity <= 0) delete next[key]
+      else next[key] = { ...item, key, selectedOptions: Object.keys(cleanOptions).length ? cleanOptions : null, variantId: variant?.id ?? null, quantity: cappedQuantity }
       return next
     })
   }
-
   function openProduct(item: ProductItem) {
     const images = productImages(item)
     const defaultOptions = Object.fromEntries(normalizeProductOptions(item.options).map((option) => [option.label, ""]))
@@ -287,7 +320,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           companyId,
           slug,
           customer: { name, phone, email, fulfillment, address, notes },
-          items: cartItems.map((item) => ({ catIndex: item.catIndex, itemIndex: item.itemIndex, quantity: item.quantity, selectedOptions: item.selectedOptions ?? null })),
+          items: cartItems.map((item) => ({ catIndex: item.catIndex, itemIndex: item.itemIndex, quantity: item.quantity, selectedOptions: item.selectedOptions ?? null, variantId: item.variantId ?? null })),
         }),
       })
       const data = await res.json()
@@ -495,7 +528,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                   {selectedProduct.shipping_note && <DetailRow label="Pickup and shipping" value={selectedProduct.shipping_note} />}
                   {selectedProduct.details?.map((detail) => <DetailRow key={`${detail.label}-${detail.value}`} label={detail.label} value={detail.value} />)}
                 </div>
-                <button onClick={() => { if (missingSelectedOption) return; setQuantity(selectedProduct, selectedProductQuantity + 1, selectedOptions); setSelectedProduct(null) }} disabled={Boolean(missingSelectedOption)} className="mt-7 w-full rounded-full py-4 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-45" style={{ backgroundColor: primary }}>{missingSelectedOption ? `Choose ${missingSelectedOption.label}` : "Add to cart"}</button>
+                <button onClick={() => { if (missingSelectedOption) return; setQuantity(selectedProduct, selectedProductQuantity + 1, selectedOptions); setSelectedProduct(null) }} disabled={Boolean(missingSelectedOption) || Boolean(selectedProductSoldOut) || Boolean(selectedProductAtLimit)} className="mt-7 w-full rounded-full py-4 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-45" style={{ backgroundColor: primary }}>{missingSelectedOption ? `Choose ${missingSelectedOption.label}` : selectedProductSoldOut ? "Sold out" : selectedProductAtLimit ? "All available added" : "Add to cart"}</button>
               </div>
             </div>
           </section>

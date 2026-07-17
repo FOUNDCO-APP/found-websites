@@ -5,7 +5,23 @@ export type ServiceCopyItem = {
 
 export type MenuCopyCategory = {
   category: string
-  items: { name: string; description: string; price: string | null; photo_url?: string | null; images?: string[] | null; details?: { label: string; value: string }[] | null; sizes?: string | null; materials?: string | null; shipping_note?: string | null }[]
+  catalog_settings?: { fulfillment?: "pickup" | "shipping" | "both" | "unavailable" | null; payment_behavior?: "online_required" | "pay_later" | null } | null
+  items: {
+    name: string
+    description: string
+    price: string | null
+    photo_url?: string | null
+    images?: string[] | null
+    details?: { label: string; value: string }[] | null
+    options?: { label: string; choices: string[] }[] | null
+    variants?: { id: string; options: Record<string, string>; stock: number | null }[] | null
+    inventory_tracking?: boolean | null
+    fulfillment?: "inherit" | "pickup" | "shipping" | "both" | "unavailable" | null
+    availability?: "active" | "hidden" | "sold_out" | null
+    sizes?: string | null
+    materials?: string | null
+    shipping_note?: string | null
+  }[]
 }
 
 const KNOWN_FIXES: Record<string, string> = {
@@ -740,19 +756,65 @@ export function polishFaqItems(value: unknown): { q: string; a: string }[] | nul
   return items.length ? items : null
 }
 
+function cleanCatalogOptions(value: unknown) {
+  if (!Array.isArray(value)) return null
+  const options = value
+    .map((option) => {
+      if (!option || typeof option !== "object") return null
+      const row = option as { label?: unknown; choices?: unknown }
+      const label = polishShortCopy(row.label).replace(/[.]+$/, "")
+      const choices = Array.isArray(row.choices)
+        ? Array.from(new Set(row.choices.map(choice => polishShortCopy(choice).replace(/[.]+$/, "")).filter(Boolean))).slice(0, 30)
+        : []
+      return label && choices.length ? { label, choices } : null
+    })
+    .filter((option): option is { label: string; choices: string[] } => option !== null)
+    .slice(0, 6)
+  return options.length ? options : null
+}
+
+function cleanCatalogVariants(value: unknown) {
+  if (!Array.isArray(value)) return null
+  const variants = value
+    .map((variant) => {
+      if (!variant || typeof variant !== "object") return null
+      const row = variant as { id?: unknown; options?: unknown; stock?: unknown }
+      const options: Record<string, string> = {}
+      if (row.options && typeof row.options === "object") {
+        for (const [label, choice] of Object.entries(row.options as Record<string, unknown>)) {
+          const cleanLabel = polishShortCopy(label).replace(/[.]+$/, "")
+          const cleanChoice = polishShortCopy(choice).replace(/[.]+$/, "")
+          if (cleanLabel && cleanChoice) options[cleanLabel] = cleanChoice
+        }
+      }
+      const numericStock = row.stock === null || row.stock === undefined || row.stock === "" ? null : Math.max(0, Math.floor(Number(row.stock)))
+      return Object.keys(options).length ? { id: typeof row.id === "string" && row.id.trim() ? row.id.trim().slice(0, 180) : Object.values(options).join("-"), options, stock: Number.isFinite(numericStock as number) ? numericStock : null } : null
+    })
+    .filter((variant): variant is { id: string; options: Record<string, string>; stock: number | null } => variant !== null)
+    .slice(0, 500)
+  return variants.length ? variants : null
+}
+
+function cleanFulfillment(value: unknown) {
+  return value === "pickup" || value === "shipping" || value === "both" || value === "unavailable" ? value : null
+}
+
+function cleanItemFulfillment(value: unknown) {
+  return value === "inherit" || value === "pickup" || value === "shipping" || value === "both" || value === "unavailable" ? value : null
+}
 export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
   if (!Array.isArray(value)) return []
   const categories: MenuCopyCategory[] = []
 
   for (const category of value) {
     if (!category || typeof category !== "object") continue
-    const row = category as { category?: unknown; items?: unknown }
+    const row = category as { category?: unknown; items?: unknown; catalog_settings?: unknown }
     const sourceItems = Array.isArray(row.items) ? row.items : []
     const items: MenuCopyCategory["items"] = []
 
     for (const item of sourceItems) {
       if (!item || typeof item !== "object") continue
-      const menuItem = item as { name?: unknown; description?: unknown; price?: unknown; photo_url?: unknown; images?: unknown; details?: unknown; sizes?: unknown; materials?: unknown; shipping_note?: unknown }
+      const menuItem = item as { name?: unknown; description?: unknown; price?: unknown; photo_url?: unknown; images?: unknown; details?: unknown; options?: unknown; variants?: unknown; inventory_tracking?: unknown; fulfillment?: unknown; availability?: unknown; sizes?: unknown; materials?: unknown; shipping_note?: unknown }
       const name = polishTitle(menuItem.name, "Item")
       const images = Array.isArray(menuItem.images)
         ? menuItem.images.filter((image): image is string => typeof image === "string" && image.trim().length > 0).map(image => image.trim()).slice(0, 6)
@@ -780,14 +842,21 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
         photo_url: primaryPhoto,
         images: images.length ? images : primaryPhoto ? [primaryPhoto] : null,
         details: details.length ? details : null,
+        options: cleanCatalogOptions(menuItem.options),
+        variants: cleanCatalogVariants(menuItem.variants),
+        inventory_tracking: typeof menuItem.inventory_tracking === "boolean" ? menuItem.inventory_tracking : null,
+        fulfillment: cleanItemFulfillment(menuItem.fulfillment),
+        availability: menuItem.availability === "hidden" || menuItem.availability === "sold_out" ? menuItem.availability : "active",
         sizes: typeof menuItem.sizes === "string" && menuItem.sizes.trim() ? polishShortCopy(menuItem.sizes).replace(/[.]+$/, "") : null,
         materials: typeof menuItem.materials === "string" && menuItem.materials.trim() ? polishShortCopy(menuItem.materials).replace(/[.]+$/, "") : null,
         shipping_note: typeof menuItem.shipping_note === "string" && menuItem.shipping_note.trim() ? polishSentence(menuItem.shipping_note, "") : null,
       })
     }
 
+    const catalogSettings = row.catalog_settings && typeof row.catalog_settings === "object" ? row.catalog_settings as { fulfillment?: unknown; payment_behavior?: unknown } : null
     categories.push({
       category: polishTitle(row.category, "Menu"),
+      catalog_settings: catalogSettings ? { fulfillment: cleanFulfillment(catalogSettings.fulfillment) ?? "both", payment_behavior: catalogSettings.payment_behavior === "pay_later" ? "pay_later" : "online_required" } : null,
       items,
     })
   }

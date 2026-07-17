@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
+import type { MenuCategory } from "@/types/company"
 
 function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
@@ -21,6 +22,26 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#039;")
 }
 
+function decrementInventory(menuItems: MenuCategory[], items: unknown) {
+  if (!Array.isArray(items)) return { changed: false, menuItems }
+  const next = JSON.parse(JSON.stringify(menuItems ?? [])) as MenuCategory[]
+  let changed = false
+  for (const item of items) {
+    const row = item as { cat_index?: unknown; item_index?: unknown; variant_id?: unknown; quantity?: unknown }
+    const catIndex = Number(row.cat_index)
+    const itemIndex = Number(row.item_index)
+    const quantity = Math.max(1, Math.floor(Number(row.quantity || 0)))
+    const variantId = typeof row.variant_id === "string" ? row.variant_id : ""
+    const product = next[catIndex]?.items?.[itemIndex]
+    if (!product?.inventory_tracking || !variantId || !Array.isArray(product.variants) || quantity <= 0) continue
+    product.variants = product.variants.map((variant) => {
+      if (variant.id !== variantId || variant.stock === null || variant.stock === undefined) return variant
+      changed = true
+      return { ...variant, stock: Math.max(0, Number(variant.stock) - quantity) }
+    })
+  }
+  return { changed, menuItems: next }
+}
 function orderItemsHtml(items: unknown) {
   if (!Array.isArray(items)) return ""
   return items.map((item) => {
@@ -49,7 +70,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: company } = await admin
     .from("companies")
-    .select("id, name, email, lead_email, phone, stripe_connect_account_id")
+    .select("id, name, email, lead_email, phone, stripe_connect_account_id, website_config(menu_items)")
     .eq("id", companyId)
     .maybeSingle()
 
@@ -91,6 +112,12 @@ export async function POST(req: NextRequest) {
     payment_status: "paid",
     stripe_payment_intent_id: paymentIntent.id,
     paid_at: new Date().toISOString(),
+  }
+
+  const currentMenuItems = ((company as { website_config?: { menu_items?: MenuCategory[] } | null }).website_config?.menu_items ?? [])
+  const inventory = decrementInventory(currentMenuItems, existingAnswers.items)
+  if (inventory.changed) {
+    await admin.from("website_config").update({ menu_items: inventory.menuItems, updated_at: new Date().toISOString() }).eq("company_id", companyId)
   }
 
   await admin.from("leads").update({ partial_answers: nextAnswers }).eq("id", leadId).eq("company_id", companyId)

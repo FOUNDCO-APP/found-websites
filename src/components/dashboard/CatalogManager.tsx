@@ -4,9 +4,12 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { updateMenuItems, uploadMenuItemPhoto } from "@/app/dashboard/(app)/site/actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
+import type { CatalogSettings } from "@/types/company"
 
 type CatalogDetail = { label: string; value: string }
 type CatalogOption = { label: string; choices: string[] }
+type CatalogVariant = { id: string; options: Record<string, string>; stock: number | null }
+type FulfillmentMode = "pickup" | "shipping" | "both" | "unavailable"
 type CatalogItem = {
   name: string
   description: string
@@ -15,11 +18,15 @@ type CatalogItem = {
   images?: string[] | null
   details?: CatalogDetail[] | null
   options?: CatalogOption[] | null
+  variants?: CatalogVariant[] | null
+  inventory_tracking?: boolean | null
+  fulfillment?: "inherit" | FulfillmentMode | null
+  availability?: "active" | "hidden" | "sold_out" | null
   sizes?: string | null
   materials?: string | null
   shipping_note?: string | null
 }
-type CatalogCategory = { category: string; items: CatalogItem[] }
+type CatalogCategory = { category: string; items: CatalogItem[]; catalog_settings?: CatalogSettings | null }
 type CatalogMode = "menu" | "products"
 type ItemDraft = {
   name: string
@@ -32,6 +39,9 @@ type ItemDraft = {
   shipping_note: string
   details: CatalogDetail[]
   options: CatalogOption[]
+  variants: CatalogVariant[]
+  inventory_tracking: boolean
+  availability: "active" | "hidden" | "sold_out"
 }
 
 type Props = {
@@ -80,27 +90,85 @@ const COPY = {
   },
 } as const
 
-const EMPTY_DRAFT: ItemDraft = { name: "", price: "", description: "", photo_url: "", images: [], sizes: "", materials: "", shipping_note: "", details: [], options: [] }
+const EMPTY_DRAFT: ItemDraft = { name: "", price: "", description: "", photo_url: "", images: [], sizes: "", materials: "", shipping_note: "", details: [], options: [], variants: [], inventory_tracking: false, availability: "active" }
+const DEFAULT_SETTINGS: Required<CatalogSettings> = { fulfillment: "both", payment_behavior: "online_required" }
+const SIZE_PRESET = ["XS", "S", "M", "L", "XL", "XXL"]
+const COMMON_SIZE_PRESET = ["Small", "Medium", "Large", "XL"]
+const COLOR_PRESET = ["Black", "White", "Gray", "Blue", "Green", "Red"]
 
 function uniqueImages(item: CatalogItem | ItemDraft) {
   return Array.from(new Set([item.photo_url || "", ...(item.images ?? [])].map(image => image.trim()).filter(Boolean))).slice(0, 6)
 }
 
-function normalizeOptions(options: CatalogOption[] | null | undefined) {
-  return (options ?? [])
-    .map((option) => ({
-      label: option.label.trim(),
-      choices: Array.from(new Set((option.choices ?? []).map(choice => choice.trim()).filter(Boolean))).slice(0, 12),
-    }))
-    .filter(option => option.label && option.choices.length)
-    .slice(0, 4)
+function titleCase(value: string) {
+  return value.trim().replace(/\s+/g, " ").replace(/\b\w/g, char => char.toUpperCase())
 }
 
-function normalizeCategories(categories: CatalogCategory[]) {
-  return categories.map((category) => ({
+function normalizeOptions(options: CatalogOption[] | null | undefined) {
+  const map = new Map<string, { label: string; choices: string[] }>()
+  for (const option of options ?? []) {
+    const label = titleCase(option.label || "")
+    if (!label) continue
+    const key = label.toLowerCase()
+    const current = map.get(key) ?? { label, choices: [] }
+    for (const choice of option.choices ?? []) {
+      const clean = String(choice || "").trim().replace(/\s+/g, " ")
+      if (clean && !current.choices.some(existing => existing.toLowerCase() === clean.toLowerCase())) current.choices.push(clean)
+    }
+    current.choices = current.choices.slice(0, 24)
+    map.set(key, current)
+  }
+  return Array.from(map.values()).filter(option => option.choices.length).slice(0, 4)
+}
+
+function variantId(options: Record<string, string>) {
+  return Object.entries(options).map(([label, value]) => `${label}:${value}`).join("|")
+}
+
+function buildVariantMatrix(options: CatalogOption[]) {
+  const normalized = normalizeOptions(options)
+  if (!normalized.length) return []
+  let rows: Record<string, string>[] = [{}]
+  for (const option of normalized) {
+    const next: Record<string, string>[] = []
+    for (const row of rows) {
+      for (const choice of option.choices) next.push({ ...row, [option.label]: choice })
+    }
+    rows = next.slice(0, 500)
+  }
+  return rows.map(optionsRecord => ({ id: variantId(optionsRecord), options: optionsRecord, stock: null as number | null }))
+}
+
+function normalizeVariants(options: CatalogOption[], variants: CatalogVariant[] | null | undefined, trackInventory: boolean) {
+  const matrix = buildVariantMatrix(options)
+  const existing = new Map<string, CatalogVariant>()
+  for (const variant of variants ?? []) {
+    if (variant?.id) existing.set(variant.id, variant)
+    if (variant?.options) existing.set(variantId(variant.options), variant)
+  }
+  return matrix.map(variant => {
+    const previous = existing.get(variant.id)
+    const rawStock = previous?.stock
+    const stock = trackInventory ? (rawStock === null || rawStock === undefined ? null : Math.max(0, Math.floor(Number(rawStock)))) : null
+    return { ...variant, stock: Number.isFinite(stock as number) ? stock : null }
+  })
+}
+
+function normalizeSettings(settings: CatalogSettings | null | undefined): Required<CatalogSettings> {
+  const fulfillment = settings?.fulfillment === "pickup" || settings?.fulfillment === "shipping" || settings?.fulfillment === "both" || settings?.fulfillment === "unavailable" ? settings.fulfillment : DEFAULT_SETTINGS.fulfillment
+  const paymentBehavior = settings?.payment_behavior === "pay_later" ? "pay_later" : DEFAULT_SETTINGS.payment_behavior
+  return { fulfillment, payment_behavior: paymentBehavior }
+}
+function normalizeCategories(categories: CatalogCategory[], settings?: CatalogSettings) {
+  const normalizedSettings = settings ? normalizeSettings(settings) : null
+  return categories.map((category, categoryIndex) => ({
     category: category.category,
+    catalog_settings: categoryIndex === 0 ? (normalizedSettings ?? normalizeSettings(category.catalog_settings)) : null,
     items: category.items.map((item) => {
       const images = uniqueImages(item)
+      const options = normalizeOptions(item.options)
+      const inventoryTracking = Boolean(item.inventory_tracking)
+      const variants = normalizeVariants(options, item.variants, inventoryTracking)
       return {
         name: item.name,
         description: item.description,
@@ -108,7 +176,11 @@ function normalizeCategories(categories: CatalogCategory[]) {
         photo_url: images[0] ?? null,
         images: images.length ? images : null,
         details: item.details?.filter(detail => detail.label.trim() && detail.value.trim()) ?? null,
-        options: normalizeOptions(item.options).length ? normalizeOptions(item.options) : null,
+        options: options.length ? options : null,
+        variants: variants.length ? variants : null,
+        inventory_tracking: inventoryTracking,
+        fulfillment: item.fulfillment ?? "inherit",
+        availability: item.availability ?? "active",
         sizes: item.sizes?.trim() || null,
         materials: item.materials?.trim() || null,
         shipping_note: item.shipping_note?.trim() || null,
@@ -116,7 +188,6 @@ function normalizeCategories(categories: CatalogCategory[]) {
     }),
   }))
 }
-
 function priceLabel(price: string | null | undefined) {
   if (!price) return ""
   const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
@@ -131,7 +202,9 @@ function inputStyle(extra: React.CSSProperties = {}): React.CSSProperties {
 export default function CatalogManager({ mode, companyName, slug, initialCategories }: Props) {
   const copy = COPY[mode]
   const isProducts = mode === "products"
-  const [categories, setCategories] = useState<CatalogCategory[]>(normalizeCategories(initialCategories))
+  const initialSettings = normalizeSettings(initialCategories.find(category => category.catalog_settings)?.catalog_settings ?? initialCategories[0]?.catalog_settings)
+  const [catalogSettings, setCatalogSettings] = useState<Required<CatalogSettings>>(initialSettings)
+  const [categories, setCategories] = useState<CatalogCategory[]>(normalizeCategories(initialCategories, initialSettings))
   const [addingCategory, setAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [editingCategoryIndex, setEditingCategoryIndex] = useState<number | null>(null)
@@ -147,13 +220,14 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
 
   const itemCount = categories.reduce((sum, category) => sum + category.items.length, 0)
   const publicHref = `https://${slug}.foundco.app${copy.previewPath}`
+  const fulfillmentLabel = catalogSettings.fulfillment === "both" ? (isProducts ? "Pickup and shipping" : "Pickup and delivery") : catalogSettings.fulfillment === "shipping" ? (isProducts ? "Shipping only" : "Delivery only") : catalogSettings.fulfillment === "pickup" ? "Pickup only" : "Checkout paused"
 
-  async function persist(next: CatalogCategory[]) {
+  async function persist(next: CatalogCategory[], settings = catalogSettings) {
     const previous = categories
-    setCategories(normalizeCategories(next))
+    setCategories(normalizeCategories(next, settings))
     setSaving(true)
     setError(null)
-    const result = await updateMenuItems(normalizeCategories(next))
+    const result = await updateMenuItems(normalizeCategories(next, settings))
     setSaving(false)
     if ("error" in result) {
       setCategories(previous)
@@ -165,6 +239,11 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     return true
   }
 
+
+  async function saveSettings(nextSettings: Required<CatalogSettings>) {
+    setCatalogSettings(nextSettings)
+    await persist(categories, nextSettings)
+  }
   async function addCategory() {
     const name = newCategoryName.trim()
     if (!name || saving) return
@@ -198,7 +277,9 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     const item = itemIndex !== null ? categories[catIndex]?.items[itemIndex] : null
     const images = item ? uniqueImages(item) : []
     setError(null)
-    setShowDetails(Boolean(item?.options?.length || item?.sizes || item?.materials || item?.shipping_note || item?.details?.length))
+    const options = normalizeOptions(item?.options)
+    const trackInventory = Boolean(item?.inventory_tracking)
+    setShowDetails(Boolean(options.length || item?.sizes || item?.materials || item?.shipping_note || item?.details?.length || trackInventory))
     setItemDraft({
       name: item?.name ?? "",
       price: item?.price ?? "",
@@ -209,7 +290,10 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
       materials: item?.materials ?? "",
       shipping_note: item?.shipping_note ?? "",
       details: item?.details ?? [],
-      options: normalizeOptions(item?.options),
+      options,
+      variants: normalizeVariants(options, item?.variants, trackInventory),
+      inventory_tracking: trackInventory,
+      availability: item?.availability ?? "active",
     })
     setEditingItem({ catIndex, itemIndex })
   }
@@ -221,6 +305,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     const images = uniqueImages(itemDraft)
     const details = itemDraft.details.filter(detail => detail.label.trim() && detail.value.trim())
     const options = normalizeOptions(itemDraft.options)
+    const variants = normalizeVariants(options, itemDraft.variants, itemDraft.inventory_tracking)
     const nextItem: CatalogItem = {
       name,
       price: itemDraft.price.trim() || null,
@@ -229,6 +314,10 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
       images: images.length ? images : null,
       details: details.length ? details : null,
       options: options.length ? options : null,
+      variants: variants.length ? variants : null,
+      inventory_tracking: itemDraft.inventory_tracking,
+      fulfillment: "inherit",
+      availability: itemDraft.availability,
       sizes: itemDraft.sizes.trim() || null,
       materials: itemDraft.materials.trim() || null,
       shipping_note: itemDraft.shipping_note.trim() || null,
@@ -270,23 +359,37 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     } else setError(result.error || "Photo could not upload.")
   }
 
-  function updateDraftOption(index: number, patch: Partial<CatalogOption>) {
+  function setDraftOptions(options: CatalogOption[]) {
     setItemDraft((prev) => {
-      const options = [...prev.options]
-      options[index] = { ...(options[index] ?? { label: "", choices: [] }), ...patch }
-      return { ...prev, options }
+      const normalized = normalizeOptions(options)
+      return { ...prev, options: normalized, variants: normalizeVariants(normalized, prev.variants, prev.inventory_tracking) }
     })
-  }
-
-  function addDraftOption() {
-    setItemDraft((prev) => ({ ...prev, options: [...prev.options, { label: "", choices: [] }].slice(0, 4) }))
     setShowDetails(true)
   }
 
-  function removeDraftOption(index: number) {
-    setItemDraft((prev) => ({ ...prev, options: prev.options.filter((_, optionIndex) => optionIndex !== index) }))
+  function addPresetOption(label: string, choices: string[]) {
+    setDraftOptions([...itemDraft.options.filter(option => option.label.toLowerCase() !== label.toLowerCase()), { label, choices }])
   }
 
+  function toggleChoice(label: string, choice: string) {
+    const existing = normalizeOptions(itemDraft.options)
+    const current = existing.find(option => option.label.toLowerCase() === label.toLowerCase()) ?? { label, choices: [] }
+    const choices = current.choices.some(value => value.toLowerCase() === choice.toLowerCase())
+      ? current.choices.filter(value => value.toLowerCase() !== choice.toLowerCase())
+      : [...current.choices, choice]
+    setDraftOptions([...existing.filter(option => option.label.toLowerCase() !== label.toLowerCase()), { label, choices }])
+  }
+
+  function removeDraftOption(label: string) {
+    setDraftOptions(itemDraft.options.filter(option => option.label.toLowerCase() !== label.toLowerCase()))
+  }
+
+  function updateVariantStock(id: string, value: string) {
+    setItemDraft((prev) => ({
+      ...prev,
+      variants: normalizeVariants(prev.options, prev.variants, prev.inventory_tracking).map(variant => variant.id === id ? { ...variant, stock: value.trim() === "" ? null : Math.max(0, Math.floor(Number(value) || 0)) } : variant),
+    }))
+  }
   function removeDraftImage(image: string) {
     setItemDraft((prev) => {
       const images = prev.images.filter(url => url !== image)
@@ -311,6 +414,19 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
           <Link href="/site" style={{ textDecoration: "none", borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 650 }}>Edit site</Link>
         </div>
 
+
+        <section style={{ marginBottom: 18, borderRadius: 22, padding: 16, border: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(135deg, rgba(49,209,88,0.13), rgba(255,255,255,0.035))" }}>
+          <p style={{ margin: "0 0 4px", ...TYPE.caption, color: GREEN }}>{fulfillmentLabel}</p>
+          <h2 style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>{isProducts ? "How customers receive purchases" : "How guests receive orders"}</h2>
+          <p style={{ margin: "0 0 14px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{isProducts ? "Set pickup, shipping, both, or pause checkout without making the site look broken." : "Choose what this business can actually handle today."}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 8 }}>
+            {(["both", "pickup", "shipping", "unavailable"] as FulfillmentMode[]).map((modeValue) => {
+              const active = catalogSettings.fulfillment === modeValue
+              const label = modeValue === "both" ? "Both" : modeValue === "shipping" ? (isProducts ? "Ship" : "Deliver") : modeValue === "pickup" ? "Pickup" : "Pause"
+              return <button key={modeValue} onClick={() => void saveSettings({ ...catalogSettings, fulfillment: modeValue })} disabled={saving} style={{ border: active ? `1px solid ${GREEN}` : "1px solid rgba(255,255,255,0.09)", borderRadius: 14, padding: "11px 7px", backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: active ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.footnote, fontWeight: 850 }}>{label}</button>
+            })}
+          </div>
+        </section>
         <section style={{ borderRadius: 24, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02))" }}>
           <div style={{ padding: "18px 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <div>
@@ -422,23 +538,46 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                 </button>
                 {showDetails && (
                   <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-                    <div style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", padding: 12 }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: itemDraft.options.length ? 10 : 0 }}>
+                    <div style={{ borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", padding: 14 }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
                         <div>
-                          <p style={{ margin: 0, ...TYPE.footnote, color: "white", fontWeight: 850 }}>Customer choices</p>
-                          <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Sizes, colors, or options customers must choose.</p>
+                          <p style={{ margin: 0, ...TYPE.subhead, color: "white", fontWeight: 900 }}>Customer choices</p>
+                          <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Tap presets. Customers must choose before adding to cart.</p>
                         </div>
-                        <button type="button" onClick={addDraftOption} disabled={itemDraft.options.length >= 4} style={{ border: "none", borderRadius: 999, padding: "9px 12px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 850, opacity: itemDraft.options.length >= 4 ? 0.45 : 1 }}>Add choice</button>
                       </div>
-                      {itemDraft.options.map((option, index) => (
-                        <div key={index} style={{ display: "grid", gridTemplateColumns: "0.75fr 1fr auto", gap: 8, marginTop: index === 0 ? 0 : 8 }}>
-                          <input value={option.label} onChange={(event) => updateDraftOption(index, { label: event.target.value })} placeholder="Size" style={inputStyle()} />
-                          <input value={option.choices.join(", ")} onChange={(event) => updateDraftOption(index, { choices: event.target.value.split(",") })} placeholder="Small, Medium, Large, XL" style={inputStyle()} />
-                          <button type="button" onClick={() => removeDraftOption(index)} aria-label="Remove choice" style={{ width: 48, borderRadius: 14, border: "1px solid rgba(255,70,70,0.18)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,105,105,0.9)", ...TYPE.subhead, fontWeight: 900 }}>x</button>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                        <button type="button" onClick={() => addPresetOption("Size", SIZE_PRESET)} style={presetButtonStyle()}>Sizes</button>
+                        <button type="button" onClick={() => addPresetOption("Size", COMMON_SIZE_PRESET)} style={presetButtonStyle()}>Simple sizes</button>
+                        <button type="button" onClick={() => addPresetOption("Color", COLOR_PRESET)} style={presetButtonStyle()}>Colors</button>
+                      </div>
+                      {normalizeOptions(itemDraft.options).map((option) => (
+                        <div key={option.label} style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 12, marginTop: 12 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", marginBottom: 9 }}>
+                            <p style={{ margin: 0, ...TYPE.footnote, color: "white", fontWeight: 900 }}>{option.label}</p>
+                            <button type="button" onClick={() => removeDraftOption(option.label)} style={{ border: "none", background: "none", color: "rgba(255,105,105,0.9)", ...TYPE.footnote, fontWeight: 850 }}>Remove</button>
+                          </div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {(option.label.toLowerCase() === "size" ? Array.from(new Set([...option.choices, ...SIZE_PRESET])) : option.label.toLowerCase() === "color" ? Array.from(new Set([...option.choices, ...COLOR_PRESET])) : option.choices).map((choice) => {
+                              const active = option.choices.some(value => value.toLowerCase() === choice.toLowerCase())
+                              return <button key={choice} type="button" onClick={() => toggleChoice(option.label, choice)} style={{ borderRadius: 999, padding: "9px 12px", border: active ? `1px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", backgroundColor: active ? `${GREEN}1E` : "rgba(255,255,255,0.045)", color: active ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.footnote, fontWeight: 850 }}>{choice}</button>
+                            })}
+                          </div>
                         </div>
                       ))}
                     </div>
-                    <input value={itemDraft.sizes} onChange={(event) => setItemDraft((prev) => ({ ...prev, sizes: event.target.value }))} placeholder="Sizes shown as product info, e.g. Small to XL" style={inputStyle()} />
+
+                    {normalizeOptions(itemDraft.options).length > 0 && (
+                      <div style={{ borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", padding: 14 }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+                          <div>
+                            <p style={{ margin: 0, ...TYPE.subhead, color: "white", fontWeight: 900 }}>Inventory by choice</p>
+                            <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Leave blank for unlimited. Enter 0 to show sold out.</p>
+                          </div>
+                          <button type="button" onClick={() => setItemDraft((prev) => ({ ...prev, inventory_tracking: !prev.inventory_tracking, variants: normalizeVariants(prev.options, prev.variants, !prev.inventory_tracking) }))} style={{ border: "none", borderRadius: 999, padding: "10px 12px", backgroundColor: itemDraft.inventory_tracking ? GREEN : "rgba(255,255,255,0.08)", color: itemDraft.inventory_tracking ? BLACK : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.footnote, fontWeight: 900 }}>{itemDraft.inventory_tracking ? "Tracking" : "Track stock"}</button>
+                        </div>
+                        {itemDraft.inventory_tracking && <div style={{ display: "grid", gap: 8 }}>{normalizeVariants(itemDraft.options, itemDraft.variants, true).map((variant) => <div key={variant.id} style={{ display: "grid", gridTemplateColumns: "1fr 104px", gap: 8, alignItems: "center" }}><p style={{ margin: 0, ...TYPE.footnote, color: "white", fontWeight: 850 }}>{Object.values(variant.options).join(" / ")}</p><input value={variant.stock ?? ""} onChange={(event) => updateVariantStock(variant.id, event.target.value)} inputMode="numeric" placeholder="Stock" style={inputStyle({ padding: "11px 12px", textAlign: "center" })} /></div>)}</div>}
+                      </div>
+                    )}                    <input value={itemDraft.sizes} onChange={(event) => setItemDraft((prev) => ({ ...prev, sizes: event.target.value }))} placeholder="Sizes shown as product info, e.g. Small to XL" style={inputStyle()} />
                     <input value={itemDraft.materials} onChange={(event) => setItemDraft((prev) => ({ ...prev, materials: event.target.value }))} placeholder="Material, finish, or what it is made from" style={inputStyle()} />
                     <input value={itemDraft.shipping_note} onChange={(event) => setItemDraft((prev) => ({ ...prev, shipping_note: event.target.value }))} placeholder="Pickup or shipping note" style={inputStyle()} />
                     <div style={{ display: "grid", gap: 8 }}>
@@ -475,4 +614,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
       )}
     </main>
   )
+}
+function presetButtonStyle(): React.CSSProperties {
+  return { border: "1px solid rgba(255,255,255,0.1)", borderRadius: 999, padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.06)", color: "white", ...TYPE.footnote, fontWeight: 850 }
 }
