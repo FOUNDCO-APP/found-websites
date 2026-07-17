@@ -432,7 +432,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
 
       </main>
 
-      {cartItems.length > 0 && !paid && (
+      {cartItems.length > 0 && !paid && !checkoutOpen && (
         <div className="fixed inset-x-4 bottom-[calc(18px+env(safe-area-inset-bottom))] z-[70] rounded-[26px] border border-neutral-200 bg-white/95 px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur md:hidden">
           <div className="mx-auto flex max-w-5xl items-center gap-4">
             <div className="min-w-0 flex-1">
@@ -444,7 +444,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
         </div>
       )}
 
-      {cartItems.length > 0 && !paid && (
+      {cartItems.length > 0 && !paid && !checkoutOpen && (
         <div className="fixed bottom-6 left-1/2 z-40 hidden w-[min(720px,calc(100%-48px))] -translate-x-1/2 rounded-full border border-neutral-200 bg-white/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur md:block">
           <div className="flex items-center gap-4">
             <div className="min-w-0 flex-1 px-3">
