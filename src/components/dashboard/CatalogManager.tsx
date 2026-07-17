@@ -72,7 +72,7 @@ const COPY = {
   },
   products: {
     title: "Products",
-    eyebrow: "Catalog studio",
+    eyebrow: "Shop setup",
     body: "Build the products customers can see, understand, and buy from your site.",
     previewPath: "/shop",
     previewLabel: "View live shop",
@@ -433,7 +433,10 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
               <p style={{ margin: "0 0 3px", ...TYPE.title, color: "white" }}>{companyName}</p>
               <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{categories.length} categories - {itemCount} items</p>
             </div>
-            <button onClick={() => setAddingCategory(true)} style={{ border: "none", borderRadius: 999, padding: "12px 15px", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 850, cursor: "pointer" }}>{copy.addCategory}</button>
+            <div style={{ display: "grid", gap: 8, justifyItems: "end" }}>
+              {categories.length > 0 && <button onClick={() => openItem(0, null)} style={{ border: "none", borderRadius: 999, padding: "12px 16px", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 850, cursor: "pointer" }}>{copy.addItem}</button>}
+              <button onClick={() => setAddingCategory(true)} style={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 999, padding: "9px 12px", backgroundColor: "rgba(255,255,255,0.035)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.footnote, fontWeight: 800, cursor: "pointer" }}>Category</button>
+            </div>
           </div>
 
           {error && <p style={{ margin: 18, borderRadius: 14, padding: "12px 13px", backgroundColor: "rgba(255,69,58,0.13)", border: "1px solid rgba(255,69,58,0.28)", color: "#FF453A", ...TYPE.footnote, fontWeight: 760 }}>{error}</p>}
@@ -458,7 +461,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
           )}
 
           {categories.map((category, catIndex) => (
-            <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.07)", padding: "18px 18px 20px" }}>
+            <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.055)", padding: "20px 18px 22px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, position: "relative", marginBottom: 14 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {editingCategoryIndex === catIndex ? (
@@ -486,8 +489,8 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                   const optionCount = normalizeOptions(item.options).reduce((sum, option) => sum + option.choices.length, 0)
                   const status = tracked ? `${totalStock} in stock` : optionCount ? `${optionCount} choices` : images.length ? `${images.length} ${images.length === 1 ? "photo" : "photos"}` : "Needs photo"
                   return (
-                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "1px solid rgba(255,255,255,0.075)", borderRadius: 22, padding: 12, background: "linear-gradient(135deg, rgba(255,255,255,0.052), rgba(255,255,255,0.018))", display: "grid", gridTemplateColumns: "88px minmax(0, 1fr) auto", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer", boxShadow: "0 14px 34px rgba(0,0,0,0.12)" }}>
-                      {images[0] ? <img src={images[0]} alt="" style={{ width: 88, height: 88, borderRadius: 20, objectFit: "contain", backgroundColor: "rgba(255,255,255,0.96)", flexShrink: 0 }} /> : <div style={{ width: 88, height: 88, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.065)", border: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.34)", ...TYPE.footnote, fontWeight: 850 }}>Photo</div>}
+                    <button key={`${item.name}-${itemIndex}`} onClick={() => openItem(catIndex, itemIndex)} style={{ border: "1px solid rgba(255,255,255,0.045)", borderRadius: 20, padding: 10, background: "transparent", display: "grid", gridTemplateColumns: "84px minmax(0, 1fr) auto", alignItems: "center", gap: 14, textAlign: "left", cursor: "pointer" }}>
+                      {images[0] ? <img src={images[0]} alt="" style={{ width: 84, height: 84, borderRadius: 18, objectFit: "contain", backgroundColor: "rgba(255,255,255,0.96)", flexShrink: 0 }} /> : <div style={{ width: 84, height: 84, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.055)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.34)", ...TYPE.footnote, fontWeight: 850 }}>Photo</div>}
                       <span style={{ minWidth: 0 }}>
                         <span style={{ display: "block", ...TYPE.subhead, fontWeight: 900, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
                         {item.description && <span style={{ display: "block", marginTop: 5, ...TYPE.footnote, lineHeight: 1.35, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</span>}
@@ -495,12 +498,12 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                       </span>
                       <span style={{ display: "grid", justifyItems: "end", gap: 7, flexShrink: 0 }}>
                         <span style={{ ...TYPE.subhead, fontWeight: 950, color: item.price ? GREEN : "rgba(255,255,255,0.42)", whiteSpace: "nowrap" }}>{item.price ? priceLabel(item.price) : "No price"}</span>
-                        <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontWeight: 850 }}>Edit</span>
+                        <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontWeight: 850 }}>Tap to edit</span>
                       </span>
                     </button>
                   )
                 })}
-                <button onClick={() => openItem(catIndex, null)} style={{ border: "1px dashed rgba(49,209,88,0.28)", borderRadius: 20, padding: "15px 16px", backgroundColor: `${GREEN}0B`, color: GREEN, textAlign: "left", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
+                <button onClick={() => openItem(catIndex, null)} style={{ border: "none", borderRadius: 18, padding: "15px 16px", backgroundColor: `${GREEN}E6`, color: BLACK, textAlign: "center", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
               </div>
             </div>
           ))}
