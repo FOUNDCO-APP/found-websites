@@ -503,7 +503,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                     </button>
                   )
                 })}
-                <button onClick={() => openItem(catIndex, null)} style={{ border: "none", borderRadius: 18, padding: "15px 16px", backgroundColor: `${GREEN}E6`, color: BLACK, textAlign: "center", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
+                <button onClick={() => openItem(catIndex, null)} style={{ border: `1px solid ${GREEN}33`, borderRadius: 18, padding: "15px 16px", backgroundColor: `${GREEN}10`, color: GREEN, textAlign: "center", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
               </div>
             </div>
           ))}
