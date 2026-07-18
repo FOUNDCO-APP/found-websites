@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState, useTransition } from "react"
+import React, { useEffect, useRef, useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
@@ -23,6 +23,7 @@ type Props = {
 }
 
 export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus }: Props) {
+  const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
@@ -64,8 +65,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const root = document.documentElement
     const previousBodyOverflow = body.style.overflow
     const previousBodyOverscroll = body.style.overscrollBehavior
+    const previousBodyPosition = body.style.position
+    const previousBodyTop = body.style.top
+    const previousBodyLeft = body.style.left
+    const previousBodyRight = body.style.right
+    const previousBodyWidth = body.style.width
     const previousRootOverflow = root.style.overflow
     const previousRootOverscroll = root.style.overscrollBehavior
+    const previousRootHeight = root.style.height
+    const scrollY = window.scrollY
 
     const updateVisualHeight = () => {
       root.style.setProperty("--found-visual-height", `${window.visualViewport?.height ?? window.innerHeight}px`)
@@ -74,21 +82,53 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     updateVisualHeight()
     body.style.overflow = "hidden"
     body.style.overscrollBehavior = "none"
+    body.style.position = "fixed"
+    body.style.top = `-${scrollY}px`
+    body.style.left = "0"
+    body.style.right = "0"
+    body.style.width = "100%"
     root.style.overflow = "hidden"
     root.style.overscrollBehavior = "none"
+    root.style.height = "100%"
     window.visualViewport?.addEventListener("resize", updateVisualHeight)
     window.visualViewport?.addEventListener("scroll", updateVisualHeight)
 
     return () => {
       body.style.overflow = previousBodyOverflow
       body.style.overscrollBehavior = previousBodyOverscroll
+      body.style.position = previousBodyPosition
+      body.style.top = previousBodyTop
+      body.style.left = previousBodyLeft
+      body.style.right = previousBodyRight
+      body.style.width = previousBodyWidth
       root.style.overflow = previousRootOverflow
       root.style.overscrollBehavior = previousRootOverscroll
+      root.style.height = previousRootHeight
       root.style.removeProperty("--found-visual-height")
       window.visualViewport?.removeEventListener("resize", updateVisualHeight)
       window.visualViewport?.removeEventListener("scroll", updateVisualHeight)
+      window.scrollTo(0, scrollY)
     }
   }, [sheetOpen])
+
+  function handleEditorTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    editorTouchStartY.current = event.touches[0]?.clientY ?? 0
+  }
+
+  function handleEditorTouchMove(event: React.TouchEvent<HTMLDivElement>) {
+    const target = event.target as HTMLElement
+    const scrollable = target.closest("[data-found-editor-scrollable='true']") as HTMLElement | null
+    if (!scrollable) {
+      event.preventDefault()
+      return
+    }
+
+    const currentY = event.touches[0]?.clientY ?? editorTouchStartY.current
+    const deltaY = currentY - editorTouchStartY.current
+    const atTop = scrollable.scrollTop <= 0
+    const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1
+    if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) event.preventDefault()
+  }
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
   const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
   const showCatalog = isFoodCatalog || isShopCatalog
@@ -936,7 +976,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       )}
       {/* ── EDIT SHEET — focused full-screen editor ── */}
       {editing && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "#111613", display: "flex", flexDirection: "column", overflow: "hidden", overscrollBehavior: "none" }}>
+        <div onTouchStart={handleEditorTouchStart} onTouchMove={handleEditorTouchMove} style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "#111613", display: "flex", flexDirection: "column", overflow: "hidden", overscrollBehavior: "none", touchAction: "none" }}>
           <div style={{ flexShrink: 0, padding: "calc(env(safe-area-inset-top, 0px) + 12px) 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(17,22,19,0.98)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}>
             <div style={{ display: "grid", gridTemplateColumns: "72px 1fr 72px", alignItems: "center", gap: 8 }}>
               <button onClick={() => setEditing(null)} style={{ justifySelf: "start", padding: "10px 0", border: "none", background: "transparent", color: "rgba(255,255,255,0.72)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Close</button>
@@ -961,13 +1001,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <textarea
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
+                data-found-editor-scrollable="true"
                 autoFocus rows={6}
-                style={{ width: "100%", height: editing === "about_text" ? "min(42dvh, 320px)" : 190, maxHeight: "42dvh", overflowY: "auto", padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", resize: "none", lineHeight: 1.55, boxSizing: "border-box", fontFamily: "inherit", overscrollBehavior: "contain" }}
+                style={{ width: "100%", height: editing === "about_text" ? "min(42dvh, 320px)" : 190, maxHeight: "42dvh", overflowY: "auto", padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", resize: "none", lineHeight: 1.55, boxSizing: "border-box", fontFamily: "inherit", overscrollBehavior: "contain", touchAction: "pan-y" }}
               />
             ) : (
               <input
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
+                data-found-editor-scrollable="true"
                 autoFocus
                 style={{ width: "100%", padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", boxSizing: "border-box" }}
               />
