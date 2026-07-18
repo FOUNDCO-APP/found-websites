@@ -953,7 +953,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           </div>
 
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", padding: "22px 20px calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
+          <div style={{ flex: 1, minHeight: 0, overflow: "hidden", overscrollBehavior: "none", padding: "22px 20px calc(env(safe-area-inset-bottom, 0px) + 22px)", display: "flex", flexDirection: "column" }}>
             {[
               "about_text",
               "hero_subtitle",
@@ -962,7 +962,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 autoFocus rows={6}
-                style={{ width: "100%", minHeight: 190, padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", resize: "none", lineHeight: 1.55, boxSizing: "border-box", fontFamily: "inherit" }}
+                style={{ width: "100%", height: editing === "about_text" ? "min(42dvh, 320px)" : 190, maxHeight: "42dvh", overflowY: "auto", padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", resize: "none", lineHeight: 1.55, boxSizing: "border-box", fontFamily: "inherit", overscrollBehavior: "contain" }}
               />
             ) : (
               <input
