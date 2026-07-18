@@ -934,49 +934,49 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </>
       )}
-      {/* ── EDIT SHEET — slides up from bottom ── */}
+      {/* ── EDIT SHEET — focused full-screen editor ── */}
       {editing && (
-        <>
-          <div onClick={() => setEditing(null)} onTouchMove={event => event.preventDefault()} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.82)", zIndex: 80, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}/>
-          <div onTouchMove={event => event.stopPropagation()} style={{
-            position: "fixed", top: 0, left: 0, right: 0, zIndex: 90,
-            height: "var(--found-visual-height, 100dvh)", overflowY: "auto", overscrollBehavior: "contain",
-            backgroundColor: "#111613",
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 0,
-            padding: "calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
-          }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              {{
-                hero_title: "Headline",
-                hero_subtitle: "Supporting Line",
-                about_text: "Your Story",
-                tagline: "Tagline",
-                cta_headline: "Button Text",
-              }[editing] ?? editing}
+        <div style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "#111613", display: "flex", flexDirection: "column", overflow: "hidden", overscrollBehavior: "none" }}>
+          <div style={{ flexShrink: 0, padding: "calc(env(safe-area-inset-top, 0px) + 12px) 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(17,22,19,0.98)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "72px 1fr 72px", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setEditing(null)} style={{ justifySelf: "start", padding: "10px 0", border: "none", background: "transparent", color: "rgba(255,255,255,0.72)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Close</button>
+              <div style={{ textAlign: "center", fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.58)", letterSpacing: "0.09em", textTransform: "uppercase", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {{
+                  hero_title: "Headline",
+                  hero_subtitle: "Supporting Line",
+                  about_text: "Your Story",
+                  tagline: "Tagline",
+                  cta_headline: "Button Text",
+                }[editing] ?? editing}
+              </div>
+              <button onClick={() => saveEdit(editing)} style={{ justifySelf: "end", padding: "10px 0", border: "none", background: "transparent", color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>Save</button>
             </div>
-            {["about_text", "hero_subtitle"].includes(editing) ? (
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overscrollBehavior: "contain", padding: "22px 20px calc(env(safe-area-inset-bottom, 0px) + 180px)" }}>
+            {[
+              "about_text",
+              "hero_subtitle",
+            ].includes(editing) ? (
               <textarea
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
-                autoFocus rows={4}
-                style={{ width: "100%", minHeight: 138, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", resize: "vertical", lineHeight: 1.6, boxSizing: "border-box", fontFamily: "inherit" }}
+                autoFocus rows={6}
+                style={{ width: "100%", minHeight: 190, padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", resize: "none", lineHeight: 1.55, boxSizing: "border-box", fontFamily: "inherit" }}
               />
             ) : (
               <input
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
                 autoFocus
-                style={{ width: "100%", padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", boxSizing: "border-box" }}
+                style={{ width: "100%", padding: "16px 18px", borderRadius: 18, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 17, outline: "none", boxSizing: "border-box" }}
               />
             )}
-            <div style={{ display: "flex", gap: 10, marginTop: 14, position: "sticky", bottom: 0, paddingTop: 10, backgroundColor: "#111613" }}>
-              <button onClick={() => setEditing(null)} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-              <button onClick={() => saveEdit(editing)} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save & Go Live</button>
-            </div>
+            <p style={{ margin: "14px 2px 0", ...TYPE.footnote, color: "rgba(255,255,255,0.42)", lineHeight: 1.45 }}>
+              Save publishes this copy to the live site.
+            </p>
           </div>
-        </>
+        </div>
       )}
 
       {/* ══════════════════════════════════════════

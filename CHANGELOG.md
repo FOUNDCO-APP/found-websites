@@ -4,6 +4,19 @@
 
 ---
 
+## Session: July 18, 2026 - Site Copy Editor Escape Fix
+**AI:** Codex
+**Worked on:** Replaced the trapped mobile copy editor with a true full-screen editor.
+
+### Completed
+- Added a permanent top `Close` control so the owner is never trapped behind the iOS keyboard.
+- Moved Save into the top bar instead of the keyboard area.
+- Removed the fragile bottom action row that could drift, expose the page behind it, or become unreachable.
+
+### Test Next
+- Edit My Site -> tap Supporting Line. Confirm Close and Save are visible at the top with the keyboard open, and dragging the editor does not reveal the dashboard behind it.
+
+---
 ## Session: July 18, 2026 - Site Edit Sheet Lock
 **AI:** Codex
 **Worked on:** Fixed the mobile text-edit sheet so the page behind it cannot peek through or scroll while the keyboard is open.
