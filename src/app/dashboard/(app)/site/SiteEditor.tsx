@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { updateSiteField, regenerateSection, assignPhotoToSection, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -33,6 +33,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [newServiceName, setNewServiceName] = useState("")
   const [newServiceDesc, setNewServiceDesc] = useState("")
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
+  const [showHeroPicker, setShowHeroPicker] = useState(false)
   const [stockImages, setStockImages] = useState<string[]>(initialStockImages)
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
@@ -227,14 +228,28 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if (ok) setEditingMenuCatIdx(null)
   }
   function handleAssignPhoto(photoId: string, section: string | null) {
-    // Optimistic update — move photo immediately in local state
-    setLocalPhotos(prev => prev.map(p => p.id === photoId ? { ...p, website_section: section } : p))
+    const photo = localPhotos.find(p => p.id === photoId)
+    setLocalPhotos(prev => prev.map(p => ({ ...p, website_section: p.id === photoId ? section : section === "hero" && p.website_section === "hero" ? null : p.website_section })))
+    if (section === "hero" && photo) {
+      const current = Array.isArray(config.hero_images) ? (config.hero_images as string[]) : []
+      const heroImages = [photo.url, ...current.filter(url => url !== photo.url)]
+      setConfig(prev => ({ ...prev, hero_image_url: photo.url, hero_images: heroImages }))
+      setShowHeroPicker(false)
+    }
     startTransition(async () => { await assignPhotoToSection(photoId, section) })
+  }
+
+  function handleClearHeroPhoto() {
+    setLocalPhotos(prev => prev.map(p => p.website_section === "hero" ? { ...p, website_section: null } : p))
+    setConfig(prev => ({ ...prev, hero_image_url: null, hero_images: [] }))
+    setShowHeroPicker(false)
+    startTransition(async () => { await clearHeroPhoto() })
   }
 
   const heroPhotos = localPhotos.filter(p => p.website_section === "hero")
   const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
   const unassigned = localPhotos.filter(p => !p.website_section)
+  const heroPickerPhotos = localPhotos
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
 
@@ -306,13 +321,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           </div>
 
-          {/* Hero action row */}
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {/* Hero actions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <button
               onClick={() => handleRegenerate("hero")}
               disabled={regenerating === "hero"}
               style={{
-                display: "flex", alignItems: "center", gap: 6,
+                alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6,
                 padding: "8px 16px", borderRadius: 100,
                 backgroundColor: regenerating === "hero" ? "rgba(255,255,255,0.08)" : `${GREEN}22`,
                 border: `1px solid ${GREEN}44`,
@@ -320,32 +335,29 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 fontSize: 12, fontWeight: 700, cursor: "pointer",
               }}
             >
-              {regenerating === "hero" ? <Spinner color={GREEN}/> : "✨"}
-              {regenerating === "hero" ? "Writing…" : "AI Rewrite"}
+              {regenerating === "hero" && <Spinner color={GREEN}/>}
+              {regenerating === "hero" ? "Writing..." : "AI Rewrite"}
             </button>
 
-            {/* Hero photo swap */}
-            {unassigned.length > 0 && (
-              <div style={{ display: "flex", gap: 5 }}>
-                {unassigned.slice(0, 3).map(p => (
-                  <button key={p.id} onClick={() => handleAssignPhoto(p.id, "hero")} style={{
-                    width: 32, height: 32, borderRadius: 8, padding: 0,
-                    border: "2px dashed rgba(255,255,255,0.2)", overflow: "hidden",
-                    cursor: "pointer", position: "relative", backgroundColor: "transparent",
-                  }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.6 }} />
-                  </button>
-                ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 18, backgroundColor: "rgba(8,10,9,0.62)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+              <div style={{ width: 58, height: 58, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
+                {heroImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 800 }}>None</div>
+                )}
               </div>
-            )}
-            {heroImage && (
-              <button onClick={() => handleAssignPhoto(heroPhotos[0]?.id ?? "", null)} style={{
-                padding: "8px 14px", borderRadius: 100,
-                backgroundColor: "rgba(255,70,70,0.15)", border: "1px solid rgba(255,70,70,0.2)",
-                color: "rgba(255,100,100,0.7)", fontSize: 11, fontWeight: 700, cursor: "pointer",
-              }}>Remove photo</button>
-            )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 3 }}>Header Photo</div>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.35, color: "rgba(255,255,255,0.72)" }}>
+                  {heroImage ? "This is the photo customers see first." : "Use one of your photos for the top of the site."}
+                </p>
+              </div>
+              <button onClick={() => setShowHeroPicker(true)} style={{ padding: "10px 14px", borderRadius: 100, border: `1px solid ${GREEN}44`, backgroundColor: `${GREEN}20`, color: GREEN, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
+                Change
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -835,16 +847,69 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </>
       )}
 
+      {showHeroPicker && (
+        <>
+          <div onClick={() => setShowHeroPicker(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 60, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{
+            position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
+            maxHeight: "min(78dvh, 680px)", overflowY: "auto",
+            backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+            boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
+          }}>
+            <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
+              <div>
+                <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>Header Photo</div>
+                <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Choose the first image customers see.</h3>
+              </div>
+              <button onClick={() => setShowHeroPicker(false)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer" }}>x</button>
+            </div>
+
+            {heroPickerPhotos.length > 0 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+                {heroPickerPhotos.map(photo => {
+                  const selected = photo.url === heroImage || photo.website_section === "hero"
+                  return (
+                    <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, "hero")} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
+                      <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                        {selected && (
+                          <div style={{ position: "absolute", right: 10, top: 10, padding: "6px 9px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, fontSize: 11, fontWeight: 900 }}>
+                            Selected
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div style={{ padding: 20, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No website photos yet.</p>
+                <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Add photos from the Photos tab, then heart the ones you want available for your site.</p>
+              </div>
+            )}
+
+            {heroImage && (
+              <button onClick={handleClearHeroPhoto} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+                Remove Header Photo
+              </button>
+            )}
+          </div>
+        </>
+      )}
       {/* ── EDIT SHEET — slides up from bottom ── */}
       {editing && (
         <>
-          <div onClick={() => setEditing(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 40, backdropFilter: "blur(4px)" }}/>
+          <div onClick={() => setEditing(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.68)", zIndex: 80, backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}/>
           <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90,
             backgroundColor: "#111613",
             borderTop: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "24px 24px 0 0",
-            padding: "20px 20px 40px",
+            maxHeight: "min(72dvh, 560px)", overflowY: "auto", padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
           }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
             <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
@@ -860,8 +925,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <textarea
                 value={editValue}
                 onChange={e => setEditValue(e.target.value)}
-                autoFocus rows={5}
-                style={{ width: "100%", padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", resize: "none", lineHeight: 1.6, boxSizing: "border-box", fontFamily: "inherit" }}
+                autoFocus rows={4}
+                style={{ width: "100%", minHeight: 138, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", resize: "vertical", lineHeight: 1.6, boxSizing: "border-box", fontFamily: "inherit" }}
               />
             ) : (
               <input
@@ -871,7 +936,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 style={{ width: "100%", padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}44`, color: "white", fontSize: 16, outline: "none", boxSizing: "border-box" }}
               />
             )}
-            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 14, position: "sticky", bottom: 0, paddingTop: 10, backgroundColor: "#111613" }}>
               <button onClick={() => setEditing(null)} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={() => saveEdit(editing)} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Save & Go Live</button>
             </div>

@@ -4,6 +4,20 @@
 
 ---
 
+## Session: July 18, 2026 - Site Header Photo Editing
+**AI:** Codex
+**Worked on:** Made owner-selected header photos clear in Site Editor and connected them to the public website config.
+
+### Completed
+- Replaced tiny unexplained hero thumbnails with an explicit Header Photo control and full bottom-sheet picker.
+- Selecting a header photo now updates `website_config.hero_image_url` and `hero_images`, not only `company_photos.website_section`.
+- Removing a header photo clears the public hero config so stock/default imagery can return.
+- Raised and constrained the text edit sheet so Save/Cancel stay visible above mobile nav and keyboard.
+
+### Test Next
+- On `my.foundco.app`, open More -> Edit My Site, change the Header Photo, then open the live site and confirm the public hero photo changes. Also edit the supporting line with the keyboard open and confirm Save/Cancel are visible.
+
+---
 ## Session: July 15, 2026 - Stripe Connect Merchant Responsibility
 **AI:** Codex
 **Worked on:** Updated business-owner payout setup so connected merchants, not Found, carry the payment-fee/loss controller model.

@@ -25,6 +25,15 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
+## SITE HEADER PHOTO EDITING - COMPLETED July 18
+
+- [x] Replace mystery hero thumbnails in Edit My Site with an explicit Header Photo control.
+- [x] Sync selected owner photos to the public site through `website_config.hero_image_url` and `hero_images`.
+- [x] Add a clear header-photo picker and remove action.
+- [x] Keep Save/Cancel visible when editing headline/supporting copy on mobile.
+
+---
+
 ## NOW (MAX 3)
 
 1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live; now create/verify the Stripe Connect webhook destination in live mode, then run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.

@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 9, 2026*
+*Last updated: July 18, 2026*
 
 ---
 
@@ -21,6 +21,7 @@ History policy: keep the current working window and anything still active in cur
 
 ## Current Status
 
+- **New July 18 site header photo editing:** Site Editor now has an explicit Header Photo picker instead of mystery thumbnails. Selecting a header photo updates `website_config.hero_image_url` and `hero_images`, so the public home hero can actually use the owner-selected photo. Removing it clears those public config fields and falls back to stock/default imagery. The text-edit sheet now sits above mobile nav/keyboard with sticky Save/Cancel controls. Test next: More -> Edit My Site -> Header Photo -> Change, pick a photo, open the live site and confirm the hero updates; then remove it and confirm fallback returns.
 - **New July 15 Stripe Connect merchant responsibility fix:** Shawn finished live Connect setup but T-Shirts payout onboarding still failed because Found created Express accounts with `fees.payer = application` and `losses.payments = application`. Craig approved changing the responsibility model so the connected merchant/Stripe side carries the payment fee/loss controller model. New accounts now use `fees.payer = account` and `losses.payments = stripe`; owner-facing errors are sanitized. Build passes with cmd /c npm run build; production deploy is live at found-websites-38uz6ux12-foundco.vercel.app.
 - **New July 14 public business name polish guard:** Shawn found `tshirts` still lowercase on `/shop`. Root cause: prior copy polish covered `website_config` fields, but public pages still received raw `company.name`. `src/lib/company.ts` now polishes `company.name` once in the shared public company loader, covering home/shop/order/menu/contact/reserve/gallery/subscribe/quote/nav/footer/custom-domain paths that use `getCompanyBySlug` or `getCompanyByDomain`. Build passes with `cmd /c npm run build`.
 - **New July 14 public commerce fallback safety:** Shawn found the public shop page exposing internal setup language (`payout account`, `No products yet`, cart chrome) on an unfinished retail shop. Shared `/[slug]/shop` now shows a polished coming-soon/contact fallback until payments and products are both ready. Shared online ordering and both commerce checkout APIs now use customer-safe fallback wording instead of Stripe/setup language. Build passes with cmd /c npm run build.

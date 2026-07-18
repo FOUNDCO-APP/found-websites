@@ -231,16 +231,24 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
 
   if (!photo) return { error: "Photo not found" }
 
+  const isGallery = section === "gallery"
+  const isHero = section === "hero"
+  const isRemoving = section === null
+
+  if (isHero) {
+    await ctx.admin
+      .from("company_photos")
+      .update({ website_section: null })
+      .eq("company_id", ctx.company.id)
+      .eq("website_section", "hero")
+  }
+
   // Update company_photos section tag
   await ctx.admin
     .from("company_photos")
     .update({ website_section: section })
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
-
-  const isGallery = section === "gallery"
-  const isHero = section === "hero"
-  const isRemoving = section === null
 
   if (isGallery || isHero) {
     // Upsert into media table so public site picks it up
@@ -280,9 +288,69 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
       .eq("url", photo.url)
   }
 
+  const { data: config } = await ctx.admin
+    .from("website_config")
+    .select("hero_images, hero_image_url")
+    .eq("company_id", ctx.company.id)
+    .single()
+
+  const currentHeroImages = Array.isArray(config?.hero_images)
+    ? (config.hero_images as unknown[]).filter((url): url is string => typeof url === "string" && url.trim().length > 0)
+    : []
+
+  if (isHero) {
+    const heroImages = [photo.url, ...currentHeroImages.filter(url => url !== photo.url)]
+    await ctx.admin
+      .from("website_config")
+      .update({ hero_image_url: photo.url, hero_images: heroImages, updated_at: new Date().toISOString() })
+      .eq("company_id", ctx.company.id)
+  } else if (isRemoving) {
+    const heroImages = currentHeroImages.filter(url => url !== photo.url)
+    if (config?.hero_image_url === photo.url || currentHeroImages.includes(photo.url)) {
+      await ctx.admin
+        .from("website_config")
+        .update({ hero_image_url: heroImages[0] ?? null, hero_images: heroImages, updated_at: new Date().toISOString() })
+        .eq("company_id", ctx.company.id)
+    }
+  }
+
   // Revalidate both dashboard and public site
   revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  revalidatePath("/")
+  return { success: true }
+}
+
+
+export async function clearHeroPhoto() {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  await ctx.admin
+    .from("company_photos")
+    .update({ website_section: null })
+    .eq("company_id", ctx.company.id)
+    .eq("website_section", "hero")
+
+  const { error } = await ctx.admin
+    .from("website_config")
+    .update({ hero_image_url: null, hero_images: [], updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
   revalidatePath("/")
   return { success: true }
 }
