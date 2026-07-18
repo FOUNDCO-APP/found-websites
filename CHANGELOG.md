@@ -4,6 +4,19 @@
 
 ---
 
+## Session: July 18, 2026 - Site Edit Sheet Lock
+**AI:** Codex
+**Worked on:** Fixed the mobile text-edit sheet so the page behind it cannot peek through or scroll while the keyboard is open.
+
+### Completed
+- Locked dashboard/body scrolling while Site Editor sheets are open.
+- Updated the text-edit sheet to own the visible mobile viewport using `visualViewport` height.
+- Strengthened the scrim and contained sheet overscroll so editing headline/supporting text feels focused instead of loose.
+
+### Team Next
+- Header motion should be a deliberate owner choice: Static, Rotate on load, or Slow slideshow. Do not surprise owners with an auto-carousel by default.
+
+---
 ## Session: July 18, 2026 - Site Header Photo Editing
 **AI:** Codex
 **Worked on:** Made owner-selected header photos clear in Site Editor and connected them to the public website config.

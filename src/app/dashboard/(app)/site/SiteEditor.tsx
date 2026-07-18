@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useTransition } from "react"
+import React, { useEffect, useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
@@ -55,6 +55,40 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
+  const sheetOpen = Boolean(editing || showHeroPicker || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null)
+
+  useEffect(() => {
+    if (!sheetOpen) return
+
+    const body = document.body
+    const root = document.documentElement
+    const previousBodyOverflow = body.style.overflow
+    const previousBodyOverscroll = body.style.overscrollBehavior
+    const previousRootOverflow = root.style.overflow
+    const previousRootOverscroll = root.style.overscrollBehavior
+
+    const updateVisualHeight = () => {
+      root.style.setProperty("--found-visual-height", `${window.visualViewport?.height ?? window.innerHeight}px`)
+    }
+
+    updateVisualHeight()
+    body.style.overflow = "hidden"
+    body.style.overscrollBehavior = "none"
+    root.style.overflow = "hidden"
+    root.style.overscrollBehavior = "none"
+    window.visualViewport?.addEventListener("resize", updateVisualHeight)
+    window.visualViewport?.addEventListener("scroll", updateVisualHeight)
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      body.style.overscrollBehavior = previousBodyOverscroll
+      root.style.overflow = previousRootOverflow
+      root.style.overscrollBehavior = previousRootOverscroll
+      root.style.removeProperty("--found-visual-height")
+      window.visualViewport?.removeEventListener("resize", updateVisualHeight)
+      window.visualViewport?.removeEventListener("scroll", updateVisualHeight)
+    }
+  }, [sheetOpen])
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
   const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
   const showCatalog = isFoodCatalog || isShopCatalog
@@ -903,13 +937,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       {/* ── EDIT SHEET — slides up from bottom ── */}
       {editing && (
         <>
-          <div onClick={() => setEditing(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.68)", zIndex: 80, backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)" }}/>
-          <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90,
+          <div onClick={() => setEditing(null)} onTouchMove={event => event.preventDefault()} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.82)", zIndex: 80, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}/>
+          <div onTouchMove={event => event.stopPropagation()} style={{
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 90,
+            height: "var(--found-visual-height, 100dvh)", overflowY: "auto", overscrollBehavior: "contain",
             backgroundColor: "#111613",
             borderTop: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "24px 24px 0 0",
-            maxHeight: "min(72dvh, 560px)", overflowY: "auto", padding: "20px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+            borderRadius: 0,
+            padding: "calc(env(safe-area-inset-top, 0px) + 20px) 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
           }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 20px" }}/>
             <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 12, letterSpacing: "0.06em", textTransform: "uppercase" }}>
