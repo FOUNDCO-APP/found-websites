@@ -11,6 +11,7 @@ import { DashboardToolIcon } from "@/components/dashboard/DashboardToolIcon"
 
 type Tab = DashboardTool
 type Album = { id: string; name: string; cover_url: string | null }
+type BadgeBucket = "leads" | "orders" | "reservations"
 
 
 export default function DashboardNav({
@@ -18,6 +19,9 @@ export default function DashboardNav({
   newLeadCount = 0,
   newOrderCount = 0,
   newReservationCount = 0,
+  newLeadLatestAt = null,
+  newOrderLatestAt = null,
+  newReservationLatestAt = null,
   industry = null,
   subIndustry = null,
   activeAddons = [],
@@ -26,12 +30,16 @@ export default function DashboardNav({
   newLeadCount?: number
   newOrderCount?: number
   newReservationCount?: number
+  newLeadLatestAt?: string | null
+  newOrderLatestAt?: string | null
+  newReservationLatestAt?: string | null
   industry?: string | null
   subIndustry?: string | null
   activeAddons?: string[]
 }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const activeView = searchParams.get("view")
 
   const isDev   = pathname.startsWith("/dashboard")
   const segment = isDev ? pathname.slice("/dashboard".length) || "/" : pathname
@@ -43,6 +51,7 @@ export default function DashboardNav({
   const allAvailable = getAvailableDashboardTools({ industry, subIndustry, activeAddons })
   const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
+  const [seenAt, setSeenAt] = useState<Record<BadgeBucket, string | null>>({ leads: null, orders: null, reservations: null })
 
   const [albums, setAlbums]                 = useState<Album[]>([])
   const [showPicker, setShowPicker]         = useState(false)
@@ -122,32 +131,83 @@ export default function DashboardNav({
   function isGeneralLeadTab(tab: Tab) {
     return pathOnly(tab.path) === "/leads" && !tab.path.includes("view=orders") && !tab.path.includes("view=reservations")
   }
+  function seenStorageKey(bucket: BadgeBucket) {
+    return `${storageKey}:seen:${bucket}`
+  }
+  function safeTime(value: string | null | undefined) {
+    if (!value) return 0
+    const time = new Date(value).getTime()
+    return Number.isFinite(time) ? time : 0
+  }
+  const badgeCounts: Record<BadgeBucket, number> = {
+    leads: newLeadCount,
+    orders: newOrderCount,
+    reservations: newReservationCount,
+  }
+  const badgeLatestAt: Record<BadgeBucket, string | null> = {
+    leads: newLeadLatestAt,
+    orders: newOrderLatestAt,
+    reservations: newReservationLatestAt,
+  }
+  function hasUnseen(bucket: BadgeBucket) {
+    const latest = badgeLatestAt[bucket]
+    if (!latest || badgeCounts[bucket] <= 0) return false
+    return safeTime(latest) > safeTime(seenAt[bucket])
+  }
+  function badgeCountForBucket(bucket: BadgeBucket) {
+    return hasUnseen(bucket) ? badgeCounts[bucket] : 0
+  }
+  function markSeen(bucket: BadgeBucket) {
+    const latest = badgeLatestAt[bucket]
+    if (!latest) return
+    setSeenAt(prev => prev[bucket] === latest ? prev : { ...prev, [bucket]: latest })
+    try { window.localStorage.setItem(seenStorageKey(bucket), latest) } catch {}
+  }
   function badgeCountFor(tab: Tab) {
-    if (tab.path.includes("view=orders")) return newOrderCount
-    if (tab.path.includes("view=reservations")) return newReservationCount
-    if (isGeneralLeadTab(tab)) return newLeadCount
+    if (tab.path.includes("view=orders")) return badgeCountForBucket("orders")
+    if (tab.path.includes("view=reservations")) return badgeCountForBucket("reservations")
+    if (isGeneralLeadTab(tab)) return badgeCountForBucket("leads")
 
     const hasVisibleGeneralLeadTab = tabs.some(isGeneralLeadTab)
     const hasVisibleOrderTab = tabs.some(t => t.path.includes("view=orders"))
     const hasVisibleReservationTab = tabs.some(t => t.path.includes("view=reservations"))
 
     if (tab.id === "people") {
-      return (hasVisibleGeneralLeadTab ? 0 : newLeadCount) +
-        (hasVisibleOrderTab ? 0 : newOrderCount) +
-        (hasVisibleReservationTab ? 0 : newReservationCount)
+      return (hasVisibleGeneralLeadTab ? 0 : badgeCountForBucket("leads")) +
+        (hasVisibleOrderTab ? 0 : badgeCountForBucket("orders")) +
+        (hasVisibleReservationTab ? 0 : badgeCountForBucket("reservations"))
     }
 
     return 0
   }
 
+  useEffect(() => {
+    try {
+      setSeenAt({
+        leads: window.localStorage.getItem(seenStorageKey("leads")),
+        orders: window.localStorage.getItem(seenStorageKey("orders")),
+        reservations: window.localStorage.getItem(seenStorageKey("reservations")),
+      })
+    } catch {
+      setSeenAt({ leads: null, orders: null, reservations: null })
+    }
+  }, [storageKey])
+
+  useEffect(() => {
+    const effective = pendingSegment ?? segment
+    if (!effective.startsWith("/leads")) return
+    if (activeView === "orders") markSeen("orders")
+    else if (activeView === "reservations") markSeen("reservations")
+    else if (!activeView) markSeen("leads")
+  }, [segment, pendingSegment, activeView, newLeadLatestAt, newOrderLatestAt, newReservationLatestAt])
+
   function isActive(tabPath: string) {
     const cleanPath = pathOnly(tabPath)
     const effective = pendingSegment ?? segment
-    const view = searchParams.get("view")
-    if (tabPath.includes("view=orders")) return effective.startsWith("/leads") && view === "orders"
-    if (tabPath.includes("view=reservations")) return effective.startsWith("/leads") && view === "reservations"
+    if (tabPath.includes("view=orders")) return effective.startsWith("/leads") && activeView === "orders"
+    if (tabPath.includes("view=reservations")) return effective.startsWith("/leads") && activeView === "reservations"
     if (cleanPath === "/") return effective === "/"
-    if (cleanPath === "/leads") return effective.startsWith("/leads") && !view
+    if (cleanPath === "/leads") return effective.startsWith("/leads") && !activeView
     if (cleanPath === "/estimates") return effective.startsWith("/estimates")
     if (cleanPath === "/people") return effective.startsWith("/people")
     return effective === cleanPath || effective.startsWith(cleanPath + "/")

@@ -36,25 +36,37 @@ export default async function DashboardLayout({ children }: { children: React.Re
     ? await Promise.all([
         admin
           .from("leads")
-          .select("id, type, source")
+          .select("id, type, source, created_at")
           .eq("company_id", company.id)
           .gte("created_at", since)
           .then(({ data }) => {
             const rows = (data ?? []).filter(row => row.type !== "onboarding_abandoned")
-            const isOrder = (lead: { type: string | null; source: string | null }) =>
+            const isOrder = (lead: { type: string | null; source: string | null; created_at?: string | null }) =>
               lead.type === "online_order" ||
               lead.source === "online_ordering" ||
               lead.type === "shopping_order" ||
               lead.source === "shopping_cart"
-            const isReservation = (lead: { type: string | null; source: string | null }) =>
+            const isReservation = (lead: { type: string | null; source: string | null; created_at?: string | null }) =>
               lead.type === "reservation_request" ||
               lead.source === "reservation" ||
               lead.source === "reservations" ||
               lead.source === "booking_calendar"
+            const latestAt = (items: { created_at?: string | null }[]) =>
+              items.reduce<string | null>((latest, item) => {
+                if (!item.created_at) return latest
+                if (!latest) return item.created_at
+                return new Date(item.created_at).getTime() > new Date(latest).getTime() ? item.created_at : latest
+              }, null)
+            const leadRows = rows.filter(row => !isOrder(row) && !isReservation(row))
+            const orderRows = rows.filter(isOrder)
+            const reservationRows = rows.filter(isReservation)
             return {
-              leads: rows.filter(row => !isOrder(row) && !isReservation(row)).length,
-              orders: rows.filter(isOrder).length,
-              reservations: rows.filter(isReservation).length,
+              leads: leadRows.length,
+              orders: orderRows.length,
+              reservations: reservationRows.length,
+              leadLatestAt: latestAt(leadRows),
+              orderLatestAt: latestAt(orderRows),
+              reservationLatestAt: latestAt(reservationRows),
             }
           }),
         admin
@@ -64,7 +76,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           .eq("active", true)
           .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug)),
       ])
-    : [{ leads: 0, orders: 0, reservations: 0 }, [] as string[]]
+    : [{ leads: 0, orders: 0, reservations: 0, leadLatestAt: null, orderLatestAt: null, reservationLatestAt: null }, [] as string[]]
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
@@ -165,6 +177,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         newLeadCount={leadCounts.leads}
         newOrderCount={leadCounts.orders}
         newReservationCount={leadCounts.reservations}
+        newLeadLatestAt={leadCounts.leadLatestAt}
+        newOrderLatestAt={leadCounts.orderLatestAt}
+        newReservationLatestAt={leadCounts.reservationLatestAt}
         industry={company?.industry_category ?? null}
         subIndustry={company?.sub_industry ?? null}
         activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs)}
