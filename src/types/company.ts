@@ -66,6 +66,11 @@ export type WebsiteConfig = {
   about_highlights: AboutHighlight[] | null
   tagline: string | null
   cta_headline: string | null
+  contact_eyebrow?: string | null
+  contact_title?: string | null
+  contact_subtitle?: string | null
+  contact_form_title?: string | null
+  contact_form_subtitle?: string | null
   services: ServiceItem[]
   menu_items: MenuCategory[] | null
   testimonials: Testimonial[]

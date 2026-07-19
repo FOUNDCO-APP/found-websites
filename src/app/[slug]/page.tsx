@@ -6,6 +6,7 @@ import { getStockImages } from "@/lib/stockImages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryCTAs } from "@/lib/industryCTAs"
+import { isVideoMedia } from "@/lib/mediaKind"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
 import PortraitLayout from "@/components/layouts/PortraitLayout"
@@ -24,11 +25,11 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const config = company.website_config
   const layout = getLayout(company.industry_category, company.vibe)
   const gradient = heroGradient(company.primary_color)
-  const heroVideo = config?.hero_video_url ?? null
+  const configuredHeroVideo = config?.hero_video_url ?? null
 
   const imgs = await getStockImages(company)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
-  const heroImage = uploadedImgs[0] ?? imgs[0] ?? null
+  const fallbackHeroImage = uploadedImgs[0] ?? imgs[0] ?? null
 
   const admin = createAdminClient()
   const [{ data: addonRows }, { data: locRows }, { data: sectionPhotoRows }] = await Promise.all([
@@ -54,8 +55,11 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
+  const heroSectionMedia = firstSectionImage("hero")
+  const heroVideo = heroSectionMedia && isVideoMedia(heroSectionMedia) ? heroSectionMedia : configuredHeroVideo
+  const heroImage = heroSectionMedia && !isVideoMedia(heroSectionMedia) ? heroSectionMedia : fallbackHeroImage
   const sectionImages = {
-    hero: firstSectionImage("hero") ?? heroImage,
+    hero: heroImage,
     about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
     cta: firstSectionImage("cta") ?? uploadedImgs[2] ?? null,
     gallery: sectionRows.filter(row => row.website_section === "gallery").map(row => row.url),

@@ -31,6 +31,8 @@ export type UploadedPhoto = {
   id: string; url: string; for_website: boolean; for_social: boolean
   website_section: string | null; album_id: string | null; created_at: string
   storage_path: string
+  media_type?: "photo" | "video"
+  mime_type?: string | null
 }
 
 export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {

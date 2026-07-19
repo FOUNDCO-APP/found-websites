@@ -1,6 +1,6 @@
-# TASKS.md - Found Co. / found-websites
+﻿# TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
-*Last updated: July 9, 2026*
+*Last updated: July 19, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
 
 ---
@@ -25,6 +25,16 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
+
+## CONTACT EDITING + VIDEO MEDIA - COMPLETED July 19
+
+- [x] Add editable Contact Page copy fields in Edit My Site.
+- [x] Add Contact as a named website media slot.
+- [x] Allow Photos uploads to accept videos and show playable video previews/badges.
+- [x] Let selected Header media render as a public muted looping hero video when the media is video.
+- [ ] Later: owner-controlled hero motion setting for static / rotate-on-load / slideshow.
+
+---
 ## NAMED SITE PHOTO SLOTS - COMPLETED July 18
 
 - [x] Replace single header-only image picker with explicit Header, About, Visit / CTA, and Gallery slots.
@@ -64,7 +74,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 ---
 ## LEADS/INQUIRIES AUDIT (July 5, 2026) - ALL 4 ITEMS RESOLVED (July 6)
 
-**Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), all 4 items are now shipped â€” see notes below on how each was actually resolved.
+**Read this first if you're picking this up.** Shawn reviewed live screenshots of the Blue Luna Events test customer/profile on `my.foundco.app` and flagged 4 things. Blue Luna Events is the account/slug Shawn created for testing; do not treat the word "Events" alone as the issue. Team discussed (Steve/Jony/Craig/Angela), all 4 items are now shipped Ã¢â‚¬â€ see notes below on how each was actually resolved.
 
 ### 1. "Inquiries" vs "Leads" labeling on the Blue Luna Events test profile - needs correction
 - `src/lib/dashboard/typography.ts` -> `defaultFormIntentFor()` maps industries to an intent, which drives the page title/vocab (Leads/Estimates/Inquiries/Bookings/Reservations/Orders/Appointments).
@@ -75,17 +85,17 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - **Shawn clarification:** Estimates/quotes are not the same thing as leads, inquiries, or bookings. Estimates are their own information pathway and should remain a separate tool/tab when the business needs to price work. A business can need both: one intake path for leads/bookings/inquiries and a separate estimates/quotes path for priced work.
 - **Product implication:** Do not use one single intent value to decide everything. We need at least two separate decisions: (1) what the incoming customer/intake tab is called (`Leads`, `Inquiries`, `Bookings`, `Reservations`, `Orders`, `Appointments`), and (2) whether the business also gets an `Estimates`/quotes workflow as a distinct tool.
 
-### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" â€” FIXED July 6
+### 2. Temperature (Hot/Warm/Cold) silently defaults to "Warm" Ã¢â‚¬â€ FIXED July 6
 - `src/app/dashboard/(app)/leads/page.tsx`: `newTemp` now starts `null`, resets to `null` on cancel/save. Save is disabled until a temperature is picked (for temp-based intents), with a quiet "Pick one to save." hint under the pills.
 - Pushed in `161716f`.
 
-### 3. Add-lead form pushes the empty state down instead of covering it â€” FIXED July 6
+### 3. Add-lead form pushes the empty state down instead of covering it Ã¢â‚¬â€ FIXED July 6
 - Converted the inline `{showAdd && (...)}` card into a real slide-up sheet (scrim + fixed bottom sheet), matching the `IntentPickerSheet` pattern already used elsewhere in this exact file (`#101411` background, same radius/z-index language). No longer shares document flow with the empty state below it.
 - Pushed in `161716f`.
 
-### 4. Schedule page needs a calendar â€” FIXED July 6 (Codex)
-- Codex rebuilt Schedule as its own session: tab order flipped to Calendar â†’ Bookings â†’ Hours (was Hours-first). Calendar shows a 7-day week strip with booking indicators. Hours redesigned into a read-first weekly summary (Open/Closed + times) with an explicit Edit mode, instead of a dense settings form by default.
-- Not yet confirmed live by Shawn â€” see "JULY 6 â€” STILL TO TEST" below.
+### 4. Schedule page needs a calendar Ã¢â‚¬â€ FIXED July 6 (Codex)
+- Codex rebuilt Schedule as its own session: tab order flipped to Calendar Ã¢â€ â€™ Bookings Ã¢â€ â€™ Hours (was Hours-first). Calendar shows a 7-day week strip with booking indicators. Hours redesigned into a read-first weekly summary (Open/Closed + times) with an explicit Edit mode, instead of a dense settings form by default.
+- Not yet confirmed live by Shawn Ã¢â‚¬â€ see "JULY 6 Ã¢â‚¬â€ STILL TO TEST" below.
 
 ---
 
@@ -99,107 +109,107 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 - Verified with `cmd /c npm run build`.
 
 ---
-## RECENTLY COMPLETED (July 3, 2026 â€” Claude Code session)
-- âœ… Estimate builder step pills â€” were hardcoded fake (`index === 0`), now real `IntersectionObserver` scroll-spy + tap-to-jump
-- âœ… Estimate builder card-stack removed â€” five sections now flow as one surface with hairline dividers, not five bordered boxes
-- âœ… FOUND wordmark â€” was hardcoded Arial in 12 places, now one shared `src/components/FoundWordmark.tsx` component
-- âœ… Sitewide font root cause â€” `globals.css` had dead `create-next-app` boilerplate (`body { font-family: Arial... }`, `--font-sans: var(--font-geist-sans)`) silently overriding the real Inter font loaded in `layout.tsx`. Removed both; `--font-sans` now points at `--font-inter`.
-- â³ Not yet visually confirmed â€” see NOW #1
-- â³ Gray status-bar band on estimate builder â€” suspected iOS Safari chrome, not app CSS. Needs Shawn to test via "Add to Home Screen" to confirm.
+## RECENTLY COMPLETED (July 3, 2026 Ã¢â‚¬â€ Claude Code session)
+- Ã¢Å“â€¦ Estimate builder step pills Ã¢â‚¬â€ were hardcoded fake (`index === 0`), now real `IntersectionObserver` scroll-spy + tap-to-jump
+- Ã¢Å“â€¦ Estimate builder card-stack removed Ã¢â‚¬â€ five sections now flow as one surface with hairline dividers, not five bordered boxes
+- Ã¢Å“â€¦ FOUND wordmark Ã¢â‚¬â€ was hardcoded Arial in 12 places, now one shared `src/components/FoundWordmark.tsx` component
+- Ã¢Å“â€¦ Sitewide font root cause Ã¢â‚¬â€ `globals.css` had dead `create-next-app` boilerplate (`body { font-family: Arial... }`, `--font-sans: var(--font-geist-sans)`) silently overriding the real Inter font loaded in `layout.tsx`. Removed both; `--font-sans` now points at `--font-inter`.
+- Ã¢ÂÂ³ Not yet visually confirmed Ã¢â‚¬â€ see NOW #1
+- Ã¢ÂÂ³ Gray status-bar band on estimate builder Ã¢â‚¬â€ suspected iOS Safari chrome, not app CSS. Needs Shawn to test via "Add to Home Screen" to confirm.
 
 ---
 
-## RECENTLY COMPLETED (June 24, 2026 â€” Codex + Claude session)
-- âœ… Online ordering system â€” inline add-to-cart on public menu, Stripe checkout, paid order handler
-- âœ… Owner order email â€” itemized table, pickup time block, notes, customer contact
-- âœ… Customer confirmation email â€” order summary + business branding
-- âœ… `DashboardTabsManager.tsx` â€” owners reorder/choose bottom tabs from More tab
-- âœ… `DashboardNav.tsx` â€” dynamic tabs per industry + active add-ons (Orders, Reserve auto-appear)
-- âœ… Leads page `?view=orders` / `?view=reservations` filtering
-- âœ… `dashboard/layout.tsx` â€” fetches activeAddonSlugs server-side, passes to DashboardNav
-- âœ… CHANGELOG + TASKS updated
+## RECENTLY COMPLETED (June 24, 2026 Ã¢â‚¬â€ Codex + Claude session)
+- Ã¢Å“â€¦ Online ordering system Ã¢â‚¬â€ inline add-to-cart on public menu, Stripe checkout, paid order handler
+- Ã¢Å“â€¦ Owner order email Ã¢â‚¬â€ itemized table, pickup time block, notes, customer contact
+- Ã¢Å“â€¦ Customer confirmation email Ã¢â‚¬â€ order summary + business branding
+- Ã¢Å“â€¦ `DashboardTabsManager.tsx` Ã¢â‚¬â€ owners reorder/choose bottom tabs from More tab
+- Ã¢Å“â€¦ `DashboardNav.tsx` Ã¢â‚¬â€ dynamic tabs per industry + active add-ons (Orders, Reserve auto-appear)
+- Ã¢Å“â€¦ Leads page `?view=orders` / `?view=reservations` filtering
+- Ã¢Å“â€¦ `dashboard/layout.tsx` Ã¢â‚¬â€ fetches activeAddonSlugs server-side, passes to DashboardNav
+- Ã¢Å“â€¦ CHANGELOG + TASKS updated
 
-## RECENTLY COMPLETED (June 22-23, 2026 â€” add-on session)
-- âœ… 7 add-ons all live in Stripe â€” `addon_subscriptions` table, `addon_stripe_prices` table
-- âœ… Reservation system â€” `/[slug]/reserve` page + form + server action + emails
-- âœ… More page rewrite â€” plan features, Lock In My Rate button, plans link
-- âœ… Menu fallback â€” warm copy + Call Us button
-- âœ… Admin email preview â€” reservation tabs conditional on industry
-- âœ… Gallery vocab â€” `albumLabelFor` used everywhere
-- âœ… `custom_domain` ungated (was accidentally Pro+ only)
+## RECENTLY COMPLETED (June 22-23, 2026 Ã¢â‚¬â€ add-on session)
+- Ã¢Å“â€¦ 7 add-ons all live in Stripe Ã¢â‚¬â€ `addon_subscriptions` table, `addon_stripe_prices` table
+- Ã¢Å“â€¦ Reservation system Ã¢â‚¬â€ `/[slug]/reserve` page + form + server action + emails
+- Ã¢Å“â€¦ More page rewrite Ã¢â‚¬â€ plan features, Lock In My Rate button, plans link
+- Ã¢Å“â€¦ Menu fallback Ã¢â‚¬â€ warm copy + Call Us button
+- Ã¢Å“â€¦ Admin email preview Ã¢â‚¬â€ reservation tabs conditional on industry
+- Ã¢Å“â€¦ Gallery vocab Ã¢â‚¬â€ `albumLabelFor` used everywhere
+- Ã¢Å“â€¦ `custom_domain` ungated (was accidentally Pro+ only)
 
-## RECENTLY COMPLETED (June 19â€“20, 2026 â€” continuous session)
-- âœ… SiteEditor: all accent colors unified to Signal Green; progress bar removed from More plan card; "contact" â†’ "lead" on Leads
-- âœ… Migration-035 live â€” `photo_albums` table + `company_photos.album_id` column
-- âœ… Photos page full rewrite â€” date grouping headers, albums/projects tab, album detail view, share sheet
-- âœ… `/api/albums` route (GET/POST/DELETE with slug dedup)
-- âœ… `/api/company-slug` returns `{ slug, industry }`
-- âœ… Public album gallery page â€” `/[slug]/gallery/[album]/page.tsx`
-- âœ… `albumLabelFor(industry)` â€” 18-industry vocab map in `typography.ts`
-- âœ… `getCompany` â€” `industry_category` added to type + SELECT
-- âœ… Camera pre-flight â€” pre-fetched albums, instant sheet, project picker with horizontal tile scroll
-- âœ… Camera picker visual overhaul â€” 84px glowing hero circle, 72Ã—72 color album tiles, Apple spring easing
-- âœ… "New" tab renamed "Unsorted"
-- âœ… Gallery integration â€” `company_photos.for_website` now appears on public `/[slug]/gallery` (dashboard photos â†’ site, gap closed)
-- âœ… Home redesign â€” 3 pure states (new lead hero / caught up momentum / welcome share), all stat chips + quick-action buttons removed
-- âœ… Photo curation â€” all 10 new industries approved by Shawn at `/admin/photos` (June 20, 2026) â€” ALL 22 industries complete
-- âœ… Plan gating â€” "Share with Client" locked to Pro; base plan sees UpgradeSheet with feature list + CTA to /more
-- âœ… Pro album-organized gallery â€” `/[slug]/gallery` shows album cover grid for Pro users; base plan flat grid unchanged
-- âœ… Lead auto-reply â€” confirmed live in `leads.ts`; no new work needed
+## RECENTLY COMPLETED (June 19Ã¢â‚¬â€œ20, 2026 Ã¢â‚¬â€ continuous session)
+- Ã¢Å“â€¦ SiteEditor: all accent colors unified to Signal Green; progress bar removed from More plan card; "contact" Ã¢â€ â€™ "lead" on Leads
+- Ã¢Å“â€¦ Migration-035 live Ã¢â‚¬â€ `photo_albums` table + `company_photos.album_id` column
+- Ã¢Å“â€¦ Photos page full rewrite Ã¢â‚¬â€ date grouping headers, albums/projects tab, album detail view, share sheet
+- Ã¢Å“â€¦ `/api/albums` route (GET/POST/DELETE with slug dedup)
+- Ã¢Å“â€¦ `/api/company-slug` returns `{ slug, industry }`
+- Ã¢Å“â€¦ Public album gallery page Ã¢â‚¬â€ `/[slug]/gallery/[album]/page.tsx`
+- Ã¢Å“â€¦ `albumLabelFor(industry)` Ã¢â‚¬â€ 18-industry vocab map in `typography.ts`
+- Ã¢Å“â€¦ `getCompany` Ã¢â‚¬â€ `industry_category` added to type + SELECT
+- Ã¢Å“â€¦ Camera pre-flight Ã¢â‚¬â€ pre-fetched albums, instant sheet, project picker with horizontal tile scroll
+- Ã¢Å“â€¦ Camera picker visual overhaul Ã¢â‚¬â€ 84px glowing hero circle, 72Ãƒâ€”72 color album tiles, Apple spring easing
+- Ã¢Å“â€¦ "New" tab renamed "Unsorted"
+- Ã¢Å“â€¦ Gallery integration Ã¢â‚¬â€ `company_photos.for_website` now appears on public `/[slug]/gallery` (dashboard photos Ã¢â€ â€™ site, gap closed)
+- Ã¢Å“â€¦ Home redesign Ã¢â‚¬â€ 3 pure states (new lead hero / caught up momentum / welcome share), all stat chips + quick-action buttons removed
+- Ã¢Å“â€¦ Photo curation Ã¢â‚¬â€ all 10 new industries approved by Shawn at `/admin/photos` (June 20, 2026) Ã¢â‚¬â€ ALL 22 industries complete
+- Ã¢Å“â€¦ Plan gating Ã¢â‚¬â€ "Share with Client" locked to Pro; base plan sees UpgradeSheet with feature list + CTA to /more
+- Ã¢Å“â€¦ Pro album-organized gallery Ã¢â‚¬â€ `/[slug]/gallery` shows album cover grid for Pro users; base plan flat grid unchanged
+- Ã¢Å“â€¦ Lead auto-reply Ã¢â‚¬â€ confirmed live in `leads.ts`; no new work needed
 
 ---
 
-## RECENTLY COMPLETED (June 19, 2026 â€” launch day session)
-- âœ… Full team audit (Jony + Steve co-lead) â€” P0/P1/P2 items identified and all approved by Shawn
-- âœ… Greeting â†’ `TYPE.largeTitle h1`; new lead Call button full-width green pill with glow
-- âœ… Welcome state added (isActive + 0 leads); caught-up state "View all â†’" link
-- âœ… Emoji temperature (ðŸ”¥âš¡â„ï¸) â†’ geometric dot system; emoji photo flags â†’ SVG heart/star
-- âœ… Unread badge: 8px red dot on Leads tab (mobile + desktop) when newLeadCount > 0
-- âœ… Context-aware quick actions: 1-col (photo only) when new lead showing
-- âœ… `?upload=1` param â†’ auto-opens file input on Photos page (from sidebar Add Photo button)
-- âœ… Contacts page complete rewrite â€” all 20+ px violations fixed, FAB 44px, SVG empty state
-- âœ… More page: Found plan green, billing section removed, email row added, upgrade features rewritten
-- âœ… Banner condition fixed for canceled accounts; favicon 404 fixed in middleware
-- âœ… All px sizes â†’ rem; iOS HIG Dynamic Type ramp enforced sitewide
-- âœ… TypeScript âœ… build âœ… â€” committed `09f502b`
+## RECENTLY COMPLETED (June 19, 2026 Ã¢â‚¬â€ launch day session)
+- Ã¢Å“â€¦ Full team audit (Jony + Steve co-lead) Ã¢â‚¬â€ P0/P1/P2 items identified and all approved by Shawn
+- Ã¢Å“â€¦ Greeting Ã¢â€ â€™ `TYPE.largeTitle h1`; new lead Call button full-width green pill with glow
+- Ã¢Å“â€¦ Welcome state added (isActive + 0 leads); caught-up state "View all Ã¢â€ â€™" link
+- Ã¢Å“â€¦ Emoji temperature (Ã°Å¸â€Â¥Ã¢Å¡Â¡Ã¢Ââ€žÃ¯Â¸Â) Ã¢â€ â€™ geometric dot system; emoji photo flags Ã¢â€ â€™ SVG heart/star
+- Ã¢Å“â€¦ Unread badge: 8px red dot on Leads tab (mobile + desktop) when newLeadCount > 0
+- Ã¢Å“â€¦ Context-aware quick actions: 1-col (photo only) when new lead showing
+- Ã¢Å“â€¦ `?upload=1` param Ã¢â€ â€™ auto-opens file input on Photos page (from sidebar Add Photo button)
+- Ã¢Å“â€¦ Contacts page complete rewrite Ã¢â‚¬â€ all 20+ px violations fixed, FAB 44px, SVG empty state
+- Ã¢Å“â€¦ More page: Found plan green, billing section removed, email row added, upgrade features rewritten
+- Ã¢Å“â€¦ Banner condition fixed for canceled accounts; favicon 404 fixed in middleware
+- Ã¢Å“â€¦ All px sizes Ã¢â€ â€™ rem; iOS HIG Dynamic Type ramp enforced sitewide
+- Ã¢Å“â€¦ TypeScript Ã¢Å“â€¦ build Ã¢Å“â€¦ Ã¢â‚¬â€ committed `09f502b`
 
-## RECENTLY COMPLETED (June 19, 2026 â€” typography session)
-- âœ… Typography system rolled out to all remaining dashboard pages â€” `SiteEditor.tsx`, `more/page.tsx`, `photos/page.tsx`. Commits: `f87c359`
-- âœ… Desktop sidebar layout â€” responsive 220px sidebar on â‰¥ 768px, mobile bottom nav unchanged. Commits: `94d7db4`
+## RECENTLY COMPLETED (June 19, 2026 Ã¢â‚¬â€ typography session)
+- Ã¢Å“â€¦ Typography system rolled out to all remaining dashboard pages Ã¢â‚¬â€ `SiteEditor.tsx`, `more/page.tsx`, `photos/page.tsx`. Commits: `f87c359`
+- Ã¢Å“â€¦ Desktop sidebar layout Ã¢â‚¬â€ responsive 220px sidebar on Ã¢â€°Â¥ 768px, mobile bottom nav unchanged. Commits: `94d7db4`
 
 ## RECENTLY COMPLETED (June 18, 2026 session)
-- âœ… Remove trial from upgrade checkout â€” confirmed no `trial_period_days` in `more/actions.ts`
-- âœ… In-dashboard activation banner (white bar, green button, inline overlay â€” no black screen)
-- âœ… Lead/Contact detail sheets with full edit capability (PATCH /api/leads, updateContact action)
-- âœ… Home screen redesign (single decisive status card)
-- âœ… Shared typography system (Leads, Contacts, Home, DashboardNav)
-- âœ… Identity-based avatar colors (Apple Contacts style)
-- âœ… Bulk-fixed 14 companies with stale `plan: "found_pro"` â†’ `plan: "found"`
+- Ã¢Å“â€¦ Remove trial from upgrade checkout Ã¢â‚¬â€ confirmed no `trial_period_days` in `more/actions.ts`
+- Ã¢Å“â€¦ In-dashboard activation banner (white bar, green button, inline overlay Ã¢â‚¬â€ no black screen)
+- Ã¢Å“â€¦ Lead/Contact detail sheets with full edit capability (PATCH /api/leads, updateContact action)
+- Ã¢Å“â€¦ Home screen redesign (single decisive status card)
+- Ã¢Å“â€¦ Shared typography system (Leads, Contacts, Home, DashboardNav)
+- Ã¢Å“â€¦ Identity-based avatar colors (Apple Contacts style)
+- Ã¢Å“â€¦ Bulk-fixed 14 companies with stale `plan: "found_pro"` Ã¢â€ â€™ `plan: "found"`
 
 ---
 
-## CURRENT SESSION HANDOFF (July 1, 2026 â€” Claude Code)
+## CURRENT SESSION HANDOFF (July 1, 2026 Ã¢â‚¬â€ Claude Code)
 
 ### Shipped
 - Business name step: name input only, no URL shown while typing
 - Web address shown calmly after name is entered and verified available
-- â€œChange my Found web address â†’â€ link (opens SlugSheet, now using plain-language â€œweb addressâ€)
+- Ã¢â‚¬Å“Change my Found web address Ã¢â€ â€™Ã¢â‚¬Â link (opens SlugSheet, now using plain-language Ã¢â‚¬Å“web addressÃ¢â‚¬Â)
 - Progress bar: thin Signal Green bar in header during questions phase
 - Bookings route Resend init moved inside POST handler (local build fix)
 - Commit: `b3c5791`
 - Drawer modal polish: gap fixed, Dynamic Island dark, keyboard awareness, double safe-area padding removed, progress bar removed
 - Commit: `d73ac49`
-- Typeform-style step animations: title wave 1 â†’ inputs wave 2 (90ms stagger), spring easing, 44px travel
-- Contact step: email reveals progressively after 10-digit phone â€” keyboard/scroll problem gone
+- Typeform-style step animations: title wave 1 Ã¢â€ â€™ inputs wave 2 (90ms stagger), spring easing, 44px travel
+- Contact step: email reveals progressively after 10-digit phone Ã¢â‚¬â€ keyboard/scroll problem gone
 - Commit: pending
 
 ### Decisions
 - Owners type the business name. Found generates the web address. They see it after, not during.
 - `company.name` and `company.slug` are separate and always were. Now the UI reflects that.
-- Always say â€œFound web addressâ€ â€” never â€œslug,â€ never â€œURL,â€ never â€œaddressâ€ alone.
+- Always say Ã¢â‚¬Å“Found web addressÃ¢â‚¬Â Ã¢â‚¬â€ never Ã¢â‚¬Å“slug,Ã¢â‚¬Â never Ã¢â‚¬Å“URL,Ã¢â‚¬Â never Ã¢â‚¬Å“addressÃ¢â‚¬Â alone.
 
 ### Must Test Next
-- Onboarding on mobile: type name â†’ see web address appear calmly below â†’ tap â€œChange my Found web addressâ€ â†’ SlugSheet language is correct â†’ slug conflict flow still works
+- Onboarding on mobile: type name Ã¢â€ â€™ see web address appear calmly below Ã¢â€ â€™ tap Ã¢â‚¬Å“Change my Found web addressÃ¢â‚¬Â Ã¢â€ â€™ SlugSheet language is correct Ã¢â€ â€™ slug conflict flow still works
 - Progress bar grows correctly through all question steps
 - Found Business full E2E flow (carry from last session)
 - Display-name prompt save closes and does not return (carry from last session)
@@ -275,37 +285,37 @@ The estimate page is the decision moment. Found should get the customer from "ye
 ## BACKLOG
 
 ### Add-Ons & Monetization
-- Plan card savings display â€” show intro-rate discount cleanly (no "Founding rate" label â€” Shawn rejected that)
-- Upsell banner â€” not built; planned as next after June 22
-- Stripe custom payment form â€” Option B approved (in-app Stripe Elements), not built
-- Menu add-on gating â€” `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks
-- Food CTA bug â€” "View Our Menu" still appears when `menu_display` add-on isn't active
-- Stripe subscriber audit â€” verify no Pro/Business subscribers charged wrong price before activateActions.ts fix
+- Plan card savings display Ã¢â‚¬â€ show intro-rate discount cleanly (no "Founding rate" label Ã¢â‚¬â€ Shawn rejected that)
+- Upsell banner Ã¢â‚¬â€ not built; planned as next after June 22
+- Stripe custom payment form Ã¢â‚¬â€ Option B approved (in-app Stripe Elements), not built
+- Menu add-on gating Ã¢â‚¬â€ `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks
+- Food CTA bug Ã¢â‚¬â€ "View Our Menu" still appears when `menu_display` add-on isn't active
+- Stripe subscriber audit Ã¢â‚¬â€ verify no Pro/Business subscribers charged wrong price before activateActions.ts fix
 
 ### Dashboard
-- Auto-reply message â€” owner writes it once during onboarding/settings, Found sends it to every new lead via Resend
-- Manual lead follow-up sequence â€” one toggle: "Follow up automatically if I don't reply in 24 hours"
-- Business card scanner â€” camera â†’ OCR â†’ pre-fill lead or contact form
-- ~~Dashboard home/overview for desktop (sidebar nav, two-column leads/inbox)~~ â€” sidebar shipped June 19
+- Auto-reply message Ã¢â‚¬â€ owner writes it once during onboarding/settings, Found sends it to every new lead via Resend
+- Manual lead follow-up sequence Ã¢â‚¬â€ one toggle: "Follow up automatically if I don't reply in 24 hours"
+- Business card scanner Ã¢â‚¬â€ camera Ã¢â€ â€™ OCR Ã¢â€ â€™ pre-fill lead or contact form
+- ~~Dashboard home/overview for desktop (sidebar nav, two-column leads/inbox)~~ Ã¢â‚¬â€ sidebar shipped June 19
 - Real-time lead notifications (push notification when new lead arrives)
-- Contacts tags â€” allow custom tags beyond the preset 5
+- Contacts tags Ã¢â‚¬â€ allow custom tags beyond the preset 5
 - Photo Before & After social post creator
 
 ### Site
 - Hero photo also syncs to `website_config.hero_image_url` for layouts that read it
-- Photo social export â€” format with brand typography, save to camera roll
+- Photo social export Ã¢â‚¬â€ format with brand typography, save to camera roll
 - Color/theme picker (Pro feature)
 - Logo upload
 
 ### Platform
-- Favicon 404 â€” all client sites throw a 404 for `/favicon.svg`. Noisy in logs, bad for SEO. Not urgent enough for NOW slot but still unresolved.
+- Favicon 404 Ã¢â‚¬â€ all client sites throw a 404 for `/favicon.svg`. Noisy in logs, bad for SEO. Not urgent enough for NOW slot but still unresolved.
 - Photo curation for 10 new industries at `/admin/photos`
 - Remove debug `[Activate]` console logs
 - `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` for connect-domain feature
 - Custom domain flow end-to-end test
-- **Resend module-level init cleanup** â€” `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
+- **Resend module-level init cleanup** Ã¢â‚¬â€ `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
-### Unified Product/Service Catalog â€” Cross-System Data Sharing
+### Unified Product/Service Catalog Ã¢â‚¬â€ Cross-System Data Sharing
 **Vision:** One catalog, three systems. A business enters their products/services/prices once and that data flows into:
 - **Online store** (sell products by card)
 - **Online ordering** (menu items, catering packages)
@@ -327,13 +337,13 @@ The estimate page is the decision moment. Found should get the customer from "ye
 
 ### New Industry Photo Curation
 - Curate Pexels photos for 3 new industries: `print_signage`, `tech_repair`, `transportation`
-- Team selects, Shawn approves via `/admin/photos` â€” same process as existing 22 industries
+- Team selects, Shawn approves via `/admin/photos` Ã¢â‚¬â€ same process as existing 22 industries
 - Needed before these industries can show real stock photos to new owners
 
 ### Decisions needed
-- Portal name â€” "Found Studio" proposed, needs Steve/team sign-off
-- Inbox tab â€” currently redirects to Leads. Should it become a full conversation thread view?
-- Social posting â€” direct API vs save to camera roll (locked: camera roll for launch)
+- Portal name Ã¢â‚¬â€ "Found Studio" proposed, needs Steve/team sign-off
+- Inbox tab Ã¢â‚¬â€ currently redirects to Leads. Should it become a full conversation thread view?
+- Social posting Ã¢â‚¬â€ direct API vs save to camera roll (locked: camera roll for launch)
 
 ### Schedule QA note - July 6, 2026
 - Verify sticky Calendar / Bookings / Hours tabs on mobile Safari.

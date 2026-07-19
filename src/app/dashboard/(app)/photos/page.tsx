@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
+import { isVideoMedia } from "@/lib/mediaKind"
 
 type Photo = {
   id: string
@@ -13,6 +14,8 @@ type Photo = {
   website_section: string | null
   album_id: string | null
   created_at: string
+  media_type?: "photo" | "video"
+  mime_type?: string | null
 }
 
 type Album = {
@@ -406,7 +409,7 @@ function PhotosPageInner() {
             )}
           </button>
         </div>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleUpload} style={{ display: "none" }} />
+        <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleUpload} style={{ display: "none" }} />
       </div>
 
       {/* Tabs — hidden when inside an album */}
@@ -643,10 +646,14 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
         </button>
       </div>
 
-      {/* Image */}
+      {/* Media */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={photo.url} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", userSelect: "none", pointerEvents: "none" }} />
+        {isVideoMedia(photo.url, photo.mime_type) ? (
+          <video src={photo.url} controls playsInline style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", userSelect: "none" }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo.url} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", userSelect: "none", pointerEvents: "none" }} />
+        )}
 
         {/* Invisible tap zones */}
         {index > 0 && (
@@ -1267,13 +1274,21 @@ function PhotoCard({ photo, onView }: {
 }) {
   return (
     <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1" }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photo.url}
-        alt="Business photo"
-        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", cursor: "pointer" }}
-        onClick={() => onView(photo)}
-      />
+      <button onClick={() => onView(photo)} aria-label={isVideoMedia(photo.url, photo.mime_type) ? "Open business video" : "Open business photo"} style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}>
+        {isVideoMedia(photo.url, photo.mime_type) ? (
+          <video src={photo.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={photo.url}
+            alt="Business photo"
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        )}
+      </button>
+      {isVideoMedia(photo.url, photo.mime_type) && (
+        <div style={{ position: "absolute", right: 8, top: 8, padding: "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", pointerEvents: "none" }}>VIDEO</div>
+      )}
       {/* Flag badges */}
       <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, pointerEvents: "none" }}>
         {photo.for_website && (

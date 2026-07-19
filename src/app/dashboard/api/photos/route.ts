@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
+import { mediaKindFromUrl } from "@/lib/mediaKind"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -16,7 +17,12 @@ export async function GET() {
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
-  return NextResponse.json({ photos: data ?? [] })
+  const photos = (data ?? []).map(photo => ({
+    ...photo,
+    media_type: mediaKindFromUrl(photo.url),
+  }))
+
+  return NextResponse.json({ photos })
 }
 
 export async function POST(req: Request) {
@@ -51,7 +57,13 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ photo: data })
+  return NextResponse.json({
+    photo: {
+      ...data,
+      media_type: mediaKindFromUrl(publicUrl, file.type),
+      mime_type: file.type,
+    },
+  })
 }
 
 export async function PATCH(req: Request) {
@@ -79,7 +91,7 @@ export async function PATCH(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ photo: data })
+  return NextResponse.json({ photo: data ? { ...data, media_type: mediaKindFromUrl(data.url) } : data })
 }
 
 export async function DELETE(req: Request) {

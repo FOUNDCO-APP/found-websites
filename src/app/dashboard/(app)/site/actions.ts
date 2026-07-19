@@ -1,10 +1,11 @@
-"use server"
+﻿"use server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
+import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
 import type { MenuCategory } from "@/types/company"
 
 
@@ -127,6 +128,7 @@ export async function updateSiteField(field: string, value: unknown) {
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
   return { success: true }
 }
 
@@ -273,7 +275,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
           company_id: ctx.company.id,
           url: photo.url,
           thumbnail_url: photo.url,
-          type: "photo",
+          type: mediaKindFromUrl(photo.url),
           filename: photo.storage_path?.split("/").pop() ?? "photo.jpg",
           website_flag: true,
           size_bytes: 0,
@@ -290,7 +292,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
 
   const { data: config } = await ctx.admin
     .from("website_config")
-    .select("hero_images, hero_image_url")
+    .select("hero_images, hero_image_url, hero_video_url")
     .eq("company_id", ctx.company.id)
     .single()
 
@@ -299,17 +301,24 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
     : []
 
   if (isHero) {
-    const heroImages = [photo.url, ...currentHeroImages.filter(url => url !== photo.url)]
-    await ctx.admin
-      .from("website_config")
-      .update({ hero_image_url: photo.url, hero_images: heroImages, updated_at: new Date().toISOString() })
-      .eq("company_id", ctx.company.id)
+    if (isVideoMedia(photo.url)) {
+      await ctx.admin
+        .from("website_config")
+        .update({ hero_video_url: photo.url, hero_image_url: null, updated_at: new Date().toISOString() })
+        .eq("company_id", ctx.company.id)
+    } else {
+      const heroImages = [photo.url, ...currentHeroImages.filter(url => url !== photo.url)]
+      await ctx.admin
+        .from("website_config")
+        .update({ hero_image_url: photo.url, hero_video_url: null, hero_images: heroImages, updated_at: new Date().toISOString() })
+        .eq("company_id", ctx.company.id)
+    }
   } else if (isRemoving) {
     const heroImages = currentHeroImages.filter(url => url !== photo.url)
     if (config?.hero_image_url === photo.url || currentHeroImages.includes(photo.url)) {
       await ctx.admin
         .from("website_config")
-        .update({ hero_image_url: heroImages[0] ?? null, hero_images: heroImages, updated_at: new Date().toISOString() })
+        .update({ hero_image_url: heroImages[0] ?? null, hero_video_url: config?.hero_video_url === photo.url ? null : config?.hero_video_url ?? null, hero_images: heroImages, updated_at: new Date().toISOString() })
         .eq("company_id", ctx.company.id)
     }
   }
@@ -321,6 +330,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
   revalidatePath("/dashboard/site")
   revalidatePath("/")
   return { success: true }
@@ -339,7 +349,7 @@ export async function clearHeroPhoto() {
 
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ hero_image_url: null, hero_images: [], updated_at: new Date().toISOString() })
+    .update({ hero_image_url: null, hero_video_url: null, hero_images: [], updated_at: new Date().toISOString() })
     .eq("company_id", ctx.company.id)
 
   if (error) return { error: error.message }

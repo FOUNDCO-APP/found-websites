@@ -1,4 +1,18 @@
-## Session: July 18, 2026 - Named Site Photo Slots
+﻿## Session: July 19, 2026 - Contact Editing + Video Media Foundation
+**AI:** Codex
+**Worked on:** Made the contact page editable and added safe video handling for dashboard media and public hero slots.
+
+### Completed
+- Added Contact Page copy controls in Edit My Site for label, headline, supporting line, form headline, and form note.
+- Added a Contact media slot under Site Photos so owners can control the public contact hero image/video.
+- Photos now accepts video uploads, marks videos with a VIDEO badge, and opens videos in a playable preview.
+- Public home/contact hero media can render selected videos as muted looping background media while photos continue to work normally.
+- Verified with `git diff --check` and `npm.cmd run build`.
+
+### Test Next
+- Upload a short video from Photos, assign it to Header or Contact in Edit My Site, then open the public home/contact pages and confirm the selected media renders.
+
+---## Session: July 18, 2026 - Named Site Photo Slots
 **AI:** Codex
 **Worked on:** Replaced the single confusing header-photo path with named website image slots.
 
@@ -375,38 +389,38 @@
 
 ---
 
-## Session: July 8, 2026 (part 2) — Found HQ Admin Dashboard
+## Session: July 8, 2026 (part 2) â€” Found HQ Admin Dashboard
 **AI:** Claude Code (Sonnet 5)
-**Worked on:** Shawn asked for "an official back end for myself" — one dashboard and menu to everything, instead of four separate `/admin/*` pages each with their own login screen. Approved to build overnight, unattended.
+**Worked on:** Shawn asked for "an official back end for myself" â€” one dashboard and menu to everything, instead of four separate `/admin/*` pages each with their own login screen. Approved to build overnight, unattended.
 
 ### Completed
-- **`src/app/admin/layout.tsx`** — single auth gate for all of `/admin/*`. Checks the `admin_key` cookie once; shows the shared login screen bare if missing, otherwise wraps every page in the new `AdminShell`.
-- **`src/app/admin/AdminShell.tsx`** — persistent nav: sticky left sidebar on desktop, bottom nav bar on mobile (Home / Businesses / Photos / Emails / Copy / Sign out). `adminAuth.ts` holds the new `adminLogout()` action.
-- **`src/app/admin/page.tsx`** — new HQ home: total/active/comp/new-this-week stats, a card per tool, and the 6 most recent signups — reading the same `companies` table the other admin tools already use.
-- Repointed the four existing tools' now-stale `redirect("/admin/photos")` and `← Admin` breadcrumb links to `/admin` (`businesses`, `emails`, `emails/[companyId]`, `copy`). No functional changes to any of the four tools themselves.
+- **`src/app/admin/layout.tsx`** â€” single auth gate for all of `/admin/*`. Checks the `admin_key` cookie once; shows the shared login screen bare if missing, otherwise wraps every page in the new `AdminShell`.
+- **`src/app/admin/AdminShell.tsx`** â€” persistent nav: sticky left sidebar on desktop, bottom nav bar on mobile (Home / Businesses / Photos / Emails / Copy / Sign out). `adminAuth.ts` holds the new `adminLogout()` action.
+- **`src/app/admin/page.tsx`** â€” new HQ home: total/active/comp/new-this-week stats, a card per tool, and the 6 most recent signups â€” reading the same `companies` table the other admin tools already use.
+- Repointed the four existing tools' now-stale `redirect("/admin/photos")` and `â† Admin` breadcrumb links to `/admin` (`businesses`, `emails`, `emails/[companyId]`, `copy`). No functional changes to any of the four tools themselves.
 - **Two real integration bugs found and fixed via scripted click-through testing, not just screenshots:**
-  1. PhotoCurator's own fixed bottom action bar (`position:fixed` Approve bar) collided with the new sidebar on both breakpoints — text got clipped under the sidebar on desktop, and the bar sat exactly behind the bottom nav on mobile. Fixed with a sidebar z-index (desktop) and a `found-hq-bottom-bar` offset class (mobile) — no changes to PhotoCurator's own logic.
-  2. More serious: the mobile sidebar's height rule leaked in from the desktop version and silently covered the *entire screen* with an invisible tap-blocking layer — nothing but the nav itself was clickable on mobile. Only surfaced because an automated test tried to click a photo and Playwright reported the nav "intercepts pointer events." Screenshots alone looked completely normal the whole time.
-- Verified with `npm run build` (clean) plus scripted Playwright click-throughs on both desktop and mobile viewports, logged in for real, clicking through Home → Businesses → Photos → Emails → Copy and back. Pushed as `3ed70ae`.
+  1. PhotoCurator's own fixed bottom action bar (`position:fixed` Approve bar) collided with the new sidebar on both breakpoints â€” text got clipped under the sidebar on desktop, and the bar sat exactly behind the bottom nav on mobile. Fixed with a sidebar z-index (desktop) and a `found-hq-bottom-bar` offset class (mobile) â€” no changes to PhotoCurator's own logic.
+  2. More serious: the mobile sidebar's height rule leaked in from the desktop version and silently covered the *entire screen* with an invisible tap-blocking layer â€” nothing but the nav itself was clickable on mobile. Only surfaced because an automated test tried to click a photo and Playwright reported the nav "intercepts pointer events." Screenshots alone looked completely normal the whole time.
+- Verified with `npm run build` (clean) plus scripted Playwright click-throughs on both desktop and mobile viewports, logged in for real, clicking through Home â†’ Businesses â†’ Photos â†’ Emails â†’ Copy and back. Pushed as `3ed70ae`.
 
 ### Must Test
 - Log into `/admin` (same key as before) and confirm you land on the new stats home page, not `/admin/photos`.
-- Click through Businesses, Photos, Emails, and Copy from the sidebar (desktop) and bottom bar (mobile) — confirm each tool works exactly as before, just inside the new shell.
+- Click through Businesses, Photos, Emails, and Copy from the sidebar (desktop) and bottom bar (mobile) â€” confirm each tool works exactly as before, just inside the new shell.
 - On Photos, select a few images and confirm the "N photos selected / Approve" bar is fully readable and clickable on both a laptop and a phone.
 - Sign out from the mobile bottom bar and confirm it correctly drops back to the login screen.
 
 ---
 
-## Session: July 8, 2026 — Comp Activation Before the Card Prompt
+## Session: July 8, 2026 â€” Comp Activation Before the Card Prompt
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn flagged that the first comp mechanism (mark comp *after* onboarding from `/admin/businesses`) still let the business see a real Stripe card screen before Shawn could intervene. Asked for team discussion, then asked for both options the team laid out rather than picking one.
 
 ### Completed
-- **`activateAsComp(slug, plan)`** in `src/app/activate/activateActions.ts` — skips Stripe entirely, sets `subscription_status: "active"` + `is_comp: true` directly. Re-reads the `admin_key` cookie itself server-side rather than trusting any client-passed flag.
-- **`ActivateOverlay.tsx`** — new optional `isAdminSession` prop. When true, the plan-selection step shows an extra dashed-orange "Activate as comp (Found team)" button next to the real payment flow. Shared component, so this works from onboarding, the dashboard's `ActivationBanner`, `MoreActivateButton`, and `PreviewBanner` alike, though only the onboarding path threads the prop through for now.
-- **`src/app/onboarding/page.tsx`** — now an async Server Component reading the `admin_key` cookie server-side, passing down a single `isAdminSession` boolean. The actual secret never reaches client-side code.
-- **Comp link** — `OnboardingFlow.tsx` reads `?comp=<token>` from the URL on mount, carries it through the whole session, and passes it to `createOnboardingSite()`. `src/app/onboarding/actions.ts` validates the token server-side against `ADMIN_KEY`; when valid, the company is inserted already `is_comp: true, subscription_status: "active"`. The Reveal screen then shows "Go to dashboard" instead of "Launch my site" - no payment step renders at all.
-- Verified with `npm run build` — clean. `/onboarding` is now dynamically rendered (was static) since it reads cookies server-side, as expected.
+- **`activateAsComp(slug, plan)`** in `src/app/activate/activateActions.ts` â€” skips Stripe entirely, sets `subscription_status: "active"` + `is_comp: true` directly. Re-reads the `admin_key` cookie itself server-side rather than trusting any client-passed flag.
+- **`ActivateOverlay.tsx`** â€” new optional `isAdminSession` prop. When true, the plan-selection step shows an extra dashed-orange "Activate as comp (Found team)" button next to the real payment flow. Shared component, so this works from onboarding, the dashboard's `ActivationBanner`, `MoreActivateButton`, and `PreviewBanner` alike, though only the onboarding path threads the prop through for now.
+- **`src/app/onboarding/page.tsx`** â€” now an async Server Component reading the `admin_key` cookie server-side, passing down a single `isAdminSession` boolean. The actual secret never reaches client-side code.
+- **Comp link** â€” `OnboardingFlow.tsx` reads `?comp=<token>` from the URL on mount, carries it through the whole session, and passes it to `createOnboardingSite()`. `src/app/onboarding/actions.ts` validates the token server-side against `ADMIN_KEY`; when valid, the company is inserted already `is_comp: true, subscription_status: "active"`. The Reveal screen then shows "Go to dashboard" instead of "Launch my site" - no payment step renders at all.
+- Verified with `npm run build` â€” clean. `/onboarding` is now dynamically rendered (was static) since it reads cookies server-side, as expected.
 - Logged as a decision in `DECISIONS.md`, superseding the July 8 "comp after onboarding" entry.
 
 ### Must Test
@@ -415,17 +429,17 @@
 
 ---
 
-## Session: July 8, 2026 — Found Operator Tooling (View As, Comp, Notes)
+## Session: July 8, 2026 â€” Found Operator Tooling (View As, Comp, Notes)
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn tried to check on a real customer's account (Nereida Lopez, Spa Mambo) and had zero visibility - every dashboard is scoped strictly to whoever owns that company. Team scoped a beginning-stage operator toolkit (see `DECISIONS.md` [2026-07-08]), built it end to end.
 
 ### Completed
 - Migration applied directly to Supabase: `companies.is_comp` (boolean) and `companies.admin_notes` (text). Migration file kept local only since `scripts/` is gitignored in this repo (other scripts there carry hardcoded credentials).
-- `getCompany()` in `src/lib/dashboard/getCompany.ts` now has an admin override — when the selected-company cookie AND a server-verified `admin_key` cookie are both present, it fetches that company by ID without the normal ownership filter. Added `isAdminOverrideActive()` as a reusable check.
-- New `/admin/businesses` — same shared admin-key gate as the existing `/admin/photos` and `/admin/emails`. Lists every company, searchable, with a "View as" button per row (reuses the exact same `found_company_id` cookie the normal company switcher already uses), a comp toggle, and a notes textarea that saves on blur.
+- `getCompany()` in `src/lib/dashboard/getCompany.ts` now has an admin override â€” when the selected-company cookie AND a server-verified `admin_key` cookie are both present, it fetches that company by ID without the normal ownership filter. Added `isAdminOverrideActive()` as a reusable check.
+- New `/admin/businesses` â€” same shared admin-key gate as the existing `/admin/photos` and `/admin/emails`. Lists every company, searchable, with a "View as" button per row (reuses the exact same `found_company_id` cookie the normal company switcher already uses), a comp toggle, and a notes textarea that saves on blur.
 - Comping a business also sets `subscription_status: "active"` in the same update, so every existing "is this account active" check across the app picks it up automatically instead of needing to touch each one.
-- Dashboard layout shows a persistent orange "Viewing as [Business] (Admin)" banner with an Exit button — but only when the override is genuinely resolving someone else's company, not just whenever the admin cookie happens to be present. Never silent about who Shawn is acting as.
-- Verified with `npm run build` — clean, `/admin/businesses` compiles.
+- Dashboard layout shows a persistent orange "Viewing as [Business] (Admin)" banner with an Exit button â€” but only when the override is genuinely resolving someone else's company, not just whenever the admin cookie happens to be present. Never silent about who Shawn is acting as.
+- Verified with `npm run build` â€” clean, `/admin/businesses` compiles.
 
 ### Must Test
 - Log into `/admin/businesses` with the existing admin key, search for a real business, tap "View as," confirm the dashboard loads as that business with the orange banner visible.
@@ -435,18 +449,18 @@
 
 ---
 
-## Session: July 7, 2026 (part 2) — Payment Reliability, Root Safe-Area Fix, Header Cleanup
+## Session: July 7, 2026 (part 2) â€” Payment Reliability, Root Safe-Area Fix, Header Cleanup
 **AI:** Claude Code (Sonnet 5)
-**Worked on:** Shawn found the builder gap persisted after the earlier fix, felt the payment sheet was weak, and — most seriously — found that after paying, the estimate page still showed the full unpaid balance. "Fix it all, we need to launch."
+**Worked on:** Shawn found the builder gap persisted after the earlier fix, felt the payment sheet was weak, and â€” most seriously â€” found that after paying, the estimate page still showed the full unpaid balance. "Fix it all, we need to launch."
 
 ### Completed
-- **Payment reliability (priority):** `handlePay()` in `AcceptButton.tsx` called our own "mark as paid" API exactly once, wrapped in an empty `catch {}`. If that single call failed for any reason, Stripe had already charged the customer successfully but our own database never recorded it — with nothing surfacing the failure anywhere. Now retries up to 3 times with backoff. Never tells the customer their payment failed once Stripe has confirmed it, and never re-prompts payment (no double-charge risk) — just gives our own record multiple chances to catch up.
-- **Root cause of the builder gap, actually found this time:** `viewport-fit=cover` was never set in the root viewport config (`src/app/layout.tsx`). Without it, `env(safe-area-inset-*)` resolves to `0` on iOS Safari everywhere in the app, not just this one header — meaning last session's margin-math fix was mathematically a no-op (both sides of the cancellation used the same flat fallback). Fixed at the root; this should also correct any other spot in the app relying on real safe-area insets, not just this one screen.
-- **Removed redundant header copy** — the green "ESTIMATE" eyebrow above "New estimate" said the same thing twice; removed it, kept one clear title.
-- **Verified the payment sheet's branding directly against Supabase** — queried the "Construction" test company's `primary_color`: it's `#1565C0`, a real blue. The payment theming is correctly applying it; the "generic Stripe" impression was a coincidence of this test company's actual brand color resembling Stripe's own, not a branding bug. No code change needed here.
-- Verified with `npm run build` — clean. Pushed as `0567b54`.
+- **Payment reliability (priority):** `handlePay()` in `AcceptButton.tsx` called our own "mark as paid" API exactly once, wrapped in an empty `catch {}`. If that single call failed for any reason, Stripe had already charged the customer successfully but our own database never recorded it â€” with nothing surfacing the failure anywhere. Now retries up to 3 times with backoff. Never tells the customer their payment failed once Stripe has confirmed it, and never re-prompts payment (no double-charge risk) â€” just gives our own record multiple chances to catch up.
+- **Root cause of the builder gap, actually found this time:** `viewport-fit=cover` was never set in the root viewport config (`src/app/layout.tsx`). Without it, `env(safe-area-inset-*)` resolves to `0` on iOS Safari everywhere in the app, not just this one header â€” meaning last session's margin-math fix was mathematically a no-op (both sides of the cancellation used the same flat fallback). Fixed at the root; this should also correct any other spot in the app relying on real safe-area insets, not just this one screen.
+- **Removed redundant header copy** â€” the green "ESTIMATE" eyebrow above "New estimate" said the same thing twice; removed it, kept one clear title.
+- **Verified the payment sheet's branding directly against Supabase** â€” queried the "Construction" test company's `primary_color`: it's `#1565C0`, a real blue. The payment theming is correctly applying it; the "generic Stripe" impression was a coincidence of this test company's actual brand color resembling Stripe's own, not a branding bug. No code change needed here.
+- Verified with `npm run build` â€” clean. Pushed as `0567b54`.
 
-### Not Fully Closed — Needs a Human
+### Not Fully Closed â€” Needs a Human
 - The Stripe webhook fallback (`payment_intent.succeeded`) needs someone with Stripe Dashboard access to confirm it's registered as a **Connect-scoped webhook** (listening to events from connected accounts), not just the platform's own direct webhook. This estimate payment is a Stripe Connect charge, and Connect events only reach a webhook endpoint that was explicitly set up to receive them. No AI in this session has Stripe Dashboard login access to verify this. The client-side retry fix covers the common case; this webhook is the safety net for the rare case where all 3 retries fail, and right now nobody has confirmed it actually fires for this payment type.
 
 ### Must Test
@@ -456,20 +470,20 @@
 
 ---
 
-## Session: July 7, 2026 — Live Test Results + Builder Gap + Payment Confirmation
+## Session: July 7, 2026 â€” Live Test Results + Builder Gap + Payment Confirmation
 **AI:** Claude Code (Sonnet 5)
 **Worked on:** Shawn live-tested all 6 July 6 items on `my.foundco.app`. 4 confirmed clean (Camera, Company Switching, Leads sheet, Schedule). 2 surfaced real issues, brought to Jony/Craig before fixing.
 
 ### Completed
-- **Estimate builder header gap** — found the exact cause: the sticky header's canceling margin was a flat `-18px` while the outer container's top padding used `max(env(safe-area-inset-top), 18px)`, which resolves to the real (larger) safe-area value on notched phones. The two never fully canceled, leaving a gap above the header showing the page scrolling behind it. Fixed both to use the identical expression.
-- **Payment methods** — team decision: keep `automatic_payment_methods` enabled. Found clients' own customers may only have Cash App, or want a BNPL option for a large job — restricting to card/bank only would cost a real client a real payment. This reverses an earlier draft recommendation.
-- **Post-payment confirmation rebuilt** — was a thin, generic "Estimate Accepted / Thank you" using a flat accent color. Now shows the Found client's own logo (or name), a bigger branded success moment in their actual brand color, and the real payment breakdown (amount paid, balance due at completion) — permanently, not just for a 2.2-second animation that used to decay into the bare version.
-- Verified with `npm run build` — clean. Pushed as `2cb0c99`.
+- **Estimate builder header gap** â€” found the exact cause: the sticky header's canceling margin was a flat `-18px` while the outer container's top padding used `max(env(safe-area-inset-top), 18px)`, which resolves to the real (larger) safe-area value on notched phones. The two never fully canceled, leaving a gap above the header showing the page scrolling behind it. Fixed both to use the identical expression.
+- **Payment methods** â€” team decision: keep `automatic_payment_methods` enabled. Found clients' own customers may only have Cash App, or want a BNPL option for a large job â€” restricting to card/bank only would cost a real client a real payment. This reverses an earlier draft recommendation.
+- **Post-payment confirmation rebuilt** â€” was a thin, generic "Estimate Accepted / Thank you" using a flat accent color. Now shows the Found client's own logo (or name), a bigger branded success moment in their actual brand color, and the real payment breakdown (amount paid, balance due at completion) â€” permanently, not just for a 2.2-second animation that used to decay into the bare version.
+- Verified with `npm run build` â€” clean. Pushed as `2cb0c99`.
 - Logged as a locked decision in `DESIGN_DECISIONS.md`.
 
 ### Must Test
-- Open an estimate builder on a phone with a notch/Dynamic Island — confirm no gap above the "ESTIMATE / New estimate" header, no page content visible behind it.
-- Complete a test payment on a Stripe-connected estimate — confirm the confirmation shows the client's logo/name, brand color, and correct amount paid / balance due, and that this state persists (not just visible for a couple seconds).
+- Open an estimate builder on a phone with a notch/Dynamic Island â€” confirm no gap above the "ESTIMATE / New estimate" header, no page content visible behind it.
+- Complete a test payment on a Stripe-connected estimate â€” confirm the confirmation shows the client's logo/name, brand color, and correct amount paid / balance due, and that this state persists (not just visible for a couple seconds).
 - Confirm Cash App / Klarna / other automatic payment methods still appear as options in the payment step.
 
 ---

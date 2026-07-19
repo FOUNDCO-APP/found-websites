@@ -1,10 +1,13 @@
-import { notFound } from "next/navigation"
+﻿import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { isVideoMedia } from "@/lib/mediaKind"
 import ContactForm from "./ContactForm"
 import { getSiteCopy } from "@/lib/siteCopy"
 import type { Metadata } from "next"
+import type { WebsiteConfig } from "@/types/company"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -33,22 +36,43 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
     industryCategory: company.industry_category,
     services: company.website_config?.services,
   })
+  const config = (company.website_config ?? {}) as Partial<WebsiteConfig>
+  const admin = createAdminClient()
+  const { data: contactPhotoRows } = await admin
+    .from("company_photos")
+    .select("url")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .eq("website_section", "contact")
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  const contactMedia = contactPhotoRows?.[0]?.url ?? img(0)
+  const contactEyebrow = String(config.contact_eyebrow || "Get In Touch")
+  const contactTitle = String(config.contact_title || "Contact Us")
+  const contactSubtitle = String(config.contact_subtitle || "We'd love to hear from you.")
+  const formTitle = String(config.contact_form_title || "Send us a message")
+  const formSubtitle = String(config.contact_form_subtitle || "We'll get back to you as soon as possible.")
 
   return (
     <>
       <section className="relative min-h-[45vh] flex items-center overflow-hidden">
-        {img(0) ? (
+        {contactMedia ? (
           <>
-            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            {isVideoMedia(contactMedia) ? (
+              <video src={contactMedia} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <img src={contactMedia} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            )}
             <div className="absolute inset-0 bg-black/70" />
           </>
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
-          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>Get In Touch</p>
-          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>Contact Us</h1>
-          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>We&apos;d love to hear from you.</p>
+          <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>{contactEyebrow}</p>
+          <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{contactTitle}</h1>
+          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>{contactSubtitle}</p>
         </div>
       </section>
 
@@ -56,7 +80,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
         <div className="max-w-6xl mx-auto px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
-            {/* Left — contact info */}
+            {/* Left â€” contact info */}
             <div className="space-y-8">
               {company.phone && company.phone_visible !== false && (
                 <div className="flex items-start gap-4">
@@ -110,7 +134,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
 
-              {/* Nudge toward primary action — only shown when intent has a dedicated page */}
+              {/* Nudge toward primary action â€” only shown when intent has a dedicated page */}
               {copy.nudgeText && copy.nudgeLabel && copy.nudgeHref && (
                 <div className="pt-4 border-t border-gray-100">
                   <p className="text-sm text-gray-500 mb-3">{copy.nudgeText}</p>
@@ -126,10 +150,10 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
               )}
             </div>
 
-            {/* Right — contact form */}
+            {/* Right â€” contact form */}
             <div className="border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
-              <h2 className="text-xl font-black mb-1" style={{ color: "#111111" }}>Send us a message</h2>
-              <p className="text-sm text-gray-400 mb-6">We&apos;ll get back to you as soon as possible.</p>
+              <h2 className="text-xl font-black mb-1" style={{ color: "#111111" }}>{formTitle}</h2>
+              <p className="text-sm text-gray-400 mb-6">{formSubtitle}</p>
               <ContactForm companyId={company.id} primaryColor={primary} />
             </div>
 

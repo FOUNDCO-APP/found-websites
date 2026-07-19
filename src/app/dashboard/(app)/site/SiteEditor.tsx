@@ -1,15 +1,16 @@
-"use client"
+﻿"use client"
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
+import { isVideoMedia } from "@/lib/mediaKind"
 
 type Config = Record<string, unknown>
-type Photo = { id: string; url: string; website_section: string | null }
+type Photo = { id: string; url: string; website_section: string | null; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
-type PhotoSlot = "hero" | "about" | "cta" | "gallery"
+type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "contact"
 type Props = {
   company: { id: string; name: string; slug: string }
   config: Config | null
@@ -314,8 +315,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     })))
     if (section === "hero" && photo) {
       const current = Array.isArray(config.hero_images) ? (config.hero_images as string[]) : []
-      const heroImages = [photo.url, ...current.filter(url => url !== photo.url)]
-      setConfig(prev => ({ ...prev, hero_image_url: photo.url, hero_images: heroImages }))
+      if (isVideoMedia(photo.url, photo.mime_type)) {
+        setConfig(prev => ({ ...prev, hero_video_url: photo.url, hero_image_url: null }))
+      } else {
+        const heroImages = [photo.url, ...current.filter(url => url !== photo.url)]
+        setConfig(prev => ({ ...prev, hero_image_url: photo.url, hero_video_url: null, hero_images: heroImages }))
+      }
     }
     if (section && section !== "gallery") setPhotoPickerSlot(null)
     startTransition(async () => { await assignPhotoToSection(photoId, section) })
@@ -325,7 +330,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const slotPhotoIds = localPhotos.filter(p => p.website_section === slot).map(p => p.id)
     if (slot === "hero") {
       setLocalPhotos(prev => prev.map(p => p.website_section === "hero" ? { ...p, website_section: null } : p))
-      setConfig(prev => ({ ...prev, hero_image_url: null, hero_images: [] }))
+      setConfig(prev => ({ ...prev, hero_image_url: null, hero_video_url: null, hero_images: [] }))
       setPhotoPickerSlot(null)
       startTransition(async () => { await clearHeroPhoto() })
       return
@@ -339,35 +344,41 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const aboutPhotos = localPhotos.filter(p => p.website_section === "about")
   const ctaPhotos = localPhotos.filter(p => p.website_section === "cta")
   const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
+  const contactPhotos = localPhotos.filter(p => p.website_section === "contact")
   const unassigned = localPhotos.filter(p => !p.website_section)
   const pickerPhotos = localPhotos
   const services = (config.services as Array<{name:string;description:string}>) ?? []
-  const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
+  const heroImage = heroPhotos[0]?.url ?? (config.hero_video_url as string) ?? (config.hero_image_url as string) ?? null
   const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
     { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
     { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
     { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
     { slot: "gallery", label: "Gallery", helper: "Photos shown in gallery and photo strips.", photos: galleryPhotos },
+    { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
 
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
 
-      {/* ══════════════════════════════════════════
-          HOME PAGE — full bleed hero preview
-      ══════════════════════════════════════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          HOME PAGE â€” full bleed hero preview
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
 
       {/* Page tab */}
       <div style={{ padding: "28px 20px 0" }}>
         <PageTab label="Home Page" href={`https://${company.slug}.foundco.app`} isLive />
       </div>
 
-      {/* Hero preview card — looks like their actual site */}
+      {/* Hero preview card â€” looks like their actual site */}
       <div style={{ margin: "16px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
         {/* Background */}
         {heroImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={heroImage} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          isVideoMedia(heroImage) ? (
+            <video src={heroImage} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={heroImage} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+          )
         ) : (
           <div style={{
             position: "absolute", inset: 0,
@@ -389,7 +400,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer", marginBottom: 10 }}
             >
               <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 5 }}>
-                HEADLINE · tap to edit
+                HEADLINE Â· tap to edit
               </div>
               <h2 style={{
                 margin: 0, fontSize: 28, fontWeight: 300,
@@ -406,7 +417,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer" }}
             >
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 5 }}>
-                SUPPORTING LINE · tap to edit
+                SUPPORTING LINE Â· tap to edit
               </div>
               <p style={{
                 margin: 0, fontSize: 15,
@@ -446,8 +457,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
                       <div style={{ width: 54, height: 54, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
                         {cover ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          isVideoMedia(cover) ? (
+                            <video src={cover} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          )
                         ) : (
                           <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
                         )}
@@ -468,7 +483,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      {/* Hook section — tagline + CTA */}
+      {/* Hook section â€” tagline + CTA */}
       <div style={{ margin: "12px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10, paddingLeft: 4 }}>
           Your Hook
@@ -477,7 +492,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <TapToEdit
             label="Tagline"
             value={String(config.tagline ?? "")}
-            placeholder="Your tagline…"
+            placeholder="Your taglineâ€¦"
             onClick={() => startEdit("tagline", String(config.tagline ?? ""))}
             isSaved={saved === "tagline"}
             flex={3}
@@ -485,7 +500,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <TapToEdit
             label="Button"
             value={String(config.cta_headline ?? "")}
-            placeholder="CTA…"
+            placeholder="CTAâ€¦"
             onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))}
             isSaved={saved === "cta_headline"}
             flex={2}
@@ -494,9 +509,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color={GREEN} onTap={() => handleRegenerate("tagline")} />
       </div>
 
-      {/* ══════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           PRIMARY CTA PICKER
-      ══════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {(() => {
         const ctaOptions: { intent: string; label: string; desc: string }[] | null = industryCategory === 'food'
           ? [
@@ -528,7 +543,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 </div>
                 {intentSaved && (
                   <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
-                    ✓ Live
+                    âœ“ Live
                   </div>
                 )}
               </div>
@@ -575,15 +590,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       {/* Divider */}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* ══════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           ABOUT PAGE
-      ══════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ padding: "0 20px" }}>
         <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
       </div>
 
       <div style={{ margin: "16px 20px 0" }}>
-        {/* Story card — feels like reading the actual about page */}
+        {/* Story card â€” feels like reading the actual about page */}
         <div
           onClick={() => !editing && startEdit("about_text", String(config.about_text ?? ""))}
           style={{
@@ -595,7 +610,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           }}
         >
           <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>
-            Your Story · tap to edit
+            Your Story Â· tap to edit
           </div>
           <p style={{
             margin: 0, fontSize: 16, fontWeight: 300,
@@ -605,7 +620,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
           </p>
           {saved === "about_text" && (
-            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>✓ Live</div>
+            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>âœ“ Live</div>
           )}
         </div>
         <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color={GREEN} onTap={() => handleRegenerate("about")} />
@@ -613,9 +628,34 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* ══════════════════════════════════════════
+      <div style={{ padding: "0 20px" }}>
+        <PageTab label="Contact Page" href={"https://" + company.slug + ".foundco.app/contact"} />
+      </div>
+
+      <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
+        <button onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Page label - tap to edit</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: config.contact_eyebrow ? "white" : "rgba(255,255,255,0.32)" }}>{String(config.contact_eyebrow || "Get in touch")}</div>
+        </button>
+        <button onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Headline - tap to edit</div>
+          <div style={{ fontSize: 24, fontWeight: 300, color: config.contact_title ? "white" : "rgba(255,255,255,0.32)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{String(config.contact_title || "Contact Us")}</div>
+        </button>
+        <button onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Supporting line - tap to edit</div>
+          <div style={{ fontSize: 15, color: config.contact_subtitle ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.32)", lineHeight: 1.45 }}>{String(config.contact_subtitle || "We'd love to hear from you.")}</div>
+        </button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <TapToEdit label="Form title" value={String(config.contact_form_title ?? "")} placeholder="Send us a message" onClick={() => startEdit("contact_form_title", String(config.contact_form_title ?? ""))} isSaved={saved === "contact_form_title"} />
+          <TapToEdit label="Form note" value={String(config.contact_form_subtitle ?? "")} placeholder="We will reply soon" onClick={() => startEdit("contact_form_subtitle", String(config.contact_form_subtitle ?? ""))} isSaved={saved === "contact_form_subtitle"} />
+        </div>
+      </div>
+
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           MENU PAGE (food) / SERVICES PAGE (everyone else)
-      ══════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       {showCatalog && (
       <div style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -776,19 +816,19 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* ══════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           GALLERY PAGE
-      ══════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ padding: "0 20px" }}>
         <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* ── Owner's real photos in gallery ── */}
+          {/* â”€â”€ Owner's real photos in gallery â”€â”€ */}
           {galleryPhotos.length > 0 && (
             <div>
               <div style={{ ...TYPE.caption, color: "#34D399", marginBottom: 10 }}>
-                Your photos · live on your gallery
+                Your photos Â· live on your gallery
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                 {galleryPhotos.map(p => (
@@ -796,7 +836,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <button onClick={() => handleAssignPhoto(p.id, null)} style={{ position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer" }}>
-                      <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>✕</div>
+                      <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>âœ•</div>
                     </button>
                   </div>
                 ))}
@@ -804,7 +844,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* ── Add more from unassigned hearted photos ── */}
+          {/* â”€â”€ Add more from unassigned hearted photos â”€â”€ */}
           {unassigned.length > 0 && (
             <div>
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>
@@ -822,7 +862,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* ── No owner photos yet ── */}
+          {/* â”€â”€ No owner photos yet â”€â”€ */}
           {photos.length === 0 && (
             <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: `1px dashed ${GREEN}22`, background: `${GREEN}05` }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
@@ -838,12 +878,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* ── Stock / placeholder photos ── */}
+          {/* â”€â”€ Stock / placeholder photos â”€â”€ */}
           {stockImages.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                  Placeholder photos · tap ✕ to remove
+                  Placeholder photos Â· tap âœ• to remove
                 </div>
                 <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
                   {stockImages.length} stock
@@ -864,7 +904,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                         startTransition(async () => { await removeStockImage(url) })
                       }}
                       style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", border: "none", cursor: "pointer", color: "rgba(255,120,120,0.9)", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}
-                    >✕</button>
+                    >âœ•</button>
                     <div style={{ position: "absolute", bottom: 5, left: 7, fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.06em" }}>STOCK</div>
                   </div>
                 ))}
@@ -982,8 +1022,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     return (
                       <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, activeSlot.slot)} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
                         <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          {isVideoMedia(photo.url, photo.mime_type) ? (
+                            <video src={photo.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          )}
+                          {isVideoMedia(photo.url, photo.mime_type) && (
+                            <div style={{ position: "absolute", left: 10, top: 10, padding: "5px 8px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em" }}>VIDEO</div>
+                          )}
                           {selected && (
                             <div style={{ position: "absolute", right: 10, top: 10, padding: "6px 9px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, fontSize: 11, fontWeight: 900 }}>
                               Selected
@@ -1022,6 +1069,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   about_text: "Your Story",
                   tagline: "Tagline",
                   cta_headline: "Button Text",
+                  contact_eyebrow: "Contact Label",
+                  contact_title: "Contact Headline",
+                  contact_subtitle: "Contact Supporting Line",
+                  contact_form_title: "Form Headline",
+                  contact_form_subtitle: "Form Supporting Line",
                 }[editing] ?? editing}
               </div>
               <button onClick={() => saveEdit(editing)} style={{ justifySelf: "end", padding: "10px 0", border: "none", background: "transparent", color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>Save</button>
@@ -1032,6 +1084,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             {[
               "about_text",
               "hero_subtitle",
+              "contact_subtitle",
+              "contact_form_subtitle",
             ].includes(editing) ? (
               <textarea
                 value={editValue}
@@ -1056,9 +1110,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       )}
 
-      {/* ══════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           CUSTOM DOMAIN
-      ══════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
       <div style={{ padding: "0 20px" }}>
         <div style={{ marginBottom: 16 }}>
@@ -1080,7 +1134,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   )
 }
 
-// ── Page Tab ──
+// â”€â”€ Page Tab â”€â”€
 function PageTab({ label, href, isLive }: { label: string; href: string; isLive?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1107,10 +1161,10 @@ function PageTab({ label, href, isLive }: { label: string; href: string; isLive?
   )
 }
 
-// ── Tap To Edit pill ──
+// â”€â”€ Tap To Edit pill â”€â”€
 function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
   label: string; value: string; placeholder: string
-  onClick: () => void; isSaved: boolean; flex: number
+  onClick: () => void; isSaved: boolean; flex?: number
 }) {
   return (
     <div onClick={onClick} style={{ flex, cursor: "pointer", borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", position: "relative" }}>
@@ -1123,7 +1177,7 @@ function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
   )
 }
 
-// ── AI Bar ──
+// â”€â”€ AI Bar â”€â”€
 function AIBar({ label, isLoading, color, onTap }: { label: string; isLoading: boolean; color: string; onTap: () => void }) {
   return (
     <button onClick={onTap} disabled={isLoading} style={{
@@ -1137,23 +1191,23 @@ function AIBar({ label, isLoading, color, onTap }: { label: string; isLoading: b
         {label}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 100, backgroundColor: isLoading ? "rgba(255,255,255,0.05)" : `${color}18`, border: `1px solid ${color}33` }}>
-        {isLoading ? <Spinner color={color}/> : <span style={{ fontSize: 13 }}>✨</span>}
+        {isLoading ? <Spinner color={color}/> : <span style={{ fontSize: 13 }}>âœ¨</span>}
         <span style={{ fontSize: 12, fontWeight: 700, color: isLoading ? "rgba(255,255,255,0.25)" : color }}>
-          {isLoading ? "Writing…" : "Rewrite"}
+          {isLoading ? "Writingâ€¦" : "Rewrite"}
         </span>
       </div>
     </button>
   )
 }
 
-// ── Spinner ──
+// â”€â”€ Spinner â”€â”€
 function Spinner({ color }: { color: string }) {
   return (
     <div style={{ width: 12, height: 12, borderRadius: "50%", border: `2px solid ${color}33`, borderTopColor: color, animation: "spin 0.7s linear infinite" }}/>
   )
 }
 
-// ── Service Card ──
+// â”€â”€ Service Card â”€â”€
 function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRemove, onCancel }: {
   index: number; name: string; description: string; isEditing: boolean
   onEdit: () => void; onSave: (i: number, n: string, d: string) => void
