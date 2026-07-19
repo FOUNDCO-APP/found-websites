@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
@@ -8,6 +8,7 @@ import { getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashb
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import FoundWordmark from "@/components/FoundWordmark"
 import { DashboardToolIcon } from "@/components/dashboard/DashboardToolIcon"
+import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 
 type Tab = DashboardTool
 type Album = { id: string; name: string; cover_url: string | null }
@@ -84,7 +85,7 @@ export default function DashboardNav({
   function buildTabs(ids: string[]): Tab[] {
     const byId = new Map(allAvailable.map(tab => [tab.id, tab]))
     const ordered = ids.map(id => byId.get(id)).filter(Boolean) as Tab[]
-    // HOME always first, MORE always last — fall back to defaults if missing from saved set
+    // HOME always first, MORE always last â€” fall back to defaults if missing from saved set
     const homeTab = ordered.find(t => t.id === "home") ?? defaultTabs.find(t => t.id === "home")
     const moreTab = ordered.find(t => t.id === "more") ?? defaultTabs.find(t => t.id === "more")
     const middle  = ordered.filter(t => t.id !== "home" && t.id !== "more").slice(0, 3)
@@ -124,7 +125,7 @@ export default function DashboardNav({
     return () => window.removeEventListener("found:open-camera", onOpenCamera)
   }, [])
 
-  // Instant visual feedback — clear when route actually settles
+  // Instant visual feedback â€” clear when route actually settles
   useEffect(() => { setPendingSegment(null) }, [pathname])
 
   function pathOnly(tabPath: string) { return tabPath.split("?")[0] }
@@ -275,32 +276,20 @@ export default function DashboardNav({
     if (!file) { e.target.value = ""; return }
     setUploading(true)
     try {
-      const form = new FormData()
-      form.append("file", file)
-      const res  = await fetch(`${prefix}/api/photos`, { method: "POST", body: form })
-      const data = await res.json()
-      if (data.photo) {
-        const albumId = pendingAlbumRef.current
-        if (albumId) {
-          fetch(`${prefix}/api/photos`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
-          }).catch(console.error)
-          setAlbums(prev => prev.map(a =>
-            a.id === albumId && !a.cover_url ? { ...a, cover_url: data.photo.url } : a
-          ))
-        }
-        window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
-          detail: { photo: { ...data.photo, album_id: albumId ?? null } },
-        }))
-        const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
-        showToastMsg(albumName ? `Saved to ${albumName}` : "Photo saved")
-      } else {
-        showToastMsg("Upload failed — try again")
+      const albumId = pendingAlbumRef.current
+      const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
+      if (albumId) {
+        setAlbums(prev => prev.map(a =>
+          a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
+        ))
       }
+      window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
+        detail: { photo: { ...photo, album_id: albumId ?? null } },
+      }))
+      const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
+      showToastMsg(albumName ? `Saved to ${albumName}` : (photo.media_type === "video" ? "Video saved" : "Photo saved"))
     } catch {
-      showToastMsg("Upload failed — try again")
+      showToastMsg("Upload failed â€” try again")
     } finally {
       pendingAlbumRef.current = null
       e.target.value = ""
@@ -347,7 +336,7 @@ export default function DashboardNav({
         </div>
       )}
 
-      {/* ── Mobile bottom tab bar — 5 equal tabs ── */}
+      {/* â”€â”€ Mobile bottom tab bar â€” 5 equal tabs â”€â”€ */}
       <nav className="found-mobile-nav" style={{
         position: "fixed", bottom: 0, left: 0, right: 0,
         backgroundColor: "#080A09",
@@ -377,7 +366,7 @@ export default function DashboardNav({
         })}
       </nav>
 
-      {/* ── Desktop sidebar ── */}
+      {/* â”€â”€ Desktop sidebar â”€â”€ */}
       <aside className="found-sidebar" style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 220, backgroundColor: "#080A09", borderRight: "1px solid rgba(255,255,255,0.07)", flexDirection: "column", zIndex: 50, display: "none" }}>
         <div style={{ padding: "24px 20px 20px" }}>
           <FoundWordmark height={16} color="white" />
@@ -418,8 +407,8 @@ export default function DashboardNav({
         </div>
       </aside>
 
-      {/* ── Hidden file inputs ── */}
-      {/* Library / files picker — no capture, opens photo library */}
+      {/* â”€â”€ Hidden file inputs â”€â”€ */}
+      {/* Library / files picker â€” no capture, opens photo library */}
       <input
         ref={uploadRef}
         type="file"
@@ -438,7 +427,7 @@ export default function DashboardNav({
         onChange={handleNavUpload}
       />
 
-      {/* ── Toast ── */}
+      {/* â”€â”€ Toast â”€â”€ */}
       {toast && (
         <div style={{
           position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
@@ -460,7 +449,7 @@ export default function DashboardNav({
         </div>
       )}
 
-      {/* ── Camera picker sheet ── */}
+      {/* â”€â”€ Camera picker sheet â”€â”€ */}
       {showPicker && (
         <>
           <div
@@ -557,7 +546,7 @@ export default function DashboardNav({
               </div>
             )}
 
-            {/* Empty state — no projects yet */}
+            {/* Empty state â€” no projects yet */}
             {albums.length === 0 && !showNewAlbum && (
               <div style={{ padding: "0 24px 8px" }}>
                 <button
@@ -589,7 +578,7 @@ export default function DashboardNav({
                       if (e.key === "Enter")  handleCreate()
                       if (e.key === "Escape") { setShowNewAlbum(false); setNewAlbumName("") }
                     }}
-                    placeholder={`${albumLabel.singular} name…`}
+                    placeholder={`${albumLabel.singular} nameâ€¦`}
                     style={{ width: "100%", background: "none", border: "none", outline: "none", color: "white", fontSize: "0.9375rem", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 12 }}
                   />
                   <div style={{ display: "flex", gap: 8 }}>
@@ -604,7 +593,7 @@ export default function DashboardNav({
                       disabled={!newAlbumName.trim() || creating}
                       style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: newAlbumName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.07)", color: newAlbumName.trim() ? FOUND_BLACK : `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontSize: "0.8125rem", fontWeight: 700, cursor: newAlbumName.trim() ? "pointer" : "default" }}
                     >
-                      {creating ? "Creating…" : "Create & Shoot"}
+                      {creating ? "Creatingâ€¦" : "Create & Shoot"}
                     </button>
                   </div>
                 </div>
@@ -614,7 +603,7 @@ export default function DashboardNav({
             {/* Spacer pushes buttons to bottom */}
             <div style={{ flex: 1, minHeight: 24 }} />
 
-            {/* Shoot | Upload — two large primary buttons */}
+            {/* Shoot | Upload â€” two large primary buttons */}
             <div style={{ padding: "0 24px", display: "flex", gap: 12 }}>
               <button
                 onClick={() => shoot(selectedAlbumId ?? undefined)}

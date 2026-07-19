@@ -1,4 +1,18 @@
-﻿## Session: July 19, 2026 - Contact Editing + Video Media Foundation
+﻿## Session: July 19, 2026 - Video Upload Save Fix
+**AI:** Codex
+**Worked on:** Fixed videos disappearing before they could be hearted/starred in Photos.
+
+### Completed
+- Audited Supabase and confirmed the issue was not the Photos filter: videos were not being inserted into `company_photos`.
+- Added signed direct video uploads to Supabase Storage, then records the completed upload in Found.
+- Kept regular photo uploads on the existing path while preserving album placement for both paths.
+- Camera and library uploads now show a real error if a save fails instead of leaving Unsorted empty.
+- Verified with `git diff --check` and `npm.cmd run build`.
+
+### Test Next
+- On iPhone, record or upload a short video, then open Photos -> Unsorted. Confirm the video appears with a VIDEO badge and can be hearted/starred.
+
+---## Session: July 19, 2026 - Contact Editing + Video Media Foundation
 **AI:** Codex
 **Worked on:** Made the contact page editable and added safe video handling for dashboard media and public hero slots.
 

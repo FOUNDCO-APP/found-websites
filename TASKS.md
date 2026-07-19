@@ -26,6 +26,16 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 ---
 
 
+
+## VIDEO UPLOAD SAVE FIX - COMPLETED July 19
+
+- [x] Confirmed existing videos were missing from company_photos, not hidden by the Photos UI.
+- [x] Added signed direct upload path for videos to avoid serverless body-size failures.
+- [x] Made failed camera/library uploads visible to owners instead of silently disappearing.
+- [x] Preserved album placement during upload record creation.
+- [ ] Test on iPhone: record/upload short video, verify Photos -> Unsorted shows VIDEO badge, then heart/star it.
+
+---
 ## CONTACT EDITING + VIDEO MEDIA - COMPLETED July 19
 
 - [x] Add editable Contact Page copy fields in Edit My Site.

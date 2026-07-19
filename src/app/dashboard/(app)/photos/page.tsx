@@ -1,10 +1,11 @@
-"use client"
+﻿"use client"
 
 import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import { isVideoMedia } from "@/lib/mediaKind"
+import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 
 type Photo = {
   id: string
@@ -79,6 +80,7 @@ function PhotosPageInner() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [photoError, setPhotoError] = useState<string | null>(null)
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null)
   const [showNewAlbum, setShowNewAlbum] = useState(false)
   const [newAlbumName, setNewAlbumName] = useState("")
@@ -159,21 +161,13 @@ function PhotosPageInner() {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    const albumId = pendingAlbumIdRef.current
     setUploading(true)
-    const form = new FormData()
-    form.append("file", file)
-    const res = await fetch("/api/photos", { method: "POST", body: form })
-    const data = await res.json()
-    if (data.photo) {
-      const albumId = pendingAlbumIdRef.current
-      const newPhoto = { ...data.photo, album_id: albumId ?? null }
-      setPhotos(prev => [newPhoto, ...prev])
+    setPhotoError(null)
+    try {
+      const newPhoto = await uploadDashboardMedia(file, { albumId })
+      setPhotos(prev => [{ ...newPhoto, album_id: albumId ?? null }, ...prev])
       if (albumId) {
-        fetch("/api/photos", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: data.photo.id, album_id: albumId }),
-        }).catch(console.error)
         const target = albums.find(a => a.id === albumId)
         if (target) {
           setView("projects")
@@ -181,9 +175,12 @@ function PhotosPageInner() {
         }
       }
       pendingAlbumIdRef.current = null
+    } catch (error) {
+      setPhotoError(error instanceof Error ? error.message : "Upload failed")
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ""
     }
-    setUploading(false)
-    if (fileRef.current) fileRef.current.value = ""
   }
 
   async function flag(id: string, field: "for_website" | "for_social", current: boolean) {
@@ -412,7 +409,7 @@ function PhotosPageInner() {
         <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleUpload} style={{ display: "none" }} />
       </div>
 
-      {/* Tabs — hidden when inside an album */}
+      {/* Tabs â€” hidden when inside an album */}
       {!activeAlbum && (
         <div style={{ padding: "0 24px 20px", display: "flex", gap: 0 }}>
           {(["queue", "website", "social", "projects"] as View[]).map(v => {
@@ -450,7 +447,7 @@ function PhotosPageInner() {
       {/* Content */}
       <div style={{ flex: 1, padding: "0 24px 32px" }}>
         {loading ? (
-          <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", ...TYPE.footnote }}>Loading…</div>
+          <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", ...TYPE.footnote }}>Loadingâ€¦</div>
         ) : activeAlbum ? (
           <DateGroupedGrid
             photos={albumPhotos}
@@ -563,7 +560,7 @@ function PhotosPageInner() {
   )
 }
 
-// ── Lightroom viewer ──
+// â”€â”€ Lightroom viewer â”€â”€
 function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
   photos: Photo[]
   initialIndex: number
@@ -675,7 +672,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
         display: "flex", alignItems: "flex-end", justifyContent: "space-around",
         padding: `72px 32px max(env(safe-area-inset-bottom, 0px), 36px)`,
       }}>
-        {/* Heart — Website */}
+        {/* Heart â€” Website */}
         <button onClick={() => onFlag(photo.id, "for_website", photo.for_website)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -698,7 +695,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Website</span>
         </button>
 
-        {/* Star — Social */}
+        {/* Star â€” Social */}
         <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -721,7 +718,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Social</span>
         </button>
 
-        {/* Trash — Delete */}
+        {/* Trash â€” Delete */}
         <button onClick={handleDelete} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -745,7 +742,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
   )
 }
 
-// ── Date-grouped photo grid ──
+// â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
   photos, onView, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
@@ -1094,8 +1091,8 @@ function SocialPostSheet({ draft, company, onClose, onCaptionChange, onStatus }:
     </>
   )
 }
-// ── Projects tab ──
-// ── Album title editor (inside album detail header) ──
+// â”€â”€ Projects tab â”€â”€
+// â”€â”€ Album title editor (inside album detail header) â”€â”€
 function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Album, name: string) => void }) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(album.name)
@@ -1170,13 +1167,13 @@ function ProjectsTab({
             value={newName}
             onChange={e => onNameChange(e.target.value)}
             onKeyDown={e => e.key === "Enter" && onCreate()}
-            placeholder={`${albumLabel.singular} name…`}
+            placeholder={`${albumLabel.singular} nameâ€¦`}
             style={{ width: "100%", padding: "13px 16px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "0.9375rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 12 }}
           />
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onHideNew} style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
             <button onClick={onCreate} disabled={!newName.trim() || saving} style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.3)", fontSize: "0.8125rem", fontWeight: 700, cursor: newName.trim() ? "pointer" : "default" }}>
-              {saving ? "Creating…" : `Create ${albumLabel.singular}`}
+              {saving ? "Creatingâ€¦" : `Create ${albumLabel.singular}`}
             </button>
           </div>
         </div>
@@ -1267,7 +1264,7 @@ function ProjectsTab({
   )
 }
 
-// ── Photo card — tap to open lightroom ──
+// â”€â”€ Photo card â€” tap to open lightroom â”€â”€
 function PhotoCard({ photo, onView }: {
   photo: Photo
   onView: (photo: Photo) => void
@@ -1306,7 +1303,7 @@ function PhotoCard({ photo, onView }: {
   )
 }
 
-// ── Upgrade sheet ──
+// â”€â”€ Upgrade sheet â”€â”€
 function UpgradeSheet({ onClose }: { onClose: () => void }) {
   return (
     <>
@@ -1325,7 +1322,7 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
           Share organized project galleries with clients. Upgrade to unlock client sharing.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-          {["Share project galleries with clients", "Branded gallery link — your colors", "Client sees only the photos you choose"].map(f => (
+          {["Share project galleries with clients", "Branded gallery link â€” your colors", "Client sees only the photos you choose"].map(f => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -1340,7 +1337,7 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
           ...TYPE.subhead, fontWeight: 700, cursor: "pointer", textAlign: "center",
           boxShadow: `0 0 28px ${SIGNAL_GREEN}33`,
         }}>
-          Upgrade to Pro →
+          Upgrade to Pro â†’
         </a>
         <button onClick={onClose} style={{ display: "block", width: "100%", marginTop: 12, padding: "13px 0", background: "none", border: "none", cursor: "pointer", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
           Maybe later
@@ -1350,7 +1347,7 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Share sheet ──
+// â”€â”€ Share sheet â”€â”€
 function ShareSheet({ album, siteSlug, copied, onShare, onClose }: {
   album: Album
   siteSlug: string
@@ -1382,7 +1379,7 @@ function ShareSheet({ album, siteSlug, copied, onShare, onClose }: {
           ...TYPE.subhead, fontWeight: 700, cursor: "pointer",
           boxShadow: `0 0 24px ${SIGNAL_GREEN}33`,
         }}>
-          {copied ? "Link Copied ✓" : "Copy & Share Link"}
+          {copied ? "Link Copied âœ“" : "Copy & Share Link"}
         </button>
       </div>
     </>

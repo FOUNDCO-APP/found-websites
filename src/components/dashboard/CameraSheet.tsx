@@ -1,7 +1,8 @@
-"use client"
+﻿"use client"
 
 import React, { useRef, useState, useEffect } from "react"
 import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
+import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
 type CameraMode = "photo" | "video"
@@ -15,7 +16,7 @@ const RATIOS = [
 
 type Capture = { id: string; previewUrl: string; uploading: boolean; isVideo?: boolean; photoId?: string; storagePath?: string }
 
-// Address-bar/settings wording differs per platform — point at the right icon.
+// Address-bar/settings wording differs per platform â€” point at the right icon.
 function blockedCameraMessage(): string {
   const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
   if (/iPhone|iPad|iPod/.test(ua)) {
@@ -76,7 +77,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       hwZoomRef.current = false
       setReady(false); setError(null); setTorchOn(false); setTorchOk(false)
 
-      // Proactive check where supported (Chrome/Android) — skips straight to
+      // Proactive check where supported (Chrome/Android) â€” skips straight to
       // guidance instead of showing a dead black screen if already blocked.
       // Safari doesn't reliably support querying "camera", so this is a
       // best-effort early exit, not something the rest of the flow depends on.
@@ -87,7 +88,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           return
         }
       } catch {
-        // Permissions API unsupported/unqueryable for "camera" — fall through to getUserMedia.
+        // Permissions API unsupported/unqueryable for "camera" â€” fall through to getUserMedia.
       }
 
       const videoConstraints = { facingMode: facing, width: { ideal: 4096 }, height: { ideal: 3072 } }
@@ -190,13 +191,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       form.append("file", blob, `photo-${id}.jpg`)
       if (pendingAlbumId) form.append("album_id", pendingAlbumId)
       try {
-        const res = await fetch("/api/photos", { method: "POST", body: form })
-        const data = await res.json()
-        if (data.photo) {
-          onUploaded(data.photo)
-          setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
-        }
-      } catch {
+        const photo = await uploadDashboardMedia(blob, { fileName: `photo-${id}.jpg`, albumId: pendingAlbumId ?? null })
+        onUploaded(photo)
+        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+      } catch (uploadError) {
+        setError(uploadError instanceof Error ? uploadError.message : "Photo upload failed")
         setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
       }
     }, "image/jpeg", 0.92)
@@ -235,13 +234,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     form.append("file", blob, `video-${id}.${ext}`)
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
     try {
-      const res = await fetch("/api/photos", { method: "POST", body: form })
-      const data = await res.json()
-      if (data.photo) {
-        onUploaded(data.photo)
-        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
-      }
-    } catch {
+      const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
+      onUploaded(photo)
+      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Video upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
     }
   }
@@ -256,13 +253,11 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     form.append("file", blob, `annotated-${id}.jpg`)
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
     try {
-      const res = await fetch("/api/photos", { method: "POST", body: form })
-      const data = await res.json()
-      if (data.photo) {
-        onUploaded(data.photo)
-        setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: data.photo.id, storagePath: data.photo.storage_path } : c))
-      }
-    } catch {
+      const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
+      onUploaded(photo)
+      setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Annotated photo upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
     }
   }
@@ -356,12 +351,12 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         <div style={{ position: "absolute", inset: 0, zIndex: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ textAlign: "center", color: "white", padding: "0 32px" }}>
             <p style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{error}</p>
-            <p style={{ fontSize: 13, opacity: 0.5 }}>Go to Settings → Browser → Camera and allow access.</p>
+            <p style={{ fontSize: 13, opacity: 0.5 }}>Go to Settings â†’ Browser â†’ Camera and allow access.</p>
           </div>
         </div>
       )}
 
-      {/* ── Top bar ── */}
+      {/* â”€â”€ Top bar â”€â”€ */}
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, zIndex: 30,
         display: "flex", alignItems: "flex-start", justifyContent: "space-between",
@@ -408,7 +403,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         </button>
       </div>
 
-      {/* ── Zoom + mode (above bottom controls) ── */}
+      {/* â”€â”€ Zoom + mode (above bottom controls) â”€â”€ */}
       <div style={{
         position: "absolute", bottom: `calc(max(env(safe-area-inset-bottom, 0px), 40px) + 112px)`,
         left: 0, right: 0, zIndex: 30,
@@ -418,7 +413,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         {!recording && (
           <div style={{ display: "flex", gap: 4, backgroundColor: "rgba(0,0,0,0.5)", borderRadius: 100, padding: "3px 4px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
             {([1, 2, 3] as ZoomLevel[]).map(z => (
-              <button key={z} onClick={() => applyZoom(z)} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}×</button>
+              <button key={z} onClick={() => applyZoom(z)} style={{ width: 46, height: 30, borderRadius: 100, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 800, backgroundColor: zoom === z ? "rgba(255,255,255,0.9)" : "transparent", color: zoom === z ? "#000" : "rgba(255,255,255,0.6)", transition: "all 0.15s ease" }}>{z}Ã—</button>
             ))}
           </div>
         )}
@@ -431,14 +426,14 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         </div>
       </div>
 
-      {/* ── Bottom bar ── */}
+      {/* â”€â”€ Bottom bar â”€â”€ */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 30,
         padding: `24px 36px max(env(safe-area-inset-bottom, 0px), 40px)`,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 100%)",
       }}>
-        {/* Last capture thumbnail — tap to review */}
+        {/* Last capture thumbnail â€” tap to review */}
         <button
           onClick={() => captures.length > 0 ? setReviewIndex(0) : undefined}
           style={{ width: 58, height: 58, padding: 0, background: "none", border: "none", cursor: captures.length > 0 ? "pointer" : "default", flexShrink: 0 }}
@@ -491,7 +486,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
           )}
         </button>
 
-        {/* Flip — disabled while recording */}
+        {/* Flip â€” disabled while recording */}
         <button
           onClick={() => { if (!recording) setFacing(f => f === "environment" ? "user" : "environment") }}
           style={{ width: 58, height: 58, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.14)", border: "none", cursor: recording ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: recording ? 0.3 : 1, transition: "opacity 0.2s" }}
@@ -503,13 +498,13 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
         </button>
       </div>
 
-      {/* ── Review overlay ── */}
+      {/* â”€â”€ Review overlay â”€â”€ */}
       {reviewIndex !== null && captures[reviewIndex] && (() => {
         const cap = captures[reviewIndex]
         return (
           <div style={{ position: "absolute", inset: 0, zIndex: 80, backgroundColor: "#0A0C0B", display: "flex", flexDirection: "column" }}>
 
-            {/* ── Top bar — solid, always visible ── */}
+            {/* â”€â”€ Top bar â€” solid, always visible â”€â”€ */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "max(env(safe-area-inset-top, 0px), 18px) 20px 14px",
@@ -559,7 +554,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               </div>
             </div>
 
-            {/* ── Main preview ── */}
+            {/* â”€â”€ Main preview â”€â”€ */}
             <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 16px 16px", overflow: "hidden", minHeight: 0 }}>
               <div style={{ width: "100%", height: "100%", borderRadius: 20, overflow: "hidden", backgroundColor: "#111", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {cap.isVideo ? (
@@ -580,7 +575,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               </div>
             </div>
 
-            {/* ── Filmstrip ── */}
+            {/* â”€â”€ Filmstrip â”€â”€ */}
             <div style={{ flexShrink: 0, backgroundColor: "#0D100E", borderTop: "1px solid rgba(255,255,255,0.07)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)" }}>
               <div
                 ref={stripRef}
@@ -622,7 +617,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               </div>
             </div>
 
-            {/* ── Annotation editor ── */}
+            {/* â”€â”€ Annotation editor â”€â”€ */}
             {annotating && (
               <AnnotationEditor
                 src={cap.previewUrl}
@@ -631,7 +626,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
               />
             )}
 
-            {/* ── Delete confirmation sheet ── */}
+            {/* â”€â”€ Delete confirmation sheet â”€â”€ */}
             {confirmDelete && (
               <div style={{
                 position: "absolute", inset: 0, zIndex: 20,
@@ -644,7 +639,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
                   <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
-                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading — it will be discarded."}
+                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading â€” it will be discarded."}
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button

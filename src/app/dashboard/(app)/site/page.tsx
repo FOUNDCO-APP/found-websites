@@ -1,4 +1,4 @@
-import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
+﻿import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -14,7 +14,7 @@ export default async function SitePage() {
   const [{ data: config }, { data: photos }, { data: mediaPhotos }, { data: addonRows }] = await Promise.all([
     admin.from("website_config").select("*").eq("company_id", company.id).single(),
     admin.from("company_photos").select("id, url, website_section").eq("company_id", company.id).eq("for_website", true).order("created_at", { ascending: false }),
-    admin.from("media").select("id, url").eq("company_id", company.id).eq("website_flag", true).eq("type", "photo"),
+    admin.from("media").select("id, url").eq("company_id", company.id).eq("website_flag", true),
     admin.from("addon_subscriptions").select("addon_slug").eq("company_id", company.id).eq("active", true),
   ])
 
