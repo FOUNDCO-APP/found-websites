@@ -7,6 +7,7 @@ import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import ServiceIcon from "@/components/ServiceIcon"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -35,7 +36,17 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
-  const heroImage = uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
+  const admin = createAdminClient()
+  const { data: sectionPhotoRows } = await admin
+    .from("company_photos")
+    .select("url, website_section")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .in("website_section", ["about", "cta"])
+  const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
+  const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
+  const heroImage = firstSectionImage("about") ?? uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
+  const ctaImage = firstSectionImage("cta") ?? heroImage
   const industryDefs = getIndustryDefaults(company.industry_category)
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
@@ -130,13 +141,13 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
 
       {/* ── CTA ── */}
       <section className="relative py-28 overflow-hidden">
-        {heroImage ? (
-          <img src={heroImage} alt={company.name}
+        {ctaImage ? (
+          <img src={ctaImage} alt={company.name}
             className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
-        {heroImage && <div className="absolute inset-0 bg-black/72" />}
+        {ctaImage && <div className="absolute inset-0 bg-black/72" />}
         <div className="relative z-10 max-w-2xl mx-auto px-8 text-center">
           <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />
           <h2 className="text-4xl md:text-5xl font-black text-white mb-6 text-balance"

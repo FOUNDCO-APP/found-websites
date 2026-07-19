@@ -31,24 +31,39 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const heroImage = uploadedImgs[0] ?? imgs[0] ?? null
 
   const admin = createAdminClient()
-  const { data: addonRows } = await admin
-    .from("addon_subscriptions")
-    .select("addon_slug")
-    .eq("company_id", company.id)
-    .eq("active", true)
+  const [{ data: addonRows }, { data: locRows }, { data: sectionPhotoRows }] = await Promise.all([
+    admin
+      .from("addon_subscriptions")
+      .select("addon_slug")
+      .eq("company_id", company.id)
+      .eq("active", true),
+    admin
+      .from("company_locations")
+      .select("id, name, address, phone, hours")
+      .eq("company_id", company.id)
+      .order("sort_order", { ascending: true }),
+    admin
+      .from("company_photos")
+      .select("url, website_section")
+      .eq("company_id", company.id)
+      .eq("for_website", true)
+      .in("website_section", ["hero", "about", "cta", "gallery"]),
+  ])
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
   const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
-
-  const { data: locRows } = await admin
-    .from("company_locations")
-    .select("id, name, address, phone, hours")
-    .eq("company_id", company.id)
-    .order("sort_order", { ascending: true })
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
+  const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
+  const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
+  const sectionImages = {
+    hero: firstSectionImage("hero") ?? heroImage,
+    about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
+    cta: firstSectionImage("cta") ?? uploadedImgs[2] ?? null,
+    gallery: sectionRows.filter(row => row.website_section === "gallery").map(row => row.url),
+  }
 
-  const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, locations }
+  const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, sectionImages, locations }
 
-  // Route to the correct layout — falls back to Impact for unbuilt layouts
+  // Route to the correct layout - falls back to Impact for unbuilt layouts
   switch (layout) {
     case "editorial": return <EditorialLayout {...props} />
     case "portrait":  return <PortraitLayout {...props} />

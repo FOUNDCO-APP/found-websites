@@ -10,7 +10,7 @@ import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
-export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage, locations = [] }: LayoutProps) {
+export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -27,6 +27,9 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
 
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
+  const aboutImage = sectionImages?.about ?? null
+  const ctaImage = sectionImages?.cta ?? null
+  const galleryImages = sectionImages?.gallery?.length ? sectionImages.gallery : []
 
   return (
     <>
@@ -83,9 +86,9 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
       </section>
 
       {/* ── GALLERY STRIP — photos arrive with a warm fade ── */}
-      {imgs.length >= 2 && (
+      {(galleryImages.length > 0 || imgs.length >= 2) && (
         <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
-          {[img(1), img(2), img(3), img(4)].filter(Boolean).map((src, i) => (
+          {(galleryImages.length ? galleryImages : [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]).map((src, i) => (
             <div
               key={i}
               className={`relative flex-none overflow-hidden ${i === 3 ? "md:hidden" : "md:flex-1"}`}
@@ -96,7 +99,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
               }}
             >
               <img
-                src={src!}
+                src={src}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
               />
@@ -177,8 +180,8 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
       {aboutCopy && (
         <section className="flex flex-col md:flex-row" style={{ minHeight: "520px" }}>
           <div className="relative w-full md:w-1/2 h-72 md:h-auto">
-            {img(4) ? (
-              <img src={img(4)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            {(aboutImage ?? img(4)) ? (
+              <img src={(aboutImage ?? img(4))!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
             ) : (
               <div className="absolute inset-0" style={{ backgroundColor: primary }} />
             )}
@@ -249,9 +252,9 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
 
       {/* ── FINAL CTA ── */}
       <section className="relative py-32 text-center overflow-hidden">
-        {img(0) ? (
+        {(ctaImage ?? img(0)) ? (
           <>
-            <img src={img(0)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={(ctaImage ?? img(0))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/65" />
           </>
         ) : (

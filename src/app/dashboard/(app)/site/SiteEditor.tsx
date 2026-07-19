@@ -9,6 +9,7 @@ import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
+type PhotoSlot = "hero" | "about" | "cta" | "gallery"
 type Props = {
   company: { id: string; name: string; slug: string }
   config: Config | null
@@ -34,7 +35,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [newServiceName, setNewServiceName] = useState("")
   const [newServiceDesc, setNewServiceDesc] = useState("")
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
-  const [showHeroPicker, setShowHeroPicker] = useState(false)
+  const [photoPickerSlot, setPhotoPickerSlot] = useState<PhotoSlot | null>(null)
   const [stockImages, setStockImages] = useState<string[]>(initialStockImages)
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
@@ -56,7 +57,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
-  const sheetOpen = Boolean(editing || showHeroPicker || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null)
+  const sheetOpen = Boolean(editing || photoPickerSlot || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null)
 
   useEffect(() => {
     if (!sheetOpen) return
@@ -301,31 +302,53 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const ok = await persistMenuCats(cats)
     if (ok) setEditingMenuCatIdx(null)
   }
-  function handleAssignPhoto(photoId: string, section: string | null) {
+  function handleAssignPhoto(photoId: string, section: PhotoSlot | null) {
     const photo = localPhotos.find(p => p.id === photoId)
-    setLocalPhotos(prev => prev.map(p => ({ ...p, website_section: p.id === photoId ? section : section === "hero" && p.website_section === "hero" ? null : p.website_section })))
+    setLocalPhotos(prev => prev.map(p => ({
+      ...p,
+      website_section: p.id === photoId
+        ? section
+        : section && section !== "gallery" && p.website_section === section
+          ? null
+          : p.website_section,
+    })))
     if (section === "hero" && photo) {
       const current = Array.isArray(config.hero_images) ? (config.hero_images as string[]) : []
       const heroImages = [photo.url, ...current.filter(url => url !== photo.url)]
       setConfig(prev => ({ ...prev, hero_image_url: photo.url, hero_images: heroImages }))
-      setShowHeroPicker(false)
     }
+    if (section && section !== "gallery") setPhotoPickerSlot(null)
     startTransition(async () => { await assignPhotoToSection(photoId, section) })
   }
 
-  function handleClearHeroPhoto() {
-    setLocalPhotos(prev => prev.map(p => p.website_section === "hero" ? { ...p, website_section: null } : p))
-    setConfig(prev => ({ ...prev, hero_image_url: null, hero_images: [] }))
-    setShowHeroPicker(false)
-    startTransition(async () => { await clearHeroPhoto() })
+  function handleClearPhotoSlot(slot: PhotoSlot) {
+    const slotPhotoIds = localPhotos.filter(p => p.website_section === slot).map(p => p.id)
+    if (slot === "hero") {
+      setLocalPhotos(prev => prev.map(p => p.website_section === "hero" ? { ...p, website_section: null } : p))
+      setConfig(prev => ({ ...prev, hero_image_url: null, hero_images: [] }))
+      setPhotoPickerSlot(null)
+      startTransition(async () => { await clearHeroPhoto() })
+      return
+    }
+    setLocalPhotos(prev => prev.map(p => p.website_section === slot ? { ...p, website_section: null } : p))
+    setPhotoPickerSlot(null)
+    startTransition(async () => { await Promise.all(slotPhotoIds.map(id => assignPhotoToSection(id, null))) })
   }
 
   const heroPhotos = localPhotos.filter(p => p.website_section === "hero")
+  const aboutPhotos = localPhotos.filter(p => p.website_section === "about")
+  const ctaPhotos = localPhotos.filter(p => p.website_section === "cta")
   const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
   const unassigned = localPhotos.filter(p => !p.website_section)
-  const heroPickerPhotos = localPhotos
+  const pickerPhotos = localPhotos
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_image_url as string) ?? null
+  const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
+    { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
+    { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
+    { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
+    { slot: "gallery", label: "Gallery", helper: "Photos shown in gallery and photo strips.", photos: galleryPhotos },
+  ]
 
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
@@ -413,24 +436,33 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               {regenerating === "hero" ? "Writing..." : "AI Rewrite"}
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, borderRadius: 18, backgroundColor: "rgba(8,10,9,0.62)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
-              <div style={{ width: 58, height: 58, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
-                {heroImage ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 800 }}>None</div>
-                )}
+            <div style={{ padding: 14, borderRadius: 20, backgroundColor: "rgba(8,10,9,0.62)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 10 }}>Site Photos</div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {photoSlots.map(slot => {
+                  const cover = slot.photos[0]?.url ?? null
+                  const count = slot.photos.length
+                  return (
+                    <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
+                      <div style={{ width: 54, height: 54, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
+                        {cover ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
+                        )}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, color: "white", marginBottom: 2 }}>{slot.label}</div>
+                        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.58)" }}>{count ? `${count} selected` : slot.helper}</p>
+                      </div>
+                      <span style={{ padding: "8px 12px", borderRadius: 999, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
+                        Change
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 3 }}>Header Photo</div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.35, color: "rgba(255,255,255,0.72)" }}>
-                  {heroImage ? "This is the photo customers see first." : "Use one of your photos for the top of the site."}
-                </p>
-              </div>
-              <button onClick={() => setShowHeroPicker(true)} style={{ padding: "10px 14px", borderRadius: 100, border: `1px solid ${GREEN}44`, backgroundColor: `${GREEN}20`, color: GREEN, fontSize: 12, fontWeight: 800, cursor: "pointer", flexShrink: 0 }}>
-                Change
-              </button>
             </div>
           </div>
         </div>
@@ -921,60 +953,63 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </>
       )}
 
-      {showHeroPicker && (
-        <>
-          <div onClick={() => setShowHeroPicker(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 60, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
-          <div style={{
-            position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
-            maxHeight: "min(78dvh, 680px)", overflowY: "auto",
-            backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
-            boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
-          }}>
-            <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
-              <div>
-                <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>Header Photo</div>
-                <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Choose the first image customers see.</h3>
+      {photoPickerSlot && (() => {
+        const activeSlot = photoSlots.find(slot => slot.slot === photoPickerSlot)
+        if (!activeSlot) return null
+        return (
+          <>
+            <div onClick={() => setPhotoPickerSlot(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 60, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+            <div style={{
+              position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
+              maxHeight: "min(78dvh, 680px)", overflowY: "auto",
+              backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+              boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
+            }}>
+              <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
+                <div>
+                  <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>{activeSlot.label} Photo</div>
+                  <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>{activeSlot.helper}</h3>
+                </div>
+                <button onClick={() => setPhotoPickerSlot(null)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer" }}>x</button>
               </div>
-              <button onClick={() => setShowHeroPicker(false)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer" }}>x</button>
+
+              {pickerPhotos.length > 0 ? (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+                  {pickerPhotos.map(photo => {
+                    const selected = photo.website_section === activeSlot.slot
+                    return (
+                      <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, activeSlot.slot)} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
+                        <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          {selected && (
+                            <div style={{ position: "absolute", right: 10, top: 10, padding: "6px 9px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, fontSize: 11, fontWeight: 900 }}>
+                              Selected
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div style={{ padding: 20, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No website photos yet.</p>
+                  <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Add photos from the Photos tab, then heart the ones you want available for your site.</p>
+                </div>
+              )}
+
+              {activeSlot.photos.length > 0 && (
+                <button onClick={() => handleClearPhotoSlot(activeSlot.slot)} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+                  Remove {activeSlot.label} Photo{activeSlot.slot === "gallery" && activeSlot.photos.length > 1 ? "s" : ""}
+                </button>
+              )}
             </div>
-
-            {heroPickerPhotos.length > 0 ? (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-                {heroPickerPhotos.map(photo => {
-                  const selected = photo.url === heroImage || photo.website_section === "hero"
-                  return (
-                    <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, "hero")} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
-                      <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                        {selected && (
-                          <div style={{ position: "absolute", right: 10, top: 10, padding: "6px 9px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, fontSize: 11, fontWeight: 900 }}>
-                            Selected
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            ) : (
-              <div style={{ padding: 20, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>No website photos yet.</p>
-                <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Add photos from the Photos tab, then heart the ones you want available for your site.</p>
-              </div>
-            )}
-
-            {heroImage && (
-              <button onClick={handleClearHeroPhoto} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
-                Remove Header Photo
-              </button>
-            )}
-          </div>
-        </>
-      )}
-      {/* ── EDIT SHEET — focused full-screen editor ── */}
+          </>
+        )
+      })()}
       {editing && (
         <div onTouchStart={handleEditorTouchStart} onTouchMove={handleEditorTouchMove} style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "#111613", display: "flex", flexDirection: "column", overflow: "hidden", overscrollBehavior: "none", touchAction: "none" }}>
           <div style={{ flexShrink: 0, padding: "calc(env(safe-area-inset-top, 0px) + 12px) 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(17,22,19,0.98)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}>

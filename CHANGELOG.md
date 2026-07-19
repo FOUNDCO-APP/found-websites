@@ -1,4 +1,18 @@
-# CHANGELOG.md - Current Session History
+## Session: July 18, 2026 - Named Site Photo Slots
+**AI:** Codex
+**Worked on:** Replaced the single confusing header-photo path with named website image slots.
+
+### Completed
+- Site Editor now shows explicit slots: Header, About, Visit / CTA, and Gallery.
+- Owners can choose which website area a hearted photo belongs to instead of guessing from tiny thumbnails.
+- Public home/about/services layouts now prefer those section-specific owner photos before falling back to stock imagery.
+- No slideshow or random rotation was added yet; motion remains a later explicit owner setting.
+- Verified with `git diff --check` and `cmd /c npm run build`.
+
+### Test Next
+- On `my.foundco.app`, open More -> Edit My Site -> Site Photos. Assign one photo each to Header, About, Visit / CTA, and Gallery, then open the public home/about/services pages and confirm those exact sections use the selected photos.
+
+---# CHANGELOG.md - Current Session History
 ### Keep this file readable. Older detailed history lives in `CHANGELOG_ARCHIVE.md`.
 *Last organized: July 6, 2026*
 

@@ -10,7 +10,7 @@ import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
-export default function CinematicLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, locations = [] }: LayoutProps) {
+export default function CinematicLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -27,6 +27,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
+  const ctaImage = sectionImages?.cta ?? null
 
   return (
     <>
@@ -253,9 +254,9 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
       {/* ── FINAL CTA — full-bleed photo (rhythm rule honored) ── */}
       <section className="relative py-32 text-center overflow-hidden">
-        {img(2) ? (
+        {(ctaImage ?? img(2)) ? (
           <>
-            <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={(ctaImage ?? img(2))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/65" />
           </>
         ) : (

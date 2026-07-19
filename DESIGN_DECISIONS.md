@@ -1,3 +1,8 @@
+**[2026-07-18] - Client website imagery uses named owner-controlled slots, not mystery thumbnails.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Marcus Webb + Craig Federighi
+Why: A business owner must know exactly where a photo will appear before saving it. Site Editor names the slots Header, About, Visit / CTA, and Gallery; public templates prefer those owner-selected section photos before stock imagery. Slideshow or rotating images stay out until they become an explicit owner setting, not a surprise behavior.
+
+---
 **[2026-07-08] - Found HQ uses a quiet editorial operating language, not generic dashboard cards.**
 Approved by: Shawn + Jony Ive + Steve Jobs
 Why: Repeated bordered cards, pills, and green-filled buttons made the private operator product feel inexpensive and visually unrelated to Found. Found HQ now uses Found Black, native system typography, hairline list separators, zero letter spacing, restrained 4px controls, and Signal Green only for identity, selection, and decisive action. The standard is documented in `FOUND_HQ_BRAND_SYSTEM.md`.

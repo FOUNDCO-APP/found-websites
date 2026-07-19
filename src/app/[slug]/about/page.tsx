@@ -9,6 +9,7 @@ import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getAboutHeroSubtitle, polishBusinessName } from "@/lib/copyPolish"
 import { getAboutHighlights, getFullAboutCopy } from "@/lib/aboutContent"
 import { getLocationSection } from "@/lib/locationSection"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { Metadata } from "next"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -38,7 +39,18 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
+  const admin = createAdminClient()
+  const { data: sectionPhotoRows } = await admin
+    .from("company_photos")
+    .select("url, website_section")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .in("website_section", ["about", "cta"])
+  const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
+  const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
   const uploaded = (i: number) => uploadedImgs[i] ?? uploadedImgs[0] ?? null
+  const aboutImage = firstSectionImage("about") ?? uploaded(1) ?? img(0)
+  const ctaImage = firstSectionImage("cta") ?? img(2)
   const industryDefs = getIndustryDefaults(company.industry_category)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
@@ -66,9 +78,9 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     <>
       {/* HEADER */}
       <section className="relative min-h-[50vh] flex items-center overflow-hidden">
-        {(uploaded(1) || img(0)) ? (
+        {aboutImage ? (
           <>
-            <img src={uploaded(1) ?? img(0)!} alt={displayName} className="absolute inset-0 w-full h-full object-cover" />
+            <img src={aboutImage} alt={displayName} className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/68" />
           </>
         ) : (
@@ -227,9 +239,9 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
 
       {/* FINAL CTA */}
       <section className="relative py-28 text-center overflow-hidden">
-        {img(2) ? (
+        {ctaImage ? (
           <>
-            <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={ctaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/72" />
           </>
         ) : (

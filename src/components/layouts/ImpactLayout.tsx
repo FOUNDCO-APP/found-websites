@@ -10,7 +10,7 @@ import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import type { LayoutProps } from "@/types/layout"
 
-export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, locations = [] }: LayoutProps) {
+export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -27,6 +27,8 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
 
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
+  const aboutImage = sectionImages?.about ?? null
+  const ctaImage = sectionImages?.cta ?? null
 
   return (
     <>
@@ -125,9 +127,9 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
       {/* ── ABOUT STRIP ── */}
       {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
-          {img(1) ? (
+          {(aboutImage ?? img(1)) ? (
             <>
-              <img src={img(1)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={(aboutImage ?? img(1))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/75" />
             </>
           ) : (
@@ -199,12 +201,12 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
 
       {/* ── FINAL CTA ── */}
       <section className="relative py-28 text-center overflow-hidden">
-        {heroImage ? (
-          <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+        {(ctaImage ?? heroImage) ? (
+          <img src={(ctaImage ?? heroImage)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
-        {heroImage && <div className="absolute inset-0 bg-black/72" />}
+        {(ctaImage ?? heroImage) && <div className="absolute inset-0 bg-black/72" />}
         <InView>
           <div className="relative z-10 max-w-2xl mx-auto px-8">
             <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />

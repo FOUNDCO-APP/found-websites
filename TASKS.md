@@ -25,6 +25,13 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ---
 
+## NAMED SITE PHOTO SLOTS - COMPLETED July 18
+
+- [x] Replace single header-only image picker with explicit Header, About, Visit / CTA, and Gallery slots.
+- [x] Persist section assignments through existing company_photos.website_section values: hero, about, cta, and gallery.
+- [x] Update public home/about/services templates so selected owner photos win before stock images.
+- [x] Keep slideshow/random rotation out of this pass; motion needs a separate owner setting later.
+
 ## SITE HEADER PHOTO EDITING - COMPLETED July 18
 
 - [x] Replace mystery hero thumbnails in Edit My Site with an explicit Header Photo control.
