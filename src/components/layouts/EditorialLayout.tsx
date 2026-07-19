@@ -10,9 +10,10 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
-export default function EditorialLayout({ company, supportingCTA, imgs, gradient, heroImage, sectionImages, locations = [] }: LayoutProps) {
+export default function EditorialLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -39,7 +40,9 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
         {/* Mobile: full-width image on top */}
         <div className="md:hidden w-full h-72 relative"
           style={{ animation: "fade-in 800ms ease-out 100ms both" }}>
-          {heroImage ? (
+          {heroVideo ? (
+            <HeroVideo src={heroVideo} />
+          ) : heroImage ? (
             <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0" style={{ background: gradient }} />
@@ -92,7 +95,9 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
         {/* Right — full-height image drifts in from right (desktop only) */}
         <div className="hidden md:block md:w-[55%] relative"
           style={{ animation: "fade-left 800ms ease-out 200ms both" }}>
-          {heroImage ? (
+          {heroVideo ? (
+            <HeroVideo src={heroVideo} />
+          ) : heroImage ? (
             <img src={heroImage} alt={company.name}
               className="absolute inset-0 w-full h-full object-cover" />
           ) : (

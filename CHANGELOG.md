@@ -1,4 +1,18 @@
-﻿## Session: July 19, 2026 - Video Upload Save Fix
+﻿## Session: July 19, 2026 - Hero Video Loop Fix
+**AI:** Codex
+**Worked on:** Fixed selected home hero videos ending on a black frame.
+
+### Completed
+- Added a shared hero video renderer with muted autoplay, inline playback, looping, preload, and an explicit ended-event restart for iOS.
+- Replaced one-off hero video tags in Impact and Cinematic layouts with the shared renderer.
+- Added hero video support to Editorial and Portrait home layouts so selected header videos are not ignored on those templates.
+- Verified with `git diff --check` and `npm.cmd run build`.
+
+### Test Next
+- On iPhone, assign a short video to Header in Edit My Site, open the live home page, and confirm the hero keeps replaying instead of going black.
+
+---
+## Session: July 19, 2026 - Video Upload Save Fix
 **AI:** Codex
 **Worked on:** Fixed videos disappearing before they could be hearted/starred in Photos.
 

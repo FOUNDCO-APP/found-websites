@@ -8,6 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
 export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
@@ -35,7 +36,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
       {/* ── HERO — fast, confident, punches in ── */}
       <section className="relative min-h-[75vh] md:min-h-[85vh] flex items-center overflow-hidden">
         {heroVideo ? (
-          <video src={heroVideo} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
         ) : heroImage ? (
           <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
         ) : (

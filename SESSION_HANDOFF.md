@@ -20,6 +20,7 @@ History policy: keep the current working window and anything still active in cur
 ---
 
 ## Current Status
+- **New July 19 hero video loop fix:** Shawn found a selected home hero video played once and then went black. Public layouts now use a shared `HeroVideo` renderer with muted inline autoplay, loop, preload, and an explicit restart on ended; Editorial and Portrait layouts also now honor `hero_video_url`. Build passes. Test next: assign a short Header video and confirm the live home hero keeps replaying.
 
 - **New July 19 video upload save fix:** Shawn found recorded videos did not appear in Photos/Unsorted. Read-only Supabase audit showed no video rows existed in `company_photos`, so the problem was upload/save, not the heart/star UI. Video uploads now use signed direct browser-to-Supabase storage, then Found records the row; failed uploads now show an error instead of silently disappearing. Build passes. Test next: record or upload a short video, confirm it appears in Photos -> Unsorted with a VIDEO badge, then heart/star it.
 - **New July 19 contact editing + video media foundation:** Site Editor now exposes editable Contact Page copy, adds a Contact media slot, and supports video uploads/previews in Photos. Header media can now be a video hero through `hero_video_url`; public home/contact render selected videos safely with muted looping playback. Build passes. Test next: upload a short video in Photos, confirm the VIDEO badge/playback, assign Header or Contact media in Edit My Site, then open the public home/contact pages.

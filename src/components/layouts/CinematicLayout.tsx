@@ -8,6 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
 export default function CinematicLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
@@ -34,8 +35,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
       {/* ── HERO — true 100vh, centered, the whole screen is the canvas ── */}
       <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden">
         {heroVideo ? (
-          <video src={heroVideo} autoPlay muted loop playsInline
-            className="absolute inset-0 w-full h-full object-cover" />
+          <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
         ) : heroImage ? (
           <img src={heroImage} alt={company.name}
             className="absolute inset-0 w-full h-full object-cover ken-burns" />

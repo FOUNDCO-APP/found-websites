@@ -8,9 +8,10 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
-export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage, sectionImages, locations = [] }: LayoutProps) {
+export default function PortraitLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -35,12 +36,14 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
     <>
       {/* ── HERO — photo leads, text rises like warm light from the bottom ── */}
       <section className="relative min-h-[90vh] flex items-end overflow-hidden">
-        {heroImage ? (
+        {heroVideo ? (
+          <HeroVideo src={heroVideo} />
+        ) : heroImage ? (
           <img src={heroImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
-        {heroImage && <div className="absolute inset-0 bg-black/40" />}
+        {(heroVideo || heroImage) && <div className="absolute inset-0 bg-black/40" />}
         <div className="absolute inset-0" style={{
           background: "linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.20) 40%, rgba(0,0,0,0) 65%)"
         }} />
