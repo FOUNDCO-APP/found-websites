@@ -1269,11 +1269,13 @@ function PhotoCard({ photo, onView }: {
   photo: Photo
   onView: (photo: Photo) => void
 }) {
+  const isVideo = isVideoMedia(photo.url, photo.mime_type)
+
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1" }}>
-      <button onClick={() => onView(photo)} aria-label={isVideoMedia(photo.url, photo.mime_type) ? "Open business video" : "Open business photo"} style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}>
-        {isVideoMedia(photo.url, photo.mime_type) ? (
-          <video src={photo.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1", backgroundColor: isVideo ? "#111813" : "transparent", border: isVideo ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+      <button onClick={() => onView(photo)} aria-label={isVideo ? "Open business video" : "Open business photo"} style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}>
+        {isVideo ? (
+          <VideoPreviewTile src={photo.url} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -1283,9 +1285,10 @@ function PhotoCard({ photo, onView }: {
           />
         )}
       </button>
-      {isVideoMedia(photo.url, photo.mime_type) && (
+      {isVideo && (
         <div style={{ position: "absolute", right: 8, top: 8, padding: "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", pointerEvents: "none" }}>VIDEO</div>
       )}
+      <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: isVideo ? "inset 0 0 0 1px rgba(255,255,255,0.05)" : "none" }} />
       {/* Flag badges */}
       <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, pointerEvents: "none" }}>
         {photo.for_website && (
@@ -1303,6 +1306,29 @@ function PhotoCard({ photo, onView }: {
   )
 }
 
+function VideoPreviewTile({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false)
+
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", background: "radial-gradient(circle at 50% 35%, rgba(45,210,117,0.18), rgba(11,17,13,0.92) 58%, #070907 100%)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <video
+        src={src}
+        muted
+        autoPlay
+        loop
+        playsInline
+        preload="auto"
+        onLoadedData={() => setLoaded(true)}
+        onCanPlay={() => setLoaded(true)}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0.18, transition: "opacity 180ms ease" }}
+      />
+      <div style={{ position: "absolute", inset: 0, background: loaded ? "linear-gradient(to top, rgba(0,0,0,0.18), transparent 55%)" : "linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0))", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)", width: 42, height: 42, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.58)", border: "1px solid rgba(255,255,255,0.16)", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      </div>
+    </div>
+  )
+}
 // â”€â”€ Upgrade sheet â”€â”€
 function UpgradeSheet({ onClose }: { onClose: () => void }) {
   return (
