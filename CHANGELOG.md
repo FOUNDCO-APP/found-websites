@@ -1,4 +1,18 @@
-﻿## Session: July 19, 2026 - Hero Video Loop Fix
+﻿## Session: July 19, 2026 - Hero Video Loop Blend
+**AI:** Codex
+**Worked on:** Smoothed hero video restarts for both app-recorded and uploaded videos.
+
+### Completed
+- Kept one shared `HeroVideo` path for every public home hero video source.
+- Added a subtle fade blend near the loop point so imperfect clips do not restart as sharply.
+- Preserved the explicit restart fallback for iOS/Safari if the video still reaches an ended state.
+- Verified with `git diff --check` and `npm.cmd run build`.
+
+### Test Next
+- Test one video recorded in Found and one uploaded video as Header media. Confirm both keep moving and the loop point feels less abrupt.
+
+---
+## Session: July 19, 2026 - Hero Video Loop Fix
 **AI:** Codex
 **Worked on:** Fixed selected home hero videos ending on a black frame.
 

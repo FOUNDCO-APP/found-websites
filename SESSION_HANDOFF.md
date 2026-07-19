@@ -20,6 +20,7 @@ History policy: keep the current working window and anything still active in cur
 ---
 
 ## Current Status
+- **New July 19 hero video loop blend:** Hero videos now use one shared playback layer for both app-recorded and uploaded videos. The player subtly fades near the loop point and still force-restarts on ended, making imperfect clips feel less abrupt instead of cutting to black or snapping hard.
 - **New July 19 hero video loop fix:** Shawn found a selected home hero video played once and then went black. Public layouts now use a shared `HeroVideo` renderer with muted inline autoplay, loop, preload, and an explicit restart on ended; Editorial and Portrait layouts also now honor `hero_video_url`. Build passes. Test next: assign a short Header video and confirm the live home hero keeps replaying.
 
 - **New July 19 video upload save fix:** Shawn found recorded videos did not appear in Photos/Unsorted. Read-only Supabase audit showed no video rows existed in `company_photos`, so the problem was upload/save, not the heart/star UI. Video uploads now use signed direct browser-to-Supabase storage, then Found records the row; failed uploads now show an error instead of silently disappearing. Build passes. Test next: record or upload a short video, confirm it appears in Photos -> Unsorted with a VIDEO badge, then heart/star it.
