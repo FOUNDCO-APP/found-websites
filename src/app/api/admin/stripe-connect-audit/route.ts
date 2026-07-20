@@ -18,6 +18,8 @@ type AuditRow = {
   cardPayments: string | null
   transfers: string | null
   issue: "connect_incomplete" | "stale_or_wrong_platform_account" | "stripe_retrieve_failed" | null
+  businessProfileName?: string | null
+  settingsRaw?: unknown
 }
 
 function stripeMessage(err: unknown) {
@@ -55,12 +57,17 @@ export async function GET(request: Request) {
   const stripe = getStripe()
   if (!stripe) return NextResponse.json({ error: "Stripe is not configured" }, { status: 503 })
 
+  const q = url.searchParams.get("q")
+  const detail = url.searchParams.get("detail") === "1"
+
   const admin = createAdminClient()
-  const { data: companies, error } = await admin
+  let query = admin
     .from("companies")
     .select("name, slug, plan, subscription_status, industry_category, primary_intent, stripe_connect_account_id, created_at")
     .not("stripe_connect_account_id", "is", null)
     .order("created_at", { ascending: true })
+  if (q) query = query.ilike("name", `%${q}%`)
+  const { data: companies, error } = await query
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -96,6 +103,10 @@ export async function GET(request: Request) {
       row.cardPayments = account.capabilities?.card_payments ?? null
       row.transfers = account.capabilities?.transfers ?? null
       if (!row.ready) row.issue = "connect_incomplete"
+      if (detail || q) {
+        row.businessProfileName = account.business_profile?.name ?? null
+        row.settingsRaw = account.settings ?? null
+      }
     } catch (err) {
       row.access = "failed"
       row.issue = issueFromStripeError(err)
