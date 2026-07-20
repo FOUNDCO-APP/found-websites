@@ -1,4 +1,4 @@
-﻿# TASKS.md - Found Co. / found-websites
+# TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
 *Last updated: July 19, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
@@ -9,9 +9,27 @@
 
 **Phase 4: Customer Dashboard - ACTIVE**
 **Add-On System: SHIPPED**
-**Online Ordering Add-On: SHIPPED (Codex)**
+**Online Ordering Add-On: SHIPPED**
+**Unified Product Catalog / Online Shop: SHIPPED July 16-17, Shawn confirmed live and tested**
+**Plan Upgrade Flow (Stripe portal): SHIPPED July 15 - also resolved the plan-card savings display question**
+**Live-mode Stripe Connect webhook: SHIPPED July 19 - closes the sandbox-only webhook gap flagged July 7**
 
-Online ordering flow live. Dashboard tab customization shipped. Next: test pass, then upsell banner + plan card savings.
+*Note: this phase line was stale until July 20 - see "DOC GAP BACKFILL" below. Several major features (full catalog/shop rebuild, live payment webhook, plan upgrade flow) shipped July 13-20 without being logged here in real time.*
+
+Online ordering flow live. Full product catalog/shop rebuilt and confirmed working by Shawn. Dashboard tab customization shipped. Next: finish the remaining launch-payment QA pass (see NOW #1) and the upsell banner.
+
+---
+
+## DOC GAP BACKFILL - July 20, 2026
+
+Docs were not kept current July 13-20 (~80 commits, several major features). Reconstructed from `git log` and confirmed with Shawn. Full detail logged in `CHANGELOG.md` under matching dates. Summary of what changed status as a result:
+
+- **Unified Product/Service Catalog** (see BACKLOG below) - was marked "not built yet, needs its own session." Actually shipped July 16-17 as an industry-aware catalog editor with variants/inventory, homepage showcase, and cart-sheet checkout. Shawn confirmed it's live and tested. Menu and product managers are dedicated (not yet confirmed whether estimates line items pull from the same catalog table - that unification may still be partial, needs a follow-up check).
+- **Stripe Connect webhook** - live-mode signing secret added July 19 (`d9dbc68`). This was the last piece of the P0 launch gate flagged July 7. Shawn said mark it ready for QA.
+- **Plan card savings display** (see BACKLOG below) - was "UNRESOLVED." The July 15 Stripe-portal plan-upgrade flow (`Add Found plan upgrade sheet`, `Route plan upgrades through Stripe portal`) resolved this per Shawn - removed from backlog, logged as a decision in `DECISIONS.md`.
+- **Copy quality audit/repair system** - shipped July 13, applied to production copy in staged risk tiers (high-risk fixed first, then medium-risk, plus new faith-industry copy). Shawn confirmed it ran against real customer sites, not just test/audit mode.
+- **Estimate payment fixes** (`Fix remaining balance estimate payments`, `Confirm estimate payment request sends`, etc., July 15) - may close part of the outstanding estimate/payment QA list below; not yet confirmed which specific test-list items this covers.
+- Smaller undocumented fixes: dashboard badge clearing on view (July 18), payment receipt sender name showing the business instead of "Found" (July 19), black video thumbnails in Photos grid (July 19), mobile checkout sheet stabilization (July 17), 3-option add-to-project photo picker + zoom label/camera button fixes (July 20).
 
 ---
 
@@ -63,7 +81,7 @@ Online ordering flow live. Dashboard tab customization shipped. Next: test pass,
 
 ## NOW (MAX 3)
 
-1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live; now create/verify the Stripe Connect webhook destination in live mode, then run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
+1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19 - ready for QA per Shawn. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
 2. **Run the first-customer launch journey** - brand-new onboarding through plan choice, activation, publication, owner login, and first lead on a real iPhone.
 3. **Make the public promise truthful and indexable** - stop exposing test/unready companies in the sitemap, add Found's own public pages, and remove or complete any paid-plan claims that cannot be used today.
 
@@ -295,7 +313,7 @@ The estimate page is the decision moment. Found should get the customer from "ye
 ## BACKLOG
 
 ### Add-Ons & Monetization
-- Plan card savings display Ã¢â‚¬â€ show intro-rate discount cleanly (no "Founding rate" label Ã¢â‚¬â€ Shawn rejected that)
+- ~~Plan card savings display~~ - resolved July 15 via the Stripe-portal plan upgrade flow. See `DECISIONS.md`.
 - Upsell banner Ã¢â‚¬â€ not built; planned as next after June 22
 - Stripe custom payment form Ã¢â‚¬â€ Option B approved (in-app Stripe Elements), not built
 - Menu add-on gating Ã¢â‚¬â€ `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks
@@ -326,6 +344,8 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - **Resend module-level init cleanup** Ã¢â‚¬â€ `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
 ### Unified Product/Service Catalog Ã¢â‚¬â€ Cross-System Data Sharing
+**STATUS UPDATE July 20, 2026: shipped July 16-17, confirmed live and tested by Shawn.** Industry-aware catalog editor, variants/inventory controls, homepage catalog showcase, and cart-sheet checkout are built (commits 66877a8 through 27c48d6). Dedicated menu and products managers exist. **Not yet confirmed:** whether Estimates line items pull from this same catalog table, or whether that integration is still a separate future step. Verify before assuming full cross-system sharing is done.
+
 **Vision:** One catalog, three systems. A business enters their products/services/prices once and that data flows into:
 - **Online store** (sell products by card)
 - **Online ordering** (menu items, catering packages)

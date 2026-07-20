@@ -1,4 +1,106 @@
-﻿## Session: July 19, 2026 - Hero Video Loop Blend
+﻿## DOC GAP BACKFILL - Entries below reconstructed July 20, 2026
+
+The sessions from July 13 through July 20 below were not logged in real time - `git log` showed ~80 commits with no matching CHANGELOG/SESSION_HANDOFF entries. Reconstructed from commit messages and confirmed with Shawn during a documentation catch-up pass. AI attribution is unknown (git author is just Shawn's machine login for every commit regardless of which AI made the change), so it's omitted below instead of guessed.
+
+---
+## Session: July 20, 2026 - Photo Picker and Camera Polish
+
+### Completed
+- Added a 3-option add-to-project flow (Take Photo, Upload, Use Existing) - previously adding a photo inside a project skipped straight to live camera capture with no way to upload from the library or reuse an existing Found photo. New projects now open this picker immediately instead of leaving the owner in an empty project.
+- Fixed a broken-encoding zoom label ("1Ã—" instead of "1x") - same glyph-corruption bug family as earlier chevron/arrow issues.
+- Matched the Photos page camera button to Home's camera button - both now open the same picker sheet when browsing the general library, while still jumping straight to camera with the album preselected when already inside a specific project.
+
+---
+## Session: July 19, 2026 - Payment Receipt and Stripe Connect Fixes
+
+### Completed
+- Fixed payment/deposit receipt emails to show the business's own name instead of "Found" - this was the one customer email that had missed the "show the business name" treatment already applied to leads, bookings, online orders, and sent estimates. Fix is shared across every industry that takes estimate payments.
+- Added a live-mode Stripe Connect webhook signing secret - the Connect webhook destination previously only existed in Stripe sandbox mode. **This closes the P0 launch-payment gate flagged July 7** (webhook handler now tries platform, sandbox-Connect, and live-Connect secrets). Confirmed ready for QA by Shawn.
+- Added business profile/settings detail to the admin Stripe Connect audit route (read-only, admin-key gated) - used to verify a connected account's receipt-email sender name and a prior per-account decision to disable Stripe's automatic receipt email.
+- Fixed black video thumbnails in the dashboard Photos grid - video tiles only loaded metadata before; some phones showed a black frame instead of a preview. Now forces real video-data loading and fades in once a frame is ready, with a play-icon overlay.
+
+### Test Next
+- Confirm a real payment/deposit receipt email shows the business name, not "Found."
+- Run the launch-payment QA list in `TASKS.md` NOW #1 now that the live webhook secret is in place.
+
+---
+## Session: July 18, 2026 - Dashboard Badge Clearing
+
+### Completed
+- Fixed dashboard badges (unread indicators) so they clear once the owner actually views the item, instead of persisting after it's been seen.
+
+---
+## Session: July 17, 2026 - Mobile Checkout Stabilization
+
+### Completed
+- Stabilized mobile checkout sheets on the public shop/ordering pages - float/hide the cart bar correctly during checkout, keep the checkout sheet above the cart bar instead of behind it.
+- Order confirmation/receipt emails for online orders now come from Found under the business's own branding ("Found own order receipts") rather than a generic sender.
+
+### Test Next
+- Add items to cart on a mobile shop page, open checkout, confirm the cart bar hides/reappears correctly and nothing overlaps.
+
+---
+## Session: July 16, 2026 - Product Catalog and Online Shop Rebuild
+
+**This is a major feature that was not logged when it shipped.** Confirmed by Shawn July 20, 2026: live and tested.
+
+### Completed
+- Built an industry-aware product catalog editor with dedicated menu and products managers (previously catalog/menu/rate-sheet data lived in three disconnected places - see the "Unified Product/Service Catalog" backlog note in `TASKS.md` for the cross-system vision this partially realizes).
+- Added catalog variants and inventory controls; sold-out product choices now show correctly in the public shop instead of disappearing or erroring.
+- Added a homepage catalog showcase and cleaned up product card presentation.
+- Moved public ordering checkout into a cart sheet; added a cart bar that renders on the active shop page.
+- Polished catalog manager rows, category actions, and the mobile checkout sheet for a quieter, less database-like feel.
+
+### Test Next (per Shawn: already tested, logging for the record)
+- Add a product with variants and inventory, confirm sold-out states show correctly on the public shop.
+- Complete a full public checkout through the new cart sheet on mobile.
+
+---
+## Session: July 15, 2026 - Plan Upgrades, Stripe Connect Payout Tooling, Estimate Payment Fixes
+
+### Completed
+- **Plan upgrade flow rebuilt:** added a Found plan upgrade sheet, created a Stripe portal config scoped to the target price, and routed plan upgrades through Stripe's own portal instead of a custom in-app flow. Per Shawn, this also resolved the previously-unresolved "plan card savings display" decision - see `DECISIONS.md` [2026-07-15].
+- **Stripe Connect payout tooling:** added an admin Stripe Connect audit page, a Stripe payout handoff sheet (with a timeout guard), and repaired invalid/incomplete Connect account setups found during the audit.
+- **Estimate payment fixes:** fixed remaining-balance calculation on estimate payments, confirmed estimate payment requests actually send, cleaned up estimate payment row display, and clarified payment-request/queue wording. May close part of the outstanding estimate/payment QA checklist in `SESSION_HANDOFF.md` - not yet confirmed which specific items.
+- Fixed the mobile menu item editor's save flow.
+- Merchant responsibility Stripe Connect fix (`fees.payer = account`, `losses.payments = stripe`) - see the July 15 entry already logged below for full detail.
+
+### Test Next
+- Run a plan upgrade end to end through the new Stripe portal flow and confirm the savings/discount display looks right.
+- Re-run the estimate/payment QA checklist to see which items these fixes actually closed out.
+
+---
+## Session: July 14, 2026 - Additional Dashboard Routing Fixes
+
+*(Supplements the July 14 "Dashboard Company and Tool Integrity" entry already logged below - these are the remaining commits from that day that weren't captured.)*
+
+### Completed
+- Added Found Business dollar promo setup.
+- Fixed leads title flicker on load.
+- Fixed dashboard request-routing taxonomy and lead-notification routing.
+- Fixed industry-aware location sections.
+- Restored Express Connect controller settings (related to the July 15 Stripe Connect merchant-responsibility fix).
+
+---
+## Session: July 13, 2026 - Copy Quality Audit and Repair System
+
+**Confirmed by Shawn July 20, 2026: this ran against real production/customer sites, not just test companies.**
+
+### Completed
+- Added a read-only copy quality audit across live company website copy.
+- Staged the fix rollout by risk: cleared high-risk issues first, then reduced medium-risk issues, with a dry-run repair plan and guarded apply step before touching production.
+- Added a copy quality fixture gate and applied it to production copy polish going forward, so future copy generation is checked against the same rules.
+- Split the homepage and about-page copy models, and split regenerated about-copy fields so they don't overwrite each other.
+- Removed redundant about-copy intros and prevented repeated human-industry labels (e.g. saying "barber" three different ways in one paragraph).
+- Added faith-specific website copy and fixed faith about-page copy.
+- Tightened apparel-specific copy quality rules.
+- Prevented duplicate service copy.
+
+### Test Next
+- Spot-check a handful of real customer sites' About/Home copy for quality and confirm no regressions from the staged fixes.
+
+---
+## Session: July 19, 2026 - Hero Video Loop Blend
 **AI:** Codex
 **Worked on:** Smoothed hero video restarts for both app-recorded and uploaded videos.
 

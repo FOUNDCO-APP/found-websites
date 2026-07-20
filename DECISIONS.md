@@ -1,3 +1,8 @@
+**[2026-07-15] - Plan card savings display resolved via the Stripe-portal plan upgrade flow.**
+Approved by: Shawn
+Why: The prior attempt (inline run-on sentences) broke mobile layout and used the wrong brand voice. Shawn had also explicitly rejected a "Founding rate" / "Founding member" label. The July 15 plan-upgrade rebuild (`Add Found plan upgrade sheet`, `Create Stripe portal config for plan upgrades`, `Route plan upgrades through Stripe portal`) shipped the savings display as part of routing upgrades through Stripe's own portal instead of a custom in-app sentence. Confirmed resolved by Shawn July 20, 2026 during a documentation backfill pass - this closes out the item that was previously logged "UNRESOLVED" in `TASKS.md`.
+
+---
 # Activation promo codes are Stripe-native first
 **Approved:** July 9, 2026
 
