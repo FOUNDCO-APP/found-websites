@@ -99,6 +99,8 @@ function PhotosPageInner() {
   const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
   const [lightroomSource, setLightroomSource] = useState<"current" | "album">("current")
   const [showCamera, setShowCamera] = useState(false)
+  const [showAddOptions, setShowAddOptions] = useState(false)
+  const [showExistingPicker, setShowExistingPicker] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
@@ -215,6 +217,7 @@ function PhotosPageInner() {
       setNewAlbumName("")
       setShowNewAlbum(false)
       setActiveAlbum(data.album)
+      setShowAddOptions(true)
     }
     setSavingAlbum(false)
   }
@@ -292,12 +295,39 @@ function PhotosPageInner() {
       window.dispatchEvent(new CustomEvent("found:open-camera"))
       return
     }
+    setShowAddOptions(true)
+  }
+
+  function handleTakePhotoFromSheet() {
+    setShowAddOptions(false)
+    if (!activeAlbum) return
     pendingAlbumIdRef.current = activeAlbum.id
     if (typeof navigator !== "undefined" && "mediaDevices" in navigator) {
       setShowCamera(true)
     } else {
       fileRef.current?.click()
     }
+  }
+
+  function handleUploadFromSheet() {
+    setShowAddOptions(false)
+    if (!activeAlbum) return
+    pendingAlbumIdRef.current = activeAlbum.id
+    fileRef.current?.click()
+  }
+
+  async function handleUseExistingConfirm(ids: string[]) {
+    if (!activeAlbum || ids.length === 0) { setShowExistingPicker(false); return }
+    const albumId = activeAlbum.id
+    setPhotos(prev => prev.map(p => ids.includes(p.id) ? { ...p, album_id: albumId } : p))
+    setShowExistingPicker(false)
+    await Promise.all(ids.map(id =>
+      fetch("/api/photos", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, album_id: albumId }),
+      }).catch(console.error)
+    ))
   }
 
   function handleCameraUploaded(photo: UploadedPhoto) {
@@ -550,6 +580,26 @@ function PhotosPageInner() {
       {/* Upgrade sheet */}
       {showUpgrade && (
         <UpgradeSheet onClose={() => setShowUpgrade(false)} />
+      )}
+
+      {/* Add to project — choose how */}
+      {showAddOptions && activeAlbum && (
+        <AddToAlbumSheet
+          albumName={activeAlbum.name}
+          onTakePhoto={handleTakePhotoFromSheet}
+          onUpload={handleUploadFromSheet}
+          onUseExisting={() => { setShowAddOptions(false); setShowExistingPicker(true) }}
+          onClose={() => setShowAddOptions(false)}
+        />
+      )}
+
+      {/* Use an existing Found photo */}
+      {showExistingPicker && activeAlbum && (
+        <ExistingPhotoPicker
+          photos={photos.filter(p => p.album_id !== activeAlbum.id)}
+          onClose={() => setShowExistingPicker(false)}
+          onConfirm={handleUseExistingConfirm}
+        />
       )}
 
       {/* In-app camera */}
@@ -1374,6 +1424,155 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
         </button>
       </div>
     </>
+  )
+}
+
+// â”€â”€ Add to project sheet â”€â”€
+function AddToAlbumSheet({ albumName, onTakePhoto, onUpload, onUseExisting, onClose }: {
+  albumName: string
+  onTakePhoto: () => void
+  onUpload: () => void
+  onUseExisting: () => void
+  onClose: () => void
+}) {
+  const options = [
+    {
+      label: "Take Photo",
+      sub: "Use your camera",
+      onClick: onTakePhoto,
+      primary: true,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Choose from Library",
+      sub: "Upload from your device",
+      onClick: onUpload,
+      primary: false,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Use Existing Photo",
+      sub: "Pick from photos already in Found",
+      onClick: onUseExisting,
+      primary: false,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+        </svg>
+      ),
+    },
+  ]
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px calc(env(safe-area-inset-bottom, 0px) + 32px)" }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
+        <h3 style={{ margin: "0 0 6px", ...TYPE.title, color: "white" }}>Add to {albumName}</h3>
+        <p style={{ margin: "0 0 22px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+          Choose how you&apos;d like to add photos or video.
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {options.map(opt => (
+            <button key={opt.label} onClick={opt.onClick} style={{
+              display: "flex", alignItems: "center", gap: 14, width: "100%",
+              padding: "14px 16px", borderRadius: 16, cursor: "pointer", textAlign: "left",
+              backgroundColor: opt.primary ? SIGNAL_GREEN : "rgba(255,255,255,0.06)",
+              border: opt.primary ? "none" : "1px solid rgba(255,255,255,0.1)",
+              boxShadow: opt.primary ? `0 0 24px ${SIGNAL_GREEN}33` : "none",
+            }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                backgroundColor: opt.primary ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.06)",
+              }}>
+                {opt.icon}
+              </div>
+              <div>
+                <div style={{ ...TYPE.subhead, fontWeight: 700, color: opt.primary ? FOUND_BLACK : "white" }}>{opt.label}</div>
+                <div style={{ ...TYPE.footnote, fontWeight: 400, color: opt.primary ? "rgba(0,0,0,0.6)" : `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{opt.sub}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+
+// â”€â”€ Existing photo picker â”€â”€
+function ExistingPhotoPicker({ photos, onClose, onConfirm }: {
+  photos: Photo[]
+  onClose: () => void
+  onConfirm: (ids: string[]) => void
+}) {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  function toggle(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 80, backgroundColor: "#0B0F0D", display: "flex", flexDirection: "column" }}>
+      <div style={{ padding: "20px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "white", ...TYPE.body, cursor: "pointer" }}>Cancel</button>
+        <h3 style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: "white" }}>Use Existing Photo</h3>
+        <button
+          onClick={() => onConfirm(Array.from(selected))}
+          disabled={selected.size === 0}
+          style={{ background: "none", border: "none", color: selected.size ? SIGNAL_GREEN : "rgba(255,255,255,0.25)", ...TYPE.body, fontWeight: 700, cursor: selected.size ? "pointer" : "default" }}
+        >
+          Add{selected.size ? ` (${selected.size})` : ""}
+        </button>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 12px 32px" }}>
+        {photos.length === 0 ? (
+          <div style={{ paddingTop: 80, textAlign: "center", ...TYPE.footnote, color: "rgba(255,255,255,0.3)" }}>
+            No other photos yet. Take or upload one instead.
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4 }}>
+            {photos.map(p => {
+              const isSelected = selected.has(p.id)
+              return (
+                <button key={p.id} onClick={() => toggle(p.id)} style={{ position: "relative", aspectRatio: "1", padding: 0, border: "none", borderRadius: 8, overflow: "hidden", cursor: "pointer" }}>
+                  {isVideoMedia(p.url, p.mime_type) ? (
+                    <video src={p.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                  )}
+                  <div style={{ position: "absolute", inset: 0, backgroundColor: isSelected ? `${SIGNAL_GREEN}48` : "transparent", transition: "background-color 0.12s ease" }} />
+                  <div style={{
+                    position: "absolute", top: 6, right: 6, width: 20, height: 20, borderRadius: "50%",
+                    border: `2px solid ${isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.6)"}`,
+                    backgroundColor: isSelected ? SIGNAL_GREEN : "rgba(0,0,0,0.35)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {isSelected && (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
