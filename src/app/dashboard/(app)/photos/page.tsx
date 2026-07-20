@@ -288,7 +288,11 @@ function PhotosPageInner() {
   }
 
   function openCamera() {
-    if (activeAlbum) pendingAlbumIdRef.current = activeAlbum.id
+    if (!activeAlbum) {
+      window.dispatchEvent(new CustomEvent("found:open-camera"))
+      return
+    }
+    pendingAlbumIdRef.current = activeAlbum.id
     if (typeof navigator !== "undefined" && "mediaDevices" in navigator) {
       setShowCamera(true)
     } else {
