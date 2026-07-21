@@ -110,15 +110,15 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Paid-order receipt fulfillment details - shop and restaurant/menu receipts now show `Ship to` for shipping and `Pickup details` for pickup, using saved company location when available and a clear pickup-instructions fallback when not.
 - [ ] Optional Stripe Dashboard reconciliation - local `.env.local` only exposed a test Stripe secret during Codex verification, so Stripe API could not read live connected-account PaymentIntents from this machine. Supabase production rows are verified; Stripe-side reconciliation should be checked in the Stripe Dashboard if Shawn wants a second ledger confirmation.
 
-*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. P1 launch hardening is now in progress: low-risk browser security headers shipped July 21; CSP/Permissions-Policy were pulled back after a Stripe Safari prompt and need a later safer pass. Remaining P1s include rate limiting, CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.*
+*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. P1 launch hardening attempted July 21 but all custom headers were rolled back after iPhone Safari Stripe `inner.html` download prompts; checkout stability takes priority before revisiting headers. Remaining P1s include rate limiting, CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.*
 
 ---
 
 ## P1 LAUNCH HARDENING - STARTED July 21, 2026
 
-- [x] Add global low-risk browser security headers through `next.config.ts`.
+- [ ] Add browser security headers later; full header experiment was rolled back after iPhone Safari Stripe `inner.html` download prompts.
 - [ ] Revisit CSP/Permissions-Policy after launch smoke testing; first attempt caused an iPhone Safari Stripe `inner.html` download prompt and was removed.
-- [ ] After hotfix deploy: retest Lucky/T-Shirts checkout on iPhone Safari and confirm the Stripe `inner.html` download prompt is gone.
+- [ ] After full rollback deploy: retest Lucky/T-Shirts checkout on iPhone Safari and confirm whether the Stripe `inner.html` download prompt is gone.
 - [ ] Next team step: public write-route rate limiting / bot controls.
 
 ---

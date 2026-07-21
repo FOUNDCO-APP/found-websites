@@ -1,3 +1,16 @@
+## Session: July 21, 2026 - Full Security Header Rollback
+**AI:** Codex
+**Worked on:** Shawn still saw iPhone Safari offering to download Stripe `inner.html` on Lucky and T-Shirts after the partial header rollback. Team decision: restore the exact pre-header `next.config.ts` shape before launch testing continues.
+
+### Fixed
+- Removed all custom global response headers from `next.config.ts`.
+- Restored the config to the known-good pre-security-header structure.
+- Build passes with `cmd /c npm run build`.
+
+### Test Next
+- Wait for Vercel to deploy this rollback, then retest Lucky/T-Shirts shop checkout on iPhone Safari. If the prompt remains after this deploy is live, the cause is not the launch-header change and needs direct checkout/Stripe script investigation.
+
+---
 ## Session: July 21, 2026 - Stripe Safari Header Hotfix
 **AI:** Codex
 **Worked on:** Shawn found iPhone Safari showing a download prompt for Stripe `inner.html` on both T-Shirts and Lucky after the security-header deploy. Team call: treat this as launch-blocking and remove the Stripe-sensitive header layer immediately.
