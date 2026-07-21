@@ -1,5 +1,6 @@
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getStripe } from "@/lib/stripe/connect"
 import { NextResponse } from "next/server"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -148,7 +149,7 @@ export async function POST(req: Request, { params }: Params) {
 
   if (!company) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
-  const body = await req.json().catch(() => ({})) as { paid?: boolean; pay_later?: boolean }
+  const body = await req.json().catch(() => ({})) as { paid?: boolean; pay_later?: boolean; payment_intent_id?: string }
 
   const admin = createAdminClient()
   const { data: estimate } = await admin
@@ -161,6 +162,31 @@ export async function POST(req: Request, { params }: Params) {
   if (!estimate) return NextResponse.json({ error: "Not found" }, { status: 404 })
   if (estimate.status === "accepted" && !body.paid && !body.pay_later) return NextResponse.json({ success: true })
 
+  // A "paid" claim is never trusted from the client alone - the PaymentIntent
+  // must actually exist, belong to this estimate/company, and have succeeded
+  // according to Stripe itself. Without this check, anyone who could POST
+  // here could mark any estimate paid without any money moving.
+  let verifiedKind: string | null = null
+  let verifiedAmountPaid = 0
+  if (body.paid) {
+    const stripe = getStripe()
+    const connectAccountId = company.stripe_connect_account_id as string | null
+    if (!stripe || !connectAccountId || !body.payment_intent_id) {
+      return NextResponse.json({ error: "Payment could not be verified" }, { status: 400 })
+    }
+    let pi
+    try {
+      pi = await stripe.paymentIntents.retrieve(body.payment_intent_id, {}, { stripeAccount: connectAccountId })
+    } catch {
+      return NextResponse.json({ error: "Payment could not be verified" }, { status: 400 })
+    }
+    if (pi.status !== "succeeded" || pi.metadata?.estimate_id !== id || pi.metadata?.company_id !== company.id) {
+      return NextResponse.json({ error: "Payment could not be verified" }, { status: 400 })
+    }
+    verifiedKind = pi.metadata?.kind ?? null
+    verifiedAmountPaid = pi.amount_received ? pi.amount_received / 100 : 0
+  }
+
   const now = new Date().toISOString()
   const companyName = displayName(company.name)
   const color = company.primary_color ?? "#30D158"
@@ -169,8 +195,8 @@ export async function POST(req: Request, { params }: Params) {
   const estimateLink = `https://${company.slug}.${ROOT_DOMAIN}/q/${id}`
   const total = Number(estimate.total ?? 0)
   const depositAmount = estimateDepositDue(total, estimate.deposit_pct as number | null, estimate.deposit_amount as number | null)
-  const hadDeposit = Boolean(estimate.deposit_paid_at) || estimate.payment_status === "deposit_paid"
-  const amountPaid = body.paid ? (hadDeposit ? total : depositAmount) : 0
+  const isBalancePayment = verifiedKind === "estimate_balance"
+  const amountPaid = body.paid ? (isBalancePayment ? total : (verifiedAmountPaid || depositAmount)) : 0
   const remaining = Math.max(total - amountPaid, 0)
 
   const patch: Record<string, string> = {
@@ -180,10 +206,10 @@ export async function POST(req: Request, { params }: Params) {
   }
 
   if (body.paid) {
-    if (!hadDeposit) patch.deposit_paid_at = estimate.deposit_paid_at ?? now
+    if (!isBalancePayment) patch.deposit_paid_at = estimate.deposit_paid_at ?? now
     patch.accepted_payment_choice = "pay_now"
-    patch.payment_status = amountPaid >= total ? "paid" : "deposit_paid"
-    if (amountPaid >= total) patch.paid_at = estimate.paid_at ?? now
+    patch.payment_status = isBalancePayment || amountPaid >= total ? "paid" : "deposit_paid"
+    if (isBalancePayment || amountPaid >= total) patch.paid_at = estimate.paid_at ?? now
   }
 
   if (body.pay_later) {

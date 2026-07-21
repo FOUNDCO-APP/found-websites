@@ -95,7 +95,7 @@ function PaymentForm({
     setError(null)
     setPaying(true)
 
-    const { error: confirmError } = await stripe.confirmPayment({
+    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
       elements,
       redirect: "if_required",
     })
@@ -111,12 +111,15 @@ function PaymentForm({
     // record of "this was paid" depends entirely on this call succeeding,
     // so retry it instead of firing once and hoping. The webhook is a
     // second safety net, not a substitute for trying properly here.
+    // The server independently re-verifies this payment_intent_id with
+    // Stripe before trusting it - this call can't mark anything paid on
+    // its own.
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const res = await fetch(`/api/accept-estimate/${estimateId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paid: true }),
+          body: JSON.stringify({ paid: true, payment_intent_id: paymentIntent?.id }),
         })
         if (res.ok) break
       } catch {}

@@ -18,6 +18,18 @@ Docs (this file, `CHANGELOG.md`, `TASKS.md`) were not kept current from July 13 
 
 ---
 
+## FULL TEAM AUDIT - July 20, 2026
+
+Shawn asked for a full team audit before launch. Result: **`LAUNCH_READINESS_AUDIT_2026-07-20.md`** - not a re-hash, five parallel domain audits actually re-read the current code (a lot shipped since the July 9 audit that was never checked against). Findings, awaiting Shawn's go-ahead before any fix:
+
+- **Most urgent, independent of launch timing:** the public estimate accept endpoint marks an estimate paid from unauthenticated client input with zero Stripe verification (`src/app/[slug]/api/accept-estimate/[id]/route.ts:151-196`). This is live in production today - a trust/fraud bug, not a launch-readiness nice-to-have.
+- Post-activation login is broken - a brand-new paying owner has no way into their own dashboard without requesting fresh access. This is *why* the July 9 "prove the first-customer journey" P0 was never actually provable.
+- The July 16 catalog editor shipped without the mobile keyboard/scroll-lock fix SiteEditor got two days later on July 18 - same bug class, reintroduced.
+- Sitemap test-company leak and the unbacked "review requests" plan claim are still open from July 9 - zero movement in 11 days despite heavy shipping elsewhere.
+- Full P0/P1 list, what's actually solid, and the team-by-lead verdict are in the audit file. Nothing has been fixed yet - waiting on Shawn's direction on what to tackle first.
+
+---
+
 ## Purpose
 
 This is the shared handoff file for Codex, Claude Code, or any other AI working on Found.

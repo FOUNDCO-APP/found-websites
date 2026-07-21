@@ -91,7 +91,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
   if (isRootHost) {
-    return NextResponse.next()
+    // Marks the request as Found's own marketing site (not a tenant site,
+    // not dashboard/admin) so the root layout knows it's safe to load
+    // Found's own analytics beacon - tenant sites and the dashboard should
+    // never get Found's own traffic tracking mixed into them.
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-found-root-site", "1")
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Customer subdomain or custom domain.

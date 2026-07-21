@@ -1,7 +1,15 @@
 # TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
-*Last updated: July 19, 2026*
+*Last updated: July 20, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
+
+---
+
+## ANALYTICS - Phase 1 SHIPPED July 20, 2026
+
+Shawn asked for traffic/activity monitoring for marketing purposes. Scoped as two phases:
+- **Phase 1 (SHIPPED):** Vercel Web Analytics on `foundco.app` only (not tenant sites, not dashboard/admin) - visitor counts, page views, referrers. Gated via a new `x-found-root-site` header set only by `middleware.ts` for root-domain requests. Not yet confirmed whether Vercel needs a one-time dashboard enable before data flows.
+- **Phase 2 (BACKLOG, not started):** PostHog for funnel/attribution - visit -> onboarding start -> onboarding complete -> activation/paid, with UTM campaign tracking. Needs its own session (event instrumentation through the full onboarding flow).
 
 ---
 
@@ -81,11 +89,14 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 
 ## NOW (MAX 3)
 
-1. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19 - ready for QA per Shawn. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end.
-2. **Run the first-customer launch journey** - brand-new onboarding through plan choice, activation, publication, owner login, and first lead on a real iPhone.
-3. **Make the public promise truthful and indexable** - stop exposing test/unready companies in the sitemap, add Found's own public pages, and remove or complete any paid-plan claims that cannot be used today.
+**Full team audit re-run July 20, 2026 - see `LAUNCH_READINESS_AUDIT_2026-07-20.md`.** Supersedes the list below; kept for history but do not treat as current.
 
-*Launch verdict and P1 work are recorded in `LAUNCH_READINESS_AUDIT_2026-07-09.md`. Open self-serve launch remains blocked; controlled pilot only.*
+0. ~~URGENT~~ **FIXED July 20, 2026:** the public estimate accept endpoint now requires and server-verifies the Stripe PaymentIntent (status, estimate_id, company_id) before marking anything paid - see `accept-estimate/[id]/route.ts`. The webhook now also handles `estimate_balance` payments (`stripe/webhook/route.ts`), mirroring the existing `estimate_deposit` branch. Client (`AcceptButton.tsx`) now sends `payment_intent_id` from the confirmed Stripe payment. Build passes. **Test next:** run a real test-mode deposit payment and a real balance payment end to end, confirm both mark the estimate paid correctly and emails send.
+1. **Fix the broken post-activation login handoff** - a brand-new paying owner is bounced to a bare `/login` screen (`src/app/onboarding/actions.ts:369-380` generates a magic link that is never sent/used). This is why the "first-customer journey" P0 below was never actually provable.
+2. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end - now blocked on item 0 above being fixed first.
+3. **Make the public promise truthful and indexable** - stop exposing test/comp companies in the sitemap (`is_comp` filter is missing, the flag already exists), add Found's own public pages, and remove or complete the still-unbuilt "automatic review requests" claim on the Business plan.
+
+*Prior verdict: `LAUNCH_READINESS_AUDIT_2026-07-09.md`. Current verdict: `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only.*
 
 ---
 

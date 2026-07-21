@@ -1,4 +1,36 @@
-﻿## DOC GAP BACKFILL - Entries below reconstructed July 20, 2026
+﻿## Session: July 20, 2026 - Full Team Audit + Payment Trust Fix
+**AI:** Claude Code (Opus)
+**Worked on:** Shawn asked for a full team audit before launch. Five parallel domain audits (product/journey, payments/data, public web, architecture/security, design/mobile) re-read the current code against the July 9 launch audit, since ~80 commits had shipped since with nothing re-verified.
+
+### Found
+- Full findings in `LAUNCH_READINESS_AUDIT_2026-07-20.md` - 5 P0s (up from July 9's 4), most urgent being a live payment-trust bug independent of launch timing.
+- Most other July 9 P1s (security headers, rate limiting, comp-link secret, no CI/tests) confirmed still untouched.
+
+### Fixed (Shawn approved same session)
+- **Payment trust bug:** `src/app/[slug]/api/accept-estimate/[id]/route.ts` previously marked an estimate `paid` straight from an unauthenticated `{ paid: true }` request body with zero Stripe verification. Now requires a `payment_intent_id`, retrieves it from Stripe scoped to the company's Connect account, and verifies `status === "succeeded"` plus `metadata.estimate_id`/`metadata.company_id` match before writing anything. `src/app/[slug]/q/[id]/AcceptButton.tsx` now passes the real `paymentIntent.id` returned by `stripe.confirmPayment()`.
+- **Companion gap:** `src/app/api/stripe/webhook/route.ts` only ever handled `payment_intent.succeeded` events tagged `estimate_deposit`; balance payments (`estimate_balance`, added when the July 15 remaining-balance work shipped) had no handler at all, so a real Stripe-confirmed balance payment had no server-side path to mark the estimate paid. Added a matching `estimate_balance` branch - marks `payment_status: "paid"`, sends owner/customer emails, guarded against double-processing via `!estimate.paid_at`.
+- Verified with `npm run build` - clean, all 89+ pages generate.
+
+### Test Next
+- Run a real test-mode deposit payment end to end on a Stripe-connected estimate, confirm it still marks `deposit_paid` correctly.
+- Run a real test-mode balance payment (pay deposit first, then pay the remaining balance), confirm the webhook now marks it `paid` and sends the "final payment received" emails.
+- Confirm a bare POST to `/api/accept-estimate/[id]` with `{paid:true}` and no valid `payment_intent_id` is now rejected (400), not silently marked paid.
+
+### Also shipped this session - Analytics Phase 1
+Shawn asked for a way to monitor traffic/activity for marketing purposes. Confirmed zero analytics existed anywhere in the codebase beforehand (no tracking package, no tracking code). Scoped as two phases per Shawn: Phase 1 (simple site analytics, foundco.app only) now, Phase 2 (funnel/attribution across onboarding -> activation, likely PostHog) as a future session.
+
+- Added `@vercel/analytics` and rendered `<Analytics />` in `src/app/layout.tsx`, gated behind a new `x-found-root-site` request header that `src/middleware.ts` only sets on requests to `foundco.app`/`www.foundco.app`. Tenant sites, `my.foundco.app` (dashboard), and `admin.foundco.app` never get this header, so Found's own traffic tracking cannot leak into a customer's site or the dashboard.
+- No cookie banner needed - Vercel Web Analytics is cookieless/first-party.
+- Verified with `npm run build` - clean.
+- **Not yet confirmed:** whether Web Analytics needs a one-time enable in the Vercel project dashboard before data starts flowing (this varies by plan) - check `vercel.com/<team>/found-websites/analytics` after the next deploy.
+
+### Test Next (analytics)
+- After deploying, visit `foundco.app` a few times and confirm visits show up in the Vercel Analytics tab within a few minutes.
+- Visit a tenant site (e.g. a `*.foundco.app` subdomain) and confirm it does NOT show up in the same analytics - separately confirms the scoping actually works, not just that tracking exists.
+
+---
+
+## DOC GAP BACKFILL - Entries below reconstructed July 20, 2026
 
 The sessions from July 13 through July 20 below were not logged in real time - `git log` showed ~80 commits with no matching CHANGELOG/SESSION_HANDOFF entries. Reconstructed from commit messages and confirmed with Shawn during a documentation catch-up pass. AI attribution is unknown (git author is just Shawn's machine login for every commit regardless of which AI made the change), so it's omitted below instead of guessed.
 

@@ -267,6 +267,71 @@ export async function POST(req: NextRequest) {
         }
       }
     }
+
+    if (pi.metadata?.kind === "estimate_balance" && pi.metadata?.estimate_id) {
+      const estimateId = pi.metadata.estimate_id
+      const { data: estimate } = await supabase
+        .from("estimates")
+        .select("id, paid_at, company_id, total, deposit_amount, client_name, client_first_name, client_last_name, client_email, receipt_sent_at")
+        .eq("id", estimateId)
+        .maybeSingle()
+
+      if (estimate && !estimate.paid_at) {
+        const now = new Date().toISOString()
+        const balancePaid = pi.amount_received ? pi.amount_received / 100 : 0
+        const total = estimate.total ?? 0
+
+        await supabase.from("estimates").update({
+          payment_status: "paid",
+          paid_at: now,
+          updated_at: now,
+        }).eq("id", estimateId)
+
+        const { data: company } = await supabase
+          .from("companies")
+          .select("name, email, lead_email, primary_color, slug")
+          .eq("id", estimate.company_id)
+          .maybeSingle()
+
+        const ownerEmail = company?.lead_email || company?.email
+        if (process.env.RESEND_API_KEY) {
+          const resend = new Resend(process.env.RESEND_API_KEY)
+          const clientName = estimate.client_first_name
+            ? `${estimate.client_first_name} ${estimate.client_last_name ?? ""}`.trim()
+            : (estimate.client_name ?? "Your client")
+          const companyName = company?.name ?? "Found"
+          const color = company?.primary_color ?? "#30D158"
+          const balanceFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(balancePaid)
+          const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(total)
+          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+          const dashboardLink = `https://my.${rootDomain}/estimates?estimate=${estimateId}`
+          const estimateLink = company?.slug ? `https://${company.slug}.${rootDomain}/q/${estimateId}` : dashboardLink
+
+          if (ownerEmail) {
+            await resend.emails.send({
+              from: "Found <hello@foundco.app>",
+              to: ownerEmail,
+              subject: `Final payment received: ${clientName} paid ${balanceFmt}`,
+              html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="background:linear-gradient(135deg,${color}18 0%,${color}06 100%);padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 6px;color:#111;font-size:22px;font-weight:800;letter-spacing:-0.02em">Final payment received</h1><p style="margin:0;color:#666;font-size:15px">${clientName} paid the remaining ${balanceFmt}</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:18px 20px;margin-bottom:20px;border:1px solid #d0eeda"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paid in full</div><div style="font-size:24px;color:#1A7A3C;font-weight:800;letter-spacing:-0.02em">${totalFmt}</div></div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">The customer has paid the balance from the estimate page.</p><a href="${dashboardLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">Open in Found</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
+            }).catch((err) => console.error("[Resend] Estimate balance webhook owner email error:", err))
+          }
+
+          if (estimate.client_email && !estimate.receipt_sent_at) {
+            const sent = await resend.emails.send({
+              from: `${companyName} <hello@foundco.app>`,
+              to: estimate.client_email,
+              subject: `Payment received by ${companyName}`,
+              html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 8px;color:#111;font-size:24px;font-weight:800;letter-spacing:-0.02em">Payment received</h1><p style="margin:0;color:#666;font-size:15px">${companyName} has been notified.</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #d0eeda;text-align:center"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paid in full</div><div style="font-size:30px;color:#1A7A3C;font-weight:800;letter-spacing:-0.03em">${totalFmt}</div></div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">Thanks, ${clientName}. Your estimate is fully paid.</p><a href="${estimateLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">View Estimate</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
+            }).catch((err) => {
+              console.error("[Resend] Estimate balance webhook receipt email error:", err)
+              return null
+            })
+            if (sent?.data?.id) await supabase.from("estimates").update({ receipt_sent_at: now }).eq("id", estimateId)
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ received: true })
   }
 
