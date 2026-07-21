@@ -18,6 +18,37 @@ function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
 
+type ShippingAddress = {
+  line1: string
+  line2: string
+  city: string
+  region: string
+  postalCode: string
+  country: string
+}
+
+function cleanShippingAddress(value: unknown): ShippingAddress {
+  const row = value && typeof value === "object" ? value as Record<string, unknown> : {}
+  return {
+    line1: cleanText(row.line1, 160),
+    line2: cleanText(row.line2, 120),
+    city: cleanText(row.city, 90),
+    region: cleanText(row.region, 40),
+    postalCode: cleanText(row.postalCode, 30),
+    country: cleanText(row.country, 80) || "United States",
+  }
+}
+
+function formatShippingAddress(address: ShippingAddress) {
+  const cityLine = [address.city, address.region, address.postalCode].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " $1")
+  return [address.line1, address.line2, cityLine, address.country].filter(Boolean).join("\n")
+}
+
+function isShippingAddressReady(address: ShippingAddress) {
+  return Boolean(address.line1 && address.city && address.region && address.postalCode)
+}
+
+
 function cleanSelectedOptions(product: MenuCategory["items"][number], selectedOptions: Record<string, unknown> | null | undefined) {
   const productOptions = (product.options ?? [])
     .map((option) => ({
@@ -62,14 +93,16 @@ export async function POST(req: NextRequest) {
   const phone = cleanText(customer.phone, 40)
   const email = cleanText(customer.email, 160)
   const fulfillment = cleanText(customer.fulfillment, 20) === "shipping" ? "shipping" : "pickup"
-  const address = cleanText(customer.address, 700)
+  const shippingAddress = cleanShippingAddress(customer.shippingAddress)
+  const legacyAddress = cleanText(customer.address, 700)
+  const address = formatShippingAddress(shippingAddress) || legacyAddress
   const notes = cleanText(customer.notes, 600)
   const requestedItems = Array.isArray(body?.items) ? body.items as CheckoutItemInput[] : []
 
   if (!companyId || !slug || !name || !phone || !email || requestedItems.length === 0) {
     return NextResponse.json({ error: "Please add products and enter your name, phone, and email." }, { status: 400 })
   }
-  if (fulfillment === "shipping" && address.length < 6) {
+  if (fulfillment === "shipping" && !isShippingAddressReady(shippingAddress) && address.length < 6) {
     return NextResponse.json({ error: "Please enter a shipping address." }, { status: 400 })
   }
 
@@ -147,6 +180,7 @@ export async function POST(req: NextRequest) {
     payment_status: "pending",
     fulfillment,
     shipping_address: fulfillment === "shipping" ? address : null,
+    shipping_address_parts: fulfillment === "shipping" ? shippingAddress : null,
     notes: notes || null,
     subtotal_cents: subtotal,
     items: orderSummary,

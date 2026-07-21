@@ -41,6 +41,15 @@ type PaymentSetup = {
   stripeAccountId: string
 }
 
+type ShippingAddress = {
+  line1: string
+  line2: string
+  city: string
+  region: string
+  postalCode: string
+  country: string
+}
+
 const SHOP_BLACK = "#0D0F0E"
 
 function paymentAppearance(primary: string): StripeElementsOptions["appearance"] {
@@ -76,6 +85,15 @@ function parsePriceCents(price: string | null | undefined) {
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+}
+
+function emptyShippingAddress(): ShippingAddress {
+  return { line1: "", line2: "", city: "", region: "", postalCode: "", country: "United States" }
+}
+
+function formatShippingAddress(address: ShippingAddress) {
+  const cityLine = [address.city.trim(), address.region.trim(), address.postalCode.trim()].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " $1")
+  return [address.line1.trim(), address.line2.trim(), cityLine, address.country.trim()].filter(Boolean).join("\n")
 }
 
 function productImages(item: Pick<ProductItem, "photo_url" | "images">) {
@@ -256,7 +274,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [fulfillment, setFulfillment] = useState<"pickup" | "shipping">("pickup")
-  const [address, setAddress] = useState("")
+  const [shippingAddress, setShippingAddress] = useState<ShippingAddress>(() => emptyShippingAddress())
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -266,7 +284,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const cartItems = Object.values(cart)
   const subtotal = cartItems.reduce((sum, item) => sum + item.unitAmount * item.quantity, 0)
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-  const shippingReady = fulfillment === "pickup" || address.trim().length > 5
+  const shippingReady = fulfillment === "pickup" || Boolean(shippingAddress.line1.trim() && shippingAddress.city.trim() && shippingAddress.region.trim() && shippingAddress.postalCode.trim())
   const shopReady = paymentsReady && items.length > 0
   const canCheckout = shopReady && itemCount > 0 && name.trim() && phone.trim() && email.trim() && shippingReady
   const checkoutActionLabel = loading
@@ -289,6 +307,11 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   const selectedProductStock = selectedProduct ? variantStock(selectedProduct, selectedOptions) : null
   const selectedProductSoldOut = selectedProduct?.inventory_tracking && selectedProductStock === 0
   const selectedProductAtLimit = selectedProduct?.inventory_tracking && selectedProductStock !== null && selectedProductQuantity >= selectedProductStock
+
+  function updateShippingAddress(field: keyof ShippingAddress, value: string) {
+    setPaymentSetup(null)
+    setShippingAddress((current) => ({ ...current, [field]: value }))
+  }
 
   function productQuantity(item: ProductItem) {
     return cartItems
@@ -331,7 +354,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
         body: JSON.stringify({
           companyId,
           slug,
-          customer: { name, phone, email, fulfillment, address, notes },
+          customer: { name, phone, email, fulfillment, shippingAddress, address: formatShippingAddress(shippingAddress), notes },
           items: cartItems.map((item) => ({ catIndex: item.catIndex, itemIndex: item.itemIndex, quantity: item.quantity, selectedOptions: item.selectedOptions ?? null, variantId: item.variantId ?? null })),
         }),
       })
@@ -361,27 +384,50 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   useEffect(() => {
     if (!checkoutOpen && !paid && !selectedProduct) return
     const scrollY = window.scrollY
+    const root = document.documentElement
     const previous = {
       bodyPosition: document.body.style.position,
       bodyTop: document.body.style.top,
       bodyWidth: document.body.style.width,
       bodyOverflow: document.body.style.overflow,
-      htmlOverflow: document.documentElement.style.overflow,
-      htmlOverflowX: document.documentElement.style.overflowX,
+      bodyOverscroll: document.body.style.overscrollBehavior,
+      htmlOverflow: root.style.overflow,
+      htmlOverflowX: root.style.overflowX,
+      htmlOverscroll: root.style.overscrollBehavior,
     }
-    document.documentElement.style.overflow = "hidden"
-    document.documentElement.style.overflowX = "hidden"
+
+    // Keeps the checkout sheet's max-height tied to the real visible
+    // viewport (var(--found-visual-height), consumed below), not a static
+    // CSS unit that never shrinks for the on-screen keyboard - this is the
+    // same pattern SiteEditor/CatalogManager use for their own sheets.
+    const updateVisualHeight = () => {
+      root.style.setProperty("--found-visual-height", `${window.visualViewport?.height ?? window.innerHeight}px`)
+    }
+
+    updateVisualHeight()
+    root.style.overflow = "hidden"
+    root.style.overflowX = "hidden"
+    root.style.overscrollBehavior = "none"
     document.body.style.position = "fixed"
     document.body.style.top = `-${scrollY}px`
     document.body.style.width = "100%"
     document.body.style.overflow = "hidden"
+    document.body.style.overscrollBehavior = "none"
+    window.visualViewport?.addEventListener("resize", updateVisualHeight)
+    window.visualViewport?.addEventListener("scroll", updateVisualHeight)
+
     return () => {
-      document.documentElement.style.overflow = previous.htmlOverflow
-      document.documentElement.style.overflowX = previous.htmlOverflowX
+      root.style.overflow = previous.htmlOverflow
+      root.style.overflowX = previous.htmlOverflowX
+      root.style.overscrollBehavior = previous.htmlOverscroll
       document.body.style.position = previous.bodyPosition
       document.body.style.top = previous.bodyTop
       document.body.style.width = previous.bodyWidth
       document.body.style.overflow = previous.bodyOverflow
+      document.body.style.overscrollBehavior = previous.bodyOverscroll
+      root.style.removeProperty("--found-visual-height")
+      window.visualViewport?.removeEventListener("resize", updateVisualHeight)
+      window.visualViewport?.removeEventListener("scroll", updateVisualHeight)
       window.scrollTo(0, scrollY)
     }
   }, [checkoutOpen, paid, selectedProduct])
@@ -492,7 +538,11 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
 
       {(checkoutOpen || paid) && (
         <div className="fixed inset-0 z-[90] flex w-[100svw] touch-pan-y items-end overflow-hidden bg-black/55 pt-[calc(28px+env(safe-area-inset-top))] backdrop-blur-sm" onClick={closeCheckout}>
-          <section className="box-border max-h-[calc(100svh-88px)] w-full max-w-[100svw] overscroll-contain overflow-x-hidden overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]" onClick={(event) => event.stopPropagation()}>
+          <section
+            className="box-border w-full max-w-[100svw] overscroll-contain overflow-x-hidden overflow-y-auto rounded-t-[34px] bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] pt-7 shadow-2xl md:mx-auto md:mb-8 md:max-w-xl md:rounded-[34px]"
+            style={{ maxHeight: "calc(var(--found-visual-height, 100svh) - 88px)" }}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-neutral-200" />
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
@@ -521,7 +571,66 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                   <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Phone</span><input value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" inputMode="tel" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
                   <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Email</span><input value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" type="email" className="w-full rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
                   <div><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Delivery</span><div className="grid grid-cols-2 gap-2">{(["pickup", "shipping"] as const).map((option) => <button key={option} type="button" onClick={() => { setFulfillment(option); setPaymentSetup(null) }} className="rounded-[16px] border px-3 py-3 text-sm font-black capitalize" style={{ borderColor: fulfillment === option ? primary : "#e5e5e5", color: fulfillment === option ? primary : "#555", backgroundColor: fulfillment === option ? `${primary}12` : "white" }}>{option}</button>)}</div></div>
-                  {fulfillment === "shipping" && <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Shipping address</span><textarea value={address} onChange={(e) => setAddress(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>}
+                  {fulfillment === "shipping" && (
+                    <div className="rounded-[20px] border border-neutral-200 bg-neutral-50 p-3">
+                      <p className="mb-3 text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Shipping address</p>
+                      <div className="grid gap-3">
+                        <input
+                          value={shippingAddress.line1}
+                          onChange={(e) => updateShippingAddress("line1", e.target.value)}
+                          autoComplete="shipping address-line1"
+                          name="shipping-address-line1"
+                          placeholder="Street address"
+                          className="w-full rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-950"
+                        />
+                        <input
+                          value={shippingAddress.line2}
+                          onChange={(e) => updateShippingAddress("line2", e.target.value)}
+                          autoComplete="shipping address-line2"
+                          name="shipping-address-line2"
+                          placeholder="Apt, suite, unit"
+                          className="w-full rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-950"
+                        />
+                        <div className="grid grid-cols-[1fr_92px] gap-3">
+                          <input
+                            value={shippingAddress.city}
+                            onChange={(e) => updateShippingAddress("city", e.target.value)}
+                            autoComplete="shipping address-level2"
+                            name="shipping-address-level2"
+                            placeholder="City"
+                            className="w-full min-w-0 rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-950"
+                          />
+                          <input
+                            value={shippingAddress.region}
+                            onChange={(e) => updateShippingAddress("region", e.target.value.toUpperCase().slice(0, 2))}
+                            autoComplete="shipping address-level1"
+                            name="shipping-address-level1"
+                            placeholder="State"
+                            className="w-full min-w-0 rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base uppercase text-neutral-950"
+                          />
+                        </div>
+                        <div className="grid grid-cols-[1fr_1.15fr] gap-3">
+                          <input
+                            value={shippingAddress.postalCode}
+                            onChange={(e) => updateShippingAddress("postalCode", e.target.value)}
+                            autoComplete="shipping postal-code"
+                            name="shipping-postal-code"
+                            inputMode="numeric"
+                            placeholder="ZIP code"
+                            className="w-full min-w-0 rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-950"
+                          />
+                          <input
+                            value={shippingAddress.country}
+                            onChange={(e) => updateShippingAddress("country", e.target.value)}
+                            autoComplete="shipping country-name"
+                            name="shipping-country-name"
+                            placeholder="Country"
+                            className="w-full min-w-0 rounded-[16px] border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-950"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <label className="block"><span className="mb-2 block text-xs font-black uppercase tracking-[0.14em] text-neutral-500">Notes</span><textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-[16px] border border-neutral-200 px-4 py-3 text-base text-neutral-950" /></label>
                 </div>
 

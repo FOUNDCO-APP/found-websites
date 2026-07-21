@@ -1,3 +1,18 @@
+## Session: July 21, 2026 - Native Shipping Address Checkout Fields
+**AI:** Codex
+**Worked on:** Shawn found that selecting Shipping in the T-Shirts shop checkout showed one large address textarea instead of normal shipping fields. Team call: Steve/Jony/Angela treat this as a launch-blocking checkout trust issue; Craig/Priya keep one normalized commerce payload.
+
+### Fixed
+- Replaced the shop checkout shipping textarea with native address inputs: street, unit, city, state, ZIP, and country.
+- Added browser/iOS/Android autofill hints using shipping address autocomplete tokens so saved address suggestions can populate correctly.
+- The checkout API now accepts structured address parts, validates required shipping fields, preserves a clean formatted address for existing lead/message/email display, and stores the structured parts in lead partial answers.
+- Build passes with `cmd /c npm run build`.
+
+### Test Next
+- On `tshirts`, add a product to cart, choose Shipping, tap Street address, and confirm iPhone offers saved address autofill.
+- Confirm the fields populate cleanly, checkout enables after required address pieces are present, and the paid order email/owner lead show the shipping address clearly.
+
+---
 ﻿## Session: July 21, 2026 - Stripe Connect Profile Ledger Audit
 **AI:** Codex
 **Worked on:** Shawn asked whether every profile and every Stripe account had actually been audited. Craig/Priya ran a read-only Found production database ledger pass across every company with a Stripe Connect account.

@@ -34,6 +34,18 @@ Process correction: after any meaningful code, QA, or note change, update `SESSI
 
 ---
 
+## NATIVE SHIPPING ADDRESS CHECKOUT FIELDS - July 21, 2026
+
+Shawn found the T-Shirts shop checkout used one big Shipping Address textarea. Team decision: this is a customer-trust issue, not a cosmetic issue.
+
+- Shop checkout now uses native shipping fields: street, unit, city, state, ZIP, country.
+- Inputs include browser/mobile autofill tokens such as `shipping address-line1`, `shipping address-level2`, `shipping address-level1`, and `shipping postal-code`.
+- Shopping cart checkout API now accepts structured `shippingAddress`, validates the required pieces for shipping, stores `shipping_address_parts`, and still stores/formats `shipping_address` for current lead/email display.
+- Build passes with `cmd /c npm run build`.
+- Test next: on `tshirts`, choose Shipping, tap Street address, use iPhone autofill, complete the $1 order, and confirm the owner/customer emails and dashboard lead show a readable shipping address.
+
+---
+
 ## STRIPE CONNECT PROFILE LEDGER AUDIT - July 21, 2026
 
 Shawn asked whether every profile with a Stripe account had been audited. Craig/Priya ran a read-only Found production database ledger audit across every company with a Stripe Connect account.
