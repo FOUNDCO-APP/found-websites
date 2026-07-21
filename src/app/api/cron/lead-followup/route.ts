@@ -13,6 +13,8 @@ function getAdminClient() {
   )
 }
 
+type FollowUpStep = "day1" | "day3" | "day7"
+
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization")
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -21,79 +23,154 @@ export async function GET(req: NextRequest) {
 
   const supabase = getAdminClient()
   const now = new Date()
+  const dryRun = req.nextUrl.searchParams.get("dryRun") === "1"
 
   const { data: leads, error } = await supabase
     .from("leads")
     .select(`
-      id, name, email, service, created_at, type,
+      id, company_id, name, email, service, created_at, type, status, source,
       follow_up_1_sent_at, follow_up_3_sent_at, follow_up_7_sent_at,
       companies ( name, phone, plan, email )
     `)
     .not("email", "is", null)
-    .or("type.is.null,type.neq.reservation_request")
+    .in("type", ["inquiry", "lead"])
+    .eq("status", "open")
 
   if (error) {
     console.error("[cron/lead-followup] query error:", error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
+  const suppressions = await loadSuppressions(supabase)
   let sent = 0
+  const skipped: Record<string, number> = {}
+  const planned: Array<{ leadId: string; email: string; company: string; step: FollowUpStep; daysSince: number }> = []
 
   for (const lead of leads ?? []) {
     const companyRaw = lead.companies
     const company = (Array.isArray(companyRaw) ? companyRaw[0] : companyRaw) as
       { name: string; phone: string | null; plan: string; email: string | null } | null
-    if (!company || !["found_pro", "found_business"].includes(company.plan)) continue
-    if (!lead.email) continue
+    if (!company || !["found_pro", "found_business"].includes(company.plan)) {
+      skipped.plan = (skipped.plan ?? 0) + 1
+      continue
+    }
+    if (!lead.email) {
+      skipped.email = (skipped.email ?? 0) + 1
+      continue
+    }
+    if (suppressions.has(suppressionKey(lead.company_id, lead.email))) {
+      skipped.suppressed = (skipped.suppressed ?? 0) + 1
+      continue
+    }
 
     const createdAt = new Date(lead.created_at)
     const daysSince = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
     const firstName = lead.name.split(" ")[0]
+    const nextStep = getNextFollowUpStep(lead, daysSince)
+    if (!nextStep) {
+      skipped.not_due = (skipped.not_due ?? 0) + 1
+      continue
+    }
 
-    // Day 1 follow-up
-    if (daysSince >= 1 && !lead.follow_up_1_sent_at) {
-      await getResend().emails.send({
+    planned.push({
+      leadId: lead.id,
+      email: lead.email,
+      company: company.name,
+      step: nextStep,
+      daysSince: Number(daysSince.toFixed(2)),
+    })
+    if (dryRun) continue
+
+    if (nextStep === "day1") {
+      const { error: sendError } = await getResend().emails.send({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `Hi ${firstName}, just checking in`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 1, service: lead.service }),
-        text: `Hi ${firstName},\n\nWe wanted to make sure we got everything you need. If you have any questions about${lead.service ? ` ${lead.service}` : " our services"}, we're happy to help.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n— ${company.name}`,
-      }).catch(err => console.error("[Resend] Day-1 follow-up error:", err))
+        text: `Hi ${firstName},\n\nWe wanted to make sure we got everything you need. If you have any questions about${lead.service ? ` ${lead.service}` : " our services"}, we're happy to help.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n-- ${company.name}`,
+      })
+      if (sendError) {
+        console.error("[Resend] Day-1 follow-up error:", sendError)
+        skipped.send_error = (skipped.send_error ?? 0) + 1
+        continue
+      }
 
       await supabase.from("leads").update({ follow_up_1_sent_at: now.toISOString() }).eq("id", lead.id)
       sent++
+      continue
     }
 
-    // Day 3 follow-up
-    if (daysSince >= 3 && !lead.follow_up_3_sent_at) {
-      await getResend().emails.send({
+    if (nextStep === "day3") {
+      const { error: sendError } = await getResend().emails.send({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `Still thinking about it, ${firstName}?`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 3, service: lead.service }),
-        text: `Hi ${firstName},\n\nJust following up to see if you're still looking for help${lead.service ? ` with ${lead.service}` : ""}. We'd love to work with you.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n— ${company.name}`,
-      }).catch(err => console.error("[Resend] Day-3 follow-up error:", err))
+        text: `Hi ${firstName},\n\nJust following up to see if you're still looking for help${lead.service ? ` with ${lead.service}` : ""}. We'd love to work with you.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n-- ${company.name}`,
+      })
+      if (sendError) {
+        console.error("[Resend] Day-3 follow-up error:", sendError)
+        skipped.send_error = (skipped.send_error ?? 0) + 1
+        continue
+      }
 
       await supabase.from("leads").update({ follow_up_3_sent_at: now.toISOString() }).eq("id", lead.id)
       sent++
+      continue
     }
 
-    // Day 7 follow-up
-    if (daysSince >= 7 && !lead.follow_up_7_sent_at) {
-      await getResend().emails.send({
+    if (nextStep === "day7") {
+      const { error: sendError } = await getResend().emails.send({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `We're here when you're ready, ${firstName}`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 7, service: lead.service }),
-        text: `Hi ${firstName},\n\nWe wanted to check in one last time. Whenever you're ready to move forward, ${company.name} is here.\n\n${company.phone ? `Call us at ${company.phone}.` : ""}\n\n— ${company.name}`,
-      }).catch(err => console.error("[Resend] Day-7 follow-up error:", err))
+        text: `Hi ${firstName},\n\nWe wanted to check in one last time. Whenever you're ready to move forward, ${company.name} is here.\n\n${company.phone ? `Call us at ${company.phone}.` : ""}\n\n-- ${company.name}`,
+      })
+      if (sendError) {
+        console.error("[Resend] Day-7 follow-up error:", sendError)
+        skipped.send_error = (skipped.send_error ?? 0) + 1
+        continue
+      }
 
       await supabase.from("leads").update({ follow_up_7_sent_at: now.toISOString() }).eq("id", lead.id)
       sent++
     }
   }
 
-  return NextResponse.json({ ok: true, sent, checked: leads?.length ?? 0 })
+  return NextResponse.json({ ok: true, dryRun, sent, checked: leads?.length ?? 0, planned, skipped })
+}
+
+function getNextFollowUpStep(
+  lead: {
+    follow_up_1_sent_at: string | null
+    follow_up_3_sent_at: string | null
+    follow_up_7_sent_at: string | null
+  },
+  daysSince: number,
+): FollowUpStep | null {
+  if (!lead.follow_up_1_sent_at) return daysSince >= 1 && daysSince < 2 ? "day1" : null
+  if (!lead.follow_up_3_sent_at) return daysSince >= 3 && daysSince < 4 ? "day3" : null
+  if (!lead.follow_up_7_sent_at) return daysSince >= 7 && daysSince < 8 ? "day7" : null
+  return null
+}
+
+async function loadSuppressions(supabase: ReturnType<typeof getAdminClient>) {
+  const { data, error } = await supabase
+    .from("contact_suppressions")
+    .select("company_id, email")
+    .eq("channel", "email")
+
+  if (error) {
+    console.error("[cron/lead-followup] suppression query error:", error.message)
+    return new Set<string>()
+  }
+
+  return new Set((data ?? []).map((row) => suppressionKey(row.company_id, row.email)).filter(Boolean))
+}
+
+function suppressionKey(companyId: string | null, email: string | null) {
+  return `${companyId ?? ""}:${email?.toLowerCase() ?? ""}`
 }
 
 function buildFollowUpEmail({
@@ -114,7 +191,7 @@ function buildFollowUpEmail({
       ? `We wanted to make sure we got everything you need. If you have any questions about${service ? ` <strong>${service}</strong>` : " our services"}, we're here and happy to help.`
       : day === 3
       ? `Just following up to see if you're still looking for help${service ? ` with <strong>${service}</strong>` : ""}. We'd love the opportunity to work with you.`
-      : `We wanted to reach out one last time. No pressure — whenever you're ready to move forward, we're here for you.`
+      : `We wanted to reach out one last time. No pressure -- whenever you're ready to move forward, we're here for you.`
 
   const ctaText = day === 7 ? `Get in Touch` : `Let's Talk`
 
