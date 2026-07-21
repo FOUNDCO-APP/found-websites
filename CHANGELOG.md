@@ -1,4 +1,29 @@
-﻿## Session: July 21, 2026 - Launch Payment QA Evidence Backfill
+﻿## Session: July 21, 2026 - Stripe Connect Profile Ledger Audit
+**AI:** Codex
+**Worked on:** Shawn asked whether every profile and every Stripe account had actually been audited. Craig/Priya ran a read-only Found production database ledger pass across every company with a Stripe Connect account.
+
+### Findings
+- Production has 37 companies total.
+- 28 companies have a Stripe customer ID for Found plan billing.
+- 6 companies have a Stripe Connect account for receiving customer payments: `bluelunaevents`, `construction`, `lucky`, `molcas-mexican`, `rosas`, and `tshirts`.
+- Found DB payment evidence exists for 5 of those 6 connected profiles:
+  - `bluelunaevents`: estimate deposit payment evidence.
+  - `construction`: multiple estimate payment events, including deposit/final-balance records.
+  - `lucky`: paid retail `shopping_order` evidence.
+  - `molcas-mexican`: older online-order payment attempts and paid records from June testing.
+  - `rosas`: paid restaurant `online_order` evidence from July testing.
+- `tshirts` has Stripe Connect set up, but Found DB does not show a completed paid order or estimate payment under that connected account.
+
+### Still Open
+- This was a Found database ledger audit, not a direct Stripe Dashboard/API reconciliation. Live Stripe API access is still not available from this workspace without pulling a live secret from Vercel/Stripe.
+- To say every connected profile has a successful payment test, `tshirts` needs one completed live shop-order payment or a Stripe Dashboard confirmation tied to `acct_1TtMCKEuYeP9g9CO`.
+- Exact current pay-later estimate path remains unverified.
+
+### Tooling
+- Added `scripts/audit-payment-ledger.mjs`, a read-only audit command that summarizes connected profiles and Found-side payment evidence without printing secrets.
+
+---
+## Session: July 21, 2026 - Launch Payment QA Evidence Backfill
 **AI:** Codex
 **Worked on:** Shawn clarified that live payment QA had already been tested but not recorded after a prior crash/context loss. Craig/Priya led a read-only production Supabase audit before changing the launch checklist.
 

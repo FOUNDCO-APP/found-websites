@@ -34,6 +34,19 @@ Process correction: after any meaningful code, QA, or note change, update `SESSI
 
 ---
 
+## STRIPE CONNECT PROFILE LEDGER AUDIT - July 21, 2026
+
+Shawn asked whether every profile with a Stripe account had been audited. Craig/Priya ran a read-only Found production database ledger audit across every company with a Stripe Connect account.
+
+- Production totals: 37 companies; 28 have Stripe customer IDs for Found plan billing; 6 have Stripe Connect accounts for receiving customer payments.
+- Connected profiles found: `bluelunaevents`, `construction`, `lucky`, `molcas-mexican`, `rosas`, and `tshirts`.
+- Found DB payment evidence exists for 5 of 6 connected profiles: Blue Luna Events estimate deposit, Construction estimate payments/final-balance evidence, Lucky retail shop order, Molcas older online-order tests, and Rosa's restaurant online-order tests.
+- `tshirts` has Stripe Connect set up but no completed paid order or estimate payment evidence in Found DB.
+- This was not a direct Stripe Dashboard/API reconciliation. Live Stripe API access is still not available from this workspace without pulling a live secret from Vercel/Stripe.
+- Open before the strictest launch sign-off: run one completed live shop-order payment on `tshirts` or verify its connected account directly in Stripe Dashboard; exact current pay-later estimate path is also still unverified.
+- Reusable command added: `node scripts/audit-payment-ledger.mjs`.
+
+---
 ## FULL TEAM AUDIT - July 20, 2026 - ALL 5 P0s FIXED SAME DAY
 
 Shawn asked for a full team audit before launch. Result: **`LAUNCH_READINESS_AUDIT_2026-07-20.md`** - five parallel domain audits actually re-read the current code (a lot shipped since the July 9 audit that was never checked against). Shawn approved fixing every P0 immediately; all shipped this session. Full detail: `CHANGELOG.md`, "July 20, 2026 (part 2)."
