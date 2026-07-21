@@ -1,3 +1,17 @@
+## Session: July 21, 2026 - Pay-Later Estimate QA Verified
+**AI:** Codex
+**Worked on:** Shawn tested the exact current pay-later estimate path on Construction and shared the resulting dashboard state. Team read: the estimate stayed unpaid, remained in needs-payment, and showed the payment request as sent with the balance still due.
+
+### Verified
+- Customer accepted an estimate without completing payment immediately.
+- Dashboard did not mark the estimate paid.
+- Estimate list showed `Payment request sent` and the amount still due.
+- Counts updated to show open / needs-payment / paid / all states separately.
+
+### Status
+- Strict launch payment QA is now complete from Found-side evidence unless Shawn wants a separate Stripe Dashboard reconciliation.
+
+---
 ## Session: July 21, 2026 - Fulfillment Details in Paid Order Receipts
 **AI:** Codex
 **Worked on:** Shawn completed the live T-Shirts shipping checkout and asked whether customer receipts should show where an order ships or where pickup happens. Team call: yes, every paid order receipt must confirm fulfillment clearly, and pickup must not invent an address.

@@ -34,6 +34,15 @@ Process correction: after any meaningful code, QA, or note change, update `SESSI
 
 ---
 
+## PAY-LATER ESTIMATE QA VERIFIED - July 21, 2026
+
+Shawn tested the exact current pay-later estimate path on Construction. The dashboard showed the accepted estimate as unpaid, with `Payment request sent` and the balance still due. This is the expected state: accepted/requested, not paid.
+
+- Pay-later estimate path is now verified from Found-side UI evidence.
+- Strict launch payment QA is complete unless Shawn wants a separate Stripe Dashboard reconciliation.
+
+---
+
 ## FULFILLMENT DETAILS IN PAID ORDER RECEIPTS - July 21, 2026
 
 Shawn completed the T-Shirts live shop checkout with Shipping and asked whether receipts should show where an order is being shipped or where pickup happens. Team decision: yes, the receipt has to answer that explicitly.
