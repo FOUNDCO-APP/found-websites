@@ -1,3 +1,16 @@
+## Session: July 21, 2026 - Stripe Safari Header Hotfix
+**AI:** Codex
+**Worked on:** Shawn found iPhone Safari showing a download prompt for Stripe `inner.html` on both T-Shirts and Lucky after the security-header deploy. Team call: treat this as launch-blocking and remove the Stripe-sensitive header layer immediately.
+
+### Fixed
+- Removed the CSP report-only baseline, Permissions-Policy, and Cross-Origin-Opener-Policy from the launch header set.
+- Kept only low-risk global headers: `X-Content-Type-Options`, `X-Frame-Options`, and `Referrer-Policy`.
+- Build passes with `cmd /c npm run build`.
+
+### Test Next
+- Retest Lucky/T-Shirts shop checkout on iPhone Safari. The `inner.html` download prompt should be gone before we move to speed tuning.
+
+---
 ## Session: July 21, 2026 - Launch Security Headers
 **AI:** Codex
 **Worked on:** Team next step after payment QA: add the first launch-safety header layer before sending more traffic to Found. Steve/Craig call: protect the browser surface now, but keep CSP report-only until Stripe/media/dashboard flows get one live smoke pass.

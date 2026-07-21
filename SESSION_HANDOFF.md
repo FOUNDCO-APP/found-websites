@@ -4,6 +4,17 @@
 
 ---
 
+## STRIPE SAFARI HEADER HOTFIX - July 21, 2026
+
+After the launch security-header deploy, Shawn saw iPhone Safari ask to download Stripe `inner.html` on both T-Shirts and Lucky checkout screens. Team decision: rollback the risky header layer immediately.
+
+- Removed CSP report-only, Permissions-Policy, and Cross-Origin-Opener-Policy from the launch header set.
+- Kept only low-risk global headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+- Build passes with `cmd /c npm run build`.
+- Test next: retry T-Shirts/Lucky checkout on iPhone Safari and confirm the Stripe `inner.html` download prompt is gone. After that, look at the 2-3 second Shop Online navigation delay.
+
+---
+
 ## LAUNCH SECURITY HEADERS - July 21, 2026
 
 Team next step after closing Found-side payment QA: add the first launch-safety browser header layer before more traffic. Implemented globally in `next.config.ts`.
