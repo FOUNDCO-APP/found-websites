@@ -4,6 +4,17 @@
 
 ---
 
+## LAUNCH SECURITY HEADERS - July 21, 2026
+
+Team next step after closing Found-side payment QA: add the first launch-safety browser header layer before more traffic. Implemented globally in `next.config.ts`.
+
+- Enforced low-risk headers: `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy: same-origin-allow-popups`.
+- Added `Content-Security-Policy-Report-Only`, not enforced yet, so Stripe checkout/Connect, Supabase, Vercel analytics/live tooling, Google Places, media uploads, and blob previews are not blocked on launch day.
+- Build passes with `cmd /c npm run build`.
+- Next P1 after deploy smoke test: public write-route rate limiting / bot controls.
+
+---
+
 ## DOC GAP BACKFILL - July 20, 2026
 
 Docs (this file, `CHANGELOG.md`, `TASKS.md`) were not kept current from July 13 through July 20 - about 80 commits shipped with no matching entries. Reconstructed from `git log` and confirmed with Shawn. Full session-by-session detail is now in `CHANGELOG.md`; status changes are in `TASKS.md`. Headlines:

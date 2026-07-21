@@ -110,7 +110,16 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Paid-order receipt fulfillment details - shop and restaurant/menu receipts now show `Ship to` for shipping and `Pickup details` for pickup, using saved company location when available and a clear pickup-instructions fallback when not.
 - [ ] Optional Stripe Dashboard reconciliation - local `.env.local` only exposed a test Stripe secret during Codex verification, so Stripe API could not read live connected-account PaymentIntents from this machine. Supabase production rows are verified; Stripe-side reconciliation should be checked in the Stripe Dashboard if Shawn wants a second ledger confirmation.
 
-*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. 14 P1s from the July 20 audit remain open - see that file for the full list (no security headers, no rate limiting, no CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.).*
+*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. P1 launch hardening is now in progress: global browser security headers shipped July 21; CSP is report-only until live smoke testing. Remaining P1s include rate limiting, CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.*
+
+---
+
+## P1 LAUNCH HARDENING - STARTED July 21, 2026
+
+- [x] Add global low-risk browser security headers through `next.config.ts`.
+- [x] Add CSP baseline in report-only mode first so launch-day Stripe/media flows are not blocked before a smoke pass.
+- [ ] After deploy: smoke-check public tenant page, dashboard login, Stripe checkout, Stripe Connect setup link, and media upload.
+- [ ] Next team step: public write-route rate limiting / bot controls.
 
 ---
 

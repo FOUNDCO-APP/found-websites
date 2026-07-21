@@ -1,3 +1,17 @@
+## Session: July 21, 2026 - Launch Security Headers
+**AI:** Codex
+**Worked on:** Team next step after payment QA: add the first launch-safety header layer before sending more traffic to Found. Steve/Craig call: protect the browser surface now, but keep CSP report-only until Stripe/media/dashboard flows get one live smoke pass.
+
+### Fixed
+- Added global Next response headers in `next.config.ts`: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Cross-Origin-Opener-Policy`.
+- Added a production-aware `Content-Security-Policy-Report-Only` baseline that allows Found, Stripe, Supabase, Vercel analytics/live tooling, Google Places, media blobs, and uploads without enforcing/blocking yet.
+- Kept the change isolated to config; no dashboard, checkout, shop, or website UI files were touched.
+- Build passes with `cmd /c npm run build`.
+
+### Next
+- After deploy, smoke-check one public site, dashboard login, Stripe checkout, Stripe Connect setup link, and media upload. If clean, the next P1 is public write-route rate limiting / bot controls.
+
+---
 ## Session: July 21, 2026 - Pay-Later Estimate QA Verified
 **AI:** Codex
 **Worked on:** Shawn tested the exact current pay-later estimate path on Construction and shared the resulting dashboard state. Team read: the estimate stayed unpaid, remained in needs-payment, and showed the payment request as sent with the balance still due.
