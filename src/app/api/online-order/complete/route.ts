@@ -21,6 +21,28 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#039;")
 }
 
+function textLinesHtml(value: string) {
+  return escapeHtml(value)
+    .split("\n")
+    .filter((line) => line.trim().length > 0)
+    .join("<br />")
+}
+
+function detailBlockHtml(label: string, body: string, tone: "light" | "warm" = "light") {
+  const background = tone === "warm" ? "#fff8e8" : "#f9f9f9"
+  const eyebrow = tone === "warm" ? "#8a6d1f" : "#888888"
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="background:${background};border-radius:12px;margin:0 0 20px;"><tr><td style="padding:16px 18px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:${eyebrow};">${escapeHtml(label)}</p><p style="margin:0;font-size:15px;line-height:1.55;color:#222222;">${textLinesHtml(body)}</p></td></tr></table>`
+}
+
+function pickupReceiptText(businessName: string, pickupTime: string, pickupLocation?: { name?: string | null; address?: string | null } | null) {
+  const name = cleanText(pickupLocation?.name, 120)
+  const address = cleanText(pickupLocation?.address, 300)
+  const lines: string[] = []
+  if (pickupTime) lines.push(`Pickup time: ${pickupTime}`)
+  if (address) lines.push(`Pickup at: ${[name || businessName, address].filter(Boolean).join("\n")}`)
+  else lines.push(`${businessName} will contact you with pickup instructions.`)
+  return lines.join("\n")
+}
 function orderItemsHtml(items: unknown) {
   if (!Array.isArray(items)) return ""
   return items.map((item) => {
@@ -105,6 +127,14 @@ export async function POST(req: NextRequest) {
   const ownerEmail = company.lead_email || company.email
   const rows = orderItemsHtml(existingAnswers.items)
   const pickupTime = typeof existingAnswers.pickup_time === "string" ? existingAnswers.pickup_time : ""
+  const { data: pickupLocation } = await admin
+    .from("company_locations")
+    .select("name, address")
+    .eq("company_id", companyId)
+    .order("sort_order", { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  const pickupHtml = detailBlockHtml("Pickup details", pickupReceiptText(businessName, pickupTime, pickupLocation))
   const orderNotes = typeof existingAnswers.notes === "string" ? existingAnswers.notes : ""
 
   if (ownerEmail && resend) {
@@ -112,7 +142,7 @@ export async function POST(req: NextRequest) {
       from: "Found Orders <hello@foundco.app>",
       to: ownerEmail,
       subject: `Online order for ${pickupTime || "pickup"}: ${lead.name || "Customer"} - ${total}`,
-      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Paid online order</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr><td><p style="margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#888888;">Customer</p><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${escapeHtml(lead.name || "Customer")}</p></td><td align="right"><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${total}</p><p style="margin:4px 0 0;font-size:13px;color:#555555;">paid</p></td></tr></table>${pickupTime ? `<div style="border:2px solid #111111;border-radius:12px;padding:14px 16px;margin:0 0 22px;text-align:center;font-size:22px;font-weight:900;color:#111111;">Pickup ${escapeHtml(pickupTime)}</div>` : ""}<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table>${orderNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e8;border-radius:12px;margin:0 0 20px;"><tr><td style="padding:16px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#8a6d1f;">Notes</p><p style="margin:0;font-size:15px;line-height:1.5;color:#222222;white-space:pre-wrap;">${escapeHtml(orderNotes)}</p></td></tr></table>` : ""}<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;"><tr><td style="padding:18px;"><p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999999;">Contact</p><p style="margin:0;font-size:16px;font-weight:800;color:#111111;">${escapeHtml(lead.phone || "No phone")}${lead.email ? ` &middot; ${escapeHtml(lead.email)}` : ""}</p></td></tr></table></td></tr></table></td></tr></table></body></html>`,
+      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Paid online order</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr><td><p style="margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#888888;">Customer</p><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${escapeHtml(lead.name || "Customer")}</p></td><td align="right"><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${total}</p><p style="margin:4px 0 0;font-size:13px;color:#555555;">paid</p></td></tr></table>${pickupHtml}<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table>${orderNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e8;border-radius:12px;margin:0 0 20px;"><tr><td style="padding:16px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#8a6d1f;">Notes</p><p style="margin:0;font-size:15px;line-height:1.5;color:#222222;white-space:pre-wrap;">${escapeHtml(orderNotes)}</p></td></tr></table>` : ""}<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;"><tr><td style="padding:18px;"><p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999999;">Contact</p><p style="margin:0;font-size:16px;font-weight:800;color:#111111;">${escapeHtml(lead.phone || "No phone")}${lead.email ? ` &middot; ${escapeHtml(lead.email)}` : ""}</p></td></tr></table></td></tr></table></td></tr></table></body></html>`,
     }).catch((err) => console.error("[Resend] Online order notification error:", err))
   }
   if (lead.email && resend) {
@@ -120,7 +150,7 @@ export async function POST(req: NextRequest) {
       from: `${businessName} <hello@foundco.app>`,
       to: lead.email,
       subject: `Your ${businessName} order receipt`,
-      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Order receipt</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><p style="margin:0 0 10px;font-size:18px;font-weight:900;color:#111111;">Thanks, ${escapeHtml(lead.name || "there")}.</p><p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#444444;">Your payment was received and your order was sent to ${escapeHtml(businessName)}.</p><table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:16px;font-weight:900;color:#111111;">Total paid</td><td align="right" style="font-size:16px;font-weight:900;color:#111111;">${total}</td></tr></table>${existingAnswers.pickup_time ? `<p style="margin:20px 0 0;font-size:14px;color:#444444;"><strong>Pickup:</strong> ${escapeHtml(existingAnswers.pickup_time)}</p>` : ""}${existingAnswers.notes ? `<p style="margin:8px 0 0;font-size:14px;color:#444444;"><strong>Notes:</strong> ${escapeHtml(existingAnswers.notes)}</p>` : ""}</td></tr></table></td></tr></table></body></html>`,
+      html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Order receipt</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><p style="margin:0 0 10px;font-size:18px;font-weight:900;color:#111111;">Thanks, ${escapeHtml(lead.name || "there")}.</p><p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#444444;">Your payment was received and your order was sent to ${escapeHtml(businessName)}.</p><table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:16px;font-weight:900;color:#111111;">Total paid</td><td align="right" style="font-size:16px;font-weight:900;color:#111111;">${total}</td></tr></table>${pickupHtml}${existingAnswers.notes ? `<p style="margin:8px 0 0;font-size:14px;color:#444444;"><strong>Notes:</strong> ${escapeHtml(existingAnswers.notes)}</p>` : ""}</td></tr></table></td></tr></table></body></html>`,
     }).catch((err) => console.error("[Resend] Customer order confirmation error:", err))
   }
   return NextResponse.json({ ok: true })

@@ -1,3 +1,19 @@
+## Session: July 21, 2026 - Fulfillment Details in Paid Order Receipts
+**AI:** Codex
+**Worked on:** Shawn completed the live T-Shirts shipping checkout and asked whether customer receipts should show where an order ships or where pickup happens. Team call: yes, every paid order receipt must confirm fulfillment clearly, and pickup must not invent an address.
+
+### Fixed
+- Shopping-cart order completion now formats fulfillment as a receipt block instead of a sentence: Shipping shows `Ship to` with the customer-entered address; Pickup shows `Pickup details`.
+- Restaurant/menu online-order completion now uses the same receipt block and includes pickup time when present.
+- Both owner and customer receipts now pull a real saved `company_locations` address when available; otherwise pickup says the business will contact the customer with pickup instructions.
+- Removed the heavy bordered owner-email fulfillment box that made shipping addresses look like a loud blue link block.
+- Build passes with `cmd /c npm run build`.
+
+### QA Status
+- Shawn confirmed the T-Shirts live shop order with shipping completed end to end, including customer and owner emails.
+- Strict payment QA still has the exact current pay-later estimate path open unless Shawn waives it for launch.
+
+---
 ## Session: July 21, 2026 - Native Shipping Address Checkout Fields
 **AI:** Codex
 **Worked on:** Shawn found that selecting Shipping in the T-Shirts shop checkout showed one large address textarea instead of normal shipping fields. Team call: Steve/Jony/Angela treat this as a launch-blocking checkout trust issue; Craig/Priya keep one normalized commerce payload.

@@ -34,6 +34,19 @@ Process correction: after any meaningful code, QA, or note change, update `SESSI
 
 ---
 
+## FULFILLMENT DETAILS IN PAID ORDER RECEIPTS - July 21, 2026
+
+Shawn completed the T-Shirts live shop checkout with Shipping and asked whether receipts should show where an order is being shipped or where pickup happens. Team decision: yes, the receipt has to answer that explicitly.
+
+- Customer and owner receipts for retail/shop orders now show a clean receipt block: `Ship to` for shipping orders, `Pickup details` for pickup orders.
+- Restaurant/menu paid-order receipts now use the same treatment and include pickup time when present.
+- Pickup details use the first saved `company_locations` address when available. If no reliable pickup address exists, Found says the business will contact the customer with pickup instructions instead of inventing one.
+- T-Shirts connected-account payment proof is now complete by Shawn's live shipping order test.
+- Build passes with `cmd /c npm run build`.
+- Still open for strictest launch payment QA: exact current pay-later estimate path unless Shawn waives it.
+
+---
+
 ## NATIVE SHIPPING ADDRESS CHECKOUT FIELDS - July 21, 2026
 
 Shawn found the T-Shirts shop checkout used one big Shipping Address textarea. Team decision: this is a customer-trust issue, not a cosmetic issue.
