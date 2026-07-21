@@ -1,4 +1,25 @@
-﻿## Session: July 20, 2026 - Full Team Audit + Payment Trust Fix
+﻿## Session: July 20, 2026 (part 2) - All 5 Launch-Audit P0s Fixed
+**AI:** Claude Code (Opus)
+**Worked on:** Shawn approved fixing every P0 from `LAUNCH_READINESS_AUDIT_2026-07-20.md` same-session, plus the two feature requests he tied to it (review-requests copy, per-business sitemap toggle).
+
+### Fixed
+- **Post-activation login handoff.** `confirmActivation()` (`src/app/activate/activateActions.ts`) now generates a real Supabase sign-in link for the owner right after payment succeeds (same mechanism the existing working email-login flow already uses), and returns it. `src/app/activate/confirm/route.ts` redirects the owner's browser through that link instead of straight to `/api/select-company`, which required a session that never existed. `src/app/dashboard/(auth)/auth/callback/route.ts` now accepts an optional `next` param (restricted to internal paths) so the sign-in redirect can land exactly on the new company's dashboard instead of the generic `/select` picker. Falls back to the old (broken) direct link only if link generation fails, so activation itself never hard-fails on this.
+- **"Automatic review requests" claim.** Changed to "coming soon" in `src/app/plans/found-business/page.tsx` (feature list, FAQ, metadata, closing description) and `src/app/dashboard/(app)/more/page.tsx` (both plan-card feature lists and the plan promise line) instead of building the feature - per Shawn.
+- **Catalog editor mobile keyboard/scroll-lock bug.** `src/components/dashboard/CatalogManager.tsx`'s Add/Edit Item sheet now uses the identical body-lock/`visualViewport` effect `SiteEditor.tsx` already has, ported directly rather than reimplemented.
+- **Sitemap/indexing.** Added `companies.is_test` (migration 048, `scripts/migration-048-is-test.sql`) - separate from `is_comp` (billing) on purpose, since a real client could be comped and a test company could still be full-price. Added a "Hide from search" / "Show in search" toggle per business in `/admin/businesses` -> Manage (`toggleTest` action, mirrors the existing `toggleComp` pattern), plus a "Test" filter tab. `src/app/sitemap.ts` now excludes `is_test` companies and, separately, now includes Found's own marketing/legal pages (`/`, `/plans/*`, `/industries/*`, `/privacy`, `/terms`) which were previously missing entirely. Test companies' public pages also now get `robots: {index: false, follow: false}` in `src/app/[slug]/layout.tsx`, so they're excluded even if found some other way, not just omitted from the sitemap.
+- **One-time data classification (confirmed with Shawn before running):** queried all 37 companies directly - 36 are under `shawnlopez@me.com`, `supershawn@email.com`, or a `@sayitmarketing.com` address (Shawn's own practice/demo accounts); the only company under a different, real owner email is "Nereidas salón" (`nlopez0441@gmail.com`). Marked all 36 as `is_test = true`; left Nereida's live and indexable.
+- Verified with `npm run build` after each change and once more at the end - clean throughout.
+
+### Test Next
+- Full fresh onboarding -> activation on a throwaway test business, confirm you land signed into the dashboard, not `/login`.
+- Confirm `/admin/businesses` shows the new "Hide from search" toggle and "Test" filter, and that toggling it actually changes `is_test` (reload the page, confirm it persisted).
+- Open `foundco.app/sitemap.xml` and confirm it now lists Found's own pages plus only Nereida's salon among tenant sites - none of the 36 practice companies should appear.
+- Open More -> [Business plan card] and the found-business plan page, confirm review requests read "coming soon" everywhere, not as a live feature.
+- On mobile, open a Products/Menu catalog item to edit it, confirm the background no longer scrolls behind the sheet and the keyboard doesn't cover the price field.
+
+---
+
+## Session: July 20, 2026 - Full Team Audit + Payment Trust Fix
 **AI:** Claude Code (Opus)
 **Worked on:** Shawn asked for a full team audit before launch. Five parallel domain audits (product/journey, payments/data, public web, architecture/security, design/mobile) re-read the current code against the July 9 launch audit, since ~80 commits had shipped since with nothing re-verified.
 

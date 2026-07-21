@@ -18,15 +18,16 @@ Docs (this file, `CHANGELOG.md`, `TASKS.md`) were not kept current from July 13 
 
 ---
 
-## FULL TEAM AUDIT - July 20, 2026
+## FULL TEAM AUDIT - July 20, 2026 - ALL 5 P0s FIXED SAME DAY
 
-Shawn asked for a full team audit before launch. Result: **`LAUNCH_READINESS_AUDIT_2026-07-20.md`** - not a re-hash, five parallel domain audits actually re-read the current code (a lot shipped since the July 9 audit that was never checked against). Findings, awaiting Shawn's go-ahead before any fix:
+Shawn asked for a full team audit before launch. Result: **`LAUNCH_READINESS_AUDIT_2026-07-20.md`** - five parallel domain audits actually re-read the current code (a lot shipped since the July 9 audit that was never checked against). Shawn approved fixing every P0 immediately; all shipped this session. Full detail: `CHANGELOG.md`, "July 20, 2026 (part 2)."
 
-- **Most urgent, independent of launch timing:** the public estimate accept endpoint marks an estimate paid from unauthenticated client input with zero Stripe verification (`src/app/[slug]/api/accept-estimate/[id]/route.ts:151-196`). This is live in production today - a trust/fraud bug, not a launch-readiness nice-to-have.
-- Post-activation login is broken - a brand-new paying owner has no way into their own dashboard without requesting fresh access. This is *why* the July 9 "prove the first-customer journey" P0 was never actually provable.
-- The July 16 catalog editor shipped without the mobile keyboard/scroll-lock fix SiteEditor got two days later on July 18 - same bug class, reintroduced.
-- Sitemap test-company leak and the unbacked "review requests" plan claim are still open from July 9 - zero movement in 11 days despite heavy shipping elsewhere.
-- Full P0/P1 list, what's actually solid, and the team-by-lead verdict are in the audit file. Nothing has been fixed yet - waiting on Shawn's direction on what to tackle first.
+- **Payment trust bug - FIXED.** The public estimate accept endpoint used to mark an estimate paid from unauthenticated client input with zero Stripe verification. Now requires and server-verifies the real Stripe PaymentIntent first.
+- **Post-activation login - FIXED.** A brand-new paying owner used to hit a bare login screen with no session. Now signed in automatically via a real magic-link redirect on the way to their dashboard.
+- **Catalog editor mobile bug - FIXED.** Ported SiteEditor's mobile keyboard/scroll-lock fix over to the catalog editor's Add/Edit Item sheet.
+- **Sitemap/indexing - FIXED.** New per-business "Hide from search" toggle in `/admin/businesses`. Classified all 37 companies directly: 36 are Shawn's own practice accounts (now hidden + `noindex`), only Nereida's real salon stays indexable. Found's own marketing pages are now in the sitemap too (previously missing entirely).
+- **"Review requests" claim - FIXED.** Changed to "coming soon" everywhere on the Business plan, per Shawn, instead of building the feature.
+- 14 P1s from the audit remain open (no security headers, no rate limiting, no CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.) - full list in `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Next priority list once Shawn's ready.
 
 ---
 

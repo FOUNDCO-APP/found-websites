@@ -111,6 +111,16 @@ export async function toggleComp(companyId: string, value: boolean) {
   await admin.from("companies").update(patch).eq("id", companyId)
 }
 
+// Separate from is_comp (billing) on purpose - a real client could be
+// comped and still deserve to be indexed, and a test company could be a
+// full-price account Shawn is just trying out himself. This only controls
+// whether src/app/sitemap.ts includes the business.
+export async function toggleTest(companyId: string, value: boolean) {
+  await requireAdmin()
+  const admin = getAdminClient()
+  await admin.from("companies").update({ is_test: value }).eq("id", companyId)
+}
+
 export async function saveNotes(companyId: string, notes: string) {
   await requireAdmin()
   const admin = getAdminClient()

@@ -63,6 +63,10 @@ export async function generateMetadata(
     },
     metadataBase: new URL(url),
     alternates: { canonical: url },
+    // Shawn's own practice/demo companies should never show up in search,
+    // even if they got linked to from somewhere and Google finds them
+    // outside the sitemap. See src/app/sitemap.ts for the matching filter.
+    ...(company.is_test ? { robots: { index: false, follow: false } } : {}),
   }
 }
 

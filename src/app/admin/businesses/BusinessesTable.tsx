@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { useState, useTransition } from "react"
-import { setViewAsCookie, toggleComp, saveNotes } from "./actions"
+import { setViewAsCookie, toggleComp, toggleTest, saveNotes } from "./actions"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-export type BusinessFilter = "all" | "attention" | "inactive" | "logo" | "payments"
+export type BusinessFilter = "all" | "attention" | "inactive" | "logo" | "payments" | "test"
 
 export type BusinessRow = {
   id: string
@@ -16,6 +16,7 @@ export type BusinessRow = {
   subscription_status: string | null
   email: string | null
   is_comp: boolean | null
+  is_test: boolean | null
   admin_notes: string | null
   created_at: string | null
   issues: string[]
@@ -46,14 +47,22 @@ function IssueBadge({ issue }: { issue: string }) {
 function BusinessItem({ row }: { row: BusinessRow }) {
   const [notes, setNotes] = useState(row.admin_notes ?? "")
   const [comp, setComp] = useState(Boolean(row.is_comp))
+  const [isTest, setIsTest] = useState(Boolean(row.is_test))
   const [savingNotes, setSavingNotes] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [testPending, startTestTransition] = useTransition()
   const active = row.subscription_status === "active" || row.subscription_status === "trialing" || comp
 
   function handleCompToggle() {
     const next = !comp
     setComp(next)
     startTransition(() => { toggleComp(row.id, next) })
+  }
+
+  function handleTestToggle() {
+    const next = !isTest
+    setIsTest(next)
+    startTestTransition(() => { toggleTest(row.id, next) })
   }
 
   async function handleNotesBlur() {
@@ -70,6 +79,7 @@ function BusinessItem({ row }: { row: BusinessRow }) {
           <div className="hq-business-name-line">
             <h2>{row.name}</h2>
             <span className={`hq-badge ${active ? "hq-badge-success" : "hq-badge-warning"}`}>{comp ? "Comp" : active ? "Active" : "Setup"}</span>
+            {isTest && <span className="hq-badge hq-badge-info">Test - hidden from search</span>}
           </div>
           <p>{row.slug}.foundco.app / {planLabel(row.plan)} / {row.industry_category ?? "Uncategorized"}</p>
           {row.email && <p>{row.email}</p>}
@@ -87,6 +97,7 @@ function BusinessItem({ row }: { row: BusinessRow }) {
           <textarea id={`notes-${row.id}`} value={notes} onChange={(event) => setNotes(event.target.value)} onBlur={handleNotesBlur} rows={2} placeholder="How you know them, account purpose, or follow-up details" />
           <div className="hq-business-manage-footer">
             <button type="button" onClick={handleCompToggle} disabled={pending} className="hq-button hq-button-secondary">{comp ? "Remove comp" : "Activate as comp"}</button>
+            <button type="button" onClick={handleTestToggle} disabled={testPending} className="hq-button hq-button-secondary">{isTest ? "Show in search" : "Hide from search"}</button>
             <span>{savingNotes ? "Saving..." : "Notes save automatically"}</span>
           </div>
         </div>
@@ -101,6 +112,7 @@ const FILTERS: Array<{ id: BusinessFilter; label: string }> = [
   { id: "inactive", label: "Setup" },
   { id: "logo", label: "No logo" },
   { id: "payments", label: "Payments" },
+  { id: "test", label: "Test" },
 ]
 
 export default function BusinessesTable({ rows, initialSearch = "", initialFilter = "all" }: { rows: BusinessRow[]; initialSearch?: string; initialFilter?: BusinessFilter }) {
@@ -114,6 +126,7 @@ export default function BusinessesTable({ rows, initialSearch = "", initialFilte
     if (filter === "inactive") return row.issues.includes("Not active")
     if (filter === "logo") return row.issues.includes("No logo")
     if (filter === "payments") return row.issues.includes("No payment setup")
+    if (filter === "test") return Boolean(row.is_test)
     return true
   })
 

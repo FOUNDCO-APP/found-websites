@@ -9,6 +9,10 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code")
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
   const appBase = `https://my.${rootDomain}`
+  // Only ever an internal my.<root domain> path (e.g. from activation) - never
+  // follow this to an external host.
+  const rawNext = searchParams.get("next")
+  const next = rawNext && rawNext.startsWith("/") ? rawNext : null
 
   // PKCE flow — has ?code= param
   if (code) {
@@ -36,12 +40,12 @@ export async function GET(request: NextRequest) {
         if (companies.length === 0) {
           return NextResponse.redirect(`${appBase}/login?error=no_company`)
         }
-        return NextResponse.redirect(`${appBase}/select`)
+        return NextResponse.redirect(`${appBase}${next ?? "/select"}`)
       }
     }
   }
 
   // No code — Supabase sent #access_token in hash instead (implicit flow)
   // Send to client-side handler that can read the hash fragment
-  return NextResponse.redirect(`${appBase}/auth/token`)
+  return NextResponse.redirect(`${appBase}/auth/token${next ? `?next=${encodeURIComponent(next)}` : ""}`)
 }

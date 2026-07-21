@@ -307,7 +307,7 @@ async function updateCompanyAfterActivation(admin: ReturnType<typeof getAdminCli
   console.warn("[Activate] Promo audit columns missing; activation saved without local promo audit fields.", error.message)
 }
 
-export async function confirmActivation(slug: string, setupIntentId: string): Promise<{ ok: boolean; companyId?: string }> {
+export async function confirmActivation(slug: string, setupIntentId: string): Promise<{ ok: boolean; companyId?: string; authLink?: string | null }> {
   if (!process.env.STRIPE_SECRET_KEY) return { ok: false }
 
   try {
@@ -324,7 +324,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const { data: company } = await admin
       .from("companies")
-      .select("id, slug")
+      .select("id, slug, user_id")
       .eq("id", companyId)
       .eq("slug", slug)
       .maybeSingle()
@@ -414,7 +414,35 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       console.error("[Activate] site-live email failed:", err)
     })
 
-    return { ok: true, companyId }
+    // A brand-new owner who just paid should land straight in their dashboard,
+    // not a bare /login screen. Generate a one-time sign-in link the same way
+    // the existing email-login flow does, and hand it back so the redirect
+    // response can carry the owner's browser straight through it.
+    let authLink: string | null = null
+    if (company.user_id) {
+      try {
+        const { data: userData } = await admin.auth.admin.getUserById(company.user_id)
+        const ownerEmail = userData?.user?.email
+        if (ownerEmail) {
+          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+          const next = `/api/select-company?id=${encodeURIComponent(companyId)}&activated=true`
+          const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+            type: "magiclink",
+            email: ownerEmail,
+            options: { redirectTo: `https://my.${rootDomain}/auth/callback?next=${encodeURIComponent(next)}` },
+          })
+          if (linkError) {
+            console.error("[Activate] generateLink error:", linkError.message)
+          } else {
+            authLink = linkData?.properties?.action_link ?? null
+          }
+        }
+      } catch (err) {
+        console.error("[Activate] auth link generation failed:", err)
+      }
+    }
+
+    return { ok: true, companyId, authLink }
   } catch (err) {
     console.error("[Activate] confirmActivation failed:", err)
     return { ok: false }

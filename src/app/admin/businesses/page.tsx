@@ -30,12 +30,12 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const params = await searchParams
   const initialSearch = typeof params.q === "string" ? params.q : ""
   const requestedFilter = typeof params.filter === "string" ? params.filter : "all"
-  const allowedFilters: BusinessFilter[] = ["all", "attention", "inactive", "logo", "payments"]
+  const allowedFilters: BusinessFilter[] = ["all", "attention", "inactive", "logo", "payments", "test"]
   const initialFilter = allowedFilters.includes(requestedFilter as BusinessFilter) ? requestedFilter as BusinessFilter : "all"
   const supabase = getAdminClient()
   const [{ data: companies }, { data: configs }] = await Promise.all([
     supabase.from("companies")
-      .select("id, name, slug, industry_category, plan, subscription_status, email, is_comp, admin_notes, created_at, logo_url, logo_white_url, primary_intent, stripe_connect_account_id")
+      .select("id, name, slug, industry_category, plan, subscription_status, email, is_comp, is_test, admin_notes, created_at, logo_url, logo_white_url, primary_intent, stripe_connect_account_id")
       .order("created_at", { ascending: false }),
     supabase.from("website_config").select("company_id, copy_generated"),
   ])
@@ -52,6 +52,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
     subscription_status: company.subscription_status,
     email: company.email,
     is_comp: company.is_comp,
+    is_test: company.is_test,
     admin_notes: company.admin_notes,
     created_at: company.created_at,
     issues: computeIssues(company, copyGeneratedByCompany.get(company.id)),

@@ -43,7 +43,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
     "Everything in Found Pro",
     "Clients book themselves",
     "Send estimates and collect deposits",
-    "Review requests go out for you",
+    "Review requests (coming soon)",
     "Reach your full client list",
     "Show clients their finished job",
   ],
@@ -52,7 +52,7 @@ const PLAN_FEATURES: Record<string, string[]> = {
 const PLAN_PROMISE: Record<string, string> = {
   found: "Your business is online, trusted, and ready to get calls.",
   found_pro: "Found helps every lead get answered, followed up, and remembered.",
-  found_business: "Found helps run the job from first booking to final review.",
+  found_business: "Found helps run the job from first booking to final invoice.",
 }
 
 const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string; headline: string; body: string; introPrice: number; normalPrice: number; features: string[] }> = {
@@ -77,13 +77,13 @@ const UPGRADE_TO: Record<string, { plan: string; label: string; eyebrow: string;
     label: "Found Business",
     eyebrow: "For growing crews",
     headline: "Run the job, not just the website.",
-    body: "Pro helps with leads. Business helps with the work after the lead says yes: bookings, estimates, deposits, reviews, and client galleries.",
+    body: "Pro helps with leads. Business helps with the work after the lead says yes: bookings, estimates, deposits, and client galleries.",
     introPrice: 69,
     normalPrice: 99,
     features: [
       "Clients book themselves without back-and-forth texts",
       "Send professional estimates and collect deposits",
-      "Review requests go out after finished jobs",
+      "Review requests (coming soon)",
       "Reach past clients with one clean message",
       "Share finished project galleries clients remember",
     ],

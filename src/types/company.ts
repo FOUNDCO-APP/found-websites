@@ -96,6 +96,7 @@ export type Company = {
   email: string | null
   phone_visible: boolean | null
   email_visible: boolean | null
+  is_test: boolean | null
   lead_phone: string | null
   lead_email: string | null
   city: string | null

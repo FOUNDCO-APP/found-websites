@@ -23,8 +23,12 @@ export async function GET(request: NextRequest) {
     return activationFailed()
   }
 
+  // Sign the owner in on the way to the dashboard - without this they land on
+  // a bare /login screen right after paying, with no session and no way in
+  // except requesting fresh access. Falls back to the old (broken) direct
+  // link only if link generation failed, so activation never hard-fails here.
   const destination = returnTo === "dashboard"
-    ? `https://my.${rootDomain}/api/select-company?id=${encodeURIComponent(activation.companyId)}&activated=true`
+    ? (activation.authLink ?? `https://my.${rootDomain}/api/select-company?id=${encodeURIComponent(activation.companyId)}&activated=true`)
     : `https://${slug}.${rootDomain}?activated=true`
 
   const response = NextResponse.redirect(destination)

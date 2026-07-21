@@ -1,6 +1,6 @@
 ﻿"use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { updateMenuItems, uploadMenuItemPhoto } from "@/app/dashboard/(app)/site/actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -217,6 +217,61 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   const [uploading, setUploading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const sheetOpen = Boolean(editingItem)
+
+  useEffect(() => {
+    if (!sheetOpen) return
+
+    const body = document.body
+    const root = document.documentElement
+    const previousBodyOverflow = body.style.overflow
+    const previousBodyOverscroll = body.style.overscrollBehavior
+    const previousBodyPosition = body.style.position
+    const previousBodyTop = body.style.top
+    const previousBodyLeft = body.style.left
+    const previousBodyRight = body.style.right
+    const previousBodyWidth = body.style.width
+    const previousRootOverflow = root.style.overflow
+    const previousRootOverscroll = root.style.overscrollBehavior
+    const previousRootHeight = root.style.height
+    const scrollY = window.scrollY
+
+    const updateVisualHeight = () => {
+      root.style.setProperty("--found-visual-height", `${window.visualViewport?.height ?? window.innerHeight}px`)
+    }
+
+    updateVisualHeight()
+    body.style.overflow = "hidden"
+    body.style.overscrollBehavior = "none"
+    body.style.position = "fixed"
+    body.style.top = `-${scrollY}px`
+    body.style.left = "0"
+    body.style.right = "0"
+    body.style.width = "100%"
+    root.style.overflow = "hidden"
+    root.style.overscrollBehavior = "none"
+    root.style.height = "100%"
+    window.visualViewport?.addEventListener("resize", updateVisualHeight)
+    window.visualViewport?.addEventListener("scroll", updateVisualHeight)
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      body.style.overscrollBehavior = previousBodyOverscroll
+      body.style.position = previousBodyPosition
+      body.style.top = previousBodyTop
+      body.style.left = previousBodyLeft
+      body.style.right = previousBodyRight
+      body.style.width = previousBodyWidth
+      root.style.overflow = previousRootOverflow
+      root.style.overscrollBehavior = previousRootOverscroll
+      root.style.height = previousRootHeight
+      root.style.removeProperty("--found-visual-height")
+      window.visualViewport?.removeEventListener("resize", updateVisualHeight)
+      window.visualViewport?.removeEventListener("scroll", updateVisualHeight)
+      window.scrollTo(0, scrollY)
+    }
+  }, [sheetOpen])
 
   const itemCount = categories.reduce((sum, category) => sum + category.items.length, 0)
   const publicHref = `https://${slug}.foundco.app${copy.previewPath}`

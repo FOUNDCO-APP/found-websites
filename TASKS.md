@@ -89,14 +89,19 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 
 ## NOW (MAX 3)
 
-**Full team audit re-run July 20, 2026 - see `LAUNCH_READINESS_AUDIT_2026-07-20.md`.** Supersedes the list below; kept for history but do not treat as current.
+**Full team audit re-run July 20, 2026 - see `LAUNCH_READINESS_AUDIT_2026-07-20.md`.** All 5 P0s from that audit are now fixed (list below, same day). Kept for history; the remaining 14 P1s from that audit are still open and are the next real priority list.
 
-0. ~~URGENT~~ **FIXED July 20, 2026:** the public estimate accept endpoint now requires and server-verifies the Stripe PaymentIntent (status, estimate_id, company_id) before marking anything paid - see `accept-estimate/[id]/route.ts`. The webhook now also handles `estimate_balance` payments (`stripe/webhook/route.ts`), mirroring the existing `estimate_deposit` branch. Client (`AcceptButton.tsx`) now sends `payment_intent_id` from the confirmed Stripe payment. Build passes. **Test next:** run a real test-mode deposit payment and a real balance payment end to end, confirm both mark the estimate paid correctly and emails send.
-1. **Fix the broken post-activation login handoff** - a brand-new paying owner is bounced to a bare `/login` screen (`src/app/onboarding/actions.ts:369-380` generates a magic link that is never sent/used). This is why the "first-customer journey" P0 below was never actually provable.
-2. **Close the launch payment gate** - `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end - now blocked on item 0 above being fixed first.
-3. **Make the public promise truthful and indexable** - stop exposing test/comp companies in the sitemap (`is_comp` filter is missing, the flag already exists), add Found's own public pages, and remove or complete the still-unbuilt "automatic review requests" claim on the Business plan.
+**All 5 P0s FIXED July 20, 2026:**
+0. Payment trust bug - `accept-estimate` now requires and server-verifies the Stripe PaymentIntent before marking anything paid; webhook now also handles `estimate_balance`. **Test next:** run a real test-mode deposit payment and a real balance payment end to end.
+1. Post-activation login handoff - `confirmActivation` now generates a real sign-in link and the activation redirect carries the owner's browser through it, landing them signed in on `/api/select-company` instead of a bare `/login` screen. **Test next:** run a full fresh onboarding -> activation and confirm you land in the dashboard already signed in, not at a login screen.
+2. Sitemap/indexing - added a per-business `is_test` toggle (`/admin/businesses` -> Manage -> "Hide from search"), separate from `is_comp` billing status. Classified July 20: 36 of 37 companies are Shawn's own practice accounts and are now excluded from the sitemap and marked `noindex`; only Nereida's real salon stays indexable. Sitemap also now includes Found's own marketing/legal pages, which were previously missing entirely.
+3. "Automatic review requests" claim - changed to "coming soon" everywhere it appeared (found-business plan page, More page plan cards) instead of building the feature, per Shawn.
+4. Catalog editor mobile keyboard/scroll-lock bug - `CatalogManager.tsx`'s Add/Edit Item sheet now uses the same body-lock pattern as SiteEditor.
 
-*Prior verdict: `LAUNCH_READINESS_AUDIT_2026-07-09.md`. Current verdict: `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only.*
+**Still open, launch payment gate itself (separate from the bug fixes above):**
+- `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end - can proceed now that the login-handoff bug (item 1 above) no longer blocks reaching the dashboard.
+
+*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. 14 P1s from the July 20 audit remain open - see that file for the full list (no security headers, no rate limiting, no CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.).*
 
 ---
 
