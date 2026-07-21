@@ -118,7 +118,9 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 
 - [ ] Add browser security headers later; full header experiment was rolled back after iPhone Safari Stripe `inner.html` download prompts.
 - [ ] Revisit CSP/Permissions-Policy after launch smoke testing; first attempt caused an iPhone Safari Stripe `inner.html` download prompt and was removed.
-- [ ] After full rollback deploy: retest Lucky/T-Shirts checkout on iPhone Safari and confirm whether the Stripe `inner.html` download prompt is gone.
+- [x] Full header rollback did not clear the iPhone Safari Stripe `inner.html` prompt; cause is not the launch header experiment.
+- [x] Remove public preview-banner Stripe prefetch so Stripe.js is not downloaded while customers only browse inactive/unactivated public sites.
+- [ ] After deploy: retest Lucky/T-Shirts shop browsing on iPhone Safari without starting checkout; if prompt only appears after payment starts, audit the checkout `PaymentElement` path next.
 - [ ] Next team step: public write-route rate limiting / bot controls.
 
 ---

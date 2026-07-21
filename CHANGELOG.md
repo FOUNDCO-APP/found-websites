@@ -1,3 +1,17 @@
+## Session: July 21, 2026 - Stop Stripe Prefetch on Public Preview Banner
+**AI:** Codex
+**Worked on:** Shawn still saw iPhone Safari asking to download Stripe `inner.html` on Lucky and T-Shirts after all launch security headers were rolled back. Team read: this is not the header layer. Craig found the public preview banner was prefetching the activation overlay, and that overlay has a top-level Stripe load.
+
+### Fixed
+- Removed the background `ActivateOverlay` prefetch from `PreviewBanner` so Stripe.js is not intentionally downloaded while a visitor is only browsing a public site.
+- Kept activation behavior intact: Stripe loads only when the owner taps the activate banner.
+- Left shop/order checkout code untouched so this fix isolates the passive browsing prompt first.
+
+### Test Next
+- After deploy, open Lucky and T-Shirts shop pages on iPhone Safari and browse/add/view product details without tapping checkout or activate. The `inner.html` download prompt should not appear.
+- If the prompt appears only after tapping `Continue to payment`, the next team step is a direct Stripe PaymentElement investigation or hosted Checkout fallback.
+
+---
 ## Session: July 21, 2026 - Full Security Header Rollback
 **AI:** Codex
 **Worked on:** Shawn still saw iPhone Safari offering to download Stripe `inner.html` on Lucky and T-Shirts after the partial header rollback. Team decision: restore the exact pre-header `next.config.ts` shape before launch testing continues.
@@ -325,7 +339,8 @@ The sessions from July 13 through July 20 below were not logged in real time - `
 ### Test Next
 - On iPhone, record or upload a short video, then open Photos -> Unsorted. Confirm the video appears with a VIDEO badge and can be hearted/starred.
 
----## Session: July 19, 2026 - Contact Editing + Video Media Foundation
+---
+## Session: July 19, 2026 - Contact Editing + Video Media Foundation
 **AI:** Codex
 **Worked on:** Made the contact page editable and added safe video handling for dashboard media and public hero slots.
 
@@ -339,7 +354,8 @@ The sessions from July 13 through July 20 below were not logged in real time - `
 ### Test Next
 - Upload a short video from Photos, assign it to Header or Contact in Edit My Site, then open the public home/contact pages and confirm the selected media renders.
 
----## Session: July 18, 2026 - Named Site Photo Slots
+---
+## Session: July 18, 2026 - Named Site Photo Slots
 **AI:** Codex
 **Worked on:** Replaced the single confusing header-photo path with named website image slots.
 

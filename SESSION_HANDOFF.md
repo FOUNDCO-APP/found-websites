@@ -4,6 +4,16 @@
 
 ---
 
+## STRIPE PREFETCH REMOVED FROM PUBLIC BROWSING - July 21, 2026
+
+Shawn still saw iPhone Safari asking to download Stripe `inner.html` on Lucky and T-Shirts after the full header rollback. Team read: the headers were not the root cause. Craig found `PreviewBanner` was prefetching `ActivateOverlay`, and `ActivateOverlay` calls Stripe at module load.
+
+- Removed the public preview banner's background `ActivateOverlay` import.
+- Stripe should no longer be intentionally downloaded while customers are only browsing a public inactive/unactivated site.
+- Activation still works; the overlay loads only after the owner taps the activate CTA.
+- Test next after deploy: browse Lucky/T-Shirts shop pages on iPhone Safari without starting checkout. If the popup returns only after tapping payment, isolate the checkout `PaymentElement` path next.
+
+---
 ## FULL SECURITY HEADER ROLLBACK - July 21, 2026
 
 Shawn still saw iPhone Safari asking to download Stripe `inner.html` on Lucky and T-Shirts after the partial header hotfix. Team decision: remove all custom security headers and restore the exact pre-header `next.config.ts` behavior before continuing launch QA.

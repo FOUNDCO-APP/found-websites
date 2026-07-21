@@ -85,10 +85,6 @@ export default function PreviewBanner({
     if (isPreview) return
     if (!isActivated) {
       setVisible(true)
-      // Prefetch the overlay chunk now — before the user taps.
-      // Also triggers loadStripe() inside the module, so Stripe.js
-      // is downloaded from js.stripe.com while they browse.
-      import("./ActivateOverlay").catch(() => {})
     }
   }, [isActivated])
 
