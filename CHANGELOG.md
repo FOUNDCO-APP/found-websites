@@ -1,4 +1,24 @@
-﻿## Session: July 20, 2026 (part 2) - All 5 Launch-Audit P0s Fixed
+﻿## Session: July 21, 2026 - Launch Payment QA Evidence Backfill
+**AI:** Codex
+**Worked on:** Shawn clarified that live payment QA had already been tested but not recorded after a prior crash/context loss. Craig/Priya led a read-only production Supabase audit before changing the launch checklist.
+
+### Verified
+- Fresh onboarding / activation payment: Shawn confirmed it passed live; production test-owner companies show active subscriptions and Stripe customer IDs.
+- Lucky (`lucky`) retail shop order: paid $1.00 `shopping_order` for Shawn Lopez from July 17, 2026, selected option `Size: XL`, Stripe PaymentIntent recorded in `leads.partial_answers`.
+- Rosa's Mexican Food (`rosas`) restaurant online order: paid $1.00 `online_order` records for Shawn Lopez, including the July 18, 2026 closed Carne Asada order, Stripe PaymentIntent recorded.
+- Blue Luna Events (`bluelunaevents`) estimate deposit: accepted $1.00 estimate for Shawn Lopez, 50% deposit, `payment_status: deposit_paid`, `accepted_payment_choice: pay_now`, Stripe PaymentIntent recorded, deposit paid July 20, 2026.
+- Construction (`construction`) estimate final balance: $1.09 estimate marked `payment_status: paid`, deposit paid July 16, 2026, final paid July 16, 2026, payment-link timestamp recorded.
+
+### Still Open
+- Exact current pay-later estimate path remains unverified: need one live `accepted_payment_choice: pay_later` / `accepted_pay_later_at` test or direct production evidence.
+- Stripe API reconciliation could not run from this machine because `.env.local` exposed only a test Stripe secret; live connected-account PaymentIntent reads failed. Supabase production rows were verified.
+
+### Documentation
+- Updated `SESSION_HANDOFF.md` and `TASKS.md` with the verified evidence and the remaining pay-later gap.
+- Reinforced the process rule: after meaningful code, QA, or note changes, update the handoff/task/changelog docs before ending the session.
+
+---
+## Session: July 20, 2026 (part 2) - All 5 Launch-Audit P0s Fixed
 **AI:** Claude Code (Opus)
 **Worked on:** Shawn approved fixing every P0 from `LAUNCH_READINESS_AUDIT_2026-07-20.md` same-session, plus the two feature requests he tied to it (review-requests copy, per-business sitemap toggle).
 

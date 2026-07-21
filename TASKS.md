@@ -1,6 +1,6 @@
 # TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
-*Last updated: July 20, 2026*
+*Last updated: July 21, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
 
 ---
@@ -98,8 +98,14 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 3. "Automatic review requests" claim - changed to "coming soon" everywhere it appeared (found-business plan page, More page plan cards) instead of building the feature, per Shawn.
 4. Catalog editor mobile keyboard/scroll-lock bug - `CatalogManager.tsx`'s Add/Edit Item sheet now uses the same body-lock pattern as SiteEditor.
 
-**Still open, launch payment gate itself (separate from the bug fixes above):**
-- `FOUND1` live activation promo is created and production price IDs are live. Live-mode Stripe Connect webhook signing secret shipped July 19. Still needed: run activation payment, Accept & Pay, pay later, receipts, owner email, dashboard state, and public paid-state QA end to end - can proceed now that the login-handoff bug (item 1 above) no longer blocks reaching the dashboard.
+**Launch payment QA backfill - July 21, 2026:**
+- [x] Fresh onboarding / live activation payment - Shawn confirmed this passed live; production companies under Shawn's test-owner emails now show active subscriptions and Stripe customer IDs.
+- [x] Retail shop order payment - verified in production Supabase: Lucky (`lucky`) has a `shopping_order` lead for Shawn Lopez, created July 17, 2026, `payment_status: paid`, $1.00 subtotal, selected option `Size: XL`, Stripe PaymentIntent recorded.
+- [x] Restaurant online order payment - verified in production Supabase: Rosa's Mexican Food (`rosas`) has paid `online_order` leads for Shawn Lopez, including July 18, 2026, $1.00 Carne Asada order, `status: closed`, `payment_status: paid`, Stripe PaymentIntent recorded.
+- [x] Estimate deposit payment - verified in production Supabase: Blue Luna Events (`bluelunaevents`) has an accepted $1.00 estimate for Shawn Lopez, 50% deposit, `payment_status: deposit_paid`, `accepted_payment_choice: pay_now`, Stripe PaymentIntent recorded, deposit paid July 20, 2026.
+- [x] Estimate final-balance payment - verified in production Supabase: Construction (`construction`) has a $1.09 estimate marked `payment_status: paid`, deposit paid July 16, 2026, final paid July 16, 2026, payment link timestamp recorded.
+- [ ] Pay-later estimate path - still needs one exact live QA pass or direct production evidence for `accepted_payment_choice: pay_later` / `accepted_pay_later_at`. Existing older unpaid accepted estimates do not prove the current pay-later flow.
+- [ ] Optional Stripe Dashboard reconciliation - local `.env.local` only exposed a test secret during Codex verification, so Stripe API could not read live connected-account PaymentIntents from this machine. Supabase production rows are verified; Stripe-side reconciliation should be checked in the Stripe Dashboard if Shawn wants a second ledger confirmation.
 
 *Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. 14 P1s from the July 20 audit remain open - see that file for the full list (no security headers, no rate limiting, no CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.).*
 

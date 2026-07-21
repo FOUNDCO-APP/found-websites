@@ -1,6 +1,6 @@
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 20, 2026*
+*Last updated: July 21, 2026*
 
 ---
 
@@ -15,6 +15,22 @@ Docs (this file, `CHANGELOG.md`, `TASKS.md`) were not kept current from July 13 
 - Also undocumented: estimate payment fixes (July 15), Stripe Connect payout/audit tooling (July 15), mobile checkout stabilization (July 17), dashboard badge-clearing fix (July 18), payment receipt sender-name fix (July 19), black video thumbnail fix (July 19), and a new 3-option add-to-project photo picker (July 20).
 
 **Fixed in this pass:** the "Current Status" section below previously had the same few July 19/July 10/July 9 paragraphs pasted 4-5 times with sentences cut mid-word (a paste bug from an earlier session). Deduplicated and reconstructed below; older July 6-8 Found HQ history was trimmed out since it's fully preserved in `CHANGELOG.md`/`CHANGELOG_ARCHIVE.md`.
+
+---
+
+## LAUNCH PAYMENT QA BACKFILL - July 21, 2026
+
+Shawn clarified that several live payment QA items were already tested but were not recorded after a prior crash/context loss. Craig/Priya ran a read-only production Supabase audit to backfill evidence before changing the launch list.
+
+- **Fresh onboarding / activation payment:** Shawn confirmed this passed live; production test-owner companies show active subscriptions and Stripe customer IDs.
+- **Retail shop order:** verified Lucky (`lucky`) has a paid $1.00 `shopping_order` for Shawn Lopez from July 17, 2026, including selected option `Size: XL` and a recorded Stripe PaymentIntent.
+- **Restaurant online order:** verified Rosa's Mexican Food (`rosas`) has paid $1.00 `online_order` records for Shawn Lopez, including the July 18, 2026 closed Carne Asada order with a recorded Stripe PaymentIntent.
+- **Estimate deposit:** verified Blue Luna Events (`bluelunaevents`) has an accepted $1.00 estimate for Shawn Lopez, 50% deposit, `payment_status: deposit_paid`, `accepted_payment_choice: pay_now`, and a recorded Stripe PaymentIntent from July 20, 2026.
+- **Estimate final balance:** verified Construction (`construction`) has a $1.09 estimate marked `payment_status: paid`; deposit paid July 16, 2026, final paid July 16, 2026, payment-link timestamp recorded.
+- **Still unverified:** exact current pay-later estimate path (`accepted_payment_choice: pay_later` / `accepted_pay_later_at`). Older accepted-unpaid estimates exist but do not prove the current pay-later flow.
+- **Stripe API note:** this machine's `.env.local` exposed only a test Stripe secret during Codex verification, so live connected-account PaymentIntent reads failed. Supabase production rows were verified; Stripe Dashboard can be used for a second ledger reconciliation if needed.
+
+Process correction: after any meaningful code, QA, or note change, update `SESSION_HANDOFF.md`, `TASKS.md`, and `CHANGELOG.md` before ending the session, then commit/push those notes separately if app code is not part of the commit.
 
 ---
 
