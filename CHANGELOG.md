@@ -1,4 +1,19 @@
-## Session: July 21, 2026 - Lazy Load Stripe Activation Overlay
+## Session: July 21, 2026 - Lazy Load Public Shop Stripe Forms
+**AI:** Codex
+**Worked on:** Shawn confirmed iPhone Safari normal mode still showed the Stripe `inner.html` download prompt after extensions and Hide IP Address were ruled out, while Firefox and Safari Private did not. Team read: stop importing Stripe from public shop/order bundles until the customer intentionally starts payment.
+
+### Fixed
+- Moved shop checkout Stripe Elements code out of `ShopClient` into a payment-only lazy component.
+- Moved restaurant/menu order Stripe Elements code out of `OnlineOrderClient` into a payment-only lazy component.
+- Public shop/order pages can now render product/menu browsing without top-level Stripe imports.
+- Preserved the mobile checkout sheet body-lock/visible-viewport fixes already in the order checkout file.
+- Build passes with `cmd /c npm run build`.
+
+### Test Next
+- After deploy, test normal Safari on Lucky/T-Shirts shop pages without tapping checkout. Browse, open product details, add/remove items, and confirm the `inner.html` download prompt does not appear.
+- Then tap checkout and start payment. If the prompt appears only at the real Stripe payment step, the fallback discussion is hosted Stripe Checkout or a Stripe support case.
+
+---## Session: July 21, 2026 - Lazy Load Stripe Activation Overlay
 **AI:** Codex
 **Worked on:** Shawn confirmed the Safari `inner.html` download prompt still appeared in normal Safari, while Firefox and Safari Private did not show it. Team read: normal Safari may still be triggering a preloaded activation chunk. Craig found `ActivateOverlay` still had a module-level `loadStripe(...)`, so any chunk preload could download Stripe before the user intentionally activated or paid.
 

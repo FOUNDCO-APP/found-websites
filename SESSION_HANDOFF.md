@@ -4,6 +4,18 @@
 
 ---
 
+## PUBLIC SHOP/ORDER STRIPE LAZY LOAD - July 21, 2026
+
+Shawn confirmed the Safari popup still appeared after Safari extensions and Hide IP Address were ruled out. Firefox and Safari Private still did not show it. Team read: the safest next code-side isolation is to keep Stripe completely out of public shop/order initial bundles until the customer intentionally starts payment.
+
+- `ShopClient` now lazy-loads a new `ShopPaymentElement` only after the checkout API returns a Stripe client secret.
+- `OnlineOrderClient` now lazy-loads a new `OrderPaymentElement` only after the order checkout API returns a Stripe client secret.
+- Public shop/order browsing no longer imports `@stripe/stripe-js` or `@stripe/react-stripe-js` at module load.
+- The already-related mobile order checkout sheet body-lock/visible-viewport fix remains in `OnlineOrderClient`.
+- Build passes with `cmd /c npm run build`.
+- Test next after deploy: normal Safari on Lucky/T-Shirts shop pages, browse/add/view details without starting checkout. Then start checkout separately.
+
+---
 ## STRIPE ACTIVATION OVERLAY LAZY LOAD - July 21, 2026
 
 Shawn confirmed the Safari popup still appeared in normal Safari after clearing data, while Firefox and Safari Private did not show it. Team read: normal Safari may still be triggering a preloaded activation chunk. Craig found `ActivateOverlay` still had a module-level `loadStripe(...)`.
