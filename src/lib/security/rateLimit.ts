@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
-type HeaderSource = Request | { get(name: string): string | null }
+type HeaderBag = { get(name: string): string | null }
+type HeaderSource = Request | HeaderBag
 
 type Bucket = {
   count: number
@@ -28,11 +29,13 @@ declare global {
 const buckets = globalThis.__foundPublicRateLimitBuckets ?? new Map<string, Bucket>()
 globalThis.__foundPublicRateLimitBuckets = buckets
 
-function headersFrom(source: HeaderSource) {
-  return "headers" in source ? source.headers : source
+function headersFrom(source: HeaderSource): HeaderBag {
+  if ("get" in source && typeof source.get === "function") return source
+  if ("headers" in source) return source.headers
+  return source
 }
 
-function firstHeader(headers: { get(name: string): string | null }, names: string[]) {
+function firstHeader(headers: HeaderBag, names: string[]) {
   for (const name of names) {
     const value = headers.get(name)
     if (value) return value
