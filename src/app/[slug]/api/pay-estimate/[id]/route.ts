@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 type Params = { params: Promise<{ slug: string; id: string }> }
 
 export async function POST(req: NextRequest, { params }: Params) {
   const { slug, id } = await params
+
+  const limit = checkPublicRateLimit(req, { key: `estimate-pay:${slug}:${id}`, limit: 8, windowMs: 5 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))

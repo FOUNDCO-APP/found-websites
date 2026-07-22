@@ -118,6 +118,7 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 
 - [ ] Add browser security headers later; full header experiment was rolled back after iPhone Safari Stripe `inner.html` download prompts.
 - [ ] Revisit CSP/Permissions-Policy after launch smoke testing; first attempt caused an iPhone Safari Stripe `inner.html` download prompt and was removed.
+- [x] Add public write-route rate limiting / bot controls - launch in-process guard shipped July 21 across subscriber, booking, shop/order checkout, estimate, login-link/password-login, lead/reservation, and reply routes. Later optional upgrade: Supabase/edge-backed distributed ledger.
 - [x] Full header rollback did not clear the iPhone Safari Stripe `inner.html` prompt; cause is not the launch header experiment.
 - [x] Remove public preview-banner Stripe prefetch so Stripe.js is not downloaded while customers only browse inactive/unactivated public sites.
 - [x] After first prefetch fix, normal Safari still showed the prompt while Firefox and Safari Private did not.

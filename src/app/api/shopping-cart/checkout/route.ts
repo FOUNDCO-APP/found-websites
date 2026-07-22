@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import type { MenuCategory } from "@/types/company"
 
 type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number; selectedOptions?: Record<string, unknown> | null; variantId?: string | null }
@@ -105,6 +106,9 @@ export async function POST(req: NextRequest) {
   if (fulfillment === "shipping" && !isShippingAddressReady(shippingAddress) && address.length < 6) {
     return NextResponse.json({ error: "Please enter a shipping address." }, { status: 400 })
   }
+
+  const limit = checkPublicRateLimit(req, { key: `shop-checkout:${companyId}`, limit: 10, windowMs: 5 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const admin = createAdminClient()
   const { data: company } = await admin

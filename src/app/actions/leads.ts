@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { Resend } from "resend"
+import { headers } from "next/headers"
 import {
   buildLeadEmail,
   buildAutoReplyEmail,
@@ -9,10 +10,10 @@ import {
   buildReservationAutoReply,
 } from "@/lib/emailBuilders"
 import { normalizeSubmittedRequestSource, normalizeSubmittedRequestType } from "@/lib/dashboard/requestKinds"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
 
 export async function submitReservation(_: unknown, formData: FormData) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const companyId = formData.get("company_id") as string
   const name = (formData.get("name") as string)?.trim()
   const phone = (formData.get("phone") as string)?.trim()
@@ -25,6 +26,9 @@ export async function submitReservation(_: unknown, formData: FormData) {
   if (!companyId || !name || !phone || !email || !date || !time) {
     return { success: false, error: "Name, phone, email, date, and time are required." }
   }
+
+  const limit = checkPublicRateLimit(await headers(), { key: `lead-reservation:${companyId}`, limit: 6, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return { success: false, error: publicRateLimitMessage(limit) }
 
   const supabase = await createClient()
   const leadId = crypto.randomUUID()
@@ -103,6 +107,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
 }
 
 export async function submitLead(_: unknown, formData: FormData) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const companyId = formData.get("company_id") as string
   const name = (formData.get("name") as string)?.trim()
   const phone = (formData.get("phone") as string)?.trim()
@@ -118,6 +123,9 @@ export async function submitLead(_: unknown, formData: FormData) {
   if (!email) {
     return { success: false, error: "Email is required so we can send you a confirmation." }
   }
+
+  const limit = checkPublicRateLimit(await headers(), { key: `lead-submit:${companyId}`, limit: 8, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return { success: false, error: publicRateLimitMessage(limit) }
 
   // Collect industry-specific fields into partial_answers
   const extraKeys = ["job_address", "timeline", "budget", "home_type", "sq_footage", "frequency", "event_date", "guest_count", "project_type", "vehicle_info", "urgency"]

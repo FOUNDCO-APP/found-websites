@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 export async function POST(req: NextRequest) {
   const { email, password } = await req.json()
@@ -8,6 +9,10 @@ export async function POST(req: NextRequest) {
   if (!email || !password) {
     return NextResponse.json({ error: "Email and password required" }, { status: 400 })
   }
+
+  const normalizedEmail = String(email).toLowerCase().trim()
+  const limit = checkPublicRateLimit(req, { key: `password-login:${normalizedEmail}`, limit: 8, windowMs: 15 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const cookieStore = await cookies()
   const supabase = createServerClient(
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
   )
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password })
 
   if (error) {
     if (error.message.includes("Invalid login")) {

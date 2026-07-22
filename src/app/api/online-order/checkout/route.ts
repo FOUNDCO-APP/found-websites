@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import type { MenuCategory } from "@/types/company"
 
 type CheckoutItemInput = {
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest) {
   if (!companyId || !slug || !name || !phone || !email || requestedItems.length === 0) {
     return NextResponse.json({ error: "Please add items and enter your name, phone, and email." }, { status: 400 })
   }
+
+  const limit = checkPublicRateLimit(req, { key: `online-order-checkout:${companyId}`, limit: 10, windowMs: 5 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const admin = createAdminClient()
   const { data: company } = await admin

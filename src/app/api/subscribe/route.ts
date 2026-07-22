@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,9 @@ export async function POST(req: NextRequest) {
     if (!company_id || !name || (!email && !phone)) {
       return NextResponse.json({ error: "Name and at least one of email or phone are required." }, { status: 400 })
     }
+
+    const limit = checkPublicRateLimit(req, { key: `subscribe:${company_id}`, limit: 8, windowMs: 10 * 60 * 1000 })
+    if (!limit.allowed) return rateLimitResponse(limit)
 
     const admin = createAdminClient()
 

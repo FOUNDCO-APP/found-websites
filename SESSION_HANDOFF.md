@@ -1,3 +1,14 @@
+## PUBLIC WRITE RATE LIMITS - July 21, 2026
+
+Team next step after the Safari Stripe popup fix: add the first bot/spam guard to anonymous write paths before launch traffic. Scope stayed narrow and launch-safe.
+
+- Added `src/lib/security/rateLimit.ts`, an IP-aware in-process limiter with endpoint-specific keys and 429 responses.
+- Covered public subscriber signup, booking create, shop checkout/complete, restaurant order checkout/complete, estimate pay/accept/decline, magic login, password login, website lead/reservation server actions, and reply links.
+- Dashboard-authenticated CRUD was left alone for this pass.
+- Caveat from Craig/Priya: this protects the current Node process. A distributed Supabase/edge ledger is the later upgrade if we need cross-instance abuse tracking.
+- Test next: normal public form/order/payment actions should still work. Rapid repeated submits from the same browser/IP should get a clear "Too many attempts" response.
+
+---
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
 *Last updated: July 21, 2026*

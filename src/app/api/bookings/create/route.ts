@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import { buildBookingNotification, buildBookingConfirmation } from "@/lib/emailBuilders"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 function clean(v: unknown, max = 200): string {
   return typeof v === "string" ? v.trim().slice(0, max) : ""
@@ -30,6 +31,9 @@ export async function POST(req: NextRequest) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(startTime)) {
     return NextResponse.json({ error: "Invalid date or time format." }, { status: 400 })
   }
+
+  const limit = checkPublicRateLimit(req, { key: `booking:${companyId}`, limit: 6, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   // Re-verify slot is still available (race condition guard)
   const available = await getAvailableSlots(companyId, date)

@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { MenuCategory } from "@/types/company"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
@@ -100,6 +101,9 @@ export async function POST(req: NextRequest) {
   if (!companyId || !leadId || !paymentIntentId) {
     return NextResponse.json({ error: "Missing order payment details." }, { status: 400 })
   }
+
+  const limit = checkPublicRateLimit(req, { key: `shop-complete:${companyId}:${leadId}`, limit: 20, windowMs: 5 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const admin = createAdminClient()
   const { data: company } = await admin

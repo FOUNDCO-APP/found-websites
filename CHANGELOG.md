@@ -1,3 +1,17 @@
+## Session: July 21, 2026 - Public Write Rate Limits
+**AI:** Codex
+**Worked on:** Team next step after Safari Stripe popup was fixed: protect anonymous/public write routes before launch traffic increases. Steve/Craig/Priya scoped this as a narrow launch guard, not a full platform rewrite.
+
+### Fixed
+- Added a shared public rate-limit helper with IP-aware, endpoint-specific buckets and clear 429 responses.
+- Guarded public writes for subscribers, booking creation, shop checkout/complete, restaurant online-order checkout/complete, estimate pay/accept/decline, magic-link login, password login, website lead/reservation server actions, and reply links.
+- Kept authenticated dashboard CRUD routes out of this pass to avoid blocking real owner work.
+- This is an in-process launch guard; a Supabase/edge-backed distributed ledger remains the future hardening option if traffic or abuse patterns require it.
+
+### Test Next
+- Normal users should see no change. If one browser repeatedly submits the same public form or payment action too quickly, it should receive `Too many attempts. Please try again...` instead of creating more writes/emails/payment work.
+
+---
 ## Session: July 21, 2026 - Lazy Load Public Shop Stripe Forms
 **AI:** Codex
 **Worked on:** Shawn confirmed iPhone Safari normal mode still showed the Stripe `inner.html` download prompt after extensions and Hide IP Address were ruled out, while Firefox and Safari Private did not. Team read: stop importing Stripe from public shop/order bundles until the customer intentionally starts payment.

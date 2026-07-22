@@ -1,6 +1,7 @@
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -14,8 +15,11 @@ function displayName(name: string) {
 
 type Params = { params: Promise<{ slug: string; id: string }> }
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(req: Request, { params }: Params) {
   const { slug, id } = await params
+
+  const limit = checkPublicRateLimit(req, { key: `estimate-decline:${slug}:${id}`, limit: 6, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
 
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))

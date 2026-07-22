@@ -2,10 +2,11 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { Resend } from "resend"
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import { headers } from "next/headers"
+import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
 
 export async function sendReply(_: unknown, formData: FormData) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const token = formData.get("token") as string
   const subject = (formData.get("subject") as string)?.trim()
   const message = (formData.get("message") as string)?.trim()
@@ -13,6 +14,9 @@ export async function sendReply(_: unknown, formData: FormData) {
   if (!token || !subject || !message) {
     return { success: false, error: "All fields are required." }
   }
+
+  const limit = checkPublicRateLimit(await headers(), { key: `reply:${token}`, limit: 6, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return { success: false, error: publicRateLimitMessage(limit) }
 
   const supabase = createAdminClient()
 
