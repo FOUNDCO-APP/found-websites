@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
@@ -16,7 +16,6 @@ import {
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#080A09"
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 type PromoSummary = {
   code: string
   promotionCodeId: string
@@ -361,6 +360,10 @@ export default function ActivateOverlay({
   const [loadError, setLoadError] = useState<string | null>(null)
   const [compActivating, setCompActivating] = useState(false)
   const rootDomainForComp = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+  const stripePromise = useMemo(() => {
+    if (!clientSecret) return null
+    return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+  }, [clientSecret])
 
   async function handleCompActivate() {
     if (compActivating) return

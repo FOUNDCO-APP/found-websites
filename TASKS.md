@@ -120,7 +120,9 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [ ] Revisit CSP/Permissions-Policy after launch smoke testing; first attempt caused an iPhone Safari Stripe `inner.html` download prompt and was removed.
 - [x] Full header rollback did not clear the iPhone Safari Stripe `inner.html` prompt; cause is not the launch header experiment.
 - [x] Remove public preview-banner Stripe prefetch so Stripe.js is not downloaded while customers only browse inactive/unactivated public sites.
-- [ ] After deploy: retest Lucky/T-Shirts shop browsing on iPhone Safari without starting checkout; if prompt only appears after payment starts, audit the checkout `PaymentElement` path next.
+- [x] After first prefetch fix, normal Safari still showed the prompt while Firefox and Safari Private did not.
+- [x] Remove module-level Stripe loading from `ActivateOverlay`; Stripe now loads only after a real activation client secret exists and the payment step renders.
+- [ ] After deploy: retest Lucky/T-Shirts shop browsing on normal iPhone Safari without starting checkout; if prompt still appears, audit the public shop/order `PaymentElement` bundle next.
 - [ ] Next team step: public write-route rate limiting / bot controls.
 
 ---

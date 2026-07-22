@@ -4,6 +4,16 @@
 
 ---
 
+## STRIPE ACTIVATION OVERLAY LAZY LOAD - July 21, 2026
+
+Shawn confirmed the Safari popup still appeared in normal Safari after clearing data, while Firefox and Safari Private did not show it. Team read: normal Safari may still be triggering a preloaded activation chunk. Craig found `ActivateOverlay` still had a module-level `loadStripe(...)`.
+
+- Removed module-level Stripe loading from `ActivateOverlay`.
+- Stripe now loads from that overlay only after Found has a real activation client secret and is rendering the payment form.
+- Build passes with `cmd /c npm run build`.
+- Test next after deploy: normal Safari on Lucky/T-Shirts shop pages before checkout. If it still appears, investigate the public shop/order `PaymentElement` bundle next.
+
+---
 ## STRIPE PREFETCH REMOVED FROM PUBLIC BROWSING - July 21, 2026
 
 Shawn still saw iPhone Safari asking to download Stripe `inner.html` on Lucky and T-Shirts after the full header rollback. Team read: the headers were not the root cause. Craig found `PreviewBanner` was prefetching `ActivateOverlay`, and `ActivateOverlay` calls Stripe at module load.
