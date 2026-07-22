@@ -6,12 +6,39 @@ import OnlineOrderClient from "./OnlineOrderClient"
 import type { Metadata } from "next"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
-  return { title: company ? `Order Online | ${company.name}` : "Order Online" }
+  if (!company) return { title: "Order Online" }
+
+  const title = `Order Online | ${company.name}`
+  const description = company.website_config?.hero_subtitle || `Order online from ${company.name}, straight from their website.`
+  const url = `https://${company.slug}.${ROOT_DOMAIN}/order`
+  const image = company.logo_url || undefined
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "website",
+      url,
+      siteName: company.name,
+      title,
+      description,
+      ...(image && { images: [{ url: image, alt: company.name }] }),
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+      ...(image && { images: [image] }),
+    },
+  }
 }
 
 export default async function OnlineOrderPage({ params, searchParams }: {

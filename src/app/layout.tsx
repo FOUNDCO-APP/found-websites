@@ -27,9 +27,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+
+// Fallback for any root-domain page that doesn't set its own metadata (e.g.
+// src/app/page.tsx sets richer page-specific metadata that overrides this).
 export const metadata: Metadata = {
-  title: "FOUND",
-  description: "Get Found.",
+  title: { default: "Found — Get Found. Get Hired.", template: "%s — Found" },
+  description: "Found builds your website, writes your copy, and picks your photos — all from your phone. Most owners are live the same day.",
+  metadataBase: new URL(`https://${ROOT_DOMAIN}`),
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

@@ -5,8 +5,6 @@ import { Resend } from "resend"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { getIndustryManifest } from "@/lib/industryManifests"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 type OnboardingInput = {
   name: string
   description: string
@@ -159,6 +157,7 @@ export async function saveAbandonedLead({
   stepAbandoned: string
   partialAnswers: Record<string, unknown>
 }): Promise<{ success: boolean; error?: string }> {
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const trimmedEmail = email.trim()
   const trimmedFirst = firstName.trim()
 
