@@ -1,3 +1,20 @@
+## Session: July 24, 2026 - Magic Login Email Raw Link Fix
+**AI:** Codex
+**Worked on:** Shawn found the dashboard login email showing the full Supabase one-time auth URL as visible blue text under the polished Open Dashboard button. Team call: launch polish/security trust bug. Keep the login URL behind the button only.
+
+### Fixed
+- Removed the visible raw `${link}` fallback paragraph from `src/app/dashboard/api/send-login/route.ts`.
+- Kept the generated Supabase magic link in the Open Dashboard button `href`.
+- Replaced visible mojibake arrow/dash characters in this email with plain ASCII so the email renders consistently.
+
+### Verification
+- `git diff --check` passed with only the repo's normal CRLF warning.
+- `cmd /c npm run build` passed.
+
+### Test Next
+- Request a new dashboard login email, confirm there is no long blue Supabase URL at the bottom, then tap Open Dashboard and confirm login still works.
+
+---
 ## Session: July 21, 2026 - Public Write Rate Limits
 **AI:** Codex
 **Worked on:** Team next step after Safari Stripe popup was fixed: protect anonymous/public write routes before launch traffic increases. Steve/Craig/Priya scoped this as a narrow launch guard, not a full platform rewrite.
@@ -27,7 +44,8 @@
 - After deploy, test normal Safari on Lucky/T-Shirts shop pages without tapping checkout. Browse, open product details, add/remove items, and confirm the `inner.html` download prompt does not appear.
 - Then tap checkout and start payment. If the prompt appears only at the real Stripe payment step, the fallback discussion is hosted Stripe Checkout or a Stripe support case.
 
----## Session: July 21, 2026 - Lazy Load Stripe Activation Overlay
+---
+## Session: July 21, 2026 - Lazy Load Stripe Activation Overlay
 **AI:** Codex
 **Worked on:** Shawn confirmed the Safari `inner.html` download prompt still appeared in normal Safari, while Firefox and Safari Private did not show it. Team read: normal Safari may still be triggering a preloaded activation chunk. Craig found `ActivateOverlay` still had a module-level `loadStripe(...)`, so any chunk preload could download Stripe before the user intentionally activated or paid.
 

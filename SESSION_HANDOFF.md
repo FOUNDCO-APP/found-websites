@@ -458,3 +458,27 @@ If priorities changed, also update `TASKS.md`.
 1. Open Today, Sales, Clients, and More on iPhone.
 2. Confirm supporting text is comfortable without zooming.
 3. Confirm longer client metadata wraps cleanly and no controls overlap.
+
+---
+
+## July 24, 2026 - Magic Login Email Raw Link Fix
+
+### What changed
+- Fixed the dashboard magic-login email so the Supabase one-time auth URL no longer appears as visible blue fallback text at the bottom of the email.
+- Kept the actual one-time login URL inside the green Open Dashboard button.
+- Cleaned the visible login email copy to plain ASCII arrows/dashes so it renders consistently.
+
+### Team read
+- Steve: launch polish bug; owners should see one clear button, not a technical token URL.
+- Jony: raw auth URLs do not belong in a Found email.
+- Craig/Priya: the token remains in the button href only; the visible email body no longer exposes it as text.
+
+### Verification
+- `git diff --check` passed with only the repo's normal CRLF warning.
+- `cmd /c npm run build` passed.
+
+### Test next
+1. Request a new Found dashboard login email.
+2. Confirm the email shows the green Open Dashboard button and the expiration text.
+3. Confirm there is no long blue Supabase URL at the bottom.
+4. Tap Open Dashboard and confirm it still signs you in.
