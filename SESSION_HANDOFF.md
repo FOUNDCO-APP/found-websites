@@ -466,7 +466,8 @@ If priorities changed, also update `TASKS.md`.
 ### What changed
 - Fixed the dashboard magic-login email so the Supabase one-time auth URL no longer appears as visible blue fallback text at the bottom of the email.
 - Kept the actual one-time login URL inside the green Open Dashboard button.
-- Cleaned the visible login email copy to plain ASCII arrows/dashes so it renders consistently.
+- Removed the visible raw auth URL.
+- Restored polished arrow/dash rendering through HTML entities and removed the footer location that iPhone Mail auto-linked in blue.
 
 ### Team read
 - Steve: launch polish bug; owners should see one clear button, not a technical token URL.
@@ -479,6 +480,6 @@ If priorities changed, also update `TASKS.md`.
 
 ### Test next
 1. Request a new Found dashboard login email.
-2. Confirm the email shows the green Open Dashboard button and the expiration text.
-3. Confirm there is no long blue Supabase URL at the bottom.
+2. Confirm the email shows the green Open Dashboard button with a clean arrow and the expiration text.
+3. Confirm there is no long blue Supabase URL at the bottom and no blue auto-linked Tucson footer.
 4. Tap Open Dashboard and confirm it still signs you in.

@@ -5,14 +5,14 @@
 ### Fixed
 - Removed the visible raw `${link}` fallback paragraph from `src/app/dashboard/api/send-login/route.ts`.
 - Kept the generated Supabase magic link in the Open Dashboard button `href`.
-- Replaced visible mojibake arrow/dash characters in this email with plain ASCII so the email renders consistently.
+- Restored polished arrow/dash rendering through HTML entities and removed the footer location that iPhone Mail auto-linked in blue.
 
 ### Verification
 - `git diff --check` passed with only the repo's normal CRLF warning.
 - `cmd /c npm run build` passed.
 
 ### Test Next
-- Request a new dashboard login email, confirm there is no long blue Supabase URL at the bottom, then tap Open Dashboard and confirm login still works.
+- Request a new dashboard login email, confirm there is no long blue Supabase URL, no ugly ASCII arrow, and no blue auto-linked footer location, then tap Open Dashboard and confirm login still works.
 
 ---
 ## Session: July 21, 2026 - Public Write Rate Limits

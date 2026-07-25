@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: "Found <hello@foundco.app>",
       to: normalizedEmail,
-      subject: "Your Found link ->",
+      subject: "Your Found link \u2192",
       html: buildMagicLinkEmail(link),
     })
 
@@ -60,7 +60,7 @@ function buildMagicLinkEmail(link: string) {
 
   <!-- Hidden preheader -->
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#080A09;">
-    One tap. Your site, your leads - open and waiting.&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;
+    One tap. Your site, your leads &mdash; open and waiting.&nbsp;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;&zwnj;
   </div>
 
   <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#080A09;min-height:100%;">
@@ -88,7 +88,7 @@ function buildMagicLinkEmail(link: string) {
           <tr>
             <td align="center" style="padding:0 0 52px;">
               <p style="margin:0;font-size:17px;font-weight:300;color:rgba(255,255,255,0.38);line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-                Your site. Your leads. Your dashboard.<br>Everything waiting - one tap away.
+                Your site. Your leads. Your dashboard.<br>Everything waiting &mdash; one tap away.
               </p>
             </td>
           </tr>
@@ -98,7 +98,7 @@ function buildMagicLinkEmail(link: string) {
             <td align="center" style="padding:0 0 52px;">
               <a href="${link}"
                 style="display:inline-block;background:#32D074;color:#080A09;font-size:13px;font-weight:900;padding:20px 48px;border-radius:100px;text-decoration:none;letter-spacing:0.16em;text-transform:uppercase;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-                Open Dashboard ->
+                Open Dashboard &rarr;
               </a>
             </td>
           </tr>
@@ -124,7 +124,7 @@ function buildMagicLinkEmail(link: string) {
           <tr>
             <td align="center" style="padding:48px 0 0;">
               <p style="margin:0;font-size:10px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
-                Found Co. &nbsp;-&nbsp; Tucson, AZ
+                Found Co.
               </p>
             </td>
           </tr>
