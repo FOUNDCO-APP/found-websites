@@ -483,3 +483,26 @@ If priorities changed, also update `TASKS.md`.
 2. Confirm the email shows the green Open Dashboard button with a clean arrow and the expiration text.
 3. Confirm there is no long blue Supabase URL at the bottom and no blue auto-linked Tucson footer.
 4. Tap Open Dashboard and confirm it still signs you in.
+
+---
+
+## July 25, 2026 - Launch Smoke Test #1 Passed
+
+### What passed
+- Shawn completed launch checklist #1 on normal iPhone Safari.
+- Lucky/T-Shirts shop browsing, cart, product details, and payment-start path passed without the Stripe `inner.html` download prompt returning.
+
+### Current plain-English launch checklist
+1. Safari shop check - PASSED.
+2. Fresh customer signup - NEXT.
+3. Dashboard company switching.
+4. One lead/inquiry notification test.
+5. One payment receipt check.
+6. Found login email - PASSED.
+
+### Next test for Shawn
+1. Go to `foundco.app` as a brand-new business owner.
+2. Start onboarding and create a test business.
+3. Pick a paid plan and use the promo code if needed.
+4. Pay.
+5. Confirm it lands in the correct dashboard for that new business.

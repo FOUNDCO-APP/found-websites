@@ -125,7 +125,7 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Remove module-level Stripe loading from `ActivateOverlay`; Stripe now loads only after a real activation client secret exists and the payment step renders.
 - [x] Safari extensions and Hide IP Address were ruled out by Shawn; normal Safari still showed the prompt, Private Safari and Firefox did not.
 - [x] Public shop/order Stripe isolation shipped: `ShopClient` and `OnlineOrderClient` no longer import Stripe at module load; Stripe Elements now live in lazy payment-only components.
-- [ ] After deploy: retest Lucky/T-Shirts shop browsing on normal iPhone Safari without starting checkout; if clean, start checkout and verify whether the prompt is gone or only tied to the real Stripe payment step.
+- [x] Normal iPhone Safari shop smoke passed July 25: Shawn confirmed #1 on the launch checklist passed for Lucky/T-Shirts shop browsing/cart/payment-start; no Stripe `inner.html` download prompt reported.
 - [ ] Next team step: public write-route rate limiting / bot controls.
 
 ---

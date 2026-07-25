@@ -1,3 +1,15 @@
+## Session: July 25, 2026 - Launch Smoke Test #1 Passed
+**AI:** Codex
+**Worked on:** Shawn completed the first launch smoke test after the Safari/Stripe lazy-load fixes.
+
+### QA Passed
+- Normal iPhone Safari shop/cart/payment-start smoke passed for the public shop path.
+- No Stripe `inner.html` download prompt was reported during this pass.
+
+### Test Next
+- Launch checklist #2: fresh customer signup from `foundco.app` through onboarding, plan selection, payment, and correct dashboard landing.
+
+---
 ## Session: July 24, 2026 - Magic Login Email Raw Link Fix
 **AI:** Codex
 **Worked on:** Shawn found the dashboard login email showing the full Supabase one-time auth URL as visible blue text under the polished Open Dashboard button. Team call: launch polish/security trust bug. Keep the login URL behind the button only.
