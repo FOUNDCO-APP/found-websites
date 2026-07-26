@@ -28,6 +28,14 @@ Online ordering flow live. Full product catalog/shop rebuilt and confirmed worki
 
 ---
 
+## JULY 26 LIVE ANNOUNCEMENT SCHEMA
+
+- [x] Apply existing `048-site-announcements.sql` migration to live Supabase.
+- [x] Confirm Lucky announcement fields are readable from live Supabase.
+- [x] Confirm Lucky public page contains the announcement in live HTML.
+- [ ] Shawn mobile QA: refresh Lucky live site and confirm the announcement is visible below the hero.
+
+---
 ## JULY 26 ANNOUNCEMENT EDITOR
 
 - [x] Clarify announcement editor controls: explicit preview, edit headline/message/button text, image, style, and destination controls.

@@ -1,3 +1,17 @@
+## Session: July 26, 2026 - Live Announcement Schema Fix
+**AI:** Codex
+**Worked on:** Announcement was turned on in the dashboard but missing on the live site.
+
+### Fixed
+- Applied existing additive migration `048-site-announcements.sql` to live Supabase.
+- Restored Lucky announcement to on after confirming the earlier toggle could not persist before the columns existed.
+- Verified the live Lucky page contains the announcement text.
+
+### Test Next
+- Shawn should refresh Lucky live site and confirm the announcement appears visually below the hero.
+
+---
+
 ## Session: July 26, 2026 - Announcement Editor Clarity
 **AI:** Codex
 **Worked on:** Dashboard announcement editor polish after Shawn flagged unclear tap-to-edit behavior, unreadable style variants, and corrupted labels.

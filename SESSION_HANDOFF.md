@@ -1,3 +1,15 @@
+## LIVE ANNOUNCEMENT SCHEMA FIX - July 26, 2026
+
+Craig found the launch blocker: the code and migration existed, but live Supabase was missing the announcement columns on `website_config`.
+
+- Applied existing additive migration `database/migrations/048-site-announcements.sql` to live Supabase.
+- Confirmed Lucky can now read `announcement_enabled`, title/body/button/style fields from the public company query.
+- Set Lucky announcement back to on because Shawn had already toggled it before the schema existed.
+- Verified `https://lucky.foundco.app` returns the announcement text in the live HTML.
+- No app code changed in this fix.
+
+---
+
 ## ANNOUNCEMENT EDITOR CLARITY - July 26, 2026
 
 Team-approved pass completed for the dashboard announcement editor.
