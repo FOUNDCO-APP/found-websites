@@ -1,3 +1,21 @@
+## Session: July 26, 2026 - Featured Update Smart Draft Guard
+**AI:** Codex
+**Worked on:** Shawn approved the team plan to make Featured Update think for the business owner and avoid generic/redundant public copy.
+
+### Fixed
+- Added a shared Featured Update draft helper for dashboard and public site rendering.
+- Drafts now use industry, sub-industry, products/menu items, and services where available.
+- Generic saved filler is replaced with smarter draft copy before it appears in the editor or live site.
+- Public pages now avoid duplicating nearby hero/about/shop/menu copy by changing or hiding the section.
+- Real owner edits are preserved unless they are blank or known generic filler.
+
+### Verification
+- `cmd /c npm run build` passed.
+
+### Test Next
+- Shawn should test Lucky, Rosa's, Construction, and FRCC on mobile and confirm Featured Update copy is specific, useful, and not repeating the section around it.
+
+---
 ## Session: July 26, 2026 - Featured Update Public Redesign
 **AI:** Codex
 **Worked on:** Shawn approved the Jony/Steve-led plan to replace the weak public announcement card with a premium, industry-aware featured update.

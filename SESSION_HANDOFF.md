@@ -1,3 +1,17 @@
+## FEATURED UPDATE SMART DRAFT GUARD - July 26, 2026
+
+Jony/Steve/Craig direction after Shawn flagged the public Featured Update could still feel generic or duplicate nearby page copy.
+
+- Added shared Featured Update copy logic in `src/lib/featuredUpdate.ts`.
+- Dashboard editor and public tenant site now use the same industry-aware draft system.
+- Drafts use business type, sub-industry, services, menu items, and products where available.
+- Old generic filler like "New in the shop" or "Share a sale..." is replaced before preview/live render.
+- Public site checks nearby hero/about/shop/menu copy and changes or hides the Featured Update if it would repeat the same thought.
+- Owner-written copy still wins unless it is blank or generic filler.
+- QA: production build passed.
+- Shawn QA next: Lucky/Rosa's/Construction/FRCC, toggle Featured Update off/on if old copy is stuck, then confirm live copy is specific and not redundant.
+
+---
 ## FEATURED UPDATE PUBLIC REDESIGN - July 26, 2026
 
 Jony/Steve-led direction after Shawn flagged the public announcement as weak and cheap.

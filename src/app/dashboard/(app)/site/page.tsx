@@ -1,4 +1,4 @@
-﻿import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
+import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -22,7 +22,7 @@ export default async function SitePage() {
 
   return (
     <SiteEditor
-      company={{ id: company.id, name: company.name, slug: company.slug }}
+      company={{ id: company.id, name: company.name, slug: company.slug, sub_industry: company.sub_industry }}
       config={config}
       photos={photos ?? []}
       stockImages={stockImages}

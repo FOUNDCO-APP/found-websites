@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Company } from "@/types/company"
+import { getFeaturedUpdatePublicCopy } from "@/lib/featuredUpdate"
 
 type Props = {
   company: Company
@@ -7,33 +8,6 @@ type Props = {
 }
 
 const TARGETS = new Set(["/", "/contact", "/shop", "/menu", "/services", "/reserve", "/estimate", "/gallery"])
-
-type FeaturedUpdate = { eyebrow: string; title: string; body: string; label: string; href: string }
-
-function featuredUpdateDefault(company: Company): FeaturedUpdate {
-  const industry = company.industry_category
-  const sub = (company.sub_industry || "").toLowerCase()
-
-  if (industry === "food" || industry === "home_based_food") {
-    return { eyebrow: "Today from the kitchen", title: "Fresh today.", body: "See what is ready to order, reserve, or ask about right now.", label: "View menu", href: "/menu" }
-  }
-  if (sub.includes("bike")) {
-    return { eyebrow: "Bike shop update", title: "Back-to-school ready.", body: "New gear, tune-ups, and local help are ready before the season starts.", label: "See what is new", href: "/shop" }
-  }
-  if (industry === "retail" || industry === "makers_crafts") {
-    return { eyebrow: "New in the shop", title: "New in the shop.", body: "A current drop, sale, or product update is ready to explore.", label: "Shop now", href: "/shop" }
-  }
-  if (industry === "home_services") {
-    return { eyebrow: "Now booking", title: "Schedule before the season fills.", body: "Request the work you need and get a clear next step from the team.", label: "Request an estimate", href: "/estimate" }
-  }
-  if (industry === "nonprofit") {
-    return { eyebrow: "This week", title: "Join what is happening.", body: "See the next way to connect, serve, or get involved.", label: "Get involved", href: "/services" }
-  }
-  if (industry === "events") {
-    return { eyebrow: "Dates are filling", title: "Plan the next event.", body: "Ask about availability, details, and the right next step.", label: "Request a quote", href: "/contact" }
-  }
-  return { eyebrow: "Featured update", title: "Worth knowing now.", body: "A current offer, event, or next step is ready for customers.", label: "Learn more", href: "/contact" }
-}
 
 function safeHref(value: unknown, fallback: string) {
   if (typeof value !== "string") return fallback
@@ -47,14 +21,24 @@ export default function SiteAnnouncement({ company, image }: Props) {
   const config = company.website_config
   if (!config?.announcement_enabled) return null
 
-  const hasOwnerContent = Boolean(config.announcement_title?.trim() || config.announcement_body?.trim() || config.announcement_cta_label?.trim() || image)
-  if (!hasOwnerContent) return null
+  const nearbyCopy = [
+    config.hero_title,
+    config.hero_subtitle,
+    config.about_preview,
+    config.about_text,
+    "From the shop",
+    "A closer look at what they carry",
+    "From the menu",
+    "A taste of what is ready",
+  ]
+  const copy = getFeaturedUpdatePublicCopy(company, nearbyCopy)
+  if (!copy && !image) return null
 
-  const fallback = featuredUpdateDefault(company)
-  const title = config.announcement_title?.trim() || fallback.title
-  const body = config.announcement_body?.trim() || fallback.body
-  const label = config.announcement_cta_label?.trim() || fallback.label
-  const href = safeHref(config.announcement_cta_href, fallback.href)
+  const title = copy?.title
+  const body = copy?.body
+  const label = copy?.label
+  const href = safeHref(copy?.href, "/contact")
+  if (!title || !body || !label) return null
   const style = config.announcement_style || "default"
   const imageUrl = style === "image" && image ? image : null
   const isLight = style === "light"
@@ -82,7 +66,7 @@ export default function SiteAnnouncement({ company, image }: Props) {
               className="mb-4 text-xs font-black uppercase tracking-[0.24em]"
               style={{ color: isLight ? primary : isAccent ? "rgba(255,255,255,0.78)" : primary }}
             >
-              {fallback.eyebrow}
+              {copy?.eyebrow}
             </p>
             <h2
               className="text-4xl font-black leading-[0.98] text-balance md:text-6xl"

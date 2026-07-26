@@ -1,3 +1,14 @@
+## JULY 26 FEATURED UPDATE SMART COPY GUARD
+
+- [x] Create shared Featured Update draft system.
+- [x] Replace old generic filler in editor preview with smart draft copy.
+- [x] Reuse the same smart copy on the public tenant site.
+- [x] Add duplicate guard against hero/about/shop/menu copy.
+- [x] Keep owner-edited copy unless blank/generic.
+- [x] Production build passed.
+- [ ] Shawn mobile QA across Lucky, Rosa's, Construction, and FRCC.
+
+---
 # TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
 *Last updated: July 25, 2026*

@@ -6,6 +6,7 @@ import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
+import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -13,7 +14,7 @@ type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact"
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type Props = {
-  company: { id: string; name: string; slug: string }
+  company: { id: string; name: string; slug: string; sub_industry?: string | null }
   config: Config | null
   photos: Photo[]
   stockImages: string[]
@@ -193,9 +194,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     }
 
     const updates: Record<string, unknown> = { announcement_enabled: true }
-    if (!String(config.announcement_title ?? "").trim()) updates.announcement_title = announcementDefault.title
-    if (!String(config.announcement_body ?? "").trim()) updates.announcement_body = announcementDefault.body
-    if (!String(config.announcement_cta_label ?? "").trim()) updates.announcement_cta_label = announcementDefault.label
+    if (isGenericFeaturedCopy(config.announcement_title)) updates.announcement_title = announcementDefault.title
+    if (isGenericFeaturedCopy(config.announcement_body)) updates.announcement_body = announcementDefault.body
+    if (isGenericFeaturedCopy(config.announcement_cta_label)) updates.announcement_cta_label = announcementDefault.label
     if (!String(config.announcement_cta_href ?? "").trim()) updates.announcement_cta_href = announcementDefault.href
 
     setConfig(prev => ({ ...prev, ...updates }))
@@ -386,18 +387,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     : isShopCatalog
       ? [{ label: "Shop", href: "/shop" }, { label: "Products", href: "/shop" }, { label: "Contact", href: "/contact" }]
       : [{ label: "Services", href: "/services" }, { label: "Estimate", href: "/estimate" }, { label: "Contact", href: "/contact" }]
-  const announcementDefault = isFoodCatalog
-    ? { title: "Fresh today.", body: "Share a menu special, seasonal item, or ordering update customers should see first.", label: "View menu", href: "/menu" }
-    : isShopCatalog
-      ? { title: "New in the shop.", body: "Share a sale, product drop, or update customers should see first.", label: "Shop now", href: "/shop" }
-      : industryCategory === "home_services"
-        ? { title: "Now booking.", body: "Highlight an opening, seasonal service, or estimate request customers should act on.", label: "Request an estimate", href: "/estimate" }
-        : industryCategory === "nonprofit"
-          ? { title: "Join what is happening.", body: "Share an event, service, drive, or next step for the community.", label: "Get involved", href: "/services" }
-          : { title: "Worth knowing now.", body: "Share a current update, offer, event, or next step for customers.", label: "Learn more", href: "/contact" }
-  const announcementTitle = typeof config.announcement_title === "string" && config.announcement_title.trim() ? config.announcement_title : announcementDefault.title
-  const announcementBody = typeof config.announcement_body === "string" && config.announcement_body.trim() ? config.announcement_body : announcementDefault.body
-  const announcementLabel = typeof config.announcement_cta_label === "string" && config.announcement_cta_label.trim() ? config.announcement_cta_label : announcementDefault.label
+  const announcementNearbyCopy = [
+    config.hero_title,
+    config.hero_subtitle,
+    config.about_preview,
+    config.about_text,
+    "From the shop",
+    "A closer look at what they carry",
+    "From the menu",
+    "A taste of what is ready",
+  ]
+  const announcementDefault = getFeaturedUpdateDraft({
+    name: company.name,
+    industry_category: industryCategory,
+    sub_industry: company.sub_industry ?? null,
+    website_config: { ...(config as any), menu_items: menuCats, services } as any,
+  }, announcementNearbyCopy) ?? { title: "A clear next step is ready.", body: "Visitors can see what matters now and move straight to the right action.", label: "Learn more", href: "/contact", eyebrow: "Featured update" }
+  const announcementTitle = !isGenericFeaturedCopy(config.announcement_title) ? String(config.announcement_title).trim() : announcementDefault.title
+  const announcementBody = !isGenericFeaturedCopy(config.announcement_body) ? String(config.announcement_body).trim() : announcementDefault.body
+  const announcementLabel = !isGenericFeaturedCopy(config.announcement_cta_label) ? String(config.announcement_cta_label).trim() : announcementDefault.label
   const announcementHref = typeof config.announcement_cta_href === "string" && config.announcement_cta_href.trim() ? config.announcement_cta_href : announcementDefault.href
   const announcementIsLight = announcementStyle === "light"
   const announcementTextColor = announcementIsLight ? "#111111" : "white"
@@ -585,6 +593,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </div>
             )}
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Preview</div>
+            <div style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.35, color: announcementMutedColor }}>Found drafted this for you. Edit it before or after it goes live.</div>
             <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
             <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
             <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
