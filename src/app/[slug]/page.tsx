@@ -48,7 +48,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       .select("url, website_section")
       .eq("company_id", company.id)
       .eq("for_website", true)
-      .in("website_section", ["hero", "about", "cta", "gallery"]),
+      .in("website_section", ["hero", "about", "cta", "gallery", "announcement"]),
   ])
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
   const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
@@ -63,6 +63,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
     cta: firstSectionImage("cta") ?? uploadedImgs[2] ?? null,
     gallery: sectionRows.filter(row => row.website_section === "gallery").map(row => row.url),
+    announcement: firstSectionImage("announcement"),
   }
 
   const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, sectionImages, locations }

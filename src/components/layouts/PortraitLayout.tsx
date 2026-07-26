@@ -8,6 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
@@ -34,7 +35,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
 
   return (
     <>
-      {/* ── HERO — photo leads, text rises like warm light from the bottom ── */}
+      {/* â”€â”€ HERO â€” photo leads, text rises like warm light from the bottom â”€â”€ */}
       <section className="relative min-h-[90vh] flex items-end overflow-hidden">
         {heroVideo ? (
           <HeroVideo src={heroVideo} />
@@ -88,7 +89,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
         </div>
       </section>
 
-      {/* ── GALLERY STRIP — photos arrive with a warm fade ── */}
+      {/* â”€â”€ GALLERY STRIP â€” photos arrive with a warm fade â”€â”€ */}
       {(galleryImages.length > 0 || imgs.length >= 2) && (
         <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
           {(galleryImages.length ? galleryImages : [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]).map((src, i) => (
@@ -111,9 +112,11 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
         </div>
       )}
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+
       <CatalogShowcase company={company} />
 
-      {/* ── SERVICES ── */}
+      {/* â”€â”€ SERVICES â”€â”€ */}
       {services.length > 0 && (
         <section className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-8">
@@ -135,7 +138,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
                   className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                   style={{ color: primary }}
                 >
-                  View All →
+                  View All â†’
                 </Link>
               </div>
             </InView>
@@ -179,7 +182,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
         </section>
       )}
 
-      {/* ── ABOUT — split, photo bleeds to edge ── */}
+      {/* â”€â”€ ABOUT â€” split, photo bleeds to edge â”€â”€ */}
       {aboutCopy && (
         <section className="flex flex-col md:flex-row" style={{ minHeight: "520px" }}>
           <div className="relative w-full md:w-1/2 h-72 md:h-auto">
@@ -220,7 +223,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
         </section>
       )}
 
-      {/* ── TESTIMONIALS ── */}
+      {/* â”€â”€ TESTIMONIALS â”€â”€ */}
       {testimonials.length > 0 && (
         <section className="py-24" style={{ backgroundColor: "#f7f7f7" }}>
           <div className="max-w-4xl mx-auto px-8">
@@ -253,7 +256,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
 
       {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
-      {/* ── FINAL CTA ── */}
+      {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-32 text-center overflow-hidden">
         {(ctaImage ?? img(0)) ? (
           <>

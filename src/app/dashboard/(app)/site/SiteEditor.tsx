@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
@@ -10,7 +10,8 @@ import { isVideoMedia } from "@/lib/mediaKind"
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
-type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "contact"
+type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact"
+type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type Props = {
   company: { id: string; name: string; slug: string }
   config: Config | null
@@ -176,6 +177,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => { await updateSiteField(field, polishedValue) })
+  }
+
+  function saveConfigField(field: string, value: unknown) {
+    setConfig(prev => ({ ...prev, [field]: value }))
+    setSaved(field)
+    setTimeout(() => setSaved(null), 2500)
+    startTransition(async () => { await updateSiteField(field, value) })
   }
 
   async function handleRegenerate(section: Section) {
@@ -345,31 +353,42 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const ctaPhotos = localPhotos.filter(p => p.website_section === "cta")
   const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
   const contactPhotos = localPhotos.filter(p => p.website_section === "contact")
+  const announcementPhotos = localPhotos.filter(p => p.website_section === "announcement")
   const unassigned = localPhotos.filter(p => !p.website_section)
   const pickerPhotos = localPhotos
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_video_url as string) ?? (config.hero_image_url as string) ?? null
+  const announcementEnabled = config.announcement_enabled === true
+  const announcementStyleRaw = typeof config.announcement_style === "string" ? config.announcement_style : "default"
+  const announcementStyle: AnnouncementStyle = (["default", "light", "dark", "accent", "image"].includes(announcementStyleRaw) ? announcementStyleRaw : "default") as AnnouncementStyle
+  const announcementImage = announcementPhotos[0]?.url ?? null
+  const announcementTargets = isFoodCatalog
+    ? [{ label: "Menu", href: "/menu" }, { label: "Reservations", href: "/reserve" }, { label: "Contact", href: "/contact" }]
+    : isShopCatalog
+      ? [{ label: "Shop", href: "/shop" }, { label: "Products", href: "/shop" }, { label: "Contact", href: "/contact" }]
+      : [{ label: "Services", href: "/services" }, { label: "Estimate", href: "/estimate" }, { label: "Contact", href: "/contact" }]
   const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
     { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
     { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
     { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
     { slot: "gallery", label: "Gallery", helper: "Photos shown in gallery and photo strips.", photos: galleryPhotos },
+    { slot: "announcement", label: "Announcement", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
 
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-          HOME PAGE â€” full bleed hero preview
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+          HOME PAGE Ã¢â‚¬â€ full bleed hero preview
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
 
       {/* Page tab */}
       <div style={{ padding: "28px 20px 0" }}>
         <PageTab label="Home Page" href={`https://${company.slug}.foundco.app`} isLive />
       </div>
 
-      {/* Hero preview card â€” looks like their actual site */}
+      {/* Hero preview card Ã¢â‚¬â€ looks like their actual site */}
       <div style={{ margin: "16px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
         {/* Background */}
         {heroImage ? (
@@ -400,7 +419,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer", marginBottom: 10 }}
             >
               <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 5 }}>
-                HEADLINE Â· tap to edit
+                HEADLINE Ã‚Â· tap to edit
               </div>
               <h2 style={{
                 margin: 0, fontSize: 28, fontWeight: 300,
@@ -417,7 +436,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer" }}
             >
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 5 }}>
-                SUPPORTING LINE Â· tap to edit
+                SUPPORTING LINE Ã‚Â· tap to edit
               </div>
               <p style={{
                 margin: 0, fontSize: 15,
@@ -483,7 +502,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      {/* Hook section â€” tagline + CTA */}
+      {/* Hook section Ã¢â‚¬â€ tagline + CTA */}
       <div style={{ margin: "12px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10, paddingLeft: 4 }}>
           Your Hook
@@ -492,7 +511,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <TapToEdit
             label="Tagline"
             value={String(config.tagline ?? "")}
-            placeholder="Your taglineâ€¦"
+            placeholder="Your taglineÃ¢â‚¬Â¦"
             onClick={() => startEdit("tagline", String(config.tagline ?? ""))}
             isSaved={saved === "tagline"}
             flex={3}
@@ -500,7 +519,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <TapToEdit
             label="Button"
             value={String(config.cta_headline ?? "")}
-            placeholder="CTAâ€¦"
+            placeholder="CTAÃ¢â‚¬Â¦"
             onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))}
             isSaved={saved === "cta_headline"}
             flex={2}
@@ -509,9 +528,71 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color={GREEN} onTap={() => handleRegenerate("tagline")} />
       </div>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
+      <div style={{ padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
+          <div>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Announcement</div>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Promote what matters now.</h2>
+            <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+              Add a sale, event, update, or seasonal push below the hero.
+            </p>
+          </div>
+          <button onClick={() => saveConfigField("announcement_enabled", !announcementEnabled)} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {announcementEnabled ? "On" : "Off"}
+          </button>
+        </div>
+
+        <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
+          {announcementStyle === "image" && announcementImage && (
+            <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative" }}>
+              {isVideoMedia(announcementImage) ? <video src={announcementImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
+            </div>
+          )}
+          <button onClick={() => startEdit("announcement_title", (config.announcement_title as string) ?? "")} style={{ display: "block", width: "100%", padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" }}>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Headline - tap to edit</div>
+            <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementStyle === "light" ? "#111" : "white", letterSpacing: 0 }}>{(config.announcement_title as string) || "Back-to-school ready."}</h3>
+          </button>
+          <button onClick={() => startEdit("announcement_body", (config.announcement_body as string) ?? "")} style={{ display: "block", width: "100%", marginTop: 12, padding: 0, border: "none", background: "transparent", color: "inherit", textAlign: "left", cursor: "pointer" }}>
+            <p style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: announcementStyle === "light" ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.72)" }}>{(config.announcement_body as string) || "New gear, seasonal updates, or a current offer can live here."}</p>
+          </button>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}>
+            {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
+              <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.05)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.72)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
+                {style}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+            <button onClick={() => startEdit("announcement_cta_label", (config.announcement_cta_label as string) ?? "")} style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button</div>
+              <div style={{ fontWeight: 900 }}>{(config.announcement_cta_label as string) || "Learn More"}</div>
+            </button>
+            <button onClick={() => setPhotoPickerSlot("announcement")} style={{ padding: 14, borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Image</div>
+              <div style={{ fontWeight: 900 }}>{announcementImage ? "Change Image" : "Add Image"}</div>
+            </button>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingTop: 14 }}>
+            {announcementTargets.map(target => (
+              <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: `1px solid ${config.announcement_cta_href === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: config.announcement_cta_href === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.05)", color: config.announcement_cta_href === target.href ? GREEN : "rgba(255,255,255,0.72)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                {target.label}
+              </button>
+            ))}
+            <button onClick={() => startEdit("announcement_cta_href", (config.announcement_cta_href as string) ?? "")} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.72)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+              Custom link
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
           PRIMARY CTA PICKER
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
       {(() => {
         const ctaOptions: { intent: string; label: string; desc: string }[] | null = industryCategory === 'food'
           ? [
@@ -543,7 +624,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 </div>
                 {intentSaved && (
                   <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
-                    âœ“ Live
+                    Ã¢Å“â€œ Live
                   </div>
                 )}
               </div>
@@ -590,15 +671,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       {/* Divider */}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
           ABOUT PAGE
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
       <div style={{ padding: "0 20px" }}>
         <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
       </div>
 
       <div style={{ margin: "16px 20px 0" }}>
-        {/* Story card â€” feels like reading the actual about page */}
+        {/* Story card Ã¢â‚¬â€ feels like reading the actual about page */}
         <div
           onClick={() => !editing && startEdit("about_text", String(config.about_text ?? ""))}
           style={{
@@ -610,7 +691,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           }}
         >
           <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>
-            Your Story Â· tap to edit
+            Your Story Ã‚Â· tap to edit
           </div>
           <p style={{
             margin: 0, fontSize: 16, fontWeight: 300,
@@ -620,7 +701,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
           </p>
           {saved === "about_text" && (
-            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>âœ“ Live</div>
+            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>Ã¢Å“â€œ Live</div>
           )}
         </div>
         <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color={GREEN} onTap={() => handleRegenerate("about")} />
@@ -653,9 +734,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
           MENU PAGE (food) / SERVICES PAGE (everyone else)
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
       {showCatalog && (
       <div style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -816,19 +897,19 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
           GALLERY PAGE
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
       <div style={{ padding: "0 20px" }}>
         <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
 
-          {/* â”€â”€ Owner's real photos in gallery â”€â”€ */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Owner's real photos in gallery Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {galleryPhotos.length > 0 && (
             <div>
               <div style={{ ...TYPE.caption, color: "#34D399", marginBottom: 10 }}>
-                Your photos Â· live on your gallery
+                Your photos Ã‚Â· live on your gallery
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                 {galleryPhotos.map(p => (
@@ -836,7 +917,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     <button onClick={() => handleAssignPhoto(p.id, null)} style={{ position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer" }}>
-                      <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>âœ•</div>
+                      <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>Ã¢Å“â€¢</div>
                     </button>
                   </div>
                 ))}
@@ -844,7 +925,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* â”€â”€ Add more from unassigned hearted photos â”€â”€ */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Add more from unassigned hearted photos Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {unassigned.length > 0 && (
             <div>
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>
@@ -862,7 +943,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* â”€â”€ No owner photos yet â”€â”€ */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ No owner photos yet Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {photos.length === 0 && (
             <div style={{ borderRadius: 20, padding: "28px 20px", textAlign: "center", border: `1px dashed ${GREEN}22`, background: `${GREEN}05` }}>
               <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
@@ -878,12 +959,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {/* â”€â”€ Stock / placeholder photos â”€â”€ */}
+          {/* Ã¢â€â‚¬Ã¢â€â‚¬ Stock / placeholder photos Ã¢â€â‚¬Ã¢â€â‚¬ */}
           {stockImages.length > 0 && (
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                  Placeholder photos Â· tap âœ• to remove
+                  Placeholder photos Ã‚Â· tap Ã¢Å“â€¢ to remove
                 </div>
                 <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
                   {stockImages.length} stock
@@ -904,7 +985,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                         startTransition(async () => { await removeStockImage(url) })
                       }}
                       style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", border: "none", cursor: "pointer", color: "rgba(255,120,120,0.9)", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}
-                    >âœ•</button>
+                    >Ã¢Å“â€¢</button>
                     <div style={{ position: "absolute", bottom: 5, left: 7, fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.06em" }}>STOCK</div>
                   </div>
                 ))}
@@ -1074,6 +1155,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   contact_subtitle: "Contact Supporting Line",
                   contact_form_title: "Form Headline",
                   contact_form_subtitle: "Form Supporting Line",
+                  announcement_title: "Announcement Headline",
+                  announcement_body: "Announcement Copy",
+                  announcement_cta_label: "Announcement Button",
+                  announcement_cta_href: "Announcement Link",
                 }[editing] ?? editing}
               </div>
               <button onClick={() => saveEdit(editing)} style={{ justifySelf: "end", padding: "10px 0", border: "none", background: "transparent", color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>Save</button>
@@ -1110,9 +1195,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+      {/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
           CUSTOM DOMAIN
-      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */}
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
       <div style={{ padding: "0 20px" }}>
         <div style={{ marginBottom: 16 }}>
@@ -1134,7 +1219,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   )
 }
 
-// â”€â”€ Page Tab â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Page Tab Ã¢â€â‚¬Ã¢â€â‚¬
 function PageTab({ label, href, isLive }: { label: string; href: string; isLive?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -1161,7 +1246,7 @@ function PageTab({ label, href, isLive }: { label: string; href: string; isLive?
   )
 }
 
-// â”€â”€ Tap To Edit pill â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Tap To Edit pill Ã¢â€â‚¬Ã¢â€â‚¬
 function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
   label: string; value: string; placeholder: string
   onClick: () => void; isSaved: boolean; flex?: number
@@ -1177,7 +1262,7 @@ function TapToEdit({ label, value, placeholder, onClick, isSaved, flex }: {
   )
 }
 
-// â”€â”€ AI Bar â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ AI Bar Ã¢â€â‚¬Ã¢â€â‚¬
 function AIBar({ label, isLoading, color, onTap }: { label: string; isLoading: boolean; color: string; onTap: () => void }) {
   return (
     <button onClick={onTap} disabled={isLoading} style={{
@@ -1191,23 +1276,23 @@ function AIBar({ label, isLoading, color, onTap }: { label: string; isLoading: b
         {label}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 100, backgroundColor: isLoading ? "rgba(255,255,255,0.05)" : `${color}18`, border: `1px solid ${color}33` }}>
-        {isLoading ? <Spinner color={color}/> : <span style={{ fontSize: 13 }}>âœ¨</span>}
+        {isLoading ? <Spinner color={color}/> : <span style={{ fontSize: 13 }}>Ã¢Å“Â¨</span>}
         <span style={{ fontSize: 12, fontWeight: 700, color: isLoading ? "rgba(255,255,255,0.25)" : color }}>
-          {isLoading ? "Writingâ€¦" : "Rewrite"}
+          {isLoading ? "WritingÃ¢â‚¬Â¦" : "Rewrite"}
         </span>
       </div>
     </button>
   )
 }
 
-// â”€â”€ Spinner â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Spinner Ã¢â€â‚¬Ã¢â€â‚¬
 function Spinner({ color }: { color: string }) {
   return (
     <div style={{ width: 12, height: 12, borderRadius: "50%", border: `2px solid ${color}33`, borderTopColor: color, animation: "spin 0.7s linear infinite" }}/>
   )
 }
 
-// â”€â”€ Service Card â”€â”€
+// Ã¢â€â‚¬Ã¢â€â‚¬ Service Card Ã¢â€â‚¬Ã¢â€â‚¬
 function ServiceCard({ index, name, description, isEditing, onEdit, onSave, onRemove, onCancel }: {
   index: number; name: string; description: string; isEditing: boolean
   onEdit: () => void; onSave: (i: number, n: string, d: string) => void

@@ -10,6 +10,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
@@ -34,7 +35,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
 
   return (
     <>
-      {/* ── HERO — magazine cover, slow deliberate reveal ── */}
+      {/* â”€â”€ HERO â€” magazine cover, slow deliberate reveal â”€â”€ */}
       <section className="flex flex-col md:flex-row min-h-[90vh] md:min-h-screen">
 
         {/* Mobile: full-width image on top */}
@@ -49,7 +50,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
           )}
         </div>
 
-        {/* Left — white, elegant text composition */}
+        {/* Left â€” white, elegant text composition */}
         <div className="relative z-10 flex flex-col justify-center w-full md:w-[45%] px-10 md:px-16 py-16 md:py-24 bg-white">
           <p className="text-xs font-black tracking-[0.25em] uppercase mb-8 md:mb-10"
             style={{ color: primary, animation: "fade-up 700ms ease-out 200ms both" }}>
@@ -92,7 +93,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
           </div>
         </div>
 
-        {/* Right — full-height image drifts in from right (desktop only) */}
+        {/* Right â€” full-height image drifts in from right (desktop only) */}
         <div className="hidden md:block md:w-[55%] relative"
           style={{ animation: "fade-left 800ms ease-out 200ms both" }}>
           {heroVideo ? (
@@ -106,9 +107,11 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
         </div>
       </section>
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+
       <CatalogShowcase company={company} />
 
-      {/* ── ABOUT — brand story ── */}
+      {/* â”€â”€ ABOUT â€” brand story â”€â”€ */}
       {aboutCopy && (
         <section className="py-28 bg-white">
           <InView distance={20}>
@@ -144,7 +147,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
         </section>
       )}
 
-      {/* ── SERVICES — luxury menu ── */}
+      {/* â”€â”€ SERVICES â€” luxury menu â”€â”€ */}
       {services.length > 0 && (
         <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
           <div className="max-w-5xl mx-auto px-8">
@@ -169,7 +172,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
                 <Link href="/services"
                   className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                   style={{ color: primary }}>
-                  View All →
+                  View All â†’
                 </Link>
               </div>
             </InView>
@@ -213,7 +216,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
         </section>
       )}
 
-      {/* ── TESTIMONIALS — oversized pull quotes ── */}
+      {/* â”€â”€ TESTIMONIALS â€” oversized pull quotes â”€â”€ */}
       {testimonials.length > 0 && (
         <section className="py-28" style={{ backgroundColor: "#F9F8F6" }}>
           <div className="max-w-3xl mx-auto px-8">
@@ -258,7 +261,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
 
       {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
-      {/* ── FINAL CTA ── */}
+      {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-32 text-center overflow-hidden">
         {(ctaImage ?? img(1)) ? (
           <>

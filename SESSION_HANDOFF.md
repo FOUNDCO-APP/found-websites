@@ -550,3 +550,31 @@ If priorities changed, also update `TASKS.md`.
 3. Pick a paid plan and use the promo code if needed.
 4. Pay.
 5. Confirm it lands in the correct dashboard for that new business.
+
+---
+
+## July 25, 2026 - Site Announcements / Promotions
+
+### What changed
+- Added one premium announcement block owners can turn on from Edit My Site.
+- Announcement supports title, body, button text, target link, visual style, and an optional image/video background.
+- Public websites render the announcement below the hero across Impact, Editorial, Portrait, and Cinematic layouts.
+- Announcement photos now have their own Website Photos slot.
+- Copy polishing now protects announcement headline, body, button, and link fields.
+- Database migration added: `048-site-announcements.sql`.
+
+### Team decision
+- Steve/Jony direction: one elegant promotion moment, not a cluttered banner stack.
+- Angela direction: defaults should work without training; owners can leave it alone or customize it quickly.
+- Craig/Priya/Marcus direction: store this as website config, render it once through shared layout infrastructure, and make it available to every template.
+
+### Verification
+- `cmd /c npm run build` passed before handoff update.
+
+### Test next
+1. Open `my.foundco.app` > Edit My Site.
+2. Turn Announcement on.
+3. Edit headline/body/button or leave the default.
+4. Pick a destination chip such as Shop, Menu, Contact, Services, Estimate, or Reservations.
+5. Optional: choose Image style and assign an Announcement photo.
+6. Open the live site and confirm the announcement appears below the hero and the button goes to the right page.

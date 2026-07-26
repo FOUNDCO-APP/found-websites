@@ -7,6 +7,7 @@ export type SectionImages = {
   about?: string | null
   cta?: string | null
   gallery?: string[]
+  announcement?: string | null
 }
 
 export type LayoutProps = {

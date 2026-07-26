@@ -8,6 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
@@ -32,7 +33,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
   return (
     <>
-      {/* ── HERO — true 100vh, centered, the whole screen is the canvas ── */}
+      {/* â”€â”€ HERO â€” true 100vh, centered, the whole screen is the canvas â”€â”€ */}
       <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden">
         {heroVideo ? (
           <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
@@ -45,7 +46,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
         {(heroVideo || heroImage) && <div className="absolute inset-0 bg-black/45" />}
 
         <div className="relative z-10 px-8 max-w-5xl w-full">
-          {/* Tagline — arrives first */}
+          {/* Tagline â€” arrives first */}
           <p
             className="text-xs font-black tracking-[0.3em] uppercase mb-6"
             style={{
@@ -56,7 +57,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
 
-          {/* Headline — the main event */}
+          {/* Headline â€” the main event */}
           <h1
             className="text-6xl md:text-8xl lg:text-9xl font-black text-white leading-none mb-8 text-balance"
             style={{
@@ -67,7 +68,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
             {config?.hero_title || displayName}
           </h1>
 
-          {/* Color line — draws across */}
+          {/* Color line â€” draws across */}
           <div
             className="w-16 h-1 mx-auto mb-8"
             style={{
@@ -116,9 +117,11 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
         </div>
       </section>
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+
       <CatalogShowcase company={company} />
 
-      {/* ── SERVICES — swipe on mobile, grid on desktop ── */}
+      {/* â”€â”€ SERVICES â€” swipe on mobile, grid on desktop â”€â”€ */}
       {services.length > 0 && (
         <section className="py-16 bg-white">
           <InView>
@@ -136,11 +139,11 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
                 <Link href="/services"
                   className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                   style={{ color: primary }}>
-                  View All →
+                  View All â†’
                 </Link>
               </div>
 
-              {/* Mobile: horizontal swipe — icon + name only */}
+              {/* Mobile: horizontal swipe â€” icon + name only */}
               <div className="flex md:hidden gap-3 overflow-x-auto pb-2">
                 {services.map((service) => (
                   <div key={service.name}
@@ -184,7 +187,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
         </section>
       )}
 
-      {/* ── ABOUT — solid dark, no competing photo (CTA owns the final image) ── */}
+      {/* â”€â”€ ABOUT â€” solid dark, no competing photo (CTA owns the final image) â”€â”€ */}
       {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
           <div className="absolute inset-0" style={{ backgroundColor: "#111111" }} />
@@ -220,7 +223,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
         </section>
       )}
 
-      {/* ── TESTIMONIALS — one. large. centered. ── */}
+      {/* â”€â”€ TESTIMONIALS â€” one. large. centered. â”€â”€ */}
       {testimonials.length > 0 && (
         <section className="py-28 bg-white">
           <InView>
@@ -243,7 +246,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
               <div className="w-10 h-1 mx-auto mt-10 mb-6" style={{ backgroundColor: primary }} />
               <p className="text-sm font-black uppercase tracking-widest" style={{ color: "#999999" }}>
                 {testimonials[0].name}
-                {testimonials[0].role ? ` — ${testimonials[0].role}` : ""}
+                {testimonials[0].role ? ` â€” ${testimonials[0].role}` : ""}
               </p>
             </div>
           </InView>
@@ -252,7 +255,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
       {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
-      {/* ── FINAL CTA — full-bleed photo (rhythm rule honored) ── */}
+      {/* â”€â”€ FINAL CTA â€” full-bleed photo (rhythm rule honored) â”€â”€ */}
       <section className="relative py-32 text-center overflow-hidden">
         {(ctaImage ?? img(2)) ? (
           <>

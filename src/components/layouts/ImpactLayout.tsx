@@ -8,6 +8,7 @@ import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
+import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
@@ -33,7 +34,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
 
   return (
     <>
-      {/* ── HERO — fast, confident, punches in ── */}
+      {/* â”€â”€ HERO â€” fast, confident, punches in â”€â”€ */}
       <section className="relative min-h-[75vh] md:min-h-[85vh] flex items-center overflow-hidden">
         {heroVideo ? (
           <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
@@ -76,9 +77,11 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
         </div>
       </section>
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+
       <CatalogShowcase company={company} />
 
-      {/* ── SERVICES TEASER ── */}
+      {/* â”€â”€ SERVICES TEASER â”€â”€ */}
       {services.length > 0 && (
         <section className="py-24" style={{ backgroundColor: "#f7f7f7" }}>
           <div className="max-w-6xl mx-auto px-8">
@@ -91,7 +94,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
                   </h2>
                   <Link href="/services" className="text-sm font-black uppercase tracking-widest shrink-0 hover:opacity-70 transition-opacity"
                     style={{ color: primary }}>
-                    View All →
+                    View All â†’
                   </Link>
                 </div>
               </div>
@@ -125,7 +128,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
         </section>
       )}
 
-      {/* ── ABOUT STRIP ── */}
+      {/* â”€â”€ ABOUT STRIP â”€â”€ */}
       {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
           {(aboutImage ?? img(1)) ? (
@@ -164,7 +167,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
         </section>
       )}
 
-      {/* ── TESTIMONIALS ── */}
+      {/* â”€â”€ TESTIMONIALS â”€â”€ */}
       {testimonials.length > 0 && (
         <section className="py-24 bg-white">
           <div className="max-w-6xl mx-auto px-8">
@@ -200,7 +203,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
 
       {locations.length > 0 && <FindUsSection company={company} locations={locations} primary={primary} />}
 
-      {/* ── FINAL CTA ── */}
+      {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-28 text-center overflow-hidden">
         {(ctaImage ?? heroImage) ? (
           <img src={(ctaImage ?? heroImage)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />

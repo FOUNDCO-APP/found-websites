@@ -88,8 +88,8 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   "party rentals": "Event pieces selected to support the setup without overcomplicating the day.",
   "event planning": "Practical coordination that keeps the event details moving in the right order.",
   venue: "A ready setting for gatherings that need a clear place to come together.",
-  "quinceañera": "A celebration setup shaped around family, tradition, and the guest experience.",
-  "quinceañeras": "Celebration setups shaped around family, tradition, and the guest experience.",
+  "quinceaÃ±era": "A celebration setup shaped around family, tradition, and the guest experience.",
+  "quinceaÃ±eras": "Celebration setups shaped around family, tradition, and the guest experience.",
   portraits: "Clean, natural images that feel useful, personal, and easy to share.",
   "senior portraits": "A relaxed portrait session built around personality, confidence, and milestone moments.",
   events: "Coverage focused on the people, details, and moments that make the day matter.",
@@ -935,7 +935,7 @@ export function polishWebsiteField(field: string, value: unknown, context?: Copy
 
 export function polishWebsiteUpdates<T extends Record<string, unknown>>(updates: T, context?: CopyPolishContext): T {
   const polished: Record<string, unknown> = { ...updates }
-  for (const field of ["hero_title", "hero_subtitle", "about_text", "about_preview", "about_story", "about_highlights", "tagline", "cta_headline", "services", "faq_items", "menu_items"]) {
+  for (const field of ["hero_title", "hero_subtitle", "about_text", "about_preview", "about_story", "about_highlights", "tagline", "cta_headline", "announcement_title", "announcement_body", "announcement_cta_label", "services", "faq_items", "menu_items"]) {
     if (field in polished) polished[field] = polishWebsiteField(field, polished[field], context)
   }
   return polished as T

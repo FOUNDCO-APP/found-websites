@@ -80,6 +80,12 @@ export type WebsiteConfig = {
   published: boolean
   copy_generated: boolean
   faq_items: { q: string; a: string }[] | null
+  announcement_enabled?: boolean | null
+  announcement_title?: string | null
+  announcement_body?: string | null
+  announcement_cta_label?: string | null
+  announcement_cta_href?: string | null
+  announcement_style?: "default" | "light" | "dark" | "accent" | "image" | null
 }
 
 export type Company = {

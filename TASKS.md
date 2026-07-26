@@ -428,3 +428,11 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Verify Calendar empty state says `No bookings this week`.
 - Verify Bookings empty state says `No booking history yet`.
 - Verify Hours shows a separated Weekly hours summary and `Save Changes` only when editing or unsaved changes exist.
+
+### Launch Addition - Site Announcements / Promotions (July 25, 2026)
+- Built one configurable announcement/promotion block for customer websites.
+- Owners can enable it from Edit My Site, customize headline/body/button/link/style, and optionally assign a promotion image.
+- Public layouts now render it below the hero across all primary templates.
+- Use case: RC Bicycles/back-to-school sale and any owner needing a current announcement without making the site look hacked together.
+- Still needs live Supabase migration application if deployment does not auto-run migrations.
+- QA: turn on announcement for one retail/bike-style site, one restaurant/menu site, and one service site; confirm each CTA lands correctly.

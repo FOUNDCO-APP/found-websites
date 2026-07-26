@@ -1012,3 +1012,21 @@ The sessions from July 13 through July 20 below were not logged in real time - `
 ## Older History
 
 Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
+
+---
+
+## July 25, 2026 - Site Announcements / Promotions
+**AI:** Codex
+**Worked on:** Added a premium, owner-editable announcement block for live customer websites.
+
+### Completed
+- Added `SiteAnnouncement` shared renderer for all public site layouts.
+- Added announcement fields to website config types and copy polishing.
+- Added Edit My Site controls for enabling the announcement, editing copy/button/link, choosing style, and assigning announcement media.
+- Added migration `048-site-announcements.sql` for website_config announcement fields.
+- Verified with `cmd /c npm run build`.
+
+### Needs QA
+- Apply migration if needed.
+- Turn announcement on for a retail/shop site and verify the live block + CTA.
+- Repeat for restaurant/menu and service/estimate destinations.
