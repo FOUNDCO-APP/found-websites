@@ -1,4 +1,21 @@
-## Session: July 26, 2026 - Live Announcement Schema Fix
+## Session: July 26, 2026 - Featured Update Public Redesign
+**AI:** Codex
+**Worked on:** Shawn approved the Jony/Steve-led plan to replace the weak public announcement card with a premium, industry-aware featured update.
+
+### Fixed
+- Renamed the dashboard section to Featured Update.
+- Removed the word Announcement from the public site surface.
+- Rebuilt the tenant-site section as a full-width feature band instead of a boxed card.
+- Added industry-aware public eyebrow language and starter content.
+- Made the on-toggle seed useful starter copy/button/link when those fields are blank.
+
+### Verification
+- `cmd /c npm run build` passed.
+
+### Test Next
+- Shawn should test Lucky on mobile after deploy: toggle Featured Update off/on, refresh the live site, and confirm the section below the hero feels premium and specific.
+
+---## Session: July 26, 2026 - Live Announcement Schema Fix
 **AI:** Codex
 **Worked on:** Announcement was turned on in the dashboard but missing on the live site.
 

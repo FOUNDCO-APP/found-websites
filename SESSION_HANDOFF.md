@@ -1,4 +1,17 @@
-## LIVE ANNOUNCEMENT SCHEMA FIX - July 26, 2026
+## FEATURED UPDATE PUBLIC REDESIGN - July 26, 2026
+
+Jony/Steve-led direction after Shawn flagged the public announcement as weak and cheap.
+
+- Renamed the owner-facing feature from Announcement to Featured Update in the dashboard editor.
+- Removed the public "Announcement" label from tenant sites.
+- Changed the live section from a boxed card to a full-width premium feature band.
+- Added industry-aware public eyebrow language: retail/shop, food, bike shop, home services, nonprofit, events, and fallback.
+- Turning the feature on now seeds useful industry-aware starter copy/button/link if the owner has not written any yet.
+- Public site hides the section if the feature is on but no owner content/image exists, avoiding empty placeholder copy.
+- QA: production build passed.
+- Shawn QA next: Lucky > Edit My Site > Featured Update, toggle off/on, refresh live site, and confirm the public section feels integrated instead of boxed.
+
+---## LIVE ANNOUNCEMENT SCHEMA FIX - July 26, 2026
 
 Craig found the launch blocker: the code and migration existed, but live Supabase was missing the announcement columns on `website_config`.
 

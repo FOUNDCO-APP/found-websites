@@ -186,6 +186,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     startTransition(async () => { await updateSiteField(field, value) })
   }
 
+  function toggleFeaturedUpdate() {
+    if (announcementEnabled) {
+      saveConfigField("announcement_enabled", false)
+      return
+    }
+
+    const updates: Record<string, unknown> = { announcement_enabled: true }
+    if (!String(config.announcement_title ?? "").trim()) updates.announcement_title = announcementDefault.title
+    if (!String(config.announcement_body ?? "").trim()) updates.announcement_body = announcementDefault.body
+    if (!String(config.announcement_cta_label ?? "").trim()) updates.announcement_cta_label = announcementDefault.label
+    if (!String(config.announcement_cta_href ?? "").trim()) updates.announcement_cta_href = announcementDefault.href
+
+    setConfig(prev => ({ ...prev, ...updates }))
+    setSaved("announcement_enabled")
+    setTimeout(() => setSaved(null), 2500)
+    startTransition(async () => {
+      await Promise.all(Object.entries(updates).map(([field, value]) => updateSiteField(field, value)))
+    })
+  }
   async function handleRegenerate(section: Section) {
     setRegenerating(section)
     const result = await regenerateSection(section)
@@ -391,7 +410,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
     { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
     { slot: "gallery", label: "Gallery", helper: "Photos shown in gallery and photo strips.", photos: galleryPhotos },
-    { slot: "announcement", label: "Announcement", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
+    { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
 
@@ -546,13 +565,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
           <div>
-            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Announcement</div>
-            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Promote what matters now.</h2>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Featured Update</div>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Feature what matters now.</h2>
             <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
-              Add a sale, event, update, or seasonal push below the hero.
+              Add a sale, drop, event, booking push, or seasonal update below the hero.
             </p>
           </div>
-          <button onClick={() => saveConfigField("announcement_enabled", !announcementEnabled)} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
+          <button onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
             {announcementEnabled ? "On" : "Off"}
           </button>
         </div>
@@ -1175,10 +1194,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   contact_subtitle: "Contact Supporting Line",
                   contact_form_title: "Form Headline",
                   contact_form_subtitle: "Form Supporting Line",
-                  announcement_title: "Announcement Headline",
-                  announcement_body: "Announcement Copy",
-                  announcement_cta_label: "Announcement Button",
-                  announcement_cta_href: "Announcement Link",
+                  announcement_title: "Featured Update Headline",
+                  announcement_body: "Featured Update Copy",
+                  announcement_cta_label: "Featured Update Button",
+                  announcement_cta_href: "Featured Update Link",
                 }[editing] ?? editing}
               </div>
               <button onClick={() => saveEdit(editing)} style={{ justifySelf: "end", padding: "10px 0", border: "none", background: "transparent", color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>Save</button>

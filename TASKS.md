@@ -28,7 +28,17 @@ Online ordering flow live. Full product catalog/shop rebuilt and confirmed worki
 
 ---
 
-## JULY 26 LIVE ANNOUNCEMENT SCHEMA
+## JULY 26 FEATURED UPDATE REDESIGN
+
+- [x] Rename dashboard feature from Announcement to Featured Update.
+- [x] Remove public Announcement label.
+- [x] Replace boxed public card with full-width premium feature band.
+- [x] Add industry-aware public labels/defaults.
+- [x] Seed useful starter content when the owner turns the feature on.
+- [x] Production build passed.
+- [ ] Shawn mobile QA: toggle Lucky Featured Update off/on, refresh live site, and confirm the section appears below hero with the right feel.
+
+---## JULY 26 LIVE ANNOUNCEMENT SCHEMA
 
 - [x] Apply existing `048-site-announcements.sql` migration to live Supabase.
 - [x] Confirm Lucky announcement fields are readable from live Supabase.
