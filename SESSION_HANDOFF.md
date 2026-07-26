@@ -15,7 +15,27 @@ Team next step after the Safari Stripe popup fix: add the first bot/spam guard t
 
 ---
 
-## ACTIVATION EMAIL POLISH - July 25, 2026
+## LEAD NOTIFICATION CHECK - July 25, 2026
+
+Shawn tested one public contact/lead path after dashboard switching.
+
+- Public lead/inquiry submission worked.
+- Dashboard red-dot notification appeared in the right place.
+- The new lead was visible.
+- The notification cleared after handling/viewing.
+- Launch checklist item #4 is passed.
+- Next test: final quick receipt/payment email check after the latest email polish.
+
+---## DASHBOARD SWITCHING CHECK - July 25, 2026
+
+Shawn tested switching between businesses from the dashboard company picker after the activation email polish pass.
+
+- Dashboard company switching works.
+- Home/business context no longer appears stuck on the previous selected company during this check.
+- Launch checklist item #3 is passed.
+- Next test: one lead/inquiry notification path.
+
+---## ACTIVATION EMAIL POLISH - July 25, 2026
 
 Shawn confirmed fresh signup/payment passed functionally, but the site-live email needed launch polish before continuing. Steve/Jony decision: activation is a paid trust moment, so the email must feel intentional and consistent in Spark and Apple Mail.
 

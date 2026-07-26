@@ -1,4 +1,26 @@
-## Session: July 25, 2026 - Activation Email Polish
+## Session: July 25, 2026 - Lead Notification Passed
+**AI:** Codex
+**Worked on:** Shawn tested the launch checklist lead/inquiry notification path.
+
+### QA Passed
+- Public form/inquiry submission worked.
+- Dashboard notification appeared, the lead was visible, and the alert cleared after handling/viewing.
+
+### Test Next
+- Final quick receipt/payment email check after the latest email polish, then summarize launch readiness.
+
+---## Session: July 25, 2026 - Dashboard Switching Passed
+**AI:** Codex
+**Worked on:** Shawn tested dashboard company switching as launch checklist item #3.
+
+### QA Passed
+- Switching businesses from the dashboard company picker works.
+- Shawn confirmed the dashboard changed to the selected business correctly.
+
+### Test Next
+- Launch checklist #4: submit one public form/inquiry, then verify the dashboard red dot appears and clears after viewing/marking it handled.
+
+---## Session: July 25, 2026 - Activation Email Polish
 **AI:** Codex
 **Worked on:** Fresh signup/payment passed functionally, but Shawn flagged the site-live email as not polished enough for launch and inconsistent between Spark and Apple Mail.
 

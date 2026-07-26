@@ -43,8 +43,8 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 
 ## JULY 14 DASHBOARD INTEGRITY TEST
 
-- [ ] Switch between tshirts, Tacos, Taco Shop, Construction, and Musician from one login.
-- [ ] Confirm Home greeting, top-right company picker, More plan card, bottom tabs, and page titles always show the same selected company.
+- [x] Switch between tshirts, Tacos, Taco Shop, Construction, and Musician from one login. Shawn confirmed dashboard company switching works July 25.
+- [x] Confirm Home greeting, top-right company picker, More plan card, bottom tabs, and page titles always show the same selected company. Shawn confirmed switching works July 25.
 - [ ] Confirm Musician shows bookings/schedule language and no Orders tab.
 - [ ] Confirm Construction still shows Estimates as the primary Business message.
 - [ ] Confirm restaurants show Reservations/Orders based on available tools and do not fall back to generic Inquiries when using the Reservations tab.
@@ -98,6 +98,13 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 3. "Automatic review requests" claim - changed to "coming soon" everywhere it appeared (found-business plan page, More page plan cards) instead of building the feature, per Shawn.
 4. Catalog editor mobile keyboard/scroll-lock bug - `CatalogManager.tsx`'s Add/Edit Item sheet now uses the same body-lock pattern as SiteEditor.
 
+
+**Launch smoke checklist - July 25, 2026:**
+- [x] Safari shop/cart/payment-start smoke passed.
+- [x] Fresh signup/payment and polished site-live email passed in Spark and Apple Mail.
+- [x] Dashboard company switching passed.
+- [x] Public lead/inquiry notification passed: red dot appeared, lead was visible, and alert cleared.
+- [ ] Final quick receipt/payment email check after latest polish.
 **Launch payment QA backfill - July 21, 2026:**
 - [x] Fresh onboarding / live activation payment - Shawn confirmed this passed live; production companies under Shawn's test-owner emails now show active subscriptions and Stripe customer IDs. Activation/site-live email polish shipped July 25 and needs one Spark + Apple Mail visual retest before checklist #2 is closed completely.
 - [x] Retail shop order payment - verified in production Supabase: Lucky (`lucky`) has a `shopping_order` lead for Shawn Lopez, created July 17, 2026, `payment_status: paid`, $1.00 subtotal, selected option `Size: XL`, Stripe PaymentIntent recorded.
