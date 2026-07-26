@@ -1,3 +1,19 @@
+## Session: July 26, 2026 - Announcement Editor Clarity
+**AI:** Codex
+**Worked on:** Dashboard announcement editor polish after Shawn flagged unclear tap-to-edit behavior, unreadable style variants, and corrupted labels.
+
+### Fixed
+- Reworked the announcement editor into an explicit preview and controls layout.
+- Added clear controls for headline, message, button text, image, style, and destination.
+- Cleaned visible corrupted labels in the site editor.
+
+### Verification
+- `cmd /c npm run build` passed.
+
+### Test Next
+- Shawn should test Lucky > Edit My Site > Announcement, then confirm the live announcement looks correct.
+
+---
 ## Session: July 25, 2026 - Final Launch Email Check Passed
 **AI:** Codex
 **Worked on:** Shawn completed the final quick receipt/payment email check after the activation email polish.
@@ -9,7 +25,8 @@
 ### Next
 - Summarize launch readiness and choose the first traffic/launch move while continuing post-launch polish.
 
----## Session: July 25, 2026 - Lead Notification Passed
+---
+## Session: July 25, 2026 - Lead Notification Passed
 **AI:** Codex
 **Worked on:** Shawn tested the launch checklist lead/inquiry notification path.
 
@@ -20,7 +37,8 @@
 ### Test Next
 - Final quick receipt/payment email check after the latest email polish, then summarize launch readiness.
 
----## Session: July 25, 2026 - Dashboard Switching Passed
+---
+## Session: July 25, 2026 - Dashboard Switching Passed
 **AI:** Codex
 **Worked on:** Shawn tested dashboard company switching as launch checklist item #3.
 
@@ -31,7 +49,8 @@
 ### Test Next
 - Launch checklist #4: submit one public form/inquiry, then verify the dashboard red dot appears and clears after viewing/marking it handled.
 
----## Session: July 25, 2026 - Activation Email Polish
+---
+## Session: July 25, 2026 - Activation Email Polish
 **AI:** Codex
 **Worked on:** Fresh signup/payment passed functionally, but Shawn flagged the site-live email as not polished enough for launch and inconsistent between Spark and Apple Mail.
 
@@ -47,7 +66,8 @@
 ### Test Next
 - Trigger one new activation/site-live email and verify it in Spark and Apple Mail before marking launch checklist #2 fully done.
 
----## Session: July 25, 2026 - Launch Smoke Test #1 Passed
+---
+## Session: July 25, 2026 - Launch Smoke Test #1 Passed
 **AI:** Codex
 **Worked on:** Shawn completed the first launch smoke test after the Safari/Stripe lazy-load fixes.
 

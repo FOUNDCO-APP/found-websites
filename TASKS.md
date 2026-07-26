@@ -28,6 +28,14 @@ Online ordering flow live. Full product catalog/shop rebuilt and confirmed worki
 
 ---
 
+## JULY 26 ANNOUNCEMENT EDITOR
+
+- [x] Clarify announcement editor controls: explicit preview, edit headline/message/button text, image, style, and destination controls.
+- [x] Clean corrupted visible labels in the site editor.
+- [x] Production build passed.
+- [ ] Shawn mobile QA: Lucky > Edit My Site > Announcement, test on/off, copy edits, style variants, link destinations, and live preview.
+
+---
 ## DOC GAP BACKFILL - July 20, 2026
 
 Docs were not kept current July 13-20 (~80 commits, several major features). Reconstructed from `git log` and confirmed with Shawn. Full detail logged in `CHANGELOG.md` under matching dates. Summary of what changed status as a result:

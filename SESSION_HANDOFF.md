@@ -1,3 +1,13 @@
+## ANNOUNCEMENT EDITOR CLARITY - July 26, 2026
+
+Team-approved pass completed for the dashboard announcement editor.
+
+- Announcement editing now separates preview from controls: headline, message, button text, image, style, and destination are explicit.
+- Cleaned visible corrupted labels in the site editor.
+- QA: production build passed.
+- Shawn QA next: Lucky > Edit My Site > Announcement. Toggle it on, edit headline/message/button text, switch Default/Light/Dark/Accent/Image, choose Shop/Products/Contact/Custom link, then View live site.
+
+---
 ## PUBLIC WRITE RATE LIMITS - July 21, 2026
 
 Team next step after the Safari Stripe popup fix: add the first bot/spam guard to anonymous write paths before launch traffic. Scope stayed narrow and launch-safe.
@@ -28,7 +38,8 @@ Launch smoke checklist status:
 
 Next: summarize launch readiness and decide whether to start driving traffic while continuing post-launch polish.
 
----## LEAD NOTIFICATION CHECK - July 25, 2026
+---
+## LEAD NOTIFICATION CHECK - July 25, 2026
 
 Shawn tested one public contact/lead path after dashboard switching.
 
@@ -39,7 +50,8 @@ Shawn tested one public contact/lead path after dashboard switching.
 - Launch checklist item #4 is passed.
 - Next test: final quick receipt/payment email check after the latest email polish.
 
----## DASHBOARD SWITCHING CHECK - July 25, 2026
+---
+## DASHBOARD SWITCHING CHECK - July 25, 2026
 
 Shawn tested switching between businesses from the dashboard company picker after the activation email polish pass.
 
@@ -48,7 +60,8 @@ Shawn tested switching between businesses from the dashboard company picker afte
 - Launch checklist item #3 is passed.
 - Next test: one lead/inquiry notification path.
 
----## ACTIVATION EMAIL POLISH - July 25, 2026
+---
+## ACTIVATION EMAIL POLISH - July 25, 2026
 
 Shawn confirmed fresh signup/payment passed functionally, but the site-live email needed launch polish before continuing. Steve/Jony decision: activation is a paid trust moment, so the email must feel intentional and consistent in Spark and Apple Mail.
 
@@ -59,7 +72,8 @@ Shawn confirmed fresh signup/payment passed functionally, but the site-live emai
 - Build passes with `cmd /c npm run build`.
 - Test next: trigger one new site-live email and inspect it in Spark and Apple Mail. Confirm the business name is title-cased, the card stays visually consistent, and both buttons work.
 
----## PUBLIC SHOP/ORDER STRIPE LAZY LOAD - July 21, 2026
+---
+## PUBLIC SHOP/ORDER STRIPE LAZY LOAD - July 21, 2026
 
 Shawn confirmed the Safari popup still appeared after Safari extensions and Hide IP Address were ruled out. Firefox and Safari Private still did not show it. Team read: the safest next code-side isolation is to keep Stripe completely out of public shop/order initial bundles until the customer intentionally starts payment.
 
