@@ -638,3 +638,22 @@ If priorities changed, also update `TASKS.md`.
 - Verified with `git diff --check` and `cmd /c npm run build`.
 
 Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `New in the shop.` and Light/Dark/Default controls are readable.
+---
+
+## July 26, 2026 - Current Handoff: Edit Site Slate Pass
+
+### Latest completed work
+- The approved team direction for the whole Edit My Site slate is implemented.
+- The page now opens with Site Studio readiness signals and clearer section language instead of relying on "tap to edit" labels.
+- Section hierarchy now guides the owner through first impression, current push, page copy, shopping/ordering, services, photos, and launch trust.
+
+### Verification
+- `cmd /c npm run build` passed.
+- `git diff --check` passed with only the normal CRLF warning.
+
+### Next human QA
+1. Open `my.foundco.app` as an owner.
+2. Go to More > Edit My Site.
+3. Confirm the new Site Studio header and readiness cards feel natural on iPhone.
+4. Check each major section for clarity: Home, Featured Update, About, Contact, Products/Menu, Services, Gallery, Custom Domain.
+5. If the pass feels good, continue launch checklist; if not, bring screenshots back to the team before coding.

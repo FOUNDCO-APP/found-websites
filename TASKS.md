@@ -477,3 +477,9 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Lucky/apparel announcement default corrected from bike-school copy to generic shop copy.
 - Announcement style selector contrast corrected for readable editor preview.
 - QA needed after deploy: Lucky announcement default + Light/Dark/Default readability.
+### Edit Site Slate QA - July 26, 2026
+- [ ] Owner QA: Edit My Site opens with Site Studio and readiness cards.
+- [ ] Owner QA: readiness cards jump to the right sections.
+- [ ] Owner QA: no confusing "tap to edit" wording remains in the main edit slate.
+- [ ] Owner QA: photo/gallery guidance makes stock vs owner photos understandable.
+- [ ] Owner QA: Custom Domain reads as a launch trust step.

@@ -421,13 +421,39 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
+  const ownPhotoCount = localPhotos.length
+  const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
+  const setupSignals = [
+    { label: "First impression", value: heroImage ? "Photo set" : "Needs photo", href: "#first-impression", active: !heroImage },
+    { label: "Current push", value: announcementEnabled ? "Live" : "Off", href: "#featured-update", active: !announcementEnabled },
+    { label: "Business photos", value: ownPhotoCount ? `${ownPhotoCount} ready` : "Add photos", href: "#site-photos", active: ownPhotoCount === 0 },
+    { label: "Launch trust", value: initialConfig?.custom_domain ? "Domain set" : "Found URL", href: "#launch-trust", active: !initialConfig?.custom_domain },
+  ]
 
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
+      <div style={{ padding: "26px 20px 0" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Site Studio</div>
+        <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Make the site ready.</h1>
+        <p style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+          Found handles the structure. Tune the first impression, current push, photos, pages, and launch details.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 18 }}>
+          {setupSignals.map(signal => (
+            <a key={signal.label} href={signal.href} style={{ textDecoration: "none", padding: 14, borderRadius: 18, border: `1px solid ${signal.active ? GREEN + "44" : "rgba(255,255,255,0.1)"}`, background: signal.active ? `linear-gradient(145deg, ${GREEN}18, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.045)" }}>
+              <div style={{ fontSize: 12, lineHeight: 1.2, fontWeight: 900, color: "rgba(255,255,255,0.56)", marginBottom: 6 }}>{signal.label}</div>
+              <div style={{ fontSize: 15, lineHeight: 1.2, fontWeight: 900, color: signal.active ? GREEN : "white" }}>{signal.value}</div>
+            </a>
+          ))}
+        </div>
+      </div>
 
+      <div id="first-impression" style={{ padding: "30px 20px 0" }}>
+        <SectionIntro eyebrow="First impression" title="Make the first screen feel right." body="This is what customers see first. Keep it simple, visual, and clear." />
+      </div>
 
       {/* Page tab */}
-      <div style={{ padding: "28px 20px 0" }}>
+      <div style={{ padding: "14px 20px 0" }}>
         <PageTab label="Home Page" href={`https://${company.slug}.foundco.app`} isLive />
       </div>
 
@@ -461,7 +487,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer", marginBottom: 10 }}
             >
               <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 5 }}>
-                HEADLINE - tap to edit
+                Change headline
               </div>
               <h2 style={{
                 margin: 0, fontSize: 28, fontWeight: 300,
@@ -478,7 +504,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               style={{ cursor: "pointer" }}
             >
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 5 }}>
-                SUPPORTING LINE - tap to edit
+                Change supporting line
               </div>
               <p style={{
                 margin: 0, fontSize: 15,
@@ -509,7 +535,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
 
             <div style={{ padding: 14, borderRadius: 20, backgroundColor: "rgba(8,10,9,0.62)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
-              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 10 }}>Site Photos</div>
+              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 10 }}>Photos customers see</div>
               <div style={{ display: "grid", gap: 10 }}>
                 {photoSlots.map(slot => {
                   const cover = slot.photos[0]?.url ?? null
@@ -546,7 +572,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ margin: "12px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10, paddingLeft: 4 }}>
-          Your Hook
+          Main action
         </div>
         <div style={{ display: "flex", gap: 10 }}>
           <TapToEdit
@@ -570,7 +596,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
-      <div style={{ padding: "0 20px" }}>
+      <div id="featured-update" style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
           <div>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Featured Update</div>
@@ -734,7 +760,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
       <div style={{ padding: "0 20px" }}>
-        <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
+        <SectionIntro eyebrow="Pages customers read" title="Make the story clear." body="These words help customers decide if they trust the business." />
+        <div style={{ marginTop: 18 }}>
+          <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
+        </div>
       </div>
 
       <div style={{ margin: "16px 20px 0" }}>
@@ -749,7 +778,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           }}
         >
           <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>
-            Your Story - tap to edit
+            Change your story
           </div>
           <p style={{
             margin: 0, fontSize: 16, fontWeight: 300,
@@ -768,20 +797,23 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
       <div style={{ padding: "0 20px" }}>
-        <PageTab label="Contact Page" href={"https://" + company.slug + ".foundco.app/contact"} />
+        <SectionIntro eyebrow="Contact" title="Make reaching out obvious." body="Customers should know what to send and feel confident someone will answer." />
+        <div style={{ marginTop: 18 }}>
+          <PageTab label="Contact Page" href={"https://" + company.slug + ".foundco.app/contact"} />
+        </div>
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
         <button onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Page label - tap to edit</div>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change page label</div>
           <div style={{ fontSize: 17, fontWeight: 900, color: config.contact_eyebrow ? "white" : "rgba(255,255,255,0.32)" }}>{String(config.contact_eyebrow || "Get in touch")}</div>
         </button>
         <button onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Headline - tap to edit</div>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change headline</div>
           <div style={{ fontSize: 24, fontWeight: 300, color: config.contact_title ? "white" : "rgba(255,255,255,0.32)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{String(config.contact_title || "Contact Us")}</div>
         </button>
         <button onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Supporting line - tap to edit</div>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change supporting line</div>
           <div style={{ fontSize: 15, color: config.contact_subtitle ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.32)", lineHeight: 1.45 }}>{String(config.contact_subtitle || "We'd love to hear from you.")}</div>
         </button>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -794,7 +826,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {showCatalog && (
       <div style={{ padding: "0 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <SectionIntro eyebrow={isFoodCatalog ? "Ordering" : "Shopping"} title={isFoodCatalog ? "What guests can order." : "What customers can buy."} body={isFoodCatalog ? "Keep the menu easy to scan, price, and order from a phone." : "Products need clear names, photos, prices, options, and inventory."} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
         </div>
@@ -899,7 +932,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {!isFoodCatalog && (
       <div style={{ padding: "0 20px" }}>
-        <PageTab label="Services Page" href={`https://${company.slug}.foundco.app/services`} />
+        <SectionIntro eyebrow="Services" title="What customers can ask for." body="Keep this list short, plain, and easy to understand." />
+        <div style={{ marginTop: 18 }}>
+          <PageTab label="Services Page" href={`https://${company.slug}.foundco.app/services`} />
+        </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
           {services.map((svc, i) => (
@@ -952,8 +988,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
-      <div style={{ padding: "0 20px" }}>
-        <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
+      <div id="site-photos" style={{ padding: "0 20px" }}>
+        <SectionIntro eyebrow="Photos" title="Proof the business is real." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
+        <div style={{ marginTop: 18 }}>
+          <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
+        </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -1244,12 +1283,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       )}
 
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-      <div style={{ padding: "0 20px" }}>
+      <div id="launch-trust" style={{ padding: "0 20px" }}>
         <div style={{ marginBottom: 16 }}>
-          <h2 style={{ margin: "0 0 4px", ...TYPE.title, color: "white" }}>Custom Domain</h2>
-          <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            Replace foundco.app with your own domain name
-          </p>
+          <SectionIntro eyebrow="Launch trust" title="Use the business domain when ready." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
         </div>
         <DomainConnector
           initialDomain={(initialConfig?.custom_domain as string | null) ?? null}
@@ -1264,6 +1300,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   )
 }
 
+function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+  return (
+    <div>
+      <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{eyebrow}</div>
+      <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>{title}</h2>
+      <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{body}</p>
+    </div>
+  )
+}
 // Page Tab
 function PageTab({ label, href, isLive }: { label: string; href: string; isLive?: boolean }) {
   return (

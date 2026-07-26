@@ -1114,3 +1114,25 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 ### Verification
 - `git diff --check` passed.
 - `cmd /c npm run build` passed.
+---
+
+## July 26, 2026 - Edit Site Slate Hierarchy Pass
+**AI:** Codex
+**Worked on:** Whole Edit My Site slate cleanup after Shawn flagged that the page still felt like a backend/settings slate instead of a guided owner workflow.
+
+### Completed
+- Added a Site Studio opening section with four readiness signals: First impression, Current push, Business photos, and Launch trust.
+- Reworded tap-to-edit labels into clearer owner actions like Change headline, Change supporting line, and Change your story.
+- Added explicit section intros for First impression, Featured Update, About, Contact, Shopping/Ordering, Services, Photos, and Custom Domain.
+- Gallery/photo guidance now calls out missing owner-photo slots instead of leaving the owner to decode stock placeholders.
+- Custom Domain now sits under Launch trust language so it reads like a launch-quality step, not a random settings box.
+
+### Verification
+- `cmd /c npm run build` passed.
+- `git diff --check` passed with only the repo's normal CRLF warning.
+
+### Test next
+1. Open `my.foundco.app` > Edit My Site on Lucky or another test business.
+2. Confirm the top says Site Studio / Make the site ready.
+3. Tap each readiness signal and confirm it jumps to the right section.
+4. Confirm Home, Featured Update, About, Contact, Products/Menu, Services, Gallery, and Custom Domain read like guided owner tasks.
