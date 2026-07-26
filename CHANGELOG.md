@@ -1,4 +1,20 @@
-## Session: July 25, 2026 - Launch Smoke Test #1 Passed
+## Session: July 25, 2026 - Activation Email Polish
+**AI:** Codex
+**Worked on:** Fresh signup/payment passed functionally, but Shawn flagged the site-live email as not polished enough for launch and inconsistent between Spark and Apple Mail.
+
+### Fixed
+- Polished the site-live and activation-reminder email shell in `src/lib/activationEmails.ts` with a consistent dark Found card.
+- Reused the production business-name polish helper so lowercase company names are title-cased in email subjects and body copy.
+- Simplified the site-live message and button labels for a clearer paid activation moment.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed.
+
+### Test Next
+- Trigger one new activation/site-live email and verify it in Spark and Apple Mail before marking launch checklist #2 fully done.
+
+---## Session: July 25, 2026 - Launch Smoke Test #1 Passed
 **AI:** Codex
 **Worked on:** Shawn completed the first launch smoke test after the Safari/Stripe lazy-load fixes.
 

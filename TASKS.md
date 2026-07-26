@@ -1,6 +1,6 @@
 # TASKS.md - Found Co. / found-websites
 ### Active work board. Current session truth lives in `SESSION_HANDOFF.md`.
-*Last updated: July 21, 2026*
+*Last updated: July 25, 2026*
 *Current handoff: read `SESSION_HANDOFF.md` first for changed / open / test status.*
 
 ---
@@ -99,7 +99,7 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 4. Catalog editor mobile keyboard/scroll-lock bug - `CatalogManager.tsx`'s Add/Edit Item sheet now uses the same body-lock pattern as SiteEditor.
 
 **Launch payment QA backfill - July 21, 2026:**
-- [x] Fresh onboarding / live activation payment - Shawn confirmed this passed live; production companies under Shawn's test-owner emails now show active subscriptions and Stripe customer IDs.
+- [x] Fresh onboarding / live activation payment - Shawn confirmed this passed live; production companies under Shawn's test-owner emails now show active subscriptions and Stripe customer IDs. Activation/site-live email polish shipped July 25 and needs one Spark + Apple Mail visual retest before checklist #2 is closed completely.
 - [x] Retail shop order payment - verified in production Supabase: Lucky (`lucky`) has a `shopping_order` lead for Shawn Lopez, created July 17, 2026, `payment_status: paid`, $1.00 subtotal, selected option `Size: XL`, Stripe PaymentIntent recorded.
 - [x] Restaurant online order payment - verified in production Supabase: Rosa's Mexican Food (`rosas`) has paid `online_order` leads for Shawn Lopez, including July 18, 2026, $1.00 Carne Asada order, `status: closed`, `payment_status: paid`, Stripe PaymentIntent recorded.
 - [x] Estimate deposit payment - verified in production Supabase: Blue Luna Events (`bluelunaevents`) has an accepted $1.00 estimate for Shawn Lopez, 50% deposit, `payment_status: deposit_paid`, `accepted_payment_choice: pay_now`, Stripe PaymentIntent recorded, deposit paid July 20, 2026.

@@ -11,11 +11,22 @@ Team next step after the Safari Stripe popup fix: add the first bot/spam guard t
 ---
 # SESSION_HANDOFF.md - Found Co. Current Truth
 ### Start here after `BRIEF.md`. Keep this short, current, and plain-English.
-*Last updated: July 21, 2026*
+*Last updated: July 25, 2026*
 
 ---
 
-## PUBLIC SHOP/ORDER STRIPE LAZY LOAD - July 21, 2026
+## ACTIVATION EMAIL POLISH - July 25, 2026
+
+Shawn confirmed fresh signup/payment passed functionally, but the site-live email needed launch polish before continuing. Steve/Jony decision: activation is a paid trust moment, so the email must feel intentional and consistent in Spark and Apple Mail.
+
+- Updated `src/lib/activationEmails.ts` so site-live and activation-reminder emails use one dark Found card instead of the fragile light header/card mix.
+- Reused the existing `polishBusinessName` helper so lowercase test/business names render as display names in the subject and body.
+- Cleaned the site-live copy: `Your site is now open for customers. You can view it, edit details, or manage new leads from your dashboard.`
+- Primary/secondary buttons now read `Open Dashboard` and `View Site`.
+- Build passes with `cmd /c npm run build`.
+- Test next: trigger one new site-live email and inspect it in Spark and Apple Mail. Confirm the business name is title-cased, the card stays visually consistent, and both buttons work.
+
+---## PUBLIC SHOP/ORDER STRIPE LAZY LOAD - July 21, 2026
 
 Shawn confirmed the Safari popup still appeared after Safari extensions and Hide IP Address were ruled out. Firefox and Safari Private still did not show it. Team read: the safest next code-side isolation is to keep Stripe completely out of public shop/order initial bundles until the customer intentionally starts payment.
 

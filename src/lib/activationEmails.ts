@@ -1,9 +1,12 @@
 import { Resend } from "resend"
+import { polishBusinessName } from "@/lib/copyPolish"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || `https://${ROOT_DOMAIN}`
 const GREEN = "#32D074"
 const BLACK = "#080A09"
+const CARD = "#111311"
+const MUTED = "#8F938D"
 
 type CompanyEmailRow = {
   id: string
@@ -26,8 +29,12 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;")
 }
 
+function displayBusinessName(name: string) {
+  return polishBusinessName(name, name).trim() || name
+}
+
 function textButton(label: string, href: string, filled = true) {
-  return `<a href="${href}" style="display:block;text-align:center;border-radius:999px;padding:17px 22px;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:0.01em;${filled ? `background:${GREEN};color:${BLACK};` : `background:#ffffff;color:${BLACK};border:1px solid #dfdfdf;`}">${label}</a>`
+  return `<a href="${escapeHtml(href)}" style="display:block;text-align:center;border-radius:999px;padding:17px 22px;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:0.01em;${filled ? `background:${GREEN};color:${BLACK};` : `background:${CARD};color:#F6F6F0;border:1px solid #4D514C;`}">${escapeHtml(label)}</a>`
 }
 
 function shell({ eyebrow, title, body, primary, secondary, footer }: {
@@ -40,32 +47,38 @@ function shell({ eyebrow, title, body, primary, secondary, footer }: {
 }) {
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:0;background:#f4f4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${BLACK};">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f1;padding:36px 14px;">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
+  <title>${escapeHtml(title)}</title>
+</head>
+<body style="margin:0;padding:0;background:${BLACK};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#F6F6F0;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:${BLACK};padding:36px 14px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:22px;overflow:hidden;border:1px solid #e8e8e3;">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:520px;background:${CARD};border-radius:24px;overflow:hidden;border:1px solid #2B2F2B;">
         <tr>
-          <td style="background:${BLACK};padding:30px 28px;text-align:center;">
-            <span style="font-size:21px;font-weight:300;letter-spacing:10px;color:#ffffff;text-transform:uppercase;">FOUND</span>
+          <td style="padding:34px 32px 12px;text-align:center;">
+            <span style="font-size:20px;font-weight:300;letter-spacing:10px;color:#F6F6F0;text-transform:uppercase;">FOUND</span>
           </td>
         </tr>
         <tr>
-          <td style="padding:42px 32px 34px;text-align:left;">
+          <td style="padding:30px 32px 34px;text-align:left;">
             <p style="margin:0 0 14px;font-size:12px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:${GREEN};">${escapeHtml(eyebrow)}</p>
-            <h1 style="margin:0 0 16px;font-size:34px;line-height:1.06;font-weight:800;letter-spacing:-0.02em;color:${BLACK};">${escapeHtml(title)}</h1>
-            <p style="margin:0 0 30px;font-size:17px;line-height:1.55;color:#575754;">${body}</p>
+            <h1 style="margin:0 0 16px;font-size:34px;line-height:1.06;font-weight:800;letter-spacing:-0.02em;color:#F6F6F0;">${escapeHtml(title)}</h1>
+            <p style="margin:0 0 30px;font-size:17px;line-height:1.55;color:#B7BAB3;">${escapeHtml(body)}</p>
             ${textButton(primary.label, primary.href, true)}
             ${secondary ? `<div style="height:10px;"></div>${textButton(secondary.label, secondary.href, false)}` : ""}
           </td>
         </tr>
         <tr>
-          <td style="padding:22px 32px 28px;border-top:1px solid #eeeeea;text-align:center;">
-            <p style="margin:0;font-size:13px;line-height:1.5;color:#8b8b86;">${footer}</p>
+          <td style="padding:22px 32px 28px;border-top:1px solid #2B2F2B;text-align:center;">
+            <p style="margin:0;font-size:13px;line-height:1.5;color:${MUTED};">${escapeHtml(footer)}</p>
           </td>
         </tr>
       </table>
-      <p style="margin:18px 0 0;font-size:12px;color:#aaa9a3;">Reply anytime. A person will read it.</p>
+      <p style="margin:18px 0 0;font-size:12px;color:#696D67;">Reply anytime. A person will read it.</p>
     </td></tr>
   </table>
 </body>
@@ -73,37 +86,38 @@ function shell({ eyebrow, title, body, primary, secondary, footer }: {
 }
 
 export function buildSiteLiveEmail(company: { id: string; name: string; slug: string }) {
-  const safeName = escapeHtml(company.name)
+  const businessName = displayBusinessName(company.name)
   const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
   const dashboardUrl = `https://my.${ROOT_DOMAIN}/api/select-company?id=${encodeURIComponent(company.id)}&activated=true`
   return {
-    subject: `${company.name} is live.`,
+    subject: `${businessName} is live.`,
     html: shell({
       eyebrow: "Site live",
-      title: `${company.name} is live.`,
-      body: `${safeName} is now turned on for customers. Open the dashboard to tune the details, or view the site exactly as customers will see it.`,
-      primary: { label: "Open your dashboard", href: dashboardUrl },
-      secondary: { label: "View your site", href: siteUrl },
+      title: `${businessName} is live.`,
+      body: "Your site is now open for customers. You can view it, edit details, or manage new leads from your dashboard.",
+      primary: { label: "Open Dashboard", href: dashboardUrl },
+      secondary: { label: "View Site", href: siteUrl },
       footer: `${company.slug}.${ROOT_DOMAIN}`,
     }),
-    text: `${company.name} is live.\n\nYour site is now turned on for customers.\n\nOpen your dashboard:\n${dashboardUrl}\n\nView your site:\n${siteUrl}\n\n- The Found Team`,
+    text: `${businessName} is live.\n\nYour site is now open for customers. You can view it, edit details, or manage new leads from your dashboard.\n\nOpen Dashboard:\n${dashboardUrl}\n\nView Site:\n${siteUrl}\n\n- The Found Team`,
   }
 }
 
 export function buildActivationReminderEmail(company: { name: string; slug: string }) {
+  const businessName = displayBusinessName(company.name)
   const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
   const activationUrl = `${APP_URL}/activate?slug=${company.slug}`
   return {
-    subject: `${company.name} is ready when you are.`,
+    subject: `${businessName} is ready when you are.`,
     html: shell({
       eyebrow: "Preview saved",
-      title: `${company.name} is waiting.`,
-      body: `Your preview is saved. Add payment when you are ready, and Found will turn the site on for customers.`,
+      title: `${businessName} is waiting.`,
+      body: "Your preview is saved. Add payment when you are ready, and Found will turn the site on for customers.",
       primary: { label: "Activate your site", href: activationUrl },
       secondary: { label: "Preview your site", href: siteUrl },
       footer: `${company.slug}.${ROOT_DOMAIN}`,
     }),
-    text: `${company.name} is ready when you are.\n\nYour preview is saved. Add payment to turn it on for customers.\n\nActivate your site:\n${activationUrl}\n\nPreview your site:\n${siteUrl}\n\n- The Found Team`,
+    text: `${businessName} is ready when you are.\n\nYour preview is saved. Add payment to turn it on for customers.\n\nActivate your site:\n${activationUrl}\n\nPreview your site:\n${siteUrl}\n\n- The Found Team`,
   }
 }
 
