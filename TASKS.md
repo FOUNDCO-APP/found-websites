@@ -104,7 +104,7 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Fresh signup/payment and polished site-live email passed in Spark and Apple Mail.
 - [x] Dashboard company switching passed.
 - [x] Public lead/inquiry notification passed: red dot appeared, lead was visible, and alert cleared.
-- [ ] Final quick receipt/payment email check after latest polish.
+- [x] Final quick receipt/payment email check after latest polish passed.
 **Launch payment QA backfill - July 21, 2026:**
 - [x] Fresh onboarding / live activation payment - Shawn confirmed this passed live; production companies under Shawn's test-owner emails now show active subscriptions and Stripe customer IDs. Activation/site-live email polish shipped July 25 and needs one Spark + Apple Mail visual retest before checklist #2 is closed completely.
 - [x] Retail shop order payment - verified in production Supabase: Lucky (`lucky`) has a `shopping_order` lead for Shawn Lopez, created July 17, 2026, `payment_status: paid`, $1.00 subtotal, selected option `Size: XL`, Stripe PaymentIntent recorded.

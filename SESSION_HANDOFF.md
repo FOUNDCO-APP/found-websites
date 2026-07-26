@@ -15,7 +15,20 @@ Team next step after the Safari Stripe popup fix: add the first bot/spam guard t
 
 ---
 
-## LEAD NOTIFICATION CHECK - July 25, 2026
+## FINAL RECEIPT EMAIL CHECK - July 25, 2026
+
+Shawn confirmed the final quick receipt/payment email check passed after the activation email polish.
+
+Launch smoke checklist status:
+- Safari shop/cart/payment-start smoke: passed.
+- Fresh signup/payment and site-live email in Spark/Apple Mail: passed.
+- Dashboard company switching: passed.
+- Public lead/inquiry notification and clearing: passed.
+- Final receipt/payment email check: passed.
+
+Next: summarize launch readiness and decide whether to start driving traffic while continuing post-launch polish.
+
+---## LEAD NOTIFICATION CHECK - July 25, 2026
 
 Shawn tested one public contact/lead path after dashboard switching.
 
