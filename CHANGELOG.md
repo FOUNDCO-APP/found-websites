@@ -1030,3 +1030,18 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Apply migration if needed.
 - Turn announcement on for a retail/shop site and verify the live block + CTA.
 - Repeat for restaurant/menu and service/estimate destinations.
+---
+
+## July 26, 2026 - Announcement QA Correction
+**AI:** Codex
+**Worked on:** Fixed launch QA issues Shawn found in the new announcement editor.
+
+### Completed
+- Generic retail/apparel announcement defaults now say `New in the shop.` instead of bike/back-to-school copy.
+- Public site fallback only uses back-to-school copy for bike-related businesses.
+- Announcement editor style controls now keep readable text and borders in Light mode.
+- Edit sheets open with the visible default announcement copy.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed.

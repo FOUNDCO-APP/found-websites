@@ -578,3 +578,10 @@ If priorities changed, also update `TASKS.md`.
 4. Pick a destination chip such as Shop, Menu, Contact, Services, Estimate, or Reservations.
 5. Optional: choose Image style and assign an Announcement photo.
 6. Open the live site and confirm the announcement appears below the hero and the button goes to the right page.
+### July 26, 2026 - Announcement QA Correction
+- Fixed announcement defaults so generic retail/apparel shops no longer show bike/back-to-school language unless the business is bike-specific.
+- Fixed the announcement editor preview contrast so Light, Default, Dark, Accent, and Image controls stay readable.
+- Editing announcement fields now opens with the visible default copy instead of a blank field.
+- Verified with `git diff --check` and `cmd /c npm run build`.
+
+Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `New in the shop.` and Light/Dark/Default controls are readable.

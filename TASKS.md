@@ -436,3 +436,7 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Use case: RC Bicycles/back-to-school sale and any owner needing a current announcement without making the site look hacked together.
 - Still needs live Supabase migration application if deployment does not auto-run migrations.
 - QA: turn on announcement for one retail/bike-style site, one restaurant/menu site, and one service site; confirm each CTA lands correctly.
+### Announcement QA Fix - July 26, 2026
+- Lucky/apparel announcement default corrected from bike-school copy to generic shop copy.
+- Announcement style selector contrast corrected for readable editor preview.
+- QA needed after deploy: Lucky announcement default + Light/Dark/Default readability.

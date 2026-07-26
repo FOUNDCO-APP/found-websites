@@ -14,8 +14,11 @@ function defaultAnnouncement(company: Company) {
   if (industry === "food" || industry === "home_based_food") {
     return { title: "Fresh today.", body: "See what is ready to order, reserve, or ask about right now.", label: "View menu", href: "/menu" }
   }
-  if (industry === "retail" || sub.includes("bike")) {
+  if (sub.includes("bike")) {
     return { title: "Back-to-school ready.", body: "New gear, tune-ups, and local help are ready before the season starts.", label: "See what is new", href: "/shop" }
+  }
+  if (industry === "retail") {
+    return { title: "New in the shop.", body: "Share a sale, product drop, or update customers should see first.", label: "Shop now", href: "/shop" }
   }
   if (industry === "home_services") {
     return { title: "Now booking.", body: "Request the work you need and get a clear next step from the team.", label: "Request an estimate", href: "/estimate" }
@@ -23,7 +26,7 @@ function defaultAnnouncement(company: Company) {
   if (industry === "nonprofit") {
     return { title: "Join what is happening.", body: "See the next way to connect, serve, or get involved.", label: "Get involved", href: "/services" }
   }
-  return { title: "Something new is ready.", body: "See the latest update and take the next step.", label: "Learn more", href: "/contact" }
+  return { title: "Worth knowing now.", body: "Share a current update, offer, event, or next step for customers.", label: "Learn more", href: "/contact" }
 }
 
 function safeHref(value: unknown, fallback: string) {
