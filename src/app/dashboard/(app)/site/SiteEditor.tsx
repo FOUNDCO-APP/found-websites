@@ -89,6 +89,21 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const sheetOpen = Boolean(editing || photoPickerSlot || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null)
 
   useEffect(() => {
+    const root = document.documentElement
+    const header = document.querySelector<HTMLElement>(".found-dashboard-header")
+    if (!header) return
+
+    const updateHeaderHeight = () => {
+      root.style.setProperty("--found-header-h", `${header.getBoundingClientRect().height}px`)
+    }
+
+    updateHeaderHeight()
+    const observer = new ResizeObserver(updateHeaderHeight)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     if (!sheetOpen) return
 
     const body = document.body
@@ -461,17 +476,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Edit website</h1>
           </div>
 
-          <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ margin: "18px 20px 0", display: "flex", alignItems: "center", gap: 13, padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textDecoration: "none" }}>
-            <div style={{ width: 46, height: 46, borderRadius: 11, flexShrink: 0, overflow: "hidden", position: "relative", background: "linear-gradient(155deg, #1c231a 0%, #0d100c 100%)" }}>
-              {heroImage && (
-                isVideoMedia(heroImage) ? <video src={heroImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              )}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 17, fontWeight: 700, color: "white", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{company.slug}.foundco.app</div>
-            </div>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+          <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ margin: "14px 20px 0", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
+            <span style={{ ...TYPE.footnote, color: GREEN }}>View live site</span>
+            <span style={{ ...TYPE.footnote, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{company.slug}.foundco.app</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
           </a>
 
           <div style={{ padding: "26px 20px 0" }}>
@@ -1384,10 +1392,22 @@ function HubTile({ label, sub, flag, onClick, href }: { label: string; sub: stri
   return <button type="button" onClick={onClick} style={sharedStyle}>{inner}</button>
 }
 
-// Shared back-to-hub header for every drilled-in page/section.
+// Shared back-to-hub header for every drilled-in page/section. Sticks under the
+// main dashboard header (via --found-header-h, measured in SiteEditor) so the
+// owner always has a way back without scrolling to the top of a long section.
 function BackHeader({ label, onBack }: { label: string; onBack: () => void }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "24px 20px 4px" }}>
+    <div style={{
+      position: "sticky",
+      top: "var(--found-header-h, 0px)",
+      zIndex: 30,
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      padding: "14px 20px",
+      backgroundColor: BLACK,
+      borderBottom: "1px solid rgba(255,255,255,0.06)",
+    }}>
       <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
       </button>

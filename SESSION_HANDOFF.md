@@ -1,3 +1,15 @@
+## 2026-07-27 - Edit My Site Hub: Sticky Back Nav + Slim Site Link
+
+Shawn ran mobile QA on the new three-tier Edit My Site hub (Lucky) and flagged two things via screenshots. Team read (Jony/Steve/Craig) approved by Shawn same session, then built:
+
+- **Sticky section back nav:** The green "< [Section]" back header on every drilled-in view (Home, About, Contact, Shop/Menu, Services, Gallery, Business Info, Domain) used to scroll away with the page content, so getting back to the hub meant scrolling all the way to the top - not practical on longer sections like Gallery or Services. `BackHeader` in `SiteEditor.tsx` is now `position: sticky`, pinned just below the main dashboard header at all times, iOS Settings-style. Offset is measured live off `.found-dashboard-header`'s real height via a `ResizeObserver` (`--found-header-h` CSS var, same pattern as the existing `--found-visual-height` var) so it stays correct across devices/safe areas and collapses to 0 on desktop where that header is hidden.
+- **Site-link row de-emphasized:** The "Lucky / lucky.foundco.app" row at the top of the hub was a full card with a 46px thumbnail - same visual weight as the Pages tiles below it, for an action that just opens the live site. Replaced with a slim inline "View live site · lucky.foundco.app" text link, no card/thumbnail.
+- `cmd /c npm run build` passed. `git diff --check` passed.
+
+Shawn QA next: open Dashboard > More > Edit My Site on mobile (Lucky). Confirm the top site-link now reads as a light text link, not a card. Open Home/About/Contact/Shop/Services/Gallery, scroll down, and confirm the "< [Section]" back bar stays pinned under the FOUND header the whole time instead of scrolling away, with no gap or overlap against the header above it.
+
+---
+
 ## 2026-07-26 - Current Handoff
 - Site editor top/homepage slate rebuilt after team review: hidden tap zones were replaced with clear owner-facing controls for headline, supporting line, main button, short hook, header photo, and AI rewrite.
 - Site photo assignment now sits in a separate "Photos around the site" section for Header, About, Visit/CTA, Gallery, Featured Update, and Contact imagery.

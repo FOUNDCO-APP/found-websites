@@ -1,3 +1,14 @@
+## 2026-07-27 - Edit My Site Hub: Sticky Back Nav + Slim Site Link, needs Shawn's mobile QA
+
+Fix for two issues Shawn found during his first mobile QA pass on the new hub (screenshots). Team-approved, built same day. Full detail: `SESSION_HANDOFF.md`.
+
+- [x] `BackHeader` (used on every section: Home, About, Contact, Shop/Menu, Services, Gallery, Business Info, Domain) is now sticky under the main dashboard header instead of scrolling away.
+- [x] Top "Lucky / lucky.foundco.app" row on the hub is now a slim text link instead of a full card.
+- [x] Build passes clean, `git diff --check` passed.
+- [ ] **Shawn mobile QA (not done yet):** Edit My Site top link reads as light text now, not a card. Open each section, scroll down, confirm the back bar stays pinned with no gap/overlap against the header.
+
+---
+
 ## 2026-07-27 - Edit My Site Hub: BUILT, needs Shawn's mobile QA
 
 Full team meeting held (Steve led - see `DESIGN_DECISIONS.md` [2026-07-27]), mockup reviewed and approved (Jony/Steve design pass, toggle concept cut after Shawn found it confusing), then built same day. Full detail: `CHANGELOG.md` "2026-07-27 - Edit My Site Hub Rebuild".
@@ -181,7 +192,24 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Paid-order receipt fulfillment details - shop and restaurant/menu receipts now show `Ship to` for shipping and `Pickup details` for pickup, using saved company location when available and a clear pickup-instructions fallback when not.
 - [ ] Optional Stripe Dashboard reconciliation - local `.env.local` only exposed a test Stripe secret during Codex verification, so Stripe API could not read live connected-account PaymentIntents from this machine. Supabase production rows are verified; Stripe-side reconciliation should be checked in the Stripe Dashboard if Shawn wants a second ledger confirmation.
 
-*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. P1 launch hardening attempted July 21 but all custom headers were rolled back after iPhone Safari Stripe `inner.html` download prompts; checkout stability takes priority before revisiting headers. Remaining P1s include rate limiting, CI/tests, comp-link secret in a URL, checkout webhook fallback gaps, etc.*
+*Prior verdicts: `LAUNCH_READINESS_AUDIT_2026-07-09.md`, `LAUNCH_READINESS_AUDIT_2026-07-20.md`. Open self-serve launch remains blocked; controlled pilot only. P1 launch hardening attempted July 21; custom security headers were rolled back after iPhone Safari Stripe `inner.html` download prompts (root cause was eager Stripe.js prefetching, since fixed via lazy-loading - not the headers themselves, but treat header work here as high-risk going forward). Rate limiting shipped July 21 (see below) - it is DONE, not remaining.*
+
+## P1 CLEANUP STATUS - as of July 27, 2026 (consolidated, supersedes scattered mentions above)
+
+From `LAUNCH_READINESS_AUDIT_2026-07-20.md`'s 14 P1s:
+- [x] Rate limiting on public write routes - shipped July 21.
+- [x] Homepage SEO metadata (canonical/OG/Twitter) - shipped, `src/app/page.tsx` + `HomeClient.tsx`.
+- [x] Homepage CTA delay - shortened (was 3.3s, no skip path) and made tap-to-skip.
+- [x] Shop page metadata - shipped, `[slug]/shop/page.tsx` + `[slug]/order/page.tsx`.
+- [x] Shop/order checkout mobile keyboard bug - fixed, same `visualViewport` pattern as SiteEditor.
+- [x] Resend module-level init in 3 files - moved inside each function.
+- [ ] **Still open:** comp-link secret (`?comp=<ADMIN_KEY>`) is a raw shared secret in a URL, not a scoped/expiring token.
+- [ ] **Still open:** no automated tests, no CI.
+- [ ] **Still open:** hero image optimization (still full-res PNGs, not WebP/AVIF).
+- [ ] **Still open:** shop/online-order checkout has no webhook fallback if the tab closes right after a successful payment (the `/complete` routes themselves are solid; this is a missing safety net, not a broken primary path).
+- [ ] **Still open, not urgent:** Stripe subscriber price audit (verify no Pro/Business subscribers were charged wrong price before the `activateActions.ts` fix) - read-only check, not yet done.
+- [ ] **Still open, not urgent:** RLS policy verification on `estimates`/`addon_subscriptions`/`leads`/catalog `website_config` fields - only 3 migration files exist in source control despite far more live tables; needs a live Supabase check, not a code-review assumption.
+- **Not a bug, a product decision:** "one catalog, three systems" (Estimates/Shop/Menu are still 3 separate data stores) - documented, not scheduled.
 
 ---
 
@@ -197,7 +225,7 @@ Docs were not kept current July 13-20 (~80 commits, several major features). Rec
 - [x] Safari extensions and Hide IP Address were ruled out by Shawn; normal Safari still showed the prompt, Private Safari and Firefox did not.
 - [x] Public shop/order Stripe isolation shipped: `ShopClient` and `OnlineOrderClient` no longer import Stripe at module load; Stripe Elements now live in lazy payment-only components.
 - [x] Normal iPhone Safari shop smoke passed July 25: Shawn confirmed #1 on the launch checklist passed for Lucky/T-Shirts shop browsing/cart/payment-start; no Stripe `inner.html` download prompt reported.
-- [ ] Next team step: public write-route rate limiting / bot controls.
+- [x] Public write-route rate limiting / bot controls - shipped July 21 (see line above - this bullet was a stale duplicate, corrected July 27).
 
 ---
 
