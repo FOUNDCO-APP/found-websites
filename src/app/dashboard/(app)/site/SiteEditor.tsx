@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -13,8 +13,10 @@ type Photo = { id: string; url: string; website_section: string | null; media_ty
 type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact"
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
+type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain"
+
 type Props = {
-  company: { id: string; name: string; slug: string; sub_industry?: string | null }
+  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null }
   config: Config | null
   photos: Photo[]
   stockImages: string[]
@@ -43,6 +45,30 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
   const [intentSaved, setIntentSaved] = useState(false)
+
+  // Edit My Site is a hub: pick a page/section, edit just that, come back.
+  // Not one long scrolling page. See DESIGN_DECISIONS.md [2026-07-27].
+  const [view, setView] = useState<View>("hub")
+  const [businessInfo, setBusinessInfo] = useState({
+    name: company.name ?? "",
+    phone: company.phone ?? "",
+    email: company.email ?? "",
+    city: company.city ?? "",
+    state: company.state ?? "",
+  })
+  const [savingBizField, setSavingBizField] = useState<string | null>(null)
+  const [savedBizField, setSavedBizField] = useState<string | null>(null)
+
+  async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state", value: string) {
+    setBusinessInfo(prev => ({ ...prev, [field]: value }))
+    setSavingBizField(field)
+    const result = await updateCompanyField(field, value)
+    setSavingBizField(null)
+    if (!("error" in result)) {
+      setSavedBizField(field)
+      setTimeout(() => setSavedBizField(null), 2200)
+    }
+  }
 
   // Shared sellable item catalog. Food sees Menu; retail/shop sees Products.
   type MenuItemDraft = { name: string; price: string; description: string; photo_url: string }
@@ -423,20 +449,71 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   ]
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
 
+  const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
+  const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
+
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
-      <div style={{ padding: "28px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Edit website</div>
-        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Make the site ready.</h1>
-        <p style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Change the photos, words, products, services, and launch details customers see.
-        </p>
-        <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ marginTop: 18, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "12px 16px", borderRadius: 999, border: `1px solid ${GREEN}40`, backgroundColor: `${GREEN}17`, color: GREEN, textDecoration: "none", fontSize: 14, fontWeight: 900 }}>
-          View live site
-        </a>
-      </div>
+      {view === "hub" && (
+        <>
+          <div style={{ padding: "28px 20px 0" }}>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Your site</div>
+            <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Edit website</h1>
+          </div>
 
-      <div id="homepage" style={{ padding: "30px 20px 0" }}>
+          <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ margin: "18px 20px 0", display: "flex", alignItems: "center", gap: 13, padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textDecoration: "none" }}>
+            <div style={{ width: 46, height: 46, borderRadius: 11, flexShrink: 0, overflow: "hidden", position: "relative", background: "linear-gradient(155deg, #1c231a 0%, #0d100c 100%)" }}>
+              {heroImage && (
+                isVideoMedia(heroImage) ? <video src={heroImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              )}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 17, fontWeight: 700, color: "white", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{company.slug}.foundco.app</div>
+            </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+          </a>
+
+          <div style={{ padding: "26px 20px 0" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ ...TYPE.caption, color: GREEN }}>Pages</div>
+              <div style={{ ...TYPE.footnote, fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Tap to edit</div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <HubTile label="Home" sub="Headline, photos, Featured Update" onClick={() => setView("home")} />
+              <HubTile label="About" sub="Your story, what you offer" onClick={() => setView("about")} />
+              <HubTile label="Contact" sub="How customers reach you" onClick={() => setView("contact")} />
+              {showCatalog && <HubTile label={catalogTileLabel} sub={catalogTileSub} onClick={() => setView("catalog")} />}
+              {!isFoodCatalog && <HubTile label="Services" sub="What you offer, priced" onClick={() => setView("services")} />}
+              <HubTile label="Gallery" sub="Photos customers see" flag={galleryPhotos.length === 0 ? "Add photos" : undefined} onClick={() => setView("photos")} />
+            </div>
+          </div>
+
+          <div style={{ padding: "26px 20px 0" }}>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Business info</div>
+            <button onClick={() => setView("businessInfo")} style={{ display: "flex", alignItems: "center", gap: 4, width: "100%", padding: 16, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: "block", fontSize: 17, fontWeight: 700, color: "white", marginBottom: 3 }}>Name, phone, email, address</span>
+                <span style={{ display: "block", fontSize: 15, fontWeight: 500, lineHeight: 1.4, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Used everywhere on your site - not just one page</span>
+              </span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+
+          <div style={{ padding: "26px 20px 0" }}>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Site-wide</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <HubTile label="Photo library" sub="All your photos" href="/photos" />
+              <HubTile label="Domain" sub={`${company.slug}.foundco.app`} onClick={() => setView("domain")} />
+            </div>
+          </div>
+        </>
+      )}
+
+      {view === "home" && (
+      <>
+      <BackHeader label="Home" onBack={() => setView("hub")} />
+      <div id="homepage" style={{ padding: "10px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>First impression</div>
         <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Homepage</h2>
         <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.5 }}>
@@ -703,11 +780,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </>
         )
       })()}
+      </>
+      )}
 
-      {/* Divider */}
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-
-      <div style={{ padding: "0 20px" }}>
+      {view === "about" && (
+      <>
+      <BackHeader label="About" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="About" title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="About" href={`https://${company.slug}.foundco.app/about`} />
@@ -741,10 +820,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
         <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color={GREEN} onTap={() => handleRegenerate("about")} />
       </div>
+      </>
+      )}
 
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-
-      <div style={{ padding: "0 20px" }}>
+      {view === "contact" && (
+      <>
+      <BackHeader label="Contact" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Contact" title="Make reaching out easy." body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Contact" href={"https://" + company.slug + ".foundco.app/contact"} />
@@ -769,11 +851,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <TapToEdit label="Form note" value={String(config.contact_form_subtitle ?? "")} placeholder="We will reply soon" onClick={() => startEdit("contact_form_subtitle", String(config.contact_form_subtitle ?? ""))} isSaved={saved === "contact_form_subtitle"} />
         </div>
       </div>
+      </>
+      )}
 
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-
-      {showCatalog && (
-      <div style={{ padding: "0 20px" }}>
+      {view === "catalog" && showCatalog && (
+      <>
+      <BackHeader label={catalogTileLabel} onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow={isFoodCatalog ? "Menu" : "Shop"} title={isFoodCatalog ? "Build the menu guests order from." : "Build the products customers buy."} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
@@ -874,12 +958,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           )}
         </div>
       </div>
+      </>
       )}
 
-      {showCatalog && !isFoodCatalog && <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>}
-
-      {!isFoodCatalog && (
-      <div style={{ padding: "0 20px" }}>
+      {view === "services" && !isFoodCatalog && (
+      <>
+      <BackHeader label="Services" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Services" href={`https://${company.slug}.foundco.app/services`} />
@@ -932,11 +1017,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <AIBar label="AI rewrites all service descriptions" isLoading={regenerating === "services"} color={GREEN} onTap={() => handleRegenerate("services")} />
         </div>
       </div>
+      </>
       )}
 
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-
-      <div id="site-photos" style={{ padding: "0 20px" }}>
+      {view === "photos" && (
+      <>
+      <BackHeader label="Gallery" onBack={() => setView("hub")} />
+      <div id="site-photos" style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Photos" title="Choose the photos customers see." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Gallery" href={`https://${company.slug}.foundco.app/gallery`} />
@@ -1030,6 +1117,26 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
         </div>
       </div>
+      </>
+      )}
+
+      {view === "businessInfo" && (
+      <>
+      <BackHeader label="Business Info" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
+        <SectionIntro eyebrow="Business info" title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
+        <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
+          <BizInfoField label="Business name" value={businessInfo.name} placeholder="Your business name" saving={savingBizField === "name"} justSaved={savedBizField === "name"} onSave={v => saveBusinessField("name", v)} />
+          <BizInfoField label="Phone" value={businessInfo.phone} placeholder="(520) 555-0100" type="tel" saving={savingBizField === "phone"} justSaved={savedBizField === "phone"} onSave={v => saveBusinessField("phone", v)} />
+          <BizInfoField label="Email" value={businessInfo.email} placeholder="you@yourbusiness.com" type="email" saving={savingBizField === "email"} justSaved={savedBizField === "email"} onSave={v => saveBusinessField("email", v)} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <BizInfoField label="City" value={businessInfo.city} placeholder="Tucson" saving={savingBizField === "city"} justSaved={savedBizField === "city"} onSave={v => saveBusinessField("city", v)} />
+            <BizInfoField label="State" value={businessInfo.state} placeholder="AZ" saving={savingBizField === "state"} justSaved={savedBizField === "state"} onSave={v => saveBusinessField("state", v)} />
+          </div>
+        </div>
+      </div>
+      </>
+      )}
 
       {/* -- CATALOG ITEM EDIT SHEET -- */}
       {editingMenuItem !== null && (
@@ -1230,8 +1337,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       )}
 
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-      <div id="launch-trust" style={{ padding: "0 20px" }}>
+      {view === "domain" && (
+      <>
+      <BackHeader label="Domain" onBack={() => setView("hub")} />
+      <div id="launch-trust" style={{ padding: "10px 20px 0" }}>
         <div style={{ marginBottom: 16 }}>
           <SectionIntro eyebrow="Domain" title="Connect a business domain." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
         </div>
@@ -1242,8 +1351,75 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           companySlug={company.slug}
         />
       </div>
+      </>
+      )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
+}
+
+// Hub tile - quiet card, no icon badge. Typography carries the hierarchy.
+// See DESIGN_DECISIONS.md [2026-07-27].
+function HubTile({ label, sub, flag, onClick, href }: { label: string; sub: string; flag?: string; onClick?: () => void; href?: string }) {
+  const sharedStyle: React.CSSProperties = {
+    borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)",
+    padding: "16px 15px 14px", textAlign: "left", cursor: "pointer",
+    display: "flex", flexDirection: "column", gap: 5, minHeight: 78,
+    textDecoration: "none",
+  }
+  const inner = (
+    <>
+      <span style={{ ...TYPE.headline, color: "white" }}>{label}</span>
+      {flag && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, ...TYPE.footnote, color: GREEN }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}44`, flexShrink: 0 }} />
+          {flag}
+        </span>
+      )}
+      <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{sub}</span>
+    </>
+  )
+  if (href) return <a href={href} style={sharedStyle}>{inner}</a>
+  return <button type="button" onClick={onClick} style={sharedStyle}>{inner}</button>
+}
+
+// Shared back-to-hub header for every drilled-in page/section.
+function BackHeader({ label, onBack }: { label: string; onBack: () => void }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "24px 20px 4px" }}>
+      <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
+    </div>
+  )
+}
+
+// Business Info field - saves itself on blur, no Save button. Matches the
+// "easy as taking a picture" bar: type, look away, it's already saved.
+function BizInfoField({ label, value, placeholder, type, saving, justSaved, onSave }: {
+  label: string; value: string; placeholder: string; type?: string
+  saving: boolean; justSaved: boolean; onSave: (value: string) => void
+}) {
+  const [local, setLocal] = useState(value)
+  useEffect(() => { setLocal(value) }, [value])
+  return (
+    <div style={{ borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+        <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{label}</span>
+        {(saving || justSaved) && (
+          <span style={{ ...TYPE.footnote, color: justSaved ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{saving ? "Saving..." : "Saved"}</span>
+        )}
+      </div>
+      <input
+        type={type ?? "text"}
+        value={local}
+        onChange={e => setLocal(e.target.value)}
+        onBlur={() => { if (local.trim() !== value.trim()) onSave(local) }}
+        placeholder={placeholder}
+        style={{ width: "100%", background: "none", border: "none", outline: "none", color: "white", fontSize: 17, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
+      />
     </div>
   )
 }

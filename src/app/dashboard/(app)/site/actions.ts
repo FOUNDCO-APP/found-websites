@@ -528,3 +528,26 @@ export async function removeStockImage(imageUrl: string) {
   revalidatePath(`/${ctx.company.slug}/gallery`)
   return { success: true }
 }
+
+// Business Info lives on the companies table, not website_config - these are
+// used sitewide (footer, nav, every page), not scoped to one page's copy.
+// Explicit allowlist on purpose: this table also holds plan/subscription/
+// Stripe fields that must never be reachable through a generic field setter.
+const COMPANY_FIELD_ALLOWLIST = new Set(["name", "phone", "email", "city", "state"])
+
+export async function updateCompanyField(field: string, value: string) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+  if (!COMPANY_FIELD_ALLOWLIST.has(field)) return { error: "Field not editable" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ [field]: value.trim() || null })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  return { success: true }
+}

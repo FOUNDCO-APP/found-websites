@@ -22,7 +22,16 @@ export default async function SitePage() {
 
   return (
     <SiteEditor
-      company={{ id: company.id, name: company.name, slug: company.slug, sub_industry: company.sub_industry }}
+      company={{
+        id: company.id,
+        name: company.name,
+        slug: company.slug,
+        sub_industry: company.sub_industry,
+        phone: company.phone,
+        email: company.email,
+        city: company.city,
+        state: company.state,
+      }}
       config={config}
       photos={photos ?? []}
       stockImages={stockImages}

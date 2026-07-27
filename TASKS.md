@@ -1,12 +1,13 @@
-## 2026-07-27 - Edit My Site Redesign: Decision Made, Build Not Started
+## 2026-07-27 - Edit My Site Hub: BUILT, needs Shawn's mobile QA
 
-Full team meeting held (Steve led, documented properly this time - see `DESIGN_DECISIONS.md` [2026-07-27]). Shawn approved the direction:
+Full team meeting held (Steve led - see `DESIGN_DECISIONS.md` [2026-07-27]), mockup reviewed and approved (Jony/Steve design pass, toggle concept cut after Shawn found it confusing), then built same day. Full detail: `CHANGELOG.md` "2026-07-27 - Edit My Site Hub Rebuild".
 
-- Reorganize Edit My Site into three tiers instead of one flat scrolling page: **Pages** (Home incl. Featured Update, About, Contact, Menu/Shop, Services, Gallery - dynamic per industry), **Business Info** (name/phone/email/address - sitewide fields, own cluster), **Site-wide** (Photo Library, Domain).
-- Tile grid on mobile, not another long list. Plain-language subtitle under every tile label. Plan-gated tiles show their own lock state.
-- Standing design bar for every screen inside this: "easy as taking a picture" (Shawn's words) - no forms, no jargon, autosave with quiet confirmation instead of a Save button, live preview instead of description, borrow the Camera tab's visual confidence rather than inventing a new "software" look.
-
-**NEXT STEP:** mockup/copy pass for Shawn to review before any code changes - per Steve's standing preference to see the actual tile list and language first. Not yet started.
+- [x] Three-tier hub: Pages (Home incl. Featured Update, About, Contact, Menu/Shop, Services, Gallery), Business Info (new - name/phone/email/city/state), Site-wide (Photo library links to `/photos`, Domain).
+- [x] Business Info is a genuinely new feature - didn't exist before this. Saves on blur, no Save button.
+- [x] All existing Edit My Site functionality preserved, just moved behind tile navigation instead of one scroll.
+- [x] Build passes clean.
+- [ ] **Shawn mobile QA (not done yet):** Dashboard -> More -> Edit My Site. Confirm hub loads, tiles work, back button returns cleanly, Business Info saves and persists, and every section still works exactly as before inside its new view.
+- **Known follow-up, not done this pass:** per-page photo pickers (e.g. changing the About photo from inside About). Photo slot assignment stays consolidated under Home for now - see CHANGELOG for why.
 
 ---
 

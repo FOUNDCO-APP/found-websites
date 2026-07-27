@@ -19,7 +19,7 @@ An owner should be able to open this, change something, and leave without ever f
 
 Steve: this is the actual acceptance bar for the rebuild, not a nice-to-have alongside it - "does it build" is not sufficient, "does an owner leave without feeling like they used software" is the real test.
 
-**Status:** Structure and design principle approved by Shawn. Build not yet started - next step is a mockup/copy pass for Shawn to review before implementation, per Steve's standing preference to see the actual tile list and language before anything gets built.
+**Status:** Mockup reviewed and approved July 27 (Jony/Steve design pass applied real typography tokens, removed icon badges, softened status colors; the Personalized/Freshly-built toggle was cut after Shawn found it confusing). Built same day - see `CHANGELOG.md` "2026-07-27 - Edit My Site Hub Rebuild". Pending Shawn's mobile QA before considered fully done.
 
 ---
 

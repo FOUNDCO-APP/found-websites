@@ -1,3 +1,25 @@
+## 2026-07-27 - Edit My Site Hub Rebuild
+**AI:** Claude Code (Opus)
+**Worked on:** Built the three-tier hub decided in DESIGN_DECISIONS.md [2026-07-27] - Edit My Site was one long scrolling page (Homepage, Featured Update, About, Contact, Menu/Shop, Services, Photos, Domain all stacked); replaced it with a landing hub of tiles that drill into a focused view per page/section.
+
+### Built
+- `SiteEditor.tsx` now has a `view` state (`hub | home | about | contact | catalog | services | photos | businessInfo | domain`). Every existing section's working logic (save handlers, menu/catalog editing, photo picker, domain connector, announcement/Featured Update, AI rewrite) is unchanged - only wrapped behind its own view instead of always rendering. This was a deliberate low-risk choice over extracting each section into separate components/routes.
+- Hub screen: live-site preview strip, a Pages tile grid (Home, About, Contact, Shop/Menu, Services, Gallery - Shop/Menu and Services only appear when relevant to the business, same gating as before), a Business Info tile, and a Site-wide row (Photo library, Domain).
+- New: **Business Info** - genuinely didn't exist before. Added `updateCompanyField` in `actions.ts` (explicit allowlist: name/phone/email/city/state only - the companies table also holds plan/billing/Stripe fields that must stay unreachable through this). Fields save on blur, no Save button, matching the "easy as taking a picture" bar from the design decision.
+- Hub tiles use the real typography tokens from `src/lib/dashboard/typography.ts` and no icon badges - quiet cards, matching the approved mockup.
+- `Photo library` tile links out to the existing `/photos` tab rather than duplicating it - that's where raw upload/browsing already lives; SiteEditor's own photo picker (per-slot assignment) stays where it already was, under Home.
+- Verified with `npm run build` - clean, no errors or warnings.
+
+### Known simplification, flagged not hidden
+- Per-page photo pickers (About's photo picked from inside About, etc.) were **not** built this pass - the existing "Photos around the site" map (all slots: Header/About/Visit-CTA/Gallery/Featured Update/Contact) stays consolidated under the Home view, same as it was before this rebuild. Decomposing that shared map into true per-page pickers is real follow-up work, not done here - the map has shared state (unassigned photo pool, slot-clearing logic) that touches multiple sections at once, higher risk to split apart than the navigation rebuild itself.
+
+### Test Next
+- Dashboard -> More -> Edit My Site on your phone. Confirm the hub loads with tiles instead of one long page, tapping a tile opens just that section with a working back button.
+- Open Business Info, edit phone and email, confirm they save on blur (small "Saved" indicator, no Save button) and persist after leaving and coming back.
+- Confirm every existing capability still works exactly as before inside its new view: About text + AI rewrite, Contact fields, Menu/Shop item editing, Services add/edit/remove, Gallery photo assignment, Featured Update toggle/style/copy, Domain connect.
+
+---
+
 ## 2026-07-26 - Site Editor First Impression Slate
 - Rebuilt the Edit Website first-impression area into explicit owner controls: preview, headline, supporting line, main button, short hook, header photo, and AI rewrite.
 - Moved site photo assignment into a separate "Photos around the site" map so owners can clearly change Header/About/Visit/Gallery/Featured Update/Contact imagery.
