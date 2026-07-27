@@ -1,3 +1,19 @@
+## 2026-07-27 - Edit My Site Sections: Lateral Nav + Home-Matched Visual Treatment
+
+Shawn's follow-up mobile QA after the sticky-nav fix: sections still felt "robotic" next to Home, and jumping between sections meant going back to the hub every time. Team meeting (Jony/Steve leads, per Shawn's explicit ask), direction approved, built same session:
+
+- **Jony's read:** Home got its full redesign (Live Preview hero card, plain-noun row labels, explicit green "Edit" pills). About/Contact/Services/Shop/Gallery never got that pass - they're still the older plain bordered-box form pattern with command-verb labels like "Change your story," "Change page label." That gap is the "robotic" feeling.
+- **Steve's read:** Back always returned to the hub, forcing a hub detour to move between sections (About -> hub -> tap Contact).
+- **Built, both approved directions:**
+  1. **Lateral Pages nav** - the sticky `BackHeader` on Home/About/Contact/Shop-or-Menu/Services/Gallery now carries a horizontal pill row (`pagesNavItems` in `SiteEditor.tsx`) so owners jump directly between those six sections without detouring through the hub. Business Info and Domain are intentionally excluded (not part of "Pages").
+  2. **About and Contact matched to Home's language/visual pattern** - added a shared `PreviewCard` (Contact) / inline live-preview block (About) showing the actual current copy above the edit controls, and a shared `EditRow` component (plain-noun label + value + explicit green "Edit" pill, same look as Home's rows) replacing the old "Change your story / Change page label / Change headline / Change supporting line" command-verb buttons.
+  - **Scoped deliberately:** Services, Shop, and Gallery were left visually as-is this pass - they already render real content (service cards, product photos, gallery photos), not blank form fields, so they didn't have the same "robotic" gap as About/Contact. They did get the lateral nav.
+- `cmd /c npm run build` passed. `git diff --check` passed.
+
+Shawn QA next: on Lucky, use the new Pages pill row to jump About -> Contact -> Shop -> Services -> Gallery -> Home directly (no hub detour). Open About and Contact and confirm the live-preview block shows the real current copy above plain-labeled Edit rows ("Story," "Page label," "Headline," "Supporting line" - not "Change ___"). Confirm editing still saves correctly through the same sheet as before.
+
+---
+
 ## 2026-07-27 - Edit My Site Hub: Sticky Back Nav + Slim Site Link
 
 Shawn ran mobile QA on the new three-tier Edit My Site hub (Lucky) and flagged two things via screenshots. Team read (Jony/Steve/Craig) approved by Shawn same session, then built:

@@ -1,3 +1,16 @@
+## 2026-07-27 - Edit My Site Sections: Lateral Nav + Home-Matched Visual Treatment, needs Shawn's mobile QA
+
+Follow-up team meeting (Jony/Steve leads) after Shawn flagged sections still felt "robotic" and lateral movement between sections required a hub detour. Full detail: `SESSION_HANDOFF.md`.
+
+- [x] Sticky `BackHeader` on the 6 Pages sections now carries a horizontal jump row (Home/About/Contact/Shop-or-Menu/Services/Gallery) - no more hub detour to move between sections. Business Info/Domain intentionally excluded.
+- [x] About and Contact now show a live-preview block (real current copy) above the edit controls, matching Home's pattern.
+- [x] Shared `EditRow` component replaces the old "Change your story / Change page label / Change headline / Change supporting line" buttons with plain-noun labels + explicit green Edit pill, matching Home's row style.
+- [x] Deliberately left Services/Shop/Gallery visual treatment as-is - they already show real content, not blank fields; they did get the lateral nav.
+- [x] Build passes clean, `git diff --check` passed.
+- [ ] **Shawn mobile QA (not done yet):** jump directly between all 6 Pages sections via the new pill row; confirm About/Contact preview blocks show real copy and Edit rows read as plain nouns; confirm saves still work.
+
+---
+
 ## 2026-07-27 - Edit My Site Hub: Sticky Back Nav + Slim Site Link, needs Shawn's mobile QA
 
 Fix for two issues Shawn found during his first mobile QA pass on the new hub (screenshots). Team-approved, built same day. Full detail: `SESSION_HANDOFF.md`.

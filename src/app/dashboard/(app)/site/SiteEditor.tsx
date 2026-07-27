@@ -467,6 +467,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
   const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
 
+  // Lateral quick-nav between the "Pages" sections, so owners can jump
+  // Home -> About -> Contact etc. without detouring back through the hub.
+  const pagesNavItems: { view: View; label: string }[] = [
+    { view: "home", label: "Home" },
+    { view: "about", label: "About" },
+    { view: "contact", label: "Contact" },
+    ...(showCatalog ? [{ view: "catalog" as View, label: catalogTileLabel }] : []),
+    ...(!isFoodCatalog ? [{ view: "services" as View, label: "Services" }] : []),
+    { view: "photos", label: "Gallery" },
+  ]
+
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
       {view === "hub" && (
@@ -520,7 +531,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "home" && (
       <>
-      <BackHeader label="Home" onBack={() => setView("hub")} />
+      <BackHeader label="Home" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div id="homepage" style={{ padding: "10px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>First impression</div>
         <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Homepage</h2>
@@ -793,7 +804,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "about" && (
       <>
-      <BackHeader label="About" onBack={() => setView("hub")} />
+      <BackHeader label="About" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="About" title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
         <div style={{ marginTop: 18 }}>
@@ -801,20 +812,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "16px 20px 0" }}>
-        <div
-          onClick={() => !editing && startEdit("about_text", String(config.about_text ?? ""))}
-          style={{
-            borderRadius: 20, padding: "22px 20px",
-            background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
-            border: `1px solid ${GREEN}22`,
-            cursor: editing === "about_text" ? "default" : "pointer",
-            position: "relative",
-          }}
-        >
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>
-            Change your story
-          </div>
+      <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
+        <div style={{
+          borderRadius: 20, padding: "22px 20px",
+          background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
+          border: `1px solid ${GREEN}22`,
+        }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Live preview</div>
           <p style={{
             margin: 0, fontSize: 16, fontWeight: 300,
             color: config.about_text ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
@@ -822,10 +826,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           }}>
             {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
           </p>
-          {saved === "about_text" && (
-            <div style={{ position: "absolute", top: 14, right: 14, fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "3px 10px", borderRadius: 100 }}>Live</div>
-          )}
         </div>
+        <EditRow
+          label="Story"
+          value={String(config.about_text ?? "")}
+          placeholder="Tap to write your story"
+          onClick={() => startEdit("about_text", String(config.about_text ?? ""))}
+          isSaved={saved === "about_text"}
+        />
         <AIBar label="Let AI write your story" isLoading={regenerating === "about"} color={GREEN} onTap={() => handleRegenerate("about")} />
       </div>
       </>
@@ -833,7 +841,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "contact" && (
       <>
-      <BackHeader label="Contact" onBack={() => setView("hub")} />
+      <BackHeader label="Contact" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Contact" title="Make reaching out easy." body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
@@ -842,18 +850,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
-        <button onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change page label</div>
-          <div style={{ fontSize: 17, fontWeight: 900, color: config.contact_eyebrow ? "white" : "rgba(255,255,255,0.32)" }}>{String(config.contact_eyebrow || "Get in touch")}</div>
-        </button>
-        <button onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change headline</div>
-          <div style={{ fontSize: 24, fontWeight: 300, color: config.contact_title ? "white" : "rgba(255,255,255,0.32)", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{String(config.contact_title || "Contact Us")}</div>
-        </button>
-        <button onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} style={{ width: "100%", padding: "16px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 7 }}>Change supporting line</div>
-          <div style={{ fontSize: 15, color: config.contact_subtitle ? "rgba(255,255,255,0.72)" : "rgba(255,255,255,0.32)", lineHeight: 1.45 }}>{String(config.contact_subtitle || "We'd love to hear from you.")}</div>
-        </button>
+        <PreviewCard
+          eyebrow={String(config.contact_eyebrow || "Get in touch")}
+          title={String(config.contact_title || "Contact Us")}
+          body={String(config.contact_subtitle || "We'd love to hear from you.")}
+        />
+        <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} />
+        <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} />
+        <EditRow label="Supporting line" value={String(config.contact_subtitle ?? "")} placeholder="We'd love to hear from you." onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} isSaved={saved === "contact_subtitle"} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <TapToEdit label="Form title" value={String(config.contact_form_title ?? "")} placeholder="Send us a message" onClick={() => startEdit("contact_form_title", String(config.contact_form_title ?? ""))} isSaved={saved === "contact_form_title"} />
           <TapToEdit label="Form note" value={String(config.contact_form_subtitle ?? "")} placeholder="We will reply soon" onClick={() => startEdit("contact_form_subtitle", String(config.contact_form_subtitle ?? ""))} isSaved={saved === "contact_form_subtitle"} />
@@ -864,7 +868,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "catalog" && showCatalog && (
       <>
-      <BackHeader label={catalogTileLabel} onBack={() => setView("hub")} />
+      <BackHeader label={catalogTileLabel} onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow={isFoodCatalog ? "Menu" : "Shop"} title={isFoodCatalog ? "Build the menu guests order from." : "Build the products customers buy."} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
@@ -971,7 +975,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "services" && !isFoodCatalog && (
       <>
-      <BackHeader label="Services" onBack={() => setView("hub")} />
+      <BackHeader label="Services" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
@@ -1030,7 +1034,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "photos" && (
       <>
-      <BackHeader label="Gallery" onBack={() => setView("hub")} />
+      <BackHeader label="Gallery" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div id="site-photos" style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Photos" title="Choose the photos customers see." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
         <div style={{ marginTop: 18 }}>
@@ -1395,23 +1399,56 @@ function HubTile({ label, sub, flag, onClick, href }: { label: string; sub: stri
 // Shared back-to-hub header for every drilled-in page/section. Sticks under the
 // main dashboard header (via --found-header-h, measured in SiteEditor) so the
 // owner always has a way back without scrolling to the top of a long section.
-function BackHeader({ label, onBack }: { label: string; onBack: () => void }) {
+// Optionally carries a row of sibling-page pills so owners can jump directly
+// between Pages sections instead of detouring back through the hub each time.
+function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
+  label: string
+  onBack: () => void
+  pages?: { view: View; label: string }[]
+  currentView?: View
+  onNavigate?: (view: View) => void
+}) {
   return (
     <div style={{
       position: "sticky",
       top: "var(--found-header-h, 0px)",
       zIndex: 30,
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "14px 20px",
       backgroundColor: BLACK,
       borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}>
-      <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-      </button>
-      <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: pages ? "14px 20px 10px" : "14px 20px" }}>
+        <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
+      </div>
+      {pages && pages.length > 0 && (
+        <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 20px 12px", scrollbarWidth: "none" as const }}>
+          {pages.map(p => {
+            const active = p.view === currentView
+            return (
+              <button
+                key={p.view}
+                type="button"
+                disabled={active}
+                onClick={() => onNavigate?.(p.view)}
+                style={{
+                  flexShrink: 0,
+                  padding: "8px 14px",
+                  borderRadius: 999,
+                  border: `1px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.1)"}`,
+                  backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.045)",
+                  color: active ? GREEN : "rgba(255,255,255,0.6)",
+                  fontSize: 13, fontWeight: 800,
+                  cursor: active ? "default" : "pointer",
+                }}
+              >
+                {p.label}
+              </button>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -1451,6 +1488,53 @@ function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string
       <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>{title}</h2>
       <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{body}</p>
     </div>
+  )
+}
+
+// Text-only "Live preview" card - same visual language as the Homepage hero
+// preview (green eyebrow + large rendered copy), just without a photo, so
+// text-first pages like About/Contact read as a real page instead of a form.
+function PreviewCard({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+  return (
+    <div style={{
+      borderRadius: 20, padding: "22px 20px",
+      background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
+      border: `1px solid ${GREEN}22`,
+    }}>
+      <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Live preview</div>
+      {eyebrow && <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{eyebrow}</div>}
+      <h3 style={{ margin: 0, fontSize: 26, fontWeight: 300, letterSpacing: "-0.03em", lineHeight: 1.15, color: "white" }}>{title}</h3>
+      {body && <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "rgba(255,255,255,0.68)" }}>{body}</p>}
+    </div>
+  )
+}
+
+// Shared editable row: plain-noun label (not a "Change ___" command) with the
+// current value below and an explicit green "Edit" pill - the same pattern
+// Homepage's headline/supporting-line rows already use.
+function EditRow({ label, value, placeholder, big, onClick, isSaved }: {
+  label: string; value: string; placeholder: string; big?: boolean; onClick: () => void; isSaved?: boolean
+}) {
+  return (
+    <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer", position: "relative" }}>
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>{label}</span>
+        <span style={{
+          display: "block",
+          fontSize: big ? 22 : 15,
+          fontWeight: big ? 300 : 700,
+          letterSpacing: big ? "-0.02em" : undefined,
+          lineHeight: big ? 1.15 : 1.35,
+          color: value ? "white" : "rgba(255,255,255,0.32)",
+          fontStyle: value ? "normal" : "italic",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}>
+          {value || placeholder}
+        </span>
+      </span>
+      <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+      {isSaved && <div style={{ position: "absolute", top: 8, right: 8, width: 8, height: 8, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}` }}/>}
+    </button>
   )
 }
 // Page Tab
