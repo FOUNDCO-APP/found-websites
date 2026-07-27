@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto } from "./actions"
@@ -427,157 +427,122 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
       <div style={{ padding: "28px 20px 0" }}>
         <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Edit website</div>
-        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Edit your website</h1>
+        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Make the site ready.</h1>
         <p style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Change what customers see on your live site.
+          Change the photos, words, products, services, and launch details customers see.
         </p>
+        <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ marginTop: 18, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "12px 16px", borderRadius: 999, border: `1px solid ${GREEN}40`, backgroundColor: `${GREEN}17`, color: GREEN, textDecoration: "none", fontSize: 14, fontWeight: 900 }}>
+          View live site
+        </a>
       </div>
 
       <div id="homepage" style={{ padding: "30px 20px 0" }}>
-        <PageTab label="Homepage" href={`https://${company.slug}.foundco.app`} isLive />
-        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Change the first photo, headline, supporting line, and main button customers see.
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>First impression</div>
+        <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Homepage</h2>
+        <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.5 }}>
+          This is the first screen customers see. Keep the photo, headline, and main action clear.
         </p>
       </div>
 
-      <div style={{ margin: "14px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
-        {/* Background */}
-        {heroImage ? (
-          isVideoMedia(heroImage) ? (
-            <video src={heroImage} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+      <div style={{ margin: "16px 20px 0", borderRadius: 26, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)" }}>
+        <div style={{ position: "relative", height: 210, overflow: "hidden" }}>
+          {heroImage ? (
+            isVideoMedia(heroImage) ? (
+              <video src={heroImage} autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={heroImage} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            )
           ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={heroImage} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-          )
-        ) : (
-          <div style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)",
-          }}/>
-        )}
-        {/* Gradient overlay like real site */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "linear-gradient(180deg, rgba(8,10,9,0.3) 0%, rgba(8,10,9,0.7) 100%)",
-        }}/>
-
-        {/* Content */}
-        <div style={{ position: "relative", padding: "28px 22px 24px" }}>
-          <div style={{ marginBottom: 20 }}>
-            {/* Headline */}
-            <div
-              onClick={() => startEdit("hero_title", String(config.hero_title ?? ""))}
-              style={{ cursor: "pointer", marginBottom: 10 }}
-            >
-              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 5 }}>
-                Change headline
-              </div>
-              <h2 style={{
-                margin: 0, fontSize: 28, fontWeight: 300,
-                color: config.hero_title ? "white" : "rgba(255,255,255,0.3)",
-                letterSpacing: "-0.03em", lineHeight: 1.1,
-              }}>
-                {String(config.hero_title || "Your headline goes here")}
-              </h2>
-            </div>
-
-            {/* Subtitle */}
-            <div
-              onClick={() => startEdit("hero_subtitle", String(config.hero_subtitle ?? ""))}
-              style={{ cursor: "pointer" }}
-            >
-              <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 5 }}>
-                Change supporting line
-              </div>
-              <p style={{
-                margin: 0, fontSize: 15,
-                color: config.hero_subtitle ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.3)",
-                lineHeight: 1.5,
-              }}>
-                {String(config.hero_subtitle || "Your supporting line goes here")}
-              </p>
-            </div>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.18) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 8 }}>Live preview</div>
+            <h3 style={{ margin: 0, fontSize: 30, lineHeight: 1.04, fontWeight: 900, color: "white", letterSpacing: 0 }}>
+              {String(config.hero_title || "Homepage headline")}
+            </h3>
+            <p style={{ margin: "8px 0 0", fontSize: 15, lineHeight: 1.45, color: "rgba(255,255,255,0.72)" }}>
+              {String(config.hero_subtitle || "Add the short line customers read first.")}
+            </p>
           </div>
+        </div>
 
-          {/* Hero actions */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <button
-              onClick={() => handleRegenerate("hero")}
-              disabled={regenerating === "hero"}
-              style={{
-                alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 6,
-                padding: "8px 16px", borderRadius: 100,
-                backgroundColor: regenerating === "hero" ? "rgba(255,255,255,0.08)" : `${GREEN}22`,
-                border: `1px solid ${GREEN}44`,
-                color: regenerating === "hero" ? "rgba(255,255,255,0.3)" : GREEN,
-                fontSize: 12, fontWeight: 700, cursor: "pointer",
-              }}
-            >
-              {regenerating === "hero" && <Spinner color={GREEN}/>}
-              {regenerating === "hero" ? "Writing..." : "AI Rewrite"}
+        <div style={{ padding: 16, display: "grid", gap: 10 }}>
+          <button onClick={() => startEdit("hero_title", String(config.hero_title ?? ""))} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
+              <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.hero_title || "Add homepage headline")}</span>
+            </span>
+            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900 }}>Edit</span>
+          </button>
+
+          <button onClick={() => startEdit("hero_subtitle", String(config.hero_subtitle ?? ""))} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Supporting line</span>
+              <span style={{ display: "block", fontSize: 14, lineHeight: 1.35, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.hero_subtitle || "Add homepage supporting line")}</span>
+            </span>
+            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900 }}>Edit</span>
+          </button>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <button onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Main button</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.cta_headline || "Come see us")}</span>
             </button>
-
-            <div style={{ padding: 14, borderRadius: 20, backgroundColor: "rgba(8,10,9,0.62)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
-              <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 10 }}>Photos customers see</div>
-              <div style={{ display: "grid", gap: 10 }}>
-                {photoSlots.map(slot => {
-                  const cover = slot.photos[0]?.url ?? null
-                  const count = slot.photos.length
-                  return (
-                    <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
-                      <div style={{ width: 54, height: 54, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
-                        {cover ? (
-                          isVideoMedia(cover) ? (
-                            <video src={cover} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          ) : (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          )
-                        ) : (
-                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
-                        )}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 900, color: "white", marginBottom: 2 }}>{slot.label}</div>
-                        <p style={{ margin: 0, fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.58)" }}>{count ? `${count} selected` : slot.helper}</p>
-                      </div>
-                      <span style={{ padding: "8px 12px", borderRadius: 999, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-                        Change
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
+            <button onClick={() => startEdit("tagline", String(config.tagline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Short hook</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.tagline || "Add a hook")}</span>
+            </button>
           </div>
+
+          <button onClick={() => setPhotoPickerSlot("hero")} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.07)", flexShrink: 0 }}>
+              {heroImage ? (
+                isVideoMedia(heroImage) ? <video src={heroImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : null}
+            </div>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Header photo</span>
+              <span style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Change the main image or video</span>
+            </span>
+            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900 }}>Change</span>
+          </button>
+
+          <AIBar label="Rewrite the first impression with AI" isLoading={regenerating === "hero"} color={GREEN} onTap={() => handleRegenerate("hero")} />
         </div>
       </div>
 
-      <div style={{ margin: "12px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10, paddingLeft: 4 }}>
-          Main action
+      <div id="site-photo-map" style={{ margin: "18px 20px 0", borderRadius: 24, padding: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.032)" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 6 }}>Photos around the site</div>
+        <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.45, color: "rgba(255,255,255,0.58)" }}>
+          Pick what appears on each page. Stock photos can stay until the owner has better images.
+        </p>
+        <div style={{ display: "grid", gap: 10 }}>
+          {photoSlots.map(slot => {
+            const cover = slot.photos[0]?.url ?? null
+            const count = slot.photos.length
+            return (
+              <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
+                  {cover ? (
+                    isVideoMedia(cover) ? <video src={cover} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 15, fontWeight: 900, color: "white", marginBottom: 2 }}>{slot.label}</div>
+                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.58)" }}>{count ? `${count} selected` : slot.helper}</p>
+                </div>
+                <span style={{ padding: "8px 12px", borderRadius: 999, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
+                  Change
+                </span>
+              </button>
+            )
+          })}
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <TapToEdit
-            label="Tagline"
-            value={String(config.tagline ?? "")}
-            placeholder="Your tagline..."
-            onClick={() => startEdit("tagline", String(config.tagline ?? ""))}
-            isSaved={saved === "tagline"}
-            flex={3}
-          />
-          <TapToEdit
-            label="Button"
-            value={String(config.cta_headline ?? "")}
-            placeholder="CTA..."
-            onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))}
-            isSaved={saved === "cta_headline"}
-            flex={2}
-          />
-        </div>
-        <AIBar label="Rewrite your hook with AI" isLoading={regenerating === "tagline"} color={GREEN} onTap={() => handleRegenerate("tagline")} />
       </div>
-
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
       <div id="featured-update" style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>

@@ -1,3 +1,8 @@
+## 2026-07-26 - Current Handoff
+- Site editor top/homepage slate rebuilt after team review: hidden tap zones were replaced with clear owner-facing controls for headline, supporting line, main button, short hook, header photo, and AI rewrite.
+- Site photo assignment now sits in a separate "Photos around the site" section for Header, About, Visit/CTA, Gallery, Featured Update, and Contact imagery.
+- Build passed with `npm run build`.
+- Pending QA: mobile test Dashboard > More > Edit My Site, confirm the new homepage controls are understandable, edit sheets still lock correctly, photo picker opens, and live site reflects saved edits.
 ## SITE EDITOR OWNER FLOW - July 26, 2026
 
 Steve/Jony/Craig-approved direction after Shawn said the Edit My Site slate looked confusing and cheap.

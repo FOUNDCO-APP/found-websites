@@ -1,3 +1,6 @@
+## 2026-07-26 - Launch QA Update
+- DONE: Rebuild Edit Website homepage/first-impression controls into explicit owner rows instead of hidden tap zones.
+- NEXT QA: On mobile, open Dashboard > More > Edit My Site; confirm Homepage shows explicit rows for Headline, Supporting line, Main button, Short hook, and Header photo. Tap each text row, save, and confirm the sheet closes cleanly. Tap Header photo and confirm the picker opens.
 ## JULY 26 SITE EDITOR OWNER FLOW
 
 - [x] Remove confusing top readiness cards from Edit My Site.

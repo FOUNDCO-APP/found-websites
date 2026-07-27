@@ -1,3 +1,7 @@
+## 2026-07-26 - Site Editor First Impression Slate
+- Rebuilt the Edit Website first-impression area into explicit owner controls: preview, headline, supporting line, main button, short hook, header photo, and AI rewrite.
+- Moved site photo assignment into a separate "Photos around the site" map so owners can clearly change Header/About/Visit/Gallery/Featured Update/Contact imagery.
+- Verified with `npm run build`.
 ## Session: July 26, 2026 - Site Editor Owner Flow
 **AI:** Codex
 **Worked on:** Shawn approved the Steve/Jony/Craig direction to remove the confusing Site Studio checklist and make Edit My Site feel like an owner-facing website editor.
