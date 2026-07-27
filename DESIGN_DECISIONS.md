@@ -1,3 +1,28 @@
+**[2026-07-27] - Edit My Site becomes a three-tier dashboard of entry points, not one long scrolling page. Every editing surface inside it must feel as easy as taking a picture.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Chris Lattner + Marcus Webb + Phil Schiller
+Why: Shawn flagged that Edit My Site had become cramped and chaotic - the July 26 rebuild alone added Homepage (6 fields), Featured Update, About, Contact, Menu/Shop, Services, Photos, and Domain, all stacked as one continuous scroll. Team discussion (documented properly this time, after an earlier undiscovered version of this same discussion happened on Codex) converged on reorganizing by page, not by content type, because it mirrors what the owner already understands - their own live website - rather than internal Found terminology.
+
+**Structure - three tiers, not one flat list:**
+1. **Pages** (primary tiles, generated dynamically per business/industry like the current section list already does): Home, About, Contact, Menu/Shop, Services, Gallery. Featured Update lives *inside* the Home entry point, not as its own tile - it renders on the homepage, so editing it separately from Home would create two places that both claim to edit "what's on my homepage."
+2. **Business Info** (its own small cluster, not folded into the Contact page): name, phone, email, address. These fields are used sitewide (footer, nav, every page), not just on Contact - forcing them into a single page's editor would make edits there feel narrower than their real effect. (Craig's finding.)
+3. **Site-wide** (secondary row, visually separated from Pages): Photo Library (raw browsing/uploading - distinct from picking *which* photo fills a specific page's slot, which now lives inside that page's own editor) and Domain.
+
+Chris: tiles should be a grid (like an app home screen / iOS Settings groups), not another long vertical list one level down - otherwise this just recreates the original clutter. Angela: every tile needs a plain-language subtitle under the label ("About - your story, what you offer"), since owners think in goals ("get better photos up") before they think in page names. Marcus: the page set stays dynamic per industry, same as today (food gets Menu, retail gets Shop, service businesses get Services, etc.). Phil: plan-gated tiles (e.g. copy rewriting is Pro+) show their own lock/upgrade state individually, not one banner at the top.
+
+**The standing design bar - "easy as taking a picture," Shawn's words, literally:**
+An owner should be able to open this, change something, and leave without ever feeling like they used software. Concretely:
+- No forms. Tap a tile -> one focused thing to change -> done. A camera has one button; an edit screen should feel the same, not a dense form with five stacked fields.
+- No "Save" button anxiety. Changes save themselves the moment you're done, with a quiet confirmation (checkmark), not a "confirm changes" modal. Easy, obvious undo instead of an upfront "are you sure."
+- No jargon, anywhere. "Main photo," "Headline," "Button text" - never "hero," "CTA," "metadata," "slug."
+- Show, don't describe. Whatever is being edited is visible as the real result right there, like a camera viewfinder, not a form field the owner has to mentally translate onto the live site.
+- Don't invent a new visual language for this - Found already has proof this works for this exact audience: the Camera tab's big glowing circle with nothing else competing for attention. Carry that same visual confidence into the page tiles instead of a more "software-y" treatment.
+
+Steve: this is the actual acceptance bar for the rebuild, not a nice-to-have alongside it - "does it build" is not sufficient, "does an owner leave without feeling like they used software" is the real test.
+
+**Status:** Structure and design principle approved by Shawn. Build not yet started - next step is a mockup/copy pass for Shawn to review before implementation, per Steve's standing preference to see the actual tile list and language before anything gets built.
+
+---
+
 **[2026-07-18] - Client website imagery uses named owner-controlled slots, not mystery thumbnails.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Marcus Webb + Craig Federighi
 Why: A business owner must know exactly where a photo will appear before saving it. Site Editor names the slots Header, About, Visit / CTA, and Gallery; public templates prefer those owner-selected section photos before stock imagery. Slideshow or rotating images stay out until they become an explicit owner setting, not a surprise behavior.
