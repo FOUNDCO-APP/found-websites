@@ -1,3 +1,14 @@
+## JULY 26 SITE EDITOR OWNER FLOW
+
+- [x] Remove confusing top readiness cards from Edit My Site.
+- [x] Replace Site Studio copy with direct owner-facing Edit website copy.
+- [x] Make Homepage the first visible edit surface.
+- [x] Rename lower editor sections into plain owner panels.
+- [x] Production build passed.
+- [ ] Shawn mobile QA: Lucky/tshirts > More > Edit My Site, confirm the top and section flow feel clearer.
+
+---
+
 ## JULY 26 FEATURED UPDATE SMART COPY GUARD
 
 - [x] Create shared Featured Update draft system.

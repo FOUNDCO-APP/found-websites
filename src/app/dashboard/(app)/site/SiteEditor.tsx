@@ -421,43 +421,26 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
-  const ownPhotoCount = localPhotos.length
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
-  const setupSignals = [
-    { label: "First impression", value: heroImage ? "Photo set" : "Needs photo", href: "#first-impression", active: !heroImage },
-    { label: "Current push", value: announcementEnabled ? "Live" : "Off", href: "#featured-update", active: !announcementEnabled },
-    { label: "Business photos", value: ownPhotoCount ? `${ownPhotoCount} ready` : "Add photos", href: "#site-photos", active: ownPhotoCount === 0 },
-    { label: "Launch trust", value: initialConfig?.custom_domain ? "Domain set" : "Found URL", href: "#launch-trust", active: !initialConfig?.custom_domain },
-  ]
 
   return (
     <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
-      <div style={{ padding: "26px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Site Studio</div>
-        <h1 style={{ margin: 0, fontSize: 38, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Make the site ready.</h1>
+      <div style={{ padding: "28px 20px 0" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Edit website</div>
+        <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Edit your website</h1>
         <p style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Found handles the structure. Tune the first impression, current push, photos, pages, and launch details.
+          Change what customers see on your live site.
         </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 18 }}>
-          {setupSignals.map(signal => (
-            <a key={signal.label} href={signal.href} style={{ textDecoration: "none", padding: 14, borderRadius: 18, border: `1px solid ${signal.active ? GREEN + "44" : "rgba(255,255,255,0.1)"}`, background: signal.active ? `linear-gradient(145deg, ${GREEN}18, rgba(255,255,255,0.04))` : "rgba(255,255,255,0.045)" }}>
-              <div style={{ fontSize: 12, lineHeight: 1.2, fontWeight: 900, color: "rgba(255,255,255,0.56)", marginBottom: 6 }}>{signal.label}</div>
-              <div style={{ fontSize: 15, lineHeight: 1.2, fontWeight: 900, color: signal.active ? GREEN : "white" }}>{signal.value}</div>
-            </a>
-          ))}
-        </div>
       </div>
 
-      <div id="first-impression" style={{ padding: "30px 20px 0" }}>
-        <SectionIntro eyebrow="First impression" title="Make the first screen feel right." body="This is what customers see first. Keep it simple, visual, and clear." />
+      <div id="homepage" style={{ padding: "30px 20px 0" }}>
+        <PageTab label="Homepage" href={`https://${company.slug}.foundco.app`} isLive />
+        <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Change the first photo, headline, supporting line, and main button customers see.
+        </p>
       </div>
 
-      {/* Page tab */}
-      <div style={{ padding: "14px 20px 0" }}>
-        <PageTab label="Home Page" href={`https://${company.slug}.foundco.app`} isLive />
-      </div>
-
-      <div style={{ margin: "16px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
+      <div style={{ margin: "14px 20px 0", borderRadius: 24, overflow: "hidden", position: "relative", minHeight: 220 }}>
         {/* Background */}
         {heroImage ? (
           isVideoMedia(heroImage) ? (
@@ -600,9 +583,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
           <div>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Featured Update</div>
-            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Feature what matters now.</h2>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Show what matters right now.</h2>
             <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
-              Add a sale, drop, event, booking push, or seasonal update below the hero.
+              Put one sale, product drop, event, or booking push below the homepage hero.
             </p>
           </div>
           <button onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
@@ -760,9 +743,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
       <div style={{ padding: "0 20px" }}>
-        <SectionIntro eyebrow="Pages customers read" title="Make the story clear." body="These words help customers decide if they trust the business." />
+        <SectionIntro eyebrow="About" title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="About Page" href={`https://${company.slug}.foundco.app/about`} />
+          <PageTab label="About" href={`https://${company.slug}.foundco.app/about`} />
         </div>
       </div>
 
@@ -797,9 +780,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
       <div style={{ padding: "0 20px" }}>
-        <SectionIntro eyebrow="Contact" title="Make reaching out obvious." body="Customers should know what to send and feel confident someone will answer." />
+        <SectionIntro eyebrow="Contact" title="Make reaching out easy." body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Contact Page" href={"https://" + company.slug + ".foundco.app/contact"} />
+          <PageTab label="Contact" href={"https://" + company.slug + ".foundco.app/contact"} />
         </div>
       </div>
 
@@ -826,7 +809,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {showCatalog && (
       <div style={{ padding: "0 20px" }}>
-        <SectionIntro eyebrow={isFoodCatalog ? "Ordering" : "Shopping"} title={isFoodCatalog ? "What guests can order." : "What customers can buy."} body={isFoodCatalog ? "Keep the menu easy to scan, price, and order from a phone." : "Products need clear names, photos, prices, options, and inventory."} />
+        <SectionIntro eyebrow={isFoodCatalog ? "Menu" : "Shop"} title={isFoodCatalog ? "Build the menu guests order from." : "Build the products customers buy."} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
@@ -932,9 +915,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {!isFoodCatalog && (
       <div style={{ padding: "0 20px" }}>
-        <SectionIntro eyebrow="Services" title="What customers can ask for." body="Keep this list short, plain, and easy to understand." />
+        <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Services Page" href={`https://${company.slug}.foundco.app/services`} />
+          <PageTab label="Services" href={`https://${company.slug}.foundco.app/services`} />
         </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -989,9 +972,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
 
       <div id="site-photos" style={{ padding: "0 20px" }}>
-        <SectionIntro eyebrow="Photos" title="Proof the business is real." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
+        <SectionIntro eyebrow="Photos" title="Choose the photos customers see." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Gallery Page" href={`https://${company.slug}.foundco.app/gallery`} />
+          <PageTab label="Gallery" href={`https://${company.slug}.foundco.app/gallery`} />
         </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -1285,7 +1268,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
       <div id="launch-trust" style={{ padding: "0 20px" }}>
         <div style={{ marginBottom: 16 }}>
-          <SectionIntro eyebrow="Launch trust" title="Use the business domain when ready." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
+          <SectionIntro eyebrow="Domain" title="Connect a business domain." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
         </div>
         <DomainConnector
           initialDomain={(initialConfig?.custom_domain as string | null) ?? null}

@@ -1,3 +1,16 @@
+## SITE EDITOR OWNER FLOW - July 26, 2026
+
+Steve/Jony/Craig-approved direction after Shawn said the Edit My Site slate looked confusing and cheap.
+
+- Removed the top four readiness/status cards.
+- Top now says Edit website / Edit your website / Change what customers see on your live site.
+- Homepage preview now leads the editor flow.
+- Lower areas now use plain owner-facing labels: Featured Update, About, Contact, Menu/Shop, Services, Photos, and Domain.
+- QA: production build passed; diff check passed after doc formatting cleanup.
+- Shawn QA next: open `my.foundco.app > More > Edit My Site` and confirm the page feels clearer before moving to the next launch item.
+
+---
+
 ## FEATURED UPDATE SMART DRAFT GUARD - July 26, 2026
 
 Jony/Steve/Craig direction after Shawn flagged the public Featured Update could still feel generic or duplicate nearby page copy.

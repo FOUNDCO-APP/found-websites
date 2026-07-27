@@ -1,3 +1,22 @@
+## Session: July 26, 2026 - Site Editor Owner Flow
+**AI:** Codex
+**Worked on:** Shawn approved the Steve/Jony/Craig direction to remove the confusing Site Studio checklist and make Edit My Site feel like an owner-facing website editor.
+
+### Fixed
+- Removed the four diagnostic readiness cards from the top of Edit My Site.
+- Replaced the top copy with clear owner language: Edit website / Edit your website / Change what customers see on your live site.
+- Moved the Homepage edit preview to the front of the flow instead of hiding it under a checklist.
+- Simplified lower section language into owner-facing panels: Featured Update, About, Contact, Menu/Shop, Services, Photos, and Domain.
+
+### Verification
+- `cmd /c npm run build` passed.
+- `git diff --check` passed after doc formatting cleanup.
+
+### Test Next
+- Shawn should open `my.foundco.app > More > Edit My Site` on Lucky/tshirts and confirm the top no longer shows the four status cards, the first editable object is Homepage, and the remaining sections read plainly.
+
+---
+
 ## Session: July 26, 2026 - Featured Update Smart Draft Guard
 **AI:** Codex
 **Worked on:** Shawn approved the team plan to make Featured Update think for the business owner and avoid generic/redundant public copy.
