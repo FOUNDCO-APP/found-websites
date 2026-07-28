@@ -499,10 +499,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </a>
 
           <div style={{ padding: "26px 20px 0" }}>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 12 }}>
-              <div style={{ ...TYPE.caption, color: GREEN }}>Pages</div>
-              <div style={{ ...TYPE.footnote, fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Tap to edit</div>
-            </div>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Pages</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <HubTile label="Home" sub="Headline, photos, Featured Update" onClick={() => setView("home")} />
               <HubTile label="About" sub="Your story, what you offer" onClick={() => setView("about")} />
@@ -1401,8 +1398,10 @@ function HubTile({ label, sub, flag, onClick, href }: { label: string; sub: stri
 // Shared back-to-hub header for every drilled-in page/section. Sticks under the
 // main dashboard header (via --found-header-h, measured in SiteEditor) so the
 // owner always has a way back without scrolling to the top of a long section.
-// Optionally carries a row of sibling-page pills so owners can jump directly
-// between Pages sections instead of detouring back through the hub each time.
+// When `pages` is given, the section label becomes a dropdown switcher (same
+// pill+chevron language as the company switcher in the dashboard header) so
+// owners can jump directly between Pages sections without a hub detour - one
+// compact row instead of a back-row plus a separate scrolling pill strip.
 function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
   label: string
   onBack: () => void
@@ -1410,6 +1409,8 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
   currentView?: View
   onNavigate?: (view: View) => void
 }) {
+  const [open, setOpen] = useState(false)
+  const current = pages?.find(p => p.view === currentView)
   return (
     <div style={{
       position: "sticky",
@@ -1418,39 +1419,58 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
       backgroundColor: BLACK,
       borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: pages ? "14px 20px 10px" : "14px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 20px" }}>
         <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
         </button>
-        <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
+
+        {pages && pages.length > 0 ? (
+          <div style={{ position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setOpen(o => !o)}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px 7px 14px", borderRadius: 100, backgroundColor: open ? `${GREEN}18` : "rgba(255,255,255,0.07)", border: `1px solid ${open ? GREEN + "55" : "rgba(255,255,255,0.1)"}`, cursor: "pointer" }}
+            >
+              <span style={{ fontSize: 13, fontWeight: 800, color: open ? GREEN : "white" }}>{current?.label ?? label}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={open ? GREEN : "rgba(255,255,255,0.6)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s ease" }}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            {open && (
+              <>
+                <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 35 }} />
+                <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 36, minWidth: 180, borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#111613", boxShadow: "0 16px 40px rgba(0,0,0,0.45)", overflow: "hidden" }}>
+                  {pages.map((p, i) => {
+                    const active = p.view === currentView
+                    return (
+                      <button
+                        key={p.view}
+                        type="button"
+                        disabled={active}
+                        onClick={() => { onNavigate?.(p.view); setOpen(false) }}
+                        style={{
+                          display: "block", width: "100%", textAlign: "left",
+                          padding: "12px 16px", border: "none",
+                          borderBottom: i < pages.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
+                          backgroundColor: active ? `${GREEN}12` : "transparent",
+                          color: active ? GREEN : "rgba(255,255,255,0.85)",
+                          fontSize: 14, fontWeight: 700,
+                          cursor: active ? "default" : "pointer",
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
+        )}
       </div>
-      {pages && pages.length > 0 && (
-        <div style={{ display: "flex", gap: 8, width: "100%", maxWidth: "100%", boxSizing: "border-box" as const, overflowX: "auto", padding: "0 20px 12px", scrollbarWidth: "none" as const }}>
-          {pages.map(p => {
-            const active = p.view === currentView
-            return (
-              <button
-                key={p.view}
-                type="button"
-                disabled={active}
-                onClick={() => onNavigate?.(p.view)}
-                style={{
-                  flexShrink: 0,
-                  padding: "8px 14px",
-                  borderRadius: 999,
-                  border: `1px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.1)"}`,
-                  backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.045)",
-                  color: active ? GREEN : "rgba(255,255,255,0.6)",
-                  fontSize: 13, fontWeight: 800,
-                  cursor: active ? "default" : "pointer",
-                }}
-              >
-                {p.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
