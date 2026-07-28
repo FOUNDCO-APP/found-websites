@@ -569,7 +569,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </div>
 
-        <div style={{ padding: 16, display: "grid", gap: 10 }}>
+        <div style={{ padding: 16, display: "flex", flexDirection: "column" as const, gap: 10 }}>
           <button onClick={() => startEdit("hero_title", String(config.hero_title ?? ""))} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
@@ -619,7 +619,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.45, color: "rgba(255,255,255,0.58)" }}>
           Pick what appears on each page. Stock photos can stay until the owner has better images.
         </p>
-        <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
           {photoSlots.map(slot => {
             const cover = slot.photos[0]?.url ?? null
             const count = slot.photos.length
@@ -659,7 +659,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
           <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
             {announcementStyle === "image" && announcementImage && (
               <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative" }}>
@@ -676,7 +676,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           </div>
 
-          <div style={{ display: "grid", gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
             <button onClick={() => startEdit("announcement_title", announcementTitle)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit headline</span>
@@ -817,7 +817,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
+      <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
         <div style={{
           borderRadius: 20, padding: "22px 20px",
           background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
@@ -854,7 +854,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
+      <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
         <EditRowGroup>
           <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} bordered={false} divider />
           <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} bordered={false} divider />
@@ -1139,7 +1139,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <BackHeader label="Business Info" onBack={() => setView("hub")} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Business info" title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
-        <div style={{ marginTop: 18, display: "grid", gap: 10 }}>
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column" as const, gap: 10 }}>
           <BizInfoField label="Business name" value={businessInfo.name} placeholder="Your business name" saving={savingBizField === "name"} justSaved={savedBizField === "name"} onSave={v => saveBusinessField("name", v)} />
           <BizInfoField label="Phone" value={businessInfo.phone} placeholder="(520) 555-0100" type="tel" saving={savingBizField === "phone"} justSaved={savedBizField === "phone"} onSave={v => saveBusinessField("phone", v)} />
           <BizInfoField label="Email" value={businessInfo.email} placeholder="you@yourbusiness.com" type="email" saving={savingBizField === "email"} justSaved={savedBizField === "email"} onSave={v => saveBusinessField("email", v)} />
