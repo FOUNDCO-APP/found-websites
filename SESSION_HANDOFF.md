@@ -1,3 +1,11 @@
+## 2026-07-28 - Page Switcher: Added "Editing, Not Browsing" Cues
+
+Shawn's follow-up: happy with the direction but wanted Jony/Steve's read on whether the panel makes clear to a business owner that they're inside the admin tool mid-edit, not looking at a live preview of their real site - understandable worry since the panel's list is deliberately modeled on the public site's own nav (same page names, same big numbered treatment). Team's proposal, built and shipped: a quiet caption label at the top of the list ("Editing - jump to a page") and a small edit-pencil icon on every inactive row (checkmark still owns the active row). Small, doesn't fight the bold list, but unmistakable regardless of what the eye lands on first. Build passed.
+
+Shawn QA next: open the switcher and judge whether it now reads clearly as an editing tool rather than a site-preview menu.
+
+---
+
 ## 2026-07-28 - Page Switcher: Scrim Was Hiding the Header It Should Have Left Alone
 
 Shawn's screenshot of the drop-down panel showed two real bugs, not taste: (1) the scrim was `inset: 0`, covering and dimming the persistent FOUND header and the trigger row above the panel too - defeating the entire point of keeping them visible - now starts at the panel's own top offset instead. (2) the panel's bottom edge was rounded; should be a flat line matching the persistent header's own flat top green bar - rounding removed. Build passed.
