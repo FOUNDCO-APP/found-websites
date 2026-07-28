@@ -1,3 +1,11 @@
+## 2026-07-28 - Page Switcher: Scrim Was Hiding the Header It Should Have Left Alone
+
+Shawn's screenshot of the drop-down panel showed two real bugs, not taste: (1) the scrim was `inset: 0`, covering and dimming the persistent FOUND header and the trigger row above the panel too - defeating the entire point of keeping them visible - now starts at the panel's own top offset instead. (2) the panel's bottom edge was rounded; should be a flat line matching the persistent header's own flat top green bar - rounding removed. Build passed.
+
+Shawn QA next: confirm the FOUND header and "Home ⌄" row stay fully visible (not dimmed) with the panel open, and the bottom edge reads as a flat green line, not a curve.
+
+---
+
 ## 2026-07-28 - Page Switcher: Drop-Down Panel Instead of Full-Screen (4th iteration)
 
 Shawn's core objection to the full-screen version, even after the stacking-context bug was fixed: this is the *admin* tool, not the customer's public website - taking over the whole screen made it feel like leaving the app entirely, with no context that you're still mid-edit. Held the Jony-led meeting he asked for before touching code, landed on:
