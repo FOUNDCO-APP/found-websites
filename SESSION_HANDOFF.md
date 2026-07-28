@@ -1,3 +1,17 @@
+## 2026-07-27 - Visible Chevron Badges + Company Switcher Restyled
+
+Shawn liked the dropdown switcher but wanted every tappable card to look tappable, and flagged that the company switcher (top of dashboard) and the new section switcher now read as two stacked dropdowns. Team-approved split: ship the safe visual fixes now, hold "make the company switcher truly instant" (a real architecture change touching every dashboard page) for its own session rather than risk it right before Shawn shows this to 3 prospects.
+
+- New shared `TapChevronBadge` (filled 28px circle, high-contrast chevron) replaces the previously-nonexistent affordance on the 6 Pages tiles + 2 Site-wide tiles, and the previously tiny/30%-opacity one on Business Info.
+- Company switcher's down-chevron swapped for a switch/swap icon - it's a link to `/select` (full page), not an inline dropdown, so it shouldn't visually promise the same instant behavior as the new section switcher. Purely a glyph swap, zero change to its underlying navigation.
+- Build passed.
+
+**Explicitly deferred:** making the company switcher an actual instant inline dropdown (client-side company switching without a page reload) - real work across every dashboard page, not a styling pass. Also still deferred from earlier: Shop/Services search + category collapsing for scale.
+
+Shawn QA next: confirm every hub card now has an obvious chevron, and that the top company switcher no longer looks like a copy of the new section dropdown.
+
+---
+
 ## 2026-07-27 - Section Nav Redesign + Tap-to-Edit Label Removed
 
 Shawn approved the Steve-led team review (see prior entry below) and asked to move fast - he has 3 clients ready to go, currently blocked. Built the two ready-to-ship items same session:
