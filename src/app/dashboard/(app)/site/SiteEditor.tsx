@@ -1597,66 +1597,63 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
         </button>
 
         {pages && pages.length > 0 ? (
-          <div style={{ position: "relative" }}>
-            <button
-              type="button"
-              onClick={() => setOpen(o => !o)}
-              style={{
-                display: "flex", alignItems: "center", gap: 8, padding: "10px 14px 10px 18px", borderRadius: 100,
-                background: open ? `linear-gradient(135deg, ${GREEN}26, ${GREEN}0f)` : "rgba(255,255,255,0.06)",
-                border: `1.5px solid ${open ? GREEN + "77" : "rgba(255,255,255,0.14)"}`,
-                boxShadow: open ? `0 0 0 4px ${GREEN}14, 0 8px 20px rgba(0,0,0,0.35)` : "none",
-                cursor: "pointer",
-              }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em", color: open ? GREEN : "white" }}>{current?.label ?? label}</span>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={open ? GREEN : "rgba(255,255,255,0.6)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.18s ease", flexShrink: 0 }}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </button>
-
-            {open && (
-              <>
-                <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 35 }} />
-                <div style={{
-                  position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 36, minWidth: 210,
-                  borderRadius: 20, border: `1px solid ${GREEN}2a`,
-                  background: "linear-gradient(165deg, #161c17 0%, #101411 100%)",
-                  boxShadow: `0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)`,
-                  overflow: "hidden", padding: 6,
-                }}>
-                  {pages.map(p => {
-                    const active = p.view === currentView
-                    return (
-                      <button
-                        key={p.view}
-                        type="button"
-                        disabled={active}
-                        onClick={() => { onNavigate?.(p.view); setOpen(false) }}
-                        style={{
-                          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, width: "100%", textAlign: "left",
-                          padding: "13px 14px", border: "none", borderRadius: 14,
-                          backgroundColor: active ? `${GREEN}16` : "transparent",
-                          color: active ? GREEN : "rgba(255,255,255,0.88)",
-                          fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em",
-                          cursor: active ? "default" : "pointer",
-                        }}
-                      >
-                        {p.label}
-                        {active && (
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </>
-            )}
-          </div>
+          // Reads as a page title, not a UI control - tapping it opens a
+          // real bottom sheet (same style as the photo picker) with big
+          // tappable cards, not an anchored dropdown pretending to be one.
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+          >
+            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "white" }}>{current?.label ?? label}</span>
+            <span style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </span>
+          </button>
         ) : (
           <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
         )}
       </div>
+
+      {pages && pages.length > 0 && open && (
+        <>
+          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }} />
+          <div style={{
+            position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
+            backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+            boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
+          }}>
+            <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }} />
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 14 }}>Jump to</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              {pages.map(p => {
+                const active = p.view === currentView
+                return (
+                  <button
+                    key={p.view}
+                    type="button"
+                    disabled={active}
+                    onClick={() => { onNavigate?.(p.view); setOpen(false) }}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                      padding: "18px 16px", borderRadius: 18,
+                      border: active ? `1.5px solid ${GREEN}66` : "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: active ? `${GREEN}14` : "rgba(255,255,255,0.035)",
+                      textAlign: "left", cursor: active ? "default" : "pointer",
+                    }}
+                  >
+                    <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", color: active ? GREEN : "white" }}>{p.label}</span>
+                    {active && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
