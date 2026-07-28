@@ -1,3 +1,43 @@
+## 2026-07-27 - END OF SESSION WRAP - read this first, then the dated entries below for detail
+
+Shawn is signing off for the night. Everything below is committed and pushed to `main` (last commit `b56bf2c`, verified clean working tree). This entry is the fast-read summary of the whole session; the dated entries below it (same day) have full detail on each piece if you need it.
+
+### What shipped tonight, in order
+1. Sticky section back-nav (was scrolling away, now pinned under the header).
+2. Slimmed the "View live site" row from a card into a plain link.
+3. Lateral nav between the 6 Pages sections - built as a horizontal pill row first, then **replaced** with a dropdown switcher (pill + chevron, same visual language as the company switcher) after Shawn found the pill row too big/redundant.
+4. **Horizontal overflow bug on Home/About - fixed twice.** First attempt (`overflow-x: clip` + pill-row width guard) was wrong and shipped without real verification - Shawn caught it still broken. Second attempt was properly root-caused with an isolated iframe measurement at real mobile width: bare `display: "grid"` (no `gridTemplateColumns`) sizes its column to the max-content width of the longest unwrapped text, ignoring nowrap/ellipsis entirely. Converted 7 affected wrappers to `flex`/`column`. **Verified this time** - 5 overflowing elements before, 0 after, measured directly, not guessed. **Lesson for next session: don't claim a CSS fix works without measuring it.**
+5. Contact page rebuilt as one flowing surface with hairline dividers (`EditRowGroup`/`EditRow`) instead of stacked bordered boxes, matching a precedent already set by the Estimate builder rebuild in July.
+6. Removed confusing "Tap to edit" label on the hub.
+7. Every tappable hub card (6 Pages tiles, Business Info, 2 Site-wide tiles) got a visible chevron - simplified per Shawn's feedback from a filled circle badge down to a bare chevron glyph.
+8. Company switcher (top of every dashboard page, not just Edit My Site) de-buttoned into a plain text link, then given back a small caret next to the name after Shawn asked how other products (Slack/Notion/Stripe) signal "this is swappable" - underlined text alone doesn't carry that meaning, name+caret does.
+9. **Real code audit** of `SiteEditor.tsx`/`actions.ts` (not a visual review) found: nearly every save path showed "Saved" without checking whether the write actually succeeded, and destructive Removes (service/category/menu item) had no confirm step. Both fixed - saves now roll back and show an error toast on failure; deletes now go through a shared confirm sheet.
+
+### Decided and closed
+- Pill-row nav → dropdown switcher (Shawn's call, built and confirmed working).
+- Chevron badges simplified to bare glyphs, no circle (Shawn's direct feedback).
+- Company switcher: text link + caret, not a button (Shawn's call, built).
+- Contact's flowing-surface treatment approved as the pattern going forward *if* it holds up - not yet extended to About/Services/Shop/Gallery, pending Shawn's reaction.
+
+### Explicitly deferred - real, not forgotten, needs its own scoped session
+- **Shop/Services at scale** - no search, no category collapse. Will genuinely break with a real catalog (100+ products). This is a missing capability, not a style issue. Still unknown whether this is what's actually blocking Shawn's 3 pending clients - **that question was asked twice this session and never answered**, worth asking again first thing.
+- **Instant company-switching** - the switcher is still a full-page navigation to `/select`, not a live inline dropdown. Making it instant is real architecture work touching every dashboard page; deliberately not risked right before a demo.
+- **AI rewrite silently falls back to generic template copy on failure**, no disclosure to the owner that it happened. No rate limit on AI rewrite calls either.
+- **No format validation** on email/phone/price fields - garbage can reach the public site.
+- **No file-size check** before photo upload.
+- **Zero accessibility labels** anywhere in `SiteEditor.tsx`.
+- **Home's "Main Button" CTA picker** only exists for food/wellness-adjacent industries - silently absent for every other industry with no explanation.
+
+### Pending Shawn's decision - do NOT proceed without explicit approval
+**Error monitoring + alerting, requested this session, not yet built.** Shawn wants: email alerts the moment anything fails (onboarding, any page/action, any individual customer site), plus a monitoring view inside Found HQ admin. Team recommendation (Craig/Priya): don't build this from scratch - adopt Sentry (application error tracking) + an external uptime monitor (Better Uptime/UptimeRobot-class tool, must run outside our own infrastructure to be meaningful), both have free tiers sufficient for this scale, then build a lightweight Found HQ "Health" page that surfaces both in one place. **Open question Shawn has not answered yet: is he good signing up for two new third-party services under his accounts?** That's a real decision point, not a build detail - ask before doing anything here.
+
+### Immediate next steps for whoever picks this up
+1. Ask Shawn (a) what's actually blocking his 3 pending clients, and (b) whether he approves the Sentry + uptime-monitor sign-up.
+2. Get his mobile QA on tonight's shipped changes (see individual entries below for exact test steps per feature).
+3. Once scope is confirmed, the error-monitoring build is the next major piece of work.
+
+---
+
 ## 2026-07-27 - Company Switcher: Added Back a Small Caret
 
 Shawn asked how other products make "click here to switch entities" feel intuitive. Precedent: Slack/Notion/Stripe all pair the current entity name with a small caret directly next to it - that pairing is the actual signal, not underlined text alone (underline reads as "more info," not "swap this"). Added a 10px caret next to the company name; still no pill/background/button, still a plain link to `/select`. Build passed.
