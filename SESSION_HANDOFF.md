@@ -1,3 +1,16 @@
+## 2026-07-28 - Page Switcher: Fixed a Real Stacking-Context Bug, Not Just Restyled
+
+Shawn sent screenshots of the full-screen switcher with a large dead zone at the top and no visible close button - "not happy yet." This turned out to be a genuine bug, not a taste call:
+
+- **Root cause (Craig):** the panel was rendering nested inside `BackHeader`'s own `position: sticky` wrapper. A fixed-position child nested inside a positioned+z-indexed ancestor has its z-index trapped within that ancestor's local stacking context - it can never out-rank a completely different element elsewhere in the tree (the persistent dashboard header, z-index 40) no matter how high its own z-index is set. The persistent header was rendering on top of the panel's own header row (the "Pages" label and close button), hiding them entirely - that's what looked like empty space.
+- **Fix:** portaled the panel straight onto `document.body` via a `Portal` helper - the exact same pattern already used elsewhere in this codebase (`LeadContactSheet`, `ActivateOverlay`, etc.), so this wasn't a new technique, just one that should have been used here from the start.
+- **Also (Jony):** switched the list from vertically centered to anchored at the top - centering looked accidental once the bug is fixed, since item count varies by industry (5 vs 6 sections) and there's no bottom CTA content to balance the composition the way the public site's version has.
+- Build passed.
+
+Shawn QA next: open the switcher and confirm the "Pages" label + close button are now visible at the top, and the list starts right below them instead of leaving dead space.
+
+---
+
 ## 2026-07-28 - Page Switcher Rebuilt Again: Full-Screen, Matching the Public-Site Nav
 
 Shawn rejected the bottom-sheet version outright ("completely horrible") and pointed to the exact reference he wanted: the public tenant site's own hamburger menu (`src/components/Navbar.tsx`, the bold/modern variant) - full-screen dark takeover, brand-accent left stripe, big bold numbered list (01/02/03...) with hairline dividers.
