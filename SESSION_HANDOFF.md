@@ -1,3 +1,16 @@
+## 2026-07-28 - Video Thumbnails Fixed, Photo Sheet Extended, Dropdown Elevated
+
+Shawn confirmed the design is "top notch... just needs some finessing" and flagged three specific things:
+
+- **Blank video thumbnails "everywhere"** - root cause was `preload="metadata"` with no autoplay, the exact same bug already fixed in the Photos grid on July 19 (that fix never got applied to `SiteEditor.tsx`). Added a shared `VideoThumb` component (autoplay/loop/`preload="auto"`, fades in on `onLoadedData`/`onCanPlay`) and swapped it into all 4 spots that had the broken pattern: Home's small header-photo row, the "Photos around the site" slot covers, the Featured Update image, and the photo picker grid itself.
+- **Photo picker sheet felt like a short bottom sheet** - was capped at `min(78dvh, 680px)`. Changed to anchor its top edge just under the safe-area inset (Dynamic Island) instead of capping height - now reads as a real full-page surface, same as the text editor sheet.
+- **Pages dropdown switcher "felt weak, generic, not Found quality"** - fair complaint: 13px text, thin padding, flat panel. Elevated to Found's real type scale (15px/800 weight), added a green glow on the trigger when open, gradient panel background, bigger rows, and a checkmark on the active section instead of relying on color alone.
+- Build passed clean.
+
+Shawn QA next: assign a video to any photo slot and confirm a real frame shows, not blank. Open the photo picker and confirm it now reaches near the top of the screen. Open the Pages dropdown and judge if it now feels like it belongs to Found.
+
+---
+
 ## 2026-07-27 - END OF SESSION WRAP - read this first, then the dated entries below for detail
 
 Shawn is signing off for the night. Everything below is committed and pushed to `main` (last commit `b56bf2c`, verified clean working tree). This entry is the fast-read summary of the whole session; the dated entries below it (same day) have full detail on each piece if you need it.
