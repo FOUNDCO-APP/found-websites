@@ -1,3 +1,15 @@
+## 2026-07-27 - Edit My Site: Horizontal Overflow Fix
+
+Shawn's screenshots after the lateral-nav ship showed Home and About fields cut off mid-line, and the page scrollable sideways revealing blank space. Fixed same session:
+
+- Added `overflowX: "clip"` on the `SiteEditor` root (guards against any descendant stretching the page past the viewport, without turning the page into its own vertical scroll container - `clip` doesn't have the side effect `hidden` has of forcing `overflow-y: auto`, so the sticky `BackHeader` keeps tracking the shared document scroll).
+- Added explicit `width: "100%"` / `boxSizing: "border-box"` to the new Pages pill row - the prime suspect, since it's the one thing common to every affected view and nests a `overflow-x: auto` scroller inside a `position: sticky` ancestor with no explicit width, a combination that can misbehave on real WebKit even though it's spec-correct.
+- `cmd /c npm run build` passed. **Could not get live visual confirmation this session** - local browser tooling (Chrome extension connection) was unreliable and I wasn't able to reproduce/verify in an actual mobile viewport before pushing. Root cause is a reasoned best guess, not a confirmed repro.
+
+Shawn QA next (important - this one isn't verified): reload Lucky's Home and About sections on iPhone, confirm nothing is cut off and the page no longer scrolls sideways. If it's still happening, screenshot again - the fix may not have hit the actual cause.
+
+---
+
 ## 2026-07-27 - Edit My Site Sections: Lateral Nav + Home-Matched Visual Treatment
 
 Shawn's follow-up mobile QA after the sticky-nav fix: sections still felt "robotic" next to Home, and jumping between sections meant going back to the hub every time. Team meeting (Jony/Steve leads, per Shawn's explicit ask), direction approved, built same session:
