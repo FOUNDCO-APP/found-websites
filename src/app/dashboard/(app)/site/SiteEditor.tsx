@@ -46,6 +46,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [savingIntent, setSavingIntent] = useState(false)
   const [intentSaved, setIntentSaved] = useState(false)
 
+  // Shared save-failure toast. A save showing "Saved" when the write actually
+  // failed is worse than no feedback at all - this makes failures visible
+  // instead of silent, and callers roll their optimistic state back on error.
+  const [saveError, setSaveError] = useState<string | null>(null)
+  function flashSaveError(message = "Couldn't save. Check your connection and try again.") {
+    setSaveError(message)
+    setTimeout(() => setSaveError(null), 4000)
+  }
+
+  // Shared confirm-before-delete. Remove buttons for real owner content
+  // (services, categories, items) used to delete instantly on one tap with
+  // no undo - a mis-tap next to Edit could wipe a whole category.
+  const [confirmAction, setConfirmAction] = useState<{ title: string; message: string; confirmLabel: string; onConfirm: () => void } | null>(null)
+
   // Edit My Site is a hub: pick a page/section, edit just that, come back.
   // Not one long scrolling page. See DESIGN_DECISIONS.md [2026-07-27].
   const [view, setView] = useState<View>("hub")
@@ -60,6 +74,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [savedBizField, setSavedBizField] = useState<string | null>(null)
 
   async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state", value: string) {
+    const previousValue = businessInfo[field]
     setBusinessInfo(prev => ({ ...prev, [field]: value }))
     setSavingBizField(field)
     const result = await updateCompanyField(field, value)
@@ -67,6 +82,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if (!("error" in result)) {
       setSavedBizField(field)
       setTimeout(() => setSavedBizField(null), 2200)
+    } else {
+      setBusinessInfo(prev => ({ ...prev, [field]: previousValue }))
+      flashSaveError("Couldn't save that. Try again.")
     }
   }
 
@@ -86,7 +104,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
-  const sheetOpen = Boolean(editing || photoPickerSlot || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null)
+  const sheetOpen = Boolean(editing || photoPickerSlot || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null || confirmAction)
 
   useEffect(() => {
     const root = document.documentElement
@@ -214,18 +232,32 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const value = editValue.trim()
     if (!value) return
     const polishedValue = polishWebsiteField(field, value)
+    const previousValue = config[field]
     setConfig(prev => ({ ...prev, [field]: polishedValue }))
     setEditing(null)
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
-    startTransition(async () => { await updateSiteField(field, polishedValue) })
+    const result = await updateSiteField(field, polishedValue)
+    if (result && "error" in result) {
+      setConfig(prev => ({ ...prev, [field]: previousValue }))
+      setSaved(null)
+      flashSaveError()
+    }
   }
 
   function saveConfigField(field: string, value: unknown) {
+    const previousValue = config[field]
     setConfig(prev => ({ ...prev, [field]: value }))
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
-    startTransition(async () => { await updateSiteField(field, value) })
+    startTransition(async () => {
+      const result = await updateSiteField(field, value)
+      if (result && "error" in result) {
+        setConfig(prev => ({ ...prev, [field]: previousValue }))
+        setSaved(null)
+        flashSaveError()
+      }
+    })
   }
 
   function toggleFeaturedUpdate() {
@@ -240,46 +272,76 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if (isGenericFeaturedCopy(config.announcement_cta_label)) updates.announcement_cta_label = announcementDefault.label
     if (!String(config.announcement_cta_href ?? "").trim()) updates.announcement_cta_href = announcementDefault.href
 
+    const previousValues: Record<string, unknown> = {}
+    Object.keys(updates).forEach(field => { previousValues[field] = config[field] })
+
     setConfig(prev => ({ ...prev, ...updates }))
     setSaved("announcement_enabled")
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => {
-      await Promise.all(Object.entries(updates).map(([field, value]) => updateSiteField(field, value)))
+      const results = await Promise.all(Object.entries(updates).map(([field, value]) => updateSiteField(field, value)))
+      if (results.some(r => r && "error" in r)) {
+        setConfig(prev => ({ ...prev, ...previousValues }))
+        setSaved(null)
+        flashSaveError()
+      }
     })
   }
   async function handleRegenerate(section: Section) {
     setRegenerating(section)
     const result = await regenerateSection(section)
     if (result.success && result.updates) setConfig(prev => ({ ...prev, ...result.updates }))
+    else flashSaveError("Couldn't rewrite that section. Try again.")
     setRegenerating(null)
   }
 
   async function saveService(index: number, name: string, description: string) {
-    const services = [...((config.services as Array<{name:string;description:string}>) ?? [])]
+    const previousServices = (config.services as Array<{name:string;description:string}>) ?? []
+    const services = [...previousServices]
     services[index] = { name, description }
     const polishedServices = polishServices(services)
     setConfig(prev => ({ ...prev, services: polishedServices }))
     setEditingService(null)
-    startTransition(async () => { await updateSiteField("services", polishedServices) })
+    startTransition(async () => {
+      const result = await updateSiteField("services", polishedServices)
+      if (result && "error" in result) {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+        flashSaveError("Couldn't save that service. Try again.")
+      }
+    })
   }
 
   async function removeService(index: number) {
-    const services = [...((config.services as Array<{name:string;description:string}>) ?? [])]
+    const previousServices = (config.services as Array<{name:string;description:string}>) ?? []
+    const services = [...previousServices]
     services.splice(index, 1)
     setConfig(prev => ({ ...prev, services }))
-    startTransition(async () => { await updateSiteField("services", services) })
+    startTransition(async () => {
+      const result = await updateSiteField("services", services)
+      if (result && "error" in result) {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+        flashSaveError("Couldn't remove that service. Try again.")
+      }
+    })
   }
 
   async function addService() {
     if (!newServiceName.trim()) return
-    const services = [...((config.services as Array<{name:string;description:string}>) ?? [])]
+    const previousServices = (config.services as Array<{name:string;description:string}>) ?? []
+    const services = [...previousServices]
     services.push({ name: newServiceName.trim(), description: newServiceDesc.trim() })
     const polishedServices = polishServices(services)
     setConfig(prev => ({ ...prev, services: polishedServices }))
     setNewService(false)
     setNewServiceName("")
     setNewServiceDesc("")
-    startTransition(async () => { await updateSiteField("services", polishedServices) })
+    startTransition(async () => {
+      const result = await updateSiteField("services", polishedServices)
+      if (result && "error" in result) {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+        flashSaveError("Couldn't add that service. Try again.")
+      }
+    })
   }
 
   async function saveIntent(intent: string) {
@@ -349,6 +411,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const result = await uploadMenuItemPhoto(fd)
     setUploadingMenuPhoto(false)
     if ('url' in result) setMenuItemDraft(prev => ({ ...prev, photo_url: result.url }))
+    else flashSaveError(result.error || "Couldn't upload that photo. Try again.")
   }
 
   async function addMenuCategory() {
@@ -374,6 +437,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   function handleAssignPhoto(photoId: string, section: PhotoSlot | null) {
     const photo = localPhotos.find(p => p.id === photoId)
+    const previousPhotos = localPhotos
+    const previousConfig = config
     setLocalPhotos(prev => prev.map(p => ({
       ...p,
       website_section: p.id === photoId
@@ -392,21 +457,43 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       }
     }
     if (section && section !== "gallery") setPhotoPickerSlot(null)
-    startTransition(async () => { await assignPhotoToSection(photoId, section) })
+    startTransition(async () => {
+      const result = await assignPhotoToSection(photoId, section)
+      if (result && "error" in result) {
+        setLocalPhotos(previousPhotos)
+        setConfig(previousConfig)
+        flashSaveError("Couldn't update that photo. Try again.")
+      }
+    })
   }
 
   function handleClearPhotoSlot(slot: PhotoSlot) {
     const slotPhotoIds = localPhotos.filter(p => p.website_section === slot).map(p => p.id)
+    const previousPhotos = localPhotos
+    const previousConfig = config
     if (slot === "hero") {
       setLocalPhotos(prev => prev.map(p => p.website_section === "hero" ? { ...p, website_section: null } : p))
       setConfig(prev => ({ ...prev, hero_image_url: null, hero_video_url: null, hero_images: [] }))
       setPhotoPickerSlot(null)
-      startTransition(async () => { await clearHeroPhoto() })
+      startTransition(async () => {
+        const result = await clearHeroPhoto()
+        if (result && "error" in result) {
+          setLocalPhotos(previousPhotos)
+          setConfig(previousConfig)
+          flashSaveError("Couldn't remove that photo. Try again.")
+        }
+      })
       return
     }
     setLocalPhotos(prev => prev.map(p => p.website_section === slot ? { ...p, website_section: null } : p))
     setPhotoPickerSlot(null)
-    startTransition(async () => { await Promise.all(slotPhotoIds.map(id => assignPhotoToSection(id, null))) })
+    startTransition(async () => {
+      const results = await Promise.all(slotPhotoIds.map(id => assignPhotoToSection(id, null)))
+      if (results.some(r => r && "error" in r)) {
+        setLocalPhotos(previousPhotos)
+        flashSaveError("Couldn't remove that photo. Try again.")
+      }
+    })
   }
 
   const heroPhotos = localPhotos.filter(p => p.website_section === "hero")
@@ -897,7 +984,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     </button>
                   )}
                 </div>
-                <button onClick={() => removeMenuCategory(catIdx)}
+                <button
+                  onClick={() => setConfirmAction({
+                    title: `Remove ${cat.category}?`,
+                    message: cat.items.length > 0
+                      ? `This removes the category and all ${cat.items.length} item${cat.items.length === 1 ? "" : "s"} in it. This can't be undone.`
+                      : "This can't be undone.",
+                    confirmLabel: "Remove",
+                    onConfirm: () => removeMenuCategory(catIdx),
+                  })}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,80,80,0.5)", fontSize: 11, fontWeight: 700, padding: "4px 8px" }}>
                   Remove
                 </button>
@@ -989,7 +1084,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               isEditing={editingService === i}
               onEdit={() => setEditingService(i)}
               onSave={saveService}
-              onRemove={() => removeService(i)}
+              onRemove={() => setConfirmAction({
+                title: `Remove ${svc.name}?`,
+                message: "This can't be undone.",
+                confirmLabel: "Remove",
+                onConfirm: () => removeService(i),
+              })}
               onCancel={() => setEditingService(null)}
             />
           ))}
@@ -1114,10 +1214,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%)" }}/>
                     <button
                       onClick={() => {
+                        const previous = stockImages
                         setStockImages(prev => prev.filter(u => u !== url))
-                        startTransition(async () => { await removeStockImage(url) })
+                        startTransition(async () => {
+                          const result = await removeStockImage(url)
+                          if (result && "error" in result) {
+                            setStockImages(previous)
+                            flashSaveError("Couldn't remove that photo. Try again.")
+                          }
+                        })
                       }}
                       style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", border: "none", cursor: "pointer", color: "rgba(255,120,120,0.9)", fontSize: 10, display: "flex", alignItems: "center", justifyContent: "center" }}
+                      aria-label="Remove this stock photo"
                     >x</button>
                     <div style={{ position: "absolute", bottom: 5, left: 7, fontSize: 9, color: "rgba(255,255,255,0.4)", fontWeight: 700, letterSpacing: "0.06em" }}>STOCK</div>
                   </div>
@@ -1208,7 +1316,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ display: "flex", gap: 8 }}>
               {editingMenuItem.itemIdx !== null && (
                 <button
-                  onClick={() => void removeMenuItem(editingMenuItem.catIdx, editingMenuItem.itemIdx!)}
+                  onClick={() => setConfirmAction({
+                    title: menuItemDraft.name ? `Remove ${menuItemDraft.name}?` : "Remove this item?",
+                    message: "This can't be undone.",
+                    confirmLabel: "Remove",
+                    onConfirm: () => { void removeMenuItem(editingMenuItem.catIdx, editingMenuItem.itemIdx!) },
+                  })}
                   disabled={menuSaving}
                   style={{ padding: "13px 16px", borderRadius: 12, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.1)", color: "rgba(255,100,100,0.8)", fontSize: 13, fontWeight: 700, cursor: menuSaving ? "default" : "pointer", opacity: menuSaving ? 0.5 : 1 }}>
                   Remove
@@ -1363,6 +1476,37 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         />
       </div>
       </>
+      )}
+
+      {/* Shared confirm-before-delete sheet. Renders above everything else,
+          including the full-screen edit sheet, since a Remove button inside
+          the item editor also routes through this. */}
+      {confirmAction && (
+        <>
+          <div onClick={() => setConfirmAction(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 96, backdropFilter: "blur(4px)" }} />
+          <div style={{ position: "fixed", left: 20, right: 20, bottom: "calc(28px + env(safe-area-inset-bottom))", zIndex: 97, backgroundColor: "#111613", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 24, padding: "22px 20px", boxShadow: "0 -20px 60px rgba(0,0,0,0.5)" }}>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "white", marginBottom: 6 }}>{confirmAction.title}</div>
+            <p style={{ margin: "0 0 18px", fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.6)" }}>{confirmAction.message}</p>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setConfirmAction(null)} style={{ flex: 1, padding: "13px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.7)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Cancel</button>
+              <button
+                onClick={() => { const action = confirmAction; setConfirmAction(null); action?.onConfirm() }}
+                style={{ flex: 1, padding: "13px 0", borderRadius: 14, border: "none", backgroundColor: "#FF453A", color: "white", fontWeight: 800, fontSize: 14, cursor: "pointer" }}
+              >
+                {confirmAction.confirmLabel}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Shared save-failure toast - a save that silently fails is worse
+          than no feedback, since the owner walks away thinking it's live. */}
+      {saveError && (
+        <div style={{ position: "fixed", left: 16, right: 16, bottom: "calc(90px + env(safe-area-inset-bottom))", zIndex: 80, backgroundColor: "#2A1213", border: "1px solid rgba(255,69,58,0.35)", borderRadius: 16, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9B95" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#FF9B95", flex: 1 }}>{saveError}</span>
+        </div>
       )}
 
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
