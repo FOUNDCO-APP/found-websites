@@ -1,3 +1,11 @@
+## 2026-07-28 - Page Switcher: CLOSED, Shawn Confirmed Approved
+
+Shawn reviewed the final screenshot (Lucky, all 6 Pages sections, panel open) and confirmed with the team: "ok lets leave it." **This closes out the page-switcher saga that ran across ~7 iterations this session and last** (pill row → anchored dropdown → bottom-sheet grid → full-screen takeover → full-width drop-down panel → scrim/flat-edge fixes → editing-context cues). Do not reopen or re-litigate this component without a new, specific complaint from Shawn - the design is approved as of this entry.
+
+Final shape, for reference: `BackHeader` in `SiteEditor.tsx`. Trigger is the page title + chevron in the sticky section header (chevron rotates on open). Opens a full-width panel portaled to `document.body`, dropping down from directly under the persistent FOUND header and the trigger row (both stay visible, never covered), ~60vh tall, scrim only below the header/row (not covering them), flat green bottom edge, numbered list (01/02/03...) with big bold labels, checkmark on the active page, edit-pencil icon on the others, "Editing - jump to a page" caption label at the top of the list.
+
+---
+
 ## 2026-07-28 - Page Switcher: Added "Editing, Not Browsing" Cues
 
 Shawn's follow-up: happy with the direction but wanted Jony/Steve's read on whether the panel makes clear to a business owner that they're inside the admin tool mid-edit, not looking at a live preview of their real site - understandable worry since the panel's list is deliberately modeled on the public site's own nav (same page names, same big numbered treatment). Team's proposal, built and shipped: a quiet caption label at the top of the list ("Editing - jump to a page") and a small edit-pencil icon on every inactive row (checkmark still owns the active row). Small, doesn't fight the bold list, but unmistakable regardless of what the eye lands on first. Build passed.
