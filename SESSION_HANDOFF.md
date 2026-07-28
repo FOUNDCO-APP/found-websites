@@ -1,3 +1,18 @@
+## 2026-07-28 - Page Switcher Rebuilt Again: Full-Screen, Matching the Public-Site Nav
+
+Shawn rejected the bottom-sheet version outright ("completely horrible") and pointed to the exact reference he wanted: the public tenant site's own hamburger menu (`src/components/Navbar.tsx`, the bold/modern variant) - full-screen dark takeover, brand-accent left stripe, big bold numbered list (01/02/03...) with hairline dividers.
+
+Held the team discussion Shawn asked for (Jony/Steve) before touching code:
+- **Jony:** carry the visual language over directly - full-screen takeover, huge numbered list, dark panel - since that's the "modern, shows off" quality that was missing.
+- **Steve:** flagged the public hamburger's slow 320ms slide + staggered per-item cascade is earned because it's a rare, one-time reveal for a first-time visitor. This switcher gets tapped constantly during an editing session - full cinematic motion every tap would read as friction, not polish.
+- Landed on: same visual DNA, fast/snappy motion (190ms, no stagger) instead of cinematic. Confirmed with Shawn via explicit choice before building.
+
+Built and shipped: `BackHeader`'s page switcher is now a `position:fixed inset:0` full-screen panel (`#111111`, 3px green left stripe), header row with "Pages" label + bordered X-close button, and the six sections as a big numbered list (12px green index, 28px/900-weight labels, hairline dividers, checkmark on the active one). Build passed.
+
+Shawn QA next: open the switcher and confirm it actually reads as Found-quality this time, and that the faster motion still feels responsive rather than abrupt.
+
+---
+
 ## 2026-07-28 - Page Switcher Rebuilt as a Bottom Sheet, Not a Bigger Dropdown
 
 Shawn's follow-up on the dropdown elevation from earlier today: "you just made it bigger, that doesn't solve the issue... needs to look modern." Fair - the fix was cosmetic, not structural. Rebuilt the interaction itself:
