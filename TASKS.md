@@ -1,10 +1,8 @@
-## 2026-07-27 - END OF SESSION - PENDING DECISION + TOP PRIORITIES
+## 2026-07-28 - CURRENT PENDING DECISIONS (read this block first)
 
-**Read `SESSION_HANDOFF.md`'s top entry first** for the full session wrap. Quick pointer here so this doesn't get missed:
-
-- [ ] **Waiting on Shawn:** does he approve signing up for Sentry (error tracking) + an external uptime monitor, so we can build the error-alerting/monitoring system he asked for tonight? Team recommended these over building from scratch. Not started - needs his yes first.
-- [ ] **Waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked twice this session, unanswered. Determines whether Shop/Services search+scale work jumps the queue.
-- [ ] Shawn mobile QA owed on tonight's full batch: dropdown section switcher, chevron badges, company switcher caret, save-error toast, delete-confirm sheet.
+- [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.
+- [ ] **Still waiting on Shawn:** does he approve signing up for Sentry (error tracking) + an external uptime monitor, so we can build the error-alerting/monitoring system he asked for? Team recommended these over building from scratch. Not started - needs his yes first.
+- [ ] **Still waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked multiple times, still unanswered. Determines whether Shop/Services search+scale work jumps the queue.
 
 ---
 
