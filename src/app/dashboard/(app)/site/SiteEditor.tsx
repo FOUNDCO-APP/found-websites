@@ -1585,8 +1585,8 @@ function Portal({ children }: { children: React.ReactNode }) {
 // Shared back-to-hub header for every drilled-in page/section. Sticks under the
 // main dashboard header (via --found-header-h, measured in SiteEditor) so the
 // owner always has a way back without scrolling to the top of a long section.
-// When `pages` is given, tapping the section label opens a full-screen page
-// switcher (portaled to body - see Portal above) instead of a hub detour.
+// When `pages` is given, tapping the section label drops down a full-width
+// panel (portaled to body - see Portal above) instead of a hub detour.
 function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
   label: string
   onBack: () => void
@@ -1595,7 +1595,24 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
   onNavigate?: (view: View) => void
 }) {
   const [open, setOpen] = useState(false)
+  const rowRef = useRef<HTMLDivElement>(null)
+  const [rowHeight, setRowHeight] = useState(62)
   const current = pages?.find(p => p.view === currentView)
+
+  // Measure this row's real height (not a guessed constant) so the dropdown
+  // panel below can be positioned exactly under it regardless of device
+  // text-size settings, same measurement approach already used for
+  // --found-header-h in SiteEditor.
+  useEffect(() => {
+    if (!rowRef.current) return
+    const el = rowRef.current
+    const update = () => setRowHeight(el.getBoundingClientRect().height)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div style={{
       position: "sticky",
@@ -1604,23 +1621,23 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
       backgroundColor: BLACK,
       borderBottom: "1px solid rgba(255,255,255,0.06)",
     }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 20px" }}>
+      <div ref={rowRef} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 20px" }}>
         <button type="button" onClick={onBack} style={{ width: 34, height: 34, borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", display: "flex", alignItems: "center", justifyContent: "center", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, cursor: "pointer", flexShrink: 0 }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
         </button>
 
         {pages && pages.length > 0 ? (
-          // Reads as a page title, not a UI control - tapping it opens the
-          // full-screen page switcher below (same DNA as the public-site
-          // hamburger menu), not an anchored dropdown pretending to be one.
+          // Reads as a page title, not a UI control. Tapping it (or tapping
+          // it again) opens/closes the dropdown below - it IS the control,
+          // there's no separate close button inside the panel anymore.
           <button
             type="button"
-            onClick={() => setOpen(true)}
+            onClick={() => setOpen(o => !o)}
             style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
             <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "white" }}>{current?.label ?? label}</span>
             <span style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.18s ease" }}><polyline points="6 9 12 15 18 9"/></svg>
             </span>
           </button>
         ) : (
@@ -1629,65 +1646,67 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
       </div>
 
       {pages && pages.length > 0 && (
-        // Full-screen takeover, same DNA as the public-site hamburger menu
-        // (dark full-bleed panel, brand-accent left stripe, big numbered
-        // list) but tuned fast/snappy instead of cinematic - this gets
-        // tapped many times a session, not once like a visitor's first
-        // hamburger tap, so no slow slide and no staggered cascade.
-        // Portaled to body: this used to render nested inside BackHeader's
-        // own `position: sticky` wrapper, which traps a fixed-position
-        // child's z-index inside that ancestor's local stacking context -
-        // it could never out-rank the persistent dashboard header (z-index
-        // 40) no matter how high its own z-index was set, so the header
-        // sat on top of and hid this panel's own header row entirely.
+        // Full-width panel dropping down from under this row - not a
+        // full-screen takeover. This is a dashboard tool, not the public
+        // site: the owner isn't navigating away, just picking a different
+        // part of the same page, so the persistent FOUND header and this
+        // row both stay visible above it, and the real page stays visible
+        // (dimmed) below it, so it reads as "an overlay on this page," the
+        // same convention the photo picker sheet already uses, just
+        // flipped to drop from the top instead of rise from the bottom.
+        // Portaled to body for the same reason as before: nested inside
+        // this row's `position: sticky` ancestor, a fixed-position child's
+        // z-index is trapped in that ancestor's local stacking context and
+        // can never out-rank the persistent dashboard header elsewhere in
+        // the tree no matter how high its own z-index is set.
         <Portal>
+          <div
+            onClick={() => setOpen(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 65,
+              backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)",
+              opacity: open ? 1 : 0, visibility: open ? "visible" : "hidden",
+              transition: "opacity 190ms ease",
+            }}
+          />
           <div style={{
-            position: "fixed", inset: 0, zIndex: 70,
+            position: "fixed", left: 0, right: 0, zIndex: 70,
+            top: `calc(var(--found-header-h, 56px) + ${rowHeight}px)`,
+            height: "60vh",
             backgroundColor: "#111111",
-            borderLeft: `3px solid ${GREEN}`,
-            transform: open ? "translateX(0)" : "translateX(100%)",
+            borderBottom: `3px solid ${GREEN}`,
+            borderRadius: "0 0 22px 22px",
+            boxShadow: "0 24px 50px rgba(0,0,0,0.5)",
+            transform: open ? "translateY(0)" : "translateY(-100%)",
             transition: "transform 190ms cubic-bezier(0.4, 0, 0.2, 1)",
             visibility: open ? "visible" : "hidden",
-            display: "flex", flexDirection: "column",
+            overflowY: "auto",
+            padding: "8px 24px 20px",
           }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "calc(env(safe-area-inset-top, 0px) + 18px) 24px 18px" }}>
-              <span style={{ ...TYPE.caption, color: GREEN }}>Pages</span>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close" style={{ width: 44, height: 44, borderRadius: 12, border: "1px solid rgba(255,255,255,0.35)", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
-            </div>
-
-            {/* Anchored from the top, not centered - a centered block looks
-                like an accident when item count varies by industry (5 vs 6
-                Pages sections) and there's no bottom content to balance it,
-                unlike the public site's version which has two CTA buttons
-                anchoring the bottom of the panel. */}
-            <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "8px 24px 24px" }}>
-              {pages.map((p, i) => {
-                const active = p.view === currentView
-                return (
-                  <button
-                    key={p.view}
-                    type="button"
-                    disabled={active}
-                    onClick={() => { onNavigate?.(p.view); setOpen(false) }}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, width: "100%",
-                      padding: "17px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.1)",
-                      backgroundColor: "transparent", textAlign: "left", cursor: active ? "default" : "pointer",
-                    }}
-                  >
-                    <span style={{ display: "flex", alignItems: "baseline", gap: 16, minWidth: 0 }}>
-                      <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, letterSpacing: "0.1em", flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
-                      <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: active ? GREEN : "white" }}>{p.label}</span>
-                    </span>
-                    {active && (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+            {pages.map((p, i) => {
+              const active = p.view === currentView
+              return (
+                <button
+                  key={p.view}
+                  type="button"
+                  disabled={active}
+                  onClick={() => { onNavigate?.(p.view); setOpen(false) }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, width: "100%",
+                    padding: "17px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: "transparent", textAlign: "left", cursor: active ? "default" : "pointer",
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "baseline", gap: 16, minWidth: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, letterSpacing: "0.1em", flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                    <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: active ? GREEN : "white" }}>{p.label}</span>
+                  </span>
+                  {active && (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                  )}
+                </button>
+              )
+            })}
           </div>
         </Portal>
       )}
