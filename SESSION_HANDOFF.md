@@ -1,3 +1,9 @@
+## 2026-07-27 - Simplified: Plain Chevrons, Company Switcher as Text Link
+
+Shawn's direct follow-up on the chevron/switcher pass: drop the circular background (just wants a simple chevron), and make the company switcher a plain text link instead of a button. Both done - `TapChevronBadge` is now a bare 18px chevron, company switcher is an underlined text link (company name), no pill/background/icon. Navigation (`/select`) unchanged. Build passed.
+
+---
+
 ## 2026-07-27 - Visible Chevron Badges + Company Switcher Restyled
 
 Shawn liked the dropdown switcher but wanted every tappable card to look tappable, and flagged that the company switcher (top of dashboard) and the new section switcher now read as two stacked dropdowns. Team-approved split: ship the safe visual fixes now, hold "make the company switcher truly instant" (a real architecture change touching every dashboard page) for its own session rather than risk it right before Shawn shows this to 3 prospects.
