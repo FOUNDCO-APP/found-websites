@@ -1684,8 +1684,14 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
             transition: "transform 190ms cubic-bezier(0.4, 0, 0.2, 1)",
             visibility: open ? "visible" : "hidden",
             overflowY: "auto",
-            padding: "8px 24px 20px",
+            padding: "14px 24px 20px",
           }}>
+            {/* Small, deliberate "you're editing, not browsing" anchor - the
+                list itself is modeled on the public site's own nav, so this
+                quiet label plus the per-row edit icon below are there so the
+                admin/editing context reads even if the eye locks onto the
+                big list before registering the surrounding dashboard chrome. */}
+            <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>Editing - jump to a page</div>
             {pages.map((p, i) => {
               const active = p.view === currentView
               return (
@@ -1704,8 +1710,10 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
                     <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, letterSpacing: "0.1em", flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
                     <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: active ? GREEN : "white" }}>{p.label}</span>
                   </span>
-                  {active && (
+                  {active ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                   )}
                 </button>
               )
