@@ -1,3 +1,19 @@
+## 2026-07-28 - Page Switcher: Drop-Down Panel Instead of Full-Screen (4th iteration)
+
+Shawn's core objection to the full-screen version, even after the stacking-context bug was fixed: this is the *admin* tool, not the customer's public website - taking over the whole screen made it feel like leaving the app entirely, with no context that you're still mid-edit. Held the Jony-led meeting he asked for before touching code, landed on:
+
+- Persistent FOUND header **and** BackHeader's own back-chevron/title row both stay visible at all times - the panel drops down *under* them, never covers them.
+- Full-width panel, ~60vh, with the real page dimmed (not hidden) behind it via a scrim - same convention the photo picker sheet already uses, just flipped to drop from the top instead of rise from the bottom.
+- Green accent moved from the panel's left edge to its bottom edge - a left stripe sitting directly under the persistent header's own top green line read as two competing brand marks.
+- The trigger itself (the page title + chevron) is now the open/close control - chevron rotates 180 on open - so the separate "Pages" label + X close button that used to live inside the panel is gone, it was redundant.
+- Panel's vertical offset is measured live via `ResizeObserver` on the trigger row (same pattern as `--found-header-h`), not a guessed pixel constant.
+- List content itself (numbered rows, big bold labels, checkmark on active) unchanged throughout every iteration - that part was never the complaint, only the container shape was.
+- Build passed.
+
+Shawn QA next: open the switcher and confirm the FOUND header and the page-title row both stay visible above it, the real page is visible (dimmed) below it, and it reads as "an overlay on this page" rather than "I left the app."
+
+---
+
 ## 2026-07-28 - Page Switcher: Fixed a Real Stacking-Context Bug, Not Just Restyled
 
 Shawn sent screenshots of the full-screen switcher with a large dead zone at the top and no visible close button - "not happy yet." This turned out to be a genuine bug, not a taste call:
