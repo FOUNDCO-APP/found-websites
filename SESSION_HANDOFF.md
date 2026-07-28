@@ -1,3 +1,17 @@
+## 2026-07-27 - Contact Page Mockup: Flowing Surface Instead of Stacked Bubbles
+
+Shawn asked Jony to lead a team read on why Edit My Site "feels antiquated... a lot of wrappers and bubbles" even after the Home-matching pass. Jony's read: Home itself has this pattern (Live Preview card + 5 more separate bordered boxes below it) - matching Home spread the bubble-stack further instead of questioning it. Found real precedent already in this codebase: the Estimate builder had the identical complaint in July ("filling out a database... five bordered boxes") and the shipped, Shawn-approved fix was collapsing separate boxes into one continuous surface with hairline dividers.
+
+Built as a **Contact-only mockup for review, not yet applied anywhere else**:
+- Removed the "Live Preview" card - it duplicated the same copy already shown in the row below it, which is likely a real contributor to the "too many bubbles" feeling (same content rendered twice).
+- Page label / Headline / Supporting line are now one `EditRowGroup` (single bordered surface, hairline divider between rows) instead of three separate bordered boxes.
+- Tapping a row still opens the existing full-screen edit sheet - deliberately did not touch that, it was its own hard-fought, already-approved July iteration.
+- Build passed clean.
+
+Shawn: this is explicitly a pilot for your reaction, not a direction I've committed to everywhere. If it lands, About/Services/Shop/Gallery would get the same treatment next; if not, we regroup on what "less antiquated" actually means to you.
+
+---
+
 ## 2026-07-27 - Edit My Site: Horizontal Overflow Fix
 
 Shawn's screenshots after the lateral-nav ship showed Home and About fields cut off mid-line, and the page scrollable sideways revealing blank space. Fixed same session:
