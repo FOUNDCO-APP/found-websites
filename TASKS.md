@@ -1,3 +1,20 @@
+## 2026-07-27 - Team Audit: Silent Save Failures + No-Confirm Deletes, Fixed
+
+- [x] All Edit My Site save paths now check server-action results, roll back optimistic state on failure, and show a shared error toast instead of a false "Saved."
+- [x] Confirm-before-delete sheet added for removing services, menu/product categories, and menu/product items - the three that destroy real owner content permanently with no undo.
+- [x] Build passed.
+- [ ] Shawn QA: verify error toast appears on a forced-failed save; verify confirm sheet blocks accidental deletes.
+
+**Explicitly still open from the same audit, not forgotten:**
+- AI rewrite falls back to generic copy silently on failure, no disclosure.
+- No rate limit on AI rewrite calls.
+- No email/phone/price format validation.
+- No file-size check before photo upload.
+- Zero accessibility labels in SiteEditor.tsx.
+- Home's "Main Button" CTA picker only exists for food/wellness industries - silently missing for every other industry.
+
+---
+
 ## 2026-07-27 - Section Nav Redesign + Tap-to-Edit Label Removed
 
 - [x] Removed confusing "Tap to edit" label on the hub Pages section.

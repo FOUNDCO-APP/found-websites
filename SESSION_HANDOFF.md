@@ -24,6 +24,21 @@ Shawn QA next: confirm every hub card now has an obvious chevron, and that the t
 
 ---
 
+## 2026-07-27 - Team Audit: Silent Save Failures + No-Confirm Deletes, Fixed
+
+Full-code audit of Edit My Site (not a visual review - actual read of `SiteEditor.tsx`/`actions.ts`) found real gaps beyond polish. Steve's priority call: fix the two that lose real work or create false confidence, queue the rest.
+
+**Fixed this pass:**
+- Every save path except the menu/product editor showed an optimistic "Saved" pulse and discarded the server action's actual result. A failed write (RLS error, network blip) meant the owner believed their change was live when the site never updated. All save paths (`saveEdit`, `saveConfigField`, `toggleFeaturedUpdate`, services, business info, photo assignment, stock photo removal, menu photo upload) now check the result, roll optimistic state back on failure, and show a shared save-error toast.
+- Removing a service, a whole product/menu category (with everything inside it), or a menu/product item was one instant tap next to Edit, no confirm, no undo - a mis-tap destroyed real content permanently. Added a shared confirm-before-delete sheet, wired into all three. Left low-stakes actions (stock photo removal, gallery photo unassignment - which just clears a section tag, doesn't delete the photo) without a confirm step deliberately, so as not to add friction to frequent low-risk taps.
+- `cmd /c npm run build` passed.
+
+**Explicitly still open from the audit, not forgotten:** AI rewrite silently falls back to generic template copy on failure with no disclosure to the owner; no rate limit on AI rewrite calls; no format validation on email/phone/price fields; no file-size check before photo upload; zero accessibility labels in this file; the "Main Button" CTA picker on Home only exists for food/wellness industries, silently absent for everyone else. None of these are launch-blocking per the team's read, but they're real and tracked.
+
+Shawn QA next: trigger a save with the network off (or throttled) somewhere in Edit My Site and confirm the error toast appears instead of a false "Saved." Try removing a service/category/menu item and confirm the new confirm sheet appears before anything is actually deleted.
+
+---
+
 ## 2026-07-27 - Section Nav Redesign + Tap-to-Edit Label Removed
 
 Shawn approved the Steve-led team review (see prior entry below) and asked to move fast - he has 3 clients ready to go, currently blocked. Built the two ready-to-ship items same session:
