@@ -107,18 +107,23 @@ export default async function DashboardLayout({ children }: { children: React.Re
             {/* Company name / switcher */}
             {company?.name && (
               hasMultiple ? (
-                // Plain text link, not a button - this goes to a company
-                // picker page, not an inline dropdown, so it shouldn't look
-                // like the instant section-switcher on Edit My Site.
+                // Text link, not a button - but name + caret together is the
+                // near-universal "this is swappable" signal (Slack, Notion,
+                // Stripe all pair the current-entity name with a small caret
+                // right next to it). Plain underlined text alone doesn't
+                // carry that meaning - underline reads as "more info," not
+                // "swap this." This goes to a company picker page, not an
+                // inline dropdown, so still no pill/background/button.
                 <Link href="/select" style={{
-                  display: "inline-block",
+                  display: "inline-flex", alignItems: "center", gap: 4,
                   fontSize: 12, fontWeight: 700,
                   color: "rgba(255,255,255,0.85)",
                   textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.32)", textUnderlineOffset: "3px",
-                  maxWidth: 160,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
-                  {company.name}
+                  <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <polyline points="6 9 12 15 18 9"/>
+                  </svg>
                 </Link>
               ) : (
                 <span style={{
