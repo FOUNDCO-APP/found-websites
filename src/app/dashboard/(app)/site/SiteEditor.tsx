@@ -684,7 +684,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <button onClick={() => setPhotoPickerSlot("hero")} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
             <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.07)", flexShrink: 0 }}>
               {heroImage ? (
-                isVideoMedia(heroImage) ? <video src={heroImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                isVideoMedia(heroImage) ? <VideoThumb src={heroImage} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : null}
             </div>
             <span style={{ flex: 1, minWidth: 0 }}>
@@ -711,7 +711,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
                 <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
                   {cover ? (
-                    isVideoMedia(cover) ? <video src={cover} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    isVideoMedia(cover) ? <VideoThumb src={cover} /> : <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
                   )}
@@ -747,7 +747,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
             {announcementStyle === "image" && announcementImage && (
               <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative" }}>
-                {isVideoMedia(announcementImage) ? <video src={announcementImage} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                {isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
               </div>
             )}
@@ -1348,7 +1348,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div onClick={() => setPhotoPickerSlot(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 60, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
             <div style={{
               position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
-              maxHeight: "min(78dvh, 680px)", overflowY: "auto",
+              top: "calc(env(safe-area-inset-top, 0px) + 14px)", overflowY: "auto", overscrollBehavior: "contain",
               backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
               borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
               boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
@@ -1370,7 +1370,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                       <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, activeSlot.slot)} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
                         <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
                           {isVideoMedia(photo.url, photo.mime_type) ? (
-                            <video src={photo.url} muted playsInline preload="metadata" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                            <VideoThumb src={photo.url} />
                           ) : (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -1518,6 +1518,23 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 // See DESIGN_DECISIONS.md [2026-07-27].
 // Filled circular chevron badge - the "click me" affordance every tappable
 // card in the hub uses, big and high-contrast instead of a faint stray mark.
+// Video thumbnail that actually shows a frame. `preload="metadata"` alone
+// doesn't reliably paint a visible frame on phones - same root cause as the
+// "black video thumbnails" bug fixed in the Photos grid (July 19). Force
+// real video-data loading and fade in once a frame is ready, same pattern.
+function VideoThumb({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <video
+      src={src}
+      muted autoPlay loop playsInline preload="auto"
+      onLoadedData={() => setLoaded(true)}
+      onCanPlay={() => setLoaded(true)}
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0, transition: "opacity 180ms ease" }}
+    />
+  )
+}
+
 function TapChevronBadge() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
@@ -1584,10 +1601,16 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
             <button
               type="button"
               onClick={() => setOpen(o => !o)}
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 10px 7px 14px", borderRadius: 100, backgroundColor: open ? `${GREEN}18` : "rgba(255,255,255,0.07)", border: `1px solid ${open ? GREEN + "55" : "rgba(255,255,255,0.1)"}`, cursor: "pointer" }}
+              style={{
+                display: "flex", alignItems: "center", gap: 8, padding: "10px 14px 10px 18px", borderRadius: 100,
+                background: open ? `linear-gradient(135deg, ${GREEN}26, ${GREEN}0f)` : "rgba(255,255,255,0.06)",
+                border: `1.5px solid ${open ? GREEN + "77" : "rgba(255,255,255,0.14)"}`,
+                boxShadow: open ? `0 0 0 4px ${GREEN}14, 0 8px 20px rgba(0,0,0,0.35)` : "none",
+                cursor: "pointer",
+              }}
             >
-              <span style={{ fontSize: 13, fontWeight: 800, color: open ? GREEN : "white" }}>{current?.label ?? label}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={open ? GREEN : "rgba(255,255,255,0.6)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.15s ease" }}>
+              <span style={{ fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em", color: open ? GREEN : "white" }}>{current?.label ?? label}</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={open ? GREEN : "rgba(255,255,255,0.6)"} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.18s ease", flexShrink: 0 }}>
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
             </button>
@@ -1595,8 +1618,14 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
             {open && (
               <>
                 <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 35 }} />
-                <div style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 36, minWidth: 180, borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#111613", boxShadow: "0 16px 40px rgba(0,0,0,0.45)", overflow: "hidden" }}>
-                  {pages.map((p, i) => {
+                <div style={{
+                  position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 36, minWidth: 210,
+                  borderRadius: 20, border: `1px solid ${GREEN}2a`,
+                  background: "linear-gradient(165deg, #161c17 0%, #101411 100%)",
+                  boxShadow: `0 24px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04)`,
+                  overflow: "hidden", padding: 6,
+                }}>
+                  {pages.map(p => {
                     const active = p.view === currentView
                     return (
                       <button
@@ -1605,16 +1634,18 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
                         disabled={active}
                         onClick={() => { onNavigate?.(p.view); setOpen(false) }}
                         style={{
-                          display: "block", width: "100%", textAlign: "left",
-                          padding: "12px 16px", border: "none",
-                          borderBottom: i < pages.length - 1 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                          backgroundColor: active ? `${GREEN}12` : "transparent",
-                          color: active ? GREEN : "rgba(255,255,255,0.85)",
-                          fontSize: 14, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, width: "100%", textAlign: "left",
+                          padding: "13px 14px", border: "none", borderRadius: 14,
+                          backgroundColor: active ? `${GREEN}16` : "transparent",
+                          color: active ? GREEN : "rgba(255,255,255,0.88)",
+                          fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em",
                           cursor: active ? "default" : "pointer",
                         }}
                       >
                         {p.label}
+                        {active && (
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
                       </button>
                     )
                   })}
