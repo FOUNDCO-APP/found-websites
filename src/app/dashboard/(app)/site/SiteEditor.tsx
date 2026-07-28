@@ -1663,7 +1663,11 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
           <div
             onClick={() => setOpen(false)}
             style={{
-              position: "fixed", inset: 0, zIndex: 65,
+              // Starts at the same offset as the panel, not inset:0 - the
+              // scrim must not dim the FOUND header or this row above it,
+              // that's the whole point of keeping them visible.
+              position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 65,
+              top: `calc(var(--found-header-h, 56px) + ${rowHeight}px)`,
               backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)",
               opacity: open ? 1 : 0, visibility: open ? "visible" : "hidden",
               transition: "opacity 190ms ease",
@@ -1675,7 +1679,6 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
             height: "60vh",
             backgroundColor: "#111111",
             borderBottom: `3px solid ${GREEN}`,
-            borderRadius: "0 0 22px 22px",
             boxShadow: "0 24px 50px rgba(0,0,0,0.5)",
             transform: open ? "translateY(0)" : "translateY(-100%)",
             transition: "transform 190ms cubic-bezier(0.4, 0, 0.2, 1)",
