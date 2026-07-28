@@ -479,7 +479,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   ]
 
   return (
-    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px" }}>
+    // overflowX: clip (not hidden) guards against any descendant - the new
+    // Pages pill row, a long unbroken value, etc. - stretching this page
+    // horizontally past the viewport, without turning this into its own
+    // vertical scroll container (which would break the sticky BackHeader,
+    // whose offset is measured against the shared document scroll).
+    <div style={{ backgroundColor: BLACK, minHeight: "100dvh", paddingBottom: "140px", overflowX: "clip" as const }}>
       {view === "hub" && (
         <>
           <div style={{ padding: "28px 20px 0" }}>
@@ -1423,7 +1428,7 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
         <span style={{ ...TYPE.caption, color: GREEN }}>{label}</span>
       </div>
       {pages && pages.length > 0 && (
-        <div style={{ display: "flex", gap: 8, overflowX: "auto", padding: "0 20px 12px", scrollbarWidth: "none" as const }}>
+        <div style={{ display: "flex", gap: 8, width: "100%", maxWidth: "100%", boxSizing: "border-box" as const, overflowX: "auto", padding: "0 20px 12px", scrollbarWidth: "none" as const }}>
           {pages.map(p => {
             const active = p.view === currentView
             return (
