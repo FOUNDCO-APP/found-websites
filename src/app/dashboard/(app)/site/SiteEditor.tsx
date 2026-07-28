@@ -855,14 +855,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "grid", gap: 10 }}>
-        <PreviewCard
-          eyebrow={String(config.contact_eyebrow || "Get in touch")}
-          title={String(config.contact_title || "Contact Us")}
-          body={String(config.contact_subtitle || "We'd love to hear from you.")}
-        />
-        <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} />
-        <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} />
-        <EditRow label="Supporting line" value={String(config.contact_subtitle ?? "")} placeholder="We'd love to hear from you." onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} isSaved={saved === "contact_subtitle"} />
+        <EditRowGroup>
+          <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} bordered={false} divider />
+          <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} bordered={false} divider />
+          <EditRow label="Supporting line" value={String(config.contact_subtitle ?? "")} placeholder="We'd love to hear from you." onClick={() => startEdit("contact_subtitle", String(config.contact_subtitle ?? ""))} isSaved={saved === "contact_subtitle"} bordered={false} />
+        </EditRowGroup>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <TapToEdit label="Form title" value={String(config.contact_form_title ?? "")} placeholder="Send us a message" onClick={() => startEdit("contact_form_title", String(config.contact_form_title ?? ""))} isSaved={saved === "contact_form_title"} />
           <TapToEdit label="Form note" value={String(config.contact_form_subtitle ?? "")} placeholder="We will reply soon" onClick={() => startEdit("contact_form_subtitle", String(config.contact_form_subtitle ?? ""))} isSaved={saved === "contact_form_subtitle"} />
@@ -1496,32 +1493,36 @@ function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string
   )
 }
 
-// Text-only "Live preview" card - same visual language as the Homepage hero
-// preview (green eyebrow + large rendered copy), just without a photo, so
-// text-first pages like About/Contact read as a real page instead of a form.
-function PreviewCard({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+// Groups several EditRows (with bordered={false}) into one continuous
+// surface with hairline dividers between rows, instead of a separate
+// bordered bubble per field - same fix the Estimate builder shipped for
+// its own "feels like a database" complaint (five boxes -> one surface).
+function EditRowGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      borderRadius: 20, padding: "22px 20px",
-      background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
-      border: `1px solid ${GREEN}22`,
-    }}>
-      <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Live preview</div>
-      {eyebrow && <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>{eyebrow}</div>}
-      <h3 style={{ margin: 0, fontSize: 26, fontWeight: 300, letterSpacing: "-0.03em", lineHeight: 1.15, color: "white" }}>{title}</h3>
-      {body && <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.55, color: "rgba(255,255,255,0.68)" }}>{body}</p>}
+    <div style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", overflow: "hidden" }}>
+      {children}
     </div>
   )
 }
 
 // Shared editable row: plain-noun label (not a "Change ___" command) with the
 // current value below and an explicit green "Edit" pill - the same pattern
-// Homepage's headline/supporting-line rows already use.
-function EditRow({ label, value, placeholder, big, onClick, isSaved }: {
+// Homepage's headline/supporting-line rows already use. Pass bordered={false}
+// to render as a flush row inside an EditRowGroup instead of its own bubble.
+function EditRow({ label, value, placeholder, big, onClick, isSaved, bordered = true, divider = false }: {
   label: string; value: string; placeholder: string; big?: boolean; onClick: () => void; isSaved?: boolean
+  bordered?: boolean; divider?: boolean
 }) {
   return (
-    <button onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer", position: "relative" }}>
+    <button onClick={onClick} style={{
+      display: "flex", alignItems: "center", gap: 14, width: "100%", boxSizing: "border-box" as const,
+      padding: bordered ? 14 : "16px 16px",
+      borderRadius: bordered ? 18 : 0,
+      border: bordered ? "1px solid rgba(255,255,255,0.08)" : "none",
+      borderBottom: divider ? "1px solid rgba(255,255,255,0.06)" : "none",
+      backgroundColor: bordered ? "rgba(255,255,255,0.035)" : "transparent",
+      textAlign: "left", cursor: "pointer", position: "relative",
+    }}>
       <span style={{ flex: 1, minWidth: 0 }}>
         <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>{label}</span>
         <span style={{
