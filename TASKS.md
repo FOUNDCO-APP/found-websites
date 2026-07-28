@@ -1,3 +1,14 @@
+## 2026-07-27 - Section Nav Redesign + Tap-to-Edit Label Removed
+
+- [x] Removed confusing "Tap to edit" label on the hub Pages section.
+- [x] BackHeader: back-row + pill-strip collapsed into one row with a dropdown switcher (matches company-switcher pill/chevron style).
+- [x] Build passed.
+- [ ] Shawn mobile QA: hub reads cleanly without the label; dropdown switcher opens/jumps correctly on every Pages section.
+
+**Explicitly deferred, not forgotten:** Shop/Services search + collapsed categories for scale - real feature work, needs its own scoped session. Flagged to Shawn to confirm whether this is actually what's blocking his 3 pending clients before prioritizing it.
+
+---
+
 ## 2026-07-27 - Horizontal Overflow: Root-Caused For Real
 
 - [x] Found the actual cause: bare `display: "grid"` (no `gridTemplateColumns`) sizes its implicit column to max-content, which ignores nowrap/ellipsis/overflow-hidden entirely. Long text (Home's supporting line, About's story, Featured Update body) blew the column hundreds of px past its container; the outer `overflow:hidden` just silently clipped it.

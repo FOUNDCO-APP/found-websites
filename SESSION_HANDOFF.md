@@ -1,3 +1,17 @@
+## 2026-07-27 - Section Nav Redesign + Tap-to-Edit Label Removed
+
+Shawn approved the Steve-led team review (see prior entry below) and asked to move fast - he has 3 clients ready to go, currently blocked. Built the two ready-to-ship items same session:
+
+- Removed the "Tap to edit" hint text next to Pages on the hub - Shawn (technical user) tapped it expecting a control; a fake-looking control teaches owners the UI is unreliable.
+- `BackHeader`'s back-row + separate scrolling pill strip is now one row: back chevron left, dropdown switcher right (same pill+chevron visual language as the company switcher), opens a short list of the other 5 Pages sections. Half the vertical space, familiar pattern, same lateral-jump capability the pill row gave.
+- Build passed clean.
+
+**Deliberately NOT built yet:** Shop/Services search + collapsed categories for scale (Marcus/Steve's item from the team review). This is real, scoped feature work - not something to bolt on fast alongside everything else, especially with live clients about to depend on this. Needs its own session once Shawn confirms it's actually what's blocking his 3 pending clients (it may not be - worth asking before assuming).
+
+Shawn QA next: reload Edit My Site, confirm the Pages hub no longer has the confusing label, and open any section to confirm the new dropdown switcher (chevron + section name, top right of the section header) opens a list and jumps correctly.
+
+---
+
 ## 2026-07-27 - Horizontal Overflow: Actually Root-Caused and Verified This Time
 
 Shawn correctly called out that the earlier "fix" (`overflow-x: clip` + pill-row width guard) did not work - Home and About were still cut off in his next round of screenshots. That earlier fix targeted the wrong thing. Root-caused properly this time with a real measurement, not another guess:
