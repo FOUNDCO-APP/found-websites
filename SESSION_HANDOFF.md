@@ -1,3 +1,15 @@
+## 2026-07-28 - Page Switcher Rebuilt as a Bottom Sheet, Not a Bigger Dropdown
+
+Shawn's follow-up on the dropdown elevation from earlier today: "you just made it bigger, that doesn't solve the issue... needs to look modern." Fair - the fix was cosmetic, not structural. Rebuilt the interaction itself:
+- Trigger no longer looks like a button/pill - reads as a page title (20px/800 weight) with a small round chevron hint, not a UI control trying to look important.
+- Tapping it opens a full bottom sheet (same scrim/shape/shadow as the existing photo picker sheet) with pages laid out as a 2-column grid of large tappable cards instead of a cramped anchored list - bigger touch targets, checkmark on the active page.
+- Deliberately reused the photo picker's existing sheet pattern rather than inventing a third distinct control, so this reads as consistent with the rest of the app.
+- Build passed (one transient Google Fonts fetch failure on first attempt, unrelated to the change - retry succeeded).
+
+Shawn QA next: open the Pages switcher and judge whether this actually reads as modern/Found-quality now, not just bigger.
+
+---
+
 ## 2026-07-28 - Video Thumbnails Fixed, Photo Sheet Extended, Dropdown Elevated
 
 Shawn confirmed the design is "top notch... just needs some finessing" and flagged three specific things:
