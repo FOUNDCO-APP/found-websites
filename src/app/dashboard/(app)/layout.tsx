@@ -107,23 +107,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
             {/* Company name / switcher */}
             {company?.name && (
               hasMultiple ? (
-                <Link href="/select" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", borderRadius: 100, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                  <span style={{
-                    fontSize: 12, fontWeight: 700,
-                    color: "rgba(255,255,255,0.85)",
-                    maxWidth: 160,
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {company.name}
-                  </span>
-                  {/* Switch icon, not a chevron - this is a link to a company
-                      picker page, not an inline dropdown, and shouldn't look
-                      like the instant section-switcher on Edit My Site. */}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke="rgba(255,255,255,0.6)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
-                    <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
-                  </svg>
+                // Plain text link, not a button - this goes to a company
+                // picker page, not an inline dropdown, so it shouldn't look
+                // like the instant section-switcher on Edit My Site.
+                <Link href="/select" style={{
+                  display: "inline-block",
+                  fontSize: 12, fontWeight: 700,
+                  color: "rgba(255,255,255,0.85)",
+                  textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.32)", textUnderlineOffset: "3px",
+                  maxWidth: 160,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {company.name}
                 </Link>
               ) : (
                 <span style={{
