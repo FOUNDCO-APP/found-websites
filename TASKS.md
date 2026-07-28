@@ -1,3 +1,14 @@
+## 2026-07-27 - Horizontal Overflow: Root-Caused For Real
+
+- [x] Found the actual cause: bare `display: "grid"` (no `gridTemplateColumns`) sizes its implicit column to max-content, which ignores nowrap/ellipsis/overflow-hidden entirely. Long text (Home's supporting line, About's story, Featured Update body) blew the column hundreds of px past its container; the outer `overflow:hidden` just silently clipped it.
+- [x] The pills row (yesterday's suspect) was not the cause - it's on every section but only Home/About had long enough text to trigger the real bug, which is why Contact/Shop/Services/Gallery were always fine.
+- [x] Converted all 7 affected bare-grid wrappers to `flex`/`column`, matching Services' already-working pattern.
+- [x] Verified with a direct DOM measurement at a real 390px width (iframe-based repro, not a screenshot guess): 5 overflowing elements before, 0 after.
+- [x] Build passed.
+- [ ] Shawn mobile QA: reload Home and About, confirm nothing is cut off this time.
+
+---
+
 ## 2026-07-27 - Edit My Site Sections: Lateral Nav + Home-Matched Visual Treatment, needs Shawn's mobile QA
 
 Follow-up team meeting (Jony/Steve leads) after Shawn flagged sections still felt "robotic" and lateral movement between sections required a hub detour. Full detail: `SESSION_HANDOFF.md`.

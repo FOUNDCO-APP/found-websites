@@ -1,3 +1,17 @@
+## 2026-07-27 - Horizontal Overflow: Actually Root-Caused and Verified This Time
+
+Shawn correctly called out that the earlier "fix" (`overflow-x: clip` + pill-row width guard) did not work - Home and About were still cut off in his next round of screenshots. That earlier fix targeted the wrong thing. Root-caused properly this time with a real measurement, not another guess:
+
+**Real cause:** every `display: "grid", gap: N }}` wrapper in `SiteEditor.tsx` that had no `gridTemplateColumns` was creating a single implicit grid column sized to `auto`. An `auto` grid track sizes to the **max-content** width of its widest child - and max-content sizing ignores `white-space: nowrap`, `overflow: hidden`, and `text-overflow: ellipsis` entirely, because those are rendering properties, not sizing properties. Any row holding a long unbroken string (Home's supporting line, About's full story paragraph, the Featured Update body) blew that column hundreds of pixels past its container. Since `overflow: hidden` sits on the *outer* card, the excess just gets silently clipped/cut off instead of scrolling - exactly what Shawn's screenshots showed.
+
+**Why only Home and About, despite every section sharing the same new pills row:** the pills row is present on all six Pages sections, but only Home and About happen to have long enough unbroken text to trigger the bug. Contact/Shop/Services/Gallery never had it - Services in particular was already using `flex`/`column` instead of bare `grid`, which is why it was always fine. That's what the earlier fix missed.
+
+**Fix:** converted the 7 affected bare-`grid` wrappers to `display: "flex", flexDirection: "column"` (Home's card, Home's photo-slot list, Home's Featured Update block x2, About's wrapper, Contact's wrapper, Business Info's wrapper) - same pattern Services already used successfully.
+
+**Verified, not assumed this time:** built an isolated HTML reproduction of the exact markup at a real 390px width (Chrome DevTools window resize wasn't cooperating, used a same-origin iframe sized to 390x900 instead to force a true narrow viewport) and measured `element.getBoundingClientRect()` against `parent.getBoundingClientRect()` directly in the console. Before the fix: 5 elements overflowed their parent by up to 196px. After the fix: zero. `cmd /c npm run build` also passed.
+
+---
+
 ## 2026-07-27 - Contact Page Mockup: Flowing Surface Instead of Stacked Bubbles
 
 Shawn asked Jony to lead a team read on why Edit My Site "feels antiquated... a lot of wrappers and bubbles" even after the Home-matching pass. Jony's read: Home itself has this pattern (Live Preview card + 5 more separate bordered boxes below it) - matching Home spread the bubble-stack further instead of questioning it. Found real precedent already in this codebase: the Estimate builder had the identical complaint in July ("filling out a database... five bordered boxes") and the shipped, Shawn-approved fix was collapsing separate boxes into one continuous surface with hairline dividers.
