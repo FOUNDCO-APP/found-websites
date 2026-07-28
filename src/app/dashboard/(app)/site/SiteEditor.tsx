@@ -512,12 +512,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
           <div style={{ padding: "26px 20px 0" }}>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Business info</div>
-            <button onClick={() => setView("businessInfo")} style={{ display: "flex", alignItems: "center", gap: 4, width: "100%", padding: 16, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
+            <button onClick={() => setView("businessInfo")} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: 16, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: "block", fontSize: 17, fontWeight: 700, color: "white", marginBottom: 3 }}>Name, phone, email, address</span>
                 <span style={{ display: "block", fontSize: 15, fontWeight: 500, lineHeight: 1.4, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Used everywhere on your site - not just one page</span>
               </span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.disabled})`} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+              <TapChevronBadge />
             </button>
           </div>
 
@@ -1372,23 +1372,36 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
 // Hub tile - quiet card, no icon badge. Typography carries the hierarchy.
 // See DESIGN_DECISIONS.md [2026-07-27].
+// Filled circular chevron badge - the "click me" affordance every tappable
+// card in the hub uses, big and high-contrast instead of a faint stray mark.
+function TapChevronBadge() {
+  return (
+    <span style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </span>
+  )
+}
+
 function HubTile({ label, sub, flag, onClick, href }: { label: string; sub: string; flag?: string; onClick?: () => void; href?: string }) {
   const sharedStyle: React.CSSProperties = {
     borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)",
-    padding: "16px 15px 14px", textAlign: "left", cursor: "pointer",
-    display: "flex", flexDirection: "column", gap: 5, minHeight: 78,
+    padding: "16px 12px 14px 15px", textAlign: "left", cursor: "pointer",
+    display: "flex", flexDirection: "row", alignItems: "center", gap: 8, minHeight: 78,
     textDecoration: "none",
   }
   const inner = (
     <>
-      <span style={{ ...TYPE.headline, color: "white" }}>{label}</span>
-      {flag && (
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, ...TYPE.footnote, color: GREEN }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}44`, flexShrink: 0 }} />
-          {flag}
-        </span>
-      )}
-      <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{sub}</span>
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 }}>
+        <span style={{ ...TYPE.headline, color: "white" }}>{label}</span>
+        {flag && (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, ...TYPE.footnote, color: GREEN }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 8px ${GREEN}44`, flexShrink: 0 }} />
+            {flag}
+          </span>
+        )}
+        <span style={{ ...TYPE.subhead, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{sub}</span>
+      </span>
+      <TapChevronBadge />
     </>
   )
   if (href) return <a href={href} style={sharedStyle}>{inner}</a>

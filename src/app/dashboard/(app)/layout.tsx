@@ -116,9 +116,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   }}>
                     {company.name}
                   </span>
+                  {/* Switch icon, not a chevron - this is a link to a company
+                      picker page, not an inline dropdown, and shouldn't look
+                      like the instant section-switcher on Edit My Site. */}
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9"/>
+                    stroke="rgba(255,255,255,0.6)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/>
+                    <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/>
                   </svg>
                 </Link>
               ) : (
