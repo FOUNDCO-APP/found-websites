@@ -76,6 +76,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
   async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state", value: string) {
     const previousValue = businessInfo[field]
+    const trimmed = value.trim()
+    // Only validate non-empty input - clearing a field is always allowed.
+    // Format checks are deliberately basic (not fully RFC-compliant email
+    // parsing, not strict phone-country rules) - this exists to catch
+    // obvious typos before they reach the public site, not to be a bulletproof
+    // validator.
+    if (trimmed && field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      flashSaveError("That doesn't look like a valid email.")
+      return false
+    }
+    if (trimmed && field === "phone" && !/^\d{10,11}$/.test(trimmed.replace(/\D/g, ""))) {
+      flashSaveError("That doesn't look like a valid phone number.")
+      return false
+    }
     setBusinessInfo(prev => ({ ...prev, [field]: value }))
     setSavingBizField(field)
     const result = await updateCompanyField(field, value)
@@ -83,10 +97,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     if (!("error" in result)) {
       setSavedBizField(field)
       setTimeout(() => setSavedBizField(null), 2200)
-    } else {
-      setBusinessInfo(prev => ({ ...prev, [field]: previousValue }))
-      flashSaveError("Couldn't save that. Try again.")
+      return true
     }
+    setBusinessInfo(prev => ({ ...prev, [field]: previousValue }))
+    flashSaveError("Couldn't save that. Try again.")
+    return false
   }
 
   // Shared sellable item catalog. Food sees Menu; retail/shop sees Products.
@@ -383,7 +398,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function saveMenuItem() {
     if (!editingMenuItem || menuSaving) return
     const { catIdx, itemIdx } = editingMenuItem
-    const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: menuItemDraft.price.trim() || null, photo_url: menuItemDraft.photo_url || null }
+    const trimmedPrice = menuItemDraft.price.trim()
+    // Price is optional (owners can leave it blank), but if something's
+    // there it has to actually look like a price - otherwise typos like
+    // "free lol" or a stray letter go straight to the public menu/shop.
+    if (trimmedPrice && !/^\$?\d+(\.\d{1,2})?$/.test(trimmedPrice)) {
+      flashSaveError("That doesn't look like a price - try something like $12.99.")
+      return
+    }
+    const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: trimmedPrice || null, photo_url: menuItemDraft.photo_url || null }
     if (!newItem.name) return
     const cats = menuCats.map((c, ci) => {
       if (ci !== catIdx) return c
@@ -816,22 +839,45 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
       {(() => {
-        const ctaOptions: { intent: string; label: string; desc: string }[] | null = industryCategory === 'food'
+        // Every industry_category gets a Main Button picker now - this used
+        // to fall through to null (no picker at all, no explanation) for 17
+        // of 22 industries, and separately had a real bug: it checked
+        // industryCategory === 'pet' but the actual manifest value is
+        // 'pet_services', so pet-services businesses were silently unmatched
+        // too. Grouped into 4 buckets by what actually makes sense as a
+        // primary action for that kind of business, covering every industry
+        // in industryManifests.ts.
+        const FOOD_LIKE = ['food', 'home_based_food']
+        const APPOINTMENT_LIKE = ['wellness', 'beauty', 'fitness', 'healthcare', 'pet_services', 'childcare', 'education', 'music_performance']
+        const SHOP_LIKE = ['retail', 'makers_crafts']
+        // Everything else: home_services, events, automotive, cleaning,
+        // landscaping, real_estate, creative_services, professional_services,
+        // home_property, nonprofit - trades/consultative businesses where
+        // "get a quote" is the natural first ask.
+        const ctaOptions: { intent: string; label: string; desc: string }[] = FOOD_LIKE.includes(industryCategory)
           ? [
               { intent: 'reserve', label: 'Reserve a Table', desc: 'Lets guests request a reservation' },
               { intent: 'menu',    label: 'View Our Menu',   desc: 'Takes visitors straight to your menu' },
               { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
               { intent: 'visit',   label: 'Visit Us',        desc: 'Shows your address & hours' },
             ]
-          : industryCategory === 'wellness' || industryCategory === 'beauty' || industryCategory === 'fitness' || industryCategory === 'healthcare' || industryCategory === 'pet'
+          : APPOINTMENT_LIKE.includes(industryCategory)
           ? [
               { intent: 'book',    label: 'Book Now',        desc: 'Sends booking requests to your inbox' },
               { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
               { intent: 'contact', label: 'Contact Us',      desc: 'General contact form' },
             ]
-          : null
-
-        if (!ctaOptions) return null
+          : SHOP_LIKE.includes(industryCategory)
+          ? [
+              { intent: 'shop',    label: 'Shop Now',        desc: 'Takes visitors straight to your shop' },
+              { intent: 'visit',   label: 'Visit Us',        desc: 'Shows your address & hours' },
+              { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
+            ]
+          : [
+              { intent: 'quote',   label: 'Get a Free Quote', desc: 'Sends quote requests to your inbox' },
+              { intent: 'contact', label: 'Contact Us',        desc: 'General contact form' },
+              { intent: 'call',    label: 'Call Us',           desc: 'Dials your number directly' },
+            ]
 
         return (
           <>
@@ -1729,7 +1775,7 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
 // "easy as taking a picture" bar: type, look away, it's already saved.
 function BizInfoField({ label, value, placeholder, type, saving, justSaved, onSave }: {
   label: string; value: string; placeholder: string; type?: string
-  saving: boolean; justSaved: boolean; onSave: (value: string) => void
+  saving: boolean; justSaved: boolean; onSave: (value: string) => Promise<boolean>
 }) {
   const [local, setLocal] = useState(value)
   useEffect(() => { setLocal(value) }, [value])
@@ -1745,7 +1791,14 @@ function BizInfoField({ label, value, placeholder, type, saving, justSaved, onSa
         type={type ?? "text"}
         value={local}
         onChange={e => setLocal(e.target.value)}
-        onBlur={() => { if (local.trim() !== value.trim()) onSave(local) }}
+        onBlur={async () => {
+          if (local.trim() === value.trim()) return
+          // Snap the visible text back if the save was rejected (bad format
+          // or a network failure) - otherwise the input keeps showing text
+          // that was never actually saved, with no indication it didn't take.
+          const ok = await onSave(local)
+          if (!ok) setLocal(value)
+        }}
         placeholder={placeholder}
         style={{ width: "100%", background: "none", border: "none", outline: "none", color: "white", fontSize: 17, fontWeight: 500, fontFamily: "inherit", padding: 0 }}
       />

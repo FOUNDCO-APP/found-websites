@@ -288,10 +288,14 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     manifest,
   })
 
-  // Comp link (?comp=<admin key> on the onboarding URL): validated here,
-  // server-side, against the real secret - the client only ever carries the
-  // raw value along, it never decides on its own whether comp applies.
-  const isComp = Boolean(input.compToken && process.env.ADMIN_KEY && input.compToken === process.env.ADMIN_KEY)
+  // Comp link (?comp=<comp secret> on the onboarding URL): validated here,
+  // server-side, against a dedicated secret - the client only ever carries
+  // the raw value along, it never decides on its own whether comp applies.
+  // Deliberately NOT process.env.ADMIN_KEY: that same key also unlocks
+  // /admin/businesses and /admin/photos, so a leaked comp link used to be
+  // able to grant full admin access, not just a free signup. This secret
+  // can only ever comp a new company.
+  const isComp = Boolean(input.compToken && process.env.COMP_LINK_SECRET && input.compToken === process.env.COMP_LINK_SECRET)
 
   const { error: companyError } = await supabase
     .from("companies")
