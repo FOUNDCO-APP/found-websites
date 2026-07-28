@@ -1,3 +1,9 @@
+## 2026-07-27 - Company Switcher: Added Back a Small Caret
+
+Shawn asked how other products make "click here to switch entities" feel intuitive. Precedent: Slack/Notion/Stripe all pair the current entity name with a small caret directly next to it - that pairing is the actual signal, not underlined text alone (underline reads as "more info," not "swap this"). Added a 10px caret next to the company name; still no pill/background/button, still a plain link to `/select`. Build passed.
+
+---
+
 ## 2026-07-27 - Simplified: Plain Chevrons, Company Switcher as Text Link
 
 Shawn's direct follow-up on the chevron/switcher pass: drop the circular background (just wants a simple chevron), and make the company switcher a plain text link instead of a button. Both done - `TapChevronBadge` is now a bare 18px chevron, company switcher is an underlined text link (company name), no pill/background/icon. Navigation (`/select`) unchanged. Build passed.
