@@ -1597,9 +1597,9 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
         </button>
 
         {pages && pages.length > 0 ? (
-          // Reads as a page title, not a UI control - tapping it opens a
-          // real bottom sheet (same style as the photo picker) with big
-          // tappable cards, not an anchored dropdown pretending to be one.
+          // Reads as a page title, not a UI control - tapping it opens the
+          // full-screen page switcher below (same DNA as the public-site
+          // hamburger menu), not an anchored dropdown pretending to be one.
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -1615,44 +1615,55 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
         )}
       </div>
 
-      {pages && pages.length > 0 && open && (
-        <>
-          <div onClick={() => setOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 60, backgroundColor: "rgba(0,0,0,0.72)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }} />
-          <div style={{
-            position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
-            backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
-            boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
-          }}>
-            <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }} />
-            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 14 }}>Jump to</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {pages.map(p => {
-                const active = p.view === currentView
-                return (
-                  <button
-                    key={p.view}
-                    type="button"
-                    disabled={active}
-                    onClick={() => { onNavigate?.(p.view); setOpen(false) }}
-                    style={{
-                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                      padding: "18px 16px", borderRadius: 18,
-                      border: active ? `1.5px solid ${GREEN}66` : "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: active ? `${GREEN}14` : "rgba(255,255,255,0.035)",
-                      textAlign: "left", cursor: active ? "default" : "pointer",
-                    }}
-                  >
-                    <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: "-0.01em", color: active ? GREEN : "white" }}>{p.label}</span>
-                    {active && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+      {pages && pages.length > 0 && (
+        // Full-screen takeover, same DNA as the public-site hamburger menu
+        // (dark full-bleed panel, brand-accent left stripe, big numbered
+        // list) but tuned fast/snappy instead of cinematic - this gets
+        // tapped many times a session, not once like a visitor's first
+        // hamburger tap, so no slow slide and no staggered cascade.
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 70,
+          backgroundColor: "#111111",
+          borderLeft: `3px solid ${GREEN}`,
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 190ms cubic-bezier(0.4, 0, 0.2, 1)",
+          visibility: open ? "visible" : "hidden",
+          display: "flex", flexDirection: "column",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "calc(env(safe-area-inset-top, 0px) + 18px) 24px 18px" }}>
+            <span style={{ ...TYPE.caption, color: GREEN }}>Pages</span>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close" style={{ width: 44, height: 44, borderRadius: 12, border: "1px solid rgba(255,255,255,0.35)", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
           </div>
-        </>
+
+          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", justifyContent: "center", padding: "0 24px" }}>
+            {pages.map((p, i) => {
+              const active = p.view === currentView
+              return (
+                <button
+                  key={p.view}
+                  type="button"
+                  disabled={active}
+                  onClick={() => { onNavigate?.(p.view); setOpen(false) }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, width: "100%",
+                    padding: "17px 0", border: "none", borderBottom: "1px solid rgba(255,255,255,0.1)",
+                    backgroundColor: "transparent", textAlign: "left", cursor: active ? "default" : "pointer",
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "baseline", gap: 16, minWidth: 0 }}>
+                    <span style={{ fontSize: 12, fontWeight: 900, color: GREEN, letterSpacing: "0.1em", flexShrink: 0 }}>{String(i + 1).padStart(2, "0")}</span>
+                    <span style={{ fontSize: 28, fontWeight: 900, letterSpacing: "-0.02em", color: active ? GREEN : "white" }}>{p.label}</span>
+                  </span>
+                  {active && (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       )}
     </div>
   )
