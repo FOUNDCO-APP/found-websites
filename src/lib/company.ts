@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import * as Sentry from '@sentry/nextjs'
 import { createClient } from './supabase/server'
 import type { Company } from '@/types/company'
 import { polishBusinessName, polishWebsiteUpdates } from '@/lib/copyPolish'
@@ -30,6 +31,7 @@ export const getCompanyBySlug = cache(async function getCompanyBySlug(slug: stri
     .single()
   if (error) console.error('[getCompanyBySlug] error:', JSON.stringify(error))
   if (!data) console.error('[getCompanyBySlug] no data for slug:', slug)
+  if (data) Sentry.setTag('company_slug', (data as Company).slug)
   return polishCompanySiteCopy(data as Company | null)
 })
 
@@ -41,5 +43,6 @@ export const getCompanyByDomain = cache(async function getCompanyByDomain(domain
     .eq('active', true)
     .filter('website_config.custom_domain', 'eq', domain)
     .single()
+  if (data) Sentry.setTag('company_slug', (data as Company).slug)
   return polishCompanySiteCopy(data as Company | null)
 })

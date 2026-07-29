@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
@@ -106,6 +107,8 @@ export async function POST(req: NextRequest) {
   if (fulfillment === "shipping" && !isShippingAddressReady(shippingAddress) && address.length < 6) {
     return NextResponse.json({ error: "Please enter a shipping address." }, { status: 400 })
   }
+
+  Sentry.setTag("company_slug", slug)
 
   const limit = checkPublicRateLimit(req, { key: `shop-checkout:${companyId}`, limit: 10, windowMs: 5 * 60 * 1000 })
   if (!limit.allowed) return rateLimitResponse(limit)

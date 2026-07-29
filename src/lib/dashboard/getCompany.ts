@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { cookies } from "next/headers"
 
@@ -65,7 +66,10 @@ export async function getCompany(
       .select(SELECT_FIELDS)
       .eq("id", adminCompanyId)
       .maybeSingle()
-    if (data) return data as CompanyRow
+    if (data) {
+      Sentry.setTag("company_slug", (data as CompanyRow).slug)
+      return data as CompanyRow
+    }
   }
 
   if (selectedId) {
@@ -75,7 +79,10 @@ export async function getCompany(
       .eq("id", selectedId)
       .or(`user_id.eq.${userId},email.eq.${userEmail}`)
       .maybeSingle()
-    if (data) return data as CompanyRow
+    if (data) {
+      Sentry.setTag("company_slug", (data as CompanyRow).slug)
+      return data as CompanyRow
+    }
   }
 
   const { data } = await admin
@@ -86,6 +93,7 @@ export async function getCompany(
     .limit(1)
     .maybeSingle()
 
+  if (data) Sentry.setTag("company_slug", (data as CompanyRow).slug)
   return (data as CompanyRow) ?? null
 }
 
