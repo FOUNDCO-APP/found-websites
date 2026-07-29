@@ -1,5 +1,6 @@
 import { getBusinessModel } from "@/lib/getBusinessModel"
 import { dashboardInboxLabelFor, hasOrderWorkflow } from "@/lib/dashboard/requestKinds"
+import { getFeatureAccess, type AddonSlug } from "@/lib/featureAccess"
 
 export type DashboardToolGroup = "website" | "get_paid" | "customers" | "work_schedule" | "marketing" | "insights" | "settings"
 
@@ -15,6 +16,7 @@ type DashboardToolPolicyInput = {
   industry?: string | null
   subIndustry?: string | null
   activeAddons?: string[]
+  plan?: string | null
 }
 
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
@@ -92,11 +94,12 @@ function inboxLabelFor(industry: string | null | undefined, subIndustry?: string
   return dashboardInboxLabelFor(industry, subIndustry).plural
 }
 
-function availableFoodTools(activeAddons: string[]): DashboardTool[] {
+function availableFoodTools(activeAddons: string[], plan: string | null | undefined): DashboardTool[] {
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasOrders = hasOrderWorkflow(activeAddons)
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
+  const hasContacts = getFeatureAccess(plan, "contact_database", activeAddons as AddonSlug[])
 
   return [
     { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
@@ -110,20 +113,21 @@ function availableFoodTools(activeAddons: string[]): DashboardTool[] {
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
-    { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
+    ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
     { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
   ]
 }
 
-export function getAvailableDashboardTools({ industry = null, subIndustry = null, activeAddons = [] }: DashboardToolPolicyInput): DashboardTool[] {
+export function getAvailableDashboardTools({ industry = null, subIndustry = null, activeAddons = [], plan = null }: DashboardToolPolicyInput): DashboardTool[] {
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
   const hasOrders = hasOrderAccess(activeAddons, industry, subIndustry)
   const hasProducts = hasProductCatalog(activeAddons, industry, subIndustry)
+  const hasContacts = getFeatureAccess(plan, "contact_database", activeAddons as AddonSlug[])
 
-  if (industry === "food") return availableFoodTools(activeAddons)
+  if (industry === "food") return availableFoodTools(activeAddons, plan)
 
   return [
     { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
@@ -135,7 +139,7 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
     ...(hasProducts ? [PRODUCTS_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
-    { id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" },
+    ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
     { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
   ]
@@ -150,6 +154,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
   const hasOrders = hasOrderAccess(activeAddons, industry, input.subIndustry)
+  const hasContacts = getFeatureAccess(input.plan ?? null, "contact_database", activeAddons as AddonSlug[])
 
   let middleIds: string[]
 
@@ -162,7 +167,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
       ...(hasEstimates ? ["estimates"] : []),
       ...(hasEmail ? ["email"] : []),
       "photos",
-      "contacts",
+      ...(hasContacts ? ["contacts"] : []),
     ]
   } else if (industry && SCHEDULE_FIRST_INDUSTRIES.has(industry)) {
     middleIds = [
@@ -172,7 +177,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
       "people",
       ...(hasEmail ? ["email"] : []),
       "photos",
-      "contacts",
+      ...(hasContacts ? ["contacts"] : []),
     ]
   } else if (industry && ESTIMATE_WORKFLOW_INDUSTRIES.has(industry)) {
     middleIds = [
@@ -182,7 +187,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
       "people",
       ...(hasEmail ? ["email"] : []),
       "photos",
-      "contacts",
+      ...(hasContacts ? ["contacts"] : []),
     ]
   } else {
     middleIds = [
@@ -193,7 +198,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
       "people",
       ...(hasEmail ? ["email"] : []),
       "photos",
-      "contacts",
+      ...(hasContacts ? ["contacts"] : []),
     ]
   }
 

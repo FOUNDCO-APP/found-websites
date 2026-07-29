@@ -300,6 +300,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         industry={industryCategory}
         subIndustry={subIndustry}
         activeAddons={effectiveAddonSlugs}
+        plan={company?.plan ?? null}
       />
 
       {/* Add to Home Screen — shown early so owners don't miss it */}

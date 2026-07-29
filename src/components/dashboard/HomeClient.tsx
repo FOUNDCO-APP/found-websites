@@ -46,6 +46,7 @@ type Props = {
   lastPhotoAt: string | null
   industry: string | null
   smartNextStep: SmartNextStep | null
+  hasContacts: boolean
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -191,7 +192,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 export default function HomeClient({
   businessName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads, lastPhotoAt, industry, smartNextStep,
+  siteSlug, isActive, recentLeads, lastPhotoAt, industry, smartNextStep, hasContacts,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -439,25 +440,27 @@ export default function HomeClient({
         <div style={{ display: "flex", gap: 10 }}>
 
           {/* My Contacts */}
-          <Link
-            href="/contacts"
-            style={{
-              flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
-              padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
-              background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
-              border: "1px solid rgba(255,255,255,0.09)",
-              textDecoration: "none",
-            }}
-          >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
-            </svg>
-            <div>
-              <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>My Contacts</div>
-              <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Vendors, staff &amp; suppliers</div>
-            </div>
-          </Link>
+          {hasContacts && (
+            <Link
+              href="/contacts"
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+                background: "linear-gradient(150deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                textDecoration: "none",
+              }}
+            >
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>My Contacts</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Vendors, staff &amp; suppliers</div>
+              </div>
+            </Link>
+          )}
 
           {/* Edit My Site */}
           <Link

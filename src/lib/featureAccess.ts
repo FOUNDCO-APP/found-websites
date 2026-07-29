@@ -10,7 +10,6 @@ export type Feature =
   | "review_collection"
   | "email_marketing"
   // Add-ons (included with Business, or active on lower plans)
-  | "menu_display"
   | "online_ordering"
   | "shopping_cart"
   | "quote_payments"
@@ -22,7 +21,6 @@ export type Feature =
   | "photo_pipeline"
 
 export type AddonSlug =
-  | "menu_display"
   | "online_ordering"
   | "shopping_cart"
   | "quote_payments"
@@ -91,8 +89,6 @@ export function getFeatureAccess(
       return hasAddonAccess(p, "email_marketing", activeAddons)
 
     // Add-ons — available on any plan with active subscription
-    case "menu_display":
-      return activeAddons.includes("menu_display")
     case "online_ordering":
       return hasAddonAccess(p, "online_ordering", activeAddons)
     case "shopping_cart":

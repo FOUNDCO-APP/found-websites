@@ -3,12 +3,14 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
+import { companyHasFeatureAccess } from "@/lib/dashboard/entitlements"
 
 export async function getContacts() {
   const user = await getAuthUser()
   if (!user) return []
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return []
+  if (!(await companyHasFeatureAccess(company, "contact_database"))) return []
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -31,6 +33,7 @@ export async function addContact(input: {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   if (!input.name?.trim()) return { error: "Name is required" }
 
@@ -57,6 +60,7 @@ export async function deleteContact(id: string) {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   const admin = createAdminClient()
   const { error } = await admin
@@ -81,6 +85,7 @@ export async function updateContact(input: {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (input.name !== undefined)  updates.name = input.name.trim()

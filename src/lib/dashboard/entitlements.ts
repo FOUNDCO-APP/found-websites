@@ -1,6 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, type CompanyRow } from "@/lib/dashboard/getCompany"
-import { hasAddonAccess, type AddonSlug } from "@/lib/featureAccess"
+import { hasAddonAccess, getFeatureAccess, type AddonSlug, type Feature } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { NextResponse } from "next/server"
@@ -49,4 +49,26 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
   }
 
   return { user, company, activeAddons }
+}
+
+// Same as requireDashboardAddonPage but for plan-tier features (e.g. contact_database)
+// that aren't tied to a purchasable add-on - anything getFeatureAccess covers.
+export async function requireDashboardFeaturePage(feature: Feature) {
+  const user = await getAuthUser()
+  if (!user) redirect("/login")
+
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company) redirect("/login")
+
+  const activeAddons = await getCompanyActiveAddonSlugs(company.id)
+  if (!getFeatureAccess(company.plan, feature, activeAddons)) {
+    redirect("/more?addon_unavailable=1")
+  }
+
+  return { user, company, activeAddons }
+}
+
+export async function companyHasFeatureAccess(company: Pick<CompanyRow, "id" | "plan">, feature: Feature): Promise<boolean> {
+  const activeAddons = await getCompanyActiveAddonSlugs(company.id)
+  return getFeatureAccess(company.plan, feature, activeAddons)
 }

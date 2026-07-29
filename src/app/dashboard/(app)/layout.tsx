@@ -187,6 +187,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         industry={company?.industry_category ?? null}
         subIndustry={company?.sub_industry ?? null}
         activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs)}
+        plan={company?.plan ?? null}
       />
 
       <style>{`

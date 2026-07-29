@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import HomeClient from "@/components/dashboard/HomeClient"
 import { getCompanyActiveAddonSlugs } from "@/lib/dashboard/entitlements"
-import { getEffectiveAddons } from "@/lib/featureAccess"
+import { getEffectiveAddons, getFeatureAccess } from "@/lib/featureAccess"
 import { smartNextStepFor } from "@/lib/dashboard/smartNextStep"
 
 export default async function HomePage() {
@@ -65,6 +65,7 @@ export default async function HomePage() {
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
   const paidAddonSlugs = await getCompanyActiveAddonSlugs(company.id)
   const effectiveAddons = getEffectiveAddons(company.plan, paidAddonSlugs)
+  const hasContacts = getFeatureAccess(company.plan, "contact_database", effectiveAddons)
   const smartNextStep = isActive ? smartNextStepFor({
     industry: company.industry_category ?? null,
     subIndustry: company.sub_industry ?? null,
@@ -85,6 +86,7 @@ export default async function HomePage() {
       lastPhotoAt={lastPhotoRow?.created_at ?? null}
       industry={company.industry_category ?? null}
       smartNextStep={smartNextStep}
+      hasContacts={hasContacts}
     />
   )
 }
