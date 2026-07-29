@@ -13,6 +13,7 @@
     "test:request-routing": "node scripts/check-request-routing.mjs"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.69.0",
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "@supabase/ssr": "^0.10.3",
