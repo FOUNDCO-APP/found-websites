@@ -34,7 +34,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
   return (
     <>
       {/* â”€â”€ HERO â€” true 100vh, centered, the whole screen is the canvas â”€â”€ */}
-      <section className="relative h-screen flex flex-col items-center justify-center text-center overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center text-center overflow-hidden">
         {heroVideo ? (
           <HeroVideo src={heroVideo} className="absolute inset-0 w-full h-full object-cover" />
         ) : heroImage ? (
