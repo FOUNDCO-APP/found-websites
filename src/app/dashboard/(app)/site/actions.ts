@@ -4,8 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
 import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
+import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
 import type { MenuCategory } from "@/types/company"
 
 
@@ -136,6 +138,13 @@ export async function regenerateSection(section: "hero" | "about" | "services" |
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
+  // AI Rewrite had no cap at all - each tap is a real, billed Anthropic API
+  // call, and the button could be hammered indefinitely. 15/hour is generous
+  // for genuine iterative use (a few tries per section, per page) while
+  // capping runaway cost from a stuck button or a bad actor.
+  const limit = checkPublicRateLimit(await headers(), { key: `ai-rewrite:${ctx.company.id}`, limit: 15, windowMs: 60 * 60 * 1000 })
+  if (!limit.allowed) return { error: publicRateLimitMessage(limit) }
+
   const { data: config } = await ctx.admin
     .from("website_config")
     .select("*")
@@ -204,6 +213,11 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
     }
   }
 
+  // If the real AI call failed or returned something unparsable, `generated`
+  // stays null and this silently falls back to a generic template - the
+  // owner used to have no way to know their "AI rewrite" wasn't actually
+  // written for their business. usedFallback lets the caller tell them.
+  const usedFallback = generated === null
   const updates = polishWebsiteUpdates(pickUpdates(generated ?? fallbackRewrite(section, company, config)), {
     businessName: company.name,
     industry: company.industry_category,
@@ -216,7 +230,7 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath("/dashboard/site")
-  return { success: true, updates }
+  return { success: true, updates, usedFallback }
 }
 
 export async function assignPhotoToSection(photoId: string, section: string | null) {

@@ -8,6 +8,7 @@ import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
+import { resizeImageToJpeg } from "@/lib/resizeImage"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -54,6 +55,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   function flashSaveError(message = "Couldn't save. Check your connection and try again.") {
     setSaveError(message)
     setTimeout(() => setSaveError(null), 4000)
+  }
+
+  // Same toast slot/timing as flashSaveError, but calmer styling - for cases
+  // where the save genuinely succeeded and there's nothing wrong, just
+  // something worth telling the owner (e.g. AI rewrite used a starter
+  // template instead of a real personalized one). A red error toast would
+  // be misleading here since nothing actually failed.
+  const [saveNotice, setSaveNotice] = useState<string | null>(null)
+  function flashSaveNotice(message: string) {
+    setSaveNotice(message)
+    setTimeout(() => setSaveNotice(null), 4500)
   }
 
   // Shared confirm-before-delete. Remove buttons for real owner content
@@ -306,8 +318,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function handleRegenerate(section: Section) {
     setRegenerating(section)
     const result = await regenerateSection(section)
-    if (result.success && result.updates) setConfig(prev => ({ ...prev, ...result.updates }))
-    else flashSaveError("Couldn't rewrite that section. Try again.")
+    if (result.success && result.updates) {
+      setConfig(prev => ({ ...prev, ...result.updates }))
+      if (result.usedFallback) flashSaveNotice("AI rewrite hit a hiccup - used a starter template instead. Feel free to try again.")
+    } else {
+      flashSaveError("error" in result ? result.error : "Couldn't rewrite that section. Try again.")
+    }
     setRegenerating(null)
   }
 
@@ -431,11 +447,21 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   async function handleMenuPhotoUpload(file: File) {
     setUploadingMenuPhoto(true)
-    const fd = new FormData(); fd.append('file', file)
-    const result = await uploadMenuItemPhoto(fd)
-    setUploadingMenuPhoto(false)
-    if ('url' in result) setMenuItemDraft(prev => ({ ...prev, photo_url: result.url }))
-    else flashSaveError(result.error || "Couldn't upload that photo. Try again.")
+    try {
+      // Was going straight to storage uncompressed - a full-res phone photo
+      // (often 10+ MB) uploaded as-is. Same resize step the onboarding hero
+      // upload already used, just applied here too instead of only there.
+      const resized = await resizeImageToJpeg(file)
+      const fd = new FormData()
+      fd.append('file', new File([resized], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }))
+      const result = await uploadMenuItemPhoto(fd)
+      if ('url' in result) setMenuItemDraft(prev => ({ ...prev, photo_url: result.url }))
+      else flashSaveError(result.error || "Couldn't upload that photo. Try again.")
+    } catch {
+      flashSaveError("Couldn't process that photo. Try a different one.")
+    } finally {
+      setUploadingMenuPhoto(false)
+    }
   }
 
   async function addMenuCategory() {
@@ -1553,6 +1579,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <div style={{ position: "fixed", left: 16, right: 16, bottom: "calc(90px + env(safe-area-inset-bottom))", zIndex: 80, backgroundColor: "#2A1213", border: "1px solid rgba(255,69,58,0.35)", borderRadius: 16, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9B95" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           <span style={{ fontSize: 13, fontWeight: 700, color: "#FF9B95", flex: 1 }}>{saveError}</span>
+        </div>
+      )}
+
+      {saveNotice && (
+        <div style={{ position: "fixed", left: 16, right: 16, bottom: "calc(90px + env(safe-area-inset-bottom))", zIndex: 80, backgroundColor: "#111613", border: `1px solid ${GREEN}44`, borderRadius: 16, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)", flex: 1 }}>{saveNotice}</span>
         </div>
       )}
 

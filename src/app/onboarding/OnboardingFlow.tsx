@@ -11,6 +11,7 @@ import { createSetupIntentForCompany } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
+import { resizeImageToJpeg } from "@/lib/resizeImage"
 import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
@@ -124,32 +125,6 @@ const PLAN_CHOICES = [
     cta: "Continue with Found Business",
   },
 ]
-
-// Resizes a photo client-side and returns a JPEG Blob.
-// Handles HEIC on iOS (Safari can decode HEIC natively into a canvas).
-// Reduces iPhone photos from 10+ MB to < 1 MB before the server action upload.
-function resizeImageToJpeg(file: File, maxPx = 2400, quality = 0.85): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const url = URL.createObjectURL(file)
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      const scale = Math.min(1, maxPx / Math.max(img.width, img.height))
-      const canvas = document.createElement("canvas")
-      canvas.width  = Math.round(img.width  * scale)
-      canvas.height = Math.round(img.height * scale)
-      const ctx = canvas.getContext("2d")
-      if (!ctx) { reject(new Error("Canvas unavailable")); return }
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob(
-        (blob) => blob ? resolve(blob) : reject(new Error("Canvas toBlob failed")),
-        "image/jpeg", quality,
-      )
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")) }
-    img.src = url
-  })
-}
 
 function canAdvance(step: Step, a: Answers): boolean {
   switch (step) {
