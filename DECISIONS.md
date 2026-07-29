@@ -1,3 +1,9 @@
+**[2026-07-29] - GO for open self-serve launch.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: The July 20 audit's "no-go" verdict was written before that same day's P0 fixes landed, and nobody recorded an updated verdict once the punch-list work finished shipping July 28. All 5 P0 launch blockers from July 20 (payment trust bug, post-activation login, false review-requests claim, sitemap exposure, catalog mobile keyboard bug) are confirmed fixed. Remaining P1 items (security headers, automated tests, hero image optimization, checkout webhook fallback, Stripe/RLS audits) are real but explicitly non-blocking - most were already deliberately deferred (security headers specifically, after an earlier attempt broke iPhone Safari Stripe checkout). Full detail: `LAUNCH_READINESS_AUDIT_2026-07-29.md`.
+
+---
+
 **[2026-07-15] - Plan card savings display resolved via the Stripe-portal plan upgrade flow.**
 Approved by: Shawn
 Why: The prior attempt (inline run-on sentences) broke mobile layout and used the wrong brand voice. Shawn had also explicitly rejected a "Founding rate" / "Founding member" label. The July 15 plan-upgrade rebuild (`Add Found plan upgrade sheet`, `Create Stripe portal config for plan upgrades`, `Route plan upgrades through Stripe portal`) shipped the savings display as part of routing upgrades through Stripe's own portal instead of a custom in-app sentence. Confirmed resolved by Shawn July 20, 2026 during a documentation backfill pass - this closes out the item that was previously logged "UNRESOLVED" in `TASKS.md`.

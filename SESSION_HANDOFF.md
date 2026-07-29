@@ -1,3 +1,9 @@
+## 2026-07-29 - GO for Open Self-Serve Launch
+
+Shawn asked directly: is anything critical left, can we launch today? Checked the full P0/P1 list from `LAUNCH_READINESS_AUDIT_2026-07-20.md` against everything shipped since. All 5 P0 blockers are fixed. Remaining P1s (security headers, automated tests, hero image optimization, checkout webhook fallback, Stripe/RLS audits) are real but non-blocking - most already deliberately deferred. The one real gap: July 20's "no-go" verdict was written before that day's P0 fixes landed, and nobody had recorded an updated verdict since. Closed that gap with a formal team review - see `LAUNCH_READINESS_AUDIT_2026-07-29.md` and `DECISIONS.md`. **Verdict: GO.** Open self-serve launch is approved as of today.
+
+---
+
 ## 2026-07-29 - Two Open Questions Closed
 
 Shawn answered both outstanding items from the July 28 pending-decisions block:
