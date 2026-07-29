@@ -120,6 +120,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   type MenuItemDraft = { name: string; price: string; description: string; photo_url: string }
   type MenuCatData = { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null }[] }
   const [menuCats, setMenuCats] = useState<MenuCatData[]>((initialConfig?.menu_items as MenuCatData[]) ?? [])
+  // Catalog editor breaks down as a wall of always-expanded categories once
+  // a business has a real catalog (50-100 items) - search filters items by
+  // name, and categories collapse individually (default expanded, so small
+  // catalogs like Lucky's look exactly as before until an owner has enough
+  // items to want to collapse something).
+  const [catalogSearch, setCatalogSearch] = useState("")
+  const [collapsedCats, setCollapsedCats] = useState<Set<number>>(new Set())
+  const [servicesSearch, setServicesSearch] = useState("")
   const [editingMenuItem, setEditingMenuItem] = useState<{ catIdx: number; itemIdx: number | null } | null>(null)
   const [menuItemDraft, setMenuItemDraft] = useState<MenuItemDraft>({ name: '', price: '', description: '', photo_url: '' })
   const [uploadingMenuPhoto, setUploadingMenuPhoto] = useState(false)
@@ -1035,73 +1043,116 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
         </div>
 
+        {menuCats.length > 0 && (
+          <div style={{ marginTop: 16, position: "relative" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+              value={catalogSearch}
+              onChange={e => setCatalogSearch(e.target.value)}
+              placeholder={`Search ${catalogCopy.pageLabel.toLowerCase()}`}
+              style={{ width: "100%", padding: "12px 14px 12px 38px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "white", fontSize: 14, outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" }}
+            />
+          </div>
+        )}
+
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-          {menuCats.map((cat, catIdx) => (
-            <div key={catIdx} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.03)" }}>
-              {/* Category header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px", borderBottom: cat.items.length > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                <div style={{ flex: 1 }}>
-                  {editingMenuCatIdx === catIdx ? (
-                    <input
-                      value={menuCatDraftName}
-                      onChange={e => setMenuCatDraftName(e.target.value)}
-                      onBlur={() => saveMenuCatName(catIdx)}
-                      onKeyDown={e => e.key === 'Enter' && saveMenuCatName(catIdx)}
-                      autoFocus
-                      style={{ background: "none", border: "none", outline: "none", color: "white", fontSize: 14, fontWeight: 700, width: "100%", fontFamily: "inherit" }}
-                    />
-                  ) : (
-                    <button onClick={() => { setMenuCatDraftName(cat.category); setEditingMenuCatIdx(catIdx) }}
-                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" as const, textAlign: "left" as const }}>
-                      {cat.category}
+          {(() => {
+            const search = catalogSearch.trim().toLowerCase()
+            return menuCats.map((cat, catIdx) => {
+              const categoryNameMatches = Boolean(search) && cat.category.toLowerCase().includes(search)
+              const visibleItems = search && !categoryNameMatches
+                ? cat.items.filter(item => item.name.toLowerCase().includes(search))
+                : cat.items
+              if (search && !categoryNameMatches && visibleItems.length === 0) return null
+
+              // Manual collapse is ignored while actively searching, so a
+              // collapsed category never hides a search result from itself.
+              const collapsed = !search && collapsedCats.has(catIdx)
+
+              return (
+                <div key={catIdx} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.03)" }}>
+                  {/* Category header */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px", borderBottom: !collapsed && cat.items.length > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
+                    <button
+                      onClick={() => setCollapsedCats(prev => { const next = new Set(prev); if (next.has(catIdx)) next.delete(catIdx); else next.add(catIdx); return next })}
+                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
+                      aria-label={collapsed ? "Expand category" : "Collapse category"}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? "rotate(-90deg)" : undefined, transition: "transform 0.15s ease" }}><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
-                  )}
-                </div>
-                <button
-                  onClick={() => setConfirmAction({
-                    title: `Remove ${cat.category}?`,
-                    message: cat.items.length > 0
-                      ? `This removes the category and all ${cat.items.length} item${cat.items.length === 1 ? "" : "s"} in it. This can't be undone.`
-                      : "This can't be undone.",
-                    confirmLabel: "Remove",
-                    onConfirm: () => removeMenuCategory(catIdx),
-                  })}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,80,80,0.5)", fontSize: 11, fontWeight: 700, padding: "4px 8px" }}>
-                  Remove
-                </button>
-              </div>
-
-              {/* Items */}
-              {cat.items.map((item, itemIdx) => (
-                <div key={itemIdx} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  {item.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.photo_url} alt={item.name} style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.05)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    <div style={{ flex: 1 }}>
+                      {editingMenuCatIdx === catIdx ? (
+                        <input
+                          value={menuCatDraftName}
+                          onChange={e => setMenuCatDraftName(e.target.value)}
+                          onBlur={() => saveMenuCatName(catIdx)}
+                          onKeyDown={e => e.key === 'Enter' && saveMenuCatName(catIdx)}
+                          autoFocus
+                          style={{ background: "none", border: "none", outline: "none", color: "white", fontSize: 14, fontWeight: 700, width: "100%", fontFamily: "inherit" }}
+                        />
+                      ) : (
+                        <button onClick={() => { setMenuCatDraftName(cat.category); setEditingMenuCatIdx(catIdx) }}
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" as const, textAlign: "left" as const }}>
+                          {cat.category}{collapsed && cat.items.length > 0 && <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 600 }}> - {cat.items.length}</span>}
+                        </button>
+                      )}
                     </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 1 }}>{item.name}</div>
-                    {item.description && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</div>}
+                    <button
+                      onClick={() => setConfirmAction({
+                        title: `Remove ${cat.category}?`,
+                        message: cat.items.length > 0
+                          ? `This removes the category and all ${cat.items.length} item${cat.items.length === 1 ? "" : "s"} in it. This can't be undone.`
+                          : "This can't be undone.",
+                        confirmLabel: "Remove",
+                        onConfirm: () => removeMenuCategory(catIdx),
+                      })}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,80,80,0.5)", fontSize: 11, fontWeight: 700, padding: "4px 8px" }}>
+                      Remove
+                    </button>
                   </div>
-                  {item.price && <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0 }}>{item.price}</div>}
-                  <button onClick={() => openEditMenuItem(catIdx, itemIdx)}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, padding: "4px 6px", flexShrink: 0 }}>
-                    Edit
-                  </button>
-                </div>
-              ))}
 
-              {/* {catalogCopy.addItemLabel} row */}
-              <button onClick={() => openEditMenuItem(catIdx, null)}
-                style={{ width: "100%", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: 13, color: `${GREEN}88`, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                {catalogCopy.addItemLabel}
-              </button>
-            </div>
-          ))}
+                  {!collapsed && (
+                    <>
+                      {/* Items */}
+                      {visibleItems.map((item) => {
+                        const itemIdx = cat.items.indexOf(item)
+                        return (
+                          <div key={itemIdx} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                            {item.photo_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={item.photo_url} alt={item.name} style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
+                            ) : (
+                              <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.05)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                              </div>
+                            )}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 1 }}>{item.name}</div>
+                              {item.description && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</div>}
+                            </div>
+                            {item.price && <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0 }}>{item.price}</div>}
+                            <button onClick={() => openEditMenuItem(catIdx, itemIdx)}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, padding: "4px 6px", flexShrink: 0 }}>
+                              Edit
+                            </button>
+                          </div>
+                        )
+                      })}
+
+                      {/* {catalogCopy.addItemLabel} row */}
+                      {!search && (
+                        <button onClick={() => openEditMenuItem(catIdx, null)}
+                          style={{ width: "100%", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: 13, color: `${GREEN}88`, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          {catalogCopy.addItemLabel}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            })
+          })()}
 
           {/* Add category */}
           {addingMenuCat ? (
@@ -1149,23 +1200,39 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <PageTab label="Services" href={`https://${company.slug}.foundco.app/services`} />
         </div>
 
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-          {services.map((svc, i) => (
-            <ServiceCard
-              key={i} index={i}
-              name={svc.name} description={svc.description}
-              isEditing={editingService === i}
-              onEdit={() => setEditingService(i)}
-              onSave={saveService}
-              onRemove={() => setConfirmAction({
-                title: `Remove ${svc.name}?`,
-                message: "This can't be undone.",
-                confirmLabel: "Remove",
-                onConfirm: () => removeService(i),
-              })}
-              onCancel={() => setEditingService(null)}
+        {services.length > 6 && (
+          <div style={{ marginTop: 16, position: "relative" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+              value={servicesSearch}
+              onChange={e => setServicesSearch(e.target.value)}
+              placeholder="Search services"
+              style={{ width: "100%", padding: "12px 14px 12px 38px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "white", fontSize: 14, outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" }}
             />
-          ))}
+          </div>
+        )}
+
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+          {services.map((svc, i) => {
+            const search = servicesSearch.trim().toLowerCase()
+            if (search && !svc.name.toLowerCase().includes(search)) return null
+            return (
+              <ServiceCard
+                key={i} index={i}
+                name={svc.name} description={svc.description}
+                isEditing={editingService === i}
+                onEdit={() => setEditingService(i)}
+                onSave={saveService}
+                onRemove={() => setConfirmAction({
+                  title: `Remove ${svc.name}?`,
+                  message: "This can't be undone.",
+                  confirmLabel: "Remove",
+                  onConfirm: () => removeService(i),
+                })}
+                onCancel={() => setEditingService(null)}
+              />
+            )
+          })}
 
           {newService ? (
             <div style={{ borderRadius: 20, padding: 20, background: `linear-gradient(135deg, ${GREEN}0a, ${GREEN}03)`, border: `1px solid ${GREEN}22` }}>
