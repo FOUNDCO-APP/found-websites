@@ -2,7 +2,7 @@
 
 - [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.
 - [x] **Launch punch list (7 items) - ALL FIXED.** Comp-link secret, CI build check (code done, needs Shawn to add GitHub secrets - see below), Shop/Services search+collapse, AI rewrite disclosure+rate-limit, field validation, CTA picker for all industries, photo resize before upload. Full detail in `SESSION_HANDOFF.md`.
-- [ ] **Action item for Shawn:** add GitHub Actions secrets so the new CI build check actually runs green - Settings > Secrets and variables > Actions on the repo, values from `.env.local`. Exact list of secret names in `SESSION_HANDOFF.md` and `.github/workflows/build.yml`.
+- [ ] **Action item for Shawn:** add 3 GitHub Actions secrets so the CI build check runs green (simplified to pull from Vercel instead of 16 duplicated secrets) - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`. Values in `SESSION_HANDOFF.md`.
 - [ ] **Still waiting on Shawn:** does he approve signing up for Sentry (error tracking) + an external uptime monitor, so we can build the error-alerting/monitoring system he asked for? Team recommended these over building from scratch. Not started - needs his yes first.
 - [ ] **Still waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked multiple times, still unanswered.
 
