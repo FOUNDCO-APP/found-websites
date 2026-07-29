@@ -1,3 +1,11 @@
+## 2026-07-29 - Two Open Questions Closed
+
+Shawn answered both outstanding items from the July 28 pending-decisions block:
+- **3 pending clients:** confirmed the only blocker was the Edit My Site design work, which is now shipped and closed. No other blocker exists - nothing further to chase here.
+- **Sentry + uptime monitor:** Shawn approved. Since account creation needs his own identity/email, he's signing up for both himself (Sentry DSN, plus a monitor on `foundco.app` and `my.foundco.app` via Better Uptime or UptimeRobot) and will hand over the DSN/API key. Once received, next session should install the Sentry SDK, add env vars via Vercel API, redeploy, and build the Found HQ "Health" page surfacing both.
+
+---
+
 ## 2026-07-28 - Launch Punch List: All 7 "Yellow Gap" Items Fixed
 
 Shawn wants to launch and asked for a plain-language list of what's actually still risky, then said "let's fix them all with the team deciding directions." All 7 done and pushed tonight, in order:

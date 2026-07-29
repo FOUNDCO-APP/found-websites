@@ -3,8 +3,8 @@
 - [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.
 - [x] **Launch punch list (7 items) - ALL FIXED.** Comp-link secret, CI build check (code done, needs Shawn to add GitHub secrets - see below), Shop/Services search+collapse, AI rewrite disclosure+rate-limit, field validation, CTA picker for all industries, photo resize before upload. Full detail in `SESSION_HANDOFF.md`.
 - [x] CI build check - Shawn added the 3 GitHub secrets, hit one real bug (workflow pulled the wrong Vercel environment), fixed, confirmed green via screenshot. Full 7-item launch punch list is now genuinely complete, not just shipped.
-- [ ] **Still waiting on Shawn:** does he approve signing up for Sentry (error tracking) + an external uptime monitor, so we can build the error-alerting/monitoring system he asked for? Team recommended these over building from scratch. Not started - needs his yes first.
-- [ ] **Still waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked multiple times, still unanswered.
+- [x] **Sentry + uptime monitor - Shawn approved 2026-07-29.** Waiting on Shawn to create the two accounts himself (Sentry DSN + uptime monitor, both need his own identity/email) and hand over the DSN/API key. Once received, Claude wires in the Sentry SDK, env vars, redeploy, and the Found HQ "Health" page in one pass.
+- [x] **3 pending clients - resolved 2026-07-29.** Shawn confirmed it was only ever the Edit My Site design/redesign work (now shipped and closed above). No other blocker exists.
 
 ---
 
