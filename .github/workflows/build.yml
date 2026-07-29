@@ -1,0 +1,51 @@
+name: Build
+
+# Automatic safety net: run the same production build locally verified
+# before every push - the exact class of check that was previously only
+# ever run by hand. This catches TypeScript errors and build breakage
+# automatically instead of relying purely on manual QA.
+#
+# This needs the repo's real env vars added as GitHub Actions secrets
+# (Settings > Secrets and variables > Actions > New repository secret)
+# before it will pass - see SESSION_HANDOFF.md for the full list mirrored
+# from .env.local. Until those are added, this workflow will run and fail
+# on missing env vars, which is expected and visible, not a silent problem.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          COMP_LINK_SECRET: ${{ secrets.COMP_LINK_SECRET }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET_CONNECT: ${{ secrets.STRIPE_WEBHOOK_SECRET_CONNECT }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          NEXT_PUBLIC_GOOGLE_PLACES_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY }}
+          STRIPE_PRICE_ID_FOUND_FOUNDING: ${{ secrets.STRIPE_PRICE_ID_FOUND_FOUNDING }}
+          STRIPE_PRICE_ID_FOUND_PRO_FOUNDING: ${{ secrets.STRIPE_PRICE_ID_FOUND_PRO_FOUNDING }}
+          STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING: ${{ secrets.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING }}
