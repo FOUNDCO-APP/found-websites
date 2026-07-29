@@ -45,7 +45,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
         )}
         {(heroVideo || heroImage) && <div className="absolute inset-0 bg-black/45" />}
 
-        <div className="relative z-10 px-8 pt-24 max-w-5xl w-full">
+        <div className="relative z-10 px-8 py-24 max-w-5xl w-full">
           {/* Tagline â€” arrives first */}
           <p
             className="text-xs font-black tracking-[0.3em] uppercase mb-6"
