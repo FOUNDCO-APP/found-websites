@@ -1,8 +1,10 @@
 ## 2026-07-28 - CURRENT PENDING DECISIONS (read this block first)
 
 - [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.
+- [x] **Launch punch list (7 items) - ALL FIXED.** Comp-link secret, CI build check (code done, needs Shawn to add GitHub secrets - see below), Shop/Services search+collapse, AI rewrite disclosure+rate-limit, field validation, CTA picker for all industries, photo resize before upload. Full detail in `SESSION_HANDOFF.md`.
+- [ ] **Action item for Shawn:** add GitHub Actions secrets so the new CI build check actually runs green - Settings > Secrets and variables > Actions on the repo, values from `.env.local`. Exact list of secret names in `SESSION_HANDOFF.md` and `.github/workflows/build.yml`.
 - [ ] **Still waiting on Shawn:** does he approve signing up for Sentry (error tracking) + an external uptime monitor, so we can build the error-alerting/monitoring system he asked for? Team recommended these over building from scratch. Not started - needs his yes first.
-- [ ] **Still waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked multiple times, still unanswered. Determines whether Shop/Services search+scale work jumps the queue.
+- [ ] **Still waiting on Shawn:** what is actually blocking his 3 pending clients from moving forward? Asked multiple times, still unanswered.
 
 ---
 
@@ -263,8 +265,8 @@ From `LAUNCH_READINESS_AUDIT_2026-07-20.md`'s 14 P1s:
 - [x] Shop page metadata - shipped, `[slug]/shop/page.tsx` + `[slug]/order/page.tsx`.
 - [x] Shop/order checkout mobile keyboard bug - fixed, same `visualViewport` pattern as SiteEditor.
 - [x] Resend module-level init in 3 files - moved inside each function.
-- [ ] **Still open:** comp-link secret (`?comp=<ADMIN_KEY>`) is a raw shared secret in a URL, not a scoped/expiring token.
-- [ ] **Still open:** no automated tests, no CI.
+- [x] **FIXED July 28** - comp-link secret decoupled from `ADMIN_KEY` into its own `COMP_LINK_SECRET`. Old comp links built with the admin key no longer work (intentional).
+- [x] **PARTIALLY FIXED July 28** - CI build check added (`.github/workflows/build.yml`), runs `npm run build` on every push/PR. Still no automated tests. Workflow needs GitHub Actions secrets added by Shawn before it runs green - see top of this file.
 - [ ] **Still open:** hero image optimization (still full-res PNGs, not WebP/AVIF).
 - [ ] **Still open:** shop/online-order checkout has no webhook fallback if the tab closes right after a successful payment (the `/complete` routes themselves are solid; this is a missing safety net, not a broken primary path).
 - [ ] **Still open, not urgent:** Stripe subscriber price audit (verify no Pro/Business subscribers were charged wrong price before the `activateActions.ts` fix) - read-only check, not yet done.
