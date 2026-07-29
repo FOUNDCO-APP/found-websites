@@ -5,10 +5,10 @@ import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -107,7 +107,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           >
             {isIntroRatePeriod && (
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
-                Intro rate — expires July 15
+                Intro rate — expires August 15
               </p>
             )}
             <h2 className="text-3xl font-normal text-white mb-3 md:text-4xl">Your site. Live today.</h2>
@@ -169,7 +169,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isIntroRatePeriod
-                ? <>Intro rate expires July 15 · locked for 12 months, then $39/month.{" "}
+                ? <>Intro rate expires August 15 · locked for 12 months, then $39/month.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans
                     </Link></>

@@ -3,10 +3,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import Stripe from "stripe"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 const INTRO_RATE_LIMIT = 25
-// July 15 midnight Arizona time (UTC-7, no DST)
-const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 async function getIntroRateCount(): Promise<number> {
   const admin = createAdminClient()
@@ -32,7 +31,7 @@ export async function getPreviewCheckout(slug: string): Promise<{ url: string } 
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
-  // Intro rate = before July 15 AND under the slot limit
+  // Intro rate = before the cutoff AND under the slot limit
   const introRateCount = await getIntroRateCount()
   const hasIntroRate = new Date() < INTRO_RATE_CUTOFF && introRateCount < INTRO_RATE_LIMIT
 

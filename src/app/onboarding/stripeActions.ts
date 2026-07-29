@@ -2,6 +2,7 @@
 
 import Stripe from "stripe"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 function getStripe() {
   if (!process.env.STRIPE_SECRET_KEY) return null
@@ -14,9 +15,6 @@ function getAdminClient() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   )
 }
-
-// July 15 midnight Arizona time (UTC-7, no DST)
-const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 function priceIdForPlan(plan?: string): string | undefined {
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF

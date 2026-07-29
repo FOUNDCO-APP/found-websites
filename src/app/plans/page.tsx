@@ -2,20 +2,20 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 export const metadata: Metadata = {
   title: "Compare Plans | Found — $29, $39, $69/month",
   description: "Compare Found, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
   openGraph: {
     title: "Compare Found Plans — $29, $39, $69/month",
-    description: "Found, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire July 15.",
+    description: "Found, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire August 15.",
     url: "https://foundco.app/plans",
   },
 }
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 const IS_INTRO_RATE_PERIOD = new Date() < INTRO_RATE_CUTOFF
 
@@ -75,7 +75,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          {IS_INTRO_RATE_PERIOD ? "Intro rates expire July 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+          {IS_INTRO_RATE_PERIOD ? "Intro rates expire August 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
         </p>
       </section>
 
@@ -181,7 +181,7 @@ export default function PlansPage() {
       <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
           {IS_INTRO_RATE_PERIOD
-            ? <>Intro rates expire July 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
+            ? <>Intro rates expire August 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
             : "Cancel anytime. Results vary by market and business type."}
         </p>
       </div>

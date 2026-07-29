@@ -5,10 +5,10 @@ import Image from "next/image"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
-const INTRO_RATE_CUTOFF = new Date('2026-07-15T07:00:00.000Z')
 
 export default function HomeClient() {
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -196,7 +196,7 @@ export default function HomeClient() {
                     className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
                     style={{ color: FOUND_BLACK }}
                   >
-                    Lock in your rate<br />before July 15.
+                    Lock in your rate<br />before August 15.
                   </h2>
                 </div>
 
@@ -230,7 +230,7 @@ export default function HomeClient() {
               <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>Pricing</p>
               <h2 className="text-4xl font-light leading-tight md:text-6xl text-white">Simple, honest pricing.</h2>
               <p className="mt-5 text-base text-white/50 font-medium">
-            {isIntroRatePeriod ? "Intro rates expire July 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+            {isIntroRatePeriod ? "Intro rates expire August 15 — locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
           </p>
             </div>
 
@@ -351,7 +351,7 @@ export default function HomeClient() {
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
               {isIntroRatePeriod
-                ? <>Intro rates expire July 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
+                ? <>Intro rates expire August 15 · locked for 12 months, then regular price · <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans</a></>
                 : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
               }
             </p>
