@@ -518,8 +518,8 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - ~~Plan card savings display~~ - resolved July 15 via the Stripe-portal plan upgrade flow. See `DECISIONS.md`.
 - Upsell banner Ã¢â‚¬â€ not built; planned as next after June 22
 - Stripe custom payment form Ã¢â‚¬â€ Option B approved (in-app Stripe Elements), not built
-- Menu add-on gating Ã¢â‚¬â€ `menu_display` add-on gates nothing; SiteEditor has no check; decision needed on what $10 unlocks
-- Food CTA bug Ã¢â‚¬â€ "View Our Menu" still appears when `menu_display` add-on isn't active
+- ~~Menu add-on gating~~ - resolved 2026-07-29: `menu_display` was never actually sellable (not in `ALL_ADDONS`, zero purchases ever) and the real menu page never checked it. Removed the dead flag entirely rather than gate something never sold. Menu display is free by design; only `online_ordering` (checkout on top of it) is a real paid capability, and that is correctly gated. See `SESSION_HANDOFF.md`.
+- ~~Food CTA bug~~ - not a bug, correct by design now that `menu_display` is gone. "View Our Menu" showing unconditionally is intended.
 - Stripe subscriber audit Ã¢â‚¬â€ verify no Pro/Business subscribers charged wrong price before activateActions.ts fix
 
 ### Dashboard

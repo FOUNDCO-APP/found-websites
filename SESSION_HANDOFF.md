@@ -1,3 +1,17 @@
+## 2026-07-29 - Full Add-On/Plan-Tier Gating Audit - CLOSED
+
+Follow-up to the functional audit below: Shawn's directive was explicit - no business on any plan/template/industry should get a paid feature for free, audit every gate, not just menu_display.
+
+Verified every real, currently-sellable add-on (online_ordering, shopping_cart, reservation_calendar, quote_payments, email_marketing) already has real enforcement, dashboard-side and public-site-side, by reading the actual enforcement code (not the feature-flag declarations). All clean.
+
+**Two real findings, both fixed:**
+1. **`contact_database` (Contacts) had zero enforcement** despite being declared Pro+/Business-only - any base-plan business could use it free. Checked live impact first: all 3 real (non-test) companies are already on `found_business`, so closing this gate has zero real-customer disruption. Added `requireDashboardFeaturePage` (generalized version of the existing addon-page guard, for any `Feature` not just purchasable add-ons), gated the Contacts layout and all 4 server actions directly (not just the page - actions are independently callable), and made the dashboard nav/dock and Home screen's "My Contacts" tile plan-aware so a base-plan owner doesn't see a dead-end tap.
+2. **`menu_display`** was declared as a paid add-on but isn't sellable anywhere (not in `ALL_ADDONS`, zero purchases ever) and the real menu page never checked it - only `online_ordering` gates the actual paid capability (checkout on top of the free menu). This was dead/vestigial code from an earlier product iteration, not a live gating gap - removed the unused type/case entirely rather than build a gate for something never sold.
+
+`worker_uploads` and `lead_sequence` are declared but have zero implementation anywhere - unbuilt backlog features, not free-access bugs, left alone. `review_collection` was already correctly resolved (honest "coming soon" copy, no backend to gate).
+
+---
+
 ## 2026-07-29 - Final Pre-Launch Pass: Intro Rate, Design + Functional Audit
 
 Shawn asked for one last pass before launch: move the expired intro-rate promo (was gated to July 15, quietly expired 2 weeks with nobody catching it) out to August 15, plus a real design/functional check - live browser + code, not a re-read of docs.
