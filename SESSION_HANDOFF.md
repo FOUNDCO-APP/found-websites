@@ -8,7 +8,9 @@ Ran a full `npm run build` before committing anything - clean, all 79 pages gene
 
 Shawn checked the PostHog dashboard right after deploy and it showed **zero events** - not a wait-a-few-minutes thing, a real bug. Traced it: `PageviewTracker`'s effect checked a module-level `initialized` flag set by `FoundPostHogProvider`'s own `useEffect`, but React fires child effects before parent effects on mount - so `PageviewTracker` always saw `initialized === false` on first load and silently skipped the capture. With `capture_pageview: false` (needed for manual App Router tracking), that meant **every fresh visit's first pageview was dropped**, and PostHog would only ever see something if a visitor triggered a client-side route change afterward - explaining "no events yet" exactly. Fixed by moving init out of `useEffect` into the render body itself (SSR-guarded with a `typeof window` check), so it always finishes before any child effect can check the flag. Build passed clean, committed and pushed (`80e573b`).
 
-Shawn QA next: reload `foundco.app` fresh (not a client nav from another Found page), then check the PostHog dashboard for a `$pageview` event. Also still confirm tenant sites / `my.foundco.app` / `admin.foundco.app` never show up there.
+**Shawn confirmed 2026-07-30:** reloaded `foundco.app` fresh and checked the PostHog Activity view - Pageview, Web vitals, and click events (`clicked link with text "Plans"`, `clicked svg`) are all landing correctly, including the first-load pageview that was previously silently dropped. PostHog Phase 2 base tracking is closed out.
+
+Still open, not done this session: confirming tenant sites / `my.foundco.app` / `admin.foundco.app` never leak into PostHog (same scoping check already done for Vercel Analytics, just not re-verified here), and the full funnel/attribution event instrumentation (visit -> onboarding start -> onboarding complete -> activation/paid, UTM tracking) - only pageviews/autocapture are live so far.
 
 ---
 
