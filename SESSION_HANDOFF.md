@@ -6,7 +6,9 @@ Verified what existed before touching anything: `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_
 
 Ran a full `npm run build` before committing anything - clean, all 79 pages generated, no errors. Committed and pushed (`a70872c`). PostHog Phase 2 is now live alongside Sentry/UptimeRobot (both fully shipped and confirmed separately this session - see `admin/health`) and the July 29 `menu_display` gating cleanup (also confirmed already shipped, no action needed).
 
-Shawn QA next: confirm pageviews are landing in the PostHog dashboard for `foundco.app`, and confirm tenant sites / `my.foundco.app` / `admin.foundco.app` do NOT show up there (same scoping check already done for Vercel Analytics).
+Shawn checked the PostHog dashboard right after deploy and it showed **zero events** - not a wait-a-few-minutes thing, a real bug. Traced it: `PageviewTracker`'s effect checked a module-level `initialized` flag set by `FoundPostHogProvider`'s own `useEffect`, but React fires child effects before parent effects on mount - so `PageviewTracker` always saw `initialized === false` on first load and silently skipped the capture. With `capture_pageview: false` (needed for manual App Router tracking), that meant **every fresh visit's first pageview was dropped**, and PostHog would only ever see something if a visitor triggered a client-side route change afterward - explaining "no events yet" exactly. Fixed by moving init out of `useEffect` into the render body itself (SSR-guarded with a `typeof window` check), so it always finishes before any child effect can check the flag. Build passed clean, committed and pushed (`80e573b`).
+
+Shawn QA next: reload `foundco.app` fresh (not a client nav from another Found page), then check the PostHog dashboard for a `$pageview` event. Also still confirm tenant sites / `my.foundco.app` / `admin.foundco.app` never show up there.
 
 ---
 

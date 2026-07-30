@@ -20,6 +20,23 @@
 
 ---
 
+## Session: July 30, 2026 - PostHog Zero-Events Bug Fixed
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn checked the PostHog dashboard right after the Phase 2 deploy above and it showed no events at all - not a propagation delay, a real bug caught by actually checking instead of assuming shipped code works.
+
+### Fixed
+- Root cause: React mounts fire child effects before parent effects. `PageviewTracker` (child) checked a module-level `initialized` flag inside its own `useEffect`, but `FoundPostHogProvider` (parent) only set that flag inside *its* `useEffect` - so on every fresh page load, the child's effect ran first, saw `initialized === false`, and silently skipped the pageview capture. Since `capture_pageview` is intentionally `false` (manual tracking, required for App Router), this meant the first pageview of literally every visit was dropped, and PostHog would only ever record something after a subsequent client-side route change.
+- Fix: moved `posthog.init()` out of `useEffect` into the component's render body (`typeof window === "undefined"` guarded so it no-ops during SSR), so initialization is synchronous and always complete before any child effect can check it.
+- `npm run build` passed clean before pushing.
+
+### Verification
+- `npm run build` passed.
+
+### Test Next
+- Load `foundco.app` fresh (full navigation, not a client-side link click from elsewhere in the app) and confirm a `$pageview` event appears in the PostHog dashboard.
+
+---
+
 ## 2026-07-27 - Edit My Site Hub Rebuild
 **AI:** Claude Code (Opus)
 **Worked on:** Built the three-tier hub decided in DESIGN_DECISIONS.md [2026-07-27] - Edit My Site was one long scrolling page (Homepage, Featured Update, About, Contact, Menu/Shop, Services, Photos, Domain all stacked); replaced it with a landing hub of tiles that drill into a focused view per page/section.
