@@ -1,3 +1,27 @@
+## 2026-07-30 - Domain Registrar Recommendations + Auto-Setup Research
+
+Shawn asked to pause the open items from earlier today and start on domain registrar auto-setup: pick top registrars to recommend, and figure out which ones would actually work with Found's setup system for real automation (not just better copy).
+
+**First team pass got corrected by Shawn:** the team initially floated GoDaddy/Namecheap/Squarespace as "familiar" recommendations - Shawn caught that Squarespace is a direct website-builder competitor to Found, not a neutral registrar pick. Real catch, logged so it doesn't happen again. See `DECISIONS.md` [2026-07-30].
+
+**Scope landed on "both, staged":** ship the registrar-recommendation copy now (fast), treat real auto-setup as its own research-then-build track.
+
+**Registrar recommendation - SHIPPED:** `DomainConnector.tsx`'s empty state ("no domain connected yet") now reads "Don't have a domain yet? We recommend GoDaddy or Namecheap." Just copy, no links/affiliate anything. Build passed, committed and pushed (`a356a1c`).
+
+**Auto-setup research (no code written for this part yet):**
+- **Domain Connect protocol** - open standard ~20 DNS providers support (covers ~35% of the `.com` zone), redirects the owner to their own registrar's consent screen so Found never touches or stores their registrar credentials. GoDaddy co-created this standard and already has a template in the official public repo (`Domain-Connect/Templates` on GitHub) - strong signal, not a marginal integration. **Not instant, though:** becoming a registered service provider means writing/testing a JSON template (there's an online editor + precedent templates to copy) and directly emailing GoDaddy's team (`domainconnect@godaddy.com`) for approval - an external dependency with no guaranteed timeline.
+- **GoDaddy scoped API fallback** - real and usable today, no waiting. GoDaddy's Developer Platform (opened up meaningfully in April 2026, previously gated behind 50+ domains or reseller status) issues Personal Access Tokens scoped narrowly to specific capabilities - e.g. "update DNS records" without domain-purchase or full-account power. The owner would still have to generate this token in their own GoDaddy account and hand it to Found, and Found would need to store it - a real UX step and a real credential-custody decision, much lower blast radius than a password but not zero risk.
+- **Namecheap** - mature API but historically requires the owner to manually enable API access + whitelist an IP in their own account first, a real friction point for a non-technical owner. Not confirmed whether they support Domain Connect. Deferred to a later phase - GoDaddy is the first target given it's the dominant registrar among Found's likely owners and has the clearer path (both Domain Connect and scoped-API options).
+
+**Decision, approved by Shawn:** pursue Domain Connect registration for GoDaddy as the long-term no-credential-storage goal, but don't block a v1 build on its approval timeline. Scoped-PAT is the documented fallback path. **Actual code for credential handling (the scoped-PAT flow) still needs explicit sign-off before being built** - this session only covered research + the registrar-copy ship. See `DECISIONS.md` [2026-07-30] for the full formal record.
+
+### Next steps for whoever picks this up
+1. If Shawn wants to move forward: draft the Domain Connect template (there's a GitHub repo with precedent templates + an online test editor) and the outreach email to `domainconnect@godaddy.com` - the actual email needs to go out under Shawn/Found's name, not sent by Claude.
+2. Get explicit sign-off on the scoped-PAT fallback flow (how it's stored, whether it's discarded after one-time use or retained) before writing any of that code - this is real credential-custody territory.
+3. Namecheap and other registrars are explicitly deferred until the GoDaddy path is proven.
+
+---
+
 ## 2026-07-30 - PostHog Phase 2 Analytics: Finished After a Crash Mid-Setup
 
 Last session's computer crashed while wiring up PostHog (the `TASKS.md` Phase 2 analytics item - funnel/attribution tracking, separate from the Phase 1 Vercel Web Analytics already live). Shawn had already created the PostHog account and the env vars had made it into Vercel, but the code itself never got committed or pushed - it sat as uncommitted local changes discovered at the start of this session.

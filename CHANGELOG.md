@@ -20,6 +20,30 @@
 
 ---
 
+## Session: July 30, 2026 - Registrar Recommendations Shipped + Domain Auto-Setup Research
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn asked to pause other work and start on domain registrar auto-setup - which registrars to recommend, and which would actually support real DNS automation with Found's system.
+
+### Team correction, logged
+First pass floated GoDaddy/Namecheap/Squarespace as "familiar" names. Shawn caught it: Squarespace is a direct website-builder competitor to Found, not a neutral recommendation. Corrected to GoDaddy + Namecheap only, no forced 3rd pick.
+
+### Shipped
+- `DomainConnector.tsx` empty state now reads "Don't have a domain yet? We recommend GoDaddy or Namecheap."
+- `npm run build` passed clean before commit.
+
+### Researched, not built
+- Domain Connect protocol (credential-free, redirect-to-consent DNS automation) - GoDaddy co-created the standard and has an existing template in the official public repo, but registering as a service provider needs a submitted template + direct approval from GoDaddy's team, timeline unknown.
+- GoDaddy's scoped Personal Access Token API - usable today (opened up in April 2026), narrower blast radius than a full credential, but still requires the owner to generate and hand over a token, and Found to store it.
+- Team decision: pursue Domain Connect as the target, scoped-PAT as the documented fallback, don't block v1 on Domain Connect's approval clock. Actual credential-handling code needs its own explicit sign-off before being written.
+
+### Verification
+- `npm run build` passed.
+
+### Test Next
+- None yet for the auto-setup piece - research only. Registrar recommendation copy is live, no QA needed beyond a visual glance at the empty Domain Connector state.
+
+---
+
 ## Session: July 30, 2026 - PostHog Zero-Events Bug Fixed
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn checked the PostHog dashboard right after the Phase 2 deploy above and it showed no events at all - not a propagation delay, a real bug caught by actually checking instead of assuming shipped code works.
