@@ -1,3 +1,17 @@
+## 2026-07-30 - Custom Domain Connect: Un-Gated, Deduplicated, Verified Live
+
+Shawn asked for a real team pass before launch: can a business owner actually connect their own domain, with the easiest UI/UX. Held the team review before touching anything, per Shawn's explicit ask (paused an in-progress edit mid-turn to do this properly).
+
+Found two real problems by reading the actual code, not assuming:
+1. **Two competing implementations existed.** A real one in the dashboard (Site Editor > Domain) that genuinely calls the Vercel Domains API - register, check status, disconnect - and a standalone `/connect-domain` page that was weaker (fire-and-forget registration, no error surfacing, generic static DNS instructions) and, confirmed via grep, linked from nowhere in the app. Removed the dead one entirely.
+2. **The real one was still Pro/Business-gated** - "Upgrade to Found Pro" wall for base-plan owners - left over from before `custom_domain` was made free on every plan back in June (`featureAccess.ts` and the copy right next to this component both already say free; the component just never got updated). Shawn confirmed: should never have cost money, every owner should be able to do this. Un-gated it.
+
+Team also recommended (Jony/Angela on UX, Craig on feasibility) adding quiet background status checking instead of requiring the owner to remember to tap "Check Connection" - Shawn approved. Now checks immediately on page load and every 20s while unverified, flips to "Live" on its own; manual button still there for on-demand reassurance.
+
+Verified the real Vercel integration directly against production before trusting it: full add → check-status → remove round-trip on a safe example.com test domain, confirmed cleanup left nothing behind. `VERCEL_API_TOKEN`/`VERCEL_PROJECT_ID` confirmed live. This closes the "never tested end-to-end" gap that TASKS.md had flagged.
+
+---
+
 ## 2026-07-29 - Full Add-On/Plan-Tier Gating Audit - CLOSED
 
 Follow-up to the functional audit below: Shawn's directive was explicit - no business on any plan/template/industry should get a paid feature for free, audit every gate, not just menu_display.

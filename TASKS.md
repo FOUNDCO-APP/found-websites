@@ -541,8 +541,8 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - Favicon 404 Ã¢â‚¬â€ all client sites throw a 404 for `/favicon.svg`. Noisy in logs, bad for SEO. Not urgent enough for NOW slot but still unresolved.
 - Photo curation for 10 new industries at `/admin/photos`
 - Remove debug `[Activate]` console logs
-- `VERCEL_API_TOKEN` + `VERCEL_PROJECT_ID` for connect-domain feature
-- Custom domain flow end-to-end test
+- ~~VERCEL_API_TOKEN + VERCEL_PROJECT_ID for connect-domain feature~~ - resolved 2026-07-30: both confirmed live in Vercel production env.
+- ~~Custom domain flow end-to-end test~~ - resolved 2026-07-30: verified live against the real Vercel Domains API (add/check/remove round-trip). Also un-gated the flow (was still Pro-only, stale since custom_domain was made free on every plan in June) and removed a dead duplicate implementation. See SESSION_HANDOFF.md.
 - **Resend module-level init cleanup** Ã¢â‚¬â€ `app/actions/reply.ts`, `app/actions/leads.ts`, `app/onboarding/actions.ts` all init `new Resend(...)` at module level (same pattern that broke the bookings route). Low risk since these are server actions, not route handlers, but should be moved inside each function as a housekeeping pass.
 
 ### Unified Product/Service Catalog Ã¢â‚¬â€ Cross-System Data Sharing
