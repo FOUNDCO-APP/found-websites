@@ -1,3 +1,25 @@
+## Session: July 30, 2026 - PostHog Phase 2 Analytics Finished + Sentry/Menu-Gating Status Confirmed
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn's computer crashed last session mid-setup on PostHog (TASKS.md Phase 2 analytics). He wasn't sure what had actually landed, and separately wanted confirmation that Sentry/uptime and the `menu_display` gating fix were really done.
+
+### Confirmed already shipped, no action needed
+- **Sentry + UptimeRobot** - fully committed (`b064b41`, `c897f6b`/`0ac6756`, `b31ba9a`), env vars live in Vercel, `/admin/health` page working.
+- **`menu_display` $10 gating cleanup** - fully committed 2026-07-29 (`9212ccd`, `16ca352`).
+
+### Fixed / Finished
+- Found `posthog-js` in `package.json`, a new uncommitted `src/components/FoundPostHogProvider.tsx`, and its `layout.tsx` wiring sitting locally, never pushed - the actual crash casualty. `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` had already made it into Vercel before the crash.
+- Read the provider code before trusting it: root-site-only via the existing `isRootSite` gate, manual `$pageview` capture (App Router doesn't fire full page loads on client nav).
+- Ran a full `npm run build` before committing - clean, all 79 pages generated.
+- Committed and pushed: `a70872c`.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Confirm pageviews land in the PostHog dashboard for `foundco.app`, and confirm tenant sites/dashboard/admin do NOT appear there.
+
+---
+
 ## 2026-07-27 - Edit My Site Hub Rebuild
 **AI:** Claude Code (Opus)
 **Worked on:** Built the three-tier hub decided in DESIGN_DECISIONS.md [2026-07-27] - Edit My Site was one long scrolling page (Homepage, Featured Update, About, Contact, Menu/Shop, Services, Photos, Domain all stacked); replaced it with a landing hub of tiles that drill into a focused view per page/section.

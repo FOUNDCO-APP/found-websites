@@ -1,3 +1,15 @@
+## 2026-07-30 - PostHog Phase 2 Analytics: Finished After a Crash Mid-Setup
+
+Last session's computer crashed while wiring up PostHog (the `TASKS.md` Phase 2 analytics item - funnel/attribution tracking, separate from the Phase 1 Vercel Web Analytics already live). Shawn had already created the PostHog account and the env vars had made it into Vercel, but the code itself never got committed or pushed - it sat as uncommitted local changes discovered at the start of this session.
+
+Verified what existed before touching anything: `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` confirmed live in Vercel Production + Preview. `src/components/FoundPostHogProvider.tsx` (new, uncommitted) and its wiring into `layout.tsx` were already written and looked complete on read - root-site-only via the same `isRootSite` gate `<Analytics />` already uses, manual `$pageview` capture since Next's App Router doesn't fire full page loads on client-side nav.
+
+Ran a full `npm run build` before committing anything - clean, all 79 pages generated, no errors. Committed and pushed (`a70872c`). PostHog Phase 2 is now live alongside Sentry/UptimeRobot (both fully shipped and confirmed separately this session - see `admin/health`) and the July 29 `menu_display` gating cleanup (also confirmed already shipped, no action needed).
+
+Shawn QA next: confirm pageviews are landing in the PostHog dashboard for `foundco.app`, and confirm tenant sites / `my.foundco.app` / `admin.foundco.app` do NOT show up there (same scoping check already done for Vercel Analytics).
+
+---
+
 ## 2026-07-30 - Custom Domain Connect: Un-Gated, Deduplicated, Verified Live
 
 Shawn asked for a real team pass before launch: can a business owner actually connect their own domain, with the easiest UI/UX. Held the team review before touching anything, per Shawn's explicit ask (paused an in-progress edit mid-turn to do this properly).

@@ -3,7 +3,8 @@
 - [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.
 - [x] **Launch punch list (7 items) - ALL FIXED.** Comp-link secret, CI build check (code done, needs Shawn to add GitHub secrets - see below), Shop/Services search+collapse, AI rewrite disclosure+rate-limit, field validation, CTA picker for all industries, photo resize before upload. Full detail in `SESSION_HANDOFF.md`.
 - [x] CI build check - Shawn added the 3 GitHub secrets, hit one real bug (workflow pulled the wrong Vercel environment), fixed, confirmed green via screenshot. Full 7-item launch punch list is now genuinely complete, not just shipped.
-- [x] **Sentry + uptime monitor - Shawn approved 2026-07-29.** Waiting on Shawn to create the two accounts himself (Sentry DSN + uptime monitor, both need his own identity/email) and hand over the DSN/API key. Once received, Claude wires in the Sentry SDK, env vars, redeploy, and the Found HQ "Health" page in one pass.
+- [x] **Sentry + uptime monitor - SHIPPED.** Sentry SDK, env vars, and the Found HQ `/admin/health` page (uptime + open Sentry issues in one view) are all committed and live. Confirmed 2026-07-30.
+- [x] **PostHog Phase 2 analytics - base SDK shipped 2026-07-30**, after a computer crash interrupted the prior session mid-setup. See `SESSION_HANDOFF.md`. Full funnel/attribution event instrumentation still needs its own session.
 - [x] **3 pending clients - resolved 2026-07-29.** Shawn confirmed it was only ever the Edit My Site design/redesign work (now shipped and closed above). No other blocker exists.
 
 ---
@@ -120,7 +121,7 @@ Full team meeting held (Steve led - see `DESIGN_DECISIONS.md` [2026-07-27]), moc
 
 Shawn asked for traffic/activity monitoring for marketing purposes. Scoped as two phases:
 - **Phase 1 (SHIPPED):** Vercel Web Analytics on `foundco.app` only (not tenant sites, not dashboard/admin) - visitor counts, page views, referrers. Gated via a new `x-found-root-site` header set only by `middleware.ts` for root-domain requests. Not yet confirmed whether Vercel needs a one-time dashboard enable before data flows.
-- **Phase 2 (BACKLOG, not started):** PostHog for funnel/attribution - visit -> onboarding start -> onboarding complete -> activation/paid, with UTM campaign tracking. Needs its own session (event instrumentation through the full onboarding flow).
+- **Phase 2 (SHIPPED 2026-07-30):** PostHog wired onto the root marketing site (`foundco.app` only, same scoping as Phase 1), pageview tracking live. Full funnel/attribution event instrumentation (visit -> onboarding start -> onboarding complete -> activation/paid, UTM campaign tracking) still needs its own session - only the base SDK + pageviews are in so far.
 
 ---
 
