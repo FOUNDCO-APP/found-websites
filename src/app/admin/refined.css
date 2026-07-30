@@ -129,6 +129,7 @@
 .hq-badge-success { background: transparent; color: var(--hq-green); }
 .hq-badge-warning { background: transparent; color: var(--hq-amber); }
 .hq-badge-info { background: transparent; color: var(--hq-blue); }
+.hq-badge-danger { background: transparent; color: var(--hq-red); }
 
 .hq-button {
   min-height: 42px;

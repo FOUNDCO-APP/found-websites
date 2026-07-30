@@ -23,6 +23,12 @@ export default async function AdminMorePage() {
         </div>
       </section>
       <section className="hq-section">
+        <div className="hq-section-head"><h2 className="hq-section-title">Monitoring</h2></div>
+        <div className="hq-panel">
+          <Link href="/admin/health" className="hq-row hq-link-row"><div><p className="hq-row-title">Health</p><p className="hq-row-meta">Uptime status and error tracking</p></div><span className="hq-chevron" /></Link>
+        </div>
+      </section>
+      <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Destinations</h2></div>
         <div className="hq-panel">
           <a href="https://my.foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Customer dashboard</p><p className="hq-row-meta">Open the business-owner product</p></div><span className="hq-chevron" /></a>

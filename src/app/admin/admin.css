@@ -52,6 +52,7 @@
 .hq-badge-success { background: rgba(50,208,116,.1); color: var(--hq-green); }
 .hq-badge-warning { background: rgba(242,201,76,.1); color: var(--hq-amber); }
 .hq-badge-info { background: rgba(119,168,255,.1); color: var(--hq-blue); }
+.hq-badge-danger { background: rgba(255,116,116,.1); color: var(--hq-red); }
 .hq-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .hq-stat-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--hq-border); border-radius: 8px; background: var(--hq-surface); }
 .hq-stat { padding: 15px 16px; border-left: 1px solid var(--hq-border); }
