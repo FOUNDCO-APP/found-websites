@@ -1,4 +1,5 @@
 import { getUptimeMonitors } from "./uptimerobot"
+import { getSentryIssues } from "./sentry"
 
 export const metadata = { title: "Health - Found HQ" }
 
@@ -11,8 +12,19 @@ function statusBadge(status: string) {
   return { tone: "info", label: "Checking" }
 }
 
+function timeAgo(iso: string): string {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (seconds < 60) return "just now"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
 export default async function AdminHealthPage() {
-  const monitors = await getUptimeMonitors()
+  const [monitors, issues] = await Promise.all([getUptimeMonitors(), getSentryIssues()])
   const anyDown = (monitors ?? []).some((m) => m.status === "down")
 
   return (
@@ -56,13 +68,31 @@ export default async function AdminHealthPage() {
       </section>
 
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Errors</h2></div>
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Errors (last 14 days)</h2>
+          {issues && <span className={`hq-badge hq-badge-${issues.length ? "warning" : "success"}`}>{issues.length ? `${issues.length} open` : "Clear"}</span>}
+        </div>
         <div className="hq-panel">
+          {!issues && (
+            <div className="hq-row"><p className="hq-row-meta">Sentry isn&apos;t configured (missing read token).</p></div>
+          )}
+          {issues && issues.length === 0 && (
+            <div className="hq-row"><p className="hq-row-meta">No unresolved errors.</p></div>
+          )}
+          {issues?.map((issue) => (
+            <a key={issue.id} href={issue.permalink} target="_blank" rel="noreferrer" className="hq-row hq-link-row" style={{ minHeight: 82 }}>
+              <div>
+                <p className="hq-row-title">{issue.title}</p>
+                <p className="hq-row-meta">
+                  {issue.count}× · last seen {timeAgo(issue.lastSeen)}
+                  {issue.culprit ? ` · ${issue.culprit}` : ""}
+                </p>
+              </div>
+              <span className="hq-chevron" aria-hidden="true" />
+            </a>
+          ))}
           <a href={SENTRY_ISSUES_URL} target="_blank" rel="noreferrer" className="hq-row hq-link-row">
-            <div>
-              <p className="hq-row-title">Sentry issues</p>
-              <p className="hq-row-meta">Errors from the dashboard, every client site, and all API routes</p>
-            </div>
+            <div><p className="hq-row-title">Open Sentry</p><p className="hq-row-meta">Full issue history, resolve, and assign</p></div>
             <span className="hq-chevron" aria-hidden="true" />
           </a>
         </div>
