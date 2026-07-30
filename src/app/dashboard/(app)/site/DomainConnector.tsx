@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { connectCustomDomain, checkDomainStatus, disconnectDomain } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
@@ -16,10 +16,10 @@ const DNS_RECORDS = [
   { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
 ]
 
-export default function DomainConnector({ initialDomain, plan, subscriptionStatus, companySlug }: Props) {
-  const isPro = (plan === "found_pro" || plan === "found_business") &&
-    (subscriptionStatus === "active" || subscriptionStatus === "trialing")
-
+// Custom domains are free on every plan (shipped June 2026) - this component
+// used to gate behind Pro/Business, left stale after that decision. Kept the
+// props so callers don't need to change, just no longer used to gate.
+export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [domain, setDomain] = useState(initialDomain ?? "")
   const [connectedDomain, setConnectedDomain] = useState(initialDomain ?? "")
   const [verified, setVerified] = useState(false)
@@ -32,6 +32,24 @@ export default function DomainConnector({ initialDomain, plan, subscriptionStatu
   const [copied, setCopied] = useState<string | null>(null)
 
   const isConnected = !!connectedDomain
+
+  // Silently check status in the background - on mount (so a page reload
+  // shows the real current state instead of assuming "not verified"), then
+  // every 20s while unverified, so the owner doesn't have to remember to
+  // tap "Check Connection" themselves. Stays quiet unless it finds success;
+  // the manual button below is still what shows an explicit error.
+  useEffect(() => {
+    if (!connectedDomain || verified) return
+    let cancelled = false
+
+    async function poll() {
+      const result = await checkDomainStatus(connectedDomain)
+      if (!cancelled && result.verified) setVerified(true)
+    }
+    poll()
+    const id = setInterval(poll, 20000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [connectedDomain, verified])
 
   function copyToClipboard(text: string, key: string) {
     navigator.clipboard.writeText(text)
@@ -76,38 +94,6 @@ export default function DomainConnector({ initialDomain, plan, subscriptionStatu
     setVerificationRecords([])
     setError("")
     setDisconnecting(false)
-  }
-
-  if (!isPro) {
-    return (
-      <div style={{
-        borderRadius: 18, padding: "20px 20px",
-        backgroundColor: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-          </svg>
-          <span style={{ ...TYPE.subhead, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
-            Custom Domain
-          </span>
-        </div>
-        <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-          Connect <strong style={{ color: "rgba(255,255,255,0.5)" }}>yourbusiness.com</strong> to your Found site.
-          Available on Found Pro.
-        </p>
-        <a href="/more" style={{ textDecoration: "none" }}>
-          <div style={{
-            padding: "11px 18px", borderRadius: 10, textAlign: "center" as const,
-            backgroundColor: `${GREEN}18`, border: `1px solid ${GREEN}33`,
-            ...TYPE.subhead, fontWeight: 700, color: GREEN,
-          }}>
-            Upgrade to Found Pro →
-          </div>
-        </a>
-      </div>
-    )
   }
 
   if (isConnected) {
