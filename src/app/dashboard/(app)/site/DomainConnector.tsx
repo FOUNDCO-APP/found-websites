@@ -267,6 +267,10 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
         Usually live within minutes.
       </p>
 
+      <p style={{ margin: "8px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
+        Don&apos;t have a domain yet? We recommend GoDaddy or Namecheap.
+      </p>
+
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </div>
   )
