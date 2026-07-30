@@ -11,6 +11,7 @@ import {
 } from "next/font/google"
 import { headers } from "next/headers"
 import { Analytics } from "@vercel/analytics/next"
+import FoundPostHogProvider from "@/components/FoundPostHogProvider"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -64,6 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       ].join(" ")}>
         {children}
         {isRootSite && <Analytics />}
+        {isRootSite && <FoundPostHogProvider />}
       </body>
     </html>
   )
