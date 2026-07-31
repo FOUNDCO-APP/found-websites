@@ -480,6 +480,84 @@ export async function checkDomainStatus(domain: string): Promise<{ verified: boo
   return { verified: data.verified ?? false }
 }
 
+// Must match DNS_RECORDS in DomainConnector.tsx - the manual-setup fallback
+// shown when auto-setup isn't used or isn't available.
+const GODADDY_BASE_RECORDS: { type: string; host: string; value: string }[] = [
+  { type: "A", host: "@", value: "76.76.21.21" },
+  { type: "CNAME", host: "www", value: "cname.vercel-dns.com" },
+]
+
+async function godaddyRequest(path: string, token: string, init?: RequestInit) {
+  return fetch(`https://api.godaddy.com/v3/domains${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  })
+}
+
+// Owner pastes a GoDaddy Personal Access Token (scoped to domains.dns:update)
+// generated from their own GoDaddy account - never stored, used once in this
+// call to create the DNS records automatically, then discarded.
+export async function connectDomainViaGoDaddy(rawDomain: string, godaddyToken: string): Promise<{
+  success: boolean; domain?: string; recordsCreated?: number; error?: string
+}> {
+  const ctx = await getContext()
+  if (!ctx) return { success: false, error: "Not authenticated" }
+
+  const token = godaddyToken.trim()
+  if (!token) return { success: false, error: "Paste your GoDaddy API token first" }
+
+  // Register with Found/Vercel first - if that fails (bad domain format, not
+  // configured), never touch the owner's GoDaddy account at all.
+  const connectResult = await connectCustomDomain(rawDomain)
+  if (!connectResult.success || !connectResult.domain) return connectResult
+  const domain = connectResult.domain
+
+  const records = [...GODADDY_BASE_RECORDS, ...(connectResult.verificationRecords ?? [])]
+  let created = 0
+
+  for (const rec of records) {
+    try {
+      // GoDaddy's v3 API has no "replace" endpoint, only create/delete by id -
+      // clear any existing record at this name+type first (most newly-bought
+      // domains already have a default parking-page A record at @).
+      const existingRes = await godaddyRequest(
+        `/zones/${domain}/dns-records?type=${rec.type}&name=${encodeURIComponent(rec.host)}`,
+        token,
+      )
+      if (existingRes.status === 401 || existingRes.status === 403) {
+        return { success: false, error: "GoDaddy rejected that token - check it has the domains.dns:update scope and hasn't expired." }
+      }
+      if (existingRes.ok) {
+        const existing = await existingRes.json()
+        for (const old of existing.items ?? []) {
+          if (old.recordId) {
+            await godaddyRequest(`/zones/${domain}/dns-records/${old.recordId}`, token, { method: "DELETE" })
+          }
+        }
+      }
+
+      const createRes = await godaddyRequest(`/zones/${domain}/dns-records`, token, {
+        method: "POST",
+        body: JSON.stringify({ name: rec.host, type: rec.type, data: rec.value, ttl: 3600 }),
+      })
+      if (createRes.ok) created++
+    } catch {
+      // One record failing shouldn't block the others - the owner can still
+      // finish manually with the existing DNS-instructions fallback below.
+    }
+  }
+
+  if (created === 0) {
+    return {
+      success: false,
+      error: "Domain registered, but couldn't create any DNS records at GoDaddy. Add them manually below, or check your token's permissions.",
+    }
+  }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  return { success: true, domain, recordsCreated: created }
+}
+
 export async function disconnectDomain(domain: string): Promise<{ success: boolean; error?: string }> {
   const ctx = await getContext()
   if (!ctx) return { success: false, error: "Not authenticated" }
