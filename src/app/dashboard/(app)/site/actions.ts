@@ -1,5 +1,6 @@
 ﻿"use server"
 
+import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
@@ -198,19 +199,23 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 500,
           messages: [{ role: "user", content: sectionPrompts[section] }],
         }),
       })
 
-      if (!response.ok) throw new Error(`Anthropic ${response.status}`)
+      if (!response.ok) {
+        const body = await response.text().catch(() => "")
+        throw new Error(`Anthropic ${response.status}: ${body.slice(0, 300)}`)
+      }
       const data = await response.json()
       const text = data.content?.[0]?.text ?? ""
       const clean = text.replace(/```json|```/g, "").trim()
       generated = JSON.parse(clean)
     } catch (err) {
       console.error("[regenerate] AI fallback used", err)
+      Sentry.captureException(err, { tags: { area: "regenerateSection" }, extra: { section, companyId: ctx.company.id } })
     }
   }
 

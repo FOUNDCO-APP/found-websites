@@ -31,7 +31,14 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
   const aboutImage = sectionImages?.about ?? null
   const ctaImage = sectionImages?.cta ?? null
-  const galleryImages = sectionImages?.gallery?.length ? sectionImages.gallery : []
+  // Owner-uploaded gallery photos always come first, but a strip with only
+  // 1-2 real photos reads as sparse/broken - top it up with stock photos
+  // until there are enough real ones to fill it on their own.
+  const ownerGalleryImages = sectionImages?.gallery ?? []
+  const stockFillImages = [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]
+  const galleryImages = ownerGalleryImages.length >= 4
+    ? ownerGalleryImages
+    : Array.from(new Set([...ownerGalleryImages, ...stockFillImages])).slice(0, 4)
 
   return (
     <>
@@ -90,9 +97,9 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
       </section>
 
       {/* â”€â”€ GALLERY STRIP â€” photos arrive with a warm fade â”€â”€ */}
-      {(galleryImages.length > 0 || imgs.length >= 2) && (
+      {galleryImages.length > 0 && (
         <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
-          {(galleryImages.length ? galleryImages : [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]).map((src, i) => (
+          {galleryImages.map((src, i) => (
             <div
               key={i}
               className={`relative flex-none overflow-hidden ${i === 3 ? "md:hidden" : "md:flex-1"}`}

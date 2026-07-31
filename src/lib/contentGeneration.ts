@@ -45,7 +45,7 @@ type ClaudeMessageResponse = {
 
 const ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
 const ANTHROPIC_VERSION = "2023-06-01"
-const DEFAULT_MODEL = "claude-haiku-4-5"
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 
 function compact(value: string) {
   return value.replace(/\s+/g, " ").trim()
