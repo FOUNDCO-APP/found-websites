@@ -8,6 +8,7 @@ import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
 import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
+import { createWhiteLogoVariant } from "@/lib/logoVariants"
 import type { MenuCategory } from "@/types/company"
 
 
@@ -604,6 +605,59 @@ export async function removeStockImage(imageUrl: string) {
 // Explicit allowlist on purpose: this table also holds plan/subscription/
 // Stripe fields that must never be reachable through a generic field setter.
 const COMPANY_FIELD_ALLOWLIST = new Set(["name", "phone", "email", "city", "state"])
+
+export async function updateCompanyLogo(formData: FormData): Promise<{ url: string; whiteUrl: string | null } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const file = formData.get("file") as File | null
+  if (!file || !file.size) return { error: "No file selected." }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png"
+  const allowed = ["png", "jpg", "jpeg", "webp", "svg", "gif"]
+  if (!allowed.includes(ext)) return { error: "PNG, JPG, WEBP, or SVG only." }
+  if (file.size > 5 * 1024 * 1024) return { error: "File must be under 5 MB." }
+
+  const bytes = await file.arrayBuffer()
+  // Cache-bust: same filename every re-upload would otherwise keep serving
+  // a stale cached image at the same URL after a replace.
+  const path = `logos/${ctx.company.id}/logo-${Date.now()}.${ext}`
+
+  const { error } = await ctx.admin.storage
+    .from("company-assets")
+    .upload(path, bytes, { contentType: file.type, upsert: true })
+  if (error) return { error: error.message }
+
+  const { data: { publicUrl } } = ctx.admin.storage.from("company-assets").getPublicUrl(path)
+
+  let whiteUrl: string | null = null
+  const whiteBytes = await createWhiteLogoVariant(bytes, file.type)
+  if (whiteBytes) {
+    const whitePath = `logos/${ctx.company.id}/logo-white-${Date.now()}.png`
+    const { error: whiteError } = await ctx.admin.storage
+      .from("company-assets")
+      .upload(whitePath, whiteBytes, { contentType: "image/png", upsert: true })
+    if (!whiteError) {
+      whiteUrl = ctx.admin.storage.from("company-assets").getPublicUrl(whitePath).data.publicUrl
+    }
+  }
+
+  const { error: dbError } = await ctx.admin
+    .from("companies")
+    .update({ logo_url: publicUrl, logo_white_url: whiteUrl })
+    .eq("id", ctx.company.id)
+  if (dbError) return { error: dbError.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { url: publicUrl, whiteUrl }
+}
 
 export async function updateCompanyField(field: string, value: string) {
   const ctx = await getContext()

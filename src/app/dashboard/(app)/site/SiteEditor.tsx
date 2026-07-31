@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -18,7 +18,7 @@ type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain"
 
 type Props = {
-  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null }
+  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; logo_url?: string | null; logo_white_url?: string | null }
   config: Config | null
   photos: Photo[]
   stockImages: string[]
@@ -85,6 +85,31 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   })
   const [savingBizField, setSavingBizField] = useState<string | null>(null)
   const [savedBizField, setSavedBizField] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState(company.logo_url ?? null)
+  const [logoWhiteUrl, setLogoWhiteUrl] = useState(company.logo_white_url ?? null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  async function handleLogoUpload(file: File) {
+    setUploadingLogo(true)
+    try {
+      // No client-side resize/JPEG conversion here on purpose — that would
+      // flatten a transparent PNG to opaque before it ever reaches the
+      // server, which is exactly what breaks the white-logo generation.
+      const fd = new FormData()
+      fd.append("file", file)
+      const result = await updateCompanyLogo(fd)
+      if ("url" in result) {
+        setLogoUrl(result.url)
+        setLogoWhiteUrl(result.whiteUrl)
+      } else {
+        flashSaveError(result.error || "Couldn't upload that logo. Try again.")
+      }
+    } catch {
+      flashSaveError("Couldn't process that logo. Try a different file.")
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
 
   async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state", value: string) {
     const previousValue = businessInfo[field]
@@ -1385,6 +1410,33 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Business info" title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column" as const, gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <label style={{ cursor: uploadingLogo ? "default" : "pointer", flexShrink: 0 }}>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden disabled={uploadingLogo}
+                onChange={e => e.target.files?.[0] && handleLogoUpload(e.target.files[0])} />
+              <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff", border: `1.5px dashed ${GREEN}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {uploadingLogo ? (
+                  <Spinner color={GREEN} />
+                ) : logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="Your logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 6 }} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${GREEN}66`} strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                )}
+              </div>
+            </label>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Logo</div>
+              <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+                {uploadingLogo ? "Uploading..." : logoUrl ? "Tap to replace" : "Tap to upload"}
+              </div>
+              {logoUrl && !logoWhiteUrl && !uploadingLogo && (
+                <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                  Works everywhere. For best results on dark backgrounds, use a logo with a transparent background.
+                </div>
+              )}
+            </div>
+          </div>
           <BizInfoField label="Business name" value={businessInfo.name} placeholder="Your business name" saving={savingBizField === "name"} justSaved={savedBizField === "name"} onSave={v => saveBusinessField("name", v)} />
           <BizInfoField label="Phone" value={businessInfo.phone} placeholder="(520) 555-0100" type="tel" saving={savingBizField === "phone"} justSaved={savedBizField === "phone"} onSave={v => saveBusinessField("phone", v)} />
           <BizInfoField label="Email" value={businessInfo.email} placeholder="you@yourbusiness.com" type="email" saving={savingBizField === "email"} justSaved={savedBizField === "email"} onSave={v => saveBusinessField("email", v)} />

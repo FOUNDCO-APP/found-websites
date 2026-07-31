@@ -31,6 +31,8 @@ export default async function SitePage() {
         email: company.email,
         city: company.city,
         state: company.state,
+        logo_url: company.logo_url,
+        logo_white_url: company.logo_white_url,
       }}
       config={config}
       photos={photos ?? []}

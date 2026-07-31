@@ -25,10 +25,12 @@ export type CompanyRow = {
   default_tax_rate: number | null
   is_comp: boolean | null
   admin_notes: string | null
+  logo_url: string | null
+  logo_white_url: string | null
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, industry_category, sub_industry, form_intent, primary_intent, default_tax_rate, is_comp, admin_notes"
+  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, industry_category, sub_industry, form_intent, primary_intent, default_tax_rate, is_comp, admin_notes, logo_url, logo_white_url"
 
 // True only when both the selected-company cookie AND a server-verified
 // admin key are present - never trust the cookie alone. This is what lets
