@@ -2,6 +2,8 @@
 // dashboard's post-onboarding logo re-upload. Kept in one place so the two
 // paths can never drift into different (and differently broken) logic.
 
+import * as Sentry from "@sentry/nextjs"
+
 export async function createDarkLogoVariant(bytes: ArrayBuffer, mimeType: string): Promise<Buffer | null> {
   if (mimeType === "image/gif") return null
   try {
@@ -22,7 +24,9 @@ export async function createDarkLogoVariant(bytes: ArrayBuffer, mimeType: string
     return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
       .png()
       .toBuffer()
-  } catch {
+  } catch (err) {
+    console.error("[logoVariants] createDarkLogoVariant failed:", err)
+    Sentry.captureException(err, { tags: { area: "logoVariants" }, extra: { mimeType, byteLength: bytes.byteLength } })
     return null
   }
 }
@@ -47,7 +51,10 @@ export async function createWhiteLogoVariant(bytes: ArrayBuffer, mimeType: strin
     for (let i = 3; i < data.length; i += 4) {
       if (data[i] < 250) { hasRealTransparency = true; break }
     }
-    if (!hasRealTransparency) return null
+    if (!hasRealTransparency) {
+      console.warn("[logoVariants] createWhiteLogoVariant: no real transparency detected, skipping", { mimeType, byteLength: bytes.byteLength, width: info.width, height: info.height })
+      return null
+    }
 
     for (let i = 0; i < data.length; i += 4) {
       if (data[i + 3] > 0) {
@@ -60,7 +67,9 @@ export async function createWhiteLogoVariant(bytes: ArrayBuffer, mimeType: strin
     return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
       .png()
       .toBuffer()
-  } catch {
+  } catch (err) {
+    console.error("[logoVariants] createWhiteLogoVariant failed:", err)
+    Sentry.captureException(err, { tags: { area: "logoVariants" }, extra: { mimeType, byteLength: bytes.byteLength } })
     return null
   }
 }
