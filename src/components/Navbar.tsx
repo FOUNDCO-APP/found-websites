@@ -123,15 +123,23 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                       transition: "opacity 200ms ease",
                     }} />
                 </div>
+              ) : isOnDark ? (
+                // No dedicated white logo: show the real logo true-color on a
+                // small white plate. A CSS invert filter only makes sense for
+                // logos with real transparency — on an opaque JPEG/PNG it
+                // turns the whole image into a solid white block.
+                <div style={{
+                  height: "48px", maxWidth: "160px",
+                  display: "inline-flex", alignItems: "center",
+                  backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 12px",
+                }}>
+                  <img src={company.logo_url!} alt={company.name}
+                    className="h-full w-auto object-contain" />
+                </div>
               ) : (
-                // Single logo: invert on dark bg; strong shadow keeps white elements visible on white navbar
                 <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url!} alt={company.name}
-                    className="h-full w-full object-contain object-left"
-                    style={{
-                      filter: isOnDark ? "brightness(0) invert(1)" : "none",
-                      transition: "filter 500ms ease",
-                    }} />
+                    className="h-full w-full object-contain object-left" />
                 </div>
               )
             ) : (
@@ -263,9 +271,14 @@ export default function Navbar({ company, transparent = false }: { company: Comp
                     className="h-full w-full object-contain object-left" />
                 </div>
               ) : company.logo_url ? (
-                <div style={{ height: "48px", width: "160px" }}>
+                // This overlay is always dark — same white-plate fallback as the header.
+                <div style={{
+                  height: "48px", maxWidth: "160px",
+                  display: "inline-flex", alignItems: "center",
+                  backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 12px",
+                }}>
                   <img src={company.logo_url} alt={company.name}
-                    className="h-full w-full object-contain object-left brightness-0 invert" />
+                    className="h-full w-auto object-contain" />
                 </div>
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />

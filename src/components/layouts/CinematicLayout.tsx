@@ -139,7 +139,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
                 <Link href="/services"
                   className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                   style={{ color: primary }}>
-                  View All â†’
+                  View All →
                 </Link>
               </div>
 

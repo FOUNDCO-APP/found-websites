@@ -1375,7 +1375,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
         const uploadedUrl = res.url
         setLogoAutoDarkUrl(res.autoDarkUrl ?? "")
         set("logoUrl", uploadedUrl)
-        if (!keepExistingWhite) set("logoWhiteUrl", "")
+        if (!keepExistingWhite) set("logoWhiteUrl", res.autoWhiteUrl ?? "")
         set("logoChoice", "uploaded")
         const logoColors = res.dominantColors ?? (res.dominantColor ? [res.dominantColor] : [])
         setLogoDetectedColors(logoColors)

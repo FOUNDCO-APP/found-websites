@@ -138,7 +138,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
                   className="text-sm font-black uppercase tracking-widest hover:opacity-70 transition-opacity shrink-0"
                   style={{ color: primary }}
                 >
-                  View All â†’
+                  View All →
                 </Link>
               </div>
             </InView>

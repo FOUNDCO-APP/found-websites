@@ -94,7 +94,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
                   </h2>
                   <Link href="/services" className="text-sm font-black uppercase tracking-widest shrink-0 hover:opacity-70 transition-opacity"
                     style={{ color: primary }}>
-                    View All â†’
+                    View All →
                   </Link>
                 </div>
               </div>
