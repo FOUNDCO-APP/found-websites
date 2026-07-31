@@ -15,7 +15,7 @@ export default async function HomePage() {
 
   const admin = createAdminClient()
 
-  const [{ data: allLeadsRaw }, { data: lastPhotoRow }] = await Promise.all([
+  const [{ data: allLeadsRaw }, { data: lastPhotoRow }, { data: siteConfig }] = await Promise.all([
     admin
       .from("leads")
       .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
@@ -30,6 +30,11 @@ export default async function HomePage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    admin
+      .from("website_config")
+      .select("custom_domain")
+      .eq("company_id", company.id)
+      .single(),
   ])
 
   // Deduplicate by phone → email → id (array is already ordered newest-first,
@@ -81,6 +86,7 @@ export default async function HomePage() {
       topName={top?.name ?? null}
       topCreatedAt={top?.created_at ?? null}
       siteSlug={company.slug}
+      customDomain={siteConfig?.custom_domain ?? null}
       isActive={isActive}
       recentLeads={recentLeads}
       lastPhotoAt={lastPhotoRow?.created_at ?? null}

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlacesInput from "@/components/dashboard/PlacesInput"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -228,8 +229,8 @@ function StatusBadge({ status, label, color }: { status: string; label?: string;
 
 // ── Shareable Link ────────────────────────────────────────────────────────────
 
-function shareUrl(estimateId: string, slug: string) {
-  return `https://${slug}.foundco.app/q/${estimateId}`
+function shareUrl(estimateId: string, slug: string, customDomain: string | null) {
+  return `${getPublicSiteOrigin(slug, customDomain)}/q/${estimateId}`
 }
 
 // ── Main Page ────────────────────────────────────────────────────────────────
@@ -238,6 +239,7 @@ export default function EstimatesPage() {
   const [estimates, setEstimates] = useState<Estimate[]>([])
   const [rateSheet, setRateSheet] = useState<RateSheetItem[]>([])
   const [companySlug, setCompanySlug] = useState("")
+  const [companyCustomDomain, setCompanyCustomDomain] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState("")
   const [companyStripeReady, setCompanyStripeReady] = useState(false)
   const [defaultTaxRate, setDefaultTaxRate] = useState(0)
@@ -270,6 +272,7 @@ export default function EstimatesPage() {
       }
       setRateSheet(rd.items ?? [])
       setCompanySlug(sd.slug ?? sd.name?.toLowerCase().replace(/\s+/g, "-") ?? "")
+      setCompanyCustomDomain(sd.customDomain ?? null)
       setCompanyName(sd.name ?? "")
       setCompanyStripeReady(Boolean(sd.stripe_connect_ready))
       setDefaultTaxRate(Number(sd.default_tax_rate ?? 0))
@@ -511,6 +514,7 @@ export default function EstimatesPage() {
         <DetailSheet
           estimate={selected}
           companySlug={companySlug}
+          companyCustomDomain={companyCustomDomain}
           companyName={companyName}
           companyStripeReady={companyStripeReady}
           locationBias={locationBias}
@@ -1096,9 +1100,10 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
 }
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
+function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
+  companyCustomDomain: string | null
   companyName: string
   companyStripeReady: boolean
   locationBias?: string
@@ -1157,7 +1162,7 @@ function DetailSheet({ estimate, companySlug, companyName, companyStripeReady, l
   const paymentStillDue = needsPayment(est)
   const hasPartialPayment = paymentStillDue && paidAmount(est) > 0
   const items = est.estimate_line_items ?? []
-  const link = shareUrl(estimate.id, companySlug)
+  const link = shareUrl(estimate.id, companySlug, companyCustomDomain)
 
   function startEdit() {
     setEditItems(items.map(i => ({ ...i })))

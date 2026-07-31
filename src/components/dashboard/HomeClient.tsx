@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK, avatarColorFor } from "@/lib/dashboard/typography"
 import type { SmartNextStep } from "@/lib/dashboard/smartNextStep"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -41,6 +42,7 @@ type Props = {
   topName: string | null
   topCreatedAt: string | null
   siteSlug: string
+  customDomain: string | null
   isActive: boolean
   recentLeads: RecentLead[]
   lastPhotoAt: string | null
@@ -192,7 +194,7 @@ function LeadsSheet({ leads, newCount, industry, onClose }: { leads: RecentLead[
 export default function HomeClient({
   businessName, greeting, newCount, totalCount,
   topName, topCreatedAt,
-  siteSlug, isActive, recentLeads, lastPhotoAt, industry, smartNextStep, hasContacts,
+  siteSlug, customDomain, isActive, recentLeads, lastPhotoAt, industry, smartNextStep, hasContacts,
 }: Props) {
   const [showSheet, setShowSheet]   = useState(false)
   const [copied,    setCopied]      = useState(false)
@@ -208,7 +210,7 @@ export default function HomeClient({
   }
 
   async function handleShare() {
-    const url = `https://${siteSlug}.foundco.app`
+    const url = getPublicSiteOrigin(siteSlug, customDomain)
     if (navigator.share) {
       await navigator.share({ title: "My site on Found", url }).catch(() => {})
     } else {

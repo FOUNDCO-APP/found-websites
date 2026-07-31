@@ -6,6 +6,7 @@ import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumL
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 type Photo = {
   id: string
@@ -92,6 +93,7 @@ function PhotosPageInner() {
   const [socialError, setSocialError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
+  const [customDomain, setCustomDomain] = useState<string | null>(null)
   const [companyMeta, setCompanyMeta] = useState<CompanyMeta>({ name: "Your Business", slug: "", primaryColor: SIGNAL_GREEN, phone: null, city: null, state: null })
   const [industry, setIndustry] = useState<string | null>(null)
   const [isPro, setIsPro] = useState(false)
@@ -144,6 +146,7 @@ function PhotosPageInner() {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
+      setCustomDomain(sd.customDomain ?? null)
       setCompanyMeta({
         name: sd.name ?? "Your Business",
         slug: sd.slug ?? "",
@@ -279,7 +282,7 @@ function PhotosPageInner() {
     }
   }
   async function handleShare(album: Album) {
-    const url = `https://${siteSlug}.foundco.app/gallery/${album.slug}`
+    const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${album.slug}`
     if (navigator.share) {
       await navigator.share({ title: album.name, url }).catch(() => {})
     } else {
@@ -571,6 +574,7 @@ function PhotosPageInner() {
         <ShareSheet
           album={shareAlbum}
           siteSlug={siteSlug}
+          customDomain={customDomain}
           copied={copied}
           onShare={handleShare}
           onClose={() => setShareAlbum(null)}
@@ -1577,14 +1581,15 @@ function ExistingPhotoPicker({ photos, onClose, onConfirm }: {
 }
 
 // â”€â”€ Share sheet â”€â”€
-function ShareSheet({ album, siteSlug, copied, onShare, onClose }: {
+function ShareSheet({ album, siteSlug, customDomain, copied, onShare, onClose }: {
   album: Album
   siteSlug: string
+  customDomain: string | null
   copied: boolean
   onShare: (album: Album) => void
   onClose: () => void
 }) {
-  const url = siteSlug ? `https://${siteSlug}.foundco.app/gallery/${album.slug}` : null
+  const url = siteSlug ? `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${album.slug}` : null
 
   return (
     <>
