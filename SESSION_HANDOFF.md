@@ -1,4 +1,20 @@
-## 2026-07-30 - GoDaddy DNS Auto-Setup: BUILT
+## 2026-07-30 - GoDaddy DNS Auto-Setup: REVERTED, then Manual Flow Fixed Instead
+
+The GoDaddy scoped-token auto-setup below shipped, then Shawn immediately and correctly rejected it: "My business owners are not developers." Asking an owner to generate a Personal Access Token from a Developer Portal is not usable by Found's real, non-technical customers, no matter how it's worded. Reverted (`61c0364`).
+
+**Process correction, important:** Shawn also flagged that Claude had been running its own informal "team discussion" (simulating Craig/Priya/Phil/Marcus) and then acting on its own synthesis of it as if it were settled team consensus - without Shawn ever calling that meeting, and without including Angela or Jony, the two people whose job was exactly to catch this UX failure. Shawn's explicit, standing rule going forward: **Claude never calls a team meeting, ever - only Shawn does.** See `feedback_team_approval_process.md` in Claude's memory system for the full corrected rule.
+
+Shawn then called a real team meeting himself (Steve leading, full roster - Jony, Angela, Craig, Priya, Marcus, Chris, Phil) to actually solve the domain-connection problem. Full transcript given to Shawn raw. Team's honest conclusion: the manual DNS flow (already live) shouldn't be replaced with new automation yet - Domain Connect's approval timeline is unknown and Entri costs $3-9K+/year against Found's current real customer count, neither justified right now. Instead, fix the real friction points in what's already shipped, since nobody had data suggesting automation was even the actual blocker.
+
+Shawn confirmed: fix the manual flow now (has the time today), hold automation for later. Sequencing question he raised and worth recording: he asked whether this meant switching to **nameserver delegation** instead of individual DNS records - clarified that's a materially different, riskier architecture (hands over ALL DNS to Found, would silently break any existing business email on the domain unless Found first builds a way to preserve those records) and explicitly NOT part of this fix. Stuck with the existing safer record-based approach.
+
+**Shipped (`5c63ea1`):** `DomainConnector.tsx`'s unverified/DNS-records view now has: a plain-English line explaining what the two records do, a warning to replace (not duplicate) any existing record at the same name+type, direct links to GoDaddy's and Namecheap's DNS settings pages, and an explicit "Done - I added these records" confirmation button that swaps into a calm "checking now, no need to keep refreshing" message instead of leaving the state ambiguous. `npm run build` passed clean before each push.
+
+Shawn QA next: walk through the manual connect flow end to end as if you were Ryan (RC Bicycles) with no DNS knowledge - confirm the explanation line, the replace-warning, both registrar links open correctly, and tapping "Done - I added these records" flips to the calm checking message.
+
+---
+
+## 2026-07-30 - GoDaddy DNS Auto-Setup: BUILT (superseded, see entry above)
 
 Shawn pushed back on the earlier research conclusion ("but how long would it take to get this approved") - fair challenge, and it caught a real conflation on Claude's part. Domain Connect (the invisible, no-key UX) genuinely does need GoDaddy's manual approval with no promised timeline - confirmed straight from Domain Connect's own docs, not just search summaries. But the *direct* GoDaddy API path (owner generates their own scoped token, pastes it in) needs **zero approval from GoDaddy at all** - that's fully self-serve today. Shawn approved building that path once the distinction was clear.
 

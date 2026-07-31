@@ -20,6 +20,27 @@
 
 ---
 
+## Session: July 30, 2026 - GoDaddy Auto-Setup Reverted, Manual Flow Fixed, Team-Process Correction
+**AI:** Claude Code (Sonnet)
+**Worked on:** The GoDaddy scoped-token auto-setup shipped earlier the same session got immediately rejected by Shawn - not usable by real non-technical business owners, full stop. Reverted.
+
+### Process correction
+Shawn caught that Claude had been running its own informal simulated "team discussions," excluding Angela/Jony (customer journey, UX - the exact perspectives needed here), and acting on its own synthesis as if it were real team consensus. Standing rule going forward, saved to Claude's memory: Claude never calls a team meeting - only Shawn does.
+
+### Fixed
+- Reverted `connectDomainViaGoDaddy()` and its UI panel entirely (`61c0364`).
+- Shawn convened a real team meeting (Steve leading, full 8-person roster) - transcript given to him raw, no Claude commentary. Conclusion: hold new automation (Domain Connect needs GoDaddy's unpriced approval timeline; Entri costs $3-9K+/year against Found's current real customer count), fix the actual friction in the shipped manual flow instead.
+- Shipped manual-flow improvements (`5c63ea1`): plain-English explanation of what the DNS records do, a warning to replace rather than duplicate an existing record, direct links to GoDaddy/Namecheap DNS settings, and an explicit "Done - I added these records" confirmation that swaps into a calm "checking now" message.
+- Clarified with Shawn that nameserver delegation (a different, simpler-looking but riskier approach that could silently break existing business email) is explicitly NOT part of this - stuck with the safer per-record approach.
+
+### Verification
+- `npm run build` passed clean before both the GoDaddy-panel commit, the revert, and the manual-flow fix.
+
+### Test Next
+- Walk the manual connect flow as a non-technical owner would: explanation line, replace-warning, both registrar links, and the "Done - I added these records" confirmation state.
+
+---
+
 ## Session: July 30, 2026 - GoDaddy DNS Auto-Setup Built
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn challenged the earlier research conclusion that GoDaddy auto-setup needed an approval wait - caught a real conflation between Domain Connect (genuinely gated, no promised timeline, confirmed against Domain Connect's own docs) and GoDaddy's direct API (fully self-serve, zero approval needed). Approved building the direct-API path once that was clear.
