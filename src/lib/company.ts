@@ -37,12 +37,26 @@ export const getCompanyBySlug = cache(async function getCompanyBySlug(slug: stri
 
 export const getCompanyByDomain = cache(async function getCompanyByDomain(domain: string): Promise<Company | null> {
   const supabase = await createClient()
-  const { data } = await supabase
+  // `website_config(*)` without `!inner` is a left join - filtering the
+  // embedded resource only controls which nested rows get attached, it does
+  // NOT restrict which `companies` rows come back. Every active company was
+  // being returned (with website_config: null for non-matches), so .single()
+  // saw dozens of rows instead of one and silently failed closed to "no
+  // company found" for every real custom-domain visitor. `!inner` makes the
+  // filter a genuine join condition. .maybeSingle() (not .single()) so zero
+  // matches is a normal, quiet "no such domain" - but if MORE than one row
+  // still comes back, that's a real data collision (two companies sharing a
+  // custom_domain value), not an expected state, so it's captured loudly
+  // instead of silently 404ing a company that did everything right.
+  const { data, error } = await supabase
     .from('companies')
-    .select('*, website_config(*)')
+    .select('*, website_config!inner(*)')
     .eq('active', true)
-    .filter('website_config.custom_domain', 'eq', domain)
-    .single()
+    .eq('website_config.custom_domain', domain)
+    .maybeSingle()
+  if (error) {
+    Sentry.captureException(error, { tags: { scope: 'getCompanyByDomain-collision' }, extra: { domain } })
+  }
   if (data) Sentry.setTag('company_slug', (data as Company).slug)
   return polishCompanySiteCopy(data as Company | null)
 })
