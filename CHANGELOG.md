@@ -20,6 +20,23 @@
 
 ---
 
+## Session: July 30, 2026 - GoDaddy DNS Auto-Setup Built
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn challenged the earlier research conclusion that GoDaddy auto-setup needed an approval wait - caught a real conflation between Domain Connect (genuinely gated, no promised timeline, confirmed against Domain Connect's own docs) and GoDaddy's direct API (fully self-serve, zero approval needed). Approved building the direct-API path once that was clear.
+
+### Built
+- `connectDomainViaGoDaddy()` in `actions.ts`, built against GoDaddy's real v3 OpenAPI spec (fetched and read directly, not assumed): registers with Vercel first via the existing `connectCustomDomain()`, then creates the A/CNAME + any verification records at GoDaddy via `POST/GET/DELETE /v3/domains/zones/{domain}/dns-records` with Bearer-token auth. Clears any existing record at the same name+type first since GoDaddy's API has no replace endpoint - handles the common case of a freshly-bought domain already having a default parking A record.
+- The pasted GoDaddy token is a local variable only - used once in that server-action call, never written to the database or logged, discarded immediately after.
+- New opt-in panel in `DomainConnector.tsx`'s empty state ("On GoDaddy? Set your DNS up automatically →"), sitting below the existing manual-entry flow which is unchanged and still the default. Auto-setup success swaps the unverified-state manual DNS-record list for a "we did this for you" message instead.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- With a real GoDaddy account, generate a Personal Access Token scoped to `domains.dns:update`, paste it into the new panel on a real domain, and confirm the DNS records appear in GoDaddy's own dashboard and the domain goes live without any manual DNS entry.
+
+---
+
 ## Session: July 30, 2026 - Registrar Recommendations Shipped + Domain Auto-Setup Research
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn asked to pause other work and start on domain registrar auto-setup - which registrars to recommend, and which would actually support real DNS automation with Found's system.

@@ -1,3 +1,21 @@
+## 2026-07-30 - GoDaddy DNS Auto-Setup: BUILT
+
+Shawn pushed back on the earlier research conclusion ("but how long would it take to get this approved") - fair challenge, and it caught a real conflation on Claude's part. Domain Connect (the invisible, no-key UX) genuinely does need GoDaddy's manual approval with no promised timeline - confirmed straight from Domain Connect's own docs, not just search summaries. But the *direct* GoDaddy API path (owner generates their own scoped token, pastes it in) needs **zero approval from GoDaddy at all** - that's fully self-serve today. Shawn approved building that path once the distinction was clear.
+
+Pulled GoDaddy's real v3 OpenAPI spec directly (`developer.godaddy.com/openapi/domains-v3.json`) instead of guessing at endpoints - confirmed the actual contract: `POST/GET/DELETE https://api.godaddy.com/v3/domains/zones/{domain}/dns-records`, Bearer-token auth, `domains.dns:update` scope, records shaped `{name, type, data, ttl}`.
+
+**Built and shipped (`71408bb`):**
+- New `connectDomainViaGoDaddy()` in `actions.ts` - registers with Vercel first via the existing `connectCustomDomain()` (so a bad domain never touches the owner's GoDaddy account), then creates the standard A/CNAME records plus any Vercel verification records at GoDaddy. Since GoDaddy's v3 API has no "replace" endpoint (only create/delete by id), it first clears any existing record at that name+type - handles the very common case of a newly-bought domain already having a default parking-page A record.
+- The GoDaddy token is a local variable only, used once inside that single server-action call and discarded - never written to the database, never logged. This was the credential-custody question flagged earlier; resolved by simply never persisting it.
+- `DomainConnector.tsx` empty state got a new opt-in panel ("On GoDaddy? Set your DNS up automatically →") sitting below the existing manual-entry flow, which is untouched and still the default. When auto-setup is used, the unverified-state view swaps the manual DNS-record list for a plain "we did this for you, checking connection" message instead.
+- `npm run build` passed clean before commit.
+
+**Not done:** Domain Connect itself (the true one-click, no-token flow) - still logged as the longer-term goal in `DECISIONS.md`, not blocking this. Namecheap and other registrars are still deferred to a later phase.
+
+Shawn QA next: with a real GoDaddy account and domain, generate a Personal Access Token scoped to `domains.dns:update` at `developer.godaddy.com`, paste it into the new panel, and confirm the A/CNAME records actually appear in the GoDaddy DNS dashboard and the domain goes live without manually touching DNS.
+
+---
+
 ## 2026-07-30 - Domain Registrar Recommendations + Auto-Setup Research
 
 Shawn asked to pause the open items from earlier today and start on domain registrar auto-setup: pick top registrars to recommend, and figure out which ones would actually work with Found's setup system for real automation (not just better copy).
