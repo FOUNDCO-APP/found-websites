@@ -31,8 +31,33 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [error, setError] = useState("")
   const [copied, setCopied] = useState<string | null>(null)
   const [manualStepConfirmed, setManualStepConfirmed] = useState(false)
+  const [misconfigured, setMisconfigured] = useState(false)
+  const [checkAttempts, setCheckAttempts] = useState(0)
 
   const isConnected = !!connectedDomain
+  // Below this many checks, always show the calm "still checking" message even
+  // if Vercel already reports misconfigured - DNS propagation isn't instant,
+  // and flagging "records look wrong" on the very first check (when it's
+  // almost certainly just still propagating) would be a false alarm. Past
+  // this many checks, a still-misconfigured result is worth surfacing as
+  // something the owner may actually need to fix, not just wait out.
+  const MISCONFIGURED_GRACE_CHECKS = 3
+  const showMisconfiguredHelp = !verified && manualStepConfirmed && misconfigured && checkAttempts >= MISCONFIGURED_GRACE_CHECKS
+
+  function applyCheckResult(result: { verified: boolean; misconfigured?: boolean; error?: string }) {
+    setVerified(result.verified)
+    if (result.verified) {
+      setCheckAttempts(0)
+      setMisconfigured(false)
+      return
+    }
+    // A network/API error isn't evidence the records are wrong - only count
+    // an actual "misconfigured" answer from Vercel toward the grace window.
+    if (!result.error) {
+      setCheckAttempts(n => n + 1)
+      setMisconfigured(!!result.misconfigured)
+    }
+  }
 
   // Silently check status in the background - on mount (so a page reload
   // shows the real current state instead of assuming "not verified"), then
@@ -45,11 +70,12 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
 
     async function poll() {
       const result = await checkDomainStatus(connectedDomain)
-      if (!cancelled && result.verified) setVerified(true)
+      if (!cancelled) applyCheckResult(result)
     }
     poll()
     const id = setInterval(poll, 20000)
     return () => { cancelled = true; clearInterval(id) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connectedDomain, verified])
 
   function copyToClipboard(text: string, key: string) {
@@ -73,6 +99,8 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setVerified(result.verified ?? false)
     setVerificationRecords(result.verificationRecords ?? [])
     setManualStepConfirmed(false)
+    setMisconfigured(false)
+    setCheckAttempts(0)
     setInputValue("")
   }
 
@@ -81,7 +109,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setChecking(true)
     const result = await checkDomainStatus(connectedDomain)
     setChecking(false)
-    setVerified(result.verified)
+    applyCheckResult(result)
     if (!result.verified) setError("DNS not detected yet — it can take up to 48 hours to propagate.")
     else setError("")
   }
@@ -89,6 +117,32 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   function handleConfirmManualStep() {
     setManualStepConfirmed(true)
     handleCheck()
+  }
+
+  function DnsRecordsList() {
+    return (
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+        {DNS_RECORDS.map((rec, i) => (
+          <div key={i} style={{
+            borderRadius: 12, padding: "11px 14px",
+            backgroundColor: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", gap: 10,
+          }}>
+            <div style={{ display: "flex", gap: 14, flex: 1, fontFamily: "monospace", fontSize: 12 }}>
+              <span style={{ color: "rgba(255,180,0,0.9)", fontWeight: 700, minWidth: 44 }}>{rec.type}</span>
+              <span style={{ color: "rgba(255,255,255,0.5)", minWidth: 30 }}>{rec.host}</span>
+              <span style={{ color: "white", fontWeight: 600, flex: 1 }}>{rec.value}</span>
+            </div>
+            <button
+              onClick={() => copyToClipboard(rec.value, rec.type + rec.host)}
+              style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6, backgroundColor: copied === rec.type + rec.host ? `${GREEN}22` : "rgba(255,255,255,0.06)", color: copied === rec.type + rec.host ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700 }}>
+              {copied === rec.type + rec.host ? "✓" : "Copy"}
+            </button>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   async function handleDisconnect() {
@@ -100,6 +154,8 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setVerified(false)
     setVerificationRecords([])
     setManualStepConfirmed(false)
+    setMisconfigured(false)
+    setCheckAttempts(0)
     setError("")
     setDisconnecting(false)
   }
@@ -148,27 +204,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
               <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
               </p>
-              <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
-                {DNS_RECORDS.map((rec, i) => (
-                  <div key={i} style={{
-                    borderRadius: 12, padding: "11px 14px",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    display: "flex", alignItems: "center", gap: 10,
-                  }}>
-                    <div style={{ display: "flex", gap: 14, flex: 1, fontFamily: "monospace", fontSize: 12 }}>
-                      <span style={{ color: "rgba(255,180,0,0.9)", fontWeight: 700, minWidth: 44 }}>{rec.type}</span>
-                      <span style={{ color: "rgba(255,255,255,0.5)", minWidth: 30 }}>{rec.host}</span>
-                      <span style={{ color: "white", fontWeight: 600, flex: 1 }}>{rec.value}</span>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(rec.value, rec.type + rec.host)}
-                      style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6, backgroundColor: copied === rec.type + rec.host ? `${GREEN}22` : "rgba(255,255,255,0.06)", color: copied === rec.type + rec.host ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700 }}>
-                      {copied === rec.type + rec.host ? "✓" : "Copy"}
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <DnsRecordsList />
 
               {verificationRecords.length > 0 && (
                 <div style={{ marginTop: 10 }}>
@@ -209,7 +245,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
           </>
         )}
 
-        {!verified && manualStepConfirmed && (
+        {!verified && manualStepConfirmed && !showMisconfiguredHelp && (
           <div style={{ padding: "0 18px 16px" }}>
             <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
               We're checking now. This usually takes a few minutes, but can take longer depending on your registrar — no need to keep refreshing, this screen will say &quot;Live&quot; the moment it's ready.
@@ -219,6 +255,18 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
               style={{ marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: GREEN, textDecoration: "underline" }}>
               Show the records again
             </button>
+          </div>
+        )}
+
+        {!verified && manualStepConfirmed && showMisconfiguredHelp && (
+          <div style={{ padding: "0 18px 16px" }}>
+            <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.9)", lineHeight: 1.6 }}>
+              We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
+            </p>
+            <DnsRecordsList />
+            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+              Fixed it? Give it a few minutes, then check again below.
+            </p>
           </div>
         )}
 

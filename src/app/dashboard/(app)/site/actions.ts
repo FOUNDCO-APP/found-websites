@@ -422,8 +422,68 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
   return { url: publicUrl }
 }
 
+// Vercel tracks two separate things for a domain: whether this project owns
+// the claim to it (the /domains endpoint's `verified`), and whether its DNS
+// actually points at Vercel (the /domains/{domain}/config endpoint's
+// `misconfigured`). Found used to treat the first as "Live" - a domain with
+// zero DNS changes could read `verified: true` immediately since nobody else
+// had a conflicting claim on it, so the dashboard said "Live" while the site
+// was not reachable there at all. This helper is the one place both signals
+// get combined; "live" requires both. Any failure to positively confirm
+// "not misconfigured" fails closed - reported as not-live, never as an
+// ambiguous pass. Short in-memory cache so an owner with two tabs open (or
+// the 20s poll firing close to a manual "Check Connection" tap) doesn't
+// double the Vercel calls for the same domain within the same few seconds.
+type DomainStatus = { ownershipVerified: boolean; misconfigured: boolean; error?: string }
+const domainStatusCache = new Map<string, { data: DomainStatus; expiresAt: number }>()
+const DOMAIN_STATUS_CACHE_MS = 12000
+
+async function getVercelDomainStatus(domain: string): Promise<DomainStatus> {
+  const cached = domainStatusCache.get(domain)
+  if (cached && cached.expiresAt > Date.now()) return cached.data
+
+  const token = process.env.VERCEL_API_TOKEN
+  const projectId = process.env.VERCEL_PROJECT_ID
+  if (!token || !projectId) return { ownershipVerified: false, misconfigured: true, error: "Not configured" }
+
+  let result: DomainStatus
+  try {
+    const [domainRes, configRes] = await Promise.all([
+      fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${domain}`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+      }),
+      fetch(`https://api.vercel.com/v6/domains/${domain}/config`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+      }),
+    ])
+
+    if (!domainRes.ok || !configRes.ok) {
+      const errSource = !domainRes.ok ? domainRes : configRes
+      const errData = await errSource.json().catch(() => ({}))
+      result = { ownershipVerified: false, misconfigured: true, error: errData.error?.message ?? "Couldn't check domain status" }
+    } else {
+      const domainData = await domainRes.json()
+      const configData = await configRes.json()
+      result = {
+        ownershipVerified: domainData.verified ?? false,
+        // Fail closed: only a explicit `false` counts as correctly configured.
+        misconfigured: configData.misconfigured !== false,
+      }
+    }
+  } catch {
+    result = { ownershipVerified: false, misconfigured: true, error: "Couldn't reach Vercel" }
+  }
+
+  domainStatusCache.set(domain, { data: result, expiresAt: Date.now() + DOMAIN_STATUS_CACHE_MS })
+  return result
+}
+
+function isDomainLive(status: DomainStatus) {
+  return status.ownershipVerified && !status.misconfigured
+}
+
 export async function connectCustomDomain(rawDomain: string): Promise<{
-  success: boolean; domain?: string; verified?: boolean
+  success: boolean; domain?: string; verified?: boolean; misconfigured?: boolean
   verificationRecords?: { type: string; host: string; value: string }[]
   error?: string
 }> {
@@ -458,26 +518,21 @@ export async function connectCustomDomain(rawDomain: string): Promise<{
 
   revalidatePath(`/${ctx.company.slug}`)
 
+  domainStatusCache.delete(domain) // just changed - never serve a stale cached status right after connecting
+  const status = await getVercelDomainStatus(domain)
+
   return {
     success: true,
     domain,
-    verified: data.verified ?? false,
+    verified: isDomainLive(status),
+    misconfigured: status.misconfigured,
     verificationRecords: (data.verification ?? []) as { type: string; host: string; value: string }[],
   }
 }
 
-export async function checkDomainStatus(domain: string): Promise<{ verified: boolean; error?: string }> {
-  const token = process.env.VERCEL_API_TOKEN
-  const projectId = process.env.VERCEL_PROJECT_ID
-  if (!token || !projectId) return { verified: false, error: "Not configured" }
-
-  const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${domain}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
-  const data = await res.json()
-  if (!res.ok) return { verified: false, error: data.error?.message }
-  return { verified: data.verified ?? false }
+export async function checkDomainStatus(domain: string): Promise<{ verified: boolean; misconfigured: boolean; error?: string }> {
+  const status = await getVercelDomainStatus(domain)
+  return { verified: isDomainLive(status), misconfigured: status.misconfigured, error: status.error }
 }
 
 export async function disconnectDomain(domain: string): Promise<{ success: boolean; error?: string }> {
@@ -498,6 +553,7 @@ export async function disconnectDomain(domain: string): Promise<{ success: boole
     .update({ custom_domain: null, updated_at: new Date().toISOString() })
     .eq("company_id", ctx.company.id)
 
+  domainStatusCache.delete(domain)
   revalidatePath(`/${ctx.company.slug}`)
   return { success: true }
 }
