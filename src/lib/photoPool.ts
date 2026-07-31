@@ -21,26 +21,34 @@ async function fetchPool(industryCategory: string): Promise<PoolPhoto[]> {
   }
 }
 
-// Returns photo URLs for a given industry, optionally filtered by sub-type tag.
-// If subType is provided: returns matching tagged photos first, then general (null tag) as fallback.
-// If subType is not provided: returns all photos shuffled.
+// Returns photo URLs for a given industry, optionally filtered by sub-type tag,
+// plus whether any photo was actually tagged for that sub-type.
+// If subType is provided and matches a tag: returns tagged photos first, then
+// general (null tag) as fallback, matchedTag: true.
+// If subType is provided but nothing is tagged for it: returns the pool's
+// general photos, but matchedTag: false — the caller should treat these as
+// an untrustworthy fit (e.g. a bike shop under "retail" falling back to
+// generic boutique photos) rather than a real match.
+// If subType is not provided: returns all photos shuffled, matchedTag: true.
 export async function getPhotoPool(
   industryCategory: string,
   _vibe: string,
   subType?: string
-): Promise<string[]> {
+): Promise<{ urls: string[]; matchedTag: boolean }> {
   const pool = await fetchPool(industryCategory)
-  if (!pool.length) return []
+  if (!pool.length) return { urls: [], matchedTag: false }
 
   if (subType) {
     const subTypeLower = subType.toLowerCase()
     const tagged = pool.filter(p => p.tag && p.tag.toLowerCase().includes(subTypeLower))
-    const general = pool.filter(p => !p.tag)
-    const combined = [...tagged, ...general]
-    return combined.length ? combined.map(p => p.url) : pool.map(p => p.url)
+    if (tagged.length) {
+      const general = pool.filter(p => !p.tag)
+      return { urls: [...tagged, ...general].map(p => p.url), matchedTag: true }
+    }
+    return { urls: pool.map(p => p.url), matchedTag: false }
   }
 
-  return [...pool].sort(() => Math.random() - 0.5).map(p => p.url)
+  return { urls: [...pool].sort(() => Math.random() - 0.5).map(p => p.url), matchedTag: true }
 }
 
 export async function getPhotoPoolWithDesc(

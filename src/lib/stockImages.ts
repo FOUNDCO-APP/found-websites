@@ -28,27 +28,40 @@ export async function getStockImages(company: Company): Promise<string[]> {
     return [...existing].sort(() => Math.random() - 0.5)
   }
 
-  // Level 3: industry photo pool
-  const pool = await getPhotoPool(company.industry_category, company.vibe || "bold", company.sub_industry ?? undefined)
-  if (pool.length) {
+  // Level 3: industry photo pool — only trust it outright when photos are
+  // actually tagged for this sub-industry, or there's no sub-industry to
+  // match against. A pool falling back to untagged/general photos can be a
+  // bad fit for a specific sub-vertical (e.g. a bike shop under "retail"
+  // landing on generic boutique/apparel stock) — try a live keyword search
+  // first in that case instead of trusting the mismatch.
+  const subType = company.sub_industry ?? undefined
+  const { urls: pool, matchedTag } = await getPhotoPool(company.industry_category, company.vibe || "bold", subType)
+  if (pool.length && matchedTag) {
     const shuffled = [...pool].sort(() => Math.random() - 0.5)
     void cacheStockImages(company.id, shuffled)
     return shuffled
   }
 
-  // Level 4: Pexels
+  // Level 4: Pexels, keyword-driven (photo_keywords overrides the industry default)
   if (process.env.PEXELS_API_KEY) {
     const fetched = await fetchStockPhotos(
       company.industry_category,
       company.vibe || "bold",
       10,
       company.city,
-      company.photo_keywords || company.sub_industry
+      company.photo_keywords || subType
     )
     if (fetched.length) {
       void cacheStockImages(company.id, fetched)
       return fetched
     }
+  }
+
+  // Nothing better available — fall back to the generic pool rather than nothing.
+  if (pool.length) {
+    const shuffled = [...pool].sort(() => Math.random() - 0.5)
+    void cacheStockImages(company.id, shuffled)
+    return shuffled
   }
 
   return []
