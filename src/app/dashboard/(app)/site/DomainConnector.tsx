@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { connectCustomDomain, connectDomainViaGoDaddy, checkDomainStatus, disconnectDomain } from "./actions"
+import { connectCustomDomain, checkDomainStatus, disconnectDomain } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type Props = {
@@ -30,10 +30,6 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [disconnecting, setDisconnecting] = useState(false)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState<string | null>(null)
-  const [showGoDaddyPanel, setShowGoDaddyPanel] = useState(false)
-  const [godaddyToken, setGodaddyToken] = useState("")
-  const [connectingViaGoDaddy, setConnectingViaGoDaddy] = useState(false)
-  const [autoSetupUsed, setAutoSetupUsed] = useState(false)
 
   const isConnected = !!connectedDomain
 
@@ -78,26 +74,6 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setInputValue("")
   }
 
-  async function handleGoDaddyConnect() {
-    if (!inputValue.trim() || !godaddyToken.trim()) return
-    setConnectingViaGoDaddy(true)
-    setError("")
-    const result = await connectDomainViaGoDaddy(inputValue, godaddyToken)
-    setConnectingViaGoDaddy(false)
-    setGodaddyToken("") // never held onto longer than the call that used it
-    if (!result.success || !result.domain) {
-      setError(result.error ?? "Something went wrong")
-      return
-    }
-    setConnectedDomain(result.domain)
-    setDomain(result.domain)
-    setVerified(false)
-    setVerificationRecords([])
-    setAutoSetupUsed(true)
-    setInputValue("")
-    setShowGoDaddyPanel(false)
-  }
-
   async function handleCheck() {
     if (!connectedDomain) return
     setChecking(true)
@@ -116,7 +92,6 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setDomain("")
     setVerified(false)
     setVerificationRecords([])
-    setAutoSetupUsed(false)
     setError("")
     setDisconnecting(false)
   }
@@ -146,20 +121,12 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
           <div style={{ flex: 1 }}>
             <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
             <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : "rgba(255,180,0,0.8)" }}>
-              {verified ? "Live — your site is live at this domain" : autoSetupUsed ? "DNS set up automatically — checking connection" : "Waiting for DNS — check back in a few minutes"}
+              {verified ? "Live — your site is live at this domain" : "Waiting for DNS — check back in a few minutes"}
             </div>
           </div>
         </div>
 
-        {!verified && autoSetupUsed && (
-          <div style={{ padding: "0 18px 16px" }}>
-            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-              We created your DNS records at GoDaddy automatically — no copy-pasting needed. This usually goes live within a few minutes, sometimes up to a few hours.
-            </p>
-          </div>
-        )}
-
-        {!verified && !autoSetupUsed && (
+        {!verified && (
           <>
             {/* DNS Records */}
             <div style={{ padding: "0 18px 16px" }}>
@@ -203,11 +170,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
                 </div>
               )}
             </div>
-          </>
-        )}
 
-        {!verified && (
-          <>
             {/* Check / Disconnect buttons */}
             <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
               <button
@@ -297,56 +260,6 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
 
       {error && (
         <p style={{ margin: "10px 0 0", ...TYPE.footnote, color: "rgba(255,130,130,0.9)" }}>{error}</p>
-      )}
-
-      {!showGoDaddyPanel ? (
-        <button
-          onClick={() => setShowGoDaddyPanel(true)}
-          style={{ marginTop: 12, background: "none", border: "none", padding: 0, cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: GREEN, textDecoration: "underline" }}>
-          On GoDaddy? Set your DNS up automatically →
-        </button>
-      ) : (
-        <div style={{ marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.04)", border: `1px solid ${GREEN}33` }}>
-          <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-            Paste a GoDaddy API token (Developer Portal → Personal Access Tokens, scoped to &quot;Update DNS records&quot;) and we&apos;ll create the records for you automatically — no copy-pasting.
-          </p>
-          <input
-            type="password"
-            value={godaddyToken}
-            onChange={e => { setGodaddyToken(e.target.value); setError("") }}
-            placeholder="GoDaddy API token"
-            style={{
-              width: "100%", padding: "12px 14px", borderRadius: 10,
-              backgroundColor: "rgba(255,255,255,0.07)",
-              border: `1.5px solid ${GREEN}33`,
-              color: "white", fontSize: 14, outline: "none", fontFamily: "inherit",
-              boxSizing: "border-box" as const, marginBottom: 8,
-            }}
-          />
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={handleGoDaddyConnect}
-              disabled={connectingViaGoDaddy || !inputValue.trim() || !godaddyToken.trim()}
-              style={{
-                flex: 1, padding: "12px 0", borderRadius: 10, border: "none",
-                backgroundColor: connectingViaGoDaddy || !inputValue.trim() || !godaddyToken.trim() ? "rgba(255,255,255,0.07)" : GREEN,
-                color: connectingViaGoDaddy || !inputValue.trim() || !godaddyToken.trim() ? "rgba(255,255,255,0.3)" : BLACK,
-                fontSize: 13, fontWeight: 700, cursor: connectingViaGoDaddy ? "default" : "pointer",
-              }}>
-              {connectingViaGoDaddy ? "Setting up…" : "Set Up Automatically"}
-            </button>
-            <button
-              onClick={() => { setShowGoDaddyPanel(false); setGodaddyToken(""); setError("") }}
-              style={{ padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              Cancel
-            </button>
-          </div>
-          {!inputValue.trim() && (
-            <p style={{ margin: "8px 0 0", ...TYPE.footnote, color: "rgba(255,180,0,0.8)" }}>
-              Enter your domain above first.
-            </p>
-          )}
-        </div>
       )}
 
       <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
