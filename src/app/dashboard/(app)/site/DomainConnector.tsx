@@ -30,6 +30,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [disconnecting, setDisconnecting] = useState(false)
   const [error, setError] = useState("")
   const [copied, setCopied] = useState<string | null>(null)
+  const [manualStepConfirmed, setManualStepConfirmed] = useState(false)
 
   const isConnected = !!connectedDomain
 
@@ -71,6 +72,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setDomain(result.domain)
     setVerified(result.verified ?? false)
     setVerificationRecords(result.verificationRecords ?? [])
+    setManualStepConfirmed(false)
     setInputValue("")
   }
 
@@ -84,6 +86,11 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     else setError("")
   }
 
+  function handleConfirmManualStep() {
+    setManualStepConfirmed(true)
+    handleCheck()
+  }
+
   async function handleDisconnect() {
     if (!connectedDomain) return
     setDisconnecting(true)
@@ -92,6 +99,7 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setDomain("")
     setVerified(false)
     setVerificationRecords([])
+    setManualStepConfirmed(false)
     setError("")
     setDisconnecting(false)
   }
@@ -121,15 +129,22 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
           <div style={{ flex: 1 }}>
             <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
             <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : "rgba(255,180,0,0.8)" }}>
-              {verified ? "Live — your site is live at this domain" : "Waiting for DNS — check back in a few minutes"}
+              {verified
+                ? "Live — your site is live at this domain"
+                : manualStepConfirmed
+                  ? "Checking your connection — this can take a few minutes"
+                  : "Add the records below to finish connecting"}
             </div>
           </div>
         </div>
 
-        {!verified && (
+        {!verified && !manualStepConfirmed && (
           <>
             {/* DNS Records */}
             <div style={{ padding: "0 18px 16px" }}>
+              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                These two lines tell the internet where to send visitors when they type your domain. Add them exactly as shown below.
+              </p>
               <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
               </p>
@@ -169,8 +184,46 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
                   ))}
                 </div>
               )}
-            </div>
 
+              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.85)", lineHeight: 1.6 }}>
+                If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
+              </p>
+
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                  Open GoDaddy DNS settings →
+                </a>
+                <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                  Open Namecheap DNS settings →
+                </a>
+              </div>
+
+              <button
+                onClick={handleConfirmManualStep}
+                style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
+                Done — I added these records
+              </button>
+            </div>
+          </>
+        )}
+
+        {!verified && manualStepConfirmed && (
+          <div style={{ padding: "0 18px 16px" }}>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+              We're checking now. This usually takes a few minutes, but can take longer depending on your registrar — no need to keep refreshing, this screen will say &quot;Live&quot; the moment it's ready.
+            </p>
+            <button
+              onClick={() => setManualStepConfirmed(false)}
+              style={{ marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: GREEN, textDecoration: "underline" }}>
+              Show the records again
+            </button>
+          </div>
+        )}
+
+        {!verified && (
+          <>
             {/* Check / Disconnect buttons */}
             <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
               <button
