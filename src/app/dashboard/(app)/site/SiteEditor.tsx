@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -11,7 +11,7 @@ import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpd
 import { resizeImageToJpeg } from "@/lib/resizeImage"
 
 type Config = Record<string, unknown>
-type Photo = { id: string; url: string; website_section: string | null; media_type?: "photo" | "video"; mime_type?: string | null }
+type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact"
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
@@ -550,6 +550,36 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     })
   }
 
+  // Gallery is independent of website_section on purpose - a photo can be
+  // BOTH a primary slot (hero/about/etc.) AND in the gallery strip at the
+  // same time. Team-approved: photos should be reusable across slots,
+  // gallery specifically since it's the one slot meant to hold several.
+  function handleToggleGallery(photoId: string, include: boolean) {
+    const previousPhotos = localPhotos
+    setLocalPhotos(prev => prev.map(p => p.id === photoId ? { ...p, in_gallery: include } : p))
+    startTransition(async () => {
+      const result = await toggleGalleryPhoto(photoId, include)
+      if (result && "error" in result) {
+        setLocalPhotos(previousPhotos)
+        flashSaveError("Couldn't update that photo. Try again.")
+      }
+    })
+  }
+
+  function handleClearAllGallery() {
+    const galleryIds = localPhotos.filter(p => p.in_gallery).map(p => p.id)
+    const previousPhotos = localPhotos
+    setLocalPhotos(prev => prev.map(p => p.in_gallery ? { ...p, in_gallery: false } : p))
+    setPhotoPickerSlot(null)
+    startTransition(async () => {
+      const results = await Promise.all(galleryIds.map(id => toggleGalleryPhoto(id, false)))
+      if (results.some(r => r && "error" in r)) {
+        setLocalPhotos(previousPhotos)
+        flashSaveError("Couldn't remove those photos. Try again.")
+      }
+    })
+  }
+
   function handleClearPhotoSlot(slot: PhotoSlot) {
     const slotPhotoIds = localPhotos.filter(p => p.website_section === slot).map(p => p.id)
     const previousPhotos = localPhotos
@@ -582,10 +612,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const heroPhotos = localPhotos.filter(p => p.website_section === "hero")
   const aboutPhotos = localPhotos.filter(p => p.website_section === "about")
   const ctaPhotos = localPhotos.filter(p => p.website_section === "cta")
-  const galleryPhotos = localPhotos.filter(p => p.website_section === "gallery")
+  const galleryPhotos = localPhotos.filter(p => p.in_gallery)
   const contactPhotos = localPhotos.filter(p => p.website_section === "contact")
   const announcementPhotos = localPhotos.filter(p => p.website_section === "announcement")
+  // Photos already used as a primary slot (hero/about/etc.) still show up
+  // as eligible for gallery - the two are independent now, so reusing a
+  // great photo in both places is expected, not a conflict.
   const unassigned = localPhotos.filter(p => !p.website_section)
+  const galleryEligible = localPhotos.filter(p => !p.in_gallery)
   const pickerPhotos = localPhotos
   const services = (config.services as Array<{name:string;description:string}>) ?? []
   const heroImage = heroPhotos[0]?.url ?? (config.hero_video_url as string) ?? (config.hero_image_url as string) ?? null
@@ -628,7 +662,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
     { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
     { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
-    { slot: "gallery", label: "Gallery", helper: "Photos shown in gallery and photo strips.", photos: galleryPhotos },
+    { slot: "gallery", label: "Gallery", helper: "Shown in gallery and photo strips - add several, not just one, for the best look.", photos: galleryPhotos },
     { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
   ]
@@ -1312,12 +1346,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <div style={{ ...TYPE.caption, color: "#34D399", marginBottom: 10 }}>
                 Your photos - live on your gallery
               </div>
+              {galleryPhotos.length < 4 && (
+                <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
+                  Add a few more below - {galleryPhotos.length} of the recommended 4+ so far. A photo already used elsewhere on your site (Header, About, etc.) can be added here too.
+                </p>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
                 {galleryPhotos.map(p => (
                   <div key={p.id} style={{ position: "relative", borderRadius: 14, overflow: "hidden", aspectRatio: "1" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    <button onClick={() => handleAssignPhoto(p.id, null)} style={{ position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer" }}>
+                    <button onClick={() => handleToggleGallery(p.id, false)} style={{ position: "absolute", inset: 0, backgroundColor: "transparent", border: "none", cursor: "pointer" }}>
                       <div style={{ position: "absolute", top: 6, right: 6, width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 10 }}>x</div>
                     </button>
                   </div>
@@ -1326,14 +1365,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           )}
 
-          {unassigned.length > 0 && (
+          {galleryEligible.length > 0 && (
             <div>
               <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>
                 Add your photos to gallery
               </div>
+              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
+                Tap as many as you want - this includes photos already used elsewhere on your site.
+              </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
-                {unassigned.map(p => (
-                  <button key={p.id} onClick={() => handleAssignPhoto(p.id, "gallery")} style={{ padding: 0, border: "2px dashed rgba(52,211,153,0.25)", borderRadius: 14, overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent" }}>
+                {galleryEligible.map(p => (
+                  <button key={p.id} onClick={() => handleToggleGallery(p.id, true)} style={{ padding: 0, border: "2px dashed rgba(52,211,153,0.25)", borderRadius: 14, overflow: "hidden", aspectRatio: "1", cursor: "pointer", position: "relative", backgroundColor: "transparent" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }} />
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: 24, opacity: 0.6 }}>+</div>
@@ -1557,9 +1599,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               {pickerPhotos.length > 0 ? (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
                   {pickerPhotos.map(photo => {
-                    const selected = photo.website_section === activeSlot.slot
+                    const isGallerySlot = activeSlot.slot === "gallery"
+                    const selected = isGallerySlot ? Boolean(photo.in_gallery) : photo.website_section === activeSlot.slot
+                    const onSelect = () => isGallerySlot ? handleToggleGallery(photo.id, !photo.in_gallery) : handleAssignPhoto(photo.id, activeSlot.slot)
                     return (
-                      <button key={photo.id} onClick={() => handleAssignPhoto(photo.id, activeSlot.slot)} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
+                      <button key={photo.id} onClick={onSelect} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
                         <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
                           {isVideoMedia(photo.url, photo.mime_type) ? (
                             <VideoThumb src={photo.url} />
@@ -1588,7 +1632,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               )}
 
               {activeSlot.photos.length > 0 && (
-                <button onClick={() => handleClearPhotoSlot(activeSlot.slot)} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
+                <button onClick={() => activeSlot.slot === "gallery" ? handleClearAllGallery() : handleClearPhotoSlot(activeSlot.slot)} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
                   Remove {activeSlot.label} Photo{activeSlot.slot === "gallery" && activeSlot.photos.length > 1 ? "s" : ""}
                 </button>
               )}

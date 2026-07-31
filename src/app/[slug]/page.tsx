@@ -45,15 +45,15 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       .order("sort_order", { ascending: true }),
     admin
       .from("company_photos")
-      .select("url, website_section")
+      .select("url, website_section, in_gallery")
       .eq("company_id", company.id)
       .eq("for_website", true)
-      .in("website_section", ["hero", "about", "cta", "gallery", "announcement"]),
+      .or("in_gallery.eq.true,website_section.in.(hero,about,cta,announcement)"),
   ])
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
   const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
-  const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
+  const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null; in_gallery: boolean }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
   const heroSectionMedia = firstSectionImage("hero")
   const heroVideo = heroSectionMedia && isVideoMedia(heroSectionMedia) ? heroSectionMedia : configuredHeroVideo
@@ -62,7 +62,9 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     hero: heroImage,
     about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
     cta: firstSectionImage("cta") ?? uploadedImgs[2] ?? null,
-    gallery: sectionRows.filter(row => row.website_section === "gallery").map(row => row.url),
+    // Independent of website_section - a photo can be in the gallery strip
+    // AND a primary slot (hero/about/etc.) at the same time.
+    gallery: sectionRows.filter(row => row.in_gallery).map(row => row.url),
     announcement: firstSectionImage("announcement"),
   }
 

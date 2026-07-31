@@ -611,6 +611,64 @@ export async function removeStockImage(imageUrl: string) {
 // Stripe fields that must never be reachable through a generic field setter.
 const COMPANY_FIELD_ALLOWLIST = new Set(["name", "phone", "email", "city", "state"])
 
+// Gallery membership is independent of website_section on purpose - a photo
+// can be a primary slot (hero/about/cta/contact/announcement) AND in the
+// gallery strip at the same time. Team-approved (Jony's lead): with only a
+// handful of real photos, forcing exclusive one-slot-per-photo meant the
+// gallery strip (the one slot meant to hold several) almost always ran out
+// of real photos before it was full, even when the owner had plenty overall.
+export async function toggleGalleryPhoto(photoId: string, include: boolean) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { data: photo } = await ctx.admin
+    .from("company_photos")
+    .select("id, url, storage_path, website_section")
+    .eq("id", photoId)
+    .eq("company_id", ctx.company.id)
+    .single()
+  if (!photo) return { error: "Photo not found" }
+
+  const { error } = await ctx.admin
+    .from("company_photos")
+    .update({ in_gallery: include })
+    .eq("id", photoId)
+    .eq("company_id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  if (include) {
+    const { data: existing } = await ctx.admin
+      .from("media")
+      .select("id")
+      .eq("company_id", ctx.company.id)
+      .eq("url", photo.url)
+      .single()
+    if (existing) {
+      await ctx.admin.from("media").update({ website_flag: true }).eq("id", existing.id)
+    } else {
+      await ctx.admin.from("media").insert({
+        company_id: ctx.company.id,
+        url: photo.url,
+        thumbnail_url: photo.url,
+        type: mediaKindFromUrl(photo.url),
+        filename: photo.storage_path?.split("/").pop() ?? "photo.jpg",
+        website_flag: true,
+        size_bytes: 0,
+      })
+    }
+  } else if (!photo.website_section) {
+    // Only unflag in `media` if this photo isn't also serving a primary
+    // slot - otherwise removing it from gallery would wrongly hide it from
+    // wherever else it's still in use.
+    await ctx.admin.from("media").update({ website_flag: false }).eq("company_id", ctx.company.id).eq("url", photo.url)
+  }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
+
 export async function updateCompanyLogo(formData: FormData): Promise<{ url: string; whiteUrl: string | null } | { error: string }> {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
