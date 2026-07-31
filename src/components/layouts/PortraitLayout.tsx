@@ -96,6 +96,8 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
         </div>
       </section>
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+
       {/* â”€â”€ GALLERY STRIP â€” photos arrive with a warm fade â”€â”€ */}
       {galleryImages.length > 0 && (
         <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
@@ -118,8 +120,6 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
           ))}
         </div>
       )}
-
-      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
 
       <CatalogShowcase company={company} />
 
