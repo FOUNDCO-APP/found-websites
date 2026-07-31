@@ -140,7 +140,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
             {/* Unsorted + legacy photos */}
             {flatPhotos.length > 0 && (
-              <section className="bg-white pt-2">
+              <section className="bg-white pt-2 pb-10">
                 {albums.length > 0 && (
                   <div className="max-w-6xl mx-auto px-8 pb-4">
                     <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#bbb" }}>More Photos</p>
@@ -234,7 +234,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
       {hasPhotos ? (
         <>
-          <section className="bg-white pt-1">
+          <section className="bg-white pt-1 pb-10">
             <GalleryLightbox photos={allPhotos} companyName={company.name} primary={primary} />
           </section>
           <section className="relative py-24 text-center overflow-hidden">
