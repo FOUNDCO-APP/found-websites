@@ -20,6 +20,36 @@
 
 ---
 
+## Session: July 31, 2026 - Custom Domains Actually 404'd - Fixed
+**AI:** Claude Code (Sonnet)
+**Worked on:** Right after the false-"Live" fix below shipped, Shawn finished connecting `mambostudio.app` for real - correct DNS, Vercel confirmed both signals correct. The site still 404'd. Second, separate, more serious bug than the dashboard-status one.
+
+### Root cause
+`getCompanyByDomain()` in `src/lib/company.ts` filtered an embedded `website_config` resource without `!inner` - doesn't restrict which `companies` rows come back in Supabase/PostgREST, only which nested rows get attached. Every active company (34) was returned on every lookup; `.single()` choked getting 34 rows instead of 1. Broken for the entire life of the feature, unrelated to the DNS-status bug fixed hours earlier.
+
+### Team review (Shawn-convened, Steve leading, second meeting same session)
+- Marcus: his earlier "site-serving path is fine" was accurate for what he'd checked, but he hadn't traced all the way to "does a real domain render a real page."
+- Angela: named the real gap - nobody had ever done a genuine end-to-end custom-domain test against the platform's real data shape (30+ companies), invisible in any small dev setup, guaranteed in the real one.
+- Explicitly separated from the July 29 GO decision - not a reversal, `DECISIONS.md` gets an honest addendum since GO assumed this worked.
+- Shawn approved the full recommendation at once, given real urgency (RC Bicycles about to sign up).
+
+### Fixed
+- `getCompanyByDomain()`: `website_config!inner(*)` + `.eq()` for a real join filter, `.maybeSingle()` instead of `.single()` - quiet on zero matches, captures a genuine collision to Sentry instead of silently 404ing an innocent company.
+- Migration 049: unique index on `website_config.custom_domain`, audited live data first (zero duplicates), safe to apply immediately.
+- `scripts/verify-domain-lookup.mjs`: standalone regression script (no test framework exists in this repo yet - out of scope to build one for a same-day hotfix). Creates two temp companies with distinct domains, confirms correct resolution both ways, confirms an unknown domain resolves to nothing, confirms the unique constraint rejects a collision, cleans up after itself. All 6 checks pass.
+- Branded `[slug]/not-found.tsx` added (Jony's backlog item, done since already in this code path).
+- Checked live marketing copy per Phil's ask: `plans/found/page.tsx` promises "your own domain... set up in minutes" - now actually true, flagged not edited (Phil's call).
+
+### Verification
+- `npm run build` passed clean.
+- `scripts/verify-domain-lookup.mjs` - all 6 checks passed against live Supabase, temp data cleaned up after itself.
+- **Live end-to-end confirmation:** `mambostudio.app` returns HTTP 200 with Lucky's real site (page title correct) - Shawn's original repro, fixed. Barrio Builders checked and does not have a real custom domain connected (was an illustrative example in `BRIEF.md`, not live data) - multi-company verification satisfied via the script's temp data instead.
+
+### Test Next
+- Ryan (RC Bicycles) connecting his real domain is the next live test of this exact path.
+
+---
+
 ## Session: July 30, 2026 - False "Live" Domain Status Fixed
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn tested the manual DNS connect flow himself with a real domain (`mambostudio.app`, DNS untouched) and Found immediately said "Live." It wasn't.

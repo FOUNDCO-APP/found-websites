@@ -1,3 +1,25 @@
+## 2026-07-31 - Custom Domains Actually 404'd - Second Domain Bug, Found and Fixed Same Session
+
+Right after the false-"Live" fix below shipped, Shawn finished connecting `mambostudio.app` for real - correct DNS, Vercel confirmed both ownership and DNS-config correct. The dashboard correctly stopped lying about "Live." But visiting the domain itself still 404'd. Different bug, more serious: the actual site was never reachable.
+
+**Root cause, confirmed against live prod data:** `getCompanyByDomain()` in `src/lib/company.ts` filtered an embedded `website_config` resource without `!inner` - in Supabase/PostgREST, that doesn't restrict which `companies` rows come back, it only controls which nested rows get attached. Every active company (34 of them) was returned on every lookup; `.single()` choked getting 34 rows instead of 1; every custom-domain visitor 404'd. This has been true for the entire life of the feature, for anyone, the moment a second active company existed - completely unrelated to the DNS-status bug fixed hours earlier in the same session.
+
+Shawn called a second team meeting himself (Steve leading, full roster) - transcript given raw. Key points: Marcus owned that his earlier "site-serving path is fine" read this morning was accurate for what he checked (that field genuinely isn't used in routing) but he hadn't traced all the way to "does a real domain actually render a real page." Angela named the real process gap plainly: nobody had ever done a genuine end-to-end custom-domain test against the platform's real data shape (30+ companies), so this was guaranteed to be invisible in any small dev setup and guaranteed to break in the real one. Team explicitly separated this from the July 29 GO-launch decision - not a reversal, but `DECISIONS.md` gets an honest addendum since GO assumed this capability worked.
+
+Shawn approved the full recommendation, all at once, given real urgency (a real prospective customer, RC Bicycles, about to sign up). **Shipped (`6284fe9`):**
+- `getCompanyByDomain()` now uses `website_config!inner(*)` + `.eq()` so the filter is a real join condition, and `.maybeSingle()` instead of `.single()` - zero matches stays quiet, but a genuine collision (two companies sharing a domain) now gets captured to Sentry instead of silently 404ing an innocent company.
+- Migration 049: unique index on `website_config.custom_domain`. Audited live data first - zero duplicates existed, safe to apply immediately, makes the collision case structurally impossible going forward.
+- `scripts/verify-domain-lookup.mjs`: standalone regression check (this repo has no test framework yet - building one from scratch wasn't the right scope for a same-day hotfix). Creates two temp companies with distinct domains, confirms each resolves to itself not the other, confirms an unknown domain resolves to nothing, confirms the new unique constraint rejects a collision, cleans up after itself. All 6 checks pass against live Supabase - run this after any future change to domain/slug lookup logic.
+- A branded `[slug]/not-found.tsx` - Jony's backlog item, done now since the session was already in this exact code path.
+- **Verified live, not just built:** `mambostudio.app` now returns HTTP 200 with Lucky's actual site (confirmed via direct fetch, page title correct). Barrio Builders was checked and does NOT have a real custom domain connected (that was an illustrative example in `BRIEF.md`, not live data) - so the "two simultaneous real domains" verification the team asked for was satisfied via the temp-data script instead of a second real domain, plus this one real end-to-end confirmation.
+- Checked marketing copy per Phil's ask: `src/app/plans/found/page.tsx` already has live copy promising "your own domain... set up in minutes" and an FAQ answer promising Found "walks you through it" connecting an existing domain. That claim is now actually true rather than false - flagged, not edited, copy changes are Phil's call.
+
+**Not done:** confirming the OG-image path specifically (Chris's ask, low priority, same root cause is fixed so it should be resolved too, just not independently re-verified).
+
+Shawn QA next: when Ryan (RC Bicycles) signs up and connects his domain, this is the exact path he'll go through - should work end to end now, both the accurate "Live" status and the site actually rendering.
+
+---
+
 ## 2026-07-30 - False "Live" Status Bug: Found, Team-Reviewed, Fixed
 
 Shawn tested the manual DNS flow himself, exactly as a real owner would - typed in a domain he owns (`mambostudio.app`, registered at Namecheap, DNS never touched, still on Namecheap's parking page) and Found immediately said "Live — your site is live at this domain" with a Visit Site button. That's false; the domain wasn't pointing at Found at all.

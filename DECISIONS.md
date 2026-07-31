@@ -26,6 +26,8 @@ Why: Shawn pushed back on the research above ("how long would this take to get a
 Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
 Why: The July 20 audit's "no-go" verdict was written before that same day's P0 fixes landed, and nobody recorded an updated verdict once the punch-list work finished shipping July 28. All 5 P0 launch blockers from July 20 (payment trust bug, post-activation login, false review-requests claim, sitemap exposure, catalog mobile keyboard bug) are confirmed fixed. Remaining P1 items (security headers, automated tests, hero image optimization, checkout webhook fallback, Stripe/RLS audits) are real but explicitly non-blocking - most were already deliberately deferred (security headers specifically, after an earlier attempt broke iPhone Safari Stripe checkout). Full detail: `LAUNCH_READINESS_AUDIT_2026-07-29.md`.
 
+**Honest addendum, 2026-07-31, not a reversal:** this decision assumed custom domains (listed as free on every plan) were a working capability. Two bugs found 2026-07-30/31 (false "Live" dashboard status, then a separate query bug that made custom domains 404 for real) mean domain-connection had actually never worked end to end for the entire life of the feature, for anyone, once a second active company existed. Both are now fixed and verified live. Team's explicit read: this doesn't change the GO bar (no P0s blocking self-serve signup/checkout), but the record should say plainly that "GO" did not mean "custom domains were verified working" for this specific feature - they weren't, until the day after this entry. See `SESSION_HANDOFF.md` [2026-07-31] for full detail.
+
 ---
 
 **[2026-07-15] - Plan card savings display resolved via the Stripe-portal plan upgrade flow.**
