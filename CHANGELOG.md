@@ -20,6 +20,36 @@
 
 ---
 
+## Session: July 30, 2026 - False "Live" Domain Status Fixed
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn tested the manual DNS connect flow himself with a real domain (`mambostudio.app`, DNS untouched) and Found immediately said "Live." It wasn't.
+
+### Root cause
+Confirmed directly against Vercel's API before proposing anything: Found only ever checked Vercel's domain-ownership signal (`GET /v10/projects/{id}/domains/{domain}`), never its separate DNS-config-correctness signal (`GET /v6/domains/{domain}/config`, `misconfigured` field). An untouched domain reads ownership-verified almost immediately since nothing conflicts with the claim - so "Live" could fire before any DNS work happened.
+
+### Team review (Shawn-convened, Steve leading, full roster - transcript given to Shawn raw)
+- Confirmed scope: the real site-serving path never used this field - Vercel's DNS is the actual traffic gate, so no tenant was ever served on the wrong domain. Dashboard trust bug, not a security bug.
+- Craig's honest process note: the earlier same-day "verified live" test used `example.com`, which can never pass Vercel's real ownership check - that test proved API plumbing worked, not that the reported status was trustworthy.
+- Priya: any check failure must fail closed (report not-live), never an ambiguous pass.
+- Angela/Jony synthesis: don't flag "records look wrong" on the very first check (DNS propagation isn't instant) - grace window first, then a distinguishable, actionable message that re-shows the actual records.
+- Logged non-blocking follow-ups: possible missing uniqueness constraint on `custom_domain` (Priya), server-side persistence of domain-health state (Priya), "email when actually live" (Chris).
+- Assessed as a pre-launch correctness bug, not an incident - every company in the database is a test account, no real customer saw the false status.
+
+### Fixed
+- New shared `getVercelDomainStatus()` in `actions.ts` - single source of truth combining both signals; live requires ownership verified AND `misconfigured === false`.
+- Fails closed on any fetch error/timeout.
+- 12-second in-memory cache so concurrent polls for the same domain don't double Vercel API calls.
+- `DomainConnector.tsx`: 3-check grace window before showing the "records don't look right yet" message; extracted `DnsRecordsList` so that message can re-show the actual records inline instead of leaving the owner stranded.
+- Annotated the earlier same-day "Verified Live" changelog entry with the honest correction.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Reconnect a domain with DNS not yet pointed at Found, confirm it now correctly shows not-live. Then actually fix the DNS and confirm it flips to verified once propagated - that recovery path hasn't been tested end-to-end yet.
+
+---
+
 ## Session: July 30, 2026 - GoDaddy Auto-Setup Reverted, Manual Flow Fixed, Team-Process Correction
 **AI:** Claude Code (Sonnet)
 **Worked on:** The GoDaddy scoped-token auto-setup shipped earlier the same session got immediately rejected by Shawn - not usable by real non-technical business owners, full stop. Reverted.

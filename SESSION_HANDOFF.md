@@ -1,3 +1,30 @@
+## 2026-07-30 - False "Live" Status Bug: Found, Team-Reviewed, Fixed
+
+Shawn tested the manual DNS flow himself, exactly as a real owner would - typed in a domain he owns (`mambostudio.app`, registered at Namecheap, DNS never touched, still on Namecheap's parking page) and Found immediately said "Live — your site is live at this domain" with a Visit Site button. That's false; the domain wasn't pointing at Found at all.
+
+**Root cause, confirmed directly against Vercel's real API before proposing any fix:** Found's `verified`/"Live" state only ever checked one Vercel signal - whether this project owns the claim to the domain (`GET /v10/projects/{id}/domains/{domain}`'s `verified` field). It never checked the separate signal for whether DNS is actually configured correctly (`GET /v6/domains/{domain}/config`'s `misconfigured` field). A domain nobody's ever touched reads ownership-verified almost immediately, since nothing else on Vercel conflicts with the claim - so brand-new, untouched domains would read "Live" within moments of being typed in, before any DNS work happened. Direct API check on `mambostudio.app` confirmed it exactly: ownership `verified: true`, but `misconfigured: true`, A record still resolving to Namecheap's parking IP.
+
+Shawn called a real team meeting himself (Steve leading, full roster) to review the bug and the proposed fix - full transcript given to him raw. Key findings from that meeting, not just "add a second check":
+- **Scope confirmed narrow:** the actual public site-serving path (`middleware.ts` + `getCompanyByDomain()`) never used this flawed field - Vercel's own DNS is the real traffic gate upstream of anything Found does, so this was a dashboard trust/messaging bug, not a routing or security bug. No tenant ever got served on the wrong domain.
+- **Craig's honest process note, worth recording plainly:** today's earlier "Custom Domain Connect - Verified Live" entry (see below) tested against `example.com`, which is IANA-reserved and can never pass Vercel's real ownership check by design. That test proved the API plumbing worked (add/check/remove round-trip, clean teardown) - it could not have caught this gap no matter how carefully it was reviewed, because the domain used structurally could never reach the state that would have exposed it. Different claim, same word ("verified"). Future domain-flow verification should use a real, team-controlled test domain that can exercise both the pass and fail paths honestly.
+- **Priya's fail-closed requirement:** any error/timeout on the new check must report "not live," never an ambiguous pass.
+- **Angela/Jony synthesis on messaging:** don't show a scary "misconfigured" message on the first check (DNS propagation isn't instant, that would manufacture false alarms) - show the calm "still checking" message for a grace window, then only after that window, if still specifically misconfigured, show a distinguishable plain-English message that points back at the actual DNS records so the owner isn't left stranded.
+- Adjacent, non-blocking follow-ups logged for later: no uniqueness constraint on `website_config.custom_domain` (Priya), persisting last-checked domain-health state server-side for support visibility (Priya, phase 2), an email the moment a domain actually goes live since nobody sits on the dashboard tab for 48 hours of propagation (Chris, future).
+- Team's read on urgency: every company in Found's database is currently one of Shawn's own test/practice accounts - no real customer was ever shown the false "Live" state. Treated as a pre-launch correctness fix caught by exactly the kind of adversarial owner-perspective testing that's supposed to catch it, not an incident.
+
+Shawn approved the full recommendation. **Shipped (`ff78d90`):**
+- New shared `getVercelDomainStatus()` in `actions.ts` - single place combining both Vercel signals; "live" requires ownership verified AND `misconfigured === false`. Both `connectCustomDomain()` and `checkDomainStatus()` now go through it instead of duplicating the check.
+- Fails closed on any fetch error/timeout - reported as not-live, error message passed through, never treated as a pass.
+- 12-second in-memory cache on the combined check so concurrent polls (e.g. two open tabs) for the same domain collapse into one upstream call instead of doubling Vercel API traffic.
+- `DomainConnector.tsx`: added a 3-check grace window before showing the "records don't look right yet" message; that message re-shows the DNS records inline (extracted into a shared `DnsRecordsList` used in both places) so the owner has something actionable, not just a warning.
+- `npm run build` passed clean before pushing.
+
+**Not done, explicitly deferred, non-blocking:** the `website_config.custom_domain` uniqueness-constraint check, server-side persistence of domain-health state, and the "email when it actually goes live" idea.
+
+Shawn QA next: reconnect `mambostudio.app` (or any domain with DNS not yet pointed at Found) and confirm it now correctly shows "not live" instead of a false "Live." Then actually add the DNS records for real and confirm it correctly flips to verified once DNS propagates - that path hasn't been tested end-to-end with a domain that starts wrong and gets fixed.
+
+---
+
 ## 2026-07-30 - GoDaddy DNS Auto-Setup: REVERTED, then Manual Flow Fixed Instead
 
 The GoDaddy scoped-token auto-setup below shipped, then Shawn immediately and correctly rejected it: "My business owners are not developers." Asking an owner to generate a Personal Access Token from a Developer Portal is not usable by Found's real, non-technical customers, no matter how it's worded. Reverted (`61c0364`).
@@ -83,6 +110,8 @@ Found two real problems by reading the actual code, not assuming:
 Team also recommended (Jony/Angela on UX, Craig on feasibility) adding quiet background status checking instead of requiring the owner to remember to tap "Check Connection" - Shawn approved. Now checks immediately on page load and every 20s while unverified, flips to "Live" on its own; manual button still there for on-demand reassurance.
 
 Verified the real Vercel integration directly against production before trusting it: full add → check-status → remove round-trip on a safe example.com test domain, confirmed cleanup left nothing behind. `VERCEL_API_TOKEN`/`VERCEL_PROJECT_ID` confirmed live. This closes the "never tested end-to-end" gap that TASKS.md had flagged.
+
+**Correction, same day, logged honestly per team review below:** "verified live" here meant the API plumbing worked - it did not mean the status reported to the owner was trustworthy. `example.com` is IANA-reserved and can never pass Vercel's real ownership check, so this test structurally could not have caught the false-"Live" bug found later the same day (see "False 'Live' Status Bug" entry above). Different claim, same word - not a case of anyone being careless, just a gap in what this specific test was capable of proving.
 
 ---
 
