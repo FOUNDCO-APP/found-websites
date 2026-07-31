@@ -181,6 +181,19 @@ h1, h2, h3, h4, h5, h6 {
   display: block;
 }
 
+/* Reserve a placeholder ratio until each photo's real dimensions are known —
+   without this, an unloaded <img> has ~0 height, so the CSS-columns masonry
+   can't balance items across columns until images finish downloading, and
+   the whole grid appears to collapse into one column and pop in over several
+   seconds. `auto <ratio>` falls back to this ratio only until the image's
+   real intrinsic size loads, then yields to it — every photo still renders
+   at its own natural proportions once loaded, this only stabilizes the gap
+   before that. */
+.masonry-item img {
+  aspect-ratio: auto 1;
+  background-color: #f0f0f0;
+}
+
 .btn-lg {
   padding: 18px 36px;
   font-size: 0.8rem;
