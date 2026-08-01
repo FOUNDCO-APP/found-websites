@@ -178,7 +178,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
             </InView>
 
             <div>
-              {services.slice(0, 6).map((service, i) => (
+              {services.slice(0, 3).map((service, i) => (
                 <InView key={service.name} delay={i * 60} distance={16}>
                   <div
                     className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-8 items-start"

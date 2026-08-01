@@ -145,7 +145,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
               {/* Mobile: horizontal swipe â€” icon + name only */}
               <div className="flex md:hidden gap-3 overflow-x-auto pb-2">
-                {services.map((service) => (
+                {services.slice(0, 3).map((service) => (
                   <div key={service.name}
                     className="flex-none flex flex-col items-center gap-3 p-4 w-24"
                     style={{
@@ -164,7 +164,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
 
               {/* Desktop: 4-col grid */}
               <div className="hidden md:grid grid-cols-4 gap-4">
-                {services.slice(0, 8).map((service, i) => (
+                {services.slice(0, 3).map((service, i) => (
                   <InView key={service.name} delay={i * 60}>
                     <div
                       className="flex flex-col items-center gap-3 p-6 text-center"

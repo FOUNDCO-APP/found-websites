@@ -150,8 +150,8 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
               </div>
             </InView>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-              {services.slice(0, 6).map((service, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {services.slice(0, 3).map((service, i) => (
                 <InView key={service.name} delay={i * 70}>
                   <div
                     className="flex flex-col items-center text-center p-8"
@@ -177,7 +177,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
               ))}
             </div>
 
-            {services.length > 6 && (
+            {services.length > 3 && (
               <div className="mt-12">
                 <Link href="/services" className="btn text-white"
                   style={{ backgroundColor: primary, borderColor: primary }}>
