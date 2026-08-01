@@ -30,7 +30,7 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
 
 
   const img = (i: number) => imgs[i % imgs.length] || null
-  const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
+  const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const ctaImage = sectionImages?.cta ?? null
 
   return (

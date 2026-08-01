@@ -47,7 +47,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
   const heroImage = firstSectionImage("about") ?? uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
   const ctaImage = firstSectionImage("cta") ?? heroImage
-  const industryDefs = getIndustryDefaults(company.industry_category)
+  const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
 

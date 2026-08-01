@@ -51,7 +51,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const uploaded = (i: number) => uploadedImgs[i] ?? uploadedImgs[0] ?? null
   const aboutImage = firstSectionImage("about") ?? uploaded(1) ?? img(0)
   const ctaImage = firstSectionImage("cta") ?? img(2)
-  const industryDefs = getIndustryDefaults(company.industry_category)
+  const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
   const displayName = polishBusinessName(company.name)

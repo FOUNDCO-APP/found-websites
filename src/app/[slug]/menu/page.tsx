@@ -33,7 +33,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const gradient = heroGradient(primary)
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const aboutCopy = getHomepageAboutCopy(config)
-  const industryDefs = getIndustryDefaults(company.industry_category)
+  const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`

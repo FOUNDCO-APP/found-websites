@@ -48,7 +48,7 @@ export default function Footer({ company }: { company: Company }) {
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
 
-  const industryDefs = getIndustryDefaults(company.industry_category)
+  const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const footerTagline = company.website_config?.tagline || industryDefs.footerTagline
   const socialLinks = (company.website_config?.social_links || {}) as Record<string, string>
   const activeSocials = Object.entries(socialLinks).filter(([, url]) => url)

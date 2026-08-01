@@ -406,6 +406,41 @@ const fallback: IndustryDefaults = {
   ],
 }
 
-export function getIndustryDefaults(industryCategory: string): IndustryDefaults {
-  return defaults[industryCategory] ?? fallback
+// "retail" covers everything from boutiques to bike shops to hardware
+// stores - the base retail defaults below lean apparel/boutique (e.g.
+// "no fast fashion"), which reads as wrong filler for anything else in
+// that bucket. Sub-industry overrides here narrow it back to something
+// actually specific, same pattern as the bike-aware copy in copyPolish.ts.
+const BIKE_SUB_INDUSTRY = /\b(bike|bicycle|bicycles|cycling|cyclery)\b/i
+
+const retailSubIndustryOverrides: { test: RegExp; defaults: IndustryDefaults }[] = [
+  {
+    test: BIKE_SUB_INDUSTRY,
+    defaults: {
+      footerTagline: "Locally owned. Ready to ride.",
+      servicesIntro: "Every bike, tune-up, and repair handled by people who actually ride.",
+      ctaHeadline: "Come See Us.",
+      galleryLabel: "Our Shop",
+      gallerySubtitle: "Real bikes, real riders.",
+      values: [
+        { label: "Locally Owned", body: (city) => `Based in ${city || "your community"} — your purchase supports a real local bike shop.` },
+        { label: "Expert Repairs", body: () => "Our mechanics know bikes inside and out, from a quick tune-up to a full rebuild." },
+        { label: "Ride-Ready Advice", body: () => "Ask us anything — sizing, gear, or which bike actually fits how you ride." },
+      ],
+      process: [
+        { step: "01", title: "Tell Us What You Ride", body: "Come in or reach out — we'll talk through what you need, no jargon required." },
+        { step: "02", title: "Get Hands-On Help",       body: "Our team fits, repairs, or helps you choose in person, not off a script." },
+        { step: "03", title: "Get Back on the Road",    body: "Walk out ready to ride, with people who'll still be here next time you need us." },
+      ],
+    },
+  },
+]
+
+export function getIndustryDefaults(industryCategory: string, subIndustry?: string | null): IndustryDefaults {
+  const base = defaults[industryCategory] ?? fallback
+  if (industryCategory === "retail" && subIndustry) {
+    const override = retailSubIndustryOverrides.find(o => o.test.test(subIndustry))
+    if (override) return override.defaults
+  }
+  return base
 }

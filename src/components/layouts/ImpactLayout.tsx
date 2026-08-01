@@ -28,7 +28,7 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
 
 
   const img = (i: number) => imgs[i % imgs.length] || null
-  const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category).ctaHeadline
+  const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const aboutImage = sectionImages?.about ?? null
   const ctaImage = sectionImages?.cta ?? null
 
