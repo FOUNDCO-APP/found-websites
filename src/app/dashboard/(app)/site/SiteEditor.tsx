@@ -367,7 +367,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const previousServices = (config.services as Array<{name:string;description:string}>) ?? []
     const services = [...previousServices]
     services[index] = { name, description }
-    const polishedServices = polishServices(services)
+    const polishedServices = polishServices(services, { businessName: company.name, industry: industryCategory, subIndustry: company.sub_industry })
     setConfig(prev => ({ ...prev, services: polishedServices }))
     setEditingService(null)
     startTransition(async () => {
@@ -398,7 +398,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const previousServices = (config.services as Array<{name:string;description:string}>) ?? []
     const services = [...previousServices]
     services.push({ name: newServiceName.trim(), description: newServiceDesc.trim() })
-    const polishedServices = polishServices(services)
+    const polishedServices = polishServices(services, { businessName: company.name, industry: industryCategory, subIndustry: company.sub_industry })
     setConfig(prev => ({ ...prev, services: polishedServices }))
     setNewService(false)
     setNewServiceName("")

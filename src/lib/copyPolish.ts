@@ -60,7 +60,17 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   catering: "Food planned around the guest list, timing, and feel of the event.",
   reservations: "A simple way for guests to plan ahead and know what to expect.",
   estimates: "Clear pricing guidance before the work begins.",
-  repairs: "Practical fixes handled with attention to the details that matter.",
+  repairs: "Repairs, fixes, and practical service that help customers get back to normal.",
+  "bike repairs": "Tune-ups, flat fixes, brake adjustments, and practical repairs that keep riders moving safely.",
+  "bicycle repairs": "Tune-ups, flat fixes, brake adjustments, and practical repairs that keep riders moving safely.",
+  "bike service": "Tune-ups, adjustments, and practical shop help that keeps bikes riding right.",
+  "bicycle service": "Tune-ups, adjustments, and practical shop help that keeps bikes riding right.",
+  "bike sales": "Bikes, parts, and gear with local guidance before customers buy.",
+  "bicycle sales": "Bikes, parts, and gear with local guidance before customers buy.",
+  "bike rentals": "Rental options for visitors, families, and riders who need a bike for the day.",
+  "bicycle rentals": "Rental options for visitors, families, and riders who need a bike for the day.",
+  sales: "Helpful product guidance so customers can choose with confidence.",
+  rentals: "Flexible options for customers who need something for the day, weekend, or season.",
   installation: "A clean setup process designed to feel straightforward from start to finish.",
   cleaning: "A reliable reset for the spaces customers use every day.",
   landscaping: "Outdoor work shaped around curb appeal, upkeep, and long-term use.",
@@ -72,7 +82,7 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
   setup: "Installation handled with care so the space is ready before guests arrive.",
   strike: "Post-event removal that keeps the close of the celebration simple.",
   "custom colors": "Palette choices matched to the theme, brand, or moment being celebrated.",
-  service: "Practical help shaped around the details customers care about most.",
+  service: "Clear help built around what customers need to choose, book, or visit.",
   restaurant: "Food, service, and timing handled so guests know what to expect.",
   remodeling: "Project work planned around clear scope, clean execution, and lasting use.",
   church: "Worship, service, and community life for people looking for connection.",
@@ -96,12 +106,28 @@ const SERVICE_DESCRIPTION_BY_NAME: Record<string, string> = {
 }
 
 const SERVICE_DESCRIPTION_PATTERNS = [
+  "Clear help built around what customers need to choose, book, or visit.",
+  "Useful guidance that turns the next step into something simple.",
+  "Practical support with enough detail for customers to act confidently.",
+  "A focused option for customers who want the work handled clearly.",
+  "Straightforward service shaped around timing, expectations, and follow-through.",
+  "A reliable way to get help without making the process complicated.",
+]
+
+// Earlier generation of the same generic fallback pool, still sitting on
+// existing customer sites saved before this pattern list changed. Treated
+// as generic too, so re-saving old services (not just new ones) picks up
+// real industry-specific copy instead of being stuck on stale filler.
+const LEGACY_SERVICE_DESCRIPTION_PATTERNS = [
   "Practical help shaped around the details customers care about most.",
   "Focused support that makes the next step easier to understand.",
   "A useful option for customers who want the important details handled well.",
   "A simple service built around clear expectations and steady follow-through.",
   "Careful attention to the small choices that affect the final result.",
   "A straightforward way to get what is needed without extra friction.",
+  // Prior exact-match dictionary value for "repairs", superseded now that
+  // a bike context defers to the more specific "bike repairs" entry.
+  "Practical fixes handled with attention to the details that matter.",
 ]
 
 
@@ -603,6 +629,65 @@ function serviceKey(name: string) {
   return name.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim()
 }
 
+function copyContextText(context?: CopyPolishContext, services: ServiceCopyItem[] = []) {
+  return [
+    context?.businessName,
+    context?.industry,
+    context?.subIndustry,
+    ...services.map(service => service.name),
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join(" ")
+    .toLowerCase()
+}
+
+function isBikeContext(context?: CopyPolishContext, services: ServiceCopyItem[] = []) {
+  return /\b(bike|bicycle|bicycles|cycling|cyclery)\b/.test(copyContextText(context, services))
+}
+
+function splitCompoundServiceName(name: string) {
+  const normalized = name
+    .replace(/\s+(?:and|&|\+|\/)\s+/gi, ",")
+    .replace(/\s*,\s*/g, ",")
+  return normalized
+    .split(",")
+    .map(part => part.trim())
+    .filter(Boolean)
+}
+
+function normalizeServiceNameForContext(name: string, context?: CopyPolishContext, services: ServiceCopyItem[] = []) {
+  const polished = polishTitle(name, "Service")
+  if (!isBikeContext(context, services)) return polished
+  const key = serviceKey(polished)
+  if (key === "sales") return "Bike Sales"
+  if (key === "repairs" || key === "repair") return "Bike Repairs"
+  if (key === "rentals" || key === "rental") return "Bike Rentals"
+  if (key === "service") return "Bike Service"
+  return polished
+}
+
+function dedupeServiceCopyItems(services: ServiceCopyItem[]) {
+  const seen = new Set<string>()
+  return services.filter(service => {
+    const key = serviceKey(service.name)
+    if (!key || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function ensureLaunchServiceCoverage(services: ServiceCopyItem[], context?: CopyPolishContext) {
+  if (!isBikeContext(context, services) || services.length >= 3) return services
+  const required = ["Bike Repairs", "Bike Sales", "Bike Rentals"]
+  const next = [...services]
+  for (const name of required) {
+    if (next.length >= 3) break
+    if (next.some(service => serviceKey(service.name) === serviceKey(name))) continue
+    next.push({ name, description: fallbackServiceDescription(name, next.length, context, next) })
+  }
+  return next
+}
+
 function serviceDescriptionSignature(service: ServiceCopyItem) {
   const key = serviceKey(service.name)
   return service.description
@@ -614,13 +699,23 @@ function serviceDescriptionSignature(service: ServiceCopyItem) {
 }
 
 function hasTemplateSmell(description: string) {
-  return TEMPLATE_SMELL_PATTERNS.some(pattern => pattern.test(description))
+  if (TEMPLATE_SMELL_PATTERNS.some(pattern => pattern.test(description))) return true
+  const normalized = description.trim().toLowerCase().replace(/[.!?]+$/, "")
+  return [...SERVICE_DESCRIPTION_PATTERNS, ...LEGACY_SERVICE_DESCRIPTION_PATTERNS]
+    .some(pattern => pattern.toLowerCase().replace(/[.!?]+$/, "") === normalized)
 }
 
-function fallbackServiceDescription(name: string, index: number) {
+function fallbackServiceDescription(name: string, index: number, context?: CopyPolishContext, services: ServiceCopyItem[] = []) {
   const key = serviceKey(name)
   const exact = SERVICE_DESCRIPTION_BY_NAME[key]
   if (exact) return exact
+
+  if (isBikeContext(context, services)) {
+    if (/\brepairs?\b/.test(key)) return SERVICE_DESCRIPTION_BY_NAME["bike repairs"]
+    if (/\bsales?\b/.test(key)) return SERVICE_DESCRIPTION_BY_NAME["bike sales"]
+    if (/\brentals?\b/.test(key)) return SERVICE_DESCRIPTION_BY_NAME["bike rentals"]
+    if (/\bservices?\b/.test(key)) return SERVICE_DESCRIPTION_BY_NAME["bike service"]
+  }
 
   const words = key.split(" ").filter(Boolean)
   for (const word of words) {
@@ -630,7 +725,7 @@ function fallbackServiceDescription(name: string, index: number) {
   return SERVICE_DESCRIPTION_PATTERNS[index % SERVICE_DESCRIPTION_PATTERNS.length]
 }
 
-function improveServiceDescriptions(services: ServiceCopyItem[]) {
+function improveServiceDescriptions(services: ServiceCopyItem[], context?: CopyPolishContext) {
   const signatures = new Map<string, number>()
   for (const service of services) {
     const signature = serviceDescriptionSignature(service)
@@ -647,7 +742,7 @@ function improveServiceDescriptions(services: ServiceCopyItem[]) {
 
     return {
       ...service,
-      description: polishSentence(fallbackServiceDescription(service.name, index)),
+      description: polishSentence(fallbackServiceDescription(service.name, index, context, services)),
     }
   })
 }
@@ -724,21 +819,24 @@ export function polishShortCopy(value: unknown, fallback = "") {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
 }
 
-export function polishServices(value: unknown): ServiceCopyItem[] {
+export function polishServices(value: unknown, context?: CopyPolishContext): ServiceCopyItem[] {
   if (!Array.isArray(value)) return []
   const services = value
-    .map(item => {
+    .flatMap(item => {
       if (!item || typeof item !== "object") return null
       const row = item as { name?: unknown; description?: unknown }
-      const name = polishTitle(row.name, "Service")
-      return {
-        name,
-        description: polishSentence(row.description, fallbackServiceDescription(name, 0)),
-      }
+      const rawName = typeof row.name === "string" ? row.name : "Service"
+      return splitCompoundServiceName(rawName).map((part) => {
+        const name = normalizeServiceNameForContext(part, context)
+        return {
+          name,
+          description: polishSentence(row.description, fallbackServiceDescription(name, 0, context)),
+        }
+      })
     })
     .filter((item): item is ServiceCopyItem => item !== null)
 
-  return improveServiceDescriptions(services)
+  return improveServiceDescriptions(ensureLaunchServiceCoverage(dedupeServiceCopyItems(services), context), context)
 }
 
 export function polishFaqItems(value: unknown): { q: string; a: string }[] | null {
@@ -923,7 +1021,7 @@ export function polishWebsiteField(field: string, value: unknown, context?: Copy
     case "about_highlights":
       return polishAboutHighlights(value)
     case "services":
-      return polishServices(value)
+      return polishServices(value, context)
     case "faq_items":
       return polishFaqItems(value)
     case "menu_items":

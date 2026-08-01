@@ -74,7 +74,7 @@ function parseGeneratedJson(text: string): Record<string, unknown> | null {
   }
 }
 
-function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
+function sanitizeServices(value: unknown, fallback: ServiceItem[], context: ReturnType<typeof copyContextForInput>) {
   if (!Array.isArray(value)) return fallback
 
   const generated = value
@@ -90,8 +90,8 @@ function sanitizeServices(value: unknown, fallback: ServiceItem[]) {
     })
     .filter(Boolean) as ServiceItem[]
 
-  if (!generated.length) return polishServices(fallback)
-  return polishServices(fallback.map((service, index) => generated[index] || service))
+  if (!generated.length) return polishServices(fallback, context)
+  return polishServices(fallback.map((service, index) => generated[index] || service), context)
 }
 
 function sanitizeFaqItems(value: unknown): { q: string; a: string }[] | null {
@@ -270,7 +270,7 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
       : [{
           name: polishTitle(industryLabel || "Service"),
           description: serviceFallback(industryLabel || "service"),
-        }]),
+        }], copyContextForInput(input)),
   }
 }
 
@@ -375,7 +375,7 @@ export async function generateWebsiteContent(input: ContentGenerationInput): Pro
       ctaHeadline: typeof generated.ctaHeadline === "string" ? polishShortCopy(limit(generated.ctaHeadline, "", 90)) || null : null,
       copy_generated: true,
       faq_items: faqItems,
-      services: sanitizeServices(generated.services, fallback.services),
+      services: sanitizeServices(generated.services, fallback.services, copyContextForInput(input)),
     }
   } catch (error) {
     console.error("[contentGeneration] Claude generation error:", error)
