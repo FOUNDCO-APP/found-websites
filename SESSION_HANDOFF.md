@@ -1,3 +1,14 @@
+## 2026-07-31 - Safari Custom-Domain Share URL Fix
+
+Shawn found Safari sharing a connected-domain site still opened/shared the foundco.app fallback for RC Bicycles, while Firefox respected the business domain. Craig/Marcus treated this as a public URL source-of-truth bug, not another DNS-only issue.
+
+Fixed: tenant metadata, shop/order metadata, dashboard live-site links, page preview links, and catalog preview links now resolve through `getPublicSiteOrigin()`, which prefers `website_config.custom_domain` and falls back to the slug subdomain only when no domain is connected.
+
+Verification: `cmd /c npm run build` passed. `git diff --check` passed after whitespace cleanup.
+
+Shawn QA next: open `https://rcbicycles.com` in normal Safari, tap Share, send/open the link, and confirm it stays on `rcbicycles.com`. Repeat from Shop/Menu if present.
+
+---
 ## 2026-07-31 - Custom Domains Actually 404'd - Second Domain Bug, Found and Fixed Same Session
 
 Right after the false-"Live" fix below shipped, Shawn finished connecting `mambostudio.app` for real - correct DNS, Vercel confirmed both ownership and DNS-config correct. The dashboard correctly stopped lying about "Live." But visiting the domain itself still 404'd. Different bug, more serious: the actual site was never reachable.

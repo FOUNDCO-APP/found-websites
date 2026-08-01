@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
@@ -9,6 +9,7 @@ import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { resizeImageToJpeg } from "@/lib/resizeImage"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -253,13 +254,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const atBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1
     if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) event.preventDefault()
   }
+  const publicSiteOrigin = getPublicSiteOrigin(company.slug, (config?.custom_domain as string | null | undefined) ?? null)
+  const publicSiteHost = publicSiteOrigin.replace(/^https?:\/\//, "")
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
   const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
   const showCatalog = isFoodCatalog || isShopCatalog
   const catalogCopy = isFoodCatalog
     ? {
         pageLabel: "Menu Page",
-        href: `https://${company.slug}.foundco.app/menu`,
+        href: `${publicSiteOrigin}/menu`,
         savedLabel: "Saved",
         addCategoryLabel: "Add a menu category",
         categoryPlaceholder: "e.g. Tacos, Plates, Drinks...",
@@ -272,7 +275,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       }
     : {
         pageLabel: "Products",
-        href: `https://${company.slug}.foundco.app/shop`,
+        href: `${publicSiteOrigin}/shop`,
         savedLabel: "Saved",
         addCategoryLabel: "Add a product category",
         categoryPlaceholder: "e.g. Shirts, Hats, Featured...",
@@ -696,9 +699,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <h1 style={{ margin: 0, fontSize: 40, lineHeight: 1.02, fontWeight: 300, color: "white", letterSpacing: 0 }}>Edit website</h1>
           </div>
 
-          <a href={`https://${company.slug}.foundco.app`} target="_blank" rel="noopener noreferrer" style={{ margin: "14px 20px 0", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
+          <a href={publicSiteOrigin} target="_blank" rel="noopener noreferrer" style={{ margin: "14px 20px 0", display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none" }}>
             <span style={{ ...TYPE.footnote, color: GREEN }}>View live site</span>
-            <span style={{ ...TYPE.footnote, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{company.slug}.foundco.app</span>
+            <span style={{ ...TYPE.footnote, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{publicSiteHost}</span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
           </a>
 
@@ -729,7 +732,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Site-wide</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
               <HubTile label="Photo library" sub="All your photos" href="/photos" />
-              <HubTile label="Domain" sub={`${company.slug}.foundco.app`} onClick={() => setView("domain")} />
+              <HubTile label="Domain" sub={publicSiteHost} onClick={() => setView("domain")} />
             </div>
           </div>
         </>
@@ -1037,7 +1040,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="About" title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="About" href={`https://${company.slug}.foundco.app/about`} />
+          <PageTab label="About" href={`${publicSiteOrigin}/about`} />
         </div>
       </div>
 
@@ -1074,7 +1077,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Contact" title="Make reaching out easy." body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Contact" href={"https://" + company.slug + ".foundco.app/contact"} />
+          <PageTab label="Contact" href={`${publicSiteOrigin}/contact`} />
         </div>
       </div>
 
@@ -1256,7 +1259,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Services" href={`https://${company.slug}.foundco.app/services`} />
+          <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
         </div>
 
         {services.length > 6 && (
@@ -1336,7 +1339,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <div id="site-photos" style={{ padding: "10px 20px 0" }}>
         <SectionIntro eyebrow="Photos" title="Choose the photos customers see." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Gallery" href={`https://${company.slug}.foundco.app/gallery`} />
+          <PageTab label="Gallery" href={`${publicSiteOrigin}/gallery`} />
         </div>
 
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>

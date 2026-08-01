@@ -1,4 +1,4 @@
-import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
+﻿import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -11,7 +11,7 @@ export default async function MenuPage() {
 
   const { data: config } = await createAdminClient()
     .from("website_config")
-    .select("menu_items")
+    .select("menu_items, custom_domain")
     .eq("company_id", company.id)
     .single()
 
@@ -21,6 +21,7 @@ export default async function MenuPage() {
       companyName={company.name}
       slug={company.slug}
       initialCategories={config?.menu_items ?? []}
+      customDomain={(config?.custom_domain as string | null) ?? null}
     />
   )
 }

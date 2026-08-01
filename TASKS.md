@@ -1,3 +1,9 @@
+## 2026-07-31 - Custom-Domain Share QA
+
+- [x] Fix Safari custom-domain share source of truth: public metadata and live-preview links prefer connected domains over foundco.app fallback URLs.
+- [ ] Shawn QA: open `https://rcbicycles.com` in normal Safari, use Share, and confirm the shared/opened URL stays on `rcbicycles.com`. Repeat from Shop/Menu if present.
+
+---
 ## 2026-07-28 - CURRENT PENDING DECISIONS (read this block first)
 
 - [x] Page switcher (`BackHeader` in `SiteEditor.tsx`) - **CLOSED, Shawn approved the final version.** Full-width drop-down panel under the persistent header, numbered list, editing-context cues. Do not reopen without a new specific complaint - see `SESSION_HANDOFF.md` for the full iteration history and final shape.

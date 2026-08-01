@@ -13,6 +13,7 @@ import { getSiteCopy } from "@/lib/siteCopy"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getStickyCTA } from "@/lib/industryCTAs"
 import StickyCtaBar from "@/components/public/StickyCtaBar"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,7 @@ export async function generateMetadata(
     ? `${vocab.servicesLabel} in ${city}${state ? `, ${state}` : ""} — ${company.name}. ${vocab.ctaBodyText.charAt(0).toUpperCase() + vocab.ctaBodyText.slice(1)}.`
     : `${company.name} — ${vocab.ctaBodyText}.`
   const description = config?.hero_subtitle || descFallback
-  const url = `https://${company.slug}.foundco.app`
+  const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const image = company.logo_url || undefined
 
   return {
@@ -72,7 +73,7 @@ export async function generateMetadata(
 
 function buildJsonLd(company: Company) {
   const config = company.website_config
-  const websiteUrl = `https://${company.slug}.foundco.app`
+  const websiteUrl = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const services = config?.services || []
   const serviceAreas = config?.service_areas || []
 

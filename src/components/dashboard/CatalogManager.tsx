@@ -5,6 +5,7 @@ import Link from "next/link"
 import { updateMenuItems, uploadMenuItemPhoto } from "@/app/dashboard/(app)/site/actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import type { CatalogSettings } from "@/types/company"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 type CatalogDetail = { label: string; value: string }
 type CatalogOption = { label: string; choices: string[] }
@@ -49,6 +50,7 @@ type Props = {
   companyName: string
   slug: string
   initialCategories: CatalogCategory[]
+  customDomain?: string | null
 }
 
 const COPY = {
@@ -199,7 +201,7 @@ function inputStyle(extra: React.CSSProperties = {}): React.CSSProperties {
   return { width: "100%", boxSizing: "border-box", padding: "14px 15px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.11)", color: "white", ...TYPE.body, outline: "none", ...extra }
 }
 
-export default function CatalogManager({ mode, companyName, slug, initialCategories }: Props) {
+export default function CatalogManager({ mode, companyName, slug, initialCategories, customDomain }: Props) {
   const copy = COPY[mode]
   const isProducts = mode === "products"
   const initialSettings = normalizeSettings(initialCategories.find(category => category.catalog_settings)?.catalog_settings ?? initialCategories[0]?.catalog_settings)
@@ -274,7 +276,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   }, [sheetOpen])
 
   const itemCount = categories.reduce((sum, category) => sum + category.items.length, 0)
-  const publicHref = `https://${slug}.foundco.app${copy.previewPath}`
+  const publicHref = `${getPublicSiteOrigin(slug, customDomain)}${copy.previewPath}`
   const fulfillmentLabel = catalogSettings.fulfillment === "both" ? (isProducts ? "Pickup and shipping" : "Pickup and delivery") : catalogSettings.fulfillment === "shipping" ? (isProducts ? "Shipping only" : "Delivery only") : catalogSettings.fulfillment === "pickup" ? "Pickup only" : "Checkout paused"
 
   async function persist(next: CatalogCategory[], settings = catalogSettings) {

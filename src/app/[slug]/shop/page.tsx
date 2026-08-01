@@ -5,8 +5,8 @@ import { hasAddonAccess } from "@/lib/featureAccess"
 import ShopClient from "./ShopClient"
 import type { Metadata } from "next"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
@@ -17,10 +17,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   const title = `Shop | ${company.name}`
   const description = company.website_config?.hero_subtitle || `Shop products from ${company.name}, straight from their website.`
-  const url = `https://${company.slug}.${ROOT_DOMAIN}/shop`
+  const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
+  const url = `${origin}/shop`
   const image = company.logo_url || undefined
 
   return {
+    metadataBase: new URL(origin),
     title,
     description,
     alternates: { canonical: url },

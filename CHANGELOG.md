@@ -1,3 +1,19 @@
+## Session: July 31, 2026 - Safari Custom-Domain Share URL Fix
+**Worked on:** Shawn found Safari sharing a connected-domain site could still use the foundco.app fallback URL for RC Bicycles, even though Firefox respected the business domain.
+
+### Fixed
+- Public metadata and dashboard/catalog preview links now resolve through `getPublicSiteOrigin()`.
+- Connected `website_config.custom_domain` wins first; slug.foundco.app is only the fallback.
+- Shop and order metadata now also set `metadataBase` from the same public origin.
+
+### Verified
+- `cmd /c npm run build` passed.
+- `git diff --check` passed.
+
+### Test Next
+- Shawn: open `https://rcbicycles.com` in normal Safari, tap Share, and confirm the shared/opened URL stays on `rcbicycles.com`. Repeat from Shop/Menu if present.
+
+---
 ## Session: July 30, 2026 - PostHog Phase 2 Analytics Finished + Sentry/Menu-Gating Status Confirmed
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn's computer crashed last session mid-setup on PostHog (TASKS.md Phase 2 analytics). He wasn't sure what had actually landed, and separately wanted confirmation that Sentry/uptime and the `menu_display` gating fix were really done.
