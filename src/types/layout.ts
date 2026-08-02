@@ -13,7 +13,8 @@ export type SectionImages = {
 export type LayoutProps = {
   company: Company
   activeAddons: string[]
-  supportingCTA: CTA | null
+  primaryCTA: CTA
+  secondaryCTA: CTA | null
   imgs: string[]
   gradient: string
   heroImage: string | null

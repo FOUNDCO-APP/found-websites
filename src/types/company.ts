@@ -95,6 +95,7 @@ export type Company = {
   user_id: string | null
   industry_category: string
   primary_intent: string
+  primary_action_override?: string | null
   secondary_intent: string | null
   sub_industry: string | null
   vibe: string

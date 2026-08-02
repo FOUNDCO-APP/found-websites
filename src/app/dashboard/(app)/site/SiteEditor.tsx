@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -10,6 +10,8 @@ import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { resizeImageToJpeg } from "@/lib/resizeImage"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -29,9 +31,10 @@ type Props = {
   activeAddons: string[]
   plan: string | null
   subscriptionStatus: string | null
+  primaryActionOverride: string | null
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -48,6 +51,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
   const [intentSaved, setIntentSaved] = useState(false)
+  const [activeOverride, setActiveOverride] = useState<string | null>(initialOverride)
+  const [savingOverride, setSavingOverride] = useState(false)
+  const [overrideSaved, setOverrideSaved] = useState(false)
 
   // Shared save-failure toast. A save showing "Saved" when the write actually
   // failed is worse than no feedback at all - this makes failures visible
@@ -436,6 +442,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSavingIntent(false)
     setIntentSaved(true)
     setTimeout(() => setIntentSaved(false), 2500)
+  }
+
+  async function saveOverride(key: string | null) {
+    if (key === activeOverride) return
+    setActiveOverride(key)
+    setSavingOverride(true)
+    await updatePrimaryActionOverride(key)
+    setSavingOverride(false)
+    setOverrideSaved(true)
+    setTimeout(() => setOverrideSaved(false), 2500)
   }
 
   async function persistMenuCats(cats: MenuCatData[]) {
@@ -1031,6 +1047,95 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                         <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                           {opt.desc}
                         </div>
+                      </div>
+                      {isActive && (
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </>
+        )
+      })()}
+      {(() => {
+        const effectiveAddons = getEffectiveAddons(plan, activeAddons)
+        const availableActions = getAvailablePrimaryActions(industryCategory, effectiveAddons, company.phone)
+        // Only worth showing when there's a real choice - a business with
+        // just one working option has nothing to override.
+        if (availableActions.length < 2) return null
+        const autoLabel = getSiteCTAs(
+          { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: null },
+          effectiveAddons
+        ).primary.label
+
+        return (
+          <>
+            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+            <div style={{ padding: "0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Primary Action</h2>
+                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    Found automatically picks the best button for your hero and mobile bar. Override it here if you want full control.
+                  </p>
+                </div>
+                {overrideSaved && (
+                  <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
+                    Live
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button
+                  onClick={() => saveOverride(null)}
+                  disabled={savingOverride}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "14px 18px", borderRadius: 16, cursor: savingOverride ? "default" : "pointer",
+                    backgroundColor: !activeOverride ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                    border: `1.5px solid ${!activeOverride ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: !activeOverride ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
+                      Auto — {autoLabel}
+                    </div>
+                    <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                      Found picks the best option as your setup changes
+                    </div>
+                  </div>
+                  {!activeOverride && (
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+                {availableActions.map(opt => {
+                  const isActive = activeOverride === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => saveOverride(opt.key)}
+                      disabled={savingOverride}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "14px 18px", borderRadius: 16, cursor: savingOverride ? "default" : "pointer",
+                        backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                        border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                        textAlign: "left",
+                      }}
+                    >
+                      <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.8)" }}>
+                        {opt.label}
                       </div>
                       {isActive && (
                         <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>

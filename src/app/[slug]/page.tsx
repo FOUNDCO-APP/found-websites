@@ -5,7 +5,7 @@ import { heroGradient } from "@/lib/color"
 import { getStockImages } from "@/lib/stockImages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getEffectiveAddons } from "@/lib/featureAccess"
-import { getIndustryCTAs } from "@/lib/industryCTAs"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 import { isVideoMedia } from "@/lib/mediaKind"
 import ImpactLayout from "@/components/layouts/ImpactLayout"
 import EditorialLayout from "@/components/layouts/EditorialLayout"
@@ -51,7 +51,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       .or("in_gallery.eq.true,website_section.in.(hero,about,cta,announcement)"),
   ])
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
-  const { supportingCTA } = getIndustryCTAs(company.industry_category, activeAddons, company.primary_intent)
+  const { primary: primaryCTA, secondary: secondaryCTA } = getSiteCTAs(company, activeAddons)
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null; in_gallery: boolean }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
@@ -68,7 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     announcement: firstSectionImage("announcement"),
   }
 
-  const props: LayoutProps = { company, activeAddons, supportingCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, sectionImages, locations }
+  const props: LayoutProps = { company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, uploadedImgs, sectionImages, locations }
 
   // Route to the correct layout - falls back to Impact for unbuilt layouts
   switch (layout) {

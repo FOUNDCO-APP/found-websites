@@ -46,6 +46,7 @@ export default async function SitePage() {
       activeAddons={(addonRows ?? []).map((row: { addon_slug: string }) => row.addon_slug)}
       plan={company.plan}
       subscriptionStatus={company.subscription_status}
+      primaryActionOverride={company.primary_action_override ?? null}
     />
   )
 }

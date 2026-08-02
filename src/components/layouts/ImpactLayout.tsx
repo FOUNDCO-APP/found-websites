@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { intentLabel, intentHref } from "@/types/company"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -13,7 +12,7 @@ import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
-export default function ImpactLayout({ company, supportingCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
+export default function ImpactLayout({ company, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -21,11 +20,6 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const aboutCopy = getHomepageAboutCopy(config)
   const displayName = polishBusinessName(company.name)
-
-  const primaryLabel = intentLabel[company.primary_intent] || "Contact Us"
-  const primaryHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
 
 
   const img = (i: number) => imgs[i % imgs.length] || null
@@ -64,14 +58,14 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
           </p>
           <div className="flex flex-col sm:flex-row gap-4"
             style={{ animation: "fade-in 350ms ease-out 430ms both" }}>
-            <Link href={primaryHref} className="btn w-full sm:w-auto text-white"
+            <Link href={primaryCTA.href} className="btn w-full sm:w-auto text-white"
               style={{ backgroundColor: primary, borderColor: primary }}>
-              {primaryLabel}
+              {primaryCTA.label}
             </Link>
-            {supportingCTA && (
-              <Link href={supportingCTA.href} className="btn w-full sm:w-auto text-white"
+            {secondaryCTA && (
+              <Link href={secondaryCTA.href} className="btn w-full sm:w-auto text-white"
                 style={{ borderColor: "rgba(255,255,255,0.35)" }}>
-                {supportingCTA.label}
+                {secondaryCTA.label}
               </Link>
             )}
           </div>
@@ -226,8 +220,8 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
               {vocab.ctaBodyText}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href={primaryHref} className="btn text-white w-full sm:w-auto" style={{ backgroundColor: primary, borderColor: primary }}>
-                {primaryLabel}
+              <Link href={primaryCTA.href} className="btn text-white w-full sm:w-auto" style={{ backgroundColor: primary, borderColor: primary }}>
+                {primaryCTA.label}
               </Link>
               {company.phone && (
                 <a href={`tel:${company.phone.replace(/\D/g, "")}`}

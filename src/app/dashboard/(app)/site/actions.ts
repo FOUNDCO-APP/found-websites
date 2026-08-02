@@ -758,3 +758,21 @@ export async function updateAddressVisibility(visible: boolean) {
   revalidatePath(`/${ctx.company.slug}/contact`)
   return { success: true }
 }
+
+// null = auto (Found picks the best real option from industry + active
+// addons, recalculated live via getSiteCTAs). A specific PrimaryActionKey
+// pins the hero/sticky-bar CTA to that option regardless of auto logic.
+export async function updatePrimaryActionOverride(key: string | null) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ primary_action_override: key })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  return { success: true }
+}

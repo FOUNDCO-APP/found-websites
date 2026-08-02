@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -8,16 +9,33 @@ export default function StickyCtaBar({
   href,
   matchPath,
   color,
+  delayUntilScroll = false,
 }: {
   label: string
   href: string
   matchPath: string | null
   color: string
+  // True when this bar would otherwise say the exact same thing as the
+  // hero's own button (a business with only one real action, so there's
+  // no genuinely different secondary option for the bar to offer instead).
+  // Rather than show the same CTA twice on screen at once, it waits until
+  // the visitor has scrolled past the hero before appearing.
+  delayUntilScroll?: boolean
 }) {
   const pathname = usePathname()
+  const [pastHero, setPastHero] = useState(!delayUntilScroll)
+
+  useEffect(() => {
+    if (!delayUntilScroll) return
+    const onScroll = () => setPastHero(window.scrollY > window.innerHeight * 0.6)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [delayUntilScroll])
 
   // Hide when already on the destination page
   if (matchPath && (pathname === matchPath || pathname.endsWith(matchPath))) return null
+  if (!pastHero) return null
 
   const isPhone = href.startsWith("tel:")
 

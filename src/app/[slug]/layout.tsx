@@ -11,7 +11,9 @@ import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
 import { getSiteCopy } from "@/lib/siteCopy"
 import { getVocab } from "@/lib/subIndustryVocabulary"
-import { getStickyCTA } from "@/lib/industryCTAs"
+import { getSiteCTAs } from "@/lib/industryCTAs"
+import { getEffectiveAddons } from "@/lib/featureAccess"
+import { createAdminClient } from "@/lib/supabase/admin"
 import StickyCtaBar from "@/components/public/StickyCtaBar"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
@@ -198,7 +200,20 @@ export default async function CompanyLayout({
   const vibe = getVibe(company.vibe)
   const layout = getLayout(company.industry_category, company.vibe)
   const schemas = buildJsonLd(company)
-  const stickyCTA = getStickyCTA(company.industry_category, company.primary_intent, company.phone)
+
+  const admin = createAdminClient()
+  const { data: addonRows } = await admin
+    .from("addon_subscriptions")
+    .select("addon_slug")
+    .eq("company_id", company.id)
+    .eq("active", true)
+  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
+  const { primary, secondary } = getSiteCTAs(company, activeAddons)
+  // The bar's job is to say whatever the hero isn't already headlining. If
+  // there's no genuinely different secondary option, it waits until the
+  // visitor scrolls past the hero instead of repeating the hero's own CTA.
+  const barCTA = secondary ?? primary
+  const barMatchPath = barCTA.href.startsWith("tel:") ? null : barCTA.href
 
   return (
     <div
@@ -223,14 +238,13 @@ export default async function CompanyLayout({
       <Navbar company={company} transparent={layout === "cinematic"} />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <Footer company={company} />
-      {stickyCTA && (
-        <StickyCtaBar
-          label={stickyCTA.label}
-          href={stickyCTA.href}
-          matchPath={stickyCTA.matchPath}
-          color={company.primary_color}
-        />
-      )}
+      <StickyCtaBar
+        label={barCTA.label}
+        href={barCTA.href}
+        matchPath={barMatchPath}
+        color={company.primary_color}
+        delayUntilScroll={!secondary}
+      />
       <PreviewBanner
         slug={company.slug}
         companyName={company.name}
