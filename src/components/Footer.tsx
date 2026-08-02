@@ -142,9 +142,11 @@ export default function Footer({ company }: { company: Company }) {
                   </a>
                 </li>
               )}
-              {company.city && (
+              {company.address_visible && company.address ? (
+                <li>{company.address}, {company.city}{company.state ? `, ${company.state}` : ""}</li>
+              ) : company.city ? (
                 <li>{company.city}{company.state ? `, ${company.state}` : ""}</li>
-              )}
+              ) : null}
               <li className="pt-2">
                 <Link href={ctaHref} className="btn text-white"
                   style={{ backgroundColor: primary, borderColor: primary }}>

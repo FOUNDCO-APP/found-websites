@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
@@ -19,7 +19,7 @@ type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain"
 
 type Props = {
-  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; logo_url?: string | null; logo_white_url?: string | null }
+  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
   config: Config | null
   photos: Photo[]
   stockImages: string[]
@@ -83,9 +83,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     email: company.email ?? "",
     city: company.city ?? "",
     state: company.state ?? "",
+    address: company.address ?? "",
+    zip: company.zip ?? "",
   })
   const [savingBizField, setSavingBizField] = useState<string | null>(null)
   const [savedBizField, setSavedBizField] = useState<string | null>(null)
+  const [addressVisible, setAddressVisible] = useState(company.address_visible ?? false)
+  const [savingAddressVisible, setSavingAddressVisible] = useState(false)
+
+  async function toggleAddressVisible(next: boolean) {
+    const previous = addressVisible
+    setAddressVisible(next)
+    setSavingAddressVisible(true)
+    const result = await updateAddressVisibility(next)
+    setSavingAddressVisible(false)
+    if (result && "error" in result) {
+      setAddressVisible(previous)
+      flashSaveError("Couldn't update that. Try again.")
+    }
+  }
   const [logoUrl, setLogoUrl] = useState(company.logo_url ?? null)
   const [logoWhiteUrl, setLogoWhiteUrl] = useState(company.logo_white_url ?? null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -112,7 +128,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     }
   }
 
-  async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state", value: string) {
+  async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state" | "address" | "zip", value: string) {
     const previousValue = businessInfo[field]
     const trimmed = value.trim()
     // Only validate non-empty input - clearing a field is always allowed.
@@ -1488,6 +1504,26 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <BizInfoField label="City" value={businessInfo.city} placeholder="Tucson" saving={savingBizField === "city"} justSaved={savedBizField === "city"} onSave={v => saveBusinessField("city", v)} />
             <BizInfoField label="State" value={businessInfo.state} placeholder="AZ" saving={savingBizField === "state"} justSaved={savedBizField === "state"} onSave={v => saveBusinessField("state", v)} />
+          </div>
+
+          <div style={{ marginTop: 4, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: addressVisible ? 14 : 0 }}>
+              <div>
+                <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Show my address</div>
+                <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+                  Customers can see your full street address on your Contact page and in Google search results. Off by default.
+                </p>
+              </div>
+              <button onClick={() => toggleAddressVisible(!addressVisible)} disabled={savingAddressVisible} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${addressVisible ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: addressVisible ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: addressVisible ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
+                {addressVisible ? "On" : "Off"}
+              </button>
+            </div>
+            {addressVisible && (
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                <BizInfoField label="Street address" value={businessInfo.address} placeholder="428 N. Fremont Ave" saving={savingBizField === "address"} justSaved={savedBizField === "address"} onSave={v => saveBusinessField("address", v)} />
+                <BizInfoField label="ZIP code" value={businessInfo.zip} placeholder="85719" saving={savingBizField === "zip"} justSaved={savedBizField === "zip"} onSave={v => saveBusinessField("zip", v)} />
+              </div>
+            )}
           </div>
         </div>
       </div>

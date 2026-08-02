@@ -127,9 +127,16 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                   </div>
                   <div>
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Location</p>
-                    <p className="text-xl font-black" style={{ color: "#111111" }}>
-                      {company.city}{company.state ? `, ${company.state}` : ""}
-                    </p>
+                    {company.address_visible && company.address ? (
+                      <p className="text-xl font-black" style={{ color: "#111111" }}>
+                        {company.address}<br />
+                        {company.city}{company.state ? `, ${company.state}` : ""}{company.zip ? ` ${company.zip}` : ""}
+                      </p>
+                    ) : (
+                      <p className="text-xl font-black" style={{ color: "#111111" }}>
+                        {company.city}{company.state ? `, ${company.state}` : ""}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

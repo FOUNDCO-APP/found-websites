@@ -89,8 +89,10 @@ function buildJsonLd(company: Company) {
     ...(company.city && company.state && {
       address: {
         "@type": "PostalAddress",
+        ...(company.address_visible && company.address && { streetAddress: company.address }),
         addressLocality: company.city,
         addressRegion: company.state,
+        ...(company.address_visible && company.zip && { postalCode: company.zip }),
         addressCountry: "US",
       },
     }),

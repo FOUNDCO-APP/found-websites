@@ -609,7 +609,7 @@ export async function removeStockImage(imageUrl: string) {
 // used sitewide (footer, nav, every page), not scoped to one page's copy.
 // Explicit allowlist on purpose: this table also holds plan/subscription/
 // Stripe fields that must never be reachable through a generic field setter.
-const COMPANY_FIELD_ALLOWLIST = new Set(["name", "phone", "email", "city", "state"])
+const COMPANY_FIELD_ALLOWLIST = new Set(["name", "phone", "email", "city", "state", "address", "zip"])
 
 // Gallery membership is independent of website_section on purpose - a photo
 // can be a primary slot (hero/about/cta/contact/announcement) AND in the
@@ -730,6 +730,26 @@ export async function updateCompanyField(field: string, value: string) {
   const { error } = await ctx.admin
     .from("companies")
     .update({ [field]: value.trim() || null })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  return { success: true }
+}
+
+// Separate from updateCompanyField since this is a boolean, not text - same
+// show/hide pattern already used for phone_visible/email_visible. Defaults
+// to false (address hidden) so nothing is ever exposed publicly without the
+// owner explicitly turning it on.
+export async function updateAddressVisibility(visible: boolean) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ address_visible: visible })
     .eq("id", ctx.company.id)
 
   if (error) return { error: error.message }

@@ -31,6 +31,9 @@ export default async function SitePage() {
         email: company.email,
         city: company.city,
         state: company.state,
+        address: company.address,
+        zip: company.zip,
+        address_visible: company.address_visible,
         logo_url: company.logo_url,
         logo_white_url: company.logo_white_url,
       }}

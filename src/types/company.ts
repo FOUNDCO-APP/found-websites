@@ -107,6 +107,9 @@ export type Company = {
   lead_email: string | null
   city: string | null
   state: string | null
+  address: string | null
+  zip: string | null
+  address_visible: boolean | null
   logo_url: string | null
   logo_white_url: string | null
   navbar_dark: boolean | null
