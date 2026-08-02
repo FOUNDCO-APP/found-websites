@@ -165,33 +165,64 @@ h1, h2, h3, h4, h5, h6 {
   to   { transform: translateY(0); }
 }
 
-/* ── Gallery masonry ── */
+/* ── Gallery masonry ──
+   Mobile: a controlled grid with uniform, cropped tiles. CSS-columns
+   masonry (the old approach, still used on desktop below) sizes each
+   column by its own content height — with mixed photo aspect ratios
+   (a tall portrait next to a couple of short landscapes) the columns
+   end up wildly uneven, leaving a visible gap under the shorter one
+   before the next section starts. On a narrow 2-column mobile layout
+   that reads as broken, not intentional. A fixed-ratio grid can't
+   produce that gap: every tile is the same shape regardless of what
+   the source photo looks like. */
 .masonry {
-  columns: 2;
-  column-gap: 3px;
-}
-
-@media (min-width: 768px) {
-  .masonry { columns: 3; }
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
 }
 
 .masonry-item {
-  break-inside: avoid;
-  margin-bottom: 3px;
+  display: block;
+  overflow: hidden;
+}
+
+.masonry-item img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  background-color: #f0f0f0;
   display: block;
 }
 
-/* Reserve a placeholder ratio until each photo's real dimensions are known —
-   without this, an unloaded <img> has ~0 height, so the CSS-columns masonry
-   can't balance items across columns until images finish downloading, and
-   the whole grid appears to collapse into one column and pop in over several
-   seconds. `auto <ratio>` falls back to this ratio only until the image's
-   real intrinsic size loads, then yields to it — every photo still renders
-   at its own natural proportions once loaded, this only stabilizes the gap
-   before that. */
-.masonry-item img {
-  aspect-ratio: auto 1;
-  background-color: #f0f0f0;
+/* Desktop: real masonry, natural photo proportions. More/wider columns
+   make uneven heights read as intentional variety rather than a gap, so
+   this wasn't flagged as broken - only mobile was. */
+@media (min-width: 768px) {
+  .masonry {
+    display: block;
+    columns: 3;
+    column-gap: 3px;
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 3px;
+  }
+
+  /* Reserve a placeholder ratio until each photo's real dimensions are
+     known - without this, an unloaded <img> has ~0 height, so the
+     CSS-columns masonry can't balance items across columns until images
+     finish downloading, and the whole grid appears to collapse into one
+     column and pop in over several seconds. `auto <ratio>` falls back to
+     this ratio only until the image's real intrinsic size loads, then
+     yields to it - every photo still renders at its own natural
+     proportions once loaded, this only stabilizes the gap before that. */
+  .masonry-item img {
+    height: auto;
+    aspect-ratio: auto 1;
+    object-fit: initial;
+  }
 }
 
 .btn-lg {
