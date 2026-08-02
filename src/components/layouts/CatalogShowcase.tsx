@@ -19,7 +19,7 @@ function parsePrice(price: string | null | undefined) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(match[1]))
 }
 
-export default function CatalogShowcase({ company }: { company: Company }) {
+export default function CatalogShowcase({ company, activeAddons = [] }: { company: Company; activeAddons?: string[] }) {
   const config = company.website_config
   const primary = company.primary_color
   const isFood = isFoodBusiness(company)
@@ -34,7 +34,9 @@ export default function CatalogShowcase({ company }: { company: Company }) {
 
   if (rows.length === 0) return null
 
-  const href = isFood ? "/menu" : "/shop"
+  // /shop only exists once shopping_cart is active - point at /services
+  // instead so this never links to a page that 404s.
+  const href = isFood ? "/menu" : activeAddons.includes("shopping_cart") ? "/shop" : "/services"
   const eyebrow = isFood ? "From the menu" : "From the shop"
   const title = isFood ? "A taste of what is ready" : "A closer look at what they carry"
   const linkLabel = isFood ? "View full menu" : "Shop all products"

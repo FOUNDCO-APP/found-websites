@@ -55,12 +55,15 @@ function listPreview(items: string[], fallback: string) {
   return `${unique[0]}, ${unique[1]}, and ${unique[2]}`
 }
 
-function defaultDraft(company: DraftCompany): FeaturedUpdateDraft {
+function defaultDraft(company: DraftCompany, activeAddons: string[] = []): FeaturedUpdateDraft {
   const industry = company.industry_category
   const sub = (company.sub_industry || "").toLowerCase()
   const config = company.website_config
   const items = itemNames(config)
   const services = serviceNames(config)
+  // /shop only exists once the shopping_cart addon is active - without it,
+  // point at /services (always real) instead of a page that 404s.
+  const hasShopAddon = activeAddons.includes("shopping_cart")
 
   if (industry === "food" || industry === "home_based_food") {
     return {
@@ -79,8 +82,8 @@ function defaultDraft(company: DraftCompany): FeaturedUpdateDraft {
       eyebrow: "Bike shop update",
       title: "Ready for the next ride.",
       body: "Tune-ups, gear, and local bike help are ready before the season gets busy.",
-      label: "See what is ready",
-      href: "/shop",
+      label: hasShopAddon ? "See what is ready" : "See our services",
+      href: hasShopAddon ? "/shop" : "/services",
     }
   }
 
@@ -91,8 +94,8 @@ function defaultDraft(company: DraftCompany): FeaturedUpdateDraft {
       body: items.length
         ? `Customers can explore ${listPreview(items, "the latest pieces")} and order directly from the site.`
         : "Customers can browse what is available and send an order directly from the site.",
-      label: "Shop the selection",
-      href: "/shop",
+      label: hasShopAddon ? "Shop the selection" : "See what we offer",
+      href: hasShopAddon ? "/shop" : "/services",
     }
   }
 
@@ -149,8 +152,8 @@ function overlapsNearby(text: string, nearbyCopy: unknown[]) {
   })
 }
 
-export function getFeaturedUpdateDraft(company: DraftCompany, nearbyCopy: unknown[] = []): FeaturedUpdateDraft | null {
-  const draft = defaultDraft(company)
+export function getFeaturedUpdateDraft(company: DraftCompany, nearbyCopy: unknown[] = [], activeAddons: string[] = []): FeaturedUpdateDraft | null {
+  const draft = defaultDraft(company, activeAddons)
   if (overlapsNearby(draft.title, nearbyCopy) || overlapsNearby(draft.body, nearbyCopy)) {
     if (company.industry_category === "retail" || company.industry_category === "makers_crafts") {
       return {
@@ -164,9 +167,9 @@ export function getFeaturedUpdateDraft(company: DraftCompany, nearbyCopy: unknow
   return draft
 }
 
-export function getFeaturedUpdatePublicCopy(company: DraftCompany, nearbyCopy: unknown[] = []) {
+export function getFeaturedUpdatePublicCopy(company: DraftCompany, nearbyCopy: unknown[] = [], activeAddons: string[] = []) {
   const config = company.website_config
-  const draft = getFeaturedUpdateDraft(company, nearbyCopy)
+  const draft = getFeaturedUpdateDraft(company, nearbyCopy, activeAddons)
   if (!draft) return null
 
   const title = isGenericFeaturedCopy(config?.announcement_title) ? draft.title : String(config?.announcement_title).trim()

@@ -5,6 +5,7 @@ import { getFeaturedUpdatePublicCopy } from "@/lib/featuredUpdate"
 type Props = {
   company: Company
   image?: string | null
+  activeAddons?: string[]
 }
 
 const TARGETS = new Set(["/", "/contact", "/shop", "/menu", "/services", "/reserve", "/estimate", "/gallery"])
@@ -17,7 +18,7 @@ function safeHref(value: unknown, fallback: string) {
   return fallback
 }
 
-export default function SiteAnnouncement({ company, image }: Props) {
+export default function SiteAnnouncement({ company, image, activeAddons = [] }: Props) {
   const config = company.website_config
   if (!config?.announcement_enabled) return null
 
@@ -31,7 +32,7 @@ export default function SiteAnnouncement({ company, image }: Props) {
     "From the menu",
     "A taste of what is ready",
   ]
-  const copy = getFeaturedUpdatePublicCopy(company, nearbyCopy)
+  const copy = getFeaturedUpdatePublicCopy(company, nearbyCopy, activeAddons)
   if (!copy && !image) return null
 
   const title = copy?.title

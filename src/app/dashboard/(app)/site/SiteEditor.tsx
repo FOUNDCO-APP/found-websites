@@ -682,7 +682,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     industry_category: industryCategory,
     sub_industry: company.sub_industry ?? null,
     website_config: { ...(config as any), menu_items: menuCats, services } as any,
-  }, announcementNearbyCopy) ?? { title: "A clear next step is ready.", body: "Visitors can see what matters now and move straight to the right action.", label: "Learn more", href: "/contact", eyebrow: "Featured update" }
+  }, announcementNearbyCopy, activeAddons) ?? { title: "A clear next step is ready.", body: "Visitors can see what matters now and move straight to the right action.", label: "Learn more", href: "/contact", eyebrow: "Featured update" }
   const announcementTitle = !isGenericFeaturedCopy(config.announcement_title) ? String(config.announcement_title).trim() : announcementDefault.title
   const announcementBody = !isGenericFeaturedCopy(config.announcement_body) ? String(config.announcement_body).trim() : announcementDefault.body
   const announcementLabel = !isGenericFeaturedCopy(config.announcement_cta_label) ? String(config.announcement_cta_label).trim() : announcementDefault.label

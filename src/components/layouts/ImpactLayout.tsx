@@ -12,7 +12,7 @@ import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
-export default function ImpactLayout({ company, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
+export default function ImpactLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -72,9 +72,9 @@ export default function ImpactLayout({ company, primaryCTA, secondaryCTA, imgs, 
         </div>
       </section>
 
-      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
 
-      <CatalogShowcase company={company} />
+      <CatalogShowcase company={company} activeAddons={activeAddons} />
 
       {/* â”€â”€ SERVICES TEASER â”€â”€ */}
       {services.length > 0 && (

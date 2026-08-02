@@ -47,8 +47,12 @@ const CONTENT_CTA: Partial<Record<string, CTA>> = {
   professional_services: { label: "Our Services",    href: "/services" },
   childcare:             { label: "Our Programs",    href: "/services" },
   home_property:         { label: "Our Services",    href: "/services" },
-  retail:                { label: "Shop Now",        href: "/shop" },
-  makers_crafts:         { label: "Shop Now",        href: "/shop" },
+  // NOT "Shop Now"/"/shop" - that page only exists when the shopping_cart
+  // addon is active (see contentCTAFor/resolveActionKey, which route there
+  // instead when it genuinely works). This is the fallback for when it
+  // doesn't, so it must point somewhere real.
+  retail:                { label: "Our Products",    href: "/services" },
+  makers_crafts:         { label: "Our Products",    href: "/services" },
   nonprofit:             { label: "Get Involved",    href: "/services" },
 }
 

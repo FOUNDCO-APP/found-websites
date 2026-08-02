@@ -14,7 +14,7 @@ import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import type { LayoutProps } from "@/types/layout"
 
-export default function EditorialLayout({ company, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
+export default function EditorialLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -102,9 +102,9 @@ export default function EditorialLayout({ company, primaryCTA, secondaryCTA, img
         </div>
       </section>
 
-      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} />
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
 
-      <CatalogShowcase company={company} />
+      <CatalogShowcase company={company} activeAddons={activeAddons} />
 
       {/* â”€â”€ ABOUT â€” brand story â”€â”€ */}
       {aboutCopy && (
