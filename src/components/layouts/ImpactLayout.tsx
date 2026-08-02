@@ -4,6 +4,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { polishBusinessName } from "@/lib/copyPolish"
+import { excerptText } from "@/lib/textExcerpt"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -112,7 +113,11 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
                     <h3 className="font-black text-lg mb-3" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
                       {service.name}
                     </h3>
-                    <p className="text-sm leading-relaxed" style={{ color: "#776F6F" }}>{service.description}</p>
+                    <p className="text-sm leading-relaxed mb-4" style={{ color: "#776F6F" }}>{excerptText(service.description, 50)}</p>
+                    <Link href="/services" className="text-xs font-black uppercase tracking-widest hover:opacity-70 transition-opacity"
+                      style={{ color: primary }}>
+                      More →
+                    </Link>
                   </div>
                 </InView>
               ))}

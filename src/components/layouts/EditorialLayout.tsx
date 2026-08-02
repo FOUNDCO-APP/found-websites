@@ -6,6 +6,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { polishBusinessName } from "@/lib/copyPolish"
+import { excerptText } from "@/lib/textExcerpt"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -197,9 +198,15 @@ export default function EditorialLayout({ company, supportingCTA, imgs, gradient
                         {service.name}
                       </h3>
                     </div>
-                    <p className="text-base leading-relaxed" style={{ color: "#777777" }}>
-                      {service.description}
-                    </p>
+                    <div>
+                      <p className="text-base leading-relaxed" style={{ color: "#777777" }}>
+                        {excerptText(service.description, 50)}
+                      </p>
+                      <Link href="/services" className="text-xs font-black uppercase tracking-widest mt-3 inline-block hover:opacity-70 transition-opacity"
+                        style={{ color: primary }}>
+                        More →
+                      </Link>
+                    </div>
                   </div>
                 </InView>
               ))}

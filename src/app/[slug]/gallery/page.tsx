@@ -96,11 +96,9 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             <h1 className="text-xs font-black tracking-widest uppercase" style={{ color: primary }}>
               {galleryLabel}
             </h1>
-            {hasContent && (
+            {hasContent && albums.length > 0 && (
               <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>
-                {albums.length > 0
-                  ? `${albums.length} ${albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()}`
-                  : `${flatPhotos.length} ${flatPhotos.length === 1 ? "photo" : "photos"}`}
+                {albums.length} {albums.length === 1 ? albumLabel.singular.toLowerCase() : albumLabel.plural.toLowerCase()}
               </span>
             )}
           </div>
@@ -221,11 +219,6 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
           <h1 className="text-xs font-black tracking-widest uppercase" style={{ color: primary }}>
             {galleryLabel}
           </h1>
-          {hasPhotos && (
-            <span className="text-xs font-black" style={{ color: "#bbbbbb" }}>
-              {allPhotos.length} {allPhotos.length === 1 ? "photo" : "photos"}
-            </span>
-          )}
         </div>
         <div className="max-w-6xl mx-auto">
           <div className="w-10 h-0.5 mt-4" style={{ backgroundColor: primary }} />
