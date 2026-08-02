@@ -279,7 +279,7 @@ export default function OnlineOrderClient({
                     {categoryItems.map((item) => {
                       const quantity = cart[item.key]?.quantity ?? 0
                       return (
-                        <div key={item.key} className="flex gap-4 p-4 border border-neutral-200" style={{ borderRadius: 8 }}>
+                        <div key={item.key} className="flex gap-4 p-4" style={{ borderRadius: "var(--card-radius, 10px)", boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))", backgroundColor: "#ffffff" }}>
                           {item.photo_url && (
                             <img src={item.photo_url} alt={item.name} className="w-20 h-20 object-cover shrink-0" style={{ borderRadius: 8 }} />
                           )}
@@ -292,26 +292,39 @@ export default function OnlineOrderClient({
                               <p className="font-black shrink-0" style={{ color: primary }}>{item.priceLabel}</p>
                             </div>
                             <div className="mt-4 flex items-center justify-end gap-3">
-                              <button
-                                type="button"
-                                onClick={() => setQuantity(item, quantity - 1)}
-                                disabled={quantity === 0}
-                                className="w-9 h-9 border border-neutral-200 font-black disabled:opacity-30"
-                                style={{ borderRadius: 999, color: "#111" }}
-                                aria-label={`Remove ${item.name}`}
-                              >
-                                -
-                              </button>
-                              <span className="w-6 text-center font-black" style={{ color: "#111" }}>{quantity}</span>
-                              <button
-                                type="button"
-                                onClick={() => setQuantity(item, quantity + 1)}
-                                className="w-9 h-9 font-black"
-                                style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
-                                aria-label={`Add ${item.name}`}
-                              >
-                                +
-                              </button>
+                              {quantity === 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => setQuantity(item, quantity + 1)}
+                                  className="w-9 h-9 font-black"
+                                  style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
+                                  aria-label={`Add ${item.name}`}
+                                >
+                                  +
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => setQuantity(item, quantity - 1)}
+                                    className="w-9 h-9 border border-neutral-200 font-black"
+                                    style={{ borderRadius: 999, color: "#111" }}
+                                    aria-label={`Remove ${item.name}`}
+                                  >
+                                    -
+                                  </button>
+                                  <span className="w-6 text-center font-black" style={{ color: "#111" }}>{quantity}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setQuantity(item, quantity + 1)}
+                                    className="w-9 h-9 font-black"
+                                    style={{ borderRadius: 999, backgroundColor: primary, color: "#fff" }}
+                                    aria-label={`Add ${item.name}`}
+                                  >
+                                    +
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
