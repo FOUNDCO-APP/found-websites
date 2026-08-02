@@ -144,7 +144,7 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
               </div>
 
               {/* Mobile: horizontal swipe â€” icon + name only */}
-              <div className="flex md:hidden gap-3 overflow-x-auto pb-2">
+              <div className="flex md:hidden gap-3 overflow-x-auto scrollbar-hide pb-2">
                 {services.slice(0, 3).map((service) => (
                   <div key={service.name}
                     className="flex-none flex flex-col items-center gap-3 p-4 w-24"

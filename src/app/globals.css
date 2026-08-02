@@ -474,6 +474,18 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.15 !important;
   }
 }
+/* Hides the native scrollbar on manually-scrollable horizontal rows
+   (touch/trackpad scrolling still works) - a visible scrollbar under a
+   card row reads as an unfinished browser default, not a deliberate
+   design choice. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .catalog-showcase-track {
   animation: catalog-showcase-scroll 34s linear infinite;
 }
@@ -491,5 +503,10 @@ h1, h2, h3, h4, h5, h6 {
   .catalog-showcase-track {
     animation: none;
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .catalog-showcase-track::-webkit-scrollbar {
+    display: none;
   }
 }

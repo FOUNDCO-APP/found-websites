@@ -101,7 +101,7 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
 
       {/* â”€â”€ GALLERY STRIP â€” photos arrive with a warm fade â”€â”€ */}
       {galleryImages.length > 0 && (
-        <div className="flex gap-0.5 overflow-x-auto md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+        <div className="flex gap-0.5 overflow-x-auto scrollbar-hide md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
           {galleryImages.map((src, i) => (
             <div
               key={i}

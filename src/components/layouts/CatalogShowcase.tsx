@@ -42,7 +42,7 @@ export default function CatalogShowcase({ company }: { company: Company }) {
   const loop = items.length >= 4 ? [...items, ...items] : items
 
   return (
-    <section className="overflow-hidden bg-white py-20 md:py-24">
+    <section className="overflow-hidden bg-white py-20 md:py-28">
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -58,7 +58,7 @@ export default function CatalogShowcase({ company }: { company: Company }) {
       <div className="relative">
 
 
-        <div className={items.length >= 4 ? "flex w-max gap-4 px-6 catalog-showcase-track md:gap-5 md:px-8" : "flex gap-4 overflow-x-auto px-6 pb-2 md:gap-5 md:px-8"}>
+        <div className={items.length >= 4 ? "flex w-max gap-4 px-6 catalog-showcase-track md:gap-5 md:px-8" : "flex gap-4 overflow-x-auto scrollbar-hide px-6 pb-6 md:gap-5 md:px-8"}>
           {loop.map((item, index) => {
             const image = itemImage(item)
             return (
