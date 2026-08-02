@@ -19,6 +19,12 @@ const paths: Record<string, string> = {
   retail:       "M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z",
   food:         "M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.871c1.355 0 2.697.056 4.024.166C17.155 8.51 18 9.473 18 10.608v2.513M15 8.25v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m15-3.379a48.474 48.474 0 00-6-.371c-2.032 0-4.034.126-6 .371m12 0c.39.049.777.102 1.163.16 1.07.16 1.837 1.094 1.837 2.175v5.169c0 .621-.504 1.125-1.125 1.125H4.125A1.125 1.125 0 013 20.625v-5.17c0-1.08.768-2.014 1.837-2.174A47.78 47.78 0 016 13.12M12.265 3.11a.375.375 0 11-.53 0L12 2.845l.265.265zm-3 0a.375.375 0 11-.53 0L9 2.845l.265.265zm6 0a.375.375 0 11-.53 0L15 2.845l.265.265z",
   fitness:      "M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z",
+  // "Sales" and "rentals" had no coverage at all - any service named after
+  // either (not just bike shops) silently fell through to the same
+  // generic default star icon, which is what made "Bike Sales" and
+  // "Bike Rentals" look identical/like a mistake next to "Bike Repairs".
+  tag:          "M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z M6 6h.008v.008H6V6z",
+  rental:       "M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z",
   default:      "M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z",
 }
 
@@ -37,6 +43,8 @@ export function getServiceIcon(serviceName: string): string {
   if (n.includes("insul") || n.includes("drywall") || n.includes("plaster")) return "insulation"
   if (n.includes("landscape") || n.includes("lawn") || n.includes("garden") || n.includes("tree") || n.includes("irrigation")) return "landscaping"
   if (n.includes("clean") || n.includes("wash") || n.includes("pressure") || n.includes("power wash")) return "cleaning"
+  if (n.includes("rent")) return "rental"
+  if (n.includes("sale") || n.includes("sell") || n.includes("buy")) return "tag"
   if (n.includes("massage") || n.includes("facial") || n.includes("spa") || n.includes("wellness") || n.includes("therapy")) return "wellness"
   if (n.includes("hair") || n.includes("cut") || n.includes("color") || n.includes("nail") || n.includes("wax") || n.includes("salon")) return "beauty"
   if (n.includes("event") || n.includes("wedding") || n.includes("balloon") || n.includes("decor") || n.includes("party")) return "events"
