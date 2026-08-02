@@ -155,12 +155,11 @@ export default function PortraitLayout({ company, supportingCTA, imgs, gradient,
               {services.slice(0, 3).map((service, i) => (
                 <InView key={service.name} delay={i * 70}>
                   <div
-                    className="flex flex-col items-center text-center p-8"
+                    className="flex flex-col items-start text-left p-8 transition-transform duration-300 hover:-translate-y-1"
                     style={{
                       backgroundColor: "#ffffff",
                       borderRadius: "var(--card-radius, 10px)",
-                      boxShadow: "var(--card-shadow, 0 2px 12px rgba(0,0,0,0.08))",
-                      border: "1px solid #f0f0f0",
+                      boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))",
                     }}
                   >
                     <div className="mb-5 p-4 rounded-full" style={{ backgroundColor: `${primary}18` }}>

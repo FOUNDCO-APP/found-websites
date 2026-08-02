@@ -167,11 +167,11 @@ export default function CinematicLayout({ company, supportingCTA, imgs, gradient
                 {services.slice(0, 3).map((service, i) => (
                   <InView key={service.name} delay={i * 60}>
                     <div
-                      className="flex flex-col items-center gap-3 p-6 text-center"
+                      className="flex flex-col items-center gap-3 p-6 text-center transition-transform duration-300 hover:-translate-y-1"
                       style={{
-                        backgroundColor: "#f7f7f7",
+                        backgroundColor: "#ffffff",
                         borderRadius: "var(--card-radius, 6px)",
-                        border: "1px solid #eeeeee",
+                        boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))",
                       }}>
                       <ServiceIcon serviceName={service.name} color={primary} size={22} />
                       <span className="text-xs font-black uppercase tracking-wide leading-tight"

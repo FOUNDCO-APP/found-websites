@@ -103,11 +103,11 @@ export default function ImpactLayout({ company, supportingCTA, imgs, gradient, h
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {services.slice(0, 3).map((service, i) => (
                 <InView key={service.name} delay={i * 80}>
-                  <div className="bg-white p-8 border-l-4"
+                  <div className="bg-white p-8 border-l-4 transition-transform duration-300 hover:-translate-y-1"
                     style={{
                       borderColor: primary,
                       borderRadius: `0 var(--card-radius, 10px) var(--card-radius, 10px) 0`,
-                      boxShadow: "var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08))",
+                      boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))",
                     }}>
                     <div className="mb-5"><ServiceIcon serviceName={service.name} color={primary} size={24} /></div>
                     <h3 className="font-black text-lg mb-3" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
