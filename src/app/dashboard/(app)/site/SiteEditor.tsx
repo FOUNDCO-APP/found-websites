@@ -796,6 +796,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
           )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.18) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+          <PhotoEditBadge onClick={() => setPhotoPickerSlot("hero")} />
           <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 8 }}>Live preview</div>
             <h3 style={{ margin: 0, fontSize: 30, lineHeight: 1.04, fontWeight: 900, color: "white", letterSpacing: 0 }}>
@@ -835,30 +836,19 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
           </div>
 
-          <button onClick={() => setPhotoPickerSlot("hero")} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-            <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.07)", flexShrink: 0 }}>
-              {heroImage ? (
-                isVideoMedia(heroImage) ? <VideoThumb src={heroImage} /> : <img src={heroImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : null}
-            </div>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Header photo</span>
-              <span style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Change the main image or video</span>
-            </span>
-            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900 }}>Change</span>
-          </button>
-
           <AIBar label="Rewrite the first impression with AI" isLoading={regenerating === "hero"} color={GREEN} onTap={() => handleRegenerate("hero")} />
         </div>
       </div>
 
       <div id="site-photo-map" style={{ margin: "18px 20px 0", borderRadius: 24, padding: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.032)" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 6 }}>Photos around the site</div>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 6 }}>More homepage photos</div>
         <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.45, color: "rgba(255,255,255,0.58)" }}>
-          Pick what appears on each page. Stock photos can stay until the owner has better images.
+          Stock photos can stay until the owner has better images.
         </p>
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-          {photoSlots.map(slot => {
+          {/* Header, About, and Contact photos now live on their own pages -
+              this stays for the slots that only exist on the homepage. */}
+          {photoSlots.filter(slot => slot.slot !== "hero" && slot.slot !== "about" && slot.slot !== "contact").map(slot => {
             const cover = slot.photos[0]?.url ?? null
             const count = slot.photos.length
             return (
@@ -1168,6 +1158,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+        <div style={{ position: "relative", height: 160, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+          {aboutPhotos[0]?.url ? (
+            isVideoMedia(aboutPhotos[0].url) ? <VideoThumb src={aboutPhotos[0].url} /> : <img src={aboutPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+          )}
+          <PhotoEditBadge onClick={() => setPhotoPickerSlot("about")} />
+        </div>
         <div style={{
           borderRadius: 20, padding: "22px 20px",
           background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
@@ -1205,6 +1203,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+        <div style={{ position: "relative", height: 160, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+          {contactPhotos[0]?.url ? (
+            isVideoMedia(contactPhotos[0].url) ? <VideoThumb src={contactPhotos[0].url} /> : <img src={contactPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+          )}
+          <PhotoEditBadge onClick={() => setPhotoPickerSlot("contact")} />
+        </div>
         <EditRowGroup>
           <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} bordered={false} divider />
           <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} bordered={false} divider />
@@ -1927,6 +1933,30 @@ function VideoThumb({ src }: { src: string }) {
 function TapChevronBadge() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+  )
+}
+
+// The one gesture for changing a page's photo everywhere it appears - sits
+// directly on the live preview image, same idea as a social profile/cover
+// photo edit button, so owners are editing the actual thing they're
+// looking at instead of hunting for a separate row in a list.
+function PhotoEditBadge({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Change photo"
+      style={{
+        position: "absolute", top: 12, right: 12, width: 40, height: 40, borderRadius: "50%",
+        backgroundColor: "rgba(8,10,9,0.68)", border: "1px solid rgba(255,255,255,0.28)",
+        display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", padding: 0,
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+    </button>
   )
 }
 

@@ -44,7 +44,19 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
     : intentHref[company.primary_intent] || "/contact"
-  const ctaImg = pickImg(imgs, 0)
+  // Real owner photos, if any exist, before ever falling back to stock -
+  // the rest of this page shows real photos, so a stock image behind the
+  // final CTA read as an obvious, jarring mismatch.
+  const { data: ctaSectionRow } = await admin
+    .from("company_photos")
+    .select("url")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .eq("website_section", "cta")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const ctaSectionPhoto = ctaSectionRow?.url ?? null
   const config = company.website_config
   const siteCopy = getSiteCopy(company.primary_intent, {
     name: company.name,
@@ -87,6 +99,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     const flatPhotos = [...unsortedUrls, ...legacyUrls]
 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
+    const ctaImg = ctaSectionPhoto ?? albums[0]?.coverUrl ?? flatPhotos[0] ?? pickImg(imgs, 0)
 
     return (
       <>
@@ -210,6 +223,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: string[] = [...ownerPhotos, ...stockPhotos.filter(url => !ownerPhotos.includes(url))]
   const hasPhotos = allPhotos.length > 0
+  const ctaImg = ctaSectionPhoto ?? ownerPhotos[0] ?? pickImg(imgs, 0)
 
   return (
     <>
