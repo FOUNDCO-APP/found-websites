@@ -8,11 +8,11 @@ import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import Link from "next/link"
 import { openBillingPortal } from "./actions"
-import AddonActivateButton from "@/components/dashboard/AddonActivateButton"
+import AddonsPanel from "@/components/dashboard/AddonsPanel"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlanUpgradeButton from "@/components/dashboard/PlanUpgradeButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
-import { getEffectiveAddons, getRelevantAddons, ALL_ADDONS } from "@/lib/featureAccess"
+import { getEffectiveAddons, getAllAddonsRanked, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
@@ -190,7 +190,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const businessUpgrade = plan === "found_business" ? null : businessUpgradeCopy(industryCategory)
   const businessPrice = useIntroPrice ? PLAN_META.found_business.intro : PLAN_META.found_business.normal
 
-  const relevantAddons = getRelevantAddons(industryCategory)
+  const rankedAddons = getAllAddonsRanked(industryCategory)
 
   let activeAddonSlugs: string[] = []
   if (company?.id) {
@@ -204,8 +204,6 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   }
 
   const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])
-  const includedAddonDef = company?.included_addon_slug ? ALL_ADDONS.find((a) => a.slug === company.included_addon_slug) : null
-  const availableAddons = plan === "found_business" ? [] : relevantAddons.filter((a) => !effectiveAddonSlugs.includes(a.slug))
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
   const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
   const paymentsReady = stripeConnect.ready
@@ -327,122 +325,20 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
-      {/* Add Features */}
-      {availableAddons.length > 0 && (
-        <section style={{ marginBottom: 20 }}>
-          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            Add Features
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {availableAddons.map((addon) => (
-              <div key={addon.slug} style={{
-                borderRadius: 14,
-                backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                padding: "16px 18px",
-              }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: "0 0 3px", ...TYPE.subhead, fontWeight: 600, color: "white" }}>
-                      {addon.label}
-                    </p>
-                    <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                      {addon.description}
-                    </p>
-                  </div>
-                  <div style={{ flexShrink: 0, textAlign: "right" as const }}>
-                    <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
-                      +${addon.price}/mo
-                    </p>
-                    {company?.id && isActive && (
-                      <AddonActivateButton
-                        companyId={company.id}
-                        addonSlug={addon.slug}
-                        addonLabel={addon.label}
-                        addonPrice={addon.price}
-                      />
-                    )}
-                    {company?.slug && !isActive && (
-                      <div style={{ width: 112 }}>
-                        <MoreActivateButton
-                          slug={company.slug}
-                          companyName={company.name}
-                          targetPlan={plan}
-                          targetAddonSlug={addon.slug}
-                          targetAddonLabel={addon.label}
-                          targetAddonPrice={addon.price}
-                          size="compact"
-                        >
-                          Activate
-                        </MoreActivateButton>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Included pick - free with plan, not billed, distinct from paid add-ons below */}
-      {includedAddonDef && (
-        <section style={{ marginBottom: 20 }}>
-          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            Included With Your Plan
-          </p>
-          <div style={{
-            borderRadius: 14,
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.06)",
-            padding: "14px 18px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
-              <span style={{ ...TYPE.subhead, color: "white" }}>{includedAddonDef.label}</span>
-            </div>
-            <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              Included - Free
-            </span>
-          </div>
-        </section>
-      )}
-
-      {/* Active Add-ons */}
-      {plan !== "found_business" && activeAddonSlugs.length > 0 && (
-        <section style={{ marginBottom: 20 }}>
-          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-            My Add-ons
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {activeAddonSlugs.map((slug) => {
-              const def = ALL_ADDONS.find((a) => a.slug === slug)
-              if (!def) return null
-              return (
-                <div key={slug} style={{
-                  borderRadius: 14,
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                  padding: "14px 18px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
-                    <span style={{ ...TYPE.subhead, color: "white" }}>{def.label}</span>
-                  </div>
-                  <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    {`Active - $${def.price}/mo`}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </section>
+      {/* Unified features list - every add-on always visible (relevant ones
+          first), each row showing Included / Active / Available so a
+          customer never has to guess what's free vs billed vs findable. */}
+      {plan !== "found_business" && company?.id && company?.slug && (
+        <AddonsPanel
+          companyId={company.id}
+          companySlug={company.slug}
+          companyName={company.name}
+          plan={plan}
+          isActive={isActive}
+          addons={rankedAddons}
+          includedAddonSlug={company?.included_addon_slug ?? null}
+          activeAddonSlugs={activeAddonSlugs}
+        />
       )}
 
       {/* My Plan */}

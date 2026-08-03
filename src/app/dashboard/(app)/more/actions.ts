@@ -125,6 +125,20 @@ export async function purchaseAddon(companyId: string, addonSlug: string): Promi
   }
 }
 
+// The Found Pro plan's one free/included pick - a plain column, not a
+// Stripe subscription item, so switching it is instant and never touches
+// billing. Picking a new one always replaces the old one; that's the
+// data shape's job, not extra logic here.
+export async function switchIncludedAddon(companyId: string, addonSlug: string | null): Promise<{ success: boolean; error?: string }> {
+  if (!companyId) return { success: false, error: "Missing company." }
+  const admin = createAdminClient()
+  const { data: company } = await admin.from("companies").select("plan").eq("id", companyId).single()
+  if (!company || company.plan !== "found_pro") return { success: false, error: "Not available on this plan." }
+  const { error } = await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+
 export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const addonSlug = formData.get("addonSlug") as string

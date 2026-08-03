@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleComp, toggleTest, saveNotes, setIncludedAddon } from "./actions"
-import { getRelevantAddons } from "@/lib/featureAccess"
+import { getAllAddonsRanked } from "@/lib/featureAccess"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 export type BusinessFilter = "all" | "attention" | "inactive" | "logo" | "payments" | "test"
@@ -56,7 +56,7 @@ function BusinessItem({ row }: { row: BusinessRow }) {
   const [includedAddon, setIncludedAddonState] = useState(row.included_addon_slug)
   const [addonPending, startAddonTransition] = useTransition()
   const active = row.subscription_status === "active" || row.subscription_status === "trialing" || comp
-  const relevantAddons = row.plan === "found_pro" ? getRelevantAddons(row.industry_category ?? "") : []
+  const relevantAddons = row.plan === "found_pro" ? getAllAddonsRanked(row.industry_category ?? "") : []
 
   function handleAddonChange(slug: string | null) {
     if (slug === includedAddon) return

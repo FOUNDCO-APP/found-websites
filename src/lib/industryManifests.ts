@@ -87,7 +87,7 @@ export const industryManifests: Record<string, IndustryManifest> = {
     primaryJob: "Show product quality, curation, and why visiting or shopping here is worth it.",
     sections: ["hero", "featured_collection", "services", "hours_location", "gallery", "reviews", "final_cta"],
     requiredFields: ["product_categories", "best_sellers", "store_hours", "address", "online_ordering", "optional_pricing"],
-    subIndustries: ["bike shop", "boutique", "beauty store", "gift shop", "home goods", "apparel", "specialty retail"],
+    subIndustries: ["bike shop", "boutique", "beauty store", "gift shop", "home goods", "apparel", "bookstore", "hardware store", "pet supply store", "furniture store", "florist", "dry cleaner", "specialty retail"],
     preferredPhotoTags: ["general", "beauty store"],
     primaryIntent: "visit",
     secondaryIntent: "shop",

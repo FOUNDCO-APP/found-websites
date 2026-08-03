@@ -180,3 +180,16 @@ export function getRelevantAddons(industryCategory: string): AddonDef[] {
 
   return [...relevant, ...general]
 }
+
+// Every add-on, always - relevant-to-this-industry ones first, everything
+// else after. Unlike getRelevantAddons, nothing is hidden: the industry tag
+// list is a rough guess, not a hard rule, and a real business (a bike shop
+// that also does repairs, say) can genuinely need something its industry
+// tag doesn't predict. Customers and admins should be able to find and pick
+// any of it, not just what the tag list happened to guess right.
+export function getAllAddonsRanked(industryCategory: string): AddonDef[] {
+  const relevant = getRelevantAddons(industryCategory)
+  const relevantSlugs = new Set(relevant.map((a) => a.slug))
+  const rest = ALL_ADDONS.filter((a) => !relevantSlugs.has(a.slug))
+  return [...relevant, ...rest]
+}
