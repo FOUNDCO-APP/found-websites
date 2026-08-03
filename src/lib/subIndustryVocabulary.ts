@@ -424,7 +424,10 @@ const retailDefaults: SubIndustryVocab = {
   aboutLabel: "About the Shop",
   reviewsLabel: "What Customers Say",
   reviewsOverline: "Shopper Reviews",
-  galleryLabel: "The Shop",
+  // Not "The Shop" - that reads as a real product page, and this link only
+  // ever goes to photos. The actual shop (when the shopping_cart addon is
+  // active) gets its own dedicated "Shop" nav link, added separately.
+  galleryLabel: "Photos",
   ctaBodyText: "come in — we'd love to help you find the right fit",
   customerWord: "customer",
   appointmentWord: "visit",
@@ -436,7 +439,6 @@ const retailVocab: Record<string, SubIndustryVocab> = {
     ...retailDefaults,
     servicesLabel: "Shop & Service",
     servicesOverline: "What We Do",
-    galleryLabel: "The Shop",
     reviewsLabel: "What Riders Say",
     reviewsOverline: "Rider Reviews",
     ctaBodyText: "come in — we're open and ready to help",

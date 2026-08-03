@@ -64,7 +64,7 @@ export default async function UnsubscribePage({
                 ? `${email} is already removed from ${company.name}'s list.`
                 : `${email} has been removed from ${company.name}'s list. You won't receive any more emails from them.`}
             </p>
-            <a href={`/${slug}`} style={{ fontSize: 13, color: primary, fontWeight: 600, textDecoration: "none" }}>
+            <a href="/" style={{ fontSize: 13, color: primary, fontWeight: 600, textDecoration: "none" }}>
               ← Back to {company.name}
             </a>
           </>

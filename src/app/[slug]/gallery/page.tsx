@@ -114,7 +114,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
               <section className="bg-white py-8 px-8">
                 <div className="max-w-6xl mx-auto" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
                   {albums.map(album => (
-                    <Link key={album.id} href={`/${slug}/gallery/${album.slug}`} style={{ textDecoration: "none", display: "block" }}>
+                    <Link key={album.id} href={`/gallery/${album.slug}`} style={{ textDecoration: "none", display: "block" }}>
                       <div style={{ borderRadius: 16, overflow: "hidden", aspectRatio: "4/3", backgroundColor: "#f0f0f0", position: "relative" }}>
                         {album.coverUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element

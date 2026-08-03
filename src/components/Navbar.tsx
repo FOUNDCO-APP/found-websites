@@ -25,7 +25,7 @@ function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: s
 
 const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
 
-function getNavLinks(industryCategory: string, subIndustry: string | null) {
+function getNavLinks(industryCategory: string, subIndustry: string | null, hasShop: boolean) {
   const isFood = FOOD_INDUSTRIES.has(industryCategory)
   const vocab = getVocab(subIndustry, industryCategory)
   return [
@@ -34,12 +34,15 @@ function getNavLinks(industryCategory: string, subIndustry: string | null) {
     isFood
       ? { label: "Menu",          href: "/menu" }
       : { label: "Services",      href: "/services" },
+    // Only a real destination once shopping_cart is genuinely active -
+    // otherwise there's nothing behind it to link to.
+    ...(hasShop ? [{ label: "Shop", href: "/shop" }] : []),
     { label: vocab.galleryLabel,  href: "/gallery" },
     { label: "Contact",           href: "/contact" },
   ]
 }
 
-export default function Navbar({ company, transparent = false }: { company: Company; transparent?: boolean }) {
+export default function Navbar({ company, transparent = false, hasShop = false }: { company: Company; transparent?: boolean; hasShop?: boolean }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -149,7 +152,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-7 text-xs tracking-wide uppercase">
-            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null, hasShop).map((item) => (
               <Link key={item.label} href={item.href}
                 className={`transition-colors ${navLinkWeight}`}
                 style={{ color: isActive(item.href) && !isOnDark ? primary : inactiveColor }}>
@@ -220,7 +223,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           </div>
 
           <nav className="flex-1 flex flex-col justify-center px-8 gap-0">
-            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null, hasShop).map((item) => (
               <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
                 className="py-5 text-2xl font-bold"
                 style={{
@@ -294,7 +297,7 @@ export default function Navbar({ company, transparent = false }: { company: Comp
           </div>
 
           <nav className="flex-1 flex flex-col justify-center px-8 gap-0">
-            {getNavLinks(company.industry_category, company.sub_industry ?? null).map((item, i) => (
+            {getNavLinks(company.industry_category, company.sub_industry ?? null, hasShop).map((item, i) => (
               <Link key={item.label} href={item.href} onClick={() => setOpen(false)}
                 className="flex items-baseline gap-5 py-5 border-b border-white/10 group hover:pl-2 transition-all duration-200"
                 style={{

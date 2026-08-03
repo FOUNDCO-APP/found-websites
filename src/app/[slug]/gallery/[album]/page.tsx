@@ -74,7 +74,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
                 {allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""} · {albumDate}
               </p>
             </div>
-            <Link href={`/${slug}/contact`} style={{
+            <Link href="/contact" style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "12px 22px", borderRadius: 100,
               backgroundColor: primary, textDecoration: "none",

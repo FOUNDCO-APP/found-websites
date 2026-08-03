@@ -352,8 +352,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             <h2 className="mx-auto max-w-xl text-3xl font-black leading-tight text-neutral-950 md:text-4xl">Online shopping is almost ready.</h2>
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-neutral-600">{companyName} is getting the shop ready. Contact the business directly and they will help with what is available now.</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <a href={`/${slug}/contact`} className="rounded-full px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white" style={{ backgroundColor: primary }}>Contact us</a>
-              <a href={`/${slug}/services`} className="rounded-full border border-neutral-200 px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-neutral-950">See what we offer</a>
+              <a href="/contact" className="rounded-full px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-white" style={{ backgroundColor: primary }}>Contact us</a>
+              <a href="/services" className="rounded-full border border-neutral-200 px-6 py-4 text-sm font-black uppercase tracking-[0.14em] text-neutral-950">See what we offer</a>
             </div>
           </section>
         </main>
