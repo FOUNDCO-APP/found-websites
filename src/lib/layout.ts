@@ -22,6 +22,7 @@ const matrix: Record<string, Record<string, LayoutType>> = {
   childcare:               { bold: "impact",    calm: "portrait",  modern: "editorial", warm: "portrait" },
   makers_crafts:           { bold: "cinematic", calm: "editorial", modern: "portrait",  warm: "portrait" },
   home_property:           { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
+  audio_visual:            { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
   nonprofit:               { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
 }
 

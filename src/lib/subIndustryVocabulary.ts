@@ -1748,6 +1748,72 @@ const makersCraftsVocab: Record<string, SubIndustryVocab> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// AUDIO & VISUAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const audioVisualDefaults: SubIndustryVocab = {
+  servicesLabel: "Services",
+  servicesOverline: "What We Do",
+  aboutLabel: "About Us",
+  reviewsLabel: "What Clients Say",
+  reviewsOverline: "Client Stories",
+  galleryLabel: "Recent Installs",
+  ctaBodyText: "get in touch for a free quote",
+  customerWord: "client",
+  appointmentWord: "consultation",
+  websiteJob: "quote_me",
+}
+
+const audioVisualVocab: Record<string, SubIndustryVocab> = {
+  "home theater installer": {
+    ...audioVisualDefaults,
+    servicesLabel: "Home Theater Services",
+    servicesOverline: "What We Install",
+    galleryLabel: "Recent Home Theaters",
+    ctaBodyText: "get a free quote for your home theater",
+  },
+  "car audio installer": {
+    ...audioVisualDefaults,
+    servicesLabel: "Car Audio Services",
+    servicesOverline: "What We Install",
+    galleryLabel: "Recent Builds",
+    ctaBodyText: "get a free quote for your car audio setup",
+    customerWord: "customer",
+  },
+  "commercial av installer": {
+    ...audioVisualDefaults,
+    servicesLabel: "Commercial AV Services",
+    servicesOverline: "What We Install",
+    galleryLabel: "Recent Projects",
+    ctaBodyText: "get a free quote for your business",
+    customerWord: "business",
+  },
+  "sound engineer": {
+    ...audioVisualDefaults,
+    servicesLabel: "Audio Services",
+    servicesOverline: "What I Offer",
+    aboutLabel: "About Me",
+    galleryLabel: "Recent Work",
+    ctaBodyText: "reach out to talk about your project",
+    websiteJob: "hire_me",
+  },
+  "smart home integrator": {
+    ...audioVisualDefaults,
+    servicesLabel: "Smart Home Services",
+    servicesOverline: "What We Set Up",
+    galleryLabel: "Recent Installs",
+    ctaBodyText: "get a free quote for your smart home",
+  },
+  "speaker installer": {
+    ...audioVisualDefaults,
+    servicesLabel: "Speaker Installation",
+    servicesOverline: "What We Install",
+    galleryLabel: "Recent Installs",
+    ctaBodyText: "get a free quote for speaker installation",
+  },
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HOME & PROPERTY
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -2002,6 +2068,7 @@ const industryDefaults: Record<string, SubIndustryVocab> = {
   childcare: childcareDefaults,
   makers_crafts: makersCraftsDefaults,
   home_property: homePropertyDefaults,
+  audio_visual: audioVisualDefaults,
   nonprofit: nonprofitDefaults,
 }
 
@@ -2028,6 +2095,7 @@ const allVocab: Record<string, SubIndustryVocab> = {
   ...childcareVocab,
   ...makersCraftsVocab,
   ...homePropertyVocab,
+  ...audioVisualVocab,
   ...nonprofitVocab,
 }
 

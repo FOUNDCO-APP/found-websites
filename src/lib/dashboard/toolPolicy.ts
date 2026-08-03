@@ -41,6 +41,7 @@ const ESTIMATE_WORKFLOW_INDUSTRIES = new Set([
   "landscaping",
   "cleaning",
   "home_property",
+  "audio_visual",
   "creative_services",
   "events",
   "professional_services",

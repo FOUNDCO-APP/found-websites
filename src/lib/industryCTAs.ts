@@ -23,6 +23,7 @@ export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
   professional_services: { label: "Schedule a Call",      href: "/reserve" },
   childcare:             { label: "Schedule a Tour",      href: "/reserve" },
   home_property:         { label: "Schedule a Visit",     href: "/reserve" },
+  audio_visual:          { label: "Get a Free Quote",     href: "/estimate" },
   // retail, makers_crafts, nonprofit → no scheduling CTA
 }
 
@@ -47,6 +48,7 @@ const CONTENT_CTA: Partial<Record<string, CTA>> = {
   professional_services: { label: "Our Services",    href: "/services" },
   childcare:             { label: "Our Programs",    href: "/services" },
   home_property:         { label: "Our Services",    href: "/services" },
+  audio_visual:          { label: "Our Services",    href: "/services" },
   // NOT "Shop Now"/"/shop" - that page only exists when the shopping_cart
   // addon is active (see contentCTAFor/resolveActionKey, which route there
   // instead when it genuinely works). This is the fallback for when it

@@ -38,6 +38,7 @@ function isEstimateBusiness(industry: string): boolean {
     "landscaping",
     "cleaning",
     "home_property",
+    "audio_visual",
     "automotive",
     "events",
     "creative_services",

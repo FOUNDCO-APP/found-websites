@@ -52,6 +52,8 @@ function industryCaption(company: NonNullable<Awaited<ReturnType<typeof getCompa
     case "cleaning":
     case "home_property":
       return `Another job wrapped by ${name}${locationLine}.\n\nNeed help with yours? Send us a message.\n\n#localbusiness #homeimprovement`
+    case "audio_visual":
+      return `Another install wrapped by ${name}${locationLine}.\n\nWant sound like this? Send us a message.\n\n#localbusiness #hometheater`
     default:
       return `Recent work from ${name}${locationLine}.\n\nNeed help with something similar? Send us a message.\n\n#localbusiness #supportlocal`
   }

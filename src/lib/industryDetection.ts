@@ -20,6 +20,7 @@ export const industryLabels: Record<string, string> = {
   childcare: "Childcare & Family",
   makers_crafts: "Makers & Crafts",
   home_property: "Home & Property",
+  audio_visual: "Audio & Visual",
   nonprofit: "Nonprofit & Community",
   print_signage: "Print & Signage",
   tech_repair: "Tech & Device Repair",
@@ -139,6 +140,11 @@ const keywordMap: KeywordConfig[] = [
     industry: "home_property",
     terms: ["interior design", "interior designer", "home organizer", "organizer", "junk removal", "moving", "mover", "home inspector", "inspection", "pest control", "locksmith", "pool service", "pool cleaning", "window clean", "pressure wash", "pressure washing", "power washing", "home staging", "property maintenance"],
     strongTerms: ["interior designer", "junk removal", "home inspector", "pest control", "locksmith", "pool service", "home organizer"],
+  },
+  {
+    industry: "audio_visual",
+    terms: ["audio", "audio installer", "audio installation", "sound engineer", "sound engineering", "home theater", "home theatre", "av installer", "av installation", "commercial av", "car audio installer", "speaker installer", "speaker installation", "surround sound", "smart home integrator", "smart home installer", "acoustics"],
+    strongTerms: ["audio installer", "audio installation", "sound engineer", "home theater", "av installer", "speaker installer", "smart home integrator"],
   },
   {
     industry: "nonprofit",

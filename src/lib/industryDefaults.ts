@@ -369,6 +369,23 @@ const defaults: Record<string, IndustryDefaults> = {
       { step: "03", title: "Done Right",        body: "We don't wrap up until the work meets our standard — which is the same standard we'd hold for our own home." },
     ],
   },
+  audio_visual: {
+    footerTagline: "Real sound, done right.",
+    servicesIntro: "From a single speaker to a full home theater — we handle the equipment and the wiring so it just works.",
+    ctaHeadline: "Get a Free Quote.",
+    galleryLabel: "Recent Installs",
+    gallerySubtitle: "Real equipment, real installs — not stock photos.",
+    values: [
+      { label: "Technical Expertise",  body: () => "We know the equipment, the wiring, and the acoustics — not just the sales pitch." },
+      { label: "Clean Installs",       body: () => "No exposed wires, no guesswork. Every install looks as good as it sounds." },
+      { label: "Honest Quotes",        body: () => "A clear price before we start, based on what your space actually needs." },
+    ],
+    process: [
+      { step: "01", title: "Free Quote",        body: "Tell us what you're working with. We'll assess the space and give you a clear price — no obligation." },
+      { step: "02", title: "We Install It",     body: "Our team handles the equipment, the wiring, and the setup, start to finish." },
+      { step: "03", title: "You Enjoy It",      body: "We walk you through everything before we leave, so it's simple to use from day one." },
+    ],
+  },
   nonprofit: {
     footerTagline: "Community. Purpose. Impact.",
     servicesIntro: "Every program, every event, every volunteer hour — directed by one mission and one community.",

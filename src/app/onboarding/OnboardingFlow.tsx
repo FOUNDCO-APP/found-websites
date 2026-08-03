@@ -90,6 +90,7 @@ const DIFFERENTIATOR_CHIPS: Record<string, string[]> = {
   childcare:             ["Licensed & certified", "CPR certified", "Bilingual staff", "Small group sizes", "Open early & late"],
   makers_crafts:         ["Custom orders welcome", "Ships nationwide", "Bilingual", "Wholesale available", "Made to order"],
   home_property:         ["Licensed & insured", "Free estimates", "Same-week service", "Bilingual", "Satisfaction guaranteed"],
+  audio_visual:          ["Licensed & insured", "Free estimates", "Clean installs", "Warranty included", "Satisfaction guaranteed"],
   nonprofit:             ["501(c)3 certified", "Volunteer-run", "Bilingual programs", "Free to community", "Accepting donations"],
 }
 

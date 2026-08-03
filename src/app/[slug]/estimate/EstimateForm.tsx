@@ -12,12 +12,12 @@ type ExtraField  = SelectField | TextField | DateField
 function getExtraFields(industry: string): ExtraField[] {
   const fields: ExtraField[] = []
 
-  const isHomeField   = ["home_services", "landscaping", "home_property"].includes(industry)
+  const isHomeField   = ["home_services", "landscaping", "home_property", "audio_visual"].includes(industry)
   const isCleaning    = industry === "cleaning"
   const isEventBased  = ["events", "music_performance"].includes(industry)
   const isCreative    = industry === "creative_services"
   const isAutomotive  = industry === "automotive"
-  const isQuoteIndustry = ["home_services", "landscaping", "cleaning", "home_property",
+  const isQuoteIndustry = ["home_services", "landscaping", "cleaning", "home_property", "audio_visual",
     "events", "creative_services", "professional_services", "automotive", "music_performance"].includes(industry)
 
   if (isHomeField || isCleaning) {

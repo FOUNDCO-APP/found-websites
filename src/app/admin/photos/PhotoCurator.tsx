@@ -28,13 +28,14 @@ const INDUSTRIES = [
   { key: "childcare",            label: "Childcare",            owner: "Angela" },
   { key: "makers_crafts",        label: "Makers & Crafts",      owner: "Jony" },
   { key: "home_property",        label: "Home & Property",      owner: "Jony" },
+  { key: "audio_visual",         label: "Audio & Visual",       owner: "Jony" },
   { key: "nonprofit",            label: "Nonprofit",            owner: "Marcus" },
 ]
 
 // New industries that need the two-step team → Shawn approval flow
 const NEW_INDUSTRIES = new Set([
   "creative_services","home_based_food","education","music_performance",
-  "professional_services","healthcare","childcare","makers_crafts","home_property","nonprofit",
+  "professional_services","healthcare","childcare","makers_crafts","home_property","audio_visual","nonprofit",
 ])
 
 const DONE_THRESHOLD = 8

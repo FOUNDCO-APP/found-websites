@@ -118,6 +118,7 @@ const ALBUM_LABEL_MAP: Record<string, AlbumLabel> = {
   landscaping:           { singular: "Job",         plural: "Jobs",         create: "New Job" },
   automotive:            { singular: "Job",         plural: "Jobs",         create: "New Job" },
   home_property:         { singular: "Project",     plural: "Projects",     create: "New Project" },
+  audio_visual:          { singular: "Project",     plural: "Projects",     create: "New Project" },
   real_estate:           { singular: "Listing",     plural: "Listings",     create: "New Listing" },
   retail:                { singular: "Collection",  plural: "Collections",  create: "New Collection" },
   home_based_food:       { singular: "Item",        plural: "Items",        create: "New Item" },
@@ -171,6 +172,7 @@ const LEAD_LABEL_MAP: Record<string, LeadLabel> = {
   landscaping:           { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   automotive:            { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   home_property:         { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
+  audio_visual:          { singular: "Estimate Request", plural: "Estimate Requests", new: "New Estimate Request" },
   real_estate:           { singular: "Inquiry",       plural: "Inquiries",      new: "New Inquiry" },
   retail:                { singular: "Order",         plural: "Orders",         new: "New Order" },
   home_based_food:       { singular: "Order",         plural: "Orders",         new: "New Order" },
@@ -234,7 +236,7 @@ export function defaultFormIntentFor(industry: string | null | undefined, subInd
   if (["wellness", "beauty", "salon", "spa", "fitness", "music_performance", "music", "pet_services"].includes(n)) return "booking"
   if (["healthcare"].includes(n)) return "appointment"
   if (["balloon_decor", "balloon_garland", "event_decor", "party_decor", "decor", "event_planning"].includes(sub)) return "estimate_request"
-  if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "contractors", "construction", "plumbing", "electrician", "events", "event_planning", "balloon_decor"].includes(n)) return "estimate_request"
+  if (["home_services", "cleaning", "landscaping", "automotive", "auto", "home_property", "audio_visual", "contractors", "construction", "plumbing", "electrician", "events", "event_planning", "balloon_decor"].includes(n)) return "estimate_request"
   if (["retail", "home_based_food", "makers_crafts"].includes(n)) return "order"
   if (["real_estate", "creative_services", "photography", "education", "professional_services", "childcare", "nonprofit"].includes(n)) return "inquiry"
   return "lead"
@@ -254,6 +256,7 @@ const CONTACT_CATEGORIES_MAP: Record<string, string[]> = {
   landscaping:           ["Client", "Subcontractor", "Vendor", "Supplier"],
   automotive:            ["Client", "Parts Vendor", "Subcontractor", "Fleet"],
   home_property:         ["Client", "Vendor", "Subcontractor", "Partner"],
+  audio_visual:          ["Client", "Vendor", "Subcontractor", "Partner"],
   real_estate:           ["Client", "Lender", "Inspector", "Other Agent"],
   retail:                ["Vendor", "Supplier", "Staff", "Wholesale"],
   home_based_food:       ["Vendor", "Supplier", "Wholesale", "Collaborator"],

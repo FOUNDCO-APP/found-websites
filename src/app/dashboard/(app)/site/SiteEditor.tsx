@@ -996,8 +996,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         const SHOP_LIKE = ['retail', 'makers_crafts']
         // Everything else: home_services, events, automotive, cleaning,
         // landscaping, real_estate, creative_services, professional_services,
-        // home_property, nonprofit - trades/consultative businesses where
-        // "get a quote" is the natural first ask.
+        // home_property, audio_visual, nonprofit - trades/consultative
+        // businesses where "get a quote" is the natural first ask.
         const ctaOptions: { intent: string; label: string; desc: string }[] = FOOD_LIKE.includes(industryCategory)
           ? [
               { intent: 'reserve', label: 'Reserve a Table', desc: 'Lets guests request a reservation' },

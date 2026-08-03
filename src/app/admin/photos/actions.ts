@@ -38,6 +38,7 @@ const industryQueries: Record<string, string> = {
   childcare:            "childcare daycare children kids play learning happy",
   makers_crafts:        "handmade craft artisan workshop ceramics woodworking jewelry maker",
   home_property:        "home interior staging property architecture real estate photography",
+  audio_visual:         "home theater speakers audio equipment installation sound system",
   nonprofit:            "community volunteers nonprofit charity giving people together",
 }
 
@@ -116,7 +117,7 @@ const ALL_INDUSTRIES = [
   "home_services","food","wellness","events","retail",
   "fitness","beauty","automotive","pet_services","cleaning","landscaping","real_estate",
   "creative_services","home_based_food","education","music_performance",
-  "professional_services","healthcare","childcare","makers_crafts","home_property","nonprofit",
+  "professional_services","healthcare","childcare","makers_crafts","home_property","audio_visual","nonprofit",
 ]
 
 export async function getApprovedCounts(): Promise<Record<string, number>> {

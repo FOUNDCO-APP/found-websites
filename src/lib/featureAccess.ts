@@ -153,7 +153,7 @@ export const ALL_ADDONS: AddonDef[] = [
     label: "Quote & Estimate Payments",
     description: "Send professional quotes and collect deposits or full payments online. Clients approve and pay from their phone.",
     price: 15,
-    relevantIndustries: ["home_services", "landscaping", "cleaning", "automotive", "home_property", "creative_services", "events", "professional_services"],
+    relevantIndustries: ["home_services", "landscaping", "cleaning", "automotive", "home_property", "audio_visual", "creative_services", "events", "professional_services"],
   },
   {
     slug: "email_marketing",
@@ -167,7 +167,7 @@ export const ALL_ADDONS: AddonDef[] = [
 export function getRelevantAddons(industryCategory: string): AddonDef[] {
   const industry = ["food", "home_based_food", "retail", "wellness", "beauty",
     "fitness", "pet_services", "education", "automotive", "healthcare",
-    "home_services", "landscaping", "cleaning", "home_property",
+    "home_services", "landscaping", "cleaning", "home_property", "audio_visual",
     "creative_services", "events", "professional_services",
     "makers_crafts"].includes(industryCategory) ? industryCategory : ""
 
