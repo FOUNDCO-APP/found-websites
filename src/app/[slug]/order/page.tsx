@@ -67,6 +67,16 @@ export default async function OnlineOrderPage({ params, searchParams }: {
 
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 
+  const { data: orderSectionRow } = await admin
+    .from("company_photos")
+    .select("url")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .eq("website_section", "order")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
   return (
     <>
       {ordered === "1" && (
@@ -81,6 +91,7 @@ export default async function OnlineOrderPage({ params, searchParams }: {
         primary={company.primary_color}
         categories={company.website_config?.menu_items ?? []}
         paymentsReady={stripeConnect.ready}
+        heroImage={orderSectionRow?.url ?? null}
       />
     </>
   )

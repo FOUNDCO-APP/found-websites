@@ -349,6 +349,7 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   revalidatePath(`/${ctx.company.slug}/services`)
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath(`/${ctx.company.slug}/contact`)
   revalidatePath("/dashboard/site")
@@ -379,6 +380,7 @@ export async function clearHeroPhoto() {
   revalidatePath(`/${ctx.company.slug}/services`)
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
   revalidatePath("/")
@@ -717,6 +719,7 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   revalidatePath(`/${ctx.company.slug}/services`)
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
   return { url: publicUrl, whiteUrl }

@@ -16,7 +16,7 @@ import { getEffectiveAddons } from "@/lib/featureAccess"
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
-type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact"
+type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact" | "services" | "shop" | "order"
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain"
 
@@ -652,6 +652,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const galleryPhotos = localPhotos.filter(p => p.in_gallery)
   const contactPhotos = localPhotos.filter(p => p.website_section === "contact")
   const announcementPhotos = localPhotos.filter(p => p.website_section === "announcement")
+  const servicesPhotos = localPhotos.filter(p => p.website_section === "services")
+  const catalogPhotos = localPhotos.filter(p => p.website_section === (isFoodCatalog ? "order" : "shop"))
   // Photos already used as a primary slot (hero/about/etc.) still show up
   // as eligible for gallery - the two are independent now, so reusing a
   // great photo in both places is expected, not a conflict.
@@ -697,11 +699,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
   const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
     { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
-    { slot: "about", label: "About", helper: "The story and services image.", photos: aboutPhotos },
+    { slot: "about", label: "About", helper: "The story image.", photos: aboutPhotos },
     { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
     { slot: "gallery", label: "Gallery", helper: "Shown in gallery and photo strips - add several, not just one, for the best look.", photos: galleryPhotos },
     { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
     { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
+    { slot: "services", label: "Services", helper: "The image behind your services page.", photos: servicesPhotos },
+    { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? "Menu" : "Shop", helper: `The image behind your ${isFoodCatalog ? "menu" : "shop"} page.`, photos: catalogPhotos },
   ]
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
 
@@ -825,9 +829,28 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <span style={{ color: GREEN, fontSize: 13, fontWeight: 900 }}>Edit</span>
           </button>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <AIBar label="Rewrite the first impression with AI" isLoading={regenerating === "hero"} color={GREEN} onTap={() => handleRegenerate("hero")} />
+        </div>
+      </div>
+
+      <div style={{ margin: "24px 20px 0" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Come see us</div>
+        <div style={{ borderRadius: 26, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)" }}>
+          <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
+            {ctaPhotos[0]?.url ? (
+              isVideoMedia(ctaPhotos[0].url) ? <VideoThumb src={ctaPhotos[0].url} /> : <img src={ctaPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+            )}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+            <PhotoEditBadge onClick={() => setPhotoPickerSlot("cta")} />
+            <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+              <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{String(config.cta_headline || "Come see us")}</h3>
+            </div>
+          </div>
+          <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <button onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Main button</span>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
               <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.cta_headline || "Come see us")}</span>
             </button>
             <button onClick={() => startEdit("tagline", String(config.tagline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
@@ -835,42 +858,24 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.tagline || "Add a hook")}</span>
             </button>
           </div>
-
-          <AIBar label="Rewrite the first impression with AI" isLoading={regenerating === "hero"} color={GREEN} onTap={() => handleRegenerate("hero")} />
         </div>
       </div>
 
-      <div id="site-photo-map" style={{ margin: "18px 20px 0", borderRadius: 24, padding: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.032)" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 6 }}>More homepage photos</div>
-        <p style={{ margin: "0 0 14px", fontSize: 14, lineHeight: 1.45, color: "rgba(255,255,255,0.58)" }}>
-          Stock photos can stay until the owner has better images.
-        </p>
-        <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-          {/* Header, About, and Contact photos now live on their own pages -
-              this stays for the slots that only exist on the homepage. */}
-          {photoSlots.filter(slot => slot.slot !== "hero" && slot.slot !== "about" && slot.slot !== "contact").map(slot => {
-            const cover = slot.photos[0]?.url ?? null
-            const count = slot.photos.length
-            return (
-              <button key={slot.slot} onClick={() => setPhotoPickerSlot(slot.slot)} style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", textAlign: "left", cursor: "pointer" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
-                  {cover ? (
-                    isVideoMedia(cover) ? <VideoThumb src={cover} /> : <img src={cover} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 15, fontWeight: 900, color: "white", marginBottom: 2 }}>{slot.label}</div>
-                  <p style={{ margin: 0, fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.58)" }}>{count ? `${count} selected` : slot.helper}</p>
-                </div>
-                <span style={{ padding: "8px 12px", borderRadius: 999, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-                  Change
-                </span>
-              </button>
-            )
-          })}
-        </div>
+      <div style={{ margin: "24px 20px 0" }}>
+        <button onClick={() => setView("photos")} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 16, borderRadius: 20, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)", color: "white", textAlign: "left", cursor: "pointer" }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
+            {galleryPhotos[0]?.url ? (
+              <img src={galleryPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
+            )}
+          </div>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Gallery</span>
+            <span style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.72)" }}>{galleryPhotos.length ? `${galleryPhotos.length} photos` : "Add photos to your gallery"}</span>
+          </span>
+          <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+        </button>
       </div>
       <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
       <div id="featured-update" style={{ padding: "0 20px" }}>
@@ -889,11 +894,19 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
           <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
-            {announcementStyle === "image" && announcementImage && (
-              <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative" }}>
-                {isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
-              </div>
+            <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative", backgroundColor: "rgba(255,255,255,0.06)" }}>
+              {announcementImage ? (
+                isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+              )}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
+              <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+            </div>
+            {announcementStyle !== "image" && (
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
+                This photo only shows live once Style below is set to "Image."
+              </p>
             )}
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Preview</div>
             <div style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.35, color: announcementMutedColor }}>Found drafted this for you. Edit it before or after it goes live.</div>
@@ -921,16 +934,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button text</div>
-              <div style={{ fontWeight: 900 }}>{announcementLabel}</div>
-            </button>
-            <button onClick={() => setPhotoPickerSlot("announcement")} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Image</div>
-              <div style={{ fontWeight: 900 }}>{announcementImage ? "Change image" : "Add image"}</div>
-            </button>
-          </div>
+          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button text</div>
+            <div style={{ fontWeight: 900 }}>{announcementLabel}</div>
+          </button>
 
           <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Style</div>
@@ -1158,27 +1165,24 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
-        <div style={{ position: "relative", height: 160, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div style={{ position: "relative", height: 230, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {aboutPhotos[0]?.url ? (
             isVideoMedia(aboutPhotos[0].url) ? <VideoThumb src={aboutPhotos[0].url} /> : <img src={aboutPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
           )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.78) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot("about")} />
-        </div>
-        <div style={{
-          borderRadius: 20, padding: "22px 20px",
-          background: "linear-gradient(160deg, rgba(50,208,116,0.07) 0%, rgba(50,208,116,0.02) 100%)",
-          border: `1px solid ${GREEN}22`,
-        }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Live preview</div>
-          <p style={{
-            margin: 0, fontSize: 16, fontWeight: 300,
-            color: config.about_text ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
-            lineHeight: 1.7, fontStyle: config.about_text ? "normal" : "italic",
-          }}>
-            {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
-          </p>
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 8 }}>Live preview</div>
+            <p style={{
+              margin: 0, fontSize: 15, fontWeight: 300, lineHeight: 1.5,
+              color: config.about_text ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.4)",
+              fontStyle: config.about_text ? "normal" : "italic",
+            }}>
+              {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
+            </p>
+          </div>
         </div>
         <EditRow
           label="Story"
@@ -1203,13 +1207,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
-        <div style={{ position: "relative", height: 160, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div style={{ position: "relative", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {contactPhotos[0]?.url ? (
             isVideoMedia(contactPhotos[0].url) ? <VideoThumb src={contactPhotos[0].url} /> : <img src={contactPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
           )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot("contact")} />
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>{String(config.contact_eyebrow || "Get in touch")}</div>
+            <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{String(config.contact_title || "Contact Us")}</h3>
+          </div>
         </div>
         <EditRowGroup>
           <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} bordered={false} divider />
@@ -1232,6 +1241,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
+        </div>
+
+        <div style={{ position: "relative", height: 160, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+          {catalogPhotos[0]?.url ? (
+            isVideoMedia(catalogPhotos[0].url) ? <VideoThumb src={catalogPhotos[0].url} /> : <img src={catalogPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+          <PhotoEditBadge onClick={() => setPhotoPickerSlot(isFoodCatalog ? "order" : "shop")} />
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>{isFoodCatalog ? "Menu" : "Shop"}</div>
+            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{isFoodCatalog ? "What guests order" : "What you sell"}</h3>
+          </div>
         </div>
 
         {menuCats.length > 0 && (
@@ -1389,6 +1412,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
+        </div>
+
+        <div style={{ position: "relative", height: 160, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+          {servicesPhotos[0]?.url ? (
+            isVideoMedia(servicesPhotos[0].url) ? <VideoThumb src={servicesPhotos[0].url} /> : <img src={servicesPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+          <PhotoEditBadge onClick={() => setPhotoPickerSlot("services")} />
+          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>Services</div>
+            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>What you offer</h3>
+          </div>
         </div>
 
         {services.length > 6 && (
@@ -2053,7 +2090,10 @@ function BackHeader({ label, onBack, pages, currentView, onNavigate }: {
             onClick={() => setOpen(o => !o)}
             style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer" }}
           >
-            <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "white" }}>{current?.label ?? label}</span>
+            <span style={{ display: "flex", flexDirection: "column" as const, alignItems: "flex-start" }}>
+              <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase" as const, letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)" }}>You are editing</span>
+              <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.02em", color: "white", lineHeight: 1.15 }}>{current?.label ?? label}</span>
+            </span>
             <span style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.09)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : undefined, transition: "transform 0.18s ease" }}><polyline points="6 9 12 15 18 9"/></svg>
             </span>

@@ -62,6 +62,7 @@ export default function OnlineOrderClient({
   categories,
   paymentsReady,
   mode = "page",
+  heroImage = null,
 }: {
   companyId: string
   companyName: string
@@ -70,6 +71,7 @@ export default function OnlineOrderClient({
   categories: MenuCategory[]
   paymentsReady: boolean
   mode?: "page" | "embedded"
+  heroImage?: string | null
 }) {
   const items = useMemo(() => {
     const rows: OrderableItem[] = []
@@ -236,8 +238,15 @@ export default function OnlineOrderClient({
   return (
     <div className={isEmbedded ? "bg-white" : "min-h-screen bg-white"}>
       {!isEmbedded && (
-        <section className="px-6 pt-12 pb-8" style={{ backgroundColor: CHECKOUT_BLACK }}>
-          <div className="max-w-5xl mx-auto">
+        <section className="relative overflow-hidden px-6 pt-12 pb-8" style={{ backgroundColor: CHECKOUT_BLACK }}>
+          {heroImage && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.85))" }} />
+            </>
+          )}
+          <div className="relative max-w-5xl mx-auto">
             <p className="text-xs font-black tracking-[0.22em] uppercase mb-4" style={{ color: primary }}>
               Order Online
             </p>

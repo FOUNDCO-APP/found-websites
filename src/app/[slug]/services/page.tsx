@@ -42,10 +42,13 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
     .select("url, website_section")
     .eq("company_id", company.id)
     .eq("for_website", true)
-    .in("website_section", ["about", "cta"])
+    .in("website_section", ["services", "about", "cta"])
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
-  const heroImage = firstSectionImage("about") ?? uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
+  // Services has its own photo slot now - falls back to the About photo
+  // only for sites that haven't set a dedicated one yet, so nothing goes
+  // blank for existing customers.
+  const heroImage = firstSectionImage("services") ?? firstSectionImage("about") ?? uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
   const ctaImage = firstSectionImage("cta") ?? heroImage
   const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const vocab = getVocab(company.sub_industry, company.industry_category)

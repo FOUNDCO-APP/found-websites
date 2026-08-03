@@ -39,6 +39,9 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const imgs = await getStockImages(company)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const galleryLabel = vocab.galleryLabel
+  // A short line of real context above the grid - a bare label and a photo
+  // wall reads like a dumped folder, not a curated one.
+  const galleryIntro = `A closer look at ${company.name}.`
   const albumLabel = albumLabelFor(company.industry_category)
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
@@ -116,7 +119,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             )}
           </div>
           <div className="max-w-6xl mx-auto">
-            <div className="w-10 h-0.5 mt-4" style={{ backgroundColor: primary }} />
+            <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
+            <p className="text-base max-w-xl" style={{ color: "#666666" }}>{galleryIntro}</p>
           </div>
         </section>
 
@@ -235,7 +239,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
           </h1>
         </div>
         <div className="max-w-6xl mx-auto">
-          <div className="w-10 h-0.5 mt-4" style={{ backgroundColor: primary }} />
+          <div className="w-10 h-0.5 mt-4 mb-4" style={{ backgroundColor: primary }} />
+          <p className="text-base max-w-xl" style={{ color: "#666666" }}>{galleryIntro}</p>
         </div>
       </section>
 

@@ -137,7 +137,7 @@ function choiceSoldOut(item: ProductItem, optionLabel: string, choice: string, s
   return candidates.every((variant) => variant.stock === 0)
 }
 
-export default function ShopClient({ companyId, companyName, slug, primary, categories, paymentsReady }: { companyId: string; companyName: string; slug: string; primary: string; categories: MenuCategory[]; paymentsReady: boolean }) {
+export default function ShopClient({ companyId, companyName, slug, primary, categories, paymentsReady, heroImage = null }: { companyId: string; companyName: string; slug: string; primary: string; categories: MenuCategory[]; paymentsReady: boolean; heroImage?: string | null }) {
   const items = useMemo(() => {
     const rows: ProductItem[] = []
     categories.forEach((cat, catIndex) => {
@@ -363,8 +363,15 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
 
   return (
     <div className="min-h-screen bg-white">
-      <section className="px-6 pb-10 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
-        <div className="mx-auto max-w-5xl">
+      <section className="relative overflow-hidden px-6 pb-10 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
+        {heroImage && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.85))" }} />
+          </>
+        )}
+        <div className="relative mx-auto max-w-5xl">
           <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop Online</p>
           <h1 className="mb-4 text-5xl font-black leading-none text-white md:text-7xl">Shop {companyName}</h1>
           <p className="max-w-xl text-lg leading-relaxed text-white/72">Choose what you want. {companyName} will receive the order and help with the next step.</p>
