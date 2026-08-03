@@ -2,7 +2,8 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride } from "./actions"
+import { getLayout, type LayoutType } from "@/lib/layout"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
@@ -34,11 +35,13 @@ type Props = {
   plan: string | null
   subscriptionStatus: string | null
   primaryActionOverride: string | null
+  vibe: string
+  layoutOverride: string | null
   includedAddonSlug: string | null
   disabledAddons: string[]
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, includedAddonSlug, disabledAddons }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, vibe, layoutOverride: initialLayoutOverride, includedAddonSlug, disabledAddons }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -62,6 +65,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeOverride, setActiveOverride] = useState<string | null>(initialOverride)
   const [savingOverride, setSavingOverride] = useState(false)
   const [overrideSaved, setOverrideSaved] = useState(false)
+  const [activeLayout, setActiveLayout] = useState<string | null>(initialLayoutOverride)
+  const [savingLayout, setSavingLayout] = useState(false)
+  const [layoutSaved, setLayoutSaved] = useState(false)
 
   // Shared save-failure toast. A save showing "Saved" when the write actually
   // failed is worse than no feedback at all - this makes failures visible
@@ -460,6 +466,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSavingOverride(false)
     setOverrideSaved(true)
     setTimeout(() => setOverrideSaved(false), 2500)
+  }
+
+  async function saveLayout(key: string | null) {
+    if (key === activeLayout) return
+    setActiveLayout(key)
+    setSavingLayout(true)
+    await updateLayoutOverride(key)
+    setSavingLayout(false)
+    setLayoutSaved(true)
+    setTimeout(() => setLayoutSaved(false), 2500)
   }
 
   async function persistMenuCats(cats: MenuCatData[]) {
@@ -1164,6 +1180,102 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   )
                 })}
               </div>
+            </div>
+          </>
+        )
+      })()}
+      {(() => {
+        const LAYOUT_OPTIONS: { key: LayoutType; label: string; desc: string }[] = [
+          { key: "impact",    label: "Impact",    desc: "Bold and high-contrast. Big type, fast first impression." },
+          { key: "editorial", label: "Editorial",  desc: "Clean, magazine-style. Calm and polished." },
+          { key: "portrait",  label: "Portrait",   desc: "Photo-forward and warm." },
+          { key: "cinematic", label: "Cinematic",  desc: "Wide, dramatic imagery with a transparent nav bar." },
+        ]
+        const autoLayout = getLayout(industryCategory, vibe)
+        const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
+
+        return (
+          <>
+            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+            <div style={{ padding: "0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                <div>
+                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Site Look</h2>
+                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    Try a different layout for your whole site. Your content and photos stay exactly where you put them.
+                  </p>
+                </div>
+                {layoutSaved && (
+                  <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
+                    Live
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button
+                  onClick={() => saveLayout(null)}
+                  disabled={savingLayout}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "14px 18px", borderRadius: 16, cursor: savingLayout ? "default" : "pointer",
+                    backgroundColor: !activeLayout ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                    border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
+                      Auto — {autoLabel}
+                    </div>
+                    <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                      Found picks the look that fits your industry
+                    </div>
+                  </div>
+                  {!activeLayout && (
+                    <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                  )}
+                </button>
+                {LAYOUT_OPTIONS.map(opt => {
+                  const isActive = activeLayout === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      onClick={() => saveLayout(opt.key)}
+                      disabled={savingLayout}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "14px 18px", borderRadius: 16, cursor: savingLayout ? "default" : "pointer",
+                        backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                        border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                        textAlign: "left",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
+                          {opt.label}
+                        </div>
+                        <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                          {opt.desc}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              <p style={{ margin: "12px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                <a href={publicSiteOrigin} target="_blank" rel="noreferrer" style={{ color: GREEN }}>View your live site →</a> after switching to see it for real.
+              </p>
             </div>
           </>
         )

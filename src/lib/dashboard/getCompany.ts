@@ -26,6 +26,8 @@ export type CompanyRow = {
   form_intent: string | null
   primary_intent: string | null
   primary_action_override: string | null
+  vibe: string | null
+  layout_override: string | null
   included_addon_slug: string | null
   disabled_addons: string[] | null
   default_tax_rate: number | null
@@ -36,7 +38,7 @@ export type CompanyRow = {
 }
 
 const SELECT_FIELDS =
-  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, address, zip, address_visible, industry_category, sub_industry, form_intent, primary_intent, primary_action_override, included_addon_slug, disabled_addons, default_tax_rate, is_comp, admin_notes, logo_url, logo_white_url"
+  "id, name, slug, email, phone, plan, subscription_status, stripe_customer_id, stripe_connect_account_id, pending_setup_intent_secret, is_founding_member, primary_color, user_id, city, state, address, zip, address_visible, industry_category, sub_industry, form_intent, primary_intent, primary_action_override, vibe, layout_override, included_addon_slug, disabled_addons, default_tax_rate, is_comp, admin_notes, logo_url, logo_white_url"
 
 // True only when both the selected-company cookie AND a server-verified
 // admin key are present - never trust the cookie alone. This is what lets

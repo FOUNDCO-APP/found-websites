@@ -780,3 +780,31 @@ export async function updatePrimaryActionOverride(key: string | null) {
   revalidatePath(`/${ctx.company.slug}`)
   return { success: true }
 }
+
+// null = auto (Found picks the layout from industry + vibe via getLayout()).
+// A specific LayoutType pins the homepage/site layout to that template
+// regardless of the industry+vibe matrix - lets an owner try a different
+// look without losing content or photo placements, since every layout
+// consumes the same fields.
+export async function updateLayoutOverride(key: string | null) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ layout_override: key })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
