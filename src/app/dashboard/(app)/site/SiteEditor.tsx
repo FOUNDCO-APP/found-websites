@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
+import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
 import { polishMenuCategories, polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
@@ -21,7 +22,7 @@ type Photo = { id: string; url: string; website_section: string | null; in_galle
 type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact" | "services" | "shop" | "order"
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
-type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain"
+type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design"
 
 type Props = {
   company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
@@ -37,11 +38,13 @@ type Props = {
   primaryActionOverride: string | null
   vibe: string
   layoutOverride: string | null
+  primaryColor: string
+  navbarDark: boolean
   includedAddonSlug: string | null
   disabledAddons: string[]
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, vibe, layoutOverride: initialLayoutOverride, includedAddonSlug, disabledAddons }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, vibe, layoutOverride: initialLayoutOverride, primaryColor: initialPrimaryColor, navbarDark: initialNavbarDark, includedAddonSlug, disabledAddons }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -68,6 +71,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeLayout, setActiveLayout] = useState<string | null>(initialLayoutOverride)
   const [savingLayout, setSavingLayout] = useState(false)
   const [layoutSaved, setLayoutSaved] = useState(false)
+  const [activeColor, setActiveColor] = useState(initialPrimaryColor)
+  const [customHex, setCustomHex] = useState(initialPrimaryColor)
+  const [hexError, setHexError] = useState<string | null>(null)
+  const [savingColor, setSavingColor] = useState(false)
+  const [colorSaved, setColorSaved] = useState(false)
+  const [logoColors, setLogoColors] = useState<string[] | null>(null)
+  const [detectingLogoColors, setDetectingLogoColors] = useState(false)
+  const [logoColorError, setLogoColorError] = useState<string | null>(null)
+  const [activeNavbarDark, setActiveNavbarDark] = useState(initialNavbarDark)
+  const [savingNavbarDark, setSavingNavbarDark] = useState(false)
+  const [navbarDarkSaved, setNavbarDarkSaved] = useState(false)
 
   // Shared save-failure toast. A save showing "Saved" when the write actually
   // failed is worse than no feedback at all - this makes failures visible
@@ -478,6 +492,53 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setTimeout(() => setLayoutSaved(false), 2500)
   }
 
+  async function saveColor(hex: string) {
+    const normalized = hex.trim()
+    if (!/^#[0-9a-fA-F]{6}$/.test(normalized)) {
+      setHexError("Enter a valid color like #2E7D32")
+      return
+    }
+    setHexError(null)
+    setCustomHex(normalized)
+    if (normalized.toLowerCase() === activeColor.toLowerCase()) return
+    setActiveColor(normalized)
+    setSavingColor(true)
+    const result = await updatePrimaryColor(normalized)
+    setSavingColor(false)
+    if (result && "error" in result) {
+      setHexError(result.error)
+      return
+    }
+    setColorSaved(true)
+    setTimeout(() => setColorSaved(false), 2500)
+  }
+
+  async function fetchLogoColors() {
+    setDetectingLogoColors(true)
+    setLogoColorError(null)
+    const result = await detectLogoColors()
+    setDetectingLogoColors(false)
+    if ("error" in result) {
+      setLogoColorError(result.error)
+      return
+    }
+    if (result.colors.length === 0) {
+      setLogoColorError("Couldn't find a strong color in your logo - try one below.")
+      return
+    }
+    setLogoColors(result.colors)
+  }
+
+  async function saveNavbarDarkChoice(dark: boolean) {
+    if (dark === activeNavbarDark) return
+    setActiveNavbarDark(dark)
+    setSavingNavbarDark(true)
+    await updateNavbarDark(dark)
+    setSavingNavbarDark(false)
+    setNavbarDarkSaved(true)
+    setTimeout(() => setNavbarDarkSaved(false), 2500)
+  }
+
   async function persistMenuCats(cats: MenuCatData[]) {
     const previousCats = menuCats
     const polishedCats = polishMenuCategories(cats)
@@ -801,6 +862,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ padding: "26px 20px 0" }}>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Site-wide</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <HubTile label="Design" sub="Color, style, theme" onClick={() => setView("design")} />
               <HubTile label="Photo library" sub="All your photos" href="/photos" />
               <HubTile label="Domain" sub={publicSiteHost} onClick={() => setView("domain")} />
             </div>
@@ -1180,102 +1242,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   )
                 })}
               </div>
-            </div>
-          </>
-        )
-      })()}
-      {(() => {
-        const LAYOUT_OPTIONS: { key: LayoutType; label: string; desc: string }[] = [
-          { key: "impact",    label: "Impact",    desc: "Bold and high-contrast. Big type, fast first impression." },
-          { key: "editorial", label: "Editorial",  desc: "Clean, magazine-style. Calm and polished." },
-          { key: "portrait",  label: "Portrait",   desc: "Photo-forward and warm." },
-          { key: "cinematic", label: "Cinematic",  desc: "Wide, dramatic imagery with a transparent nav bar." },
-        ]
-        const autoLayout = getLayout(industryCategory, vibe)
-        const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
-
-        return (
-          <>
-            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-            <div style={{ padding: "0 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <div>
-                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Site Look</h2>
-                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    Try a different layout for your whole site. Your content and photos stay exactly where you put them.
-                  </p>
-                </div>
-                {layoutSaved && (
-                  <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
-                    Live
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button
-                  onClick={() => saveLayout(null)}
-                  disabled={savingLayout}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "14px 18px", borderRadius: 16, cursor: savingLayout ? "default" : "pointer",
-                    backgroundColor: !activeLayout ? `${GREEN}18` : "rgba(255,255,255,0.03)",
-                    border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
-                    textAlign: "left",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
-                      Auto — {autoLabel}
-                    </div>
-                    <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                      Found picks the look that fits your industry
-                    </div>
-                  </div>
-                  {!activeLayout && (
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-                {LAYOUT_OPTIONS.map(opt => {
-                  const isActive = activeLayout === opt.key
-                  return (
-                    <button
-                      key={opt.key}
-                      onClick={() => saveLayout(opt.key)}
-                      disabled={savingLayout}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "14px 18px", borderRadius: 16, cursor: savingLayout ? "default" : "pointer",
-                        backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
-                        border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
-                        textAlign: "left",
-                      }}
-                    >
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
-                          {opt.label}
-                        </div>
-                        <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                          {opt.desc}
-                        </div>
-                      </div>
-                      {isActive && (
-                        <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-              <p style={{ margin: "12px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                <a href={publicSiteOrigin} target="_blank" rel="noreferrer" style={{ color: GREEN }}>View your live site →</a> after switching to see it for real.
-              </p>
             </div>
           </>
         )
@@ -2078,6 +2044,268 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           subscriptionStatus={subscriptionStatus}
           companySlug={company.slug}
         />
+      </div>
+      </>
+      )}
+
+      {view === "design" && (
+      <>
+      <BackHeader label="Design" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
+        <SectionIntro eyebrow="Design" title="Change how your whole site looks." body="Color, style, and theme apply everywhere - every page, not just Home." />
+      </div>
+
+      {/* ── COLOR ── */}
+      <div style={{ padding: "18px 20px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Color</h2>
+            <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              Your main color - buttons, accents, and highlights across your whole site.
+            </p>
+          </div>
+          {colorSaved && (
+            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
+              Live
+            </div>
+          )}
+        </div>
+
+        {(company.logo_url || company.logo_white_url) && (
+          <div style={{ marginBottom: 14 }}>
+            {!logoColors ? (
+              <button
+                onClick={fetchLogoColors}
+                disabled={detectingLogoColors}
+                style={{
+                  width: "100%", padding: "14px 18px", borderRadius: 16, cursor: detectingLogoColors ? "default" : "pointer",
+                  backgroundColor: "rgba(255,255,255,0.03)", border: `1.5px dashed rgba(255,255,255,0.15)`,
+                  color: "rgba(255,255,255,0.75)", fontSize: 14, fontWeight: 700, textAlign: "left",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}
+              >
+                <span>{detectingLogoColors ? "Reading your logo…" : "Match my logo"}</span>
+                {company.logo_url && <img src={company.logo_url} alt="" style={{ height: 20, width: 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }} />}
+              </button>
+            ) : (
+              <div>
+                <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 8 }}>From your logo</div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {logoColors.map(hex => {
+                    const active = activeColor.toLowerCase() === hex.toLowerCase()
+                    return (
+                      <button key={hex} onClick={() => saveColor(hex)} disabled={savingColor}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 8, padding: "8px 14px 8px 8px", borderRadius: 100,
+                          backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                          border: `1.5px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.1)"}`,
+                          cursor: savingColor ? "default" : "pointer",
+                        }}>
+                        <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: hex, flexShrink: 0, border: "1px solid rgba(255,255,255,0.15)" }} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: active ? GREEN : "rgba(255,255,255,0.8)", fontFamily: "monospace" }}>{hex.toUpperCase()}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            {logoColorError && (
+              <p style={{ margin: "8px 2px 0", fontSize: 12, color: "#ff8a80" }}>{logoColorError}</p>
+            )}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {palettes.map(p => {
+            const active = activeColor.toLowerCase() === p.hex.toLowerCase()
+            return (
+              <button key={p.hex} onClick={() => saveColor(p.hex)} disabled={savingColor}
+                style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, textAlign: "left",
+                  backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                  border: `1.5px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                  cursor: savingColor ? "default" : "pointer",
+                }}>
+                <span style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: p.hex, flexShrink: 0, border: "1px solid rgba(255,255,255,0.15)" }} />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: active ? GREEN : "white" }}>{p.name}</span>
+                  <span style={{ display: "block", fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.feel}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <span style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: /^#[0-9a-fA-F]{6}$/.test(customHex) ? customHex : "#333", flexShrink: 0, border: "1px solid rgba(255,255,255,0.15)" }} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 2 }}>Custom hex</span>
+            <input
+              value={customHex}
+              onChange={e => setCustomHex(e.target.value)}
+              onBlur={() => saveColor(customHex)}
+              onKeyDown={e => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+              placeholder="#2E7D32"
+              style={{ width: "100%", background: "none", border: "none", outline: "none", color: "white", fontSize: 14, fontWeight: 700, fontFamily: "monospace" }}
+            />
+          </span>
+        </div>
+        {hexError && (
+          <p style={{ margin: "8px 2px 0", fontSize: 12, color: "#ff8a80" }}>{hexError}</p>
+        )}
+      </div>
+
+      {/* ── STYLE ── */}
+      {(() => {
+        const LAYOUT_OPTIONS: { key: LayoutType; label: string; desc: string }[] = [
+          { key: "impact",    label: "Impact",    desc: "Bold and high-contrast. Big type, fast first impression." },
+          { key: "editorial", label: "Editorial",  desc: "Clean, magazine-style. Calm and polished." },
+          { key: "portrait",  label: "Portrait",   desc: "Photo-forward and warm." },
+          { key: "cinematic", label: "Cinematic",  desc: "Wide, dramatic imagery with a transparent nav bar." },
+        ]
+        const autoLayout = getLayout(industryCategory, vibe)
+        const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
+        const swatch = /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#2E7D32"
+
+        function LayoutMockup({ layout }: { layout: LayoutType }) {
+          if (layout === "editorial") {
+            return (
+              <div style={{ display: "flex", height: 56, borderRadius: 8, overflow: "hidden" }}>
+                <div style={{ flex: 1, backgroundColor: swatch }} />
+                <div style={{ flex: 1, backgroundColor: "#1a1a1a", padding: 8, display: "flex", flexDirection: "column", justifyContent: "center", gap: 5 }}>
+                  <div style={{ height: 4, width: "80%", backgroundColor: "rgba(255,255,255,0.8)", borderRadius: 2 }} />
+                  <div style={{ height: 4, width: "55%", backgroundColor: "rgba(255,255,255,0.35)", borderRadius: 2 }} />
+                </div>
+              </div>
+            )
+          }
+          if (layout === "portrait") {
+            return (
+              <div style={{ position: "relative", height: 56, borderRadius: 18, overflow: "hidden", background: `linear-gradient(160deg, ${swatch} 0%, #1a1a1a 100%)` }}>
+                <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center" }}>
+                  <div style={{ height: 5, width: 46, backgroundColor: "#fff", borderRadius: 3 }} />
+                </div>
+              </div>
+            )
+          }
+          if (layout === "cinematic") {
+            return (
+              <div style={{ position: "relative", height: 56, borderRadius: 4, overflow: "hidden", backgroundColor: "#000" }}>
+                <div style={{ position: "absolute", top: 12, left: 0, right: 0, bottom: 12, backgroundColor: swatch, opacity: 0.85 }} />
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 5, backgroundColor: "rgba(255,255,255,0.15)" }} />
+                <div style={{ position: "absolute", left: 0, right: 0, top: "50%", transform: "translateY(-50%)", display: "flex", justifyContent: "center" }}>
+                  <div style={{ height: 5, width: 54, backgroundColor: "#fff", borderRadius: 3 }} />
+                </div>
+              </div>
+            )
+          }
+          return (
+            <div style={{ position: "relative", height: 56, borderRadius: 8, overflow: "hidden", backgroundColor: swatch }}>
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.75) 100%)" }} />
+              <div style={{ position: "absolute", left: 8, right: 8, bottom: 8 }}>
+                <div style={{ height: 6, width: "65%", backgroundColor: "#fff", borderRadius: 2, marginBottom: 4 }} />
+                <div style={{ height: 4, width: "40%", backgroundColor: "rgba(255,255,255,0.5)", borderRadius: 2 }} />
+              </div>
+            </div>
+          )
+        }
+
+        return (
+          <div style={{ padding: "26px 20px 0" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div>
+                <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Style</h2>
+                <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                  Your homepage layout - your content and photos stay exactly where you put them.
+                </p>
+              </div>
+              {layoutSaved && (
+                <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
+                  Live
+                </div>
+              )}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button onClick={() => saveLayout(null)} disabled={savingLayout}
+                style={{
+                  padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
+                  backgroundColor: !activeLayout ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                  border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                }}>
+                <div style={{ height: 56, borderRadius: 8, border: "1px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1 }}>Auto</span>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Auto — {autoLabel}</div>
+                <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>Fits your industry</div>
+              </button>
+              {LAYOUT_OPTIONS.map(opt => {
+                const isActive = activeLayout === opt.key
+                return (
+                  <button key={opt.key} onClick={() => saveLayout(opt.key)} disabled={savingLayout}
+                    style={{
+                      padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
+                      backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                      border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                    }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <LayoutMockup layout={opt.key} />
+                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.85)" }}>{opt.label}</div>
+                    <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2, lineHeight: 1.35 }}>{opt.desc}</div>
+                  </button>
+                )
+              })}
+            </div>
+            <p style={{ margin: "12px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              <a href={publicSiteOrigin} target="_blank" rel="noreferrer" style={{ color: GREEN }}>View your live site →</a> after switching to see it for real.
+            </p>
+          </div>
+        )
+      })()}
+
+      {/* ── THEME ── */}
+      <div style={{ padding: "26px 20px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Theme</h2>
+            <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              Your navigation bar - light works with dark logos, dark works with light ones.
+            </p>
+          </div>
+          {navbarDarkSaved && (
+            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
+              Live
+            </div>
+          )}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {([
+            { dark: false, label: "Light", desc: "White navigation bar" },
+            { dark: true,  label: "Dark",  desc: "Dark nav - great for light logos" },
+          ] as const).map(o => {
+            const active = activeNavbarDark === o.dark
+            return (
+              <button key={String(o.dark)} onClick={() => saveNavbarDarkChoice(o.dark)} disabled={savingNavbarDark}
+                style={{
+                  padding: 10, borderRadius: 16, textAlign: "left", cursor: savingNavbarDark ? "default" : "pointer",
+                  backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                  border: `1.5px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                }}>
+                <div style={{
+                  height: 24, borderRadius: 6, marginBottom: 8, display: "flex", alignItems: "center", padding: "0 8px", gap: 6,
+                  backgroundColor: o.dark ? "#111111" : "#ffffff",
+                  border: o.dark ? "none" : "1px solid #e0e0e0",
+                }}>
+                  <div style={{ height: 6, width: 34, borderRadius: 3, backgroundColor: o.dark ? "rgba(255,255,255,0.6)" : "#cccccc" }} />
+                  <div style={{ flex: 1 }} />
+                  <div style={{ height: 14, width: 30, borderRadius: 3, backgroundColor: /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#2E7D32" }} />
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: active ? GREEN : "rgba(255,255,255,0.85)" }}>{o.label}</div>
+                <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>{o.desc}</div>
+              </button>
+            )
+          })}
+        </div>
       </div>
       </>
       )}

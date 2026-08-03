@@ -49,6 +49,8 @@ export default async function SitePage() {
       primaryActionOverride={company.primary_action_override ?? null}
       vibe={company.vibe ?? 'bold'}
       layoutOverride={company.layout_override ?? null}
+      primaryColor={company.primary_color}
+      navbarDark={company.navbar_dark ?? false}
       includedAddonSlug={company.included_addon_slug ?? null}
       disabledAddons={company.disabled_addons ?? []}
     />

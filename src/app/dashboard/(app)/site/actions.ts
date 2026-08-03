@@ -10,6 +10,7 @@ import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpd
 import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
 import { createWhiteLogoVariant } from "@/lib/logoVariants"
+import { extractLogoColors } from "@/lib/logoColors"
 import type { MenuCategory } from "@/types/company"
 
 
@@ -807,4 +808,77 @@ export async function updateLayoutOverride(key: string | null) {
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
   return { success: true }
+}
+
+const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/
+
+// The single primary_color field drives buttons, accents, gradients, and
+// the logo/navbar contrast check (logoColor()) across every page and
+// layout - one write here reaches the whole site.
+export async function updatePrimaryColor(hex: string): Promise<{ error: string } | { success: true }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+  if (!HEX_PATTERN.test(hex)) return { error: "Enter a valid color like #2E7D32" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ primary_color: hex })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
+
+export async function updateNavbarDark(dark: boolean) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ navbar_dark: dark })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
+
+// Re-runs the same sharp-based color extraction onboarding uses on a fresh
+// upload, but against the logo already on file - so "match my logo" works
+// for an existing business, not just during signup.
+export async function detectLogoColors(): Promise<{ colors: string[] } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+  const logoUrl = ctx.company.logo_url || ctx.company.logo_white_url
+  if (!logoUrl) return { error: "No logo on file" }
+
+  try {
+    const res = await fetch(logoUrl)
+    if (!res.ok) return { error: "Couldn't load your logo" }
+    const bytes = await res.arrayBuffer()
+    const mimeType = res.headers.get("content-type") ?? "image/png"
+    const colors = await extractLogoColors(bytes, mimeType)
+    return { colors }
+  } catch {
+    return { error: "Couldn't read your logo" }
+  }
 }
