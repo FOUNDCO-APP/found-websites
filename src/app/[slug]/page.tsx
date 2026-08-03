@@ -23,7 +23,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   if (!company) notFound()
 
   const config = company.website_config
-  const layout = getLayout(company.industry_category, company.vibe)
+  const layout = getLayout(company.industry_category, company.vibe, company.layout_override)
   const gradient = heroGradient(company.primary_color)
   const configuredHeroVideo = config?.hero_video_url ?? null
 

@@ -26,6 +26,15 @@ const matrix: Record<string, Record<string, LayoutType>> = {
   nonprofit:               { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
 }
 
-export function getLayout(industryCategory: string, vibe: string): LayoutType {
+const VALID_LAYOUTS: LayoutType[] = ["impact", "editorial", "portrait", "cinematic"]
+
+export function getLayout(
+  industryCategory: string,
+  vibe: string,
+  layoutOverride?: string | null,
+): LayoutType {
+  if (layoutOverride && (VALID_LAYOUTS as string[]).includes(layoutOverride)) {
+    return layoutOverride as LayoutType
+  }
   return matrix[industryCategory]?.[vibe as keyof typeof matrix[string]] ?? "impact"
 }

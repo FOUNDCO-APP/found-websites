@@ -97,6 +97,7 @@ export type Company = {
   industry_category: string
   primary_intent: string
   primary_action_override?: string | null
+  layout_override?: string | null
   included_addon_slug?: string | null
   disabled_addons?: string[] | null
   secondary_intent: string | null

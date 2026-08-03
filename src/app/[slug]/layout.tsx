@@ -198,7 +198,7 @@ export default async function CompanyLayout({
 
   const { primary_color, accent_color_1 } = company
   const vibe = getVibe(company.vibe)
-  const layout = getLayout(company.industry_category, company.vibe)
+  const layout = getLayout(company.industry_category, company.vibe, company.layout_override)
   const schemas = buildJsonLd(company)
 
   const admin = createAdminClient()
