@@ -57,7 +57,18 @@ export async function middleware(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.redirect(new URL("/login", req.url))
+      // "View as" from /admin has no real Supabase session - it proves
+      // access with its own admin_key + found_admin_view cookies instead
+      // (see isAdminOverrideActive in src/lib/dashboard/getCompany.ts).
+      // Without this check, this redirect fires before that logic ever
+      // gets a chance to run, so "View as" only worked by accident, on
+      // whichever browser happened to already have a real session.
+      const adminKey = req.cookies.get("admin_key")?.value
+      const adminView = req.cookies.get("found_admin_view")?.value
+      const isAdminOverride = adminView === "1" && !!adminKey && !!process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY
+      if (!isAdminOverride) {
+        return NextResponse.redirect(new URL("/login", req.url))
+      }
     }
 
     const url = req.nextUrl.clone()

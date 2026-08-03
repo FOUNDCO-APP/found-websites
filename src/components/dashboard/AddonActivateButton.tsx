@@ -10,19 +10,21 @@ export default function AddonActivateButton({
   addonSlug,
   addonLabel,
   addonPrice,
-  size = "compact",
+  emphasis = "bold",
 }: {
   companyId: string
   addonSlug: string
   addonLabel: string
   addonPrice: number
-  size?: "compact" | "regular"
+  // "quiet" when a free option is being steered toward instead (Found Pro,
+  // next to "Use free pick") - "bold" when this is the only real action
+  // (no free alternative, e.g. Found Starter).
+  emphasis?: "bold" | "quiet"
 }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-  const isCompact = size === "compact"
 
   async function handleConfirm() {
     setLoading(true)
@@ -45,11 +47,21 @@ export default function AddonActivateButton({
       <button
         type="button"
         onClick={() => { setError(null); setSuccess(false); setOpen(true) }}
-        style={{
-          minHeight: isCompact ? 34 : 52,
+        style={emphasis === "quiet" ? {
+          background: "none",
+          border: "none",
+          padding: 0,
+          fontSize: 12,
+          fontWeight: 800,
+          color: "rgba(255,255,255,0.5)",
+          cursor: "pointer",
+          textDecoration: "underline",
+          textUnderlineOffset: 3,
+        } : {
+          minHeight: 34,
           borderRadius: 999,
-          padding: isCompact ? "0 15px" : "0 18px",
-          fontSize: isCompact ? 12 : 14,
+          padding: "0 15px",
+          fontSize: 12,
           fontWeight: 900,
           backgroundColor: `${GREEN}18`,
           color: GREEN,
@@ -59,7 +71,7 @@ export default function AddonActivateButton({
           letterSpacing: "0.01em",
         }}
       >
-        Add
+        {emphasis === "quiet" ? `Add for $${addonPrice}/mo` : "Add"}
       </button>
 
       {open && createPortal(

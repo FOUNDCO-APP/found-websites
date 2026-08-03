@@ -41,9 +41,21 @@ function UseAsFreePickButton({
       <button
         type="button"
         onClick={() => { setError(null); setSuccess(false); setOpen(true) }}
-        style={{ background: "none", border: "none", padding: 0, ...TYPE.footnote, fontWeight: 800, color: GREEN, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }}
+        style={{
+          minHeight: 34,
+          borderRadius: 999,
+          padding: "0 15px",
+          fontSize: 12,
+          fontWeight: 900,
+          backgroundColor: `${GREEN}18`,
+          color: GREEN,
+          border: `1px solid ${GREEN}35`,
+          cursor: "pointer",
+          boxShadow: `0 0 18px ${GREEN}10`,
+          letterSpacing: "0.01em",
+        }}
       >
-        Use as my free pick
+        Use free pick
       </button>
 
       {open && createPortal(
@@ -132,8 +144,11 @@ export default function AddonsPanel({
 
   return (
     <section style={{ marginBottom: 20 }}>
-      <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-        {isPro ? "Features — one pick included free, add more anytime" : "Add Features"}
+      <p style={{ margin: "0 0 2px", ...TYPE.title, fontWeight: 700, color: "white" }}>
+        Features
+      </p>
+      <p style={{ margin: "0 0 12px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+        {isPro ? "One pick included free. Add more anytime." : "Add more anytime."}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
         {addons.map((addon) => {
@@ -156,22 +171,17 @@ export default function AddonsPanel({
                   <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                     {addon.description}
                   </p>
-                  {!isIncluded && !isPaidActive && isPro && (
-                    <div style={{ marginTop: 8 }}>
-                      <UseAsFreePickButton companyId={companyId} addon={addon} currentIncludedLabel={includedLabel} />
-                    </div>
-                  )}
                 </div>
-                <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                <div style={{ flexShrink: 0, textAlign: "right" as const, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                   {isIncluded ? (
                     <span style={{ ...TYPE.footnote, color: GREEN, fontWeight: 800 }}>Included - Free</span>
                   ) : isPaidActive ? (
                     <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{`Active - $${addon.price}/mo`}</span>
                   ) : (
                     <>
-                      <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: GREEN }}>+${addon.price}/mo</p>
+                      {isPro && <UseAsFreePickButton companyId={companyId} addon={addon} currentIncludedLabel={includedLabel} />}
                       {isActive ? (
-                        <AddonActivateButton companyId={companyId} addonSlug={addon.slug} addonLabel={addon.label} addonPrice={addon.price} />
+                        <AddonActivateButton companyId={companyId} addonSlug={addon.slug} addonLabel={addon.label} addonPrice={addon.price} emphasis={isPro ? "quiet" : "bold"} />
                       ) : (
                         <div style={{ width: 112 }}>
                           <MoreActivateButton slug={companySlug} companyName={companyName} targetPlan={plan} targetAddonSlug={addon.slug} targetAddonLabel={addon.label} targetAddonPrice={addon.price} size="compact">
