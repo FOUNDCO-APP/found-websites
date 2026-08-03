@@ -57,7 +57,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const displayName = polishBusinessName(company.name)
   const aboutCopy = getFullAboutCopy(config)
   const aboutHighlights = getAboutHighlights(config)
-  const aboutHeroSubtitle = getAboutHeroSubtitle({
+  const aboutHeroSubtitle = config?.about_hero_subtitle || getAboutHeroSubtitle({
     businessName: company.name,
     industry: company.industry_category,
     subIndustry: company.sub_industry,

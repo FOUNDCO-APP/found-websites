@@ -338,8 +338,15 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
   if (!shopReady) {
     return (
       <div className="min-h-screen bg-white">
-        <section className="px-6 pb-9 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
-          <div className="mx-auto max-w-5xl">
+        <section className="relative overflow-hidden px-6 pb-9 pt-12" style={{ backgroundColor: SHOP_BLACK }}>
+          {heroImage && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.85))" }} />
+            </>
+          )}
+          <div className="relative mx-auto max-w-5xl">
             <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop</p>
             <h1 className="mb-4 text-4xl font-black leading-none text-white md:text-6xl">Shop {companyName}</h1>
             <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">Online shopping is coming soon. Reach out directly and the team will help with availability, sizing, and orders.</p>

@@ -131,6 +131,7 @@ export async function updateSiteField(field: string, value: unknown) {
   if (error) return { error: error.message }
 
   revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath(`/${ctx.company.slug}/contact`)
   return { success: true }

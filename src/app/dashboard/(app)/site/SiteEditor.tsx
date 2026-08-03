@@ -5,13 +5,15 @@ import { createPortal } from "react-dom"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
-import { polishMenuCategories, polishServices, polishWebsiteField } from "@/lib/copyPolish"
+import { polishMenuCategories, polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { resizeImageToJpeg } from "@/lib/resizeImage"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
+import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -654,6 +656,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementPhotos = localPhotos.filter(p => p.website_section === "announcement")
   const servicesPhotos = localPhotos.filter(p => p.website_section === "services")
   const catalogPhotos = localPhotos.filter(p => p.website_section === (isFoodCatalog ? "order" : "shop"))
+  // What the About page's hero actually shows live - an owner override if
+  // set, else the same auto-generated line the public page falls back to.
+  // Previously this card showed about_text instead, which is really the
+  // Story section further down the real page, not the hero.
+  const aboutHeroSubtitleDefault = getAboutHeroSubtitle({ businessName: company.name, industry: industryCategory, subIndustry: company.sub_industry, city: company.city, state: company.state })
+  // Services' real intro line - shares the homepage's "Supporting line"
+  // field rather than having its own yet, so this shows what's really
+  // there instead of a made-up placeholder.
+  const servicesIntro = String(config.hero_subtitle || getIndustryDefaults(industryCategory, company.sub_industry).servicesIntro)
+  const vocabServicesLabel = getVocab(company.sub_industry ?? null, industryCategory).servicesLabel
   // Photos already used as a primary slot (hero/about/etc.) still show up
   // as eligible for gallery - the two are independent now, so reusing a
   // great photo in both places is expected, not a conflict.
@@ -862,6 +874,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "24px 20px 0" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Gallery</div>
         <button onClick={() => setView("photos")} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 16, borderRadius: 20, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)", color: "white", textAlign: "left", cursor: "pointer" }}>
           <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
             {galleryPhotos[0]?.url ? (
@@ -1174,16 +1187,21 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.78) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot("about")} />
           <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 8 }}>Live preview</div>
-            <p style={{
-              margin: 0, fontSize: 15, fontWeight: 300, lineHeight: 1.5,
-              color: config.about_text ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.4)",
-              fontStyle: config.about_text ? "normal" : "italic",
-            }}>
-              {String(config.about_text || "Tap to write your story. Tell customers who you are and why you love what you do.")}
-            </p>
+            <h3 style={{ margin: "0 0 8px", fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>About {company.name}</h3>
+            <button
+              onClick={() => startEdit("about_hero_subtitle", String(config.about_hero_subtitle || aboutHeroSubtitleDefault))}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}
+            >
+              <span style={{ fontSize: 15, lineHeight: 1.4, color: "rgba(255,255,255,0.88)" }}>
+                {String(config.about_hero_subtitle || aboutHeroSubtitleDefault)}
+              </span>
+              <span style={{ color: GREEN, fontSize: 12, fontWeight: 900, flexShrink: 0, textDecoration: "underline" }}>Edit</span>
+            </button>
           </div>
         </div>
+        <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Further down the page - the longer story next to your highlights.
+        </p>
         <EditRow
           label="Story"
           value={String(config.about_text ?? "")}
@@ -1414,19 +1432,22 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
         </div>
 
-        <div style={{ position: "relative", height: 160, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div style={{ position: "relative", height: 180, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {servicesPhotos[0]?.url ? (
             isVideoMedia(servicesPhotos[0].url) ? <VideoThumb src={servicesPhotos[0].url} /> : <img src={servicesPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
           )}
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.78) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot("services")} />
           <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>Services</div>
-            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>What you offer</h3>
+            <h3 style={{ margin: "0 0 8px", fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{vocabServicesLabel}</h3>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.4, color: "rgba(255,255,255,0.85)" }}>{servicesIntro}</p>
           </div>
         </div>
+        <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          That line comes from your homepage's Supporting Line - change it from the Home tab.
+        </p>
 
         {services.length > 6 && (
           <div style={{ marginTop: 16, position: "relative" }}>
@@ -1839,6 +1860,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   hero_title: "Headline",
                   hero_subtitle: "Supporting Line",
                   about_text: "Your Story",
+                  about_hero_subtitle: "About Hero Subtitle",
                   tagline: "Tagline",
                   cta_headline: "Button Text",
                   contact_eyebrow: "Contact Label",
@@ -1860,6 +1882,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             {[
               "about_text",
               "hero_subtitle",
+              "about_hero_subtitle",
               "contact_subtitle",
               "contact_form_subtitle",
             ].includes(editing) ? (

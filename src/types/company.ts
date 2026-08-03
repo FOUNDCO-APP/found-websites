@@ -61,6 +61,7 @@ export type WebsiteConfig = {
   hero_images: string[] | null
   stock_images: string[]
   about_text: string | null
+  about_hero_subtitle?: string | null
   about_preview: string | null
   about_story: string | null
   about_highlights: AboutHighlight[] | null
