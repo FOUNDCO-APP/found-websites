@@ -274,24 +274,43 @@ export default function DashboardNav({
   }
 
   async function handleNavUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) { e.target.value = ""; return }
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) { e.target.value = ""; return }
     setUploading(true)
+    const albumId = pendingAlbumRef.current
+    let uploadedCount = 0
+    let lastWasVideo = false
     try {
-      const albumId = pendingAlbumRef.current
-      const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
-      if (albumId) {
-        setAlbums(prev => prev.map(a =>
-          a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
-        ))
+      // One request per file, in sequence - keeps album cover-photo
+      // assignment and upload feedback predictable even when several
+      // photos are picked at once, which the file input already allowed
+      // but this handler used to silently ignore past the first file.
+      for (const file of files) {
+        try {
+          const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
+          uploadedCount++
+          lastWasVideo = photo.media_type === "video"
+          if (albumId) {
+            setAlbums(prev => prev.map(a =>
+              a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
+            ))
+          }
+          window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
+            detail: { photo: { ...photo, album_id: albumId ?? null } },
+          }))
+        } catch {
+          // Keep going - one bad file shouldn't stop the rest from uploading
+        }
       }
-      window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
-        detail: { photo: { ...photo, album_id: albumId ?? null } },
-      }))
       const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
-      showToastMsg(albumName ? `Saved to ${albumName}` : (photo.media_type === "video" ? "Video saved" : "Photo saved"))
-    } catch {
-      showToastMsg("Upload failed â€” try again")
+      if (uploadedCount === 0) {
+        showToastMsg("Upload failed â€” try again")
+      } else {
+        const label = uploadedCount === 1
+          ? (lastWasVideo ? "Video saved" : "Photo saved")
+          : `${uploadedCount} photos saved`
+        showToastMsg(albumName ? `${label} to ${albumName}` : label)
+      }
     } finally {
       pendingAlbumRef.current = null
       e.target.value = ""
