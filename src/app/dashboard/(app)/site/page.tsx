@@ -47,6 +47,8 @@ export default async function SitePage() {
       plan={company.plan}
       subscriptionStatus={company.subscription_status}
       primaryActionOverride={company.primary_action_override ?? null}
+      includedAddonSlug={company.included_addon_slug ?? null}
+      disabledAddons={company.disabled_addons ?? []}
     />
   )
 }

@@ -63,7 +63,7 @@ export default async function OnlineOrderPage({ params, searchParams }: {
     .eq("active", true)
     .maybeSingle()
 
-  if (!hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [])) notFound()
+  if (!hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [], company.included_addon_slug, company.disabled_addons ?? [])) notFound()
 
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 

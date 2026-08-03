@@ -38,10 +38,21 @@ export const BUSINESS_INCLUDED_ADDONS: AddonSlug[] = [
 export function getEffectiveAddons(
   plan: string | null | undefined,
   activeAddons: string[] = [],
+  // A Found Pro company's one free/included pick - not billed, not
+  // Stripe-synced. Separate from activeAddons (paid extras) so swapping it
+  // is just changing this one field, safe at any time, and never at risk of
+  // being reconciled away by the Stripe webhook sync.
+  includedAddonSlug?: string | null,
+  // A Found Business company's included add-ons they've chosen to hide,
+  // even though technically bundled free with the plan.
+  disabledAddons: string[] = [],
 ): AddonSlug[] {
   const merged = new Set(activeAddons as AddonSlug[])
-  if ((plan ?? "found") === "found_business") {
-    BUSINESS_INCLUDED_ADDONS.forEach(slug => merged.add(slug))
+  const p = plan ?? "found"
+  if (p === "found_business") {
+    BUSINESS_INCLUDED_ADDONS.forEach(slug => { if (!disabledAddons.includes(slug)) merged.add(slug) })
+  } else if (p === "found_pro" && includedAddonSlug) {
+    merged.add(includedAddonSlug as AddonSlug)
   }
   return Array.from(merged)
 }
@@ -50,14 +61,18 @@ export function hasAddonAccess(
   plan: string | null | undefined,
   addonSlug: AddonSlug,
   activeAddons: string[] = [],
+  includedAddonSlug?: string | null,
+  disabledAddons: string[] = [],
 ): boolean {
-  return getEffectiveAddons(plan, activeAddons).includes(addonSlug)
+  return getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons).includes(addonSlug)
 }
 
 export function getFeatureAccess(
   plan: string | null | undefined,
   feature: Feature,
   activeAddons: AddonSlug[] = [],
+  includedAddonSlug?: string | null,
+  disabledAddons: string[] = [],
 ): boolean {
   const p = plan ?? "found"
 
@@ -78,25 +93,25 @@ export function getFeatureAccess(
     case "lead_tracking":
       return p === "found_pro" || p === "found_business"
 
-    // Business plan capabilities, or the matching paid add-on when one exists.
+    // Business plan capabilities, or the matching paid/included add-on.
     case "booking":
-      return hasAddonAccess(p, "reservation_calendar", activeAddons)
+      return hasAddonAccess(p, "reservation_calendar", activeAddons, includedAddonSlug, disabledAddons)
     case "quotes":
-      return hasAddonAccess(p, "quote_payments", activeAddons)
+      return hasAddonAccess(p, "quote_payments", activeAddons, includedAddonSlug, disabledAddons)
     case "review_collection":
       return p === "found_business"
     case "email_marketing":
-      return hasAddonAccess(p, "email_marketing", activeAddons)
+      return hasAddonAccess(p, "email_marketing", activeAddons, includedAddonSlug, disabledAddons)
 
     // Add-ons — available on any plan with active subscription
     case "online_ordering":
-      return hasAddonAccess(p, "online_ordering", activeAddons)
+      return hasAddonAccess(p, "online_ordering", activeAddons, includedAddonSlug, disabledAddons)
     case "shopping_cart":
-      return hasAddonAccess(p, "shopping_cart", activeAddons)
+      return hasAddonAccess(p, "shopping_cart", activeAddons, includedAddonSlug, disabledAddons)
     case "quote_payments":
-      return hasAddonAccess(p, "quote_payments", activeAddons)
+      return hasAddonAccess(p, "quote_payments", activeAddons, includedAddonSlug, disabledAddons)
     case "reservation_calendar":
-      return hasAddonAccess(p, "reservation_calendar", activeAddons)
+      return hasAddonAccess(p, "reservation_calendar", activeAddons, includedAddonSlug, disabledAddons)
 
     default:
       return false

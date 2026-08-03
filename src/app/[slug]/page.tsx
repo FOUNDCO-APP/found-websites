@@ -50,7 +50,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       .eq("for_website", true)
       .or("in_gallery.eq.true,website_section.in.(hero,about,cta,announcement)"),
   ])
-  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
+  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
   const { primary: primaryCTA, secondary: secondaryCTA } = getSiteCTAs(company, activeAddons)
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null; in_gallery: boolean }[]

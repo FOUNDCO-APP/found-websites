@@ -186,7 +186,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         newReservationLatestAt={leadCounts.reservationLatestAt}
         industry={company?.industry_category ?? null}
         subIndustry={company?.sub_industry ?? null}
-        activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs)}
+        activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])}
         plan={company?.plan ?? null}
       />
 

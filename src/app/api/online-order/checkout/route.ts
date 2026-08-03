@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data: company } = await admin
     .from("companies")
-    .select("id, name, email, phone, plan, stripe_connect_account_id, website_config(menu_items)")
+    .select("id, name, email, phone, plan, included_addon_slug, disabled_addons, stripe_connect_account_id, website_config(menu_items)")
     .eq("id", companyId)
     .single()
 
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     .eq("active", true)
     .maybeSingle()
 
-  if (!company || !hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [])) {
+  if (!company || !hasAddonAccess(company.plan, "online_ordering", addon ? ["online_ordering"] : [], company.included_addon_slug, company.disabled_addons ?? [])) {
     return NextResponse.json({ error: "Online ordering is not active for this business." }, { status: 404 })
   }
 

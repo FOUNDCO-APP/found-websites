@@ -63,7 +63,7 @@ export default async function ShopPage({ params, searchParams }: {
     .eq("active", true)
     .maybeSingle()
 
-  if (!hasAddonAccess(company.plan, "shopping_cart", addon ? ["shopping_cart"] : [])) notFound()
+  if (!hasAddonAccess(company.plan, "shopping_cart", addon ? ["shopping_cart"] : [], company.included_addon_slug, company.disabled_addons ?? [])) notFound()
 
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 

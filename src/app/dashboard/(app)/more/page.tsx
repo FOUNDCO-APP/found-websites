@@ -203,7 +203,8 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
     activeAddonSlugs = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
   }
 
-  const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs)
+  const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])
+  const includedAddonDef = company?.included_addon_slug ? ALL_ADDONS.find((a) => a.slug === company.included_addon_slug) : null
   const availableAddons = plan === "found_business" ? [] : relevantAddons.filter((a) => !effectiveAddonSlugs.includes(a.slug))
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
   const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
@@ -380,6 +381,32 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Included pick - free with plan, not billed, distinct from paid add-ons below */}
+      {includedAddonDef && (
+        <section style={{ marginBottom: 20 }}>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Included With Your Plan
+          </p>
+          <div style={{
+            borderRadius: 14,
+            backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            padding: "14px 18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />
+              <span style={{ ...TYPE.subhead, color: "white" }}>{includedAddonDef.label}</span>
+            </div>
+            <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              Included - Free
+            </span>
           </div>
         </section>
       )}

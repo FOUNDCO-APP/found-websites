@@ -16,9 +16,9 @@ export async function getCompanyActiveAddonSlugs(companyId: string): Promise<Add
   return ((data ?? []).map((row: { addon_slug: string }) => row.addon_slug) as AddonSlug[])
 }
 
-export async function companyHasAddonAccess(company: Pick<CompanyRow, "id" | "plan">, addon: AddonSlug): Promise<boolean> {
+export async function companyHasAddonAccess(company: Pick<CompanyRow, "id" | "plan" | "included_addon_slug" | "disabled_addons">, addon: AddonSlug): Promise<boolean> {
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  return hasAddonAccess(company.plan, addon, activeAddons)
+  return hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])
 }
 
 export async function requireDashboardAddonAccess(addon: AddonSlug) {
@@ -29,7 +29,7 @@ export async function requireDashboardAddonAccess(addon: AddonSlug) {
   if (!company) return { ok: false as const, response: NextResponse.json({ error: "No company" }, { status: 404 }) }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!hasAddonAccess(company.plan, addon, activeAddons)) {
+  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
     return { ok: false as const, response: NextResponse.json({ error: "Feature not available on this plan" }, { status: 403 }) }
   }
 
@@ -44,7 +44,7 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
   if (!company) redirect("/login")
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!hasAddonAccess(company.plan, addon, activeAddons)) {
+  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
     redirect("/more?addon_unavailable=1")
   }
 
@@ -61,14 +61,14 @@ export async function requireDashboardFeaturePage(feature: Feature) {
   if (!company) redirect("/login")
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!getFeatureAccess(company.plan, feature, activeAddons)) {
+  if (!getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
     redirect("/more?addon_unavailable=1")
   }
 
   return { user, company, activeAddons }
 }
 
-export async function companyHasFeatureAccess(company: Pick<CompanyRow, "id" | "plan">, feature: Feature): Promise<boolean> {
+export async function companyHasFeatureAccess(company: Pick<CompanyRow, "id" | "plan" | "included_addon_slug" | "disabled_addons">, feature: Feature): Promise<boolean> {
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  return getFeatureAccess(company.plan, feature, activeAddons)
+  return getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])
 }

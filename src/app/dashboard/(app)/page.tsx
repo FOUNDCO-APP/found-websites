@@ -69,7 +69,7 @@ export default async function HomePage() {
   const businessName = (company.name ?? "").trim() || "there"
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
   const paidAddonSlugs = await getCompanyActiveAddonSlugs(company.id)
-  const effectiveAddons = getEffectiveAddons(company.plan, paidAddonSlugs)
+  const effectiveAddons = getEffectiveAddons(company.plan, paidAddonSlugs, company.included_addon_slug, company.disabled_addons ?? [])
   const hasContacts = getFeatureAccess(company.plan, "contact_database", effectiveAddons)
   const smartNextStep = isActive ? smartNextStepFor({
     industry: company.industry_category ?? null,

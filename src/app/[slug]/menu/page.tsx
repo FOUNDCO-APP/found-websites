@@ -56,7 +56,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     .eq("addon_slug", "online_ordering")
     .eq("active", true)
     .maybeSingle()
-  const onlineOrderingActive = hasAddonAccess(company.plan, "online_ordering", onlineOrderingAddon ? ["online_ordering"] : [])
+  const onlineOrderingActive = hasAddonAccess(company.plan, "online_ordering", onlineOrderingAddon ? ["online_ordering"] : [], company.included_addon_slug, company.disabled_addons ?? [])
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 
   return (

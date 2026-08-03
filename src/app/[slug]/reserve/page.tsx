@@ -56,7 +56,7 @@ export default async function ReservePage({ params }: { params: Promise<{ slug: 
     .eq("active", true)
     .maybeSingle()
 
-  const hasCalendar = hasAddonAccess(company.plan, "reservation_calendar", addon ? ["reservation_calendar"] : [])
+  const hasCalendar = hasAddonAccess(company.plan, "reservation_calendar", addon ? ["reservation_calendar"] : [], company.included_addon_slug, company.disabled_addons ?? [])
 
   // Fetch working days to grey non-working days on the calendar (no API calls from client)
   let workingDays: number[] = []

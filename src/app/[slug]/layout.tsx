@@ -207,7 +207,7 @@ export default async function CompanyLayout({
     .select("addon_slug")
     .eq("company_id", company.id)
     .eq("active", true)
-  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug))
+  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
   const { primary, secondary } = getSiteCTAs(company, activeAddons)
   // The bar's job is to say whatever the hero isn't already headlining. If
   // there's no genuinely different secondary option, it waits until the

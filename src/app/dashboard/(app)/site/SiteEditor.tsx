@@ -32,9 +32,11 @@ type Props = {
   plan: string | null
   subscriptionStatus: string | null
   primaryActionOverride: string | null
+  includedAddonSlug: string | null
+  disabledAddons: string[]
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, includedAddonSlug, disabledAddons }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -1064,7 +1066,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
       {(() => {
-        const effectiveAddons = getEffectiveAddons(plan, activeAddons)
+        const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
         const availableActions = getAvailablePrimaryActions(industryCategory, effectiveAddons, company.phone)
         // Only worth showing when there's a real choice - a business with
         // just one working option has nothing to override.
