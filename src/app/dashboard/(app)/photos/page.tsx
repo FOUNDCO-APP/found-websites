@@ -87,6 +87,10 @@ function PhotosPageInner() {
   const [newAlbumName, setNewAlbumName] = useState("")
   const [savingAlbum, setSavingAlbum] = useState(false)
   const [shareAlbum, setShareAlbum] = useState<Album | null>(null)
+  const [deleteConfirmPhoto, setDeleteConfirmPhoto] = useState<Photo | null>(null)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [downloadingZip, setDownloadingZip] = useState(false)
   const [selectedSocialDraft, setSelectedSocialDraft] = useState<SocialDraft | null>(null)
   const [socialDrafts, setSocialDrafts] = useState<SocialDraft[]>([])
   const [socialGenerating, setSocialGenerating] = useState(false)
@@ -204,6 +208,47 @@ function PhotosPageInner() {
       body: JSON.stringify({ id: photo.id, storage_path: photo.url }),
     })
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
+  async function downloadSelected() {
+    if (selectedIds.size === 0 || downloadingZip) return
+    setDownloadingZip(true)
+    try {
+      const res = await fetch("/api/photos/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      })
+      if (!res.ok) throw new Error("Download failed")
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "photos.zip"
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      exitSelectMode()
+    } catch {
+      setPhotoError("Couldn't download those photos. Try again.")
+    } finally {
+      setDownloadingZip(false)
+    }
   }
 
   async function createAlbum() {
@@ -404,6 +449,15 @@ function PhotosPageInner() {
         </div>
 
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          {!selectMode && photos.length > 0 && (
+            <button onClick={() => setSelectMode(true)} style={{
+              padding: "10px 16px", borderRadius: 100,
+              backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+              color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+            }}>
+              Select
+            </button>
+          )}
           {activeAlbum && (
             <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
               display: "flex", alignItems: "center", gap: 6,
@@ -489,6 +543,11 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
+            onFlag={flag}
+            onRequestDelete={setDeleteConfirmPhoto}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
             emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
             emptySub="Tap the camera button to add photos."
             onAdd={openCamera}
@@ -526,6 +585,11 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
+            onFlag={flag}
+            onRequestDelete={setDeleteConfirmPhoto}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelect}
             emptyTitle={
               view === "queue"   ? "Take a photo or video." :
               view === "website" ? "No website photos yet." :
@@ -581,6 +645,35 @@ function PhotosPageInner() {
         />
       )}
 
+      {/* Delete confirm - friendly, not a system warning, since this is the
+          one irreversible action available straight from the thumbnail. */}
+      {deleteConfirmPhoto && (
+        <>
+          <div onClick={() => setDeleteConfirmPhoto(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
+            <div style={{ fontSize: 30, marginBottom: 10 }}>🗑️</div>
+            <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>Delete this one?</p>
+            <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
+              It'll be gone for good, including anywhere it's used on your site or in a social post.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+              <button
+                onClick={() => { remove(deleteConfirmPhoto); setDeleteConfirmPhoto(null) }}
+                style={{ padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: "rgba(255,70,70,0.16)", color: "#FF6B6B", fontSize: 15, fontWeight: 900, cursor: "pointer" }}
+              >
+                Yes, delete it
+              </button>
+              <button
+                onClick={() => setDeleteConfirmPhoto(null)}
+                style={{ padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}
+              >
+                Keep it
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Upgrade sheet */}
       {showUpgrade && (
         <UpgradeSheet onClose={() => setShowUpgrade(false)} />
@@ -613,6 +706,36 @@ function PhotosPageInner() {
           onUploaded={handleCameraUploaded}
           pendingAlbumId={pendingAlbumIdRef.current}
         />
+      )}
+
+      {/* Select mode - pick specific photos to download, not just all of them */}
+      {selectMode && (
+        <div style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 75,
+          padding: "14px 20px max(env(safe-area-inset-bottom, 0px), 20px)",
+          backgroundColor: "rgba(15,18,16,0.94)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <button onClick={exitSelectMode} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", ...TYPE.body, cursor: "pointer", padding: 0 }}>
+            Cancel
+          </button>
+          <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.5)" }}>
+            {selectedIds.size === 0 ? "Tap photos to select" : `${selectedIds.size} selected`}
+          </span>
+          <button
+            onClick={downloadSelected}
+            disabled={selectedIds.size === 0 || downloadingZip}
+            style={{
+              padding: "12px 20px", borderRadius: 100, border: "none",
+              backgroundColor: selectedIds.size === 0 ? "rgba(255,255,255,0.08)" : SIGNAL_GREEN,
+              color: selectedIds.size === 0 ? "rgba(255,255,255,0.35)" : FOUND_BLACK,
+              ...TYPE.footnote, fontWeight: 800, cursor: selectedIds.size === 0 ? "default" : "pointer",
+            }}
+          >
+            {downloadingZip ? "Zipping..." : "Download"}
+          </button>
+        </div>
       )}
     </main>
   )
@@ -802,10 +925,15 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
+  onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onRequestDelete?: (photo: Photo) => void
+  selectMode?: boolean
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
   emptyTitle: string
   emptySub: string
   emptyIcon?: React.ReactNode
@@ -847,7 +975,16 @@ function DateGroupedGrid({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
             {group.photos.map(photo => (
-              <PhotoCard key={photo.id} photo={photo} onView={onView} />
+              <PhotoCard
+                key={photo.id}
+                photo={photo}
+                onView={onView}
+                onFlag={onFlag}
+                onRequestDelete={onRequestDelete}
+                selectMode={selectMode}
+                selected={selectedIds?.has(photo.id)}
+                onToggleSelect={onToggleSelect}
+              />
             ))}
           </div>
         </div>
@@ -1323,15 +1460,24 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView }: {
+function PhotoCard({ photo, onView, onFlag, onRequestDelete, selectMode, selected, onToggleSelect }: {
   photo: Photo
   onView: (photo: Photo) => void
+  onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onRequestDelete?: (photo: Photo) => void
+  selectMode?: boolean
+  selected?: boolean
+  onToggleSelect?: (id: string) => void
 }) {
   const isVideo = isVideoMedia(photo.url, photo.mime_type)
 
   return (
     <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1", backgroundColor: isVideo ? "#111813" : "transparent", border: isVideo ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
-      <button onClick={() => onView(photo)} aria-label={isVideo ? "Open business video" : "Open business photo"} style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}>
+      <button
+        onClick={() => selectMode ? onToggleSelect?.(photo.id) : onView(photo)}
+        aria-label={isVideo ? "Open business video" : "Open business photo"}
+        style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}
+      >
         {isVideo ? (
           <VideoPreviewTile src={photo.url} />
         ) : (
@@ -1343,23 +1489,62 @@ function PhotoCard({ photo, onView }: {
           />
         )}
       </button>
+      {selectMode && (
+        <>
+          <div style={{ position: "absolute", inset: 0, backgroundColor: selected ? `${SIGNAL_GREEN}40` : "rgba(0,0,0,0.15)", pointerEvents: "none", transition: "background-color 0.12s ease" }} />
+          <div style={{
+            position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: "50%",
+            border: `2px solid ${selected ? SIGNAL_GREEN : "rgba(255,255,255,0.7)"}`,
+            backgroundColor: selected ? SIGNAL_GREEN : "rgba(0,0,0,0.4)",
+            display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+          }}>
+            {selected && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            )}
+          </div>
+        </>
+      )}
       {isVideo && (
         <div style={{ position: "absolute", right: 8, top: 8, padding: "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", pointerEvents: "none" }}>VIDEO</div>
       )}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: isVideo ? "inset 0 0 0 1px rgba(255,255,255,0.05)" : "none" }} />
-      {/* Flag badges */}
-      <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4, pointerEvents: "none" }}>
-        {photo.for_website && (
-          <div style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FF4B8B" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-          </div>
-        )}
-        {photo.for_social && (
-          <div style={{ width: 22, height: 22, borderRadius: 6, backgroundColor: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFB800" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          </div>
-        )}
-      </div>
+      {/* Heart / Star - always visible, tappable straight from the thumbnail
+          now instead of only inside the enlarged viewer. Hidden in select
+          mode so a tap always means "select," not "toggle a flag." */}
+      {onFlag && !selectMode && (
+        <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4 }}>
+          <button
+            onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_website", photo.for_website) }}
+            aria-label={photo.for_website ? "Remove from website" : "Add to website"}
+            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_website ? "#FF4B8B" : "none"} stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }}
+            aria-label={photo.for_social ? "Remove from social" : "Add to social"}
+            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_social ? "#FFB800" : "none"} stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </button>
+        </div>
+      )}
+      {onRequestDelete && !selectMode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onRequestDelete(photo) }}
+          aria-label="Delete photo"
+          style={{ position: "absolute", bottom: 8, right: 8, width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,120,120,0.9)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+        </button>
+      )}
     </div>
   )
 }
