@@ -370,8 +370,18 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 </p>
               </div>
               <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                {hasIntroRate && (
+                  <p style={{ margin: "0 0 1px", ...TYPE.footnote, fontWeight: 700, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textDecoration: "line-through" }}>
+                    ${meta.normal}/mo
+                  </p>
+                )}
                 <p style={{ margin: 0, ...TYPE.title, color: "white" }}>${displayPrice}</p>
                 <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
+                {hasIntroRate && (
+                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 800, color: GREEN }}>
+                    Save ${meta.normal - meta.intro}/mo
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -400,8 +410,18 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                   </h2>
                 </div>
                 <div style={{ flexShrink: 0, textAlign: "right" as const }}>
+                  {isActive && hasIntroRate && (
+                    <p style={{ margin: "0 0 1px", ...TYPE.footnote, fontWeight: 700, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textDecoration: "line-through" }}>
+                      ${meta.normal}/mo
+                    </p>
+                  )}
                   <p style={{ margin: 0, ...TYPE.largeTitle, fontSize: "1.85rem", color: "white" }}>${displayPrice}</p>
                   <p style={{ margin: "-2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>/month</p>
+                  {isActive && hasIntroRate && (
+                    <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 800, color: GREEN }}>
+                      Save ${meta.normal - meta.intro}/mo
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -499,7 +519,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
                 Upgrade to {upgrade.label} for +${Math.max(upgradePrice - displayPrice, 0)}/mo
               </MoreActivateButton>
             ) : null}
-            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 700, textAlign: "center" as const, color: "rgba(8,10,9,0.46)" }}>
+            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 800, textAlign: "center" as const, color: "rgba(8,10,9,0.72)" }}>
               {hasIntroRate
                 ? `Intro price locked. Regular price is $${upgrade.normalPrice}/month.`
                 : "Upgrade anytime. Your site, leads, and photos stay with you."}
