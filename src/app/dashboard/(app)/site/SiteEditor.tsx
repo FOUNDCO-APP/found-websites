@@ -51,6 +51,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [newServiceDesc, setNewServiceDesc] = useState("")
   const [localPhotos, setLocalPhotos] = useState<Photo[]>(photos)
   const [photoPickerSlot, setPhotoPickerSlot] = useState<PhotoSlot | null>(null)
+  // A photo can only live in one single-slot spot at a time - if it's
+  // already somewhere else, check with the owner before quietly moving it,
+  // so they're never surprised to find a photo missing from another page.
+  const [reassignConfirm, setReassignConfirm] = useState<{ photoId: string; slot: PhotoSlot; fromLabel: string } | null>(null)
   const [stockImages, setStockImages] = useState<string[]>(initialStockImages)
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
@@ -1811,7 +1815,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   {pickerPhotos.map(photo => {
                     const isGallerySlot = activeSlot.slot === "gallery"
                     const selected = isGallerySlot ? Boolean(photo.in_gallery) : photo.website_section === activeSlot.slot
-                    const onSelect = () => isGallerySlot ? handleToggleGallery(photo.id, !photo.in_gallery) : handleAssignPhoto(photo.id, activeSlot.slot)
+                    const onSelect = () => {
+                      if (isGallerySlot) { handleToggleGallery(photo.id, !photo.in_gallery); return }
+                      const currentSection = photo.website_section as PhotoSlot | null
+                      if (currentSection && currentSection !== activeSlot.slot) {
+                        const fromSlot = photoSlots.find(s => s.slot === currentSection)
+                        setReassignConfirm({ photoId: photo.id, slot: activeSlot.slot, fromLabel: fromSlot?.label ?? "another page" })
+                        return
+                      }
+                      handleAssignPhoto(photo.id, activeSlot.slot)
+                    }
                     return (
                       <button key={photo.id} onClick={onSelect} style={{ padding: 0, border: selected ? `2px solid ${GREEN}` : "1px solid rgba(255,255,255,0.1)", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", cursor: "pointer", textAlign: "left", boxShadow: selected ? `0 0 0 4px ${GREEN}22` : "none" }}>
                         <div style={{ position: "relative", aspectRatio: "4 / 3", backgroundColor: "rgba(255,255,255,0.04)" }}>
@@ -1846,6 +1859,37 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   Remove {activeSlot.label} Photo{activeSlot.slot === "gallery" && activeSlot.photos.length > 1 ? "s" : ""}
                 </button>
               )}
+            </div>
+          </>
+        )
+      })()}
+      {reassignConfirm && (() => {
+        const toSlot = photoSlots.find(s => s.slot === reassignConfirm.slot)
+        return (
+          <>
+            <div onClick={() => setReassignConfirm(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+            <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
+              <div style={{ fontSize: 30, marginBottom: 10 }}>👋</div>
+              <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>
+                Quick heads up
+              </p>
+              <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
+                This photo is currently on your <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong> page. Moving it to <strong style={{ color: "white" }}>{toSlot?.label ?? "here"}</strong> means {reassignConfirm.fromLabel} won&apos;t have it anymore.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                <button
+                  onClick={() => { handleAssignPhoto(reassignConfirm.photoId, reassignConfirm.slot); setReassignConfirm(null) }}
+                  style={{ padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 15, fontWeight: 900, cursor: "pointer" }}
+                >
+                  Move it to {toSlot?.label ?? "here"}
+                </button>
+                <button
+                  onClick={() => setReassignConfirm(null)}
+                  style={{ padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}
+                >
+                  Leave it on {reassignConfirm.fromLabel}
+                </button>
+              </div>
             </div>
           </>
         )
