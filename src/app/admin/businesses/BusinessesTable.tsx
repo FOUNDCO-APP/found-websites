@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useState, useTransition } from "react"
-import { setViewAsCookie, toggleComp, toggleTest, saveNotes } from "./actions"
+import { setViewAsCookie, toggleComp, toggleTest, saveNotes, setIncludedAddon } from "./actions"
+import { getRelevantAddons } from "@/lib/featureAccess"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 export type BusinessFilter = "all" | "attention" | "inactive" | "logo" | "payments" | "test"
@@ -19,6 +20,7 @@ export type BusinessRow = {
   is_test: boolean | null
   admin_notes: string | null
   created_at: string | null
+  included_addon_slug: string | null
   issues: string[]
 }
 
@@ -51,7 +53,16 @@ function BusinessItem({ row }: { row: BusinessRow }) {
   const [savingNotes, setSavingNotes] = useState(false)
   const [pending, startTransition] = useTransition()
   const [testPending, startTestTransition] = useTransition()
+  const [includedAddon, setIncludedAddonState] = useState(row.included_addon_slug)
+  const [addonPending, startAddonTransition] = useTransition()
   const active = row.subscription_status === "active" || row.subscription_status === "trialing" || comp
+  const relevantAddons = row.plan === "found_pro" ? getRelevantAddons(row.industry_category ?? "") : []
+
+  function handleAddonChange(slug: string | null) {
+    if (slug === includedAddon) return
+    setIncludedAddonState(slug)
+    startAddonTransition(() => { setIncludedAddon(row.id, slug) })
+  }
 
   function handleCompToggle() {
     const next = !comp
@@ -93,6 +104,32 @@ function BusinessItem({ row }: { row: BusinessRow }) {
       <details className="hq-business-manage">
         <summary>Manage</summary>
         <div className="hq-business-manage-body">
+          {row.plan === "found_pro" && (
+            <div style={{ marginBottom: 16 }}>
+              <label className="hq-business-note-label">Included add-on (Pro plan - one pick, free)</label>
+              <div className="hq-filter-row">
+                <button
+                  type="button"
+                  data-active={!includedAddon}
+                  disabled={addonPending}
+                  onClick={() => handleAddonChange(null)}
+                >
+                  None
+                </button>
+                {relevantAddons.map((addon) => (
+                  <button
+                    key={addon.slug}
+                    type="button"
+                    data-active={includedAddon === addon.slug}
+                    disabled={addonPending}
+                    onClick={() => handleAddonChange(addon.slug)}
+                  >
+                    {addon.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <label className="hq-business-note-label" htmlFor={`notes-${row.id}`}>Private note</label>
           <textarea id={`notes-${row.id}`} value={notes} onChange={(event) => setNotes(event.target.value)} onBlur={handleNotesBlur} rows={2} placeholder="How you know them, account purpose, or follow-up details" />
           <div className="hq-business-manage-footer">

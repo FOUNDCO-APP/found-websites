@@ -126,3 +126,13 @@ export async function saveNotes(companyId: string, notes: string) {
   const admin = getAdminClient()
   await admin.from("companies").update({ admin_notes: notes }).eq("id", companyId)
 }
+
+// A Found Pro company's one free/included add-on pick - not billed, not
+// Stripe-synced (see src/lib/featureAccess.ts). A single nullable column,
+// not a list, so picking a new one always replaces the old one - "one at a
+// time" is enforced by the data shape itself, not extra logic here.
+export async function setIncludedAddon(companyId: string, addonSlug: string | null) {
+  await requireAdmin()
+  const admin = getAdminClient()
+  await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
+}

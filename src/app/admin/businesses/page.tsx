@@ -35,7 +35,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
   const supabase = getAdminClient()
   const [{ data: companies }, { data: configs }] = await Promise.all([
     supabase.from("companies")
-      .select("id, name, slug, industry_category, plan, subscription_status, email, is_comp, is_test, admin_notes, created_at, logo_url, logo_white_url, primary_intent, stripe_connect_account_id")
+      .select("id, name, slug, industry_category, plan, subscription_status, email, is_comp, is_test, admin_notes, created_at, logo_url, logo_white_url, primary_intent, stripe_connect_account_id, included_addon_slug")
       .order("created_at", { ascending: false }),
     supabase.from("website_config").select("company_id, copy_generated"),
   ])
@@ -55,6 +55,7 @@ export default async function AdminBusinessesPage({ searchParams }: { searchPara
     is_test: company.is_test,
     admin_notes: company.admin_notes,
     created_at: company.created_at,
+    included_addon_slug: company.included_addon_slug ?? null,
     issues: computeIssues(company, copyGeneratedByCompany.get(company.id)),
   }))
 

@@ -427,7 +427,9 @@ const retailDefaults: SubIndustryVocab = {
   // Not "The Shop" - that reads as a real product page, and this link only
   // ever goes to photos. The actual shop (when the shopping_cart addon is
   // active) gets its own dedicated "Shop" nav link, added separately.
-  galleryLabel: "Photos",
+  // Catch-all for any retail sub-industry without its own specific label
+  // below (including "specialty retail" and anything unrecognized).
+  galleryLabel: "Take a Look",
   ctaBodyText: "come in — we'd love to help you find the right fit",
   customerWord: "customer",
   appointmentWord: "visit",
@@ -439,6 +441,7 @@ const retailVocab: Record<string, SubIndustryVocab> = {
     ...retailDefaults,
     servicesLabel: "Shop & Service",
     servicesOverline: "What We Do",
+    galleryLabel: "The Bikes",
     reviewsLabel: "What Riders Say",
     reviewsOverline: "Rider Reviews",
     ctaBodyText: "come in — we're open and ready to help",
@@ -458,18 +461,21 @@ const retailVocab: Record<string, SubIndustryVocab> = {
     ...retailDefaults,
     servicesLabel: "What We Carry",
     servicesOverline: "Our Products",
+    galleryLabel: "On the Shelf",
     ctaBodyText: "come in — we'll help you find exactly what you need",
   },
   "gift shop": {
     ...retailDefaults,
     servicesLabel: "What We Carry",
     servicesOverline: "In the Shop",
+    galleryLabel: "What's Inside",
     ctaBodyText: "come find the perfect gift",
   },
   "home goods": {
     ...retailDefaults,
     servicesLabel: "The Collection",
     servicesOverline: "What We Carry",
+    galleryLabel: "In the Store",
     ctaBodyText: "come see what's in store",
   },
   apparel: {
