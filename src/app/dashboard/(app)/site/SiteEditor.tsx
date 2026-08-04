@@ -1722,7 +1722,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Business Info" onBack={() => setView("hub")} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Business info" title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
+        <SectionIntro title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column" as const, gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <label style={{ cursor: uploadingLogo ? "default" : "pointer", flexShrink: 0 }}>
@@ -2036,7 +2036,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <BackHeader label="Domain" onBack={() => setView("hub")} />
       <div id="launch-trust" style={{ padding: "10px 20px 0" }}>
         <div style={{ marginBottom: 16 }}>
-          <SectionIntro eyebrow="Domain" title="Connect a business domain." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
+          <SectionIntro title="Connect a business domain." body="Keep the foundco.app URL while testing, or connect a domain so customers see the business name in the address bar." />
         </div>
         <DomainConnector
           initialDomain={(initialConfig?.custom_domain as string | null) ?? null}
@@ -2052,7 +2052,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Design" onBack={() => setView("hub")} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Design" title="Change how your whole site looks." body="Color, style, and theme apply everywhere - every page, not just Home." />
+        <SectionIntro title="Change how your whole site looks." body="Color, style, and theme apply everywhere - every page, not just Home." />
       </div>
 
       {/* ── COLOR ── */}
@@ -2122,6 +2122,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <button key={p.hex} onClick={() => saveColor(p.hex)} disabled={savingColor}
                 style={{
                   display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", borderRadius: 14, textAlign: "left",
+                  minWidth: 0, width: "100%", boxSizing: "border-box" as const,
                   backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.03)",
                   border: `1.5px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
                   cursor: savingColor ? "default" : "pointer",
@@ -2129,7 +2130,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <span style={{ width: 28, height: 28, borderRadius: "50%", backgroundColor: p.hex, flexShrink: 0, border: "1px solid rgba(255,255,255,0.15)" }} />
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: "block", fontSize: 13, fontWeight: 700, color: active ? GREEN : "white" }}>{p.name}</span>
-                  <span style={{ display: "block", fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.feel}</span>
+                  <span style={{ display: "block", fontSize: 11, lineHeight: 1.3, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{p.feel}</span>
                 </span>
               </button>
             )
@@ -2229,6 +2230,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <button onClick={() => saveLayout(null)} disabled={savingLayout}
                 style={{
                   padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
+                  minWidth: 0, width: "100%", boxSizing: "border-box" as const,
                   backgroundColor: !activeLayout ? `${GREEN}18` : "rgba(255,255,255,0.03)",
                   border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
                 }}>
@@ -2244,6 +2246,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   <button key={opt.key} onClick={() => saveLayout(opt.key)} disabled={savingLayout}
                     style={{
                       padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
+                      minWidth: 0, width: "100%", boxSizing: "border-box" as const,
                       backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
                       border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
                     }}>
@@ -2288,6 +2291,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <button key={String(o.dark)} onClick={() => saveNavbarDarkChoice(o.dark)} disabled={savingNavbarDark}
                 style={{
                   padding: 10, borderRadius: 16, textAlign: "left", cursor: savingNavbarDark ? "default" : "pointer",
+                  minWidth: 0, width: "100%", boxSizing: "border-box" as const,
                   backgroundColor: active ? `${GREEN}18` : "rgba(255,255,255,0.03)",
                   border: `1.5px solid ${active ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
                 }}>
@@ -2625,10 +2629,10 @@ function BizInfoField({ label, value, placeholder, type, saving, justSaved, onSa
   )
 }
 
-function SectionIntro({ eyebrow, title, body }: { eyebrow: string; title: string; body: string }) {
+function SectionIntro({ eyebrow, title, body }: { eyebrow?: string; title: string; body: string }) {
   return (
     <div>
-      <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{eyebrow}</div>
+      {eyebrow && <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{eyebrow}</div>}
       <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>{title}</h2>
       <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{body}</p>
     </div>
