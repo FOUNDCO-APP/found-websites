@@ -9,6 +9,7 @@ const SIGNAL_GREEN = "#32D074"
 
 const NAV_LINKS = [
   { label: "How it works", href: "/#how-it-works" },
+  { label: "Compare",      href: "/compare" },
   { label: "Plans",        href: "/plans" },
   { label: "Industries",   href: "/industries" },
 ]

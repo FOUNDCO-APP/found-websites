@@ -184,6 +184,73 @@ export default function HomeClient() {
           </div>
         </section>
 
+        {/* ── What's actually different ── */}
+        <section className="bg-[#0B0E0C] px-6 py-24 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+              What&apos;s actually different
+            </p>
+            <h2 className="max-w-2xl text-4xl font-light leading-tight md:text-6xl">
+              Wix gives you a website. Found gives you a business.
+            </h2>
+
+            {/* Camera system — the lead feature, real narrative treatment */}
+            <div className="mt-16 grid gap-10 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#080A09] p-8 md:grid-cols-2 md:gap-16 md:p-14">
+              <div className="flex flex-col justify-center">
+                <h3 className="text-3xl font-normal leading-tight text-white md:text-4xl">
+                  Take a photo. It&apos;s on your site.
+                </h3>
+                <p className="mt-5 text-base leading-8 text-white/55 font-medium">
+                  Finish a job, snap a photo on your phone, tap the heart in Found — it&apos;s already live on your website, ready to become your next social post. Built the way CompanyCam works for contractors, except Found built it for every business, not just one trade.
+                </p>
+              </div>
+              <div className="flex items-center justify-center">
+                <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+                  <div className="flex-1">
+                    <div className="mb-2 text-[10px] font-black uppercase tracking-[0.15em] text-white/30">Your phone</div>
+                    <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-white/15 bg-white/[0.02]">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8a2 2 0 012-2h1.5l1-1.5h7l1 1.5H18a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z" />
+                        <circle cx="12" cy="13" r="3.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                  </div>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" className="shrink-0">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                  <div className="flex-1">
+                    <div className="mb-2 text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>Your site</div>
+                    <div className="flex h-24 flex-col justify-end gap-1.5 rounded-xl p-3" style={{ backgroundColor: "rgba(50,208,116,0.08)" }}>
+                      <div className="h-2 w-3/4 rounded" style={{ backgroundColor: SIGNAL_GREEN, opacity: 0.9 }} />
+                      <div className="h-2 w-1/2 rounded bg-white/25" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Three lighter blocks — simple, small-business scale, not a Shopify/Toast pitch */}
+            <div className="mt-10 grid gap-px overflow-hidden border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
+              {[
+                ["Send a quote. Get paid.", "Quotes and deposits from your phone — without learning QuickBooks."],
+                ["Take orders, right from your site.", "Built for restaurants. No extra software, no separate login."],
+                ["Sell without a separate store.", "Simple product sales with real checkout — no Shopify subscription required."],
+              ].map(([title, body]) => (
+                <div key={title} className="bg-[#080A09] p-7">
+                  <h3 className="text-lg font-normal leading-tight text-white">{title}</h3>
+                  <p className="mt-3 text-sm font-medium leading-7 text-white/55">{body}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10">
+              <a href="/compare" className="text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-80" style={{ color: SIGNAL_GREEN }}>
+                See everything that makes Found different →
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* ── Promo banner — only visible during intro-rate period ── */}
         {isIntroRatePeriod && (
           <section style={{ backgroundColor: SIGNAL_GREEN }}>
