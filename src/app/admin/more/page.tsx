@@ -26,6 +26,7 @@ export default async function AdminMorePage() {
         <div className="hq-section-head"><h2 className="hq-section-title">Monitoring</h2></div>
         <div className="hq-panel">
           <Link href="/admin/health" className="hq-row hq-link-row"><div><p className="hq-row-title">Health</p><p className="hq-row-meta">Uptime status and error tracking</p></div><span className="hq-chevron" /></Link>
+          <Link href="/admin/billing" className="hq-row hq-link-row"><div><p className="hq-row-title">Test billing</p><p className="hq-row-meta">Cancel Stripe subscriptions on your own test accounts</p></div><span className="hq-chevron" /></Link>
         </div>
       </section>
       <section className="hq-section">
