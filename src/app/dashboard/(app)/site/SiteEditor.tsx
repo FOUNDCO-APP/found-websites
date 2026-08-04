@@ -70,18 +70,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [overrideSaved, setOverrideSaved] = useState(false)
   const [activeLayout, setActiveLayout] = useState<string | null>(initialLayoutOverride)
   const [savingLayout, setSavingLayout] = useState(false)
-  const [layoutSaved, setLayoutSaved] = useState(false)
   const [activeColor, setActiveColor] = useState(initialPrimaryColor)
   const [customHex, setCustomHex] = useState(initialPrimaryColor)
   const [hexError, setHexError] = useState<string | null>(null)
   const [savingColor, setSavingColor] = useState(false)
-  const [colorSaved, setColorSaved] = useState(false)
   const [logoColors, setLogoColors] = useState<string[] | null>(null)
   const [detectingLogoColors, setDetectingLogoColors] = useState(false)
   const [logoColorError, setLogoColorError] = useState<string | null>(null)
   const [activeNavbarDark, setActiveNavbarDark] = useState(initialNavbarDark)
   const [savingNavbarDark, setSavingNavbarDark] = useState(false)
-  const [navbarDarkSaved, setNavbarDarkSaved] = useState(false)
+  // Persistent, scroll-proof receipt for the Design tab - the per-section
+  // "Live" pills fade in 2.5s and are easy to miss once you've scrolled on
+  // to the next section, so this counts every change made this visit and
+  // stays pinned until dismissed or the owner leaves the tab.
+  const [designChangeCount, setDesignChangeCount] = useState(0)
 
   // Shared save-failure toast. A save showing "Saved" when the write actually
   // failed is worse than no feedback at all - this makes failures visible
@@ -111,6 +113,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   // Edit My Site is a hub: pick a page/section, edit just that, come back.
   // Not one long scrolling page. See DESIGN_DECISIONS.md [2026-07-27].
   const [view, setView] = useState<View>("hub")
+
+  // The Design change-receipt bar only makes sense while looking at Design -
+  // clear it the moment the owner navigates elsewhere, so it doesn't
+  // reappear stale on a later visit.
+  useEffect(() => {
+    if (view !== "design") setDesignChangeCount(0)
+  }, [view])
+
   const [businessInfo, setBusinessInfo] = useState({
     name: company.name ?? "",
     phone: company.phone ?? "",
@@ -488,8 +498,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSavingLayout(true)
     await updateLayoutOverride(key)
     setSavingLayout(false)
-    setLayoutSaved(true)
-    setTimeout(() => setLayoutSaved(false), 2500)
+    setDesignChangeCount(c => c + 1)
   }
 
   async function saveColor(hex: string) {
@@ -509,8 +518,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       setHexError(result.error)
       return
     }
-    setColorSaved(true)
-    setTimeout(() => setColorSaved(false), 2500)
+    setDesignChangeCount(c => c + 1)
   }
 
   async function fetchLogoColors() {
@@ -535,8 +543,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSavingNavbarDark(true)
     await updateNavbarDark(dark)
     setSavingNavbarDark(false)
-    setNavbarDarkSaved(true)
-    setTimeout(() => setNavbarDarkSaved(false), 2500)
+    setDesignChangeCount(c => c + 1)
   }
 
   async function persistMenuCats(cats: MenuCatData[]) {
@@ -2064,11 +2071,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               Your main color - buttons, accents, and highlights across your whole site.
             </p>
           </div>
-          {colorSaved && (
-            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
-              Live
-            </div>
-          )}
         </div>
 
         {(company.logo_url || company.logo_white_url) && (
@@ -2220,11 +2222,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   Your homepage layout - your content and photos stay exactly where you put them.
                 </p>
               </div>
-              {layoutSaved && (
-                <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
-                  Live
-                </div>
-              )}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               <button onClick={() => saveLayout(null)} disabled={savingLayout}
@@ -2259,9 +2256,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 )
               })}
             </div>
-            <p style={{ margin: "12px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              <a href={publicSiteOrigin} target="_blank" rel="noreferrer" style={{ color: GREEN }}>View your live site →</a> after switching to see it for real.
-            </p>
           </div>
         )
       })()}
@@ -2275,11 +2269,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               Your navigation bar - light works with dark logos, dark works with light ones.
             </p>
           </div>
-          {navbarDarkSaved && (
-            <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100, flexShrink: 0 }}>
-              Live
-            </div>
-          )}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           {([
@@ -2311,6 +2300,41 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           })}
         </div>
       </div>
+
+      {/* Persistent change receipt - survives scrolling past all three
+          sections, unlike the old per-section pills that faded in 2.5s and
+          were easy to miss right when you scrolled on to the next section. */}
+      {designChangeCount > 0 && (
+        <div style={{
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 75,
+          padding: "14px 20px max(env(safe-area-inset-bottom, 0px), 20px)",
+          backgroundColor: "rgba(15,18,16,0.94)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+        }}>
+          <button onClick={() => setDesignChangeCount(0)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", ...TYPE.body, cursor: "pointer", padding: 0, flexShrink: 0 }}>
+            Dismiss
+          </button>
+          <span style={{ minWidth: 0, textAlign: "center" }}>
+            <span style={{ display: "block", fontSize: 14, fontWeight: 800, color: "white" }}>Your site's updated</span>
+            <span style={{ display: "block", ...TYPE.footnote, color: "rgba(255,255,255,0.5)" }}>
+              {designChangeCount} change{designChangeCount === 1 ? "" : "s"} made - take a look
+            </span>
+          </span>
+          <a
+            href={publicSiteOrigin}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              padding: "12px 20px", borderRadius: 100, border: "none",
+              backgroundColor: GREEN, color: BLACK,
+              ...TYPE.footnote, fontWeight: 800, textDecoration: "none", whiteSpace: "nowrap", flexShrink: 0,
+            }}
+          >
+            View site
+          </a>
+        </div>
+      )}
       </>
       )}
 
