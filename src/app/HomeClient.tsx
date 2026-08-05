@@ -14,6 +14,12 @@ const SIGNAL_GREEN = "#32D074"
 // real feature blocks in the "What's actually different" section below.
 const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders", "sell online", "collect reviews"]
 
+// "Get found." stays fixed (it's the company name) - only the outcome
+// rotates, so every industry gets equal billing instead of "hired" quietly
+// assuming every customer is a contractor. Order matters here: even
+// distribution, no phrase treated as the default.
+const HERO_OUTCOMES = ["Get hired.", "Get booked.", "Get orders.", "Get calls."]
+
 const HOME_FAQS: { q: string; a: string }[] = [
   { q: "How fast can I actually get a site?", a: "Most owners are live the same day. Answer a few questions, and Found writes your copy, picks your photos, and builds every page for you." },
   { q: "Do I need any design experience?", a: "No. There's no editor to learn - you answer questions, Found builds the site." },
@@ -69,7 +75,7 @@ export default function HomeClient() {
   const cinematicTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
-  const typedHero = useTypewriter(["Get found.", "Get hired."])
+  const typedHeroOutcome = useTypewriter(HERO_OUTCOMES)
   const typedFeature = useTypewriter(ROTATING_WORDS)
 
   useEffect(() => {
@@ -171,9 +177,12 @@ export default function HomeClient() {
 
             <div className="found-hero-content flex flex-1 items-start pt-8 md:items-center md:pt-0">
               <div className="found-hero-copy max-w-[350px] md:max-w-[590px]">
-                <h1 className="found-hero-title text-[2.65rem] font-normal leading-[0.98] tracking-normal text-white md:text-7xl" style={{ minHeight: "1.1em" }}>
-                  {typedHero}
-                  <TypedCursor />
+                <h1 className="found-hero-title text-[2.65rem] font-normal leading-[0.98] tracking-normal text-white md:text-7xl">
+                  <span className="block">Get found.</span>
+                  <span className="block" style={{ color: SIGNAL_GREEN, minHeight: "1em" }}>
+                    {typedHeroOutcome}
+                    <TypedCursor />
+                  </span>
                 </h1>
                 <p className="found-hero-mobile-copy mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden">
                   Found builds your site.<br />You get the calls.
