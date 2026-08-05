@@ -295,11 +295,11 @@ export default function HomeClient() {
               What&apos;s actually different
             </p>
             <h2 className="max-w-2xl text-4xl font-light leading-tight md:text-6xl">
-              One app for your whole business —{" "}
-              <span className="inline-block" style={{ color: SIGNAL_GREEN }}>
+              <span className="block">One app for your whole business —</span>
+              <span className="block" style={{ color: SIGNAL_GREEN, minHeight: "1.1em" }}>
                 {typedFeature}
+                <TypedCursor />
               </span>
-              <TypedCursor />
             </h2>
 
             {/* Camera system — the lead feature, real narrative treatment */}
