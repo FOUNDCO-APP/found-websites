@@ -57,16 +57,20 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const locations: import("@/components/layouts/FindUsSection").PublicLocation[] = (locRows ?? []) as typeof locations
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null; in_gallery: boolean }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
+  const galleryImageUrls = sectionRows.filter(row => row.in_gallery).map(row => row.url)
   const heroSectionMedia = firstSectionImage("hero")
+  const ctaSectionImage = firstSectionImage("cta")
   const heroVideo = heroSectionMedia && isVideoMedia(heroSectionMedia) ? heroSectionMedia : configuredHeroVideo
-  const heroImage = heroSectionMedia && !isVideoMedia(heroSectionMedia) ? heroSectionMedia : fallbackHeroImage
+  const heroImage = heroSectionMedia && !isVideoMedia(heroSectionMedia)
+    ? heroSectionMedia
+    : ctaSectionImage ?? galleryImageUrls[0] ?? fallbackHeroImage
   const sectionImages = {
     hero: heroImage,
     about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
-    cta: firstSectionImage("cta") ?? uploadedImgs[2] ?? null,
+    cta: ctaSectionImage ?? uploadedImgs[2] ?? null,
     // Independent of website_section - a photo can be in the gallery strip
     // AND a primary slot (hero/about/etc.) at the same time.
-    gallery: sectionRows.filter(row => row.in_gallery).map(row => row.url),
+    gallery: galleryImageUrls,
     announcement: firstSectionImage("announcement"),
   }
 

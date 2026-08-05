@@ -3,7 +3,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { polishBusinessName } from "@/lib/copyPolish"
-import { excerptText } from "@/lib/textExcerpt"
+import { publicServiceDescription } from "@/lib/publicServiceDescription"
 import ServiceIcon from "@/components/ServiceIcon"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
@@ -164,7 +164,7 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
                       {service.name}
                     </h3>
                     <p className="text-sm leading-relaxed" style={{ color: "#776F6F" }}>
-                      {excerptText(service.description, 50)}
+                      {publicServiceDescription(service, { industryCategory: company.industry_category, subIndustry: company.sub_industry }, 50)}
                     </p>
                     <Link href="/services" className="text-xs font-black uppercase tracking-widest mt-4 hover:opacity-70 transition-opacity"
                       style={{ color: primary }}>

@@ -798,14 +798,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementControlBg = announcementIsLight ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.06)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
   const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
-    { slot: "hero", label: "Header", helper: "The first image customers see.", photos: heroPhotos },
-    { slot: "about", label: "About", helper: "The story image.", photos: aboutPhotos },
-    { slot: "cta", label: "Visit / CTA", helper: "The final action image on the site.", photos: ctaPhotos },
-    { slot: "gallery", label: "Gallery", helper: "Shown in gallery and photo strips - add several, not just one, for the best look.", photos: galleryPhotos },
+    { slot: "hero", label: "First Impression", helper: "The main photo customers see first.", photos: heroPhotos },
+    { slot: "about", label: "About / Story", helper: "The photo that explains the business or owner.", photos: aboutPhotos },
+    { slot: "cta", label: "Final Booking Image", helper: "The image behind the final action section.", photos: ctaPhotos },
+    { slot: "gallery", label: "Gallery / Client Results", helper: "Shown in gallery and photo strips - add several strong photos.", photos: galleryPhotos },
     { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
-    { slot: "contact", label: "Contact", helper: "The image behind the contact page.", photos: contactPhotos },
-    { slot: "services", label: "Services", helper: "The image behind your services page.", photos: servicesPhotos },
-    { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? "Menu" : "Shop", helper: `The image behind your ${isFoodCatalog ? "menu" : "shop"} page.`, photos: catalogPhotos },
+    { slot: "contact", label: "Contact Page", helper: "The image behind the contact page.", photos: contactPhotos },
+    { slot: "services", label: "Services Page", helper: "The image behind your services page.", photos: servicesPhotos },
+    { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? "Menu Page" : "Products Page", helper: `The image behind your ${isFoodCatalog ? "menu" : "products"} page.`, photos: catalogPhotos },
   ]
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
 

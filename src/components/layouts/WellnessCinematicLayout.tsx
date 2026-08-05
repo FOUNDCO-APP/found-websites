@@ -3,7 +3,7 @@ import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { polishBusinessName } from "@/lib/copyPolish"
-import { excerptText } from "@/lib/textExcerpt"
+import { publicServiceDescription } from "@/lib/publicServiceDescription"
 import InView from "@/components/InView"
 import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
@@ -23,18 +23,6 @@ function imageAt(images: string[], index: number) {
 function softAccent(primary: string) {
   return /^#[0-9a-fA-F]{6}$/.test(primary) ? `${primary}18` : SAGE
 }
-function polishedServiceDescription(name: string, description: string) {
-  const trimmed = description.trim()
-  if (trimmed && !/^(clear|practical) help (built|shaped) around/i.test(trimmed)) return excerptText(trimmed, 55)
-
-  const key = name.toLowerCase()
-  if (key.includes("facial")) return "Customized facial care focused on calm skin, visible glow, and a comfortable appointment."
-  if (key.includes("wax")) return "Clean, careful waxing services with a steady hand and attention to comfort."
-  if (key.includes("lash")) return "Detailed lash services shaped around your natural features and the look you want."
-  if (key.includes("brow")) return "Precise brow care with shape, balance, and polish in mind."
-  return `Thoughtful ${name.toLowerCase()} shaped around comfort, detail, and visible results.`
-}
-
 export default function WellnessCinematicLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
@@ -123,7 +111,7 @@ export default function WellnessCinematicLayout({ company, activeAddons, primary
                   <Link href="/services" className="block h-full bg-[#151B18] p-7 transition hover:bg-[#1A211D] md:p-8">
                     <p className="mb-8 text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>{String(i + 1).padStart(2, "0")}</p>
                     <h3 className="text-2xl font-normal leading-tight text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{service.name}</h3>
-                    <p className="mt-4 text-sm font-medium leading-7 text-white/52">{polishedServiceDescription(service.name, service.description)}</p>
+                    <p className="mt-4 text-sm font-medium leading-7 text-white/52">{publicServiceDescription(service, { industryCategory: company.industry_category, subIndustry: company.sub_industry })}</p>
                   </Link>
                 </InView>
               ))}
