@@ -23,6 +23,17 @@ function imageAt(images: string[], index: number) {
 function softAccent(primary: string) {
   return /^#[0-9a-fA-F]{6}$/.test(primary) ? `${primary}18` : SAGE
 }
+function polishedServiceDescription(name: string, description: string) {
+  const trimmed = description.trim()
+  if (trimmed && !/^(clear|practical) help (built|shaped) around/i.test(trimmed)) return excerptText(trimmed, 55)
+
+  const key = name.toLowerCase()
+  if (key.includes("facial")) return "Customized facial care focused on calm skin, visible glow, and a comfortable appointment."
+  if (key.includes("wax")) return "Clean, careful waxing services with a steady hand and attention to comfort."
+  if (key.includes("lash")) return "Detailed lash services shaped around your natural features and the look you want."
+  if (key.includes("brow")) return "Precise brow care with shape, balance, and polish in mind."
+  return `Thoughtful ${name.toLowerCase()} shaped around comfort, detail, and visible results.`
+}
 
 export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
@@ -33,10 +44,10 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
   const aboutCopy = getHomepageAboutCopy(config)
   const displayName = polishBusinessName(company.name)
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
-  const heroFallback = heroImage ?? imageAt(imgs, 0)
-  const aboutImage = sectionImages?.about ?? imageAt(imgs, 1)
-  const ctaImage = sectionImages?.cta ?? imageAt(imgs, 2)
   const ownerGalleryImages = sectionImages?.gallery ?? []
+  const heroFallback = sectionImages?.cta ?? ownerGalleryImages[0] ?? heroImage ?? imageAt(imgs, 0)
+  const aboutImage = sectionImages?.about ?? imageAt(imgs, 1)
+  const ctaImage = sectionImages?.cta ?? ownerGalleryImages[1] ?? heroFallback ?? imageAt(imgs, 2)
   const galleryImages = Array.from(new Set([...ownerGalleryImages, imageAt(imgs, 2), imageAt(imgs, 3), imageAt(imgs, 4)].filter(Boolean) as string[])).slice(0, 5)
   const serviceCount = Math.min(services.length, 3)
   const serviceGridCols = serviceCount <= 1 ? "md:grid-cols-1" : serviceCount === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
@@ -44,7 +55,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
   return (
     <>
       <section className="relative overflow-hidden" style={{ backgroundColor: PAPER }}>
-        <div className="mx-auto grid min-h-[calc(100svh-96px)] max-w-7xl grid-cols-1 items-center gap-10 px-6 pb-12 pt-14 md:grid-cols-[0.92fr_1.08fr] md:px-10 md:pb-16 md:pt-16">
+        <div className="mx-auto grid min-h-[calc(100svh-150px)] max-w-7xl grid-cols-1 items-center gap-10 px-6 pb-10 pt-12 md:grid-cols-[0.92fr_1.08fr] md:px-10 md:pb-12 md:pt-12">
           <div className="relative z-10 max-w-xl">
             <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: primary }}>
               {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
@@ -67,9 +78,9 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
             </div>
           </div>
 
-          <div className="relative min-h-[390px] md:min-h-[560px]">
+          <div className="relative min-h-[360px] md:min-h-[500px]">
             <div className="absolute left-0 top-8 hidden h-48 w-48 rounded-full md:block" style={{ backgroundColor: softAccent(primary) }} />
-            <div className="relative ml-auto h-[390px] w-full overflow-hidden rounded-[2rem] shadow-[0_30px_80px_rgba(17,23,21,0.18)] md:h-[560px] md:w-[82%]">
+            <div className="relative ml-auto h-[360px] w-full overflow-hidden rounded-[2rem] shadow-[0_30px_80px_rgba(17,23,21,0.18)] md:h-[500px] md:w-[82%]">
               {heroVideo ? (
                 <HeroVideo src={heroVideo} />
               ) : heroFallback ? (
@@ -105,7 +116,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
       <CatalogShowcase company={company} activeAddons={activeAddons} />
 
       {services.length > 0 && (
-        <section className="py-20 md:py-28" style={{ backgroundColor: INK }}>
+        <section className="py-16 md:py-20" style={{ backgroundColor: INK }}>
           <div className="mx-auto max-w-6xl px-6 md:px-10">
             <InView>
               <div className="mb-12 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
@@ -122,7 +133,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
                   <Link href="/services" className="block h-full bg-[#151B18] p-7 transition hover:bg-[#1A211D] md:p-8">
                     <p className="mb-8 text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: primary }}>{String(i + 1).padStart(2, "0")}</p>
                     <h3 className="text-2xl font-normal leading-tight text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>{service.name}</h3>
-                    <p className="mt-4 text-sm font-medium leading-7 text-white/52">{excerptText(service.description, 55)}</p>
+                    <p className="mt-4 text-sm font-medium leading-7 text-white/52">{polishedServiceDescription(service.name, service.description)}</p>
                   </Link>
                 </InView>
               ))}
@@ -132,9 +143,9 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
       )}
 
       {aboutCopy && (
-        <section className="py-20 md:py-28" style={{ backgroundColor: PAPER }}>
+        <section className="py-16 md:py-20" style={{ backgroundColor: PAPER }}>
           <div className="mx-auto grid max-w-6xl gap-10 px-6 md:grid-cols-[0.96fr_1.04fr] md:px-10">
-            <div className="relative min-h-[360px] overflow-hidden rounded-[1.5rem] md:min-h-[560px]">
+            <div className="relative min-h-[320px] overflow-hidden rounded-[1.5rem] md:min-h-[440px]">
               {aboutImage ? <img src={aboutImage} alt={displayName} className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0" style={{ backgroundColor: MIST }} />}
             </div>
             <InView distance={20}>
@@ -152,7 +163,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
       )}
 
       {galleryImages.length > 0 && (
-        <section className="py-14 md:py-18" style={{ backgroundColor: MIST }}>
+        <section className="py-10 md:py-12" style={{ backgroundColor: MIST }}>
           <div className="mx-auto max-w-6xl px-6 md:px-10">
             <div className="grid gap-3 md:grid-cols-[1.35fr_0.82fr_0.82fr]">
               {galleryImages.slice(0, 3).map((src, i) => (
@@ -166,7 +177,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
       )}
 
       {testimonials.length > 0 && (
-        <section className="py-20 md:py-28" style={{ backgroundColor: PAPER }}>
+        <section className="py-16 md:py-20" style={{ backgroundColor: PAPER }}>
           <div className="mx-auto max-w-4xl px-6 md:px-10">
             <p className="mb-8 text-center text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Client stories</p>
             <div className="space-y-px overflow-hidden rounded-2xl border border-black/[0.06] bg-black/[0.06]">

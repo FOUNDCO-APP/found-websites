@@ -48,9 +48,9 @@ export default function StickyCtaBar({
         left: 0,
         right: 0,
         zIndex: 40,
-        padding: "10px 16px",
-        paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
-        backgroundColor: "rgba(0,0,0,0.80)",
+        padding: "8px 14px",
+        paddingBottom: "calc(8px + env(safe-area-inset-bottom))",
+        backgroundColor: "rgba(0,0,0,0.68)",
         backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
         borderTop: "1px solid rgba(255,255,255,0.08)",
@@ -60,7 +60,7 @@ export default function StickyCtaBar({
         <a
           href={href}
           className="btn w-full text-white"
-          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center" }}
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "999px" }}
         >
           {label}
         </a>
@@ -68,7 +68,7 @@ export default function StickyCtaBar({
         <Link
           href={href}
           className="btn w-full text-white"
-          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center" }}
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "999px" }}
         >
           {label}
         </Link>

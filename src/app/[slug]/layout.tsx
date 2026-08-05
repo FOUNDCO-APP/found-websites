@@ -35,11 +35,11 @@ export async function generateMetadata(
   const city = company.city
   const state = company.state
   const locationStr = city ? `${city}${state ? `, ${state}` : ""}` : ""
-  const homeTitle = [company.name, locationStr, serviceList].filter(Boolean).join(" — ")
+  const homeTitle = [company.name, locationStr, serviceList].filter(Boolean).join(" - ")
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const descFallback = city
-    ? `${vocab.servicesLabel} in ${city}${state ? `, ${state}` : ""} — ${company.name}. ${vocab.ctaBodyText.charAt(0).toUpperCase() + vocab.ctaBodyText.slice(1)}.`
-    : `${company.name} — ${vocab.ctaBodyText}.`
+    ? `${vocab.servicesLabel} in ${city}${state ? `, ${state}` : ""} - ${company.name}. ${vocab.ctaBodyText.charAt(0).toUpperCase() + vocab.ctaBodyText.slice(1)}.`
+    : `${company.name} - ${vocab.ctaBodyText}.`
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const image = company.logo_url || undefined
@@ -47,7 +47,7 @@ export async function generateMetadata(
   return {
     title: {
       default: homeTitle,
-      template: `%s — ${company.name}`,
+      template: `%s - ${company.name}`,
     },
     description,
     openGraph: {
@@ -209,10 +209,11 @@ export default async function CompanyLayout({
     .eq("active", true)
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
   const { primary, secondary } = getSiteCTAs(company, activeAddons)
-  // The bar's job is to say whatever the hero isn't already headlining. If
-  // there's no genuinely different secondary option, it waits until the
-  // visitor scrolls past the hero instead of repeating the hero's own CTA.
-  const barCTA = secondary ?? primary
+  const bookingLedIndustries = new Set(["wellness", "beauty", "fitness", "healthcare", "pet_services", "events", "music_performance", "education", "childcare"])
+  const usePrimaryMobileCTA = bookingLedIndustries.has(company.industry_category) && primary.href !== "/services"
+  // Appointment-led sites need one persistent mobile action: book/call now. Other
+  // industries can still use the alternate content action when that is clearer.
+  const barCTA = usePrimaryMobileCTA ? primary : secondary ?? primary
   const barMatchPath = barCTA.href.startsWith("tel:") ? null : barCTA.href
 
   return (
@@ -243,7 +244,7 @@ export default async function CompanyLayout({
         href={barCTA.href}
         matchPath={barMatchPath}
         color={company.primary_color}
-        delayUntilScroll={!secondary}
+        delayUntilScroll={usePrimaryMobileCTA || !secondary}
       />
       <PreviewBanner
         slug={company.slug}
