@@ -9,13 +9,17 @@ import { logoColor } from "@/lib/color"
 
 function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: string }) {
   const len = name.length
-  const fontSize = len > 20 ? "text-lg lg:text-xl" : len > 14 ? "text-2xl lg:text-3xl" : "text-3xl lg:text-4xl"
-  const tracking = len > 20 ? "tracking-wide" : len > 14 ? "tracking-wider" : "tracking-[0.12em]"
-  const weight = vibe === "calm" || vibe === "warm" ? "font-bold" : "font-black"
+  const isSoftBrand = vibe === "calm" || vibe === "warm"
+  const fontSize = isSoftBrand
+    ? len > 20 ? "text-lg lg:text-[1.65rem]" : len > 14 ? "text-2xl lg:text-[2.15rem]" : "text-3xl lg:text-[2.45rem]"
+    : len > 20 ? "text-lg lg:text-xl" : len > 14 ? "text-2xl lg:text-3xl" : "text-3xl lg:text-4xl"
+  const tracking = isSoftBrand ? "tracking-[0.035em]" : len > 20 ? "tracking-wide" : len > 14 ? "tracking-wider" : "tracking-[0.12em]"
+  const weight = isSoftBrand ? "font-semibold" : "font-black"
+  const casing = isSoftBrand ? "" : "uppercase"
 
   return (
     <span
-      className={`${fontSize} ${tracking} ${weight} uppercase leading-none`}
+      className={`${fontSize} ${tracking} ${weight} ${casing} leading-none`}
       style={{ color, fontFamily: "var(--font-heading, inherit)" }}
     >
       {name}
@@ -24,6 +28,13 @@ function BrandMark({ name, color, vibe }: { name: string; color: string; vibe: s
 }
 
 const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
+const PRODUCT_LABEL_INDUSTRIES = new Set(["beauty", "wellness"])
+
+function shopNavLabel(industryCategory: string) {
+  if (FOOD_INDUSTRIES.has(industryCategory)) return "Order"
+  if (PRODUCT_LABEL_INDUSTRIES.has(industryCategory)) return "Products"
+  return "Shop"
+}
 
 function getNavLinks(industryCategory: string, subIndustry: string | null, hasShop: boolean) {
   const isFood = FOOD_INDUSTRIES.has(industryCategory)
@@ -36,7 +47,7 @@ function getNavLinks(industryCategory: string, subIndustry: string | null, hasSh
       : { label: "Services",      href: "/services" },
     // Only a real destination once shopping_cart is genuinely active -
     // otherwise there's nothing behind it to link to.
-    ...(hasShop ? [{ label: "Shop", href: "/shop" }] : []),
+    ...(hasShop ? [{ label: shopNavLabel(industryCategory), href: "/shop" }] : []),
     { label: vocab.galleryLabel,  href: "/gallery" },
     { label: "Contact",           href: "/contact" },
   ]
@@ -62,7 +73,7 @@ export default function Navbar({ company, transparent = false, hasShop = false }
   }, [transparent])
 
   // Wait for background transition to finish before showing color logo
-  // Skip entirely on dark-nav sites — color logo never shows
+  // Skip entirely on dark-nav sites - color logo never shows
   useEffect(() => {
     if (!transparent || !isHome || isNavDark) return
     let t: ReturnType<typeof setTimeout>
@@ -74,7 +85,7 @@ export default function Navbar({ company, transparent = false, hasShop = false }
     return () => clearTimeout(t)
   }, [scrolled, transparent, isHome, isNavDark])
 
-  // Only overlay on the homepage — inner pages always get sticky navbar
+  // Only overlay on the homepage - inner pages always get sticky navbar
   const isOverlay = transparent && isHome && !scrolled
   // isOnDark: logo and text should be white (either transparent hero or always-dark navbar)
   const isOnDark = isOverlay || isNavDark
@@ -129,7 +140,7 @@ export default function Navbar({ company, transparent = false, hasShop = false }
               ) : isOnDark ? (
                 // No dedicated white logo: show the real logo true-color on a
                 // small white plate. A CSS invert filter only makes sense for
-                // logos with real transparency — on an opaque JPEG/PNG it
+                // logos with real transparency - on an opaque JPEG/PNG it
                 // turns the whole image into a solid white block.
                 <div style={{
                   height: "48px", maxWidth: "160px",
@@ -190,7 +201,7 @@ export default function Navbar({ company, transparent = false, hasShop = false }
         </div>
       </header>
 
-      {/* Mobile menu — calm/warm gets lighter treatment */}
+      {/* Mobile menu - calm/warm gets lighter treatment */}
       {isCalm ? (
         // Calm: white slide-in panel, refined
         <div
@@ -268,13 +279,13 @@ export default function Navbar({ company, transparent = false, hasShop = false }
           <div className="flex items-center justify-between px-8 py-6">
             <Link href="/" onClick={() => setOpen(false)}>
               {company.logo_white_url ? (
-                // Use dedicated white logo directly — no filter artifacts
+                // Use dedicated white logo directly - no filter artifacts
                 <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_white_url} alt={company.name}
                     className="h-full w-full object-contain object-left" />
                 </div>
               ) : company.logo_url ? (
-                // This overlay is always dark — same white-plate fallback as the header.
+                // This overlay is always dark - same white-plate fallback as the header.
                 <div style={{
                   height: "48px", maxWidth: "160px",
                   display: "inline-flex", alignItems: "center",

@@ -38,11 +38,13 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
   const ctaImage = sectionImages?.cta ?? imageAt(imgs, 2)
   const ownerGalleryImages = sectionImages?.gallery ?? []
   const galleryImages = Array.from(new Set([...ownerGalleryImages, imageAt(imgs, 2), imageAt(imgs, 3), imageAt(imgs, 4)].filter(Boolean) as string[])).slice(0, 5)
+  const serviceCount = Math.min(services.length, 3)
+  const serviceGridCols = serviceCount <= 1 ? "md:grid-cols-1" : serviceCount === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
 
   return (
     <>
       <section className="relative overflow-hidden" style={{ backgroundColor: PAPER }}>
-        <div className="mx-auto grid min-h-[88vh] max-w-7xl grid-cols-1 items-center gap-10 px-6 pb-16 pt-20 md:grid-cols-[0.92fr_1.08fr] md:px-10 md:pb-24 md:pt-24">
+        <div className="mx-auto grid min-h-[calc(100svh-96px)] max-w-7xl grid-cols-1 items-center gap-10 px-6 pb-12 pt-14 md:grid-cols-[0.92fr_1.08fr] md:px-10 md:pb-16 md:pt-16">
           <div className="relative z-10 max-w-xl">
             <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: primary }}>
               {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
@@ -65,9 +67,9 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
             </div>
           </div>
 
-          <div className="relative min-h-[430px] md:min-h-[650px]">
+          <div className="relative min-h-[390px] md:min-h-[560px]">
             <div className="absolute left-0 top-8 hidden h-48 w-48 rounded-full md:block" style={{ backgroundColor: softAccent(primary) }} />
-            <div className="relative ml-auto h-[430px] w-full overflow-hidden rounded-[2rem] shadow-[0_30px_80px_rgba(17,23,21,0.18)] md:h-[650px] md:w-[82%]">
+            <div className="relative ml-auto h-[390px] w-full overflow-hidden rounded-[2rem] shadow-[0_30px_80px_rgba(17,23,21,0.18)] md:h-[560px] md:w-[82%]">
               {heroVideo ? (
                 <HeroVideo src={heroVideo} />
               ) : heroFallback ? (
@@ -85,6 +87,20 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
         </div>
       </section>
 
+
+      <section className="border-y border-black/[0.06]" style={{ backgroundColor: PAPER }}>
+        <div className="mx-auto grid max-w-6xl gap-px px-6 py-4 md:grid-cols-3 md:px-10">
+          {[
+            company.city ? `${company.city}, ${company.state || "local"}` : "Local studio",
+            company.phone ? "Easy direct booking" : "Simple online booking",
+            "Personal care, no clutter",
+          ].map((item) => (
+            <p key={item} className="py-3 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: "rgba(17,23,21,0.54)" }}>
+              {item}
+            </p>
+          ))}
+        </div>
+      </section>
       <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
       <CatalogShowcase company={company} activeAddons={activeAddons} />
 
@@ -100,7 +116,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
                 <Link href="/services" className="text-xs font-black uppercase tracking-[0.16em] text-white/50 transition hover:text-white">View all</Link>
               </div>
             </InView>
-            <div className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] md:grid-cols-3">
+            <div className={`grid gap-px overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.08] ${serviceGridCols}`}>
               {services.slice(0, 3).map((service, i) => (
                 <InView key={service.name} delay={i * 80}>
                   <Link href="/services" className="block h-full bg-[#151B18] p-7 transition hover:bg-[#1A211D] md:p-8">
@@ -136,11 +152,11 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
       )}
 
       {galleryImages.length > 0 && (
-        <section className="py-16" style={{ backgroundColor: MIST }}>
-          <div className="mx-auto max-w-7xl px-6 md:px-10">
-            <div className="grid auto-rows-[220px] grid-cols-2 gap-3 md:auto-rows-[300px] md:grid-cols-5">
-              {galleryImages.map((src, i) => (
-                <div key={src} className={`relative overflow-hidden rounded-2xl ${i === 0 ? "col-span-2 row-span-2 md:col-span-2" : ""}`}>
+        <section className="py-14 md:py-18" style={{ backgroundColor: MIST }}>
+          <div className="mx-auto max-w-6xl px-6 md:px-10">
+            <div className="grid gap-3 md:grid-cols-[1.35fr_0.82fr_0.82fr]">
+              {galleryImages.slice(0, 3).map((src, i) => (
+                <div key={src} className={`relative overflow-hidden rounded-[1.5rem] ${i === 0 ? "min-h-[420px] md:min-h-[520px]" : "min-h-[260px] md:min-h-[520px]"}`}>
                   <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
                 </div>
               ))}
