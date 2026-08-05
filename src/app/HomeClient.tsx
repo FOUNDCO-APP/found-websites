@@ -10,13 +10,32 @@ import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 
+// Found's own verbs, not DripJobs' contractor-specific ones - mirrors the
+// real feature blocks in the "What's actually different" section below.
+const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders", "sell online", "collect reviews"]
+
+const HOME_FAQS: { q: string; a: string }[] = [
+  { q: "How fast can I actually get a site?", a: "Most owners are live the same day. Answer a few questions, and Found writes your copy, picks your photos, and builds every page for you." },
+  { q: "Do I need any design experience?", a: "No. There's no editor to learn - you answer questions, Found builds the site." },
+  { q: "What if I already have a website?", a: "Point your existing domain to Found and you're live with a new site today. No agency, no waiting weeks for a redesign." },
+  { q: "What's the camera thing everyone mentions?", a: "Every plan includes it. Finish a job, take a photo, tap the heart - it's live on your site and ready to become a social post." },
+  { q: "Can I cancel anytime?", a: "Yes. No contracts." },
+]
+
 export default function HomeClient() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [showPlanChoice, setShowPlanChoice] = useState(true)
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const cinematicTimers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const [wordIndex, setWordIndex] = useState(0)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+
+  useEffect(() => {
+    const interval = setInterval(() => setWordIndex(i => (i + 1) % ROTATING_WORDS.length), 1900)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     document.documentElement.style.backgroundColor = FOUND_BLACK
@@ -72,8 +91,19 @@ export default function HomeClient() {
     setTimeout(() => setCinematic("off"), 400)
   }
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: HOME_FAQS.map(f => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  }
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <SiteNav transparent onCta={() => openDrawer()} />
 
       <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
@@ -145,6 +175,44 @@ export default function HomeClient() {
           </div>
         </section>
 
+        {/* ── Who's it for ── */}
+        <section className="bg-[#0B0E0C] px-6 py-16 md:px-10">
+          <div className="mx-auto max-w-7xl">
+            <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+              Who it&apos;s for
+            </p>
+            <h2 className="max-w-2xl text-2xl font-light leading-tight md:text-4xl mb-8">
+              Built for the businesses that run on word of mouth and a phone number.
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {[
+                ["Contractors", "/industries/contractors"],
+                ["Salons & Spas", "/industries/salons"],
+                ["Restaurants", "/industries/restaurants"],
+                ["Photographers", "/industries/photographers"],
+                ["Real Estate", "/industries/real-estate"],
+                ["Retail", "/industries/retail"],
+                ["Cleaning", "/industries/cleaning"],
+              ].map(([label, href]) => (
+                <a
+                  key={label}
+                  href={href}
+                  className="rounded-full border border-white/[0.12] bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-white/75 transition hover:border-white/30 hover:text-white"
+                >
+                  {label}
+                </a>
+              ))}
+              <a
+                href="/industries"
+                className="rounded-full px-5 py-2.5 text-sm font-black transition hover:opacity-80"
+                style={{ color: SIGNAL_GREEN }}
+              >
+                And more →
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* ── How it works ── */}
         <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10">
           <div className="mx-auto max-w-7xl">
@@ -191,7 +259,15 @@ export default function HomeClient() {
               What&apos;s actually different
             </p>
             <h2 className="max-w-2xl text-4xl font-light leading-tight md:text-6xl">
-              Wix gives you a website. Found gives you a business.
+              One app for your whole business —{" "}
+              <span
+                key={wordIndex}
+                className="inline-block"
+                style={{ color: SIGNAL_GREEN, animation: "fade-in 400ms ease-out both" }}
+              >
+                {ROTATING_WORDS[wordIndex]}
+              </span>
+              .
             </h2>
 
             {/* Camera system — the lead feature, real narrative treatment */}
@@ -422,6 +498,39 @@ export default function HomeClient() {
                 : <a href="/plans" className="underline" style={{ color: SIGNAL_GREEN }}>Compare all plans →</a>
               }
             </p>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section className="bg-[#0B0E0C] px-6 py-24 md:px-10">
+          <div className="mx-auto max-w-3xl">
+            <p className="mb-10 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+              Questions
+            </p>
+            <div className="space-y-2">
+              {HOME_FAQS.map((faq, i) => (
+                <div key={faq.q} className="rounded-xl overflow-hidden border border-white/[0.07]" style={{ backgroundColor: "#080A09" }}>
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-6 py-5 text-left"
+                  >
+                    <span className="text-sm font-black text-white pr-4">{faq.q}</span>
+                    <svg
+                      className="shrink-0 transition-transform"
+                      style={{ transform: openFaq === i ? "rotate(45deg)" : "rotate(0)" }}
+                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-6 pb-5">
+                      <p className="text-sm text-white/55 leading-relaxed">{faq.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
