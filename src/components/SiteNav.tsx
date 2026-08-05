@@ -32,10 +32,29 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
     return () => window.removeEventListener("scroll", handler)
   }, [transparent])
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu is open. overflow:hidden alone doesn't
+  // reliably lock scrolling on iOS Safari - the page can still shift under
+  // touch, which drifts this fixed panel's real hit-test area out of sync
+  // with what's visually on screen, so taps land on the wrong element (or
+  // nothing). Pinning the body with position:fixed and restoring the exact
+  // scroll offset on close is the standard fix for that class of bug.
   useEffect(() => {
-    document.body.style.overflow = menuMounted ? "hidden" : ""
-    return () => { document.body.style.overflow = "" }
+    if (!menuMounted) return
+    const scrollY = window.scrollY
+    const body = document.body
+    body.style.position = "fixed"
+    body.style.top = `-${scrollY}px`
+    body.style.left = "0"
+    body.style.right = "0"
+    body.style.overflow = "hidden"
+    return () => {
+      body.style.position = ""
+      body.style.top = ""
+      body.style.left = ""
+      body.style.right = ""
+      body.style.overflow = ""
+      window.scrollTo(0, scrollY)
+    }
   }, [menuMounted])
 
   function openMenu() {
