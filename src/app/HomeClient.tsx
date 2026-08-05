@@ -204,10 +204,10 @@ export default function HomeClient() {
                     Get my site
                   </button>
                   <a
-                    href="#how-it-works"
+                    href="/how-it-works"
                     className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/18 bg-black/20 px-7 text-xs font-black uppercase tracking-widest text-white backdrop-blur-md transition hover:border-white/40 md:min-h-14 md:px-8 md:text-sm"
                   >
-                    See how it works
+                    See how Found works
                   </a>
                 </div>
 
@@ -297,6 +297,13 @@ export default function HomeClient() {
               >
                 Get my site
               </button>
+              <a
+                href="/how-it-works"
+                className="ml-0 mt-4 inline-flex text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-80 sm:ml-6 sm:mt-0"
+                style={{ color: SIGNAL_GREEN }}
+              >
+                Learn more
+              </a>
               <p className="mt-4 text-xs text-white/30 font-medium">Most sites are ready the same day.</p>
             </div>
           </div>

@@ -2,16 +2,18 @@
 
 import { memo, useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+const MENU_TRANSITION_MS = 320
 
 const NAV_LINKS = [
-  { label: "How it works", href: "/#how-it-works" },
-  { label: "Compare",      href: "/compare" },
-  { label: "Plans",        href: "/plans" },
-  { label: "Industries",   href: "/industries" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Compare", href: "/compare" },
+  { label: "Plans", href: "/plans" },
+  { label: "Industries", href: "/industries" },
 ]
 
 interface Props {
@@ -19,44 +21,25 @@ interface Props {
   onCta?: () => void
 }
 
-// Memoized: SiteNav lives inside HomeClient, whose hero/headline typewriter
-// re-renders it every 30-55ms while typing. Without this, SiteNav's whole
-// subtree (including the open mobile menu) was being force-re-rendered in
-// lockstep with every keystroke of the animation - constant background
-// re-renders under a user's finger appear to be what was breaking tap/click
-// gesture recognition on WebKit (Safari + Chrome-iOS), even though the
-// component's own props never actually changed. Requires onCta to be a
-// stable reference (see openDrawer's useCallback in HomeClient) - a fresh
-// arrow function every render would defeat this entirely.
 function SiteNav({ transparent = false, onCta }: Props) {
-  const [scrolled, setScrolled]     = useState(false)
-  const [menuOpen, setMenuOpen]     = useState(false)   // drives animation state
-  const [menuMounted, setMenuMounted] = useState(false) // drives DOM presence
+  const router = useRouter()
+  const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuMounted, setMenuMounted] = useState(false)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const navigatingRef = useRef(false)
 
   useEffect(() => {
     if (!transparent) return
     const handler = () => setScrolled(window.scrollY > 60)
+    handler()
     window.addEventListener("scroll", handler, { passive: true })
     return () => window.removeEventListener("scroll", handler)
   }, [transparent])
 
-  // Lock body scroll when mobile menu is open. overflow:hidden alone doesn't
-  // reliably lock scrolling on iOS Safari - the page can still shift under
-  // touch, which drifts this fixed panel's real hit-test area out of sync
-  // with what's visually on screen, so taps land on the wrong element (or
-  // nothing). Pinning the body with position:fixed and restoring the exact
-  // scroll offset on close is the standard fix for that class of bug.
-  // Whether the CURRENT close was triggered by tapping a link (navigating
-  // somewhere) vs. tapping the X or outside (just dismissing the menu).
-  // Only the latter should restore the pre-open scroll position below -
-  // otherwise this was stomping on the new page/anchor's own scroll
-  // position 320ms after a nav link was tapped, always landing back at
-  // wherever the page was before the menu opened.
-  const navigatingRef = useRef(false)
-
   useEffect(() => {
     if (!menuMounted) return
+
     const scrollY = window.scrollY
     const body = document.body
     body.style.position = "fixed"
@@ -64,6 +47,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
     body.style.left = "0"
     body.style.right = "0"
     body.style.overflow = "hidden"
+
     return () => {
       body.style.position = ""
       body.style.top = ""
@@ -75,55 +59,44 @@ function SiteNav({ transparent = false, onCta }: Props) {
     }
   }, [menuMounted])
 
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current)
+    }
+  }, [])
+
   function openMenu() {
     if (closeTimer.current) clearTimeout(closeTimer.current)
     setMenuMounted(true)
-    // Two frames so CSS transition has a starting point
     requestAnimationFrame(() => requestAnimationFrame(() => setMenuOpen(true)))
   }
 
-  function closeMenu(navigating = false) {
+  function closeMenu({ navigating = false, afterClose }: { navigating?: boolean; afterClose?: () => void } = {}) {
     navigatingRef.current = navigating
     setMenuOpen(false)
-    closeTimer.current = setTimeout(() => setMenuMounted(false), 320)
+    closeTimer.current = setTimeout(() => {
+      setMenuMounted(false)
+      afterClose?.()
+    }, MENU_TRANSITION_MS)
+  }
+
+  function handleMobileNav(e: React.MouseEvent, href: string) {
+    e.preventDefault()
+    closeMenu({
+      navigating: true,
+      afterClose: () => router.push(href),
+    })
+  }
+
+  function handleCta() {
+    if (!menuMounted) {
+      onCta?.()
+      return
+    }
+    closeMenu({ afterClose: onCta })
   }
 
   const showBg = (!transparent || scrolled) && !menuMounted
-
-  function handleCta() {
-    closeMenu()
-    onCta?.()
-  }
-
-  const closeMenuForNav = () => closeMenu(true)
-
-  // Next.js's <Link> doesn't reliably scroll to a hash when you're already
-  // on the target page - it only handles scroll-into-view on a real route
-  // transition, so a same-page hash link just quietly rewrites the URL and
-  // goes nowhere. Handle same-page hash links manually; let Link behave
-  // normally for anything that's a real page change (it'll land on load).
-  function handleHashNav(e: React.MouseEvent, href: string) {
-    const hashIndex = href.indexOf("#")
-    if (hashIndex === -1) return false
-    const path = href.slice(0, hashIndex) || "/"
-    const hash = href.slice(hashIndex + 1)
-    if (typeof window === "undefined" || path !== window.location.pathname) return false
-
-    e.preventDefault()
-    window.history.pushState(null, "", href)
-    const scrollToTarget = () => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" })
-
-    if (menuMounted) {
-      // Wait for the menu's own close/unmount (320ms) to finish before
-      // scrolling - the body is still pinned via position:fixed until then,
-      // so scrolling any earlier wouldn't visibly do anything.
-      closeMenu(true)
-      setTimeout(scrollToTarget, 340)
-    } else {
-      scrollToTarget()
-    }
-    return true
-  }
 
   const CtaEl = ({ fullWidth = false }: { fullWidth?: boolean }) => {
     const base = `${fullWidth ? "w-full min-h-[60px]" : "px-5 py-2.5"} rounded-full text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-90`
@@ -132,7 +105,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
         Get my site
       </button>
     ) : (
-      <Link href="/?start=1" onClick={closeMenuForNav} className={`inline-flex items-center justify-center ${base}`} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+      <Link href="/?start=1" onClick={(e) => menuMounted && handleMobileNav(e, "/?start=1")} className={`inline-flex items-center justify-center ${base}`} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
         Get my site
       </Link>
     )
@@ -140,7 +113,6 @@ function SiteNav({ transparent = false, onCta }: Props) {
 
   return (
     <>
-      {/* ── Top bar ── */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
@@ -149,16 +121,13 @@ function SiteNav({ transparent = false, onCta }: Props) {
         }}
       >
         <div className="flex items-center justify-between px-6 py-4 md:px-10 max-w-[1500px] mx-auto">
-
-          {/* Logo */}
           <Link href="/" className="text-white shrink-0 z-10">
             <FoundWordmark height={28} />
           </Link>
 
-          {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map(({ label, href }) => (
-              <Link key={label} href={href} onClick={(e) => handleHashNav(e, href)} className="text-xs font-black uppercase tracking-[0.16em] text-white/60 hover:text-white transition">
+              <Link key={label} href={href} className="text-xs font-black uppercase tracking-[0.16em] text-white/60 hover:text-white transition">
                 {label}
               </Link>
             ))}
@@ -166,8 +135,6 @@ function SiteNav({ transparent = false, onCta }: Props) {
 
           <div className="flex items-center gap-4">
             <div className="hidden md:block"><CtaEl /></div>
-
-            {/* Hamburger / close */}
             <button
               className="md:hidden text-white p-1 z-10 relative"
               onClick={() => (menuMounted ? closeMenu() : openMenu())}
@@ -189,7 +156,6 @@ function SiteNav({ transparent = false, onCta }: Props) {
         </div>
       </nav>
 
-      {/* ── Full-screen mobile menu ── */}
       {menuMounted && (
         <div
           className="fixed inset-0 z-40 flex flex-col md:hidden"
@@ -199,34 +165,24 @@ function SiteNav({ transparent = false, onCta }: Props) {
             transition: "opacity 280ms ease",
           }}
         >
-          {/* Spacer for top bar */}
           <div className="h-[60px] shrink-0" />
-
-          {/* Signal Green ambient glow */}
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden="true"
             style={{ background: "radial-gradient(ellipse 90% 55% at 50% 110%, rgba(50,208,116,0.18) 0%, transparent 70%)" }}
           />
 
-          {/* Large nav links */}
           <div className="flex-1 flex flex-col justify-center px-8 relative">
             {NAV_LINKS.map(({ label, href }, i) => (
               <Link
                 key={label}
                 href={href}
-                onClick={(e) => { if (!handleHashNav(e, href)) closeMenuForNav() }}
+                onClick={(e) => handleMobileNav(e, href)}
                 className="flex items-center justify-between py-6 group"
                 style={{
                   borderBottom: "1px solid rgba(255,255,255,0.07)",
                   opacity: menuOpen ? 1 : 0,
                   transform: menuOpen ? "translateY(0)" : "translateY(14px)",
-                  // Always animated, never an instant snap (was `transition:
-                  // "none"` while closing) - on WebKit (Safari + Chrome-iOS),
-                  // the tapped link vanishing in the same tick as the tap
-                  // appears to cancel the pending navigation outright, which
-                  // is exactly the "menu opens, but taps do nothing" bug.
-                  // Firefox's engine tolerates it; WebKit apparently doesn't.
                   transition: `opacity 420ms ease ${menuOpen ? i * 80 + 120 : 0}ms, transform 420ms ease ${menuOpen ? i * 80 + 120 : 0}ms`,
                 }}
               >
@@ -243,7 +199,6 @@ function SiteNav({ transparent = false, onCta }: Props) {
             ))}
           </div>
 
-          {/* Bottom CTA */}
           <div
             className="px-8 pb-12 pt-6 shrink-0"
             style={{

@@ -6,6 +6,7 @@ const pages = ["", "/services", "/about", "/gallery", "/contact", "/estimate"]
 
 const ROOT_PAGES: Array<{ path: string; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]; priority: number }> = [
   { path: "", changeFrequency: "weekly", priority: 1.0 },
+  { path: "/how-it-works", changeFrequency: "monthly", priority: 0.9 },
   { path: "/compare", changeFrequency: "monthly", priority: 0.9 },
   { path: "/plans", changeFrequency: "monthly", priority: 0.9 },
   { path: "/plans/found", changeFrequency: "monthly", priority: 0.8 },

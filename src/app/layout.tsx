@@ -42,6 +42,45 @@ export const metadata: Metadata = {
   },
 }
 
+
+function rootSiteSchema(rootDomain: string) {
+  const origin = `https://${rootDomain}`
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${origin}/#organization`,
+        name: "Found",
+        url: origin,
+        logo: `${origin}/favicon.svg`,
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${origin}/#website`,
+        name: "Found",
+        url: origin,
+        publisher: { "@id": `${origin}/#organization` },
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": `${origin}/#software`,
+        name: "Found",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web, iOS, Android",
+        url: origin,
+        description: "Found builds websites and mobile business tools for local businesses, including leads, photos, online ordering, bookings, estimates, and payments.",
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "USD",
+          price: "29",
+          url: `${origin}/plans`,
+        },
+        publisher: { "@id": `${origin}/#organization` },
+      },
+    ],
+  }
+}
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Set by middleware only for foundco.app / www.foundco.app requests - never
   // true for tenant sites (my.foundco.app, admin.foundco.app, or any
@@ -64,6 +103,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         "min-h-full flex flex-col",
       ].join(" ")}>
         {children}
+        {isRootSite && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(rootSiteSchema(ROOT_DOMAIN)) }} />
+        )}
         {isRootSite && <Analytics />}
         {isRootSite && <FoundPostHogProvider />}
       </body>

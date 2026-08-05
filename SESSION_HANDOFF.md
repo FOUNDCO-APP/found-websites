@@ -1,3 +1,17 @@
+## 2026-08-05 - Dedicated How Found Works Page + Clean Nav
+
+Shawn approved stopping the fragile `/#how-it-works` hamburger behavior and building a real `/how-it-works` page instead. Team read: Craig/Chris said stop fighting hash navigation on mobile; Steve/Jony/Angela/Phil agreed the topic deserves its own page for clarity, conversion, SEO, AEO, and GEO.
+
+Fixed: `src/components/SiteNav.tsx` now points `How it works` to `/how-it-works` and no longer carries hash-navigation code. Mobile menu navigation is simple: close the menu, release scroll lock, then route.
+
+Built: new `src/app/how-it-works/page.tsx` explaining how Found builds the website, what happens after launch, the mobile dashboard/tools, local search fundamentals, and FAQs. The page includes metadata, canonical URL, Open Graph/Twitter metadata, FAQPage JSON-LD, HowTo JSON-LD, and WebPage JSON-LD.
+
+SEO/AEO/GEO: added `/how-it-works` to `src/app/sitemap.ts`; homepage hero and the abbreviated homepage How It Works preview now link to the dedicated page. Added root-site-only Organization, WebSite, and SoftwareApplication JSON-LD in `src/app/layout.tsx` so Found marketing pages share a consistent entity signal without leaking it onto tenant sites.
+
+Verification: `cmd /c npm run build` passed and generated `/how-it-works`. `git diff --check` passed with only the repo's normal CRLF warning. Production-build verification against `http://127.0.0.1:3002/how-it-works` returned 200, included JSON-LD, FAQPage, HowTo, SoftwareApplication, and `/sitemap.xml` includes `/how-it-works`.
+
+Shawn QA next: on iPhone, open the hamburger from Home, Compare, Plans, and Industries. Tap How it works and confirm it always opens the dedicated page. Review the new page copy quickly for launch clarity.
+---
 ## 2026-07-31 - Safari Custom-Domain Share URL Fix
 
 Shawn found Safari sharing a connected-domain site still opened/shared the foundco.app fallback for RC Bicycles, while Firefox respected the business domain. Craig/Marcus treated this as a public URL source-of-truth bug, not another DNS-only issue.
@@ -507,7 +521,8 @@ Jony/Steve-led direction after Shawn flagged the public announcement as weak and
 - QA: production build passed.
 - Shawn QA next: Lucky > Edit My Site > Featured Update, toggle off/on, refresh live site, and confirm the public section feels integrated instead of boxed.
 
----## LIVE ANNOUNCEMENT SCHEMA FIX - July 26, 2026
+---
+## LIVE ANNOUNCEMENT SCHEMA FIX - July 26, 2026
 
 Craig found the launch blocker: the code and migration existed, but live Supabase was missing the announcement columns on `website_config`.
 

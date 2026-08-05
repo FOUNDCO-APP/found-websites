@@ -1,3 +1,26 @@
+## Session: August 5, 2026 - Dedicated How Found Works Page + Clean Nav
+**Worked on:** Shawn found the hamburger `How it works` link still failed after navigating to another menu page: it returned to the home hero instead of the section. Team agreed to stop fighting fragile mobile hash routing and give How It Works its own page.
+
+### Fixed / Built
+- Added `/how-it-works` as a dedicated marketing page.
+- Updated `SiteNav.tsx`: `How it works` now routes to `/how-it-works`; mobile nav is simple close-then-route behavior with no hash-navigation branch.
+- Updated the homepage hero and abbreviated homepage How It Works section to link to `/how-it-works`.
+- Added `/how-it-works` to the root sitemap.
+- Added root-site-only Organization, WebSite, and SoftwareApplication JSON-LD in `src/app/layout.tsx` for stronger Found entity signals across marketing pages without applying it to tenant sites.
+
+### SEO / AEO / GEO
+- Page has title, description, canonical, Open Graph, and Twitter metadata.
+- Added WebPage, HowTo, and FAQPage JSON-LD.
+- Copy answers launch-intent questions: how Found builds the site, how fast owners can go live, what can be edited after launch, what tools are included, and how Found differs from Wix/Squarespace/Shopify.
+
+### Verified
+- `cmd /c npm run build` passed; route list includes `/how-it-works`.
+- `git diff --check` passed with only the normal CRLF warning.
+- Production-build fetch on `http://127.0.0.1:3002`: `/how-it-works` returned 200, includes JSON-LD / FAQPage / HowTo / SoftwareApplication; `/sitemap.xml` includes `/how-it-works`.
+
+### Test Next
+- On iPhone, open hamburger from Home, Compare, Plans, and Industries. Tap How it works and confirm it always opens the dedicated page. Review the new page copy quickly before launch.
+---
 ## Session: July 31, 2026 - Safari Custom-Domain Share URL Fix
 **Worked on:** Shawn found Safari sharing a connected-domain site could still use the foundco.app fallback URL for RC Bicycles, even though Firefox respected the business domain.
 
@@ -255,7 +278,8 @@ First pass floated GoDaddy/Namecheap/Squarespace as "familiar" names. Shawn caug
 ### Test Next
 - Shawn should test Lucky on mobile after deploy: toggle Featured Update off/on, refresh the live site, and confirm the section below the hero feels premium and specific.
 
----## Session: July 26, 2026 - Live Announcement Schema Fix
+---
+## Session: July 26, 2026 - Live Announcement Schema Fix
 **AI:** Codex
 **Worked on:** Announcement was turned on in the dashboard but missing on the live site.
 
