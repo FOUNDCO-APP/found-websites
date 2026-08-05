@@ -16,11 +16,12 @@ import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getSitePhotoSections, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
 type Section = "hero" | "about" | "services" | "tagline"
-type PhotoSlot = "hero" | "about" | "cta" | "gallery" | "announcement" | "contact" | "services" | "shop" | "order"
+type PhotoSlot = SitePhotoSlot
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design"
 
@@ -797,15 +798,24 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementSubtleColor = announcementIsLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)"
   const announcementControlBg = announcementIsLight ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.06)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
+  const activeLayoutType = getLayout(industryCategory, vibe, activeLayout)
+  const photoSections = getSitePhotoSections({
+    config,
+    industryCategory,
+    subIndustry: company.sub_industry,
+    layout: activeLayoutType,
+    isFoodCatalog,
+  })
+  const ctaSection = photoSections.cta
   const photoSlots: { slot: PhotoSlot; label: string; helper: string; photos: Photo[] }[] = [
-    { slot: "hero", label: "First Impression", helper: "The main photo customers see first.", photos: heroPhotos },
-    { slot: "about", label: "About / Story", helper: "The photo that explains the business or owner.", photos: aboutPhotos },
-    { slot: "cta", label: "Final Booking Image", helper: "The image behind the final action section.", photos: ctaPhotos },
-    { slot: "gallery", label: "Gallery / Client Results", helper: "Shown in gallery and photo strips - add several strong photos.", photos: galleryPhotos },
-    { slot: "announcement", label: "Featured Update", helper: "The image behind a sale, update, or promotion.", photos: announcementPhotos },
-    { slot: "contact", label: "Contact Page", helper: "The image behind the contact page.", photos: contactPhotos },
-    { slot: "services", label: "Services Page", helper: "The image behind your services page.", photos: servicesPhotos },
-    { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? "Menu Page" : "Products Page", helper: `The image behind your ${isFoodCatalog ? "menu" : "products"} page.`, photos: catalogPhotos },
+    { slot: "hero", label: photoSections.hero.title, helper: photoSections.hero.helper, photos: heroPhotos },
+    { slot: "about", label: photoSections.about.title, helper: photoSections.about.helper, photos: aboutPhotos },
+    { slot: "cta", label: photoSections.cta.title, helper: photoSections.cta.helper, photos: ctaPhotos },
+    { slot: "gallery", label: photoSections.gallery.title, helper: photoSections.gallery.helper, photos: galleryPhotos },
+    { slot: "announcement", label: photoSections.announcement.title, helper: photoSections.announcement.helper, photos: announcementPhotos },
+    { slot: "contact", label: photoSections.contact.title, helper: photoSections.contact.helper, photos: contactPhotos },
+    { slot: "services", label: photoSections.services.title, helper: photoSections.services.helper, photos: servicesPhotos },
+    { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? photoSections.order.title : photoSections.shop.title, helper: isFoodCatalog ? photoSections.order.helper : photoSections.shop.helper, photos: catalogPhotos },
   ]
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
 
@@ -935,7 +945,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "24px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Come see us</div>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{ctaSection.title}</div>
+        <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{ctaSection.helper}</p>
         <div style={{ borderRadius: 26, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)" }}>
           <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
             {ctaPhotos[0]?.url ? (
@@ -946,13 +957,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
             <PhotoEditBadge onClick={() => setPhotoPickerSlot("cta")} />
             <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-              <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{String(config.cta_headline || "Come see us")}</h3>
+              <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{ctaSection.title}</h3>
             </div>
           </div>
           <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <button onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
-              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.cta_headline || "Come see us")}</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ctaSection.title}</span>
             </button>
             <button onClick={() => startEdit("tagline", String(config.tagline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Short hook</span>
