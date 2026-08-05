@@ -18,7 +18,7 @@ const ROTATING_WORDS = ["get found", "share photos", "send quotes", "take orders
 // rotates, so every industry gets equal billing instead of "hired" quietly
 // assuming every customer is a contractor. Order matters here: even
 // distribution, no phrase treated as the default.
-const HERO_OUTCOMES = ["Get hired.", "Get booked.", "Get orders.", "Get calls."]
+const HERO_OUTCOMES = ["Get hired.", "Get booked.", "Get jobs.", "Get orders.", "Get calls."]
 
 const HOME_FAQS: { q: string; a: string }[] = [
   { q: "How fast can I actually get a site?", a: "Most owners are live the same day. Answer a few questions, and Found writes your copy, picks your photos, and builds every page for you." },
