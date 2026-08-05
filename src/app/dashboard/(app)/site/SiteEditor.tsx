@@ -674,6 +674,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setLocalPhotos(previousPhotos)
         setConfig(previousConfig)
         flashSaveError("Couldn't update that photo. Try again.")
+      } else if (section) {
+        flashSaveNotice(getPhotoSlotSaveNotice(section))
       }
     })
   }
@@ -690,6 +692,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (result && "error" in result) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't update that photo. Try again.")
+      } else {
+        flashSaveNotice(include ? getPhotoSlotSaveNotice("gallery") : getPhotoSlotSaveNotice("gallery", "removed"))
       }
     })
   }
@@ -704,6 +708,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (results.some(r => r && "error" in r)) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove those photos. Try again.")
+      } else if (galleryIds.length) {
+        flashSaveNotice(getPhotoSlotSaveNotice("gallery", "removed"))
       }
     })
   }
@@ -722,6 +728,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           setLocalPhotos(previousPhotos)
           setConfig(previousConfig)
           flashSaveError("Couldn't remove that photo. Try again.")
+        } else {
+          flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"))
         }
       })
       return
@@ -733,6 +741,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (results.some(r => r && "error" in r)) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove that photo. Try again.")
+      } else if (slotPhotoIds.length) {
+        flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"))
       }
     })
   }
@@ -823,6 +833,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const galleryIntroBody = missingPhotoSlots
     ? `${photoSections.gallery.helper} ${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.`
     : `${photoSections.gallery.helper} The important photo spots have owner photos assigned.`
+
+  function getPhotoSlotSaveNotice(slot: PhotoSlot, action: "saved" | "removed" = "saved") {
+    const section = photoSections[slot]
+    const verb = action === "removed" ? "Removed from" : "Saved to"
+    return `${verb} ${section.title}. Check ${section.page}: ${section.position}.`
+  }
 
   const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
   const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
