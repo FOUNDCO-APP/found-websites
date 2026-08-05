@@ -47,6 +47,14 @@ function SiteNav({ transparent = false, onCta }: Props) {
   // with what's visually on screen, so taps land on the wrong element (or
   // nothing). Pinning the body with position:fixed and restoring the exact
   // scroll offset on close is the standard fix for that class of bug.
+  // Whether the CURRENT close was triggered by tapping a link (navigating
+  // somewhere) vs. tapping the X or outside (just dismissing the menu).
+  // Only the latter should restore the pre-open scroll position below -
+  // otherwise this was stomping on the new page/anchor's own scroll
+  // position 320ms after a nav link was tapped, always landing back at
+  // wherever the page was before the menu opened.
+  const navigatingRef = useRef(false)
+
   useEffect(() => {
     if (!menuMounted) return
     const scrollY = window.scrollY
@@ -62,7 +70,8 @@ function SiteNav({ transparent = false, onCta }: Props) {
       body.style.left = ""
       body.style.right = ""
       body.style.overflow = ""
-      window.scrollTo(0, scrollY)
+      if (!navigatingRef.current) window.scrollTo(0, scrollY)
+      navigatingRef.current = false
     }
   }, [menuMounted])
 
@@ -73,7 +82,8 @@ function SiteNav({ transparent = false, onCta }: Props) {
     requestAnimationFrame(() => requestAnimationFrame(() => setMenuOpen(true)))
   }
 
-  function closeMenu() {
+  function closeMenu(navigating = false) {
+    navigatingRef.current = navigating
     setMenuOpen(false)
     closeTimer.current = setTimeout(() => setMenuMounted(false), 320)
   }
@@ -85,6 +95,8 @@ function SiteNav({ transparent = false, onCta }: Props) {
     onCta?.()
   }
 
+  const closeMenuForNav = () => closeMenu(true)
+
   const CtaEl = ({ fullWidth = false }: { fullWidth?: boolean }) => {
     const base = `${fullWidth ? "w-full min-h-[60px]" : "px-5 py-2.5"} rounded-full text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-90`
     return onCta ? (
@@ -92,7 +104,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
         Get my site
       </button>
     ) : (
-      <Link href="/?start=1" onClick={closeMenu} className={`inline-flex items-center justify-center ${base}`} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+      <Link href="/?start=1" onClick={closeMenuForNav} className={`inline-flex items-center justify-center ${base}`} style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
         Get my site
       </Link>
     )
@@ -130,7 +142,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
             {/* Hamburger / close */}
             <button
               className="md:hidden text-white p-1 z-10 relative"
-              onClick={menuMounted ? closeMenu : openMenu}
+              onClick={() => (menuMounted ? closeMenu() : openMenu())}
               aria-label={menuMounted ? "Close menu" : "Open menu"}
             >
               <div style={{ transition: "transform 250ms ease, opacity 250ms ease" }}>
@@ -175,7 +187,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
               <Link
                 key={label}
                 href={href}
-                onClick={closeMenu}
+                onClick={closeMenuForNav}
                 className="flex items-center justify-between py-6 group"
                 style={{
                   borderBottom: "1px solid rgba(255,255,255,0.07)",
