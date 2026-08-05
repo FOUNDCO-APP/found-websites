@@ -153,7 +153,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function handleLogoUpload(file: File) {
     setUploadingLogo(true)
     try {
-      // No client-side resize/JPEG conversion here on purpose — that would
+      // No client-side resize/JPEG conversion here on purpose â€” that would
       // flatten a transparent PNG to opaque before it ever reaches the
       // server, which is exactly what breaks the white-logo generation.
       const fd = new FormData()
@@ -1206,7 +1206,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 >
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: !activeOverride ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
-                      Auto — {autoLabel}
+                      Auto â€” {autoLabel}
                     </div>
                     <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                       Found picks the best option as your setup changes
@@ -1954,7 +1954,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <>
             <div onClick={() => setReassignConfirm(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
             <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
-              <div style={{ fontSize: 30, marginBottom: 10 }}>👋</div>
+              <div style={{ fontSize: 30, marginBottom: 10 }}>ðŸ‘‹</div>
               <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>
                 Quick heads up
               </p>
@@ -2062,7 +2062,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <SectionIntro title="Change how your whole site looks." body="Color, style, and theme apply everywhere - every page, not just Home." />
       </div>
 
-      {/* ── COLOR ── */}
+      {/* â”€â”€ COLOR â”€â”€ */}
       <div style={{ padding: "18px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
@@ -2086,7 +2086,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}
               >
-                <span>{detectingLogoColors ? "Reading your logo…" : "Match my logo"}</span>
+                <span>{detectingLogoColors ? "Reading your logoâ€¦" : "Match my logo"}</span>
                 {company.logo_url && <img src={company.logo_url} alt="" style={{ height: 20, width: 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }} />}
               </button>
             ) : (
@@ -2158,14 +2158,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )}
       </div>
 
-      {/* ── STYLE ── */}
+      {/* â”€â”€ STYLE â”€â”€ */}
       {(() => {
         const LAYOUT_OPTIONS: { key: LayoutType; label: string; desc: string }[] = [
           { key: "impact",    label: "Impact",    desc: "Bold and high-contrast. Big type, fast first impression." },
           { key: "editorial", label: "Editorial",  desc: "Clean, magazine-style. Calm and polished." },
           { key: "portrait",  label: "Portrait",   desc: "Photo-forward and warm." },
           { key: "cinematic", label: "Cinematic",  desc: "Wide, dramatic imagery with a transparent nav bar." },
-          { key: "wellness_luxe", label: "Wellness Luxe", desc: "Premium, calm, image-led. Best for spa, salon, and wellness brands." },
+          { key: "wellness_luxe", label: "Wellness Luxe", desc: "Bright, polished, and serene. Best for spa, salon, and wellness brands." },
+          { key: "wellness_cinematic", label: "Wellness Cinematic", desc: "Dramatic, premium, and booking-focused for beauty and appointment brands." },
         ]
         const autoLayout = getLayout(industryCategory, vibe)
         const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
@@ -2199,6 +2200,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <div style={{ position: "absolute", right: 8, top: 12, width: 42, height: 32, borderRadius: 16, backgroundColor: "#111715" }} />
                 <div style={{ position: "absolute", left: 52, top: 18, height: 5, width: 58, backgroundColor: "#111715", borderRadius: 3 }} />
                 <div style={{ position: "absolute", left: 52, top: 29, height: 4, width: 36, backgroundColor: "rgba(17,23,21,0.35)", borderRadius: 3 }} />
+              </div>
+            )
+          }
+          if (layout === "wellness_cinematic") {
+            return (
+              <div style={{ position: "relative", height: 56, borderRadius: 10, overflow: "hidden", backgroundColor: "#111715", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div style={{ position: "absolute", inset: 0, backgroundColor: swatch, opacity: 0.38 }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.85), rgba(0,0,0,0.34))" }} />
+                <div style={{ position: "absolute", left: 12, bottom: 13, height: 5, width: 72, backgroundColor: "rgba(255,255,255,0.9)", borderRadius: 3 }} />
+                <div style={{ position: "absolute", left: 12, bottom: 24, height: 4, width: 42, backgroundColor: "rgba(255,255,255,0.48)", borderRadius: 3 }} />
+                <div style={{ position: "absolute", right: 12, bottom: 12, height: 14, width: 38, borderRadius: 999, backgroundColor: swatch }} />
               </div>
             )
           }
@@ -2245,7 +2257,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <div style={{ height: 56, borderRadius: 8, border: "1px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
                   <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1 }}>Auto</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Auto — {autoLabel}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Auto â€” {autoLabel}</div>
                 <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>Fits your industry</div>
               </button>
               {LAYOUT_OPTIONS.map(opt => {
@@ -2271,7 +2283,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
 
-      {/* ── THEME ── */}
+      {/* â”€â”€ THEME â”€â”€ */}
       <div style={{ padding: "26px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>

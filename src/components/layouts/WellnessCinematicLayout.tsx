@@ -35,7 +35,7 @@ function polishedServiceDescription(name: string, description: string) {
   return `Thoughtful ${name.toLowerCase()} shaped around comfort, detail, and visible results.`
 }
 
-export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
+export default function WellnessCinematicLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
   const primary = company.primary_color
   const services = config?.services || []
@@ -54,50 +54,40 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
 
   return (
     <>
-      <section className="relative overflow-hidden" style={{ backgroundColor: PAPER }}>
-        <div className="mx-auto grid min-h-[calc(100svh-150px)] max-w-7xl grid-cols-1 items-center gap-10 px-6 pb-10 pt-12 md:grid-cols-[0.92fr_1.08fr] md:px-10 md:pb-12 md:pt-12">
-          <div className="relative z-10 max-w-xl">
-            <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: primary }}>
-              {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
-            </p>
-            <h1 className="text-5xl font-normal leading-[0.96] tracking-normal md:text-7xl" style={{ color: INK, fontFamily: "var(--font-heading, inherit)" }}>
-              {config?.hero_title || displayName}
-            </h1>
-            <p className="mt-7 max-w-md text-base font-medium leading-8 md:text-lg" style={{ color: "rgba(17,23,21,0.62)" }}>
-              {config?.hero_subtitle || `A calmer way to discover ${displayName}.`}
-            </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Link href={primaryCTA.href} className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:opacity-90" style={{ backgroundColor: primary }}>
-                {primaryCTA.label}
+      <section className="relative isolate overflow-hidden text-white" style={{ backgroundColor: INK }}>
+        <div className="absolute inset-0">
+          {heroVideo ? (
+            <HeroVideo src={heroVideo} />
+          ) : heroFallback ? (
+            <img src={heroFallback} alt={company.name} className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <div className="absolute inset-0" style={{ background: gradient }} />
+          )}
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(17,23,21,0.86)_0%,rgba(17,23,21,0.58)_46%,rgba(17,23,21,0.42)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-36 bg-[linear-gradient(180deg,rgba(17,23,21,0)_0%,rgba(17,23,21,0.96)_100%)]" />
+        </div>
+        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-86px)] max-w-6xl flex-col justify-end px-6 pb-14 pt-24 text-center md:min-h-[calc(100svh-92px)] md:px-10 md:pb-18 md:pt-28">
+          <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: "rgba(255,255,255,0.68)" }}>
+            {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
+          </p>
+          <h1 className="mx-auto max-w-4xl text-5xl font-normal leading-[0.96] tracking-normal md:text-7xl" style={{ fontFamily: "var(--font-heading, inherit)" }}>
+            {config?.hero_title || displayName}
+          </h1>
+          <p className="mx-auto mt-6 max-w-lg text-base font-medium leading-8 text-white/72 md:text-lg">
+            {config?.hero_subtitle || `A calmer way to discover ${displayName}.`}
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href={primaryCTA.href} className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-[0.16em] text-white shadow-[0_18px_44px_rgba(0,0,0,0.24)] transition hover:opacity-90" style={{ backgroundColor: primary }}>
+              {primaryCTA.label}
+            </Link>
+            {secondaryCTA && (
+              <Link href={secondaryCTA.href} className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/28 px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:border-white/48">
+                {secondaryCTA.label}
               </Link>
-              {secondaryCTA && (
-                <Link href={secondaryCTA.href} className="inline-flex min-h-14 items-center justify-center rounded-full border px-8 text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-75" style={{ borderColor: "rgba(17,23,21,0.18)", color: INK }}>
-                  {secondaryCTA.label}
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="relative min-h-[360px] md:min-h-[500px]">
-            <div className="absolute left-0 top-8 hidden h-48 w-48 rounded-full md:block" style={{ backgroundColor: softAccent(primary) }} />
-            <div className="relative ml-auto h-[360px] w-full overflow-hidden rounded-[2rem] shadow-[0_30px_80px_rgba(17,23,21,0.18)] md:h-[500px] md:w-[82%]">
-              {heroVideo ? (
-                <HeroVideo src={heroVideo} />
-              ) : heroFallback ? (
-                <img src={heroFallback} alt={company.name} className="absolute inset-0 h-full w-full object-cover" />
-              ) : (
-                <div className="absolute inset-0" style={{ background: gradient }} />
-              )}
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,23,21,0)_44%,rgba(17,23,21,0.58)_100%)]" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white md:p-8">
-                <p className="text-[11px] font-black uppercase tracking-[0.2em] text-white/60">Open today</p>
-                <p className="mt-2 text-xl font-medium leading-tight">{company.phone ? "Call when you are ready." : "Book when you are ready."}</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
-
 
       <section className="border-y border-black/[0.06]" style={{ backgroundColor: PAPER }}>
         <div className="mx-auto grid max-w-6xl gap-px px-6 py-4 md:grid-cols-3 md:px-10">

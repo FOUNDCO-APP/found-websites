@@ -12,6 +12,7 @@ import EditorialLayout from "@/components/layouts/EditorialLayout"
 import PortraitLayout from "@/components/layouts/PortraitLayout"
 import CinematicLayout from "@/components/layouts/CinematicLayout"
 import WellnessLuxeLayout from "@/components/layouts/WellnessLuxeLayout"
+import WellnessCinematicLayout from "@/components/layouts/WellnessCinematicLayout"
 import type { LayoutProps } from "@/types/layout"
 
 export default async function HomePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -77,6 +78,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
     case "portrait":  return <PortraitLayout {...props} />
     case "cinematic": return <CinematicLayout {...props} />
     case "wellness_luxe": return <WellnessLuxeLayout {...props} />
+    case "wellness_cinematic": return <WellnessCinematicLayout {...props} />
     default:          return <ImpactLayout {...props} />
   }
 }
