@@ -840,6 +840,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     return `${verb} ${section.title}. Check ${section.page}: ${section.position}.`
   }
 
+  function getPhotoSlotPublicUrl(slot: PhotoSlot) {
+    switch (slot) {
+      case "about":
+        return `${publicSiteOrigin}/about`
+      case "contact":
+        return `${publicSiteOrigin}/contact`
+      case "services":
+        return `${publicSiteOrigin}/services`
+      case "gallery":
+        return `${publicSiteOrigin}/gallery`
+      case "shop":
+        return `${publicSiteOrigin}/shop`
+      case "order":
+        return `${publicSiteOrigin}/menu`
+      default:
+        return publicSiteOrigin
+    }
+  }
+
   const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
   const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
 
@@ -1923,11 +1942,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             }}>
               <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>{activeSlot.label} Photo</div>
                   <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>{activeSlot.helper}</h3>
+                  <a
+                    href={getPhotoSlotPublicUrl(activeSlot.slot)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 12px", borderRadius: 999, border: `1px solid ${GREEN}44`, backgroundColor: `${GREEN}10`, color: GREEN, textDecoration: "none", ...TYPE.footnote, fontWeight: 800 }}
+                  >
+                    View on live site
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 6l6 6-6 6"/></svg>
+                  </a>
                 </div>
-                <button onClick={() => setPhotoPickerSlot(null)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer" }}>x</button>
+                <button onClick={() => setPhotoPickerSlot(null)} style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: "pointer", flexShrink: 0 }}>x</button>
               </div>
 
               {pickerPhotos.length > 0 ? (
