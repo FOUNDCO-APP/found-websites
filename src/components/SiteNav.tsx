@@ -172,9 +172,13 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
                   borderBottom: "1px solid rgba(255,255,255,0.07)",
                   opacity: menuOpen ? 1 : 0,
                   transform: menuOpen ? "translateY(0)" : "translateY(14px)",
-                  transition: menuOpen
-                    ? `opacity 420ms ease ${i * 80 + 120}ms, transform 420ms ease ${i * 80 + 120}ms`
-                    : "none",
+                  // Always animated, never an instant snap (was `transition:
+                  // "none"` while closing) - on WebKit (Safari + Chrome-iOS),
+                  // the tapped link vanishing in the same tick as the tap
+                  // appears to cancel the pending navigation outright, which
+                  // is exactly the "menu opens, but taps do nothing" bug.
+                  // Firefox's engine tolerates it; WebKit apparently doesn't.
+                  transition: `opacity 420ms ease ${menuOpen ? i * 80 + 120 : 0}ms, transform 420ms ease ${menuOpen ? i * 80 + 120 : 0}ms`,
                 }}
               >
                 <span className="text-[2.4rem] font-light leading-none text-white transition-opacity group-hover:opacity-50">
