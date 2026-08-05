@@ -22,20 +22,55 @@ const HOME_FAQS: { q: string; a: string }[] = [
   { q: "Can I cancel anytime?", a: "Yes. No contracts." },
 ]
 
+// Types each word out, pauses, deletes it, moves to the next - loops
+// forever. Same mechanic everywhere it's used (hero + feature headline) so
+// the whole page reads as one consistent animation, not two different ones.
+function useTypewriter(words: string[], typingSpeed = 55, deletingSpeed = 30, pauseMs = 1400) {
+  const [display, setDisplay] = useState("")
+  const [wordIndex, setWordIndex] = useState(0)
+  const [deleting, setDeleting] = useState(false)
+
+  useEffect(() => {
+    const current = words[wordIndex % words.length]
+    let timeout: ReturnType<typeof setTimeout>
+
+    if (!deleting && display.length < current.length) {
+      timeout = setTimeout(() => setDisplay(current.slice(0, display.length + 1)), typingSpeed)
+    } else if (!deleting && display.length === current.length) {
+      timeout = setTimeout(() => setDeleting(true), pauseMs)
+    } else if (deleting && display.length > 0) {
+      timeout = setTimeout(() => setDisplay(display.slice(0, -1)), deletingSpeed)
+    } else {
+      setDeleting(false)
+      setWordIndex(i => (i + 1) % words.length)
+    }
+
+    return () => clearTimeout(timeout)
+  }, [display, deleting, wordIndex, words, typingSpeed, deletingSpeed, pauseMs])
+
+  return display
+}
+
+function TypedCursor() {
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-block align-middle"
+      style={{ width: "3px", height: "0.85em", marginLeft: "3px", backgroundColor: SIGNAL_GREEN, animation: "cursor-blink 1s step-end infinite" }}
+    />
+  )
+}
+
 export default function HomeClient() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState("found_pro")
   const [showPlanChoice, setShowPlanChoice] = useState(true)
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const cinematicTimers = useRef<ReturnType<typeof setTimeout>[]>([])
-  const [wordIndex, setWordIndex] = useState(0)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
-
-  useEffect(() => {
-    const interval = setInterval(() => setWordIndex(i => (i + 1) % ROTATING_WORDS.length), 1900)
-    return () => clearInterval(interval)
-  }, [])
+  const typedHero = useTypewriter(["Get found.", "Get hired."])
+  const typedFeature = useTypewriter(ROTATING_WORDS)
 
   useEffect(() => {
     document.documentElement.style.backgroundColor = FOUND_BLACK
@@ -136,8 +171,9 @@ export default function HomeClient() {
 
             <div className="found-hero-content flex flex-1 items-start pt-8 md:items-center md:pt-0">
               <div className="found-hero-copy max-w-[350px] md:max-w-[590px]">
-                <h1 className="found-hero-title text-[2.65rem] font-normal leading-[0.98] tracking-normal text-white md:text-7xl">
-                  Get found.<br />Get hired.
+                <h1 className="found-hero-title text-[2.65rem] font-normal leading-[0.98] tracking-normal text-white md:text-7xl" style={{ minHeight: "1.1em" }}>
+                  {typedHero}
+                  <TypedCursor />
                 </h1>
                 <p className="found-hero-mobile-copy mt-5 max-w-[310px] text-sm font-medium leading-6 text-white/72 md:hidden">
                   Found builds your site.<br />You get the calls.
@@ -260,14 +296,10 @@ export default function HomeClient() {
             </p>
             <h2 className="max-w-2xl text-4xl font-light leading-tight md:text-6xl">
               One app for your whole business —{" "}
-              <span
-                key={wordIndex}
-                className="inline-block"
-                style={{ color: SIGNAL_GREEN, animation: "fade-in 400ms ease-out both" }}
-              >
-                {ROTATING_WORDS[wordIndex]}
+              <span className="inline-block" style={{ color: SIGNAL_GREEN }}>
+                {typedFeature}
               </span>
-              .
+              <TypedCursor />
             </h2>
 
             {/* Camera system — the lead feature, real narrative treatment */}
