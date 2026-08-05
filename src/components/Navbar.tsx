@@ -112,7 +112,7 @@ export default function Navbar({ company, transparent = false, hasShop = false }
           borderBottomColor: isOnDark ? "rgba(0,0,0,0)" : isCalm ? "#eeeeee" : "#f0f0f0",
         }}
       >
-        <div className="max-w-6xl mx-auto px-8 py-4 flex items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4 md:px-10">
 
           {/* Logo */}
           <Link href="/" className="flex items-center shrink-0">
