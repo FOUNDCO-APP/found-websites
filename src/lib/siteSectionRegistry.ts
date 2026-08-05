@@ -1,5 +1,6 @@
 import type { LayoutType } from "@/lib/layout"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getVocab } from "@/lib/subIndustryVocabulary"
 
 type ConfigLike = Record<string, unknown> | null | undefined
 
@@ -18,6 +19,7 @@ type SitePhotoSectionArgs = {
   config: ConfigLike
   industryCategory: string
   subIndustry?: string | null
+  businessName?: string | null
   layout: LayoutType
   isFoodCatalog?: boolean
 }
@@ -39,10 +41,14 @@ function ctaPosition(layout: LayoutType) {
   }
 }
 
-export function getSitePhotoSections({ config, industryCategory, subIndustry, layout, isFoodCatalog = false }: SitePhotoSectionArgs): Record<SitePhotoSlot, SitePhotoSection> {
+export function getSitePhotoSections({ config, industryCategory, subIndustry, businessName, layout, isFoodCatalog = false }: SitePhotoSectionArgs): Record<SitePhotoSlot, SitePhotoSection> {
   const defaults = getIndustryDefaults(industryCategory, subIndustry ?? null)
+  const vocab = getVocab(subIndustry ?? null, industryCategory)
   const heroTitle = clean(config?.hero_title) ?? "Homepage"
-  const aboutTitle = clean(config?.about_preview) ?? "About"
+  const displayName = clean(businessName) ?? "this business"
+  const aboutTitle = `About ${displayName}`
+  const contactTitle = clean(config?.contact_title) ?? "Contact Us"
+  const servicesTitle = vocab.servicesLabel
   const ctaTitle = clean(config?.cta_headline) ?? defaults.ctaHeadline
   const catalogTitle = isFoodCatalog ? "Menu" : "Products"
 
@@ -58,10 +64,10 @@ export function getSitePhotoSections({ config, industryCategory, subIndustry, la
     about: {
       slot: "about",
       title: aboutTitle,
-      helper: "About page and homepage story area. Story photo.",
+      helper: `About page, top of page. Background photo behind "${aboutTitle}".`,
       page: "About",
-      position: "Story area",
-      photoRole: "Story photo",
+      position: "Top of About page",
+      photoRole: "Background photo",
     },
     cta: {
       slot: "cta",
@@ -89,19 +95,19 @@ export function getSitePhotoSections({ config, industryCategory, subIndustry, la
     },
     contact: {
       slot: "contact",
-      title: "Contact",
-      helper: "Contact page image.",
+      title: contactTitle,
+      helper: `Contact page, top of page. Background photo behind "${contactTitle}".`,
       page: "Contact",
-      position: "Contact page",
-      photoRole: "Page image",
+      position: "Top of Contact page",
+      photoRole: "Background photo",
     },
     services: {
       slot: "services",
-      title: "Services",
-      helper: "Services page image.",
+      title: servicesTitle,
+      helper: `Services page, top of page. Background photo behind "${servicesTitle}".`,
       page: "Services",
-      position: "Services page",
-      photoRole: "Page image",
+      position: "Top of Services page",
+      photoRole: "Background photo",
     },
     shop: {
       slot: "shop",

@@ -803,6 +803,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     config,
     industryCategory,
     subIndustry: company.sub_industry,
+    businessName: company.name,
     layout: activeLayoutType,
     isFoodCatalog,
   })
@@ -818,6 +819,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { slot: isFoodCatalog ? "order" : "shop", label: isFoodCatalog ? photoSections.order.title : photoSections.shop.title, helper: isFoodCatalog ? photoSections.order.helper : photoSections.shop.helper, photos: catalogPhotos },
   ]
   const missingPhotoSlots = photoSlots.filter(slot => slot.photos.length === 0).length
+  const catalogSection = isFoodCatalog ? photoSections.order : photoSections.shop
+  const galleryIntroBody = missingPhotoSlots
+    ? `${photoSections.gallery.helper} ${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.`
+    : `${photoSections.gallery.helper} The important photo spots have owner photos assigned.`
 
   const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
   const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
@@ -974,7 +979,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       </div>
 
       <div style={{ margin: "24px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Gallery</div>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>{photoSections.gallery.title}</div>
         <button onClick={() => setView("photos")} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 16, borderRadius: 20, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)", color: "white", textAlign: "left", cursor: "pointer" }}>
           <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
             {galleryPhotos[0]?.url ? (
@@ -984,7 +989,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             )}
           </div>
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Gallery</span>
+            <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>{photoSections.gallery.title}</span>
             <span style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.72)" }}>{galleryPhotos.length ? `${galleryPhotos.length} photos` : "Add photos to your gallery"}</span>
           </span>
           <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
@@ -1300,7 +1305,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </div>
         <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          Further down the page - the longer story next to your highlights.
+          {photoSections.about.helper}
         </p>
         <EditRow
           label="Story"
@@ -1318,7 +1323,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Contact" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Contact" title="Make reaching out easy." body="Set the words customers see before they send a message." />
+        <SectionIntro eyebrow="Contact" title={photoSections.contact.title} body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Contact" href={`${publicSiteOrigin}/contact`} />
         </div>
@@ -1338,6 +1343,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{String(config.contact_title || "Contact Us")}</h3>
           </div>
         </div>
+        <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{photoSections.contact.helper}</p>
         <EditRowGroup>
           <EditRow label="Page label" value={String(config.contact_eyebrow ?? "")} placeholder="Get in touch" onClick={() => startEdit("contact_eyebrow", String(config.contact_eyebrow ?? ""))} isSaved={saved === "contact_eyebrow"} bordered={false} divider />
           <EditRow label="Headline" value={String(config.contact_title ?? "")} placeholder="Contact Us" big onClick={() => startEdit("contact_title", String(config.contact_title ?? ""))} isSaved={saved === "contact_title"} bordered={false} divider />
@@ -1355,7 +1361,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label={catalogTileLabel} onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow={isFoodCatalog ? "Menu" : "Shop"} title={isFoodCatalog ? "Build the menu guests order from." : "Build the products customers buy."} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
+        <SectionIntro eyebrow={catalogSection.page} title={catalogSection.title} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
@@ -1370,10 +1376,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot(isFoodCatalog ? "order" : "shop")} />
           <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>{isFoodCatalog ? "Menu" : "Shop"}</div>
-            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{isFoodCatalog ? "What guests order" : "What you sell"}</h3>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>{catalogSection.page}</div>
+            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{catalogSection.title}</h3>
           </div>
         </div>
+
+        <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{catalogSection.helper}</p>
 
         {menuCats.length > 0 && (
           <div style={{ marginTop: 16, position: "relative" }}>
@@ -1527,7 +1535,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Services" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Services" title="Show what you offer." body="Keep the service list short, plain, and easy to understand." />
+        <SectionIntro eyebrow="Services" title={photoSections.services.title} body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
         </div>
@@ -1546,7 +1554,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         </div>
         <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          That line comes from your homepage's Supporting Line - change it from the Home tab.
+          {photoSections.services.helper} That line comes from your homepage's Supporting Line - change it from the Home tab.
         </p>
 
         {services.length > 6 && (
@@ -1624,7 +1632,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Gallery" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div id="site-photos" style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Photos" title="Choose the photos customers see." body={missingPhotoSlots ? `${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.` : "The important photo spots have owner photos assigned."} />
+        <SectionIntro eyebrow="Photos" title={photoSections.gallery.title} body={galleryIntroBody} />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Gallery" href={`${publicSiteOrigin}/gallery`} />
         </div>
