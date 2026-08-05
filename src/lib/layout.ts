@@ -1,13 +1,13 @@
-export type LayoutType = "impact" | "editorial" | "portrait" | "cinematic"
+export type LayoutType = "impact" | "editorial" | "portrait" | "cinematic" | "wellness_luxe"
 
 const matrix: Record<string, Record<string, LayoutType>> = {
   home_services: { bold: "impact", calm: "impact", modern: "cinematic", warm: "portrait" },
-  wellness:      { bold: "cinematic", calm: "editorial", modern: "editorial", warm: "portrait" },
+  wellness:      { bold: "cinematic", calm: "wellness_luxe", modern: "wellness_luxe", warm: "wellness_luxe" },
   food:          { bold: "portrait", calm: "portrait", modern: "cinematic", warm: "portrait" },
   events:        { bold: "cinematic", calm: "editorial", modern: "cinematic", warm: "cinematic" },
   retail:        { bold: "portrait", calm: "editorial", modern: "cinematic", warm: "portrait" },
   fitness:       { bold: "impact", calm: "cinematic", modern: "cinematic", warm: "impact" },
-  beauty:        { bold: "cinematic", calm: "editorial", modern: "editorial", warm: "portrait" },
+  beauty:        { bold: "cinematic", calm: "wellness_luxe", modern: "wellness_luxe", warm: "wellness_luxe" },
   automotive:    { bold: "impact", calm: "impact", modern: "cinematic", warm: "portrait" },
   pet_services:  { bold: "portrait", calm: "editorial", modern: "editorial", warm: "portrait" },
   cleaning:      { bold: "impact", calm: "editorial", modern: "cinematic", warm: "impact" },
@@ -26,7 +26,7 @@ const matrix: Record<string, Record<string, LayoutType>> = {
   nonprofit:               { bold: "impact",    calm: "editorial", modern: "editorial", warm: "portrait" },
 }
 
-const VALID_LAYOUTS: LayoutType[] = ["impact", "editorial", "portrait", "cinematic"]
+const VALID_LAYOUTS: LayoutType[] = ["impact", "editorial", "portrait", "cinematic", "wellness_luxe"]
 
 export function getLayout(
   industryCategory: string,

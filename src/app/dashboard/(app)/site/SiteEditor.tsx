@@ -2165,6 +2165,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           { key: "editorial", label: "Editorial",  desc: "Clean, magazine-style. Calm and polished." },
           { key: "portrait",  label: "Portrait",   desc: "Photo-forward and warm." },
           { key: "cinematic", label: "Cinematic",  desc: "Wide, dramatic imagery with a transparent nav bar." },
+          { key: "wellness_luxe", label: "Wellness Luxe", desc: "Premium, calm, image-led. Best for spa, salon, and wellness brands." },
         ]
         const autoLayout = getLayout(industryCategory, vibe)
         const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
@@ -2188,6 +2189,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <div style={{ position: "absolute", left: 0, right: 0, bottom: 10, display: "flex", justifyContent: "center" }}>
                   <div style={{ height: 5, width: 46, backgroundColor: "#fff", borderRadius: 3 }} />
                 </div>
+              </div>
+            )
+          }
+          if (layout === "wellness_luxe") {
+            return (
+              <div style={{ position: "relative", height: 56, borderRadius: 18, overflow: "hidden", backgroundColor: "#FBFCF8", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div style={{ position: "absolute", left: 8, top: 8, bottom: 8, width: 34, borderRadius: 14, backgroundColor: swatch, opacity: 0.55 }} />
+                <div style={{ position: "absolute", right: 8, top: 12, width: 42, height: 32, borderRadius: 16, backgroundColor: "#111715" }} />
+                <div style={{ position: "absolute", left: 52, top: 18, height: 5, width: 58, backgroundColor: "#111715", borderRadius: 3 }} />
+                <div style={{ position: "absolute", left: 52, top: 29, height: 4, width: 36, backgroundColor: "rgba(17,23,21,0.35)", borderRadius: 3 }} />
               </div>
             )
           }

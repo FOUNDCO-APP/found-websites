@@ -1,4 +1,16 @@
-## 2026-08-05 - Dedicated How Found Works Page + Clean Nav
+## 2026-08-05 - Premium Wellness Luxe Template Added
+
+Shawn approved Jony-led design direction: keep the Found hero quality as the bar and bring templates closer to that promise rather than weakening the marketing. The first implementation step is a real premium wellness/spa template option.
+
+Built: `src/components/layouts/WellnessLuxeLayout.tsx`, a calm image-led layout for spa, salon, beauty, and wellness-style businesses. It uses large editorial imagery, quieter typography, premium spacing, service blocks, gallery mosaic, owner-supplied client stories only, and a strong final CTA. It intentionally does not imply Google Reviews are integrated.
+
+Routing: added `wellness_luxe` as a valid layout type in `src/lib/layout.ts`; wellness and beauty calm/modern/warm profiles now default to it. Added the layout to the public `[slug]` renderer. Added it as a selectable option in Edit My Site > Design with a small mockup.
+
+Verification: `cmd /c npm run build` passed. `git diff --check` passed with only the repo's normal CRLF warnings.
+
+Shawn QA next: open a wellness/spa/salon test site and confirm the homepage feels closer to the Found hero device imagery. In Edit My Site > Design, confirm `Wellness Luxe` appears and switching layouts keeps the same content/photos.
+
+---## 2026-08-05 - Dedicated How Found Works Page + Clean Nav
 
 Shawn approved stopping the fragile `/#how-it-works` hamburger behavior and building a real `/how-it-works` page instead. Team read: Craig/Chris said stop fighting hash navigation on mobile; Steve/Jony/Angela/Phil agreed the topic deserves its own page for clarity, conversion, SEO, AEO, and GEO.
 

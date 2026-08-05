@@ -1,4 +1,22 @@
-## Session: August 5, 2026 - Dedicated How Found Works Page + Clean Nav
+## Session: August 5, 2026 - Premium Wellness Luxe Template Added
+**Worked on:** Shawn approved the Jony-led recommendation to close the gap between Found's hero imagery and the actual generated customer templates. First implementation step: make a real premium spa/wellness template option rather than faking it in marketing imagery.
+
+### Fixed / Built
+- Added `WellnessLuxeLayout.tsx` as a new public layout family.
+- Added `wellness_luxe` to `LayoutType`, valid layout overrides, and the wellness/beauty layout matrix.
+- Routed `[slug]` homepage rendering to the new layout.
+- Added `Wellness Luxe` as a selectable design option in Edit My Site > Design.
+- Review/testimonial treatment says `Client stories` and only renders owner-supplied testimonials. No Google Review implication was added.
+
+### Verified
+- `cmd /c npm run build` passed.
+- `git diff --check` passed with only normal CRLF warnings.
+
+### Test Next
+- Open a spa/wellness/salon test site and compare the new homepage against the Found hero device promise.
+- In Edit My Site > Design, switch to `Wellness Luxe` and confirm content/photos carry over cleanly.
+
+---## Session: August 5, 2026 - Dedicated How Found Works Page + Clean Nav
 **Worked on:** Shawn found the hamburger `How it works` link still failed after navigating to another menu page: it returned to the home hero instead of the section. Team agreed to stop fighting fragile mobile hash routing and give How It Works its own page.
 
 ### Fixed / Built
