@@ -264,7 +264,7 @@ export default function HomeClient() {
         </section>
 
         {/* ── How it works ── */}
-        <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10">
+        <section id="how-it-works" className="bg-[#080A09] px-6 py-24 md:px-10" style={{ scrollMarginTop: 80 }}>
           <div className="mx-auto max-w-7xl">
             <div className="grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
               <div>

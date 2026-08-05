@@ -97,6 +97,34 @@ function SiteNav({ transparent = false, onCta }: Props) {
 
   const closeMenuForNav = () => closeMenu(true)
 
+  // Next.js's <Link> doesn't reliably scroll to a hash when you're already
+  // on the target page - it only handles scroll-into-view on a real route
+  // transition, so a same-page hash link just quietly rewrites the URL and
+  // goes nowhere. Handle same-page hash links manually; let Link behave
+  // normally for anything that's a real page change (it'll land on load).
+  function handleHashNav(e: React.MouseEvent, href: string) {
+    const hashIndex = href.indexOf("#")
+    if (hashIndex === -1) return false
+    const path = href.slice(0, hashIndex) || "/"
+    const hash = href.slice(hashIndex + 1)
+    if (typeof window === "undefined" || path !== window.location.pathname) return false
+
+    e.preventDefault()
+    window.history.pushState(null, "", href)
+    const scrollToTarget = () => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" })
+
+    if (menuMounted) {
+      // Wait for the menu's own close/unmount (320ms) to finish before
+      // scrolling - the body is still pinned via position:fixed until then,
+      // so scrolling any earlier wouldn't visibly do anything.
+      closeMenu(true)
+      setTimeout(scrollToTarget, 340)
+    } else {
+      scrollToTarget()
+    }
+    return true
+  }
+
   const CtaEl = ({ fullWidth = false }: { fullWidth?: boolean }) => {
     const base = `${fullWidth ? "w-full min-h-[60px]" : "px-5 py-2.5"} rounded-full text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-90`
     return onCta ? (
@@ -130,7 +158,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map(({ label, href }) => (
-              <Link key={label} href={href} className="text-xs font-black uppercase tracking-[0.16em] text-white/60 hover:text-white transition">
+              <Link key={label} href={href} onClick={(e) => handleHashNav(e, href)} className="text-xs font-black uppercase tracking-[0.16em] text-white/60 hover:text-white transition">
                 {label}
               </Link>
             ))}
@@ -187,7 +215,7 @@ function SiteNav({ transparent = false, onCta }: Props) {
               <Link
                 key={label}
                 href={href}
-                onClick={closeMenuForNav}
+                onClick={(e) => { if (!handleHashNav(e, href)) closeMenuForNav() }}
                 className="flex items-center justify-between py-6 group"
                 style={{
                   borderBottom: "1px solid rgba(255,255,255,0.07)",
