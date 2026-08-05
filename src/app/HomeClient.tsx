@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
@@ -107,7 +107,12 @@ export default function HomeClient() {
     return () => { cinematicTimers.current.forEach(clearTimeout) }
   }, [])
 
-  function openDrawer(nextPlan?: string, requirePlanChoice = true) {
+  // useCallback with real deps (not []) - openDrawer reads drawerOpen and
+  // cinematic via closure, so it still needs to update when those change.
+  // The point isn't "never changes," it's "doesn't change on every
+  // typewriter tick," which is what lets SiteNav's memo actually skip
+  // re-rendering while the hero/headline are typing.
+  const openDrawer = useCallback((nextPlan?: string, requirePlanChoice = true) => {
     if (drawerOpen || cinematic !== "off") return
     setSelectedPlan(nextPlan ?? "found_pro")
     setShowPlanChoice(requirePlanChoice)
@@ -122,7 +127,7 @@ export default function HomeClient() {
       setTimeout(() => { setDrawerOpen(true); setCinematic("fading") }, 2300),
       setTimeout(() => setCinematic("off"), 3200),
     ]
-  }
+  }, [drawerOpen, cinematic])
 
   function skipCinematic() {
     if (cinematic !== "on" && cinematic !== "iris") return
@@ -145,7 +150,7 @@ export default function HomeClient() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <SiteNav transparent onCta={() => openDrawer()} />
+      <SiteNav transparent onCta={openDrawer} />
 
       <main className="min-h-screen overflow-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
 

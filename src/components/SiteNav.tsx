@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import FoundWordmark from "@/components/FoundWordmark"
 
@@ -19,7 +19,16 @@ interface Props {
   onCta?: () => void
 }
 
-export default function SiteNav({ transparent = false, onCta }: Props) {
+// Memoized: SiteNav lives inside HomeClient, whose hero/headline typewriter
+// re-renders it every 30-55ms while typing. Without this, SiteNav's whole
+// subtree (including the open mobile menu) was being force-re-rendered in
+// lockstep with every keystroke of the animation - constant background
+// re-renders under a user's finger appear to be what was breaking tap/click
+// gesture recognition on WebKit (Safari + Chrome-iOS), even though the
+// component's own props never actually changed. Requires onCta to be a
+// stable reference (see openDrawer's useCallback in HomeClient) - a fresh
+// arrow function every render would defeat this entirely.
+function SiteNav({ transparent = false, onCta }: Props) {
   const [scrolled, setScrolled]     = useState(false)
   const [menuOpen, setMenuOpen]     = useState(false)   // drives animation state
   const [menuMounted, setMenuMounted] = useState(false) // drives DOM presence
@@ -215,3 +224,5 @@ export default function SiteNav({ transparent = false, onCta }: Props) {
     </>
   )
 }
+
+export default memo(SiteNav)
