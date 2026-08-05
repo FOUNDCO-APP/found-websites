@@ -33,7 +33,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
   const displayName = polishBusinessName(company.name)
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const ownerGalleryImages = sectionImages?.gallery ?? []
-  const heroFallback = sectionImages?.cta ?? ownerGalleryImages[0] ?? heroImage ?? imageAt(imgs, 0)
+  const heroFallback = heroImage ?? ownerGalleryImages[0] ?? imageAt(imgs, 0)
   const aboutImage = sectionImages?.about ?? imageAt(imgs, 1)
   const ctaImage = sectionImages?.cta ?? ownerGalleryImages[1] ?? heroFallback ?? imageAt(imgs, 2)
   const galleryImages = Array.from(new Set([...ownerGalleryImages, imageAt(imgs, 2), imageAt(imgs, 3), imageAt(imgs, 4)].filter(Boolean) as string[])).slice(0, 5)
