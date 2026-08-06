@@ -2,7 +2,7 @@
 
 - [x] Team audit Rosa's Mexican Food mobile order page before more code changes.
 - [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Final team correction: no placeholder at all for restaurant no-photo items.
-- [ ] After Shawn tests the no-placeholder restaurant card, decide whether menu cards need stronger restaurant-specific hierarchy, descriptions, category navigation, modifiers, badges, or visual polish.
+- [ ] Shawn QA: test the 3-line description clamp and tighter restaurant card spacing on Rosa's mobile menu page. Then decide whether deeper menu hierarchy/polish is still needed.
 - [x] Documentation recovery checkpoint added after credit interruption; current truth is back at the top of `SESSION_HANDOFF.md`.
 
 ---

@@ -282,7 +282,7 @@ export default function OnlineOrderClient({
                     {categoryItems.map((item) => {
                       const quantity = cart[item.key]?.quantity ?? 0
                       return (
-                        <div key={item.key} className="flex gap-4 p-4" style={{ borderRadius: "var(--card-radius, 10px)", boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))", backgroundColor: "#ffffff" }}>
+                        <div key={item.key} className="flex gap-3 p-3.5 sm:gap-4 sm:p-4" style={{ borderRadius: "var(--card-radius, 10px)", boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))", backgroundColor: "#ffffff" }}>
                           {item.photo_url && (
                             <img src={item.photo_url} alt={item.name} className="w-20 h-20 object-cover shrink-0" style={{ borderRadius: 8 }} />
                           )}
@@ -290,11 +290,11 @@ export default function OnlineOrderClient({
                             <div className="flex items-start justify-between gap-3">
                               <div>
                                 <h3 className="font-black text-lg leading-tight" style={{ color: "#111" }}>{item.name}</h3>
-                                {item.description && <p className="text-sm mt-1 leading-relaxed" style={{ color: "#666" }}>{item.description}</p>}
+                                {item.description && <p className="mt-1 line-clamp-3 text-sm leading-relaxed" style={{ color: "#666" }}>{item.description}</p>}
                               </div>
                               <p className="font-black shrink-0" style={{ color: primary }}>{item.priceLabel}</p>
                             </div>
-                            <div className="mt-4 flex items-center justify-end gap-3">
+                            <div className="mt-3 flex items-center justify-end gap-3">
                               {quantity === 0 ? (
                                 <button
                                   type="button"

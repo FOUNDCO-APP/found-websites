@@ -1,3 +1,21 @@
+## Session: August 5, 2026 - Restaurant Menu Card Readability Pass
+**Worked on:** Team-approved next polish after the no-photo placeholder was removed: improve menu card scanning without changing checkout or the overall layout.
+
+### Fixed
+- Clamped restaurant menu item descriptions to 3 lines on cards.
+- Tightened mobile card padding/gap slightly.
+- Reduced the spacing above add controls from `mt-4` to `mt-3`.
+- Kept pricing, checkout, cart state, image behavior, and sticky Order Online unchanged.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: refresh Rosa's mobile menu page and confirm descriptions cap at about 3 lines and cards scan faster.
+
+---
 ## Session: August 5, 2026 - Remove Restaurant No-Photo Placeholder Entirely
 **Worked on:** Shawn asked the team to give Codex explicit directions after both fallback attempts missed the mark. Team direction: no fake food, no initials, no placeholder box.
 

@@ -3,29 +3,29 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: team-directed correction removed all no-photo visuals from restaurant order/menu cards.
+- Latest local work: approved restaurant card readability pass was applied to the live menu/order card path.
 - Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
 - Price formatting is shipped and Shawn confirmed `1` renders as `$1.00`.
 - Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
 
 ### What Changed Recently
-- Restaurant order items without photos now render no image block at all.
-- Real-photo items still keep their 80x80 image exactly as before.
-- Removed the initials placeholder and the fake food/plate illustration from `src/app/[slug]/order/OnlineOrderClient.tsx`.
+- Restaurant menu descriptions are now clamped to 3 lines on cards for faster scanning.
+- Card spacing is slightly tighter on mobile: smaller gap/padding and a little less space above the add controls.
+- Restaurant order items without photos still render no image block at all.
+- Real-photo items still keep their 80x80 image.
 - Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
-- Admin save confirmations still tell owners where to check the live site for photo, text, service, menu, and product edits.
 
 ### Shawn-Tested
 - Photo labels and live-section confirmations: working.
 - Service/menu/product confirmations: working.
 - Confirmation clears after `View live page`: working.
 - Rosa's price `1` became `$1.00`: working.
-- Illustrated and neutral placeholders were rejected; both have now been removed from the restaurant order/menu card path.
+- Illustrated and neutral placeholders were rejected and removed from the restaurant order/menu card path.
 
 ### Test Next
-- On Rosa's mobile menu page, look at the Burritos item with no photo.
-- Confirm there is no image/initials/placeholder square for that item.
-- Confirm existing food photos, prices, plus buttons, and sticky Order Online button still look unchanged.
+- On Rosa's mobile menu page, confirm long descriptions stop at about 3 lines.
+- Confirm the cards scan faster and do not feel cramped.
+- Confirm existing food photos, prices, plus buttons, no-photo Burritos card, and sticky Order Online button still behave normally.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.
