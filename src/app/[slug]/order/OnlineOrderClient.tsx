@@ -40,17 +40,13 @@ function itemInitials(name: string) {
 function MenuItemFallbackImage({ name, primary }: { name: string; primary: string }) {
   return (
     <div
-      className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden"
-      style={{ borderRadius: 8, background: `linear-gradient(135deg, #FFF8F1 0%, ${primary}16 48%, #FDE9D8 100%)` }}
+      className="relative flex h-20 w-20 shrink-0 items-end justify-end overflow-hidden border border-neutral-100 bg-neutral-50"
+      style={{ borderRadius: 8 }}
       aria-hidden="true"
     >
-      <div className="absolute inset-2 rounded-full bg-white/82 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04),0_8px_18px_rgba(0,0,0,0.08)]" />
-      <div className="absolute left-5 top-5 h-3 w-8 -rotate-12 rounded-full" style={{ backgroundColor: `${primary}26` }} />
-      <div className="absolute left-7 top-8 h-3 w-7 rotate-12 rounded-full bg-amber-200/70" />
-      <div className="absolute right-5 top-7 h-3 w-3 rounded-full" style={{ backgroundColor: primary }} />
-      <div className="absolute bottom-5 left-6 h-2 w-2 rounded-full bg-emerald-500/70" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-neutral-50 to-neutral-100" />
       <span
-        className="absolute bottom-2 right-2 rounded-full bg-white/88 px-1.5 py-0.5 text-[10px] font-black leading-none shadow-sm"
+        className="relative m-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-black leading-none shadow-sm"
         style={{ color: primary }}
       >
         {itemInitials(name)}

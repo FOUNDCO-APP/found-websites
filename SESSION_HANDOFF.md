@@ -3,29 +3,29 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: restaurant order-page missing-photo fallback was upgraded after the team approved keeping the menu layout intact.
+- Latest local work: removed the bad illustrated plate fallback from Rosa's restaurant menu/order cards.
 - Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
-- Price formatting and no-photo catalog fallback are already shipped and Shawn confirmed they work.
+- Price formatting is shipped and Shawn confirmed `1` renders as `$1.00`.
 - Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
 
 ### What Changed Recently
-- Restaurant order items without photos now show a warmer food-style fallback visual instead of a large initials-only placeholder.
-- The fallback keeps the same 80x80 footprint, so card layout and tap targets do not shift.
-- Admin save confirmations still tell owners where to check the live site for photo, text, service, menu, and product edits.
-- `View live page` still clears the confirmation before navigating.
+- Restaurant order items without photos now use a quiet neutral 80x80 placeholder with tiny initials.
+- The fake food/plate illustration was removed because it looked cheap next to real food photos.
+- The placeholder keeps the same footprint, so card layout and tap targets do not shift.
 - Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
+- Admin save confirmations still tell owners where to check the live site for photo, text, service, menu, and product edits.
 
 ### Shawn-Tested
 - Photo labels and live-section confirmations: working.
 - Service/menu/product confirmations: working.
 - Confirmation clears after `View live page`: working.
 - Rosa's price `1` became `$1.00`: working.
-- Earlier no-photo item showed initials fallback: working before this visual polish.
+- Illustrated plate fallback: rejected by Shawn and removed in this correction.
 
 ### Test Next
-- On Rosa's mobile order page, look at the Burritos item with no photo.
-- Confirm it feels more like a food/menu visual and less like a plain placeholder.
-- Confirm existing food photos, prices, plus buttons, and the sticky Order Online button still look unchanged.
+- On Rosa's mobile menu page, look at the Burritos item with no photo.
+- Confirm the fake plate is gone and replaced by a quiet neutral placeholder.
+- Confirm existing food photos, prices, plus buttons, and sticky Order Online button still look unchanged.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.

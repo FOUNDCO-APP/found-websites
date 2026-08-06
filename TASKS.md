@@ -1,8 +1,8 @@
 ## 2026-08-05 - CURRENT NOW
 
 - [x] Team audit Rosa's Mexican Food mobile order page before more code changes.
-- [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Chosen first pass: richer food-style placeholder, no layout rewrite.
-- [ ] After Shawn tests the richer no-photo placeholder, decide whether menu cards need stronger restaurant-specific hierarchy, descriptions, category navigation, modifiers, badges, or visual polish.
+- [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Illustrated food fallback was rejected; current correction is a quiet neutral placeholder with tiny initials.
+- [ ] After Shawn tests the neutral no-photo placeholder, decide whether menu cards need stronger restaurant-specific hierarchy, descriptions, category navigation, modifiers, badges, or visual polish.
 - [x] Documentation recovery checkpoint added after credit interruption; current truth is back at the top of `SESSION_HANDOFF.md`.
 
 ---

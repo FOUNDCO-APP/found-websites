@@ -1,3 +1,20 @@
+## Session: August 5, 2026 - Remove Bad Restaurant Placeholder Illustration
+**Worked on:** Shawn rejected the illustrated food-plate fallback as looking bad. Team direction: remove fake food, keep a quiet premium placeholder.
+
+### Fixed
+- Removed the illustrated plate/food-shape fallback from restaurant order cards.
+- Replaced it with a neutral 80x80 placeholder and tiny initials.
+- Kept prices, card size, add buttons, checkout, and sticky Order Online behavior unchanged.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: refresh Rosa's mobile menu page and confirm the Burritos no-photo card no longer has the fake plate visual.
+
+---
 ## Session: August 5, 2026 - Restaurant Menu No-Photo Fallback Polish
 **Worked on:** Team-approved polish for Rosa's Mexican Food mobile order page. Scope stayed limited to the no-photo menu visual.
 
