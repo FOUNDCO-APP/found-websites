@@ -8,6 +8,7 @@ import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
+import Spinner from "@/components/Spinner"
 
 type Photo = {
   id: string
@@ -972,30 +973,31 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onRemo
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Social</span>
         </button>
 
-        {/* Pin — Place on Site */}
-        {onPlace && (
-          <button onClick={() => onPlace(photo)} style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
-            background: "none", border: "none", cursor: "pointer", padding: 0,
-          }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: "50%",
-              backgroundColor: photo.website_section || photo.in_gallery ? "rgba(50,208,116,0.22)" : "rgba(255,255,255,0.1)",
-              border: `2px solid ${photo.website_section || photo.in_gallery ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
-              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.18s ease",
+        {/* Add to Site */}
+        {onPlace && (() => {
+          const active = Boolean(photo.website_section || photo.in_gallery)
+          const activeColor = active ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"
+          return (
+            <button onClick={() => onPlace(photo)} style={{
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+              background: "none", border: "none", cursor: "pointer", padding: 0,
             }}>
-              <svg width="24" height="24" viewBox="0 0 24 24"
-                fill="none"
-                stroke={photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"}
-                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Place</span>
-          </button>
-        )}
+              <div style={{
+                width: 64, height: 64, borderRadius: "50%",
+                backgroundColor: active ? "rgba(50,208,116,0.22)" : "rgba(255,255,255,0.1)",
+                border: `2px solid ${active ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
+                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.18s ease",
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/><rect x="7" y="9" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Add to Site</span>
+            </button>
+          )
+        })()}
 
         {/* Trash — Delete */}
         <button onClick={handleDelete} style={{
@@ -1671,15 +1673,26 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
           {onPlace && (
             <button
               onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
-              aria-label="Place on site"
+              aria-label="Add to site"
               style={{
                 height: 26, padding: "0 8px", borderRadius: 8, border: "none", cursor: "pointer",
                 backgroundColor: photo.website_section || photo.in_gallery ? `${SIGNAL_GREEN}30` : "rgba(0,0,0,0.55)",
                 backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                display: "flex", alignItems: "center", gap: 4, justifyContent: "center",
               }}
             >
-              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.02em", color: photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)" }}>PLACE</span>
+              {(() => {
+                const activeColor = photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)"
+                return (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="16" rx="2"/>
+                      <rect x="6.5" y="8" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
+                    </svg>
+                    <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.02em", color: activeColor }}>ADD TO SITE</span>
+                  </>
+                )
+              })()}
             </button>
           )}
         </div>
@@ -1758,7 +1771,7 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
                   backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800,
                   cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.75 : 1,
                 }}>
-                  {submitting && <div style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }} />}
+                  {submitting && <Spinner size={16} color={FOUND_BLACK} />}
                   {submitting ? "Replacing..." : "Replace it"}
                 </button>
                 <button onClick={onCancelConfirm} disabled={submitting} style={{ padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 700, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.5 : 1 }}>Cancel</button>
@@ -1787,7 +1800,7 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
                 >
                   <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
                   {isPlacing ? (
-                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid ${SIGNAL_GREEN}44`, borderTopColor: SIGNAL_GREEN, animation: "spin 0.8s linear infinite" }} />
+                    <Spinner size={16} color={SIGNAL_GREEN} />
                   ) : active ? (
                     <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>{isGallery ? "In gallery - tap to remove" : "Current"}</span>
                   ) : null}
