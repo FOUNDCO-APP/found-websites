@@ -3,29 +3,29 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest pushed commit before this cleanup: `a6bd73a Document live launch handoff state`.
+- Latest local work: restaurant order-page missing-photo fallback was upgraded after the team approved keeping the menu layout intact.
 - Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
 - Price formatting and no-photo catalog fallback are already shipped and Shawn confirmed they work.
-- Next product work must start with the team audit of Rosa's mobile menu screenshot. Do not redesign it without Shawn approval.
+- Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
 
 ### What Changed Recently
-- Admin save confirmations now tell owners where to check the live site for photo, text, service, menu, and product edits.
-- `View live page` now clears the confirmation before navigating.
-- Photo labels now use owner-facing section language from `src/lib/siteSectionRegistry.ts`.
-- Wellness hero and final CTA image slots stay separate.
-- Catalog prices now normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
-- Restaurant/order and retail/shop cards now show an initials fallback when an item has no photo.
+- Restaurant order items without photos now show a warmer food-style fallback visual instead of a large initials-only placeholder.
+- The fallback keeps the same 80x80 footprint, so card layout and tap targets do not shift.
+- Admin save confirmations still tell owners where to check the live site for photo, text, service, menu, and product edits.
+- `View live page` still clears the confirmation before navigating.
+- Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
 
 ### Shawn-Tested
 - Photo labels and live-section confirmations: working.
 - Service/menu/product confirmations: working.
 - Confirmation clears after `View live page`: working.
 - Rosa's price `1` became `$1.00`: working.
-- No-photo item showed initials fallback: working.
+- Earlier no-photo item showed initials fallback: working before this visual polish.
 
 ### Test Next
-- No owner QA needed for this docs-only cleanup.
-- Next visible product test will come after the team approves what to change on Rosa's menu/order page.
+- On Rosa's mobile order page, look at the Burritos item with no photo.
+- Confirm it feels more like a food/menu visual and less like a plain placeholder.
+- Confirm existing food photos, prices, plus buttons, and the sticky Order Online button still look unchanged.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.

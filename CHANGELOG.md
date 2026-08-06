@@ -1,3 +1,19 @@
+## Session: August 5, 2026 - Restaurant Menu No-Photo Fallback Polish
+**Worked on:** Team-approved polish for Rosa's Mexican Food mobile order page. Scope stayed limited to the no-photo menu visual.
+
+### Fixed
+- Replaced the initials-dominant missing-photo square on restaurant order cards with a warmer food-style fallback visual.
+- Kept the same card layout, dimensions, pricing, checkout behavior, and sticky order button.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: open Rosa's mobile order page and confirm the no-photo Burritos item feels more intentional, while photos/prices/buttons still look unchanged.
+
+---
 ## Session: August 5, 2026 - Documentation Recovery Cleanup
 **Worked on:** Shawn questioned whether the recovery documentation followed the normal process and warned against adding more docs than necessary.
 
