@@ -33,27 +33,6 @@ function formatMoney(cents: number) {
   return formatCatalogMoney(cents)
 }
 
-function itemInitials(name: string) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "Item"
-}
-
-function MenuItemFallbackImage({ name, primary }: { name: string; primary: string }) {
-  return (
-    <div
-      className="relative flex h-20 w-20 shrink-0 items-end justify-end overflow-hidden border border-neutral-100 bg-neutral-50"
-      style={{ borderRadius: 8 }}
-      aria-hidden="true"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-neutral-50 to-neutral-100" />
-      <span
-        className="relative m-2 rounded-full bg-white/90 px-1.5 py-0.5 text-[10px] font-black leading-none shadow-sm"
-        style={{ color: primary }}
-      >
-        {itemInitials(name)}
-      </span>
-    </div>
-  )
-}
 
 function pickupTimeOptions() {
   const options: { value: string; label: string }[] = []
@@ -304,10 +283,8 @@ export default function OnlineOrderClient({
                       const quantity = cart[item.key]?.quantity ?? 0
                       return (
                         <div key={item.key} className="flex gap-4 p-4" style={{ borderRadius: "var(--card-radius, 10px)", boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))", backgroundColor: "#ffffff" }}>
-                          {item.photo_url ? (
+                          {item.photo_url && (
                             <img src={item.photo_url} alt={item.name} className="w-20 h-20 object-cover shrink-0" style={{ borderRadius: 8 }} />
-                          ) : (
-                            <MenuItemFallbackImage name={item.name} primary={primary} />
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3">

@@ -3,15 +3,15 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: removed the bad illustrated plate fallback from Rosa's restaurant menu/order cards.
+- Latest local work: team-directed correction removed all no-photo visuals from restaurant order/menu cards.
 - Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
 - Price formatting is shipped and Shawn confirmed `1` renders as `$1.00`.
 - Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
 
 ### What Changed Recently
-- Restaurant order items without photos now use a quiet neutral 80x80 placeholder with tiny initials.
-- The fake food/plate illustration was removed because it looked cheap next to real food photos.
-- The placeholder keeps the same footprint, so card layout and tap targets do not shift.
+- Restaurant order items without photos now render no image block at all.
+- Real-photo items still keep their 80x80 image exactly as before.
+- Removed the initials placeholder and the fake food/plate illustration from `src/app/[slug]/order/OnlineOrderClient.tsx`.
 - Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
 - Admin save confirmations still tell owners where to check the live site for photo, text, service, menu, and product edits.
 
@@ -20,11 +20,11 @@
 - Service/menu/product confirmations: working.
 - Confirmation clears after `View live page`: working.
 - Rosa's price `1` became `$1.00`: working.
-- Illustrated plate fallback: rejected by Shawn and removed in this correction.
+- Illustrated and neutral placeholders were rejected; both have now been removed from the restaurant order/menu card path.
 
 ### Test Next
 - On Rosa's mobile menu page, look at the Burritos item with no photo.
-- Confirm the fake plate is gone and replaced by a quiet neutral placeholder.
+- Confirm there is no image/initials/placeholder square for that item.
 - Confirm existing food photos, prices, plus buttons, and sticky Order Online button still look unchanged.
 
 ### Process Guardrails

@@ -1,3 +1,21 @@
+## Session: August 5, 2026 - Remove Restaurant No-Photo Placeholder Entirely
+**Worked on:** Shawn asked the team to give Codex explicit directions after both fallback attempts missed the mark. Team direction: no fake food, no initials, no placeholder box.
+
+### Fixed
+- Removed the restaurant no-photo fallback visual entirely from `OnlineOrderClient.tsx`.
+- Items with real photos still render the same 80x80 image.
+- Items without photos now render text, price, and add button only.
+- Pricing, checkout, cart state, and sticky Order Online behavior were not changed.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: refresh Rosa's mobile menu page and confirm the no-photo Burritos item has no image/initials/placeholder square.
+
+---
 ## Session: August 5, 2026 - Remove Bad Restaurant Placeholder Illustration
 **Worked on:** Shawn rejected the illustrated food-plate fallback as looking bad. Team direction: remove fake food, keep a quiet premium placeholder.
 
