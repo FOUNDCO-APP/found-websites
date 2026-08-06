@@ -578,6 +578,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     }
     setMenuSaved(true)
     setTimeout(() => setMenuSaved(false), 2500)
+    flashSaveNotice(isFoodCatalog ? "Menu was saved." : "Products were saved.", catalogCopy.href)
     return true
   }
 
