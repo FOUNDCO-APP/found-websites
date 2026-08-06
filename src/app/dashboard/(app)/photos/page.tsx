@@ -1611,7 +1611,8 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
           selectMode ? onToggleSelect?.(photo.id) : onView(photo)
         }}
         aria-label={isVideo ? "Open business video" : "Open business photo"}
-        style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}
+        onContextMenu={(e) => e.preventDefault()}
+        style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
       >
         {isVideo ? (
           <VideoPreviewTile src={photo.url} />
@@ -1620,7 +1621,8 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
           <img
             src={photo.url}
             alt="Business photo"
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none" }}
           />
         )}
       </button>
