@@ -2558,7 +2558,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: 16, lineHeight: 1.45, fontWeight: 700 }}>{saveNotice}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginTop: 2 }}>
-              <a href={saveNoticeUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "15px 0", borderRadius: 16, backgroundColor: GREEN, color: BLACK, textAlign: "center", textDecoration: "none", fontSize: 15, fontWeight: 900 }}>
+              <a href={saveNoticeUrl} target="_blank" rel="noopener noreferrer" onClick={() => { setSaveNotice(null); setSaveNoticeUrl(null) }} style={{ padding: "15px 0", borderRadius: 16, backgroundColor: GREEN, color: BLACK, textAlign: "center", textDecoration: "none", fontSize: 15, fontWeight: 900 }}>
                 View live page
               </a>
               <button onClick={() => { setSaveNotice(null); setSaveNoticeUrl(null) }} style={{ padding: "15px 0", borderRadius: 16, border: "1px solid rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.82)", fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
