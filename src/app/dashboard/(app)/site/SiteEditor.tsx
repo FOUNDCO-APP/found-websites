@@ -374,6 +374,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       setConfig(prev => ({ ...prev, [field]: previousValue }))
       setSaved(null)
       flashSaveError()
+    } else {
+      const liveUpdate = getTextFieldLiveUpdate(field)
+      if (liveUpdate) flashSaveNotice(liveUpdate.message, liveUpdate.url)
     }
   }
 
@@ -840,6 +843,46 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const galleryIntroBody = missingPhotoSlots
     ? `${photoSections.gallery.helper} ${missingPhotoSlots} site photo spots still need owner photos. Stock can stay until better photos are ready.`
     : `${photoSections.gallery.helper} The important photo spots have owner photos assigned.`
+
+  function getTextFieldLiveUpdate(field: string) {
+    const homeUrl = publicSiteOrigin
+    const aboutUrl = `${publicSiteOrigin}/about`
+    const contactUrl = `${publicSiteOrigin}/contact`
+    switch (field) {
+      case "hero_title":
+        return { message: "Homepage headline was saved.", url: homeUrl }
+      case "hero_subtitle":
+        return { message: "Homepage supporting line was saved.", url: homeUrl }
+      case "tagline":
+        return { message: "Homepage tagline was saved.", url: homeUrl }
+      case "cta_headline":
+        return { message: "Bottom homepage text was saved.", url: homeUrl }
+      case "about_text":
+        return { message: "About story was saved.", url: aboutUrl }
+      case "about_hero_subtitle":
+        return { message: "About page intro was saved.", url: aboutUrl }
+      case "contact_eyebrow":
+        return { message: "Contact label was saved.", url: contactUrl }
+      case "contact_title":
+        return { message: "Contact headline was saved.", url: contactUrl }
+      case "contact_subtitle":
+        return { message: "Contact supporting line was saved.", url: contactUrl }
+      case "contact_form_title":
+        return { message: "Contact form headline was saved.", url: contactUrl }
+      case "contact_form_subtitle":
+        return { message: "Contact form supporting line was saved.", url: contactUrl }
+      case "announcement_title":
+        return { message: "Featured update headline was saved.", url: homeUrl }
+      case "announcement_body":
+        return { message: "Featured update copy was saved.", url: homeUrl }
+      case "announcement_cta_label":
+        return { message: "Featured update button was saved.", url: homeUrl }
+      case "announcement_cta_href":
+        return { message: "Featured update link was saved.", url: homeUrl }
+      default:
+        return null
+    }
+  }
 
   function getPhotoSlotSaveNotice(slot: PhotoSlot, action: "saved" | "removed" = "saved") {
     const label = getPhotoSlotOwnerLabel(slot)
