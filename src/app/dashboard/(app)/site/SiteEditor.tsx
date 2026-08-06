@@ -313,7 +313,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     ? {
         pageLabel: "Menu Page",
         href: `${publicSiteOrigin}/menu`,
-        manageHref: "/dashboard/menu",
+        manageHref: "/menu",
         manageLabel: "Manage menu items",
         liveLabel: "View live menu",
         savedLabel: "Saved",
@@ -331,7 +331,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     : {
         pageLabel: "Products",
         href: `${publicSiteOrigin}/shop`,
-        manageHref: "/dashboard/products",
+        manageHref: "/products",
         manageLabel: "Manage products",
         liveLabel: "View live shop",
         savedLabel: "Saved",

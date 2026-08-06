@@ -4,7 +4,7 @@
 - [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Final team correction: no placeholder at all for restaurant no-photo items.
 - [x] Consolidate Edit Website > Menu/Products so it no longer duplicates the main Menu/Products manager.
 - [ ] Shawn QA: Edit Website > Menu should show a page image control plus Manage menu items / View live menu, not add/edit item controls.
-- [ ] Shawn QA: Manage menu items should open the dedicated Menu tool; View live menu should open the public menu page.
+- [ ] Shawn QA: Manage menu items should open the dedicated Menu tool without a 404; View live menu should open the public menu page.
 - [x] Documentation recovery checkpoint added after credit interruption; current truth is back at the top of `SESSION_HANDOFF.md`.
 
 ---

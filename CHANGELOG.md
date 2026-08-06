@@ -1,3 +1,17 @@
+## Session: August 5, 2026 - Fix Edit Website Menu Handoff 404
+**Worked on:** Hotfix after Shawn clicked Manage menu items from Edit Website > Menu and hit a 404.
+
+### Fixed
+- Changed the handoff route from `/dashboard/menu` to `/menu` and `/dashboard/products` to `/products`.
+- This matches the dashboard nav path model on `my.foundco.app`, where live owner-app URLs are app-relative and do not include `/dashboard`.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+
+### Test Next
+- Shawn: tap Manage menu items from Edit Website > Menu again. It should open the Menu tool instead of 404.
+
+---
 ## Session: August 5, 2026 - Consolidate Edit Website Catalog Handoff
 **Worked on:** Team-approved UX correction after Shawn showed that Edit Website > Menu and the main Menu tool looked like two different systems for the same job.
 

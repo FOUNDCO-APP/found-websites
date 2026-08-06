@@ -10,7 +10,7 @@
 
 ### What Changed Recently
 - Removed the duplicate menu/product search, category editing, item editing, add-category controls, and old item edit sheet from `src/app/dashboard/(app)/site/SiteEditor.tsx`.
-- Added `Manage menu items` -> `/dashboard/menu` and `Manage products` -> `/dashboard/products` from the website editor catalog page.
+- Added `Manage menu items` -> `/menu` and `Manage products` -> `/products` from the website editor catalog page. Important: these must stay app-relative because `my.foundco.app` strips the `/dashboard` prefix in live owner-app mode.
 - Kept the Menu/Product page hero image control in Edit Website because that controls how the public website page looks.
 - Public menu cards still show real photos when present, no image block when missing, descriptions clamped to about 3 lines, and prices normalize through `src/lib/catalogPricing.ts`.
 
@@ -23,7 +23,7 @@
 
 ### Test Next
 - In Edit Website > Menu, confirm there is no duplicate add/edit item experience; it should explain that Menu is managed in one place.
-- Tap `Manage menu items` and confirm it opens the dedicated Menu tool with the same premium item/category editor Shawn screenshotted.
+- Tap `Manage menu items` and confirm it opens the dedicated Menu tool with the same premium item/category editor Shawn screenshotted, with no 404.
 - Tap `View live menu` and confirm it opens the public menu page.
 - Confirm changing the Menu Page image from Edit Website still affects the public menu page image only.
 
