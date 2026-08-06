@@ -1,3 +1,87 @@
+## 2026-08-05 - Live Launch Handoff: Found Website Editor, Templates, and Catalog Polish
+
+**Authoritative recovery note from Codex after credit interruption.** Claude added useful reconstructed entries in commit `8b8c425`, but this section is the current top-level handoff for any AI or engineer picking up the work. Preserve the entries below; do not overwrite or revert them unless Shawn explicitly asks.
+
+### Team Operating Rule
+- Shawn wants every product/design decision routed through the Found team in `AGENTS.md`.
+- Steve gives product approval, Jony leads design quality, Angela owns owner/customer clarity, Craig owns architecture, Marcus owns public template rendering, and Priya owns backend/data impact.
+- Do not make independent design choices. If there is a meaningful choice, bring it back to the team first.
+- This is live-launch work. Keep changes small, clean, reversible, and verified.
+
+### Current Git State to Understand
+- Latest known doc backfill commit before this note: `8b8c425 Backfill docs for 17 undocumented commits, per BRIEF.md Step 8`.
+- Recent functional commits shipped and pushed:
+  - `e1a53d8 Normalize catalog prices and improve no-photo cards`
+  - `6b71444 Confirm menu and product saves`
+  - `a520243 Clarify photo labels and confirm service saves`
+  - `f7cf511 Dismiss live confirmation when viewing page`
+  - `e8f74f6 Show live confirmation after text edits`
+  - `a12ecb3 Clarify photo update and reassignment prompts`
+  - `ebbca7a Add view action to photo save notice`
+  - `14f83da Add live view links for photo sections`
+  - `1d6c936 Show live section confirmation after photo changes`
+  - `f91e4bc Keep wellness hero photo separate from CTA slot`
+  - `cad04b5 Extend live section labels across photo admin`
+  - `c58741d Map admin photo labels to live sections`
+  - `13f0725 Improve shared template content fallbacks`
+
+### What We Changed
+- Added `src/lib/siteSectionRegistry.ts` as the owner-facing mapping between admin photo slots and public website sections/pages.
+- Updated `src/app/dashboard/(app)/site/SiteEditor.tsx` so photo labels, save confirmations, text confirmations, service confirmations, menu confirmations, and product confirmations tell the owner where to check the live site.
+- Save confirmations now use a larger modal for public-facing saves with `View live page` and `Keep editing`.
+- Clicking `View live page` dismisses the confirmation before opening the public page, so it is not still there when the owner returns.
+- Reassignment copy for photos was simplified. It no longer uses confusing generated titles like "Professional Audio in Tucson"; it says which section already uses the photo and whether to use it here or keep it there.
+- Wellness hero and final CTA image slots were kept separate so changing one does not silently affect the other.
+- Added `src/lib/catalogPricing.ts` and routed restaurant menus, retail products, checkout APIs, catalog previews, and admin catalog editing through the same price parser/formatter.
+- Catalog prices now normalize owner input like `1` into `$1.00` where valid.
+- Restaurant order and retail shop cards now show a soft initials fallback image when the owner has not uploaded a photo.
+
+### Key Files
+- `src/app/dashboard/(app)/site/SiteEditor.tsx`
+- `src/lib/siteSectionRegistry.ts`
+- `src/lib/catalogPricing.ts`
+- `src/lib/copyPolish.ts`
+- `src/app/[slug]/order/OnlineOrderClient.tsx`
+- `src/app/[slug]/shop/ShopClient.tsx`
+- `src/app/api/online-order/checkout/route.ts`
+- `src/app/api/shopping-cart/checkout/route.ts`
+- `src/components/dashboard/CatalogManager.tsx`
+- `src/components/layouts/CatalogShowcase.tsx`
+
+### Verification Already Done
+- `git diff --check` passed after each functional change.
+- `cmd /c npx tsc --noEmit` passed after functional changes.
+- `cmd /c npm run build` passed after functional changes.
+- The build still shows the existing warning: `"middleware" file convention is deprecated. Please use "proxy" instead.` That warning was already present and was not introduced here.
+
+### Shawn-Tested Results
+- Photo labels and live-section save confirmations worked.
+- Service save confirmations worked.
+- Menu and product save confirmations worked.
+- `View live page` now clears the confirmation before navigating.
+- Price display worked on Rosa's Mexican Food: raw `1` showed as `$1.00`.
+- No-photo menu item displayed an initials fallback card, e.g. `CA`.
+
+### Active Context Before Pause
+- Shawn paused the prior template/admin work to focus on restaurant menu quality.
+- Current screenshot under discussion: Rosa's Mexican Food mobile order page. It now shows prices correctly and a no-photo fallback, but the team still needs to audit whether the menu feels premium enough compared with Owner.com-style restaurant ordering.
+- Do not jump straight into further menu redesign. First give a team read on what to keep/change, then get Shawn approval.
+
+### Team Queue Next
+1. Team audit of Rosa's mobile menu/order page screenshot.
+2. Decide whether the no-photo fallback should stay as initials, become a richer food-style placeholder, or prompt owners harder to upload photos.
+3. Decide whether menu cards need stronger hierarchy, descriptions, category navigation, modifiers, badges, or tighter restaurant-specific styling.
+4. Continue the template/admin work only after the menu pause is resolved.
+5. Keep improving dynamic owner-facing admin labels so the admin references what the owner sees on the public site, not internal slot names.
+
+### Guardrails
+- Do not revert Claude's doc commit or any user/Claude changes.
+- Do not stack broad patches on top of patches.
+- Keep docs current before pushing meaningful feature work.
+- If Shawn asks "what do I test," answer in plain owner language using the real page and section names visible in the admin/public site.
+
+---
+
 ## 2026-08-05 - Catalog Price Normalization + No-Photo Fallback Cards (restaurants + retail)
 
 **Reconstructed catch-up entry** - this work (commit `e1a53d8`) shipped without a matching doc update; written after the fact from the actual diff, not live session notes. Flagging that plainly since it's a gap in the process, not a silent edit.
