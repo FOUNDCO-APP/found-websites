@@ -1672,11 +1672,14 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
             <button
               onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
               aria-label="Place on site"
-              style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+              style={{
+                height: 26, padding: "0 8px", borderRadius: 8, border: "none", cursor: "pointer",
+                backgroundColor: photo.website_section || photo.in_gallery ? `${SIGNAL_GREEN}30` : "rgba(0,0,0,0.55)",
+                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-              </svg>
+              <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.02em", color: photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)" }}>PLACE</span>
             </button>
           )}
         </div>
@@ -1741,17 +1744,28 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
           </div>
         </div>
 
-        {confirm ? (
-          <div style={{ borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "18px 16px" }}>
-            <p style={{ margin: "0 0 16px", ...TYPE.subhead, fontWeight: 400, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
-              <strong style={{ color: "white" }}>{confirm.label}</strong> already has a photo. Replace it with this one?
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <button onClick={onConfirmReplace} style={{ padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Replace it</button>
-              <button onClick={onCancelConfirm} style={{ padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+        {confirm ? (() => {
+          const submitting = placingSlot === confirm.slot
+          return (
+            <div style={{ borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "18px 16px" }}>
+              <p style={{ margin: "0 0 16px", ...TYPE.subhead, fontWeight: 400, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
+                <strong style={{ color: "white" }}>{confirm.label}</strong> already has a photo. Replace it with this one?
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button onClick={onConfirmReplace} disabled={submitting} style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  padding: "14px 0", borderRadius: 14, border: "none",
+                  backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800,
+                  cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.75 : 1,
+                }}>
+                  {submitting && <div style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }} />}
+                  {submitting ? "Replacing..." : "Replace it"}
+                </button>
+                <button onClick={onCancelConfirm} disabled={submitting} style={{ padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 700, cursor: submitting ? "default" : "pointer", opacity: submitting ? 0.5 : 1 }}>Cancel</button>
+              </div>
             </div>
-          </div>
-        ) : loading || !destinations ? (
+          )
+        })() : loading || !destinations ? (
           <div style={{ padding: "30px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", ...TYPE.footnote }}>Loading...</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
