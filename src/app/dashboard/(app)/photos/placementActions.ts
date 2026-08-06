@@ -8,9 +8,13 @@ import { getSitePhotoSections } from "@/lib/siteSectionRegistry"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { assignPhotoToSection, toggleGalleryPhoto } from "@/app/dashboard/(app)/site/actions"
 
+export type DestinationIcon = "home" | "person" | "wrench" | "phone" | "tag" | "grid" | "star"
+
 export type PhotoDestination = {
   slot: string
   label: string
+  icon: DestinationIcon
+  group?: "home"
   toggle?: boolean
 }
 
@@ -47,24 +51,24 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
   const vocab = getVocab(ctx.company.sub_industry ?? null, industryCategory)
 
   const destinations: PhotoDestination[] = [
-    { slot: "hero", label: `Top of ${sections.hero.page} page` },
-    { slot: "cta", label: `Bottom of ${sections.cta.page} page` },
-    { slot: "about", label: sections.about.page },
-    { slot: "services", label: sections.services.page },
-    { slot: "contact", label: sections.contact.page },
+    { slot: "hero", label: "Top", icon: "home", group: "home" },
+    { slot: "cta", label: "Bottom", icon: "home", group: "home" },
+    { slot: "about", label: sections.about.page, icon: "person" },
+    { slot: "services", label: sections.services.page, icon: "wrench" },
+    { slot: "contact", label: sections.contact.page, icon: "phone" },
   ]
 
   if (isFoodCatalog) {
-    destinations.push({ slot: "order", label: sections.order.page })
+    destinations.push({ slot: "order", label: sections.order.page, icon: "tag" })
   } else {
-    destinations.push({ slot: "shop", label: sections.shop.page })
+    destinations.push({ slot: "shop", label: sections.shop.page, icon: "tag" })
   }
 
   if (config?.announcement_enabled) {
-    destinations.push({ slot: "announcement", label: sections.announcement.page + " — Featured Update" })
+    destinations.push({ slot: "announcement", label: sections.announcement.page + " — Featured Update", icon: "star" })
   }
 
-  destinations.push({ slot: "gallery", label: vocab.galleryLabel, toggle: true })
+  destinations.push({ slot: "gallery", label: vocab.galleryLabel, icon: "grid", toggle: true })
 
   return destinations
 }

@@ -1670,32 +1670,33 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
           </button>
-          {onPlace && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
-              aria-label="Add to site"
-              style={{
-                height: 26, padding: "0 8px", borderRadius: 8, border: "none", cursor: "pointer",
-                backgroundColor: photo.website_section || photo.in_gallery ? `${SIGNAL_GREEN}30` : "rgba(0,0,0,0.55)",
-                backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-                display: "flex", alignItems: "center", gap: 4, justifyContent: "center",
-              }}
-            >
-              {(() => {
-                const activeColor = photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)"
-                return (
-                  <>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="16" rx="2"/>
-                      <rect x="6.5" y="8" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
-                    </svg>
-                    <span style={{ fontSize: 10, fontWeight: 900, letterSpacing: "0.02em", color: activeColor }}>ADD TO SITE</span>
-                  </>
-                )
-              })()}
-            </button>
-          )}
         </div>
+      )}
+      {onPlace && !selectMode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
+          aria-label="Add to site"
+          style={{
+            position: "absolute", bottom: 8, left: 8,
+            height: 22, padding: "0 8px", borderRadius: 7, border: "none", cursor: "pointer",
+            backgroundColor: photo.website_section || photo.in_gallery ? `${SIGNAL_GREEN}30` : "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", gap: 4, justifyContent: "center",
+          }}
+        >
+          {(() => {
+            const activeColor = photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)"
+            return (
+              <>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/>
+                  <rect x="6.5" y="8" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
+                </svg>
+                <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.02em", color: activeColor }}>ADD TO SITE</span>
+              </>
+            )
+          })()}
+        </button>
       )}
       {onRequestDelete && !selectMode && (
         <button
@@ -1710,6 +1711,71 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
         </button>
       )}
     </div>
+  )
+}
+
+// ── Small glyphs for destination rows ──
+function DestinationGlyph({ icon, color }: { icon: PhotoDestination["icon"]; color: string }) {
+  const common = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
+  switch (icon) {
+    case "home":
+      return <svg {...common}><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    case "person":
+      return <svg {...common}><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+    case "wrench":
+      return <svg {...common}><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94z"/></svg>
+    case "phone":
+      return <svg {...common}><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>
+    case "tag":
+      return <svg {...common}><path d="M20.59 13.41L13.42 20.58a2 2 0 01-2.83 0L2.5 12.5V4a2 2 0 012-2h8.5l7.59 7.59a2 2 0 010 2.82z"/><circle cx="7.5" cy="7.5" r="1" fill={color} stroke="none"/></svg>
+    case "star":
+      return <svg {...common} fill={color}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    case "grid":
+      return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+  }
+}
+
+// ── One destination row in the placement sheet ──
+function DestinationRow({ dest, photo, placingSlot, onPlace }: {
+  dest: PhotoDestination
+  photo: Photo
+  placingSlot: string | null
+  onPlace: (destination: PhotoDestination) => void
+}) {
+  const isGallery = Boolean(dest.toggle)
+  const active = isGallery ? Boolean(photo.in_gallery) : photo.website_section === dest.slot
+  const isPlacing = placingSlot === dest.slot
+  const iconColor = active ? SIGNAL_GREEN : "rgba(255,255,255,0.55)"
+
+  return (
+    <button
+      onClick={() => onPlace(dest)}
+      disabled={isPlacing}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+        padding: "14px 16px", borderRadius: 14, textAlign: "left", cursor: isPlacing ? "default" : "pointer",
+        border: isGallery
+          ? `1px dashed ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.28)"}`
+          : active ? `1px solid ${SIGNAL_GREEN}55` : "1px solid rgba(255,255,255,0.08)",
+        backgroundColor: isGallery ? "transparent" : active ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.04)",
+      }}
+    >
+      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <DestinationGlyph icon={dest.icon} color={iconColor} />
+        <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
+      </span>
+      {isPlacing ? (
+        <Spinner size={16} color={SIGNAL_GREEN} />
+      ) : isGallery ? (
+        active ? (
+          <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>In - tap to remove</span>
+        ) : (
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        )
+      ) : active ? (
+        <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>Current</span>
+      ) : null}
+    </button>
   )
 }
 
@@ -1780,35 +1846,28 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
           )
         })() : loading || !destinations ? (
           <div style={{ padding: "30px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", ...TYPE.footnote }}>Loading...</div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {destinations.map(dest => {
-              const isGallery = Boolean(dest.toggle)
-              const active = isGallery ? Boolean(photo.in_gallery) : photo.website_section === dest.slot
-              const isPlacing = placingSlot === dest.slot
-              return (
-                <button
-                  key={dest.slot}
-                  onClick={() => onPlace(dest)}
-                  disabled={isPlacing}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-                    padding: "14px 16px", borderRadius: 14, textAlign: "left", cursor: isPlacing ? "default" : "pointer",
-                    border: active ? `1px solid ${SIGNAL_GREEN}55` : "1px solid rgba(255,255,255,0.08)",
-                    backgroundColor: active ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.04)",
-                  }}
-                >
-                  <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
-                  {isPlacing ? (
-                    <Spinner size={16} color={SIGNAL_GREEN} />
-                  ) : active ? (
-                    <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>{isGallery ? "In gallery - tap to remove" : "Current"}</span>
-                  ) : null}
-                </button>
-              )
-            })}
-          </div>
-        )}
+        ) : (() => {
+          const homeDests = destinations.filter(d => d.group === "home")
+          const otherDests = destinations.filter(d => d.group !== "home")
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {homeDests.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px" }}>
+                    <DestinationGlyph icon="home" color="rgba(255,255,255,0.45)" />
+                    <span style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Home Page</span>
+                  </div>
+                  {homeDests.map(dest => (
+                    <DestinationRow key={dest.slot} dest={dest} photo={photo} placingSlot={placingSlot} onPlace={onPlace} />
+                  ))}
+                </div>
+              )}
+              {otherDests.map(dest => (
+                <DestinationRow key={dest.slot} dest={dest} photo={photo} placingSlot={placingSlot} onPlace={onPlace} />
+              ))}
+            </div>
+          )
+        })()}
       </div>
     </>
   )
