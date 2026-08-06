@@ -1,5 +1,26 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Place on Site: Fast Photo Placement
+
+### Where We Left Off
+- Shawn parked the social-post-generation direction (star/`for_social` pipeline) after seeing quality issues (logo rendering, no "wow factor") on two other live projects using a similar approach. Redirected the team to the real mission: eliminate the "you have to be a web designer" tax for photos specifically - fast placement, zero tech savvy required.
+- Root problem reported: Shawn hearted new photos and assigned them to hero/about/etc., but a gallery-strip section on some templates kept showing stock photos, because `in_gallery` is a flag separate from `for_website`/`website_section`, previously only settable through a picker buried inside Site Editor.
+- Team brainstorm (Jony/Steve/Angela/Marcus/Craig) landed on a destination-first flow: long-press (or tap a visible icon on) any photo to get a flat action sheet of real destinations - one tap places it, no nested pickers. Shawn approved and said to build it.
+
+### What Changed
+- New `getPhotoDestinationOptions()` / `placePhoto()` / `removeFromGallery()` server actions (`src/app/dashboard/(app)/photos/placementActions.ts`) - thin wrappers around the already-correct, already-shipped `assignPhotoToSection`/`toggleGalleryPhoto` actions in `site/actions.ts`. Destination labels reuse `getSitePhotoSections()` (page/title per slot) and `getVocab().galleryLabel` (per-industry gallery naming, e.g. "The Food" for restaurants, "The Portfolio" for photographers) - both already existed, no new naming system built.
+- New `PlacementSheet` component in the Photos tab (`src/app/dashboard/(app)/photos/page.tsx`) - an animated bottom sheet (new `.placement-sheet` CSS transition in `globals.css`, modeled on `OnboardingDrawer`'s slide-up convention since most existing sheets in this codebase mount instantly with no animation). Lists every real destination (Top of Home, Bottom of Home, About, Services, Contact, Menu or Products, Featured Update if enabled, Gallery) as a flat one-tap list; gallery is a toggle row, everything else is exclusive-assign with a "replace this photo?" confirm if the slot is already occupied.
+- `PhotoCard` (grid tile) gets a third icon (alongside heart/star) that opens the sheet, plus long-press-to-open built from scratch (no gesture precedent existed anywhere in the codebase - pointerdown/timer/move-cancel-threshold). `PhotoLightroom` gets a matching "Place" button in its existing bottom action bar.
+- Added `in_gallery` to the photos API route's GET select and to the shared `Photo`/`UploadedPhoto`/`DashboardMediaUpload` types so the UI can read current gallery state.
+- Explicitly untouched: star/`for_social`, the whole Social Assistant tab (branded post generator, drafts, canvas rendering), and Site Editor's own per-slot picker sheets - all left exactly as they were.
+
+### Test Next
+- Shawn: heart a photo, long-press it (or tap the new pin icon), confirm the sheet opens with correct labels - test on a food-catalog company (should say "Menu") and a non-food one (should say "Products"), confirm the gallery row's label varies by sub-industry.
+- Tap "Top of Home page" on a real photo, confirm it goes live as the hero on the public site. Tap the gallery row on a Portrait/Wellness Luxe/Wellness Cinematic company, confirm the photo now shows in the gallery strip instead of stock - this is the direct fix for the original bug report.
+- Confirm the Social tab, star icon, and post generator still work exactly as before - nothing there should have changed.
+
+---
+
 ## 2026-08-06 - Edit Website Header Redundancy Fixed
 
 ### Where We Left Off

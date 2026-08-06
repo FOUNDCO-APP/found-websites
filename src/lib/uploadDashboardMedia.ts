@@ -8,6 +8,7 @@ export type DashboardMediaUpload = {
   for_website: boolean
   for_social: boolean
   website_section: string | null
+  in_gallery: boolean
   album_id: string | null
   created_at: string
   media_type?: "photo" | "video"

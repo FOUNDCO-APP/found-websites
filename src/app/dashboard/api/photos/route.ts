@@ -35,7 +35,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("company_photos")
-    .select("id, url, storage_path, for_website, for_social, website_section, album_id, created_at")
+    .select("id, url, storage_path, for_website, for_social, website_section, in_gallery, album_id, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 

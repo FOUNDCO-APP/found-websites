@@ -7,6 +7,7 @@ import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSh
 import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 
 type Photo = {
   id: string
@@ -14,6 +15,7 @@ type Photo = {
   for_website: boolean
   for_social: boolean
   website_section: string | null
+  in_gallery: boolean
   album_id: string | null
   created_at: string
   media_type?: "photo" | "video"
@@ -107,6 +109,11 @@ function PhotosPageInner() {
   const [showCamera, setShowCamera] = useState(false)
   const [showAddOptions, setShowAddOptions] = useState(false)
   const [showExistingPicker, setShowExistingPicker] = useState(false)
+  const [placingPhoto, setPlacingPhoto] = useState<Photo | null>(null)
+  const [destinations, setDestinations] = useState<PhotoDestination[] | null>(null)
+  const [destinationsLoading, setDestinationsLoading] = useState(false)
+  const [placingSlot, setPlacingSlot] = useState<string | null>(null)
+  const [placeReassignConfirm, setPlaceReassignConfirm] = useState<{ slot: string; label: string } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const searchParams = useSearchParams()
@@ -208,6 +215,48 @@ function PhotosPageInner() {
       body: JSON.stringify({ id: photo.id, storage_path: photo.url }),
     })
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
+  }
+
+  async function openPlacement(photo: Photo) {
+    setPlacingPhoto(photo)
+    setPlaceReassignConfirm(null)
+    if (destinations === null && !destinationsLoading) {
+      setDestinationsLoading(true)
+      const result = await getPhotoDestinationOptions()
+      setDestinationsLoading(false)
+      if (!("error" in result)) setDestinations(result)
+    }
+  }
+
+  async function handlePlace(destination: PhotoDestination, force = false) {
+    if (!placingPhoto) return
+    const isGalleryToggle = Boolean(destination.toggle)
+    const removingFromGallery = isGalleryToggle && placingPhoto.in_gallery
+
+    if (!isGalleryToggle && !force) {
+      const occupant = photos.find(p => p.id !== placingPhoto.id && p.website_section === destination.slot)
+      if (occupant) {
+        setPlaceReassignConfirm({ slot: destination.slot, label: destination.label })
+        return
+      }
+    }
+
+    setPlacingSlot(destination.slot)
+    const photoId = placingPhoto.id
+    const result = removingFromGallery ? await removeFromGallery(photoId) : await placePhoto(photoId, destination.slot)
+    setPlacingSlot(null)
+    setPlaceReassignConfirm(null)
+    if (result && "error" in result) return
+
+    setPhotos(prev => prev.map(p => {
+      if (isGalleryToggle) {
+        return p.id === photoId ? { ...p, in_gallery: !removingFromGallery } : p
+      }
+      if (p.id === photoId) return { ...p, website_section: destination.slot }
+      if (p.website_section === destination.slot) return { ...p, website_section: null }
+      return p
+    }))
+    if (!isGalleryToggle) setPlacingPhoto(null)
   }
 
   function toggleSelect(id: string) {
@@ -544,6 +593,7 @@ function PhotosPageInner() {
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
             onFlag={flag}
+            onPlace={openPlacement}
             onRequestDelete={setDeleteConfirmPhoto}
             selectMode={selectMode}
             selectedIds={selectedIds}
@@ -586,6 +636,7 @@ function PhotosPageInner() {
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
             onFlag={flag}
+            onPlace={openPlacement}
             onRequestDelete={setDeleteConfirmPhoto}
             selectMode={selectMode}
             selectedIds={selectedIds}
@@ -618,7 +669,28 @@ function PhotosPageInner() {
           initialIndex={lightroomIndex}
           onClose={() => setLightroomIndex(null)}
           onFlag={flag}
+          onPlace={openPlacement}
           onRemove={remove}
+        />
+      )}
+
+      {/* Place on Site sheet */}
+      {placingPhoto && (
+        <PlacementSheet
+          photo={photos.find(p => p.id === placingPhoto.id) ?? placingPhoto}
+          destinations={destinations}
+          loading={destinationsLoading}
+          placingSlot={placingSlot}
+          confirm={placeReassignConfirm}
+          onPlace={handlePlace}
+          onConfirmReplace={() => {
+            if (placeReassignConfirm) {
+              const dest = destinations?.find(d => d.slot === placeReassignConfirm.slot)
+              if (dest) handlePlace(dest, true)
+            }
+          }}
+          onCancelConfirm={() => setPlaceReassignConfirm(null)}
+          onClose={() => { setPlacingPhoto(null); setPlaceReassignConfirm(null) }}
         />
       )}
 
@@ -742,11 +814,12 @@ function PhotosPageInner() {
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onRemove }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
   onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onPlace?: (photo: Photo) => void
   onRemove: (photo: Photo) => void
 }) {
   const [index, setIndex] = useState(initialIndex)
@@ -899,7 +972,32 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Social</span>
         </button>
 
-        {/* Trash â€” Delete */}
+        {/* Pin — Place on Site */}
+        {onPlace && (
+          <button onClick={() => onPlace(photo)} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%",
+              backgroundColor: photo.website_section || photo.in_gallery ? "rgba(50,208,116,0.22)" : "rgba(255,255,255,0.1)",
+              border: `2px solid ${photo.website_section || photo.in_gallery ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
+              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.18s ease",
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24"
+                fill="none"
+                stroke={photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"}
+                strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Place</span>
+          </button>
+        )}
+
+        {/* Trash — Delete */}
         <button onClick={handleDelete} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -925,11 +1023,12 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onRemove }: {
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onPlace, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onPlace?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
   selectedIds?: Set<string>
@@ -980,6 +1079,7 @@ function DateGroupedGrid({
                 photo={photo}
                 onView={onView}
                 onFlag={onFlag}
+                onPlace={onPlace}
                 onRequestDelete={onRequestDelete}
                 selectMode={selectMode}
                 selected={selectedIds?.has(photo.id)}
@@ -1460,21 +1560,56 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView, onFlag, onRequestDelete, selectMode, selected, onToggleSelect }: {
+function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode, selected, onToggleSelect }: {
   photo: Photo
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onPlace?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
   selected?: boolean
   onToggleSelect?: (id: string) => void
 }) {
   const isVideo = isVideoMedia(photo.url, photo.mime_type)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const longPressFired = useRef(false)
+  const pointerStart = useRef<{ x: number; y: number } | null>(null)
+
+  function clearLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+  function handlePointerDown(e: React.PointerEvent) {
+    if (selectMode || !onPlace) return
+    longPressFired.current = false
+    pointerStart.current = { x: e.clientX, y: e.clientY }
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true
+      onPlace(photo)
+    }, 500)
+  }
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!pointerStart.current) return
+    const dx = e.clientX - pointerStart.current.x
+    const dy = e.clientY - pointerStart.current.y
+    if (Math.sqrt(dx * dx + dy * dy) > 10) clearLongPress()
+  }
 
   return (
-    <div style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1", backgroundColor: isVideo ? "#111813" : "transparent", border: isVideo ? "1px solid rgba(255,255,255,0.08)" : "none" }}>
+    <div
+      style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1", backgroundColor: isVideo ? "#111813" : "transparent", border: isVideo ? "1px solid rgba(255,255,255,0.08)" : "none" }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={clearLongPress}
+      onPointerLeave={clearLongPress}
+    >
       <button
-        onClick={() => selectMode ? onToggleSelect?.(photo.id) : onView(photo)}
+        onClick={() => {
+          if (longPressFired.current) { longPressFired.current = false; return }
+          selectMode ? onToggleSelect?.(photo.id) : onView(photo)
+        }}
         aria-label={isVideo ? "Open business video" : "Open business photo"}
         style={{ width: "100%", height: "100%", padding: 0, border: "none", background: "transparent", cursor: "pointer", display: "block" }}
       >
@@ -1531,6 +1666,17 @@ function PhotoCard({ photo, onView, onFlag, onRequestDelete, selectMode, selecte
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
           </button>
+          {onPlace && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
+              aria-label="Place on site"
+              style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </button>
+          )}
         </div>
       )}
       {onRequestDelete && !selectMode && (
@@ -1546,6 +1692,96 @@ function PhotoCard({ photo, onView, onFlag, onRequestDelete, selectMode, selecte
         </button>
       )}
     </div>
+  )
+}
+
+// ── Placement sheet — "Place on Site" destination picker ──
+function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, onPlace, onConfirmReplace, onCancelConfirm, onClose }: {
+  photo: Photo
+  destinations: PhotoDestination[] | null
+  loading: boolean
+  placingSlot: string | null
+  confirm: { slot: string; label: string } | null
+  onPlace: (destination: PhotoDestination) => void
+  onConfirmReplace: () => void
+  onCancelConfirm: () => void
+  onClose: () => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setOpen(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  function handleClose() {
+    setOpen(false)
+    setTimeout(onClose, 320)
+  }
+
+  return (
+    <>
+      <div onClick={handleClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 90, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", opacity: open ? 1 : 0, transition: "opacity 320ms ease" }} />
+      <div className={`placement-sheet${open ? " placement-sheet-open" : ""}`} style={{ padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)" }}>
+        <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 18px" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0, backgroundColor: "rgba(255,255,255,0.05)" }}>
+            {isVideoMedia(photo.url, photo.mime_type) ? (
+              <VideoPreviewTile src={photo.url} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            )}
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, ...TYPE.caption, color: `${SIGNAL_GREEN}cc` }}>PLACE ON SITE</p>
+            <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Where does this go?</h3>
+          </div>
+        </div>
+
+        {confirm ? (
+          <div style={{ borderRadius: 18, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "18px 16px" }}>
+            <p style={{ margin: "0 0 16px", ...TYPE.subhead, fontWeight: 400, color: "rgba(255,255,255,0.8)", lineHeight: 1.5 }}>
+              <strong style={{ color: "white" }}>{confirm.label}</strong> already has a photo. Replace it with this one?
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button onClick={onConfirmReplace} style={{ padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Replace it</button>
+              <button onClick={onCancelConfirm} style={{ padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+            </div>
+          </div>
+        ) : loading || !destinations ? (
+          <div style={{ padding: "30px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", ...TYPE.footnote }}>Loading...</div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {destinations.map(dest => {
+              const isGallery = Boolean(dest.toggle)
+              const active = isGallery ? Boolean(photo.in_gallery) : photo.website_section === dest.slot
+              const isPlacing = placingSlot === dest.slot
+              return (
+                <button
+                  key={dest.slot}
+                  onClick={() => onPlace(dest)}
+                  disabled={isPlacing}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+                    padding: "14px 16px", borderRadius: 14, textAlign: "left", cursor: isPlacing ? "default" : "pointer",
+                    border: active ? `1px solid ${SIGNAL_GREEN}55` : "1px solid rgba(255,255,255,0.08)",
+                    backgroundColor: active ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.04)",
+                  }}
+                >
+                  <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
+                  {isPlacing ? (
+                    <div style={{ width: 16, height: 16, borderRadius: "50%", border: `2px solid ${SIGNAL_GREEN}44`, borderTopColor: SIGNAL_GREEN, animation: "spin 0.8s linear infinite" }} />
+                  ) : active ? (
+                    <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>{isGallery ? "In gallery - tap to remove" : "Current"}</span>
+                  ) : null}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
 

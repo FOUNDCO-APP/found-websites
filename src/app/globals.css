@@ -104,6 +104,29 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* ── PlacementSheet — "Place on Site" action sheet ── */
+.placement-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 95;
+  max-height: min(74vh, 620px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 26px 26px 0 0;
+  background: #111613;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 -24px 70px rgba(0,0,0,0.45);
+  transition: transform 420ms cubic-bezier(0.32, 0.72, 0, 1);
+  transform: translateY(100%);
+  will-change: transform;
+}
+
+.placement-sheet.placement-sheet-open {
+  transform: translateY(0);
+}
+
 /* ── OnboardingDrawer — responsive panel ── */
 .found-drawer {
   position: fixed;

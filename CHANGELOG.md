@@ -1,3 +1,28 @@
+## Session: August 6, 2026 - Place on Site: Fast Photo Placement
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn parked the social-post-generation direction after quality issues (logo rendering, no "wow factor") on two other live projects. Redirected to the core mission: eliminate the "be a web designer" tax for photos - fast, one-tap placement, zero tech savvy required. Ran a team brainstorm (Jony/Steve/Angela/Marcus/Craig) off Shawn's own vision (heart -> website tab -> per-page picker); team countered with a destination-first alternative (long-press any photo -> flat action sheet -> one tap places it) reasoning it removes a step instead of adding one. Shawn approved building the team's version.
+
+### Root problem this fixes
+- `in_gallery` was a flag totally separate from `for_website`/`website_section`, only settable through a picker buried inside Site Editor - so hearting and assigning new photos to hero/about/etc. never made them show in the gallery-strip section some templates render, leaving it full of stock photos even when the owner had plenty of real ones.
+
+### Built
+- `src/app/dashboard/(app)/photos/placementActions.ts` (new) - `getPhotoDestinationOptions()`, `placePhoto()`, `removeFromGallery()`. Thin wrappers around the already-correct `assignPhotoToSection`/`toggleGalleryPhoto` server actions in `site/actions.ts` - no new business logic. Destination labels reuse `getSitePhotoSections()` and `getVocab().galleryLabel` (both pre-existing, per-industry-aware).
+- New `PlacementSheet` in `photos/page.tsx` - animated bottom sheet (new `.placement-sheet` CSS transition in `globals.css`, since most sheets in this codebase mount instantly with no animation - modeled on `OnboardingDrawer`'s slide-up instead). Flat one-tap destination list; gallery is a toggle row, everything else exclusive-assign with a replace-confirm if occupied.
+- `PhotoCard`: third icon (pin, alongside heart/star) opens the sheet; long-press-to-open built from scratch (pointerdown/timer/move-cancel-threshold - no gesture precedent existed anywhere in this codebase). `PhotoLightroom`: matching "Place" button added to its bottom action bar.
+- Added `in_gallery` to the photos API route's GET select and to the `Photo`/`UploadedPhoto`/`DashboardMediaUpload` shared types.
+
+### Explicitly untouched
+- Star/`for_social`, the whole Social Assistant tab (branded post generator, drafts, canvas rendering), Site Editor's own per-slot picker sheets. Nothing in those paths was touched.
+
+### Verification
+- `npm run build` passed clean (two pre-existing type gaps surfaced and fixed along the way: `uploadDashboardMedia`'s and `CameraSheet`'s upload-response types were missing `in_gallery`, added to both).
+
+### Test Next
+- Shawn: heart a photo, long-press it (or tap the pin icon), confirm the sheet shows correct labels on both a food-catalog company ("Menu") and non-food ("Products"), and that the gallery row's label varies by sub-industry.
+- Place a photo on "Top of Home page", confirm it goes live as the hero. Add a photo to the gallery row on a Portrait/Wellness Luxe/Wellness Cinematic company, confirm it now appears in the gallery strip instead of stock.
+- Confirm Social tab/star/post generator are unaffected.
+
+---
 ## Session: August 6, 2026 - Edit Website Header Redundancy Fixed
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn had flagged the Menu page showing "Menu" repeatedly to Codex before that session ran out of credit; still unfixed. Brought Jony/Steve/Craig back in explicitly before touching code, per Shawn's ask.
