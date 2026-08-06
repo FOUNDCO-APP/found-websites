@@ -101,9 +101,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   // template instead of a real personalized one). A red error toast would
   // be misleading here since nothing actually failed.
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
-  function flashSaveNotice(message: string) {
+  const [saveNoticeUrl, setSaveNoticeUrl] = useState<string | null>(null)
+  function flashSaveNotice(message: string, liveUrl: string | null = null) {
     setSaveNotice(message)
-    setTimeout(() => setSaveNotice(null), 4500)
+    setSaveNoticeUrl(liveUrl)
+    setTimeout(() => {
+      setSaveNotice(null)
+      setSaveNoticeUrl(null)
+    }, 6500)
   }
 
   // Shared confirm-before-delete. Remove buttons for real owner content
@@ -675,7 +680,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setConfig(previousConfig)
         flashSaveError("Couldn't update that photo. Try again.")
       } else if (section) {
-        flashSaveNotice(getPhotoSlotSaveNotice(section))
+        flashSaveNotice(getPhotoSlotSaveNotice(section), getPhotoSlotPublicUrl(section))
       }
     })
   }
@@ -693,7 +698,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't update that photo. Try again.")
       } else {
-        flashSaveNotice(include ? getPhotoSlotSaveNotice("gallery") : getPhotoSlotSaveNotice("gallery", "removed"))
+        flashSaveNotice(include ? getPhotoSlotSaveNotice("gallery") : getPhotoSlotSaveNotice("gallery", "removed"), getPhotoSlotPublicUrl("gallery"))
       }
     })
   }
@@ -709,7 +714,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove those photos. Try again.")
       } else if (galleryIds.length) {
-        flashSaveNotice(getPhotoSlotSaveNotice("gallery", "removed"))
+        flashSaveNotice(getPhotoSlotSaveNotice("gallery", "removed"), getPhotoSlotPublicUrl("gallery"))
       }
     })
   }
@@ -729,7 +734,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           setConfig(previousConfig)
           flashSaveError("Couldn't remove that photo. Try again.")
         } else {
-          flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"))
+          flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"), getPhotoSlotPublicUrl(slot))
         }
       })
       return
@@ -742,7 +747,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove that photo. Try again.")
       } else if (slotPhotoIds.length) {
-        flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"))
+        flashSaveNotice(getPhotoSlotSaveNotice(slot, "removed"), getPhotoSlotPublicUrl(slot))
       }
     })
   }
@@ -2459,6 +2464,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <div style={{ position: "fixed", left: 16, right: 16, bottom: "calc(90px + env(safe-area-inset-bottom))", zIndex: 80, backgroundColor: "#111613", border: `1px solid ${GREEN}44`, borderRadius: 16, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)", flex: 1 }}>{saveNotice}</span>
+          {saveNoticeUrl && (
+            <a href={saveNoticeUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 11px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, textDecoration: "none", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
+              View
+            </a>
+          )}
         </div>
       )}
 
