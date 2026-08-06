@@ -1,3 +1,35 @@
+## 2026-08-05 - Catalog Price Normalization + No-Photo Fallback Cards (restaurants + retail)
+
+**Reconstructed catch-up entry** - this work (commit `e1a53d8`) shipped without a matching doc update; written after the fact from the actual diff, not live session notes. Flagging that plainly since it's a gap in the process, not a silent edit.
+
+Price parsing/formatting for menu and product items was duplicated across `OnlineOrderClient.tsx` (restaurant ordering), `ShopClient.tsx` (retail shop), both checkout API routes, `CatalogShowcase.tsx`, and the owner's own `SiteEditor.tsx` catalog editor - each with its own slightly different regex, so the same price could render inconsistently depending on which page rendered it. Consolidated into one shared `src/lib/catalogPricing.ts` (`parseCatalogPriceCents`, `formatCatalogMoney`, `formatCatalogPrice`, `normalizeCatalogPriceInput`) and wired every one of those call sites through it.
+
+Also: menu/product items with no photo used to render nothing in that slot. Now show a fallback card - item initials on a soft gradient background - instead of a blank box, on both the restaurant order page and the shop page.
+
+Shawn QA next: on a restaurant test site's `/order` page and a retail test site's `/shop` page, confirm prices display consistently (e.g. `$12.50` not `$12.5` or raw owner input), and confirm any item without a photo now shows an initials card instead of empty space.
+
+---
+
+## 2026-08-05 - Save Confirmations Now Say Where to Look on the Live Site
+
+**Reconstructed catch-up entry** - 11 commits (`c58741d` through `6b71444`) shipped without a matching doc update; written after the fact from the diffs, not live session notes.
+
+Previously, saving a photo, service, or menu/product item in Site Editor showed a generic "Saved" toast with no indication of where on the live site to actually check. Extended the existing calm `flashSaveNotice` toast pattern (see the July 28 saves-can-fail-silently fix below) so it now names the specific destination - e.g. "Saved to Home Hero. Check Home: top of page." A new `getPhotoSlotSaveNotice()` helper in `SiteEditor.tsx` builds this from each photo slot's own section/page/position metadata, covering save, remove, and gallery add/remove paths. Extended the same live-location awareness to text-content edits and service saves, then to menu/product saves. Along the way: photo labels in the admin UI were clarified to match live section names more consistently, the wellness template's hero photo slot was confirmed to stay independent from its CTA photo slot (no longer double-counted), and the notice now dismisses itself automatically if the owner navigates to view the live page rather than lingering.
+
+Shawn QA next: change a hero photo, a service, and a menu item one at a time in Site Editor and confirm each save shows a specific "check X page, Y section" message, not just a bare "Saved."
+
+---
+
+## 2026-08-05 - Wellness Luxe Template: Second Polish Pass
+
+**Reconstructed catch-up entry** - 5 commits (`16621e6` through `13f0725`) shipped without a matching doc update; written after the fact from the diffs, not live session notes.
+
+Follow-up refinement on the Wellness Luxe template added earlier the same day (see entry below). Polished the desktop layout and navbar treatment, improved the mobile sticky CTA bar, and made the hero read as more cinematic. That cinematic hero direction diverged enough from the original calm/editorial Wellness Luxe concept that it was split into its own separate layout family, `WellnessCinematicLayout.tsx` (`wellness_cinematic` in `src/lib/layout.ts`) rather than overloading one template with two different moods - Wellness Luxe stays calm/editorial, Wellness Cinematic is the bolder option. Also extracted a shared `publicServiceDescription.ts` helper so Impact/Editorial/Portrait and both new wellness layouts fall back to consistent service copy when an owner hasn't written their own.
+
+Shawn QA next: on a wellness/spa/salon test site, check both `Wellness Luxe` and `Wellness Cinematic` in Edit My Site > Design and confirm they read as two genuinely distinct moods, not near-duplicates. Confirm the mobile sticky CTA bar looks right on a real phone.
+
+---
+
 ## 2026-08-05 - Premium Wellness Luxe Template Added
 
 Shawn approved Jony-led design direction: keep the Found hero quality as the bar and bring templates closer to that promise rather than weakening the marketing. The first implementation step is a real premium wellness/spa template option.
