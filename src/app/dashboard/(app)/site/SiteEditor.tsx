@@ -105,10 +105,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   function flashSaveNotice(message: string, liveUrl: string | null = null) {
     setSaveNotice(message)
     setSaveNoticeUrl(liveUrl)
-    setTimeout(() => {
-      setSaveNotice(null)
-      setSaveNoticeUrl(null)
-    }, 6500)
+    if (!liveUrl) {
+      setTimeout(() => {
+        setSaveNotice(null)
+        setSaveNoticeUrl(null)
+      }, 6500)
+    }
   }
 
   // Shared confirm-before-delete. Remove buttons for real owner content
@@ -840,9 +842,52 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     : `${photoSections.gallery.helper} The important photo spots have owner photos assigned.`
 
   function getPhotoSlotSaveNotice(slot: PhotoSlot, action: "saved" | "removed" = "saved") {
-    const section = photoSections[slot]
-    const verb = action === "removed" ? "Removed from" : "Saved to"
-    return `${verb} ${section.title}. Check ${section.page}: ${section.position}.`
+    const label = getPhotoSlotOwnerLabel(slot)
+    return action === "removed" ? `${label} was removed.` : `${label} was saved.`
+  }
+
+  function getPhotoSlotOwnerLabel(slot: PhotoSlot) {
+    switch (slot) {
+      case "hero":
+        return "Homepage photo"
+      case "about":
+        return "About page photo"
+      case "cta":
+        return "Bottom homepage photo"
+      case "gallery":
+        return "Gallery photos"
+      case "announcement":
+        return "Featured update photo"
+      case "contact":
+        return "Contact page photo"
+      case "services":
+        return "Services page photo"
+      case "shop":
+        return "Shop page photo"
+      case "order":
+        return "Menu page photo"
+    }
+  }
+
+  function getPhotoSlotPageLabel(slot: PhotoSlot) {
+    switch (slot) {
+      case "hero":
+      case "cta":
+      case "announcement":
+        return "Home"
+      case "about":
+        return "About"
+      case "contact":
+        return "Contact"
+      case "services":
+        return "Services"
+      case "gallery":
+        return "Gallery"
+      case "shop":
+        return "Shop"
+      case "order":
+        return "Menu"
+    }
   }
 
   function getPhotoSlotPublicUrl(slot: PhotoSlot) {
@@ -1972,8 +2017,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                       if (isGallerySlot) { handleToggleGallery(photo.id, !photo.in_gallery); return }
                       const currentSection = photo.website_section as PhotoSlot | null
                       if (currentSection && currentSection !== activeSlot.slot) {
-                        const fromSlot = photoSlots.find(s => s.slot === currentSection)
-                        setReassignConfirm({ photoId: photo.id, slot: activeSlot.slot, fromLabel: fromSlot?.label ?? "another page" })
+                        setReassignConfirm({ photoId: photo.id, slot: activeSlot.slot, fromLabel: getPhotoSlotPageLabel(currentSection) })
                         return
                       }
                       handleAssignPhoto(photo.id, activeSlot.slot)
@@ -2017,30 +2061,29 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
       {reassignConfirm && (() => {
-        const toSlot = photoSlots.find(s => s.slot === reassignConfirm.slot)
         return (
           <>
             <div onClick={() => setReassignConfirm(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
             <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
-              <div style={{ fontSize: 30, marginBottom: 10 }}>ðŸ‘‹</div>
+              <div style={{ width: 42, height: 4, borderRadius: 999, backgroundColor: GREEN, marginBottom: 18 }} />
               <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>
                 Quick heads up
               </p>
               <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
-                This photo is currently on your <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong> page. Moving it to <strong style={{ color: "white" }}>{toSlot?.label ?? "here"}</strong> means {reassignConfirm.fromLabel} won&apos;t have it anymore.
+                This photo is already used on <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong>. If you move it here, <strong style={{ color: "white" }}>{reassignConfirm.fromLabel}</strong> will need a different photo.
               </p>
               <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
                 <button
                   onClick={() => { handleAssignPhoto(reassignConfirm.photoId, reassignConfirm.slot); setReassignConfirm(null) }}
                   style={{ padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 15, fontWeight: 900, cursor: "pointer" }}
                 >
-                  Move it to {toSlot?.label ?? "here"}
+                  Use it here
                 </button>
                 <button
                   onClick={() => setReassignConfirm(null)}
                   style={{ padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}
                 >
-                  Leave it on {reassignConfirm.fromLabel}
+                  Keep it on {reassignConfirm.fromLabel}
                 </button>
               </div>
             </div>
@@ -2460,15 +2503,33 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       )}
 
-      {saveNotice && (
+      {saveNotice && saveNoticeUrl && (
+        <>
+          <div onClick={() => { setSaveNotice(null); setSaveNoticeUrl(null) }} style={{ position: "fixed", inset: 0, zIndex: 78, backgroundColor: "rgba(0,0,0,0.64)", backdropFilter: "blur(5px)", WebkitBackdropFilter: "blur(5px)" }} />
+          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 80, backgroundColor: "#122018", border: `1px solid ${GREEN}66`, borderRadius: 26, padding: "28px 22px 22px", display: "flex", flexDirection: "column", gap: 16, boxShadow: "0 24px 80px rgba(0,0,0,0.55)" }}>
+            <div style={{ width: 54, height: 54, borderRadius: "50%", backgroundColor: GREEN, color: BLACK, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 2 }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <h3 style={{ margin: "0 0 8px", color: "white", fontSize: 25, lineHeight: 1.1, fontWeight: 900 }}>Your website was updated</h3>
+              <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: 16, lineHeight: 1.45, fontWeight: 700 }}>{saveNotice}</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, marginTop: 2 }}>
+              <a href={saveNoticeUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "15px 0", borderRadius: 16, backgroundColor: GREEN, color: BLACK, textAlign: "center", textDecoration: "none", fontSize: 15, fontWeight: 900 }}>
+                View live page
+              </a>
+              <button onClick={() => { setSaveNotice(null); setSaveNoticeUrl(null) }} style={{ padding: "15px 0", borderRadius: 16, border: "1px solid rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.82)", fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
+                Keep editing
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {saveNotice && !saveNoticeUrl && (
         <div style={{ position: "fixed", left: 16, right: 16, bottom: "calc(90px + env(safe-area-inset-bottom))", zIndex: 80, backgroundColor: "#111613", border: `1px solid ${GREEN}44`, borderRadius: 16, padding: "13px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)", flex: 1 }}>{saveNotice}</span>
-          {saveNoticeUrl && (
-            <a href={saveNoticeUrl} target="_blank" rel="noopener noreferrer" style={{ padding: "8px 11px", borderRadius: 999, backgroundColor: GREEN, color: BLACK, textDecoration: "none", fontSize: 12, fontWeight: 900, flexShrink: 0 }}>
-              View
-            </a>
-          )}
         </div>
       )}
 
