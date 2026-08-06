@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Place on Site: Jony-Led Visual Redesign
+
+### Where We Left Off
+- Shawn tested again after the icon/spinner fix and sent screenshots. Two visual complaints: the tile's heart/star/Add-to-Site controls were all crammed into one corner with no spacing (unequal-width elements with no separation reading as one cluster instead of two different kinds of action); and the destination sheet felt "weak" - seven visually identical text rows, no hierarchy, Gallery (additive) indistinguishable from the exclusive-assign rows.
+- Shawn explicitly convened the team again, Jony leading this time as the design expert, and asked Jony to actually solve both problems rather than take Shawn's rough suggestion literally.
+- Jony's recommendation, approved by Shawn and followed exactly: heart+star stay as a tight top-left pair, Add to Site moves to a low-profile bottom-left bar; sheet gets a leading icon per row, Home's two slots merge under one static "Home Page" label with two chips underneath, Gallery gets a dashed/outlined treatment to signal additive vs. exclusive.
+
+### What Changed
+- `placementActions.ts`: each `PhotoDestination` now carries an `icon` key (home/person/wrench/phone/tag/grid/star) and hero/cta carry `group: "home"`. Hero/cta labels shortened to "Top"/"Bottom" since they now render as chips under a shared header instead of full standalone rows.
+- `PhotoCard`: Add to Site button moved from the top-left icon row to its own low-profile bar at bottom-left; heart/star unchanged.
+- `PlacementSheet`: new `DestinationGlyph`/`DestinationRow` components - every row gets a leading icon, Home's two slots render under a static "Home Page" group label, Gallery renders with a dashed border and a "+" affordance instead of solid fill.
+- No destination logic or data model changes - confirmed in the team review as a pure layout/visual pass.
+
+### Test Next
+- Shawn: confirm the tile no longer feels cramped, and the sheet reads as more designed/hierarchical rather than a flat list.
+
+---
+
 ## 2026-08-06 - Place on Site: Team Review Follow-Up (Icon/Label + Shared Spinner)
 
 ### Where We Left Off

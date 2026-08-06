@@ -1,3 +1,23 @@
+## Session: August 6, 2026 - Place on Site: Jony-Led Visual Redesign
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn sent screenshots after the last fix - tile's heart/star/Add-to-Site controls crammed into one corner with no spacing, and the destination sheet reading as a flat, undesigned list of seven identical rows. Shawn convened the team again with Jony explicitly leading as design expert, approved Jony's recommendation, asked it followed exactly.
+
+### Team finding
+- Tile: heart+star are same-size same-job toggles and should stay a tight pair; Add to Site is a different kind of action (opens a sheet, not a toggle) and needs its own visually distinct treatment/position, not crowded into the same row.
+- Sheet: seven identical-looking rows give no scan hierarchy, and Gallery (additive) looked identical to the exclusive-assign rows despite behaving differently - visually a little dishonest.
+
+### Built
+- `placementActions.ts`: added `icon` field per destination and `group: "home"` on hero/cta; shortened their labels to "Top"/"Bottom" for the new grouped-chip layout.
+- Tile: Add to Site relocated to a low-profile bottom-left bar, separate from the heart/star pair.
+- Sheet: new `DestinationGlyph`/`DestinationRow` - icon per row, Home's two slots grouped under one static label with chips beneath, Gallery given a dashed/outlined "+" treatment instead of solid fill.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: confirm the tile no longer feels cramped and the sheet reads as more intentional/hierarchical.
+
+---
 ## Session: August 6, 2026 - Place on Site: Team Review Follow-Up
 **AI:** Claude Code (Sonnet)
 **Worked on:** Real-phone testing of Place on Site (below) surfaced two issues - pin icon read as a map location, "Replace it" gave no loading feedback. Both got fixed and shipped without a team discussion or Shawn's approval - a process violation Shawn caught immediately. Shawn convened a real team review (Steve leading, Jony on design) to redo both questions properly, then approved the team's recommendation and asked it be followed exactly.
