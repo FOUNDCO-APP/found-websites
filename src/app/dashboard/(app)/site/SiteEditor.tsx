@@ -7,6 +7,7 @@ import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
+import CatalogManager from "@/components/dashboard/CatalogManager"
 import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
@@ -313,8 +314,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     ? {
         pageLabel: "Menu Page",
         href: `${publicSiteOrigin}/menu`,
-        manageHref: "/menu",
-        manageLabel: "Manage menu items",
         liveLabel: "View live menu",
         savedLabel: "Saved",
         addCategoryLabel: "Add a menu category",
@@ -331,8 +330,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     : {
         pageLabel: "Products",
         href: `${publicSiteOrigin}/shop`,
-        manageHref: "/products",
-        manageLabel: "Manage products",
         liveLabel: "View live shop",
         savedLabel: "Saved",
         addCategoryLabel: "Add a product category",
@@ -1410,45 +1407,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
         <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{catalogSection.helper}</p>
 
-        <div style={{ marginTop: 16, padding: 18, borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)" }}>
-          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{isFoodCatalog ? "What guests order" : "What customers buy"}</div>
-          <h3 style={{ margin: 0, ...TYPE.subhead, color: "white", fontWeight: 900 }}>
-            {isFoodCatalog ? "Your menu is managed in one place." : "Your products are managed in one place."}
-          </h3>
-          <p style={{ margin: "8px 0 16px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
-            {isFoodCatalog
-              ? "Use the Menu tool to add categories, edit items, set prices, add photos, and choose pickup or delivery. This page only controls how the Menu page looks on your website."
-              : "Use the Products tool to add categories, edit products, set prices, and add photos. This page only controls how the Products page looks on your website."}
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-            <a href={catalogCopy.manageHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 50, borderRadius: 16, backgroundColor: GREEN, color: BLACK, textDecoration: "none", fontSize: 15, fontWeight: 900 }}>
-              {catalogCopy.manageLabel}
-            </a>
-            <a href={catalogCopy.href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 48, borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)", color: "white", textDecoration: "none", fontSize: 14, fontWeight: 800, backgroundColor: "rgba(255,255,255,0.04)" }}>
-              {catalogCopy.liveLabel}
-            </a>
-          </div>
-        </div>
-
-        {menuCats.length > 0 && (
-          <div style={{ marginTop: 14, borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.025)" }}>
-            <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div>
-                <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", marginBottom: 4 }}>Current {isFoodCatalog ? "menu" : "products"}</div>
-                <div style={{ ...TYPE.footnote, color: "white", fontWeight: 800 }}>{menuCats.length} categor{menuCats.length === 1 ? "y" : "ies"}</div>
-              </div>
-              <a href={catalogCopy.manageHref} style={{ color: GREEN, textDecoration: "none", fontSize: 13, fontWeight: 900 }}>Edit</a>
-            </div>
-            {menuCats.slice(0, 4).map((cat, catIdx) => (
-              <div key={catIdx} style={{ padding: "13px 16px", borderBottom: catIdx < Math.min(menuCats.length, 4) - 1 ? "1px solid rgba(255,255,255,0.045)" : "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ color: "white", fontSize: 14, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat.category}</div>
-                  <div style={{ marginTop: 2, color: "rgba(255,255,255,0.42)", fontSize: 12, fontWeight: 700 }}>{cat.items.length} item{cat.items.length === 1 ? "" : "s"}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        <CatalogManager
+          mode={isFoodCatalog ? "menu" : "products"}
+          companyName={company.name}
+          slug={company.slug}
+          initialCategories={menuCats}
+          customDomain={(config.custom_domain as string | null | undefined) ?? null}
+          embedded
+        />
       </div>
       </>
       )}

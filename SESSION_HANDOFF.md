@@ -3,15 +3,15 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: Edit Website > Menu/Products was consolidated so owners do not see a second, different catalog editor.
-- Team decision: the dedicated Dashboard > Menu and Dashboard > Products tools are the only places to add/edit categories, items, prices, descriptions, photos, pickup/delivery, etc.
-- Edit Website > Menu/Products now explains that split, keeps the website page image control, shows a live-page link, and sends owners to the real manager with one primary button.
-- Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality and owner UX around menu editing.
+- Latest local work: Edit Website > Menu/Products now blends the website page visuals with the real shared catalog editor.
+- Team decision: there is still one catalog engine (`CatalogManager`), but it can appear from multiple entry points so owners do not feel bounced between two different systems.
+- Edit Website > Menu/Products keeps the page image/camera control at the top, then shows the same item/category editor used by the dedicated Menu/Products tool.
+- CatalogManager now supports embedded mode plus search and category collapse for larger catalogs.
 
 ### What Changed Recently
-- Removed the duplicate menu/product search, category editing, item editing, add-category controls, and old item edit sheet from `src/app/dashboard/(app)/site/SiteEditor.tsx`.
-- Added `Manage menu items` -> `/menu` and `Manage products` -> `/products` from the website editor catalog page. Important: these must stay app-relative because `my.foundco.app` strips the `/dashboard` prefix in live owner-app mode.
-- Kept the Menu/Product page hero image control in Edit Website because that controls how the public website page looks.
+- Replaced the handoff/explanation card in `SiteEditor.tsx` with embedded `CatalogManager`.
+- Added `embedded` support to `src/components/dashboard/CatalogManager.tsx` so the standalone Menu page keeps its header, while Edit Website gets the editor body only.
+- Added search when catalogs grow beyond a small list and collapsed categories by default for large menus/product lists.
 - Public menu cards still show real photos when present, no image block when missing, descriptions clamped to about 3 lines, and prices normalize through `src/lib/catalogPricing.ts`.
 
 ### Shawn-Tested
@@ -22,10 +22,10 @@
 - Rosa's public menu readability pass looked better after description clamp.
 
 ### Test Next
-- In Edit Website > Menu, confirm there is no duplicate add/edit item experience; it should explain that Menu is managed in one place.
-- Tap `Manage menu items` and confirm it opens the dedicated Menu tool with the same premium item/category editor Shawn screenshotted, with no 404.
-- Tap `View live menu` and confirm it opens the public menu page.
-- Confirm changing the Menu Page image from Edit Website still affects the public menu page image only.
+- In Edit Website > Menu, confirm the top still controls the Menu Page image.
+- Below that, confirm the actual menu editor appears directly: pickup/delivery, categories, items, add item, edit item.
+- Confirm editing an item from Edit Website saves and updates the public menu.
+- For a larger test menu, confirm search appears and categories start collapsed instead of creating a huge wall of items.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.

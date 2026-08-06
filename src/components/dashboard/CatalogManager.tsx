@@ -52,6 +52,7 @@ type Props = {
   slug: string
   initialCategories: CatalogCategory[]
   customDomain?: string | null
+  embedded?: boolean
 }
 
 const COPY = {
@@ -203,7 +204,7 @@ function inputStyle(extra: React.CSSProperties = {}): React.CSSProperties {
   return { width: "100%", boxSizing: "border-box", padding: "14px 15px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.11)", color: "white", ...TYPE.body, outline: "none", ...extra }
 }
 
-export default function CatalogManager({ mode, companyName, slug, initialCategories, customDomain }: Props) {
+export default function CatalogManager({ mode, companyName, slug, initialCategories, customDomain, embedded = false }: Props) {
   const copy = COPY[mode]
   const isProducts = mode === "products"
   const initialSettings = normalizeSettings(initialCategories.find(category => category.catalog_settings)?.catalog_settings ?? initialCategories[0]?.catalog_settings)
@@ -221,6 +222,8 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   const [uploading, setUploading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set())
 
   const sheetOpen = Boolean(editingItem)
 
@@ -278,6 +281,9 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   }, [sheetOpen])
 
   const itemCount = categories.reduce((sum, category) => sum + category.items.length, 0)
+  const compactCatalog = itemCount > 20 || categories.length > 5
+  const showSearch = itemCount > 8 || categories.length > 3
+  const searchTerm = search.trim().toLowerCase()
   const publicHref = `${getPublicSiteOrigin(slug, customDomain)}${copy.previewPath}`
   const fulfillmentLabel = catalogSettings.fulfillment === "both" ? (isProducts ? "Pickup and shipping" : "Pickup and delivery") : catalogSettings.fulfillment === "shipping" ? (isProducts ? "Shipping only" : "Delivery only") : catalogSettings.fulfillment === "pickup" ? "Pickup only" : "Checkout paused"
 
@@ -457,22 +463,27 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
   }
 
   return (
-    <main style={{ minHeight: "100dvh", backgroundColor: BLACK, padding: "28px 20px 140px" }}>
-      <div style={{ maxWidth: 820, margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28 }}>
-          <div>
-            <p style={{ margin: "0 0 8px", ...TYPE.caption, color: GREEN }}>{copy.eyebrow}</p>
-            <h1 style={{ margin: "0 0 8px", ...TYPE.largeTitle, color: "white" }}>{copy.title}</h1>
-            <p style={{ margin: 0, ...TYPE.body, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{copy.body}</p>
-          </div>
-          {saved && <div style={{ flexShrink: 0, borderRadius: 100, padding: "7px 12px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 800 }}>Saved</div>}
-        </div>
+    <main style={{ minHeight: embedded ? undefined : "100dvh", backgroundColor: embedded ? "transparent" : BLACK, padding: embedded ? "18px 0 0" : "28px 20px 140px" }}>
+      <div style={{ maxWidth: embedded ? undefined : 820, margin: embedded ? undefined : "0 auto" }}>
+        {!embedded && (
+          <>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28 }}>
+              <div>
+                <p style={{ margin: "0 0 8px", ...TYPE.caption, color: GREEN }}>{copy.eyebrow}</p>
+                <h1 style={{ margin: "0 0 8px", ...TYPE.largeTitle, color: "white" }}>{copy.title}</h1>
+                <p style={{ margin: 0, ...TYPE.body, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{copy.body}</p>
+              </div>
+              {saved && <div style={{ flexShrink: 0, borderRadius: 100, padding: "7px 12px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 800 }}>Saved</div>}
+            </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 26 }}>
-          <a href={publicHref} target="_blank" rel="noreferrer" style={{ textDecoration: "none", borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)", color: "white", ...TYPE.subhead, fontWeight: 750 }}>{copy.previewLabel}</a>
-          <Link href="/site" style={{ textDecoration: "none", borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 650 }}>Edit site</Link>
-        </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 26 }}>
+              <a href={publicHref} target="_blank" rel="noreferrer" style={{ textDecoration: "none", borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)", color: "white", ...TYPE.subhead, fontWeight: 750 }}>{copy.previewLabel}</a>
+              <Link href="/site" style={{ textDecoration: "none", borderRadius: 16, padding: "14px 15px", backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 650 }}>Edit site</Link>
+            </div>
+          </>
+        )}
 
+        {embedded && saved && <div style={{ marginBottom: 12, borderRadius: 100, padding: "9px 12px", backgroundColor: `${GREEN}16`, color: GREEN, ...TYPE.footnote, fontWeight: 900, textAlign: "center" }}>Saved</div>}
 
         <section style={{ marginBottom: 18, borderRadius: 22, padding: 16, border: "1px solid rgba(255,255,255,0.08)", background: "linear-gradient(135deg, rgba(49,209,88,0.13), rgba(255,255,255,0.035))" }}>
           <p style={{ margin: "0 0 4px", ...TYPE.caption, color: GREEN }}>{fulfillmentLabel}</p>
@@ -519,9 +530,38 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
             </div>
           )}
 
-          {categories.map((category, catIndex) => (
+          {showSearch && (
+            <div style={{ padding: "0 18px 16px", borderBottom: "1px solid rgba(255,255,255,0.055)" }}>
+              <label style={{ display: "block", position: "relative" }}>
+                <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.36)", ...TYPE.footnote, fontWeight: 900 }}>Search</span>
+                <input
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={isProducts ? "Find a product" : "Find a menu item"}
+                  style={{ ...inputStyle({ paddingLeft: 72, backgroundColor: "rgba(255,255,255,0.055)" }) }}
+                />
+              </label>
+              {compactCatalog && !searchTerm && (
+                <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.4 }}>Large {isProducts ? "product lists" : "menus"} start collapsed. Open only the category you need.</p>
+              )}
+            </div>
+          )}
+          {categories.map((category, catIndex) => {
+            const categoryMatches = searchTerm.length > 0 && category.category.toLowerCase().includes(searchTerm)
+            const visibleItems = searchTerm && !categoryMatches
+              ? category.items.filter(item => item.name.toLowerCase().includes(searchTerm) || item.description.toLowerCase().includes(searchTerm))
+              : category.items
+            if (searchTerm && !categoryMatches && visibleItems.length === 0) return null
+            const categoryCollapsed = !searchTerm && compactCatalog && !expandedCategories.has(catIndex)
+            return (
             <div key={`${category.category}-${catIndex}`} style={{ borderTop: catIndex === 0 && !addingCategory ? "none" : "1px solid rgba(255,255,255,0.055)", padding: "20px 18px 22px" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, position: "relative", marginBottom: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, position: "relative", marginBottom: categoryCollapsed ? 0 : 14 }}>
+                <button
+                  type="button"
+                  aria-label={categoryCollapsed ? `Open ${category.category}` : `Close ${category.category}`}
+                  onClick={() => setExpandedCategories(prev => { const next = new Set(prev); if (next.has(catIndex)) next.delete(catIndex); else next.add(catIndex); return next })}
+                  style={{ width: 32, height: 32, marginTop: 1, borderRadius: 999, border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.035)", color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, ...TYPE.subhead, fontWeight: 900, cursor: "pointer", transform: categoryCollapsed ? "rotate(-90deg)" : undefined }}
+                >v</button>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {editingCategoryIndex === catIndex ? (
                     <input value={categoryDraftName} onChange={(event) => setCategoryDraftName(event.target.value)} onBlur={() => void saveCategoryName(catIndex)} onKeyDown={(event) => event.key === "Enter" && void saveCategoryName(catIndex)} autoFocus style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: "white", ...TYPE.title, fontWeight: 820 }} />
@@ -539,8 +579,9 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                 )}
               </div>
 
-              <div style={{ display: "grid", gap: 10 }}>
-                {category.items.map((item, itemIndex) => {
+              {!categoryCollapsed && <div style={{ display: "grid", gap: 10 }}>
+                {visibleItems.map((item) => {
+                  const itemIndex = category.items.indexOf(item)
                   const images = uniqueImages(item)
                   const variants = normalizeVariants(item.options ?? [], item.variants, Boolean(item.inventory_tracking))
                   const tracked = Boolean(item.inventory_tracking && variants.length)
@@ -563,9 +604,10 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                   )
                 })}
                 <button onClick={() => openItem(catIndex, null)} style={{ border: `1px solid ${GREEN}33`, borderRadius: 18, padding: "15px 16px", backgroundColor: `${GREEN}10`, color: GREEN, textAlign: "center", ...TYPE.subhead, fontWeight: 900, cursor: "pointer" }}>+ {copy.addItem}</button>
-              </div>
+              </div>}
             </div>
-          ))}
+            )
+          })}
         </section>
       </div>
 

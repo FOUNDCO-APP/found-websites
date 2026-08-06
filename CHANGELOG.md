@@ -1,3 +1,22 @@
+## Session: August 5, 2026 - Blend Edit Website Menu With Shared Catalog Editor
+**Worked on:** Shawn rejected the handoff-only Menu screen as feeling broken. Team direction: blend the website page controls and real menu editor into one experience, while keeping one catalog engine.
+
+### Fixed
+- Added embedded mode to `CatalogManager` so it can render inside Edit Website without duplicating item/category logic.
+- Replaced the Edit Website > Menu/Products handoff card with the embedded shared catalog editor.
+- Kept the Menu/Product page image control at the top of Edit Website because it controls the public page visual.
+- Added search for larger catalogs and category collapse for large menus/product lists so 30-50 items do not become an endless wall.
+- Standalone Dashboard > Menu and Dashboard > Products still use the same component with their normal page header/actions.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+- `git diff --check` passed with normal CRLF warnings only.
+
+### Test Next
+- Shawn: open Edit Website > Menu. Confirm the Menu Page image is still editable, then scroll down and edit a real menu item without leaving the page.
+
+---
 ## Session: August 5, 2026 - Fix Edit Website Menu Handoff 404
 **Worked on:** Hotfix after Shawn clicked Manage menu items from Edit Website > Menu and hit a 404.
 
