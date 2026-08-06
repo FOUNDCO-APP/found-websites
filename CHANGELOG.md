@@ -1,3 +1,23 @@
+## Session: August 6, 2026 - Edit Website Header Redundancy Fixed
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn had flagged the Menu page showing "Menu" repeatedly to Codex before that session ran out of credit; still unfixed. Brought Jony/Steve/Craig back in explicitly before touching code, per Shawn's ask.
+
+### Team finding
+- Menu/Shop: "Menu" (or "Shop") rendered 5x before the real editor - BackHeader's big title, a SectionIntro eyebrow+title both saying the same word, and a photo-hero overlay caption+heading also saying it. Zero unique content across any of it.
+- About/Contact/Services: audited on Craig's request before scoping site-wide. Different, smaller bug - only the SectionIntro eyebrow duplicated BackHeader's title. Their photo-hero blocks show real content (business name, editable subtitle, live page copy) and are not redundant.
+- Home/Gallery: audited, found no actual duplication. Left alone.
+
+### Fixed
+- `SiteEditor.tsx`: Menu/Shop catalog view - removed SectionIntro entirely, removed the photo-hero's overlaid caption/heading, kept the real guidance sentence as a plain paragraph.
+- About/Contact/Services - removed only the SectionIntro's `eyebrow` prop; title, body, and photo-hero content unchanged.
+
+### Verification
+- `cmd /c npm run build` passed clean.
+
+### Test Next
+- Shawn: Edit Website > Menu (or Shop) - confirm the page name appears once, not five times. About/Contact/Services - confirm the small duplicate eyebrow is gone and real editable content (business name, live copy) is untouched.
+
+---
 ## Session: August 5, 2026 - Blend Edit Website Menu With Shared Catalog Editor
 **Worked on:** Shawn rejected the handoff-only Menu screen as feeling broken. Team direction: blend the website page controls and real menu editor into one experience, while keeping one catalog engine.
 

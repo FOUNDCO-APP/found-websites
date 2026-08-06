@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Edit Website Header Redundancy Fixed
+
+### Where We Left Off
+- Shawn had already flagged this to Codex before that session ran out of credit; it was still unfixed. Brought Jony/Steve/Craig back in per Shawn's explicit ask before touching code.
+- Craig's find: on the Menu (and Shop) screen in Edit Website, "Menu" rendered five times before the real editor - BackHeader's "You are editing / Menu", a SectionIntro eyebrow+title that also both said "Menu", and a photo-hero overlay with its own "Menu" caption and heading. All pure duplication.
+- Team direction: BackHeader owns "what page you're on." The photo-hero block only earns its overlay text when it's showing real, distinct content (a business name, live page copy) - not when it's just repeating the section name a third time.
+- Craig flagged this same SectionIntro+photo-hero pairing exists on Home, About, Contact, and Services too and asked for an audit before scoping a fix beyond Menu.
+
+### What Changed
+- Menu/Shop: removed the SectionIntro entirely and the hero's overlaid caption/heading. Kept the real guidance sentence ("Keep every item easy to scan...") as a plain paragraph instead of losing it.
+- About, Contact, Services: audited and found a *different*, smaller version of the same bug - only the SectionIntro's eyebrow literally duplicated BackHeader's title. Removed just the eyebrow on each; left the title/body and the photo-hero blocks alone, since those show real functional content (About's actual business name + an editable subtitle field, Contact/Services' real editable live-page copy), not decorative repetition.
+- Home and Gallery: audited and found no actual duplication - Home's intro says "First impression" / "Homepage" (not "Home"), Gallery's eyebrow says "Photos" against a "Gallery" header. Left untouched; not every page with this component pairing was actually broken.
+
+### Test Next
+- Shawn: open Edit Website > Menu (or Shop) and confirm the page name now appears once, in the sticky header, not five times. Open About/Contact/Services and confirm the small eyebrow duplicate is gone but the real page-preview content (business name, live copy) is still there and still editable.
+
+---
+
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
