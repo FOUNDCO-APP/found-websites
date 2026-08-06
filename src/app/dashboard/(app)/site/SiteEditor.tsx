@@ -1300,7 +1300,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="About" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="About" title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
+        <SectionIntro title="Tell customers why to trust you." body="Write the short story customers read before they call, book, or buy." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="About" href={`${publicSiteOrigin}/about`} />
         </div>
@@ -1347,7 +1347,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Contact" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Contact" title={photoSections.contact.title} body="Set the words customers see before they send a message." />
+        <SectionIntro title={photoSections.contact.title} body="Set the words customers see before they send a message." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Contact" href={`${publicSiteOrigin}/contact`} />
         </div>
@@ -1385,12 +1385,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label={catalogTileLabel} onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow={catalogSection.page} title={catalogSection.title} body={isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."} />
+        <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+          {isFoodCatalog ? "Keep every item easy to scan, price, and order from a phone." : "Set names, photos, prices, options, and inventory."}
+        </p>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
           <PageTab label={catalogCopy.pageLabel} href={catalogCopy.href} />
           {menuSaved && <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>{catalogCopy.savedLabel}</div>}
         </div>
 
+        {/* No overlaid caption/heading here on purpose - BackHeader above
+            already establishes "you're on Menu/Shop"; repeating it a
+            second and third time on the photo itself was the redundancy
+            Shawn flagged. Just the photo and its edit control now. */}
         <div style={{ position: "relative", height: 160, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {catalogPhotos[0]?.url ? (
             isVideoMedia(catalogPhotos[0].url) ? <VideoThumb src={catalogPhotos[0].url} /> : <img src={catalogPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1399,10 +1405,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           )}
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
           <PhotoEditBadge onClick={() => setPhotoPickerSlot(isFoodCatalog ? "order" : "shop")} />
-          <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.76)", marginBottom: 6 }}>{catalogSection.page}</div>
-            <h3 style={{ margin: 0, fontSize: 22, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{catalogSection.title}</h3>
-          </div>
         </div>
 
         <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{catalogSection.helper}</p>
@@ -1423,7 +1425,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Services" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro eyebrow="Services" title={photoSections.services.title} body="Keep the service list short, plain, and easy to understand." />
+        <SectionIntro title={photoSections.services.title} body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
           <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
         </div>
