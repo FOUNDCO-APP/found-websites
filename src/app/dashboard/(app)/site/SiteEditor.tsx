@@ -2,22 +2,20 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateMenuItems, uploadMenuItemPhoto, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import DomainConnector from "./DomainConnector"
-import { polishMenuCategories, polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
+import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/copyPolish"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
-import { resizeImageToJpeg } from "@/lib/resizeImage"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSitePhotoSections, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
-import { normalizeCatalogPriceInput, formatCatalogPrice } from "@/lib/catalogPricing"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -212,30 +210,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
 
   // Shared sellable item catalog. Food sees Menu; retail/shop sees Products.
-  type MenuItemDraft = { name: string; price: string; description: string; photo_url: string }
   type MenuCatData = { category: string; items: { name: string; description: string; price: string | null; photo_url?: string | null }[] }
-  const [menuCats, setMenuCats] = useState<MenuCatData[]>((initialConfig?.menu_items as MenuCatData[]) ?? [])
-  // Catalog editor breaks down as a wall of always-expanded categories once
-  // a business has a real catalog (50-100 items) - search filters items by
-  // name, and categories collapse individually (default expanded, so small
-  // catalogs like Lucky's look exactly as before until an owner has enough
-  // items to want to collapse something).
-  const [catalogSearch, setCatalogSearch] = useState("")
-  const [collapsedCats, setCollapsedCats] = useState<Set<number>>(new Set())
+  const [menuCats] = useState<MenuCatData[]>((initialConfig?.menu_items as MenuCatData[]) ?? [])
   const [servicesSearch, setServicesSearch] = useState("")
-  const [editingMenuItem, setEditingMenuItem] = useState<{ catIdx: number; itemIdx: number | null } | null>(null)
-  const [menuItemDraft, setMenuItemDraft] = useState<MenuItemDraft>({ name: '', price: '', description: '', photo_url: '' })
-  const [uploadingMenuPhoto, setUploadingMenuPhoto] = useState(false)
-  const [addingMenuCat, setAddingMenuCat] = useState(false)
-  const [newMenuCatName, setNewMenuCatName] = useState('')
-  const [editingMenuCatIdx, setEditingMenuCatIdx] = useState<number | null>(null)
-  const [menuCatDraftName, setMenuCatDraftName] = useState('')
   const [menuSaved, setMenuSaved] = useState(false)
-  const [menuSaving, setMenuSaving] = useState(false)
-  const [menuError, setMenuError] = useState<string | null>(null)
 
   const [, startTransition] = useTransition()
-  const sheetOpen = Boolean(editing || photoPickerSlot || editingMenuItem || editingService !== null || newService || addingMenuCat || editingMenuCatIdx !== null || confirmAction)
+  const sheetOpen = Boolean(editing || photoPickerSlot || editingService !== null || newService || confirmAction)
 
   useEffect(() => {
     const root = document.documentElement
@@ -332,6 +313,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     ? {
         pageLabel: "Menu Page",
         href: `${publicSiteOrigin}/menu`,
+        manageHref: "/dashboard/menu",
+        manageLabel: "Manage menu items",
+        liveLabel: "View live menu",
         savedLabel: "Saved",
         addCategoryLabel: "Add a menu category",
         categoryPlaceholder: "e.g. Tacos, Plates, Drinks...",
@@ -347,6 +331,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     : {
         pageLabel: "Products",
         href: `${publicSiteOrigin}/shop`,
+        manageHref: "/dashboard/products",
+        manageLabel: "Manage products",
+        liveLabel: "View live shop",
         savedLabel: "Saved",
         addCategoryLabel: "Add a product category",
         categoryPlaceholder: "e.g. Shirts, Hats, Featured...",
@@ -568,107 +555,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setDesignChangeCount(c => c + 1)
   }
 
-  async function persistMenuCats(cats: MenuCatData[]) {
-    const previousCats = menuCats
-    const polishedCats = polishMenuCategories(cats)
-    setMenuError(null)
-    setMenuSaving(true)
-    setMenuCats(polishedCats)
-    const result = await updateMenuItems(polishedCats)
-    setMenuSaving(false)
-    if ("error" in result) {
-      setMenuCats(previousCats)
-      setMenuError(result.error || "Menu could not be saved. Try again.")
-      return false
-    }
-    setMenuSaved(true)
-    setTimeout(() => setMenuSaved(false), 2500)
-    flashSaveNotice(isFoodCatalog ? "Menu was saved." : "Products were saved.", catalogCopy.href)
-    return true
-  }
-
-  function openEditMenuItem(catIdx: number, itemIdx: number | null) {
-    const item = itemIdx !== null ? menuCats[catIdx]?.items[itemIdx] : null
-    setMenuError(null)
-    setMenuItemDraft({ name: item?.name ?? '', price: item?.price ?? '', description: item?.description ?? '', photo_url: item?.photo_url ?? '' })
-    setEditingMenuItem({ catIdx, itemIdx })
-  }
-
-  async function saveMenuItem() {
-    if (!editingMenuItem || menuSaving) return
-    const { catIdx, itemIdx } = editingMenuItem
-    const trimmedPrice = menuItemDraft.price.trim()
-    // Price is optional (owners can leave it blank), but if something's
-    // there it has to actually look like a price - otherwise typos like
-    // "free lol" or a stray letter go straight to the public menu/shop.
-    if (trimmedPrice && !/^\$?\d+(\.\d{1,2})?$/.test(trimmedPrice)) {
-      flashSaveError("That doesn't look like a price - try something like $12.99.")
-      return
-    }
-    const normalizedPrice = trimmedPrice ? normalizeCatalogPriceInput(trimmedPrice) : null
-    const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: normalizedPrice, photo_url: menuItemDraft.photo_url || null }
-    if (!newItem.name) return
-    const cats = menuCats.map((c, ci) => {
-      if (ci !== catIdx) return c
-      const items = [...c.items]
-      if (itemIdx === null) items.push(newItem)
-      else items[itemIdx] = newItem
-      return { ...c, items }
-    })
-    const ok = await persistMenuCats(cats)
-    if (ok) setEditingMenuItem(null)
-  }
-
-  async function removeMenuItem(catIdx: number, itemIdx: number) {
-    if (menuSaving) return
-    const cats = menuCats.map((c, ci) => {
-      if (ci !== catIdx) return c
-      const items = [...c.items]; items.splice(itemIdx, 1)
-      return { ...c, items }
-    })
-    const ok = await persistMenuCats(cats)
-    if (ok) setEditingMenuItem(null)
-  }
-  async function handleMenuPhotoUpload(file: File) {
-    setUploadingMenuPhoto(true)
-    try {
-      // Was going straight to storage uncompressed - a full-res phone photo
-      // (often 10+ MB) uploaded as-is. Same resize step the onboarding hero
-      // upload already used, just applied here too instead of only there.
-      const resized = await resizeImageToJpeg(file)
-      const fd = new FormData()
-      fd.append('file', new File([resized], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }))
-      const result = await uploadMenuItemPhoto(fd)
-      if ('url' in result) setMenuItemDraft(prev => ({ ...prev, photo_url: result.url }))
-      else flashSaveError(result.error || "Couldn't upload that photo. Try again.")
-    } catch {
-      flashSaveError("Couldn't process that photo. Try a different one.")
-    } finally {
-      setUploadingMenuPhoto(false)
-    }
-  }
-
-  async function addMenuCategory() {
-    if (!newMenuCatName.trim() || menuSaving) return
-    const cats = [...menuCats, { category: newMenuCatName.trim(), items: [] }]
-    const ok = await persistMenuCats(cats)
-    if (ok) { setNewMenuCatName(''); setAddingMenuCat(false) }
-  }
-
-  async function removeMenuCategory(catIdx: number) {
-    if (menuSaving) return
-    const cats = [...menuCats]; cats.splice(catIdx, 1)
-    await persistMenuCats(cats)
-  }
-
-  async function saveMenuCatName(catIdx: number) {
-    if (menuSaving) return
-    const name = menuCatDraftName.trim()
-    if (!name) { setEditingMenuCatIdx(null); return }
-    const cats = menuCats.map((c, ci) => ci === catIdx ? { ...c, category: name } : c)
-    const ok = await persistMenuCats(cats)
-    if (ok) setEditingMenuCatIdx(null)
-  }
   function handleAssignPhoto(photoId: string, section: PhotoSlot | null) {
     const photo = localPhotos.find(p => p.id === photoId)
     const previousPhotos = localPhotos
@@ -1524,150 +1410,45 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
         <p style={{ margin: "8px 2px 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{catalogSection.helper}</p>
 
+        <div style={{ marginTop: 16, padding: 18, borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)" }}>
+          <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{isFoodCatalog ? "What guests order" : "What customers buy"}</div>
+          <h3 style={{ margin: 0, ...TYPE.subhead, color: "white", fontWeight: 900 }}>
+            {isFoodCatalog ? "Your menu is managed in one place." : "Your products are managed in one place."}
+          </h3>
+          <p style={{ margin: "8px 0 16px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+            {isFoodCatalog
+              ? "Use the Menu tool to add categories, edit items, set prices, add photos, and choose pickup or delivery. This page only controls how the Menu page looks on your website."
+              : "Use the Products tool to add categories, edit products, set prices, and add photos. This page only controls how the Products page looks on your website."}
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+            <a href={catalogCopy.manageHref} style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 50, borderRadius: 16, backgroundColor: GREEN, color: BLACK, textDecoration: "none", fontSize: 15, fontWeight: 900 }}>
+              {catalogCopy.manageLabel}
+            </a>
+            <a href={catalogCopy.href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 48, borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)", color: "white", textDecoration: "none", fontSize: 14, fontWeight: 800, backgroundColor: "rgba(255,255,255,0.04)" }}>
+              {catalogCopy.liveLabel}
+            </a>
+          </div>
+        </div>
+
         {menuCats.length > 0 && (
-          <div style={{ marginTop: 16, position: "relative" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input
-              value={catalogSearch}
-              onChange={e => setCatalogSearch(e.target.value)}
-              placeholder={`Search ${catalogCopy.pageLabel.toLowerCase()}`}
-              style={{ width: "100%", padding: "12px 14px 12px 38px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "white", fontSize: 14, outline: "none", boxSizing: "border-box" as const, fontFamily: "inherit" }}
-            />
+          <div style={{ marginTop: 14, borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.025)" }}>
+            <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", marginBottom: 4 }}>Current {isFoodCatalog ? "menu" : "products"}</div>
+                <div style={{ ...TYPE.footnote, color: "white", fontWeight: 800 }}>{menuCats.length} categor{menuCats.length === 1 ? "y" : "ies"}</div>
+              </div>
+              <a href={catalogCopy.manageHref} style={{ color: GREEN, textDecoration: "none", fontSize: 13, fontWeight: 900 }}>Edit</a>
+            </div>
+            {menuCats.slice(0, 4).map((cat, catIdx) => (
+              <div key={catIdx} style={{ padding: "13px 16px", borderBottom: catIdx < Math.min(menuCats.length, 4) - 1 ? "1px solid rgba(255,255,255,0.045)" : "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ color: "white", fontSize: 14, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cat.category}</div>
+                  <div style={{ marginTop: 2, color: "rgba(255,255,255,0.42)", fontSize: 12, fontWeight: 700 }}>{cat.items.length} item{cat.items.length === 1 ? "" : "s"}</div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
-
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-          {(() => {
-            const search = catalogSearch.trim().toLowerCase()
-            return menuCats.map((cat, catIdx) => {
-              const categoryNameMatches = Boolean(search) && cat.category.toLowerCase().includes(search)
-              const visibleItems = search && !categoryNameMatches
-                ? cat.items.filter(item => item.name.toLowerCase().includes(search))
-                : cat.items
-              if (search && !categoryNameMatches && visibleItems.length === 0) return null
-
-              // Manual collapse is ignored while actively searching, so a
-              // collapsed category never hides a search result from itself.
-              const collapsed = !search && collapsedCats.has(catIdx)
-
-              return (
-                <div key={catIdx} style={{ borderRadius: 20, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", backgroundColor: "rgba(255,255,255,0.03)" }}>
-                  {/* Category header */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px", borderBottom: !collapsed && cat.items.length > 0 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
-                    <button
-                      onClick={() => setCollapsedCats(prev => { const next = new Set(prev); if (next.has(catIdx)) next.delete(catIdx); else next.add(catIdx); return next })}
-                      style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", alignItems: "center", flexShrink: 0 }}
-                      aria-label={collapsed ? "Expand category" : "Collapse category"}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: collapsed ? "rotate(-90deg)" : undefined, transition: "transform 0.15s ease" }}><polyline points="6 9 12 15 18 9"/></svg>
-                    </button>
-                    <div style={{ flex: 1 }}>
-                      {editingMenuCatIdx === catIdx ? (
-                        <input
-                          value={menuCatDraftName}
-                          onChange={e => setMenuCatDraftName(e.target.value)}
-                          onBlur={() => saveMenuCatName(catIdx)}
-                          onKeyDown={e => e.key === 'Enter' && saveMenuCatName(catIdx)}
-                          autoFocus
-                          style={{ background: "none", border: "none", outline: "none", color: "white", fontSize: 14, fontWeight: 700, width: "100%", fontFamily: "inherit" }}
-                        />
-                      ) : (
-                        <button onClick={() => { setMenuCatDraftName(cat.category); setEditingMenuCatIdx(catIdx) }}
-                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 14, fontWeight: 700, color: "white", letterSpacing: "0.08em", textTransform: "uppercase" as const, textAlign: "left" as const }}>
-                          {cat.category}{collapsed && cat.items.length > 0 && <span style={{ color: "rgba(255,255,255,0.35)", fontWeight: 600 }}> - {cat.items.length}</span>}
-                        </button>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setConfirmAction({
-                        title: `Remove ${cat.category}?`,
-                        message: cat.items.length > 0
-                          ? `This removes the category and all ${cat.items.length} item${cat.items.length === 1 ? "" : "s"} in it. This can't be undone.`
-                          : "This can't be undone.",
-                        confirmLabel: "Remove",
-                        onConfirm: () => removeMenuCategory(catIdx),
-                      })}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,80,80,0.5)", fontSize: 11, fontWeight: 700, padding: "4px 8px" }}>
-                      Remove
-                    </button>
-                  </div>
-
-                  {!collapsed && (
-                    <>
-                      {/* Items */}
-                      {visibleItems.map((item) => {
-                        const itemIdx = cat.items.indexOf(item)
-                        return (
-                          <div key={itemIdx} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                            {item.photo_url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={item.photo_url} alt={item.name} style={{ width: 44, height: 44, borderRadius: 10, objectFit: "cover", flexShrink: 0 }} />
-                            ) : (
-                              <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.05)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                              </div>
-                            )}
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 1 }}>{item.name}</div>
-                              {item.description && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</div>}
-                            </div>
-                            {item.price && <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0 }}>{formatCatalogPrice(item.price)}</div>}
-                            <button onClick={() => openEditMenuItem(catIdx, itemIdx)}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, padding: "4px 6px", flexShrink: 0 }}>
-                              Edit
-                            </button>
-                          </div>
-                        )
-                      })}
-
-                      {/* {catalogCopy.addItemLabel} row */}
-                      {!search && (
-                        <button onClick={() => openEditMenuItem(catIdx, null)}
-                          style={{ width: "100%", padding: "12px 16px", background: "none", border: "none", cursor: "pointer", textAlign: "left" as const, fontSize: 13, color: `${GREEN}88`, fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          {catalogCopy.addItemLabel}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              )
-            })
-          })()}
-
-          {/* Add category */}
-          {addingMenuCat ? (
-            <div style={{ borderRadius: 16, padding: 16, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}08` }}>
-              <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Category Name</div>
-              <input
-                placeholder={catalogCopy.categoryPlaceholder}
-                value={newMenuCatName}
-                onChange={e => setNewMenuCatName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addMenuCategory()}
-                autoFocus
-                style={{ width: "100%", padding: "12px 14px", borderRadius: 10, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 15, outline: "none", boxSizing: "border-box" as const, marginBottom: 10, fontFamily: "inherit" }}
-              />
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => { setAddingMenuCat(false); setNewMenuCatName('') }}
-                  style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                <button onClick={addMenuCategory} disabled={!newMenuCatName.trim()}
-                  style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: newMenuCatName.trim() ? GREEN : "rgba(255,255,255,0.06)", color: newMenuCatName.trim() ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: newMenuCatName.trim() ? "pointer" : "default" }}>
-                  Add Category
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button onClick={() => setAddingMenuCat(true)} style={{
-              width: "100%", padding: "16px 0", borderRadius: 16,
-              border: `2px dashed ${GREEN}33`, backgroundColor: "transparent",
-              color: `${GREEN}88`, fontSize: 13, fontWeight: 700,
-              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              {catalogCopy.addCategoryLabel}
-            </button>
-          )}
-        </div>
       </div>
       </>
       )}
@@ -1948,96 +1729,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
       </>
-      )}
-
-      {/* -- CATALOG ITEM EDIT SHEET -- */}
-      {editingMenuItem !== null && (
-        <>
-          <div onClick={() => setEditingMenuItem(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 40, backdropFilter: "blur(4px)" }}/>
-          <div style={{ position: "fixed", left: 12, right: 12, bottom: "calc(84px + env(safe-area-inset-bottom))", zIndex: 50, maxHeight: "min(78dvh, 620px)", minHeight: "52dvh", overflowY: "auto" as const, backgroundColor: "#111613", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 28, padding: "22px 20px 24px", boxShadow: "0 -28px 80px rgba(0,0,0,0.55)" }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 18px" }}/>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.4)", marginBottom: 16, letterSpacing: "0.08em", textTransform: "uppercase" as const }}>
-              {editingMenuItem.itemIdx === null ? catalogCopy.sheetAddLabel : catalogCopy.sheetEditLabel}
-            </div>
-
-            {/* Photo + name/price row */}
-            <div style={{ display: "flex", gap: 14, marginBottom: 12 }}>
-              <label style={{ cursor: "pointer", flexShrink: 0 }}>
-                <input type="file" accept="image/*" hidden onChange={e => e.target.files?.[0] && handleMenuPhotoUpload(e.target.files[0])} />
-                <div style={{ width: 72, height: 72, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px dashed ${GREEN}44`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                  {uploadingMenuPhoto ? (
-                    <Spinner color={GREEN} />
-                  ) : menuItemDraft.photo_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={menuItemDraft.photo_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <div style={{ textAlign: "center" as const }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${GREEN}66`} strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                      <div style={{ fontSize: 9, color: `${GREEN}66`, fontWeight: 700, marginTop: 3 }}>ADD PHOTO</div>
-                    </div>
-                  )}
-                </div>
-              </label>
-              <div style={{ flex: 1, display: "flex", flexDirection: "column" as const, gap: 8 }}>
-                <input
-                  placeholder={catalogCopy.itemPlaceholder}
-                  value={menuItemDraft.name}
-                  onChange={e => setMenuItemDraft(prev => ({ ...prev, name: e.target.value }))}
-                  style={{ padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: `1.5px solid ${GREEN}33`, color: "white", fontSize: 15, outline: "none", fontFamily: "inherit" }}
-                />
-                <input
-                  placeholder="Price (e.g. $12.99)"
-                  value={menuItemDraft.price}
-                  onChange={e => setMenuItemDraft(prev => ({ ...prev, price: e.target.value }))}
-                  style={{ padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", fontFamily: "inherit" }}
-                />
-              </div>
-            </div>
-
-            <p style={{ margin: "-4px 0 12px", fontSize: 12, lineHeight: 1.45, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
-              {menuItemDraft.photo_url ? "This photo will lead the public card." : catalogCopy.photoHelp}
-            </p>
-
-            <textarea
-              placeholder={catalogCopy.descriptionPlaceholder}
-              value={menuItemDraft.description}
-              onChange={e => setMenuItemDraft(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none" as const, boxSizing: "border-box" as const, marginBottom: 8, fontFamily: "inherit", lineHeight: 1.5 }}
-            />
-            <p style={{ margin: "0 0 14px", fontSize: 12, lineHeight: 1.45, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
-              {catalogCopy.descHelp}
-            </p>
-
-            {menuError && (
-              <p style={{ margin: "0 0 12px", padding: "11px 12px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.12)", border: "1px solid rgba(255,69,58,0.28)", color: "#FF453A", fontSize: 13, fontWeight: 700, lineHeight: 1.35 }}>{menuError}</p>
-            )}
-
-            <div style={{ display: "flex", gap: 8 }}>
-              {editingMenuItem.itemIdx !== null && (
-                <button
-                  onClick={() => setConfirmAction({
-                    title: menuItemDraft.name ? `Remove ${menuItemDraft.name}?` : "Remove this item?",
-                    message: "This can't be undone.",
-                    confirmLabel: "Remove",
-                    onConfirm: () => { void removeMenuItem(editingMenuItem.catIdx, editingMenuItem.itemIdx!) },
-                  })}
-                  disabled={menuSaving}
-                  style={{ padding: "13px 16px", borderRadius: 12, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.1)", color: "rgba(255,100,100,0.8)", fontSize: 13, fontWeight: 700, cursor: menuSaving ? "default" : "pointer", opacity: menuSaving ? 0.5 : 1 }}>
-                  Remove
-                </button>
-              )}
-              <button onClick={() => setEditingMenuItem(null)} disabled={menuSaving}
-                style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 13, fontWeight: 600, cursor: menuSaving ? "default" : "pointer", opacity: menuSaving ? 0.5 : 1 }}>
-                Cancel
-              </button>
-              <button onClick={() => void saveMenuItem()} disabled={!menuItemDraft.name.trim() || menuSaving}
-                style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: menuItemDraft.name.trim() && !menuSaving ? GREEN : "rgba(255,255,255,0.08)", color: menuItemDraft.name.trim() && !menuSaving ? BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: menuItemDraft.name.trim() && !menuSaving ? "pointer" : "default" }}>
-                {menuSaving ? "Saving..." : catalogCopy.saveLabel}
-              </button>
-            </div>
-          </div>
-        </>
       )}
 
       {photoPickerSlot && (() => {

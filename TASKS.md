@@ -2,7 +2,9 @@
 
 - [x] Team audit Rosa's Mexican Food mobile order page before more code changes.
 - [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Final team correction: no placeholder at all for restaurant no-photo items.
-- [ ] Shawn QA: test Menu editor and Edit Website menu item helper text. Confirm it references the public card behavior clearly and does not slow down adding items.
+- [x] Consolidate Edit Website > Menu/Products so it no longer duplicates the main Menu/Products manager.
+- [ ] Shawn QA: Edit Website > Menu should show a page image control plus Manage menu items / View live menu, not add/edit item controls.
+- [ ] Shawn QA: Manage menu items should open the dedicated Menu tool; View live menu should open the public menu page.
 - [x] Documentation recovery checkpoint added after credit interruption; current truth is back at the top of `SESSION_HANDOFF.md`.
 
 ---

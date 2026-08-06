@@ -3,16 +3,16 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: approved owner guidance was added to menu/product item editors after reviewing Rosa's current public menu look.
-- Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
-- Public menu cards now show real photos when present, no image block when missing, and descriptions clamped to about 3 lines.
-- Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
+- Latest local work: Edit Website > Menu/Products was consolidated so owners do not see a second, different catalog editor.
+- Team decision: the dedicated Dashboard > Menu and Dashboard > Products tools are the only places to add/edit categories, items, prices, descriptions, photos, pickup/delivery, etc.
+- Edit Website > Menu/Products now explains that split, keeps the website page image control, shows a live-page link, and sends owners to the real manager with one primary button.
+- Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality and owner UX around menu editing.
 
 ### What Changed Recently
-- Dedicated Menu/Products manager now tells owners photos help customers choose faster.
-- Edit Website menu/product sheet now shows the same non-blocking photo and description guidance.
-- Guidance references the public behavior: missing menu photos become text-only cards; long descriptions are shortened on the live menu.
-- Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
+- Removed the duplicate menu/product search, category editing, item editing, add-category controls, and old item edit sheet from `src/app/dashboard/(app)/site/SiteEditor.tsx`.
+- Added `Manage menu items` -> `/dashboard/menu` and `Manage products` -> `/dashboard/products` from the website editor catalog page.
+- Kept the Menu/Product page hero image control in Edit Website because that controls how the public website page looks.
+- Public menu cards still show real photos when present, no image block when missing, descriptions clamped to about 3 lines, and prices normalize through `src/lib/catalogPricing.ts`.
 
 ### Shawn-Tested
 - Photo labels and live-section confirmations: working.
@@ -22,9 +22,10 @@
 - Rosa's public menu readability pass looked better after description clamp.
 
 ### Test Next
-- In the dashboard Menu editor, open or add a menu item and confirm the helper text appears under photos and description.
-- In Edit Website > Menu, open or add a menu item and confirm the same guidance appears there too.
-- Confirm saving an item still works and the public menu still looks like the latest screenshot.
+- In Edit Website > Menu, confirm there is no duplicate add/edit item experience; it should explain that Menu is managed in one place.
+- Tap `Manage menu items` and confirm it opens the dedicated Menu tool with the same premium item/category editor Shawn screenshotted.
+- Tap `View live menu` and confirm it opens the public menu page.
+- Confirm changing the Menu Page image from Edit Website still affects the public menu page image only.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.

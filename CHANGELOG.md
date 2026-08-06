@@ -1,3 +1,22 @@
+## Session: August 5, 2026 - Consolidate Edit Website Catalog Handoff
+**Worked on:** Team-approved UX correction after Shawn showed that Edit Website > Menu and the main Menu tool looked like two different systems for the same job.
+
+### Fixed
+- Turned Edit Website > Menu/Products into a website-context screen instead of a duplicate item/category editor.
+- Kept the page image control there because it changes the public Menu/Product page presentation.
+- Added one primary route into the real manager: Manage menu items / Manage products.
+- Added a live page button: View live menu / View live shop.
+- Removed the obsolete in-page catalog search, add category, item edit rows, and old catalog item edit sheet from SiteEditor.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: go to Edit Website > Menu for Rosa. Confirm it is not a second menu editor anymore, then tap Manage menu items and confirm it opens the same dedicated Menu tool.
+
+---
 ## Session: August 5, 2026 - Menu Owner Guidance From Public Card Behavior
 **Worked on:** Team-approved owner guidance after reviewing Rosa's current public menu: real photos show, missing photos become text-only cards, and descriptions are clamped for scanning.
 
