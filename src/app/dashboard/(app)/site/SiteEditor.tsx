@@ -446,6 +446,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't save that service. Try again.")
+      } else {
+        flashSaveNotice("Services were saved.", getPhotoSlotPublicUrl("services"))
       }
     })
   }
@@ -460,6 +462,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't remove that service. Try again.")
+      } else {
+        flashSaveNotice("Services were saved.", getPhotoSlotPublicUrl("services"))
       }
     })
   }
@@ -479,6 +483,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't add that service. Try again.")
+      } else {
+        flashSaveNotice("Services were saved.", getPhotoSlotPublicUrl("services"))
       }
     })
   }
@@ -2036,7 +2042,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>{activeSlot.label} Photo</div>
+                  <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>{getPhotoSlotOwnerLabel(activeSlot.slot)}</div>
                   <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>{activeSlot.helper}</h3>
                   <a
                     href={getPhotoSlotPublicUrl(activeSlot.slot)}
@@ -2096,7 +2102,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
               {activeSlot.photos.length > 0 && (
                 <button onClick={() => activeSlot.slot === "gallery" ? handleClearAllGallery() : handleClearPhotoSlot(activeSlot.slot)} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,80,80,0.24)", backgroundColor: "rgba(255,80,80,0.12)", color: "rgba(255,120,120,0.9)", fontSize: 14, fontWeight: 800, cursor: "pointer" }}>
-                  Remove {activeSlot.label} Photo{activeSlot.slot === "gallery" && activeSlot.photos.length > 1 ? "s" : ""}
+                  Remove {getPhotoSlotOwnerLabel(activeSlot.slot)}
                 </button>
               )}
             </div>
