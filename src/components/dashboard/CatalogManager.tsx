@@ -6,6 +6,7 @@ import { updateMenuItems, uploadMenuItemPhoto } from "@/app/dashboard/(app)/site
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 import type { CatalogSettings } from "@/types/company"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { formatCatalogPrice, normalizeCatalogPriceInput } from "@/lib/catalogPricing"
 
 type CatalogDetail = { label: string; value: string }
 type CatalogOption = { label: string; choices: string[] }
@@ -191,10 +192,7 @@ function normalizeCategories(categories: CatalogCategory[], settings?: CatalogSe
   }))
 }
 function priceLabel(price: string | null | undefined) {
-  if (!price) return ""
-  const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
-  if (!match) return price
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(match[1]))
+  return formatCatalogPrice(price)
 }
 
 function inputStyle(extra: React.CSSProperties = {}): React.CSSProperties {
@@ -365,7 +363,7 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
     const variants = normalizeVariants(options, itemDraft.variants, itemDraft.inventory_tracking)
     const nextItem: CatalogItem = {
       name,
-      price: itemDraft.price.trim() || null,
+      price: itemDraft.price.trim() ? normalizeCatalogPriceInput(itemDraft.price) ?? itemDraft.price.trim() : null,
       description: itemDraft.description.trim(),
       photo_url: images[0] ?? null,
       images: images.length ? images : null,

@@ -5,16 +5,9 @@ import { hasAddonAccess } from "@/lib/featureAccess"
 import { getStripe, getStripeConnectStatus } from "@/lib/stripe/connect"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import type { MenuCategory } from "@/types/company"
+import { formatCatalogMoney, formatCatalogPrice, parseCatalogPriceCents } from "@/lib/catalogPricing"
 
 type CheckoutItemInput = { catIndex: number; itemIndex: number; quantity: number; selectedOptions?: Record<string, unknown> | null; variantId?: string | null }
-
-function parsePriceCents(price: string | null | undefined) {
-  if (!price) return null
-  const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
-  if (!match) return null
-  const cents = Math.round(Number(match[1]) * 100)
-  return Number.isFinite(cents) && cents > 0 ? cents : null
-}
 
 function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
@@ -148,7 +141,7 @@ export async function POST(req: NextRequest) {
   for (const input of requestedItems.slice(0, 30)) {
     const quantity = Math.max(1, Math.min(Number(input.quantity) || 0, 20))
     const product = productItems[input.catIndex]?.items?.[input.itemIndex]
-    const unitAmount = parsePriceCents(product?.price)
+    const unitAmount = parseCatalogPriceCents(product?.price)
     if (!product || !unitAmount || quantity <= 0) continue
     const selectedOptions = cleanSelectedOptions(product, input.selectedOptions)
     if ((product.options ?? []).length && !selectedOptions) {
@@ -168,7 +161,7 @@ export async function POST(req: NextRequest) {
       name: product.name,
       quantity,
       unit_amount: unitAmount,
-      price: product.price || `$${(unitAmount / 100).toFixed(2)}`,
+      price: formatCatalogPrice(product.price) || formatCatalogMoney(unitAmount),
       selected_options: selectedOptions,
     })
   }

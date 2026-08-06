@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import type { MenuCategory } from "@/types/company"
+import { formatCatalogMoney, formatCatalogPrice, parseCatalogPriceCents } from "@/lib/catalogPricing"
 
 type ProductDetail = { label: string; value: string }
 type ProductOption = { label: string; choices: string[] }
@@ -51,16 +52,12 @@ type ShippingAddress = {
 const SHOP_BLACK = "#0D0F0E"
 const ClientPaymentElement = dynamic(() => import("./ShopPaymentElement"), { ssr: false })
 
-function parsePriceCents(price: string | null | undefined) {
-  if (!price) return null
-  const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
-  if (!match) return null
-  const cents = Math.round(Number(match[1]) * 100)
-  return Number.isFinite(cents) && cents > 0 ? cents : null
+function formatMoney(cents: number) {
+  return formatCatalogMoney(cents)
 }
 
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+function itemInitials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "Item"
 }
 
 function emptyShippingAddress(): ShippingAddress {
@@ -142,7 +139,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
     const rows: ProductItem[] = []
     categories.forEach((cat, catIndex) => {
       cat.items.forEach((item, itemIndex) => {
-        const unitAmount = parsePriceCents(item.price)
+        const unitAmount = parseCatalogPriceCents(item.price)
         if (!unitAmount) return
         rows.push({
           key: `${catIndex}:${itemIndex}`,
@@ -160,7 +157,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           sizes: item.sizes,
           materials: item.materials,
           shipping_note: item.shipping_note,
-          priceLabel: item.price || formatMoney(unitAmount),
+          priceLabel: formatCatalogPrice(item.price) || formatMoney(unitAmount),
           unitAmount,
         })
       })
@@ -402,7 +399,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
                       <article key={item.key} className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.07)]">
                         <button type="button" onClick={() => openProduct(item)} className="block w-full text-left">
                           <div className="relative aspect-[4/3] bg-neutral-100">
-                            {images[0] ? <img src={images[0]} alt={item.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm font-black uppercase tracking-[0.18em] text-neutral-400">Product</div>}
+                            {images[0] ? <img src={images[0]} alt={item.name} className="h-full w-full object-cover" /> : <div className="relative flex h-full items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary}18, #F5F7F6)` }}><div className="absolute inset-0 opacity-70" style={{ background: "radial-gradient(circle at 28% 24%, rgba(255,255,255,0.95), transparent 32%), radial-gradient(circle at 78% 76%, rgba(0,0,0,0.08), transparent 34%)" }} /><span className="relative text-4xl font-black" style={{ color: primary }}>{itemInitials(item.name)}</span></div>}
                             <div className="absolute bottom-3 right-3 rounded-full bg-white/92 px-3 py-2 text-sm font-black text-neutral-950 shadow-lg">{formatMoney(item.unitAmount)}</div>
                           </div>
                           <div className="p-5">
@@ -569,7 +566,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
             <div className="grid md:grid-cols-[1.05fr_0.95fr]">
               <div className="bg-neutral-100 p-4">
                 <div className="aspect-square overflow-hidden rounded-[26px] bg-neutral-200">
-                  {selectedImage ? <img src={selectedImage} alt={selectedProduct.name} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-sm font-black uppercase tracking-[0.18em] text-neutral-400">Product</div>}
+                  {selectedImage ? <img src={selectedImage} alt={selectedProduct.name} className="h-full w-full object-cover" /> : <div className="relative flex h-full items-center justify-center overflow-hidden" style={{ background: `linear-gradient(135deg, ${primary}18, #F5F7F6)` }}><div className="absolute inset-0 opacity-70" style={{ background: "radial-gradient(circle at 28% 24%, rgba(255,255,255,0.95), transparent 32%), radial-gradient(circle at 78% 76%, rgba(0,0,0,0.08), transparent 34%)" }} /><span className="relative text-4xl font-black" style={{ color: primary }}>{itemInitials(selectedProduct.name)}</span></div>}
                 </div>
                 {productImages(selectedProduct).length > 1 && <div className="mt-3 grid grid-cols-5 gap-2">{productImages(selectedProduct).map((image) => <button key={image} onClick={() => setSelectedImage(image)} className="aspect-square overflow-hidden rounded-xl border" style={{ borderColor: selectedImage === image ? primary : "#e5e5e5" }}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div>}
               </div>

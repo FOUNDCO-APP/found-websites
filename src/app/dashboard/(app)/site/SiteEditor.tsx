@@ -17,6 +17,7 @@ import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSitePhotoSections, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
+import { normalizeCatalogPriceInput, formatCatalogPrice } from "@/lib/catalogPricing"
 
 type Config = Record<string, unknown>
 type Photo = { id: string; url: string; website_section: string | null; in_gallery?: boolean; media_type?: "photo" | "video"; mime_type?: string | null }
@@ -600,7 +601,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       flashSaveError("That doesn't look like a price - try something like $12.99.")
       return
     }
-    const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: trimmedPrice || null, photo_url: menuItemDraft.photo_url || null }
+    const normalizedPrice = trimmedPrice ? normalizeCatalogPriceInput(trimmedPrice) : null
+    const newItem = { name: menuItemDraft.name.trim(), description: menuItemDraft.description.trim(), price: normalizedPrice, photo_url: menuItemDraft.photo_url || null }
     if (!newItem.name) return
     const cats = menuCats.map((c, ci) => {
       if (ci !== catIdx) return c
@@ -1605,7 +1607,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                               <div style={{ fontSize: 14, fontWeight: 600, color: "white", marginBottom: 1 }}>{item.name}</div>
                               {item.description && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.description}</div>}
                             </div>
-                            {item.price && <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0 }}>{item.price}</div>}
+                            {item.price && <div style={{ fontSize: 13, fontWeight: 700, color: GREEN, flexShrink: 0 }}>{formatCatalogPrice(item.price)}</div>}
                             <button onClick={() => openEditMenuItem(catIdx, itemIdx)}
                               style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", fontSize: 11, fontWeight: 700, padding: "4px 6px", flexShrink: 0 }}>
                               Edit

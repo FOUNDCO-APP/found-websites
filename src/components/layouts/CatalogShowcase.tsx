@@ -1,5 +1,6 @@
 import Link from "next/link"
 import type { Company, MenuItem } from "@/types/company"
+import { formatCatalogPrice } from "@/lib/catalogPricing"
 
 type ShowcaseItem = MenuItem & { category: string }
 
@@ -13,10 +14,7 @@ function itemImage(item: MenuItem) {
 }
 
 function parsePrice(price: string | null | undefined) {
-  if (!price) return ""
-  const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
-  if (!match) return price
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(match[1]))
+  return formatCatalogPrice(price)
 }
 
 export default function CatalogShowcase({ company, activeAddons = [] }: { company: Company; activeAddons?: string[] }) {

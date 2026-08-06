@@ -1,3 +1,4 @@
+import { normalizeCatalogPriceInput } from "@/lib/catalogPricing"
 export type ServiceCopyItem = {
   name: string
   description: string
@@ -936,7 +937,7 @@ export function polishMenuCategories(value: unknown): MenuCopyCategory[] {
       items.push({
         name,
         description: polishSentence(menuItem.description, ""),
-        price: typeof menuItem.price === "string" && menuItem.price.trim() ? menuItem.price.trim() : null,
+        price: typeof menuItem.price === "string" && menuItem.price.trim() ? normalizeCatalogPriceInput(menuItem.price) ?? menuItem.price.trim() : null,
         photo_url: primaryPhoto,
         images: images.length ? images : primaryPhoto ? [primaryPhoto] : null,
         details: details.length ? details : null,

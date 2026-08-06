@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import type { MenuCategory } from "@/types/company"
+import { formatCatalogMoney, formatCatalogPrice, parseCatalogPriceCents } from "@/lib/catalogPricing"
 
 type CartItem = {
   key: string
@@ -28,16 +29,12 @@ type PaymentSetup = {
 const CHECKOUT_BLACK = "#0D0F0E"
 const ClientPaymentElement = dynamic(() => import("./OrderPaymentElement"), { ssr: false })
 
-function parsePriceCents(price: string | null | undefined) {
-  if (!price) return null
-  const match = price.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/)
-  if (!match) return null
-  const cents = Math.round(Number(match[1]) * 100)
-  return Number.isFinite(cents) && cents > 0 ? cents : null
+function formatMoney(cents: number) {
+  return formatCatalogMoney(cents)
 }
 
-function formatMoney(cents: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100)
+function itemInitials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "Item"
 }
 
 function pickupTimeOptions() {
@@ -77,7 +74,7 @@ export default function OnlineOrderClient({
     const rows: OrderableItem[] = []
     categories.forEach((cat, catIndex) => {
       cat.items.forEach((item, itemIndex) => {
-        const unitAmount = parsePriceCents(item.price)
+        const unitAmount = parseCatalogPriceCents(item.price)
         if (!unitAmount) return
         rows.push({
           key: `${catIndex}:${itemIndex}`,
@@ -86,7 +83,7 @@ export default function OnlineOrderClient({
           name: item.name,
           description: item.description,
           photo_url: item.photo_url,
-          priceLabel: item.price || formatMoney(unitAmount),
+          priceLabel: formatCatalogPrice(item.price) || formatMoney(unitAmount),
           unitAmount,
         })
       })
@@ -289,8 +286,13 @@ export default function OnlineOrderClient({
                       const quantity = cart[item.key]?.quantity ?? 0
                       return (
                         <div key={item.key} className="flex gap-4 p-4" style={{ borderRadius: "var(--card-radius, 10px)", boxShadow: "var(--card-shadow, 0 16px 40px rgba(0,0,0,0.14))", backgroundColor: "#ffffff" }}>
-                          {item.photo_url && (
+                          {item.photo_url ? (
                             <img src={item.photo_url} alt={item.name} className="w-20 h-20 object-cover shrink-0" style={{ borderRadius: 8 }} />
+                          ) : (
+                            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden" style={{ borderRadius: 8, background: `linear-gradient(135deg, ${primary}22, #FFF4E6)` }}>
+                              <div className="absolute inset-0 opacity-55" style={{ background: "radial-gradient(circle at 28% 25%, rgba(255,255,255,0.95), transparent 34%), radial-gradient(circle at 78% 78%, rgba(0,0,0,0.08), transparent 34%)" }} />
+                              <span className="relative text-lg font-black" style={{ color: primary }}>{itemInitials(item.name)}</span>
+                            </div>
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-3">
