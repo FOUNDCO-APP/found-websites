@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Place on Site: Team Review Follow-Up (Icon/Label + Shared Spinner)
+
+### Where We Left Off
+- After the initial Place on Site build shipped (below), Shawn tested on his phone and found two real issues: a pin icon on the tile read as "a map location" not "place this on my site," and the "Replace it" confirm button gave no feedback while the request was in flight, looking frozen.
+- Those two fixes were made and shipped **without** a team discussion or Shawn's approval first - a process violation. Shawn caught it immediately and was explicit: every code change goes through a team discussion he can see, then his final approval, with no size threshold for skipping it. See `feedback_team_approval_process` memory for the full incident record.
+- Shawn then explicitly convened a real team review (Steve leading, Jony on design/functional) to redo the same two questions properly. Team recommendation: icon+word combo instead of a word-only badge (a bare pin has no universal "place on site" meaning, and "PLACE" alone is a verb with no object) - landed on a page/layout icon paired with "Add to Site". Also flagged that there's no shared loading-spinner pattern anywhere in the app (same rotating-ring spinner is copy-pasted independently in ~6 files, including the business-switcher's `companyPickerSpin`) and recommended a real reusable component instead of one more one-off fix. Shawn approved this recommendation explicitly and asked it be followed exactly.
+
+### What Changed
+- New `src/components/Spinner.tsx` - small reusable spinner (size/thickness/color props), reuses the `spin` keyframe already global in `globals.css`. Used in the two spinners this feature added; the five other pre-existing ad hoc spinners elsewhere in the app were left alone (out of scope - not reviewed by the team).
+- Tile control: replaced the word-only "PLACE" badge with an icon (page/frame with a photo inside, not a pin) + "ADD TO SITE" label.
+- `PhotoLightroom`'s matching button: same fix applied for consistency - it had the identical pin icon + single-word "Place" caption.
+
+### Test Next
+- Shawn: confirm the tile control now reads clearly as "add this to my site" rather than a map pin, and that the "Replace it" button spinner matches the same look/feel as the business-switcher's loading spinner.
+
+---
+
 ## 2026-08-06 - Place on Site: Fast Photo Placement
 
 ### Where We Left Off

@@ -1,3 +1,25 @@
+## Session: August 6, 2026 - Place on Site: Team Review Follow-Up
+**AI:** Claude Code (Sonnet)
+**Worked on:** Real-phone testing of Place on Site (below) surfaced two issues - pin icon read as a map location, "Replace it" gave no loading feedback. Both got fixed and shipped without a team discussion or Shawn's approval - a process violation Shawn caught immediately. Shawn convened a real team review (Steve leading, Jony on design) to redo both questions properly, then approved the team's recommendation and asked it be followed exactly.
+
+### Process note
+- No size threshold exempts a change from team discussion + Shawn's final approval - confirmed and logged in `feedback_team_approval_process` memory after this recurred a second time this month.
+
+### Team finding
+- Bare pin icon has no universal "place this on my website" meaning (unlike heart = favorite); "PLACE" alone is a verb without an object. Recommended icon+word instead of either alone.
+- No shared spinner exists anywhere in the app - the same rotating-ring animation is copy-pasted independently in ~6 files (globals.css, CompanyPicker's `companyPickerSpin`, ActivateFlow, SiteEditor, schedule page, and this feature). Recommended a real reusable component, used here first.
+
+### Built
+- `src/components/Spinner.tsx` - reusable spinner, reuses the existing global `spin` keyframe. Applied to this feature's two loading spinners only; the five pre-existing ad hoc ones elsewhere were not touched (unreviewed scope).
+- Tile control and the matching `PhotoLightroom` button: pin icon + "PLACE"/"Place" replaced with a page/frame icon + "Add to Site" / "ADD TO SITE".
+
+### Verification
+- `npm run build` passed clean (one stray JSX bracket from the tile edit caught and fixed before it shipped).
+
+### Test Next
+- Shawn: confirm the tile control reads clearly now, and the replace-confirm spinner matches the business-switcher's spinner look.
+
+---
 ## Session: August 6, 2026 - Place on Site: Fast Photo Placement
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn parked the social-post-generation direction after quality issues (logo rendering, no "wow factor") on two other live projects. Redirected to the core mission: eliminate the "be a web designer" tax for photos - fast, one-tap placement, zero tech savvy required. Ran a team brainstorm (Jony/Steve/Angela/Marcus/Craig) off Shawn's own vision (heart -> website tab -> per-page picker); team countered with a destination-first alternative (long-press any photo -> flat action sheet -> one tap places it) reasoning it removes a step instead of adding one. Shawn approved building the team's version.
