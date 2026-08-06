@@ -3,16 +3,15 @@
 ## 2026-08-05 - Live Launch Handoff
 
 ### Where We Left Off
-- Latest local work: approved restaurant card readability pass was applied to the live menu/order card path.
+- Latest local work: approved owner guidance was added to menu/product item editors after reviewing Rosa's current public menu look.
 - Shawn paused template/admin polish to focus on Rosa's Mexican Food menu/order quality.
-- Price formatting is shipped and Shawn confirmed `1` renders as `$1.00`.
+- Public menu cards now show real photos when present, no image block when missing, and descriptions clamped to about 3 lines.
 - Next product decision should stay on Rosa's menu quality only; do not redesign checkout or the whole menu without Shawn approval.
 
 ### What Changed Recently
-- Restaurant menu descriptions are now clamped to 3 lines on cards for faster scanning.
-- Card spacing is slightly tighter on mobile: smaller gap/padding and a little less space above the add controls.
-- Restaurant order items without photos still render no image block at all.
-- Real-photo items still keep their 80x80 image.
+- Dedicated Menu/Products manager now tells owners photos help customers choose faster.
+- Edit Website menu/product sheet now shows the same non-blocking photo and description guidance.
+- Guidance references the public behavior: missing menu photos become text-only cards; long descriptions are shortened on the live menu.
 - Catalog prices still normalize through `src/lib/catalogPricing.ts`, so `1` renders as `$1.00`.
 
 ### Shawn-Tested
@@ -20,12 +19,12 @@
 - Service/menu/product confirmations: working.
 - Confirmation clears after `View live page`: working.
 - Rosa's price `1` became `$1.00`: working.
-- Illustrated and neutral placeholders were rejected and removed from the restaurant order/menu card path.
+- Rosa's public menu readability pass looked better after description clamp.
 
 ### Test Next
-- On Rosa's mobile menu page, confirm long descriptions stop at about 3 lines.
-- Confirm the cards scan faster and do not feel cramped.
-- Confirm existing food photos, prices, plus buttons, no-photo Burritos card, and sticky Order Online button still behave normally.
+- In the dashboard Menu editor, open or add a menu item and confirm the helper text appears under photos and description.
+- In Edit Website > Menu, open or add a menu item and confirm the same guidance appears there too.
+- Confirm saving an item still works and the public menu still looks like the latest screenshot.
 
 ### Process Guardrails
 - Keep `SESSION_HANDOFF.md` short; detailed history belongs in `CHANGELOG.md` or `CHANGELOG_ARCHIVE.md`.

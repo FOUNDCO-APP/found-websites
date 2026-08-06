@@ -72,6 +72,8 @@ const COPY = {
     descPlaceholder: "Ingredients, allergens, prep notes, or what makes it special",
     save: "Save to Menu",
     photoLabel: "Dish photos",
+    photoHelp: "Food photos help customers choose faster. If you skip one, the live menu card becomes text-only.",
+    descHelp: "On the live menu, descriptions are shortened for quick scanning. Put the strongest detail first.",
   },
   products: {
     title: "Products",
@@ -90,6 +92,8 @@ const COPY = {
     descPlaceholder: "Short description customers will see first",
     save: "Save Product",
     photoLabel: "Product photos",
+    photoHelp: "Product photos help customers decide faster. If you skip one, the shop card stays text-first.",
+    descHelp: "Keep this short. Customers see the first lines before they open the product.",
   },
 } as const
 
@@ -587,13 +591,16 @@ export default function CatalogManager({ mode, companyName, slug, initialCategor
                   </label>
                 )}
               </div>
-              {itemDraft.images.length > 0 && <p style={{ margin: "8px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Tap a photo to remove it. First photo leads the product.</p>}
+              <p style={{ margin: "8px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+                {itemDraft.images.length > 0 ? "Tap a photo to remove it. First photo leads the public card." : copy.photoHelp}
+              </p>
             </div>
 
             <div style={{ display: "grid", gap: 10, marginBottom: 12 }}>
               <input value={itemDraft.name} onChange={(event) => setItemDraft((prev) => ({ ...prev, name: event.target.value }))} placeholder={copy.itemPlaceholder} style={inputStyle({ border: `1.5px solid ${GREEN}33` })} />
               <input value={itemDraft.price} onChange={(event) => setItemDraft((prev) => ({ ...prev, price: event.target.value }))} placeholder="Price, e.g. $12.99" inputMode="decimal" style={inputStyle()} />
               <textarea value={itemDraft.description} onChange={(event) => setItemDraft((prev) => ({ ...prev, description: event.target.value }))} placeholder={copy.descPlaceholder} rows={3} style={inputStyle({ lineHeight: 1.45, resize: "none" })} />
+              <p style={{ margin: "-2px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{copy.descHelp}</p>
             </div>
 
             {isProducts && (

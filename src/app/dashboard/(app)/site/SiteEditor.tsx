@@ -340,6 +340,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         sheetEditLabel: "Edit Menu Item",
         itemPlaceholder: "Menu item name *",
         descriptionPlaceholder: "Description (optional) - ingredients, allergens, what makes it special...",
+        photoHelp: "Food photos help customers choose faster. If you skip one, the live menu card becomes text-only.",
+        descHelp: "On the live menu, descriptions are shortened for quick scanning. Put the strongest detail first.",
         saveLabel: "Save to Menu",
       }
     : {
@@ -353,6 +355,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         sheetEditLabel: "Edit Product",
         itemPlaceholder: "Product name *",
         descriptionPlaceholder: "Description (optional) - size, material, pickup, shipping, or what makes it special...",
+        photoHelp: "Product photos help customers decide faster. If you skip one, the shop card stays text-first.",
+        descHelp: "Keep this short. Customers see the first lines before they open the product.",
         saveLabel: "Save Product",
       }
 
@@ -1990,13 +1994,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </div>
             </div>
 
+            <p style={{ margin: "-4px 0 12px", fontSize: 12, lineHeight: 1.45, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
+              {menuItemDraft.photo_url ? "This photo will lead the public card." : catalogCopy.photoHelp}
+            </p>
+
             <textarea
               placeholder={catalogCopy.descriptionPlaceholder}
               value={menuItemDraft.description}
               onChange={e => setMenuItemDraft(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
-              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none" as const, boxSizing: "border-box" as const, marginBottom: 14, fontFamily: "inherit", lineHeight: 1.5 }}
+              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: 14, outline: "none", resize: "none" as const, boxSizing: "border-box" as const, marginBottom: 8, fontFamily: "inherit", lineHeight: 1.5 }}
             />
+            <p style={{ margin: "0 0 14px", fontSize: 12, lineHeight: 1.45, color: "rgba(255,255,255,0.42)", fontWeight: 500 }}>
+              {catalogCopy.descHelp}
+            </p>
 
             {menuError && (
               <p style={{ margin: "0 0 12px", padding: "11px 12px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.12)", border: "1px solid rgba(255,69,58,0.28)", color: "#FF453A", fontSize: 13, fontWeight: 700, lineHeight: 1.35 }}>{menuError}</p>

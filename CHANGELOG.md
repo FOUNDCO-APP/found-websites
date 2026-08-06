@@ -1,3 +1,21 @@
+## Session: August 5, 2026 - Menu Owner Guidance From Public Card Behavior
+**Worked on:** Team-approved owner guidance after reviewing Rosa's current public menu: real photos show, missing photos become text-only cards, and descriptions are clamped for scanning.
+
+### Fixed
+- Added non-blocking photo guidance to the dedicated Menu/Products manager.
+- Added matching guidance to the Edit Website menu/product item sheet.
+- Added description guidance so owners know the first lines matter because public cards shorten long copy.
+- No public menu layout, checkout, cart, or pricing behavior changed in this pass.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed with the existing middleware deprecation warning only.
+
+### Test Next
+- Shawn: open Dashboard > Menu and Edit Website > Menu, then add/edit an item and confirm the helper text is clear and not annoying.
+
+---
 ## Session: August 5, 2026 - Restaurant Menu Card Readability Pass
 **Worked on:** Team-approved next polish after the no-photo placeholder was removed: improve menu card scanning without changing checkout or the overall layout.
 
