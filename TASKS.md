@@ -1,3 +1,12 @@
+## 2026-08-05 - CURRENT NOW
+
+- [ ] Team audit Rosa's Mexican Food mobile order page before more code changes.
+- [ ] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos.
+- [ ] Decide whether menu cards need stronger restaurant-specific hierarchy, descriptions, category navigation, modifiers, badges, or visual polish.
+- [x] Documentation recovery checkpoint added after credit interruption; current truth is back at the top of `SESSION_HANDOFF.md`.
+
+---
+
 ## 2026-07-31 - Custom-Domain Share QA
 
 - [x] Fix Safari custom-domain share source of truth: public metadata and live-preview links prefer connected domains over foundco.app fallback URLs.

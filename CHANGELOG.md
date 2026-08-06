@@ -1,3 +1,18 @@
+## Session: August 5, 2026 - Documentation Recovery Cleanup
+**Worked on:** Shawn questioned whether the recovery documentation followed the normal process and warned against adding more docs than necessary.
+
+### Fixed
+- Tightened the top of `SESSION_HANDOFF.md` back into a concise current-truth handoff instead of a long recovery dump.
+- Added the current Rosa's menu/order-page pause to `TASKS.md` so next work starts from the active queue.
+- Preserved Claude's reconstructed history below the handoff; no product code changed.
+
+### Verification
+- Docs-only cleanup. No build needed.
+
+### Test Next
+- None for Shawn. Next product step is team review of Rosa's menu/order page before coding.
+
+---
 ## Session: August 5, 2026 - Catalog Price Normalization + No-Photo Fallback Cards
 **Note:** Reconstructed catch-up entry written from `git show e1a53d8`, not live session notes - this shipped without a doc update at the time.
 **Worked on:** Price display was duplicated and inconsistent across the restaurant order page, retail shop page, both checkout routes, the catalog showcase preview, and the owner's own catalog editor.
