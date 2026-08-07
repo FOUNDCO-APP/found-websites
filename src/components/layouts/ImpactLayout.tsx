@@ -26,6 +26,14 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const aboutImage = sectionImages?.about ?? null
   const ctaImage = sectionImages?.cta ?? null
+  // Owner-uploaded gallery photos always come first, but a strip with only
+  // 1-2 real photos reads as sparse/broken - top it up with stock photos
+  // until there are enough real ones to fill it on their own.
+  const ownerGalleryImages = sectionImages?.gallery ?? []
+  const stockFillImages = [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]
+  const galleryImages = ownerGalleryImages.length >= 4
+    ? ownerGalleryImages
+    : Array.from(new Set([...ownerGalleryImages, ...stockFillImages])).slice(0, 4)
 
   return (
     <>
@@ -71,6 +79,25 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
           </div>
         </div>
       </section>
+
+      {/* ── GALLERY STRIP ── */}
+      {galleryImages.length > 0 && (
+        <div className="flex gap-0.5 overflow-x-auto scrollbar-hide md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+          {galleryImages.map((src, i) => (
+            <div
+              key={i}
+              className={`relative flex-none overflow-hidden ${i === 3 ? "md:hidden" : "md:flex-1"}`}
+              style={{ height: "260px", width: "75vw" }}
+            >
+              <img
+                src={src}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
 

@@ -24,6 +24,12 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const ctaImage = sectionImages?.cta ?? null
+  // Cinematic is deliberately restrained - hero and final CTA are the only
+  // "photo moments" by design. Rather than break that with a generic strip,
+  // the owner's own gallery-tagged photos (if any) show as a small collage
+  // inside About - real photos only, no stock fallback, so the restraint
+  // rule still holds for anyone who hasn't tagged a gallery yet.
+  const ownerGalleryImages = (sectionImages?.gallery ?? []).slice(0, 4)
 
   return (
     <>
@@ -212,6 +218,19 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
                   </Link>
                 </div>
               </div>
+              {ownerGalleryImages.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-16">
+                  {ownerGalleryImages.map((src, i) => (
+                    <div
+                      key={i}
+                      className="relative overflow-hidden"
+                      style={{ aspectRatio: "3 / 4", borderRadius: "var(--card-radius, 6px)" }}
+                    >
+                      <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </InView>
           </div>
         </section>

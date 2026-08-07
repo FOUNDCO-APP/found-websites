@@ -27,6 +27,12 @@ export default function EditorialLayout({ company, activeAddons, primaryCTA, sec
   const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const ctaImage = sectionImages?.cta ?? null
+  // Editorial has no photo-forward section anywhere but hero/CTA by design -
+  // a full gallery strip would fight its narrow, literary character. When
+  // the owner has tagged real gallery photos, show a small, quiet moment
+  // instead of a section - no stock fallback, so a business with nothing
+  // tagged yet keeps the text-only look this template is built around.
+  const ownerGalleryImages = (sectionImages?.gallery ?? []).slice(0, 3)
 
   return (
     <>
@@ -128,6 +134,15 @@ export default function EditorialLayout({ company, activeAddons, primaryCTA, sec
                 </h2>
               ) : null}
               <div className="w-12 h-0.5 mx-auto mb-8" style={{ backgroundColor: primary }} />
+              {ownerGalleryImages.length > 0 && (
+                <div className="flex justify-center gap-3 mb-10">
+                  {ownerGalleryImages.map((src, i) => (
+                    <div key={i} className="relative overflow-hidden" style={{ width: 84, height: 84, border: "1px solid rgba(0,0,0,0.08)" }}>
+                      <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
               {aboutCopy && (
                 <p className="text-lg leading-relaxed mb-10" style={{ color: "#666666" }}>
                   {aboutCopy}
