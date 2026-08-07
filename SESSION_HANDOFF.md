@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Gallery Template Parity (Impact, Cinematic, Editorial)
+
+### Where We Left Off
+- Real gap from tonight's Place on Site launch: the Gallery destination worked at the data level for every template, but only 3 of 6 templates (Portrait, Wellness Luxe, Wellness Cinematic) actually render a gallery-strip section. On Impact/Editorial/Cinematic, tagging a photo Gallery succeeded in the database with nowhere on the public site for it to show up.
+- Team picked this up as the top-priority next item off the earlier photo-system roadmap. First pass at planning assumed Cinematic would be an easy port from Wellness Cinematic and Impact had a structural CTA-bleed complication - direct code investigation corrected both: Impact has no bleed issue (simpler than assumed), and Cinematic's own code comments state a deliberate "exactly two photo moments" (hero + final CTA) rhythm rule that a literal gallery strip would violate - not a gap, an intentional design choice.
+- Team reconvened on the corrected facts (real disagreement: Jony arguing for design integrity, Marcus/Angela arguing the owner's actual photos not showing up matters more). Landed on: Impact gets a real strip (ported from Portrait), Cinematic and Editorial get bespoke, smaller, real-photos-only treatments instead of a literal strip, preserving each template's character. Shawn approved and asked it built exactly as recommended.
+
+### What Changed
+- `ImpactLayout.tsx`: added Portrait's 4-tile full-bleed gallery strip (same stock-fill-to-4 threshold logic), placed immediately after the hero.
+- `CinematicLayout.tsx`: no strip. About section's solid dark background now shows a small 4-photo collage (portrait-oriented tiles, small radius matching Cinematic's own convention) built from the owner's real gallery photos - only renders when the owner has tagged at least one, no stock fallback, so the original "no competing photo" restraint holds for anyone who hasn't used Gallery yet.
+- `EditorialLayout.tsx`: no strip either - the template has zero photo-forward precedent anywhere else in the file. Added 2-3 small (84px) thumbnails inline within the About section's text column, real photos only, no stock fallback.
+
+### Test Next
+- Shawn: tag a few photos Gallery on a company using each of these 3 templates and confirm they now show up - Impact should show a strip right under the hero, Cinematic should show a small photo collage inside the About section, Editorial should show a few small thumbnails inline in the About text.
+
+---
+
 ## 2026-08-06 - Place on Site: Jony-Led Visual Redesign
 
 ### Where We Left Off

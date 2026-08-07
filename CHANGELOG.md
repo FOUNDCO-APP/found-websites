@@ -1,3 +1,24 @@
+## Session: August 6, 2026 - Gallery Template Parity (Impact, Cinematic, Editorial)
+**AI:** Claude Code (Sonnet)
+**Worked on:** Place on Site's Gallery destination only had somewhere to show up on 3 of 6 templates. Team picked up template parity as top-priority; code investigation corrected the team's initial assumptions (Impact's assumed CTA-bleed doesn't exist; Cinematic isn't an easy port - its comments state a deliberate 2-photo-moment rhythm rule a literal strip would break). Team reconvened, real disagreement over breaking that rule vs. owner photos not showing up anywhere, landed on template-appropriate treatments. Shawn approved, asked it followed exactly.
+
+### Team finding
+- Impact: no structural blocker, ported Portrait's pattern directly.
+- Cinematic: literal strip breaks an intentional design rule (comments: "no competing photo," "rhythm rule honored"). Resolution: real owner photos shown as a small collage inside the existing About section instead of a new strip section - keeps the 2-moment structure, actually contains the photos.
+- Editorial: zero photo-forward precedent anywhere in the file, narrow literary character. Resolution: 2-3 small thumbnails inline in the About text column, not a section.
+
+### Built
+- `ImpactLayout.tsx`: Portrait's 4-tile full-bleed strip, right after hero.
+- `CinematicLayout.tsx`: 4-photo collage inside About's dark background, real photos only (no stock fallback - preserves original restraint for anyone without tagged Gallery photos).
+- `EditorialLayout.tsx`: 2-3 small (84px) inline thumbnails in the About column, real photos only.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: tag Gallery photos on a company using each of these 3 templates, confirm they now show up in the template-appropriate spot.
+
+---
 ## Session: August 6, 2026 - Place on Site: Jony-Led Visual Redesign
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn sent screenshots after the last fix - tile's heart/star/Add-to-Site controls crammed into one corner with no spacing, and the destination sheet reading as a flat, undesigned list of seven identical rows. Shawn convened the team again with Jony explicitly leading as design expert, approved Jony's recommendation, asked it followed exactly.
