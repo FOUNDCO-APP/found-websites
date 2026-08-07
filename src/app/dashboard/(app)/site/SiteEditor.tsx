@@ -1152,11 +1152,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           : SHOP_LIKE.includes(industryCategory)
           ? [
               { intent: 'shop',    label: 'Shop Now',        desc: 'Takes visitors straight to your shop' },
+              { intent: 'reserve', label: 'Book Appointments', desc: 'Lets customers request a time to visit or get service' },
               { intent: 'visit',   label: 'Visit Us',        desc: 'Shows your address & hours' },
               { intent: 'call',    label: 'Call Us',         desc: 'Dials your number directly' },
             ]
           : [
               { intent: 'quote',   label: 'Get a Free Quote', desc: 'Sends quote requests to your inbox' },
+              { intent: 'reserve', label: 'Book Appointments', desc: 'Lets customers request a time to meet or get service' },
               { intent: 'contact', label: 'Contact Us',        desc: 'General contact form' },
               { intent: 'call',    label: 'Call Us',           desc: 'Dials your number directly' },
             ]

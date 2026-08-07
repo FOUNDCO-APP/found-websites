@@ -27,6 +27,7 @@ export default function DashboardNav({
   subIndustry = null,
   activeAddons = [],
   plan = null,
+  primaryIntent = null,
 }: {
   companyName?: string | null
   newLeadCount?: number
@@ -39,6 +40,7 @@ export default function DashboardNav({
   subIndustry?: string | null
   activeAddons?: string[]
   plan?: string | null
+  primaryIntent?: string | null
 }) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -50,8 +52,8 @@ export default function DashboardNav({
 
   const albumLabel = albumLabelFor(industry)
   const addonKey = activeAddons.join("|")
-  const defaultTabs = getDefaultDashboardTools({ industry, subIndustry, activeAddons, plan })
-  const allAvailable = getAvailableDashboardTools({ industry, subIndustry, activeAddons, plan })
+  const defaultTabs = getDefaultDashboardTools({ industry, subIndustry, activeAddons, plan, primaryIntent })
+  const allAvailable = getAvailableDashboardTools({ industry, subIndustry, activeAddons, plan, primaryIntent })
   const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
   const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
   const [seenAt, setSeenAt] = useState<Record<BadgeBucket, string | null>>({ leads: null, orders: null, reservations: null })

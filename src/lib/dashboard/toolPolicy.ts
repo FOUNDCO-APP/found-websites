@@ -17,7 +17,10 @@ type DashboardToolPolicyInput = {
   subIndustry?: string | null
   activeAddons?: string[]
   plan?: string | null
+  primaryIntent?: string | null
 }
+
+const SCHEDULING_INTENTS = new Set(["reserve", "book"])
 
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
 const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
@@ -120,7 +123,7 @@ function availableFoodTools(activeAddons: string[], plan: string | null | undefi
   ]
 }
 
-export function getAvailableDashboardTools({ industry = null, subIndustry = null, activeAddons = [], plan = null }: DashboardToolPolicyInput): DashboardTool[] {
+export function getAvailableDashboardTools({ industry = null, subIndustry = null, activeAddons = [], plan = null, primaryIntent = null }: DashboardToolPolicyInput): DashboardTool[] {
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
   const hasEstimates = has(activeAddons, "quote_payments")
@@ -130,9 +133,19 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
 
   if (industry === "food") return availableFoodTools(activeAddons, plan)
 
+  // A business whose action button is set to a scheduling intent but has no
+  // calendar add-on still gets real reservation-request leads (they land in
+  // the leads table same as any other request) - just no dedicated Schedule
+  // tab yet. Relabel the inbox so those requests are findable as
+  // "Reservations," same pattern food businesses already had.
+  const isSchedulingIntent = primaryIntent ? SCHEDULING_INTENTS.has(primaryIntent) : false
+  const inboxTool: DashboardTool = isSchedulingIntent && !hasCalendar
+    ? { id: "inbox", path: "/leads?view=reservations", label: "Reservations", group: "customers", description: "Customers asking to book a time" }
+    : { id: "inbox", path: "/leads", label: inboxLabelFor(industry, subIndustry), group: "customers", description: "Incoming customer requests" }
+
   return [
     { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
-    { id: "inbox", path: "/leads", label: inboxLabelFor(industry, subIndustry), group: "customers", description: "Incoming customer requests" },
+    inboxTool,
     ...(hasOrders ? ([{ id: "orders", path: "/leads?view=orders", label: "Orders", group: "get_paid", description: "Paid product and cart requests" }] as DashboardTool[]) : []),
     ...(hasEstimates ? ([{ id: "estimates", path: "/estimates", label: "Estimates", group: "get_paid", description: "Price work, get approval, and collect deposits" }] as DashboardTool[]) : []),
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),

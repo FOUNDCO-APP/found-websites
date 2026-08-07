@@ -15,20 +15,22 @@ export default function DashboardPages({
   subIndustry = null,
   activeAddons,
   plan = null,
+  primaryIntent = null,
 }: {
   companyName: string | null
   industry: string | null
   subIndustry?: string | null
   activeAddons: string[]
   plan?: string | null
+  primaryIntent?: string | null
 }) {
   const pathname = usePathname()
   const prefix = pathname.startsWith("/dashboard") ? "/dashboard" : ""
   const addonKey = activeAddons.join("|")
   const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
 
-  const allPages = useMemo(() => getAvailableDashboardTools({ industry, subIndustry, activeAddons, plan }), [industry, subIndustry, addonKey, plan])
-  const defaultIds = useMemo(() => getDefaultDashboardToolIds({ industry, subIndustry, activeAddons, plan }), [industry, subIndustry, addonKey, plan])
+  const allPages = useMemo(() => getAvailableDashboardTools({ industry, subIndustry, activeAddons, plan, primaryIntent }), [industry, subIndustry, addonKey, plan, primaryIntent])
+  const defaultIds = useMemo(() => getDefaultDashboardToolIds({ industry, subIndustry, activeAddons, plan, primaryIntent }), [industry, subIndustry, addonKey, plan, primaryIntent])
 
   const [mode, setMode] = useState<"view" | "edit">("view")
   const [tabIds, setTabIds] = useState<string[]>(defaultIds)
