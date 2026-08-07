@@ -1,5 +1,35 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Home Editor Language and Flow Cleanup
+
+### Where We Left Off
+- Shawn tested Edit Website through the lens of Ryan, a non-technical bike-shop owner. The Home editor still felt confusing because it used web/design language and had controls out of live-site order.
+- Team decision: stop using "hero" in owner-facing labels. Apple-style owner wording is "First Impression" because it describes the moment customers see, not the technical section name.
+- The old Home editor exposed three button concepts: "Main Button", "Primary Action", and "Booking Button Text". Code verification showed those were split pieces of one owner problem: what the main website button does and, only for booking-style businesses, what it says.
+
+### What Changed
+- Home hub subcopy now says "First Impression, button, Featured Update".
+- Home editor order now starts with First Impression, then Main Website Button, then Featured Update.
+- "Main Button" renamed to "Main Website Button" with plain copy: it controls the main button customers see at the top of the site and on the mobile bar.
+- Removed the separate "Primary Action" picker from Home. When an owner chooses the Main Website Button, the old hidden primary-action override is cleared so the live site cannot keep following an invisible older override.
+- "Booking Button Text" renamed to "Button Words" and kept only as the optional booking-label wording control.
+- Removed the editable Home Gallery strip from the Home editor. Gallery remains managed from the Gallery page; homepage gallery visuals should be automated from Gallery photos/stock fallback.
+- Added "Services Preview" on Home for non-food businesses only, with an "Edit services" action that jumps to the Services editor instead of pretending the preview is edited on Home.
+- Moved the bottom CTA editor near the end of Home and labeled it "Footer Call to Action" with helper text that says it is the final section above the footer and shows the current public headline.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+### Test Next
+- Shawn: open Dashboard > More > Edit Website > Home. Confirm the order reads naturally: First Impression, Main Website Button, Featured Update, Services Preview, Footer Call to Action.
+- Change the Main Website Button and confirm the public site top/mobile button updates.
+- Confirm Gallery no longer appears as a separate editable strip on Home.
+- For a food/menu business, confirm Services Preview does not appear on Home.
+
+---
+
 ## 2026-08-07 - Hours Tab Redesign (Jony-Led)
 
 ### Where We Left Off

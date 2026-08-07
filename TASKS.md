@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Home Editor Owner-Language Cleanup
+
+- [x] Team certified "First Impression" as the owner-facing replacement for "hero".
+- [x] Home editor now surfaces Main Website Button instead of separate Main Button / Primary Action controls.
+- [x] Main Website Button clears the old hidden CTA override when saved.
+- [x] Home Gallery strip removed from the Home editor.
+- [x] Services Preview added as a handoff to Services for non-food businesses.
+- [x] Footer Call to Action moved near the bottom and labeled with current-headline reference.
+- [ ] Shawn QA: Home editor order and labels make sense for Ryan-level non-technical owners.
+- [ ] Shawn QA: changing Main Website Button updates the public site top/mobile button.
+
+---
+
 - [x] Team audit Rosa's Mexican Food mobile order page before more code changes.
 - [x] Decide whether no-photo menu items should stay initials-only, use richer food-style placeholders, or push owners harder to add real photos. Final team correction: no placeholder at all for restaurant no-photo items.
 - [x] Replace Edit Website > Menu/Products handoff with embedded shared CatalogManager.

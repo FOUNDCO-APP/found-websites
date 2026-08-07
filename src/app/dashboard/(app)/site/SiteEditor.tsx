@@ -12,7 +12,7 @@ import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
-import { getAvailablePrimaryActions, getSiteCTAs, SCHEDULING_CTA } from "@/lib/industryCTAs"
+import { SCHEDULING_CTA } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
@@ -67,9 +67,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeIntent, setActiveIntent] = useState(initialIntent)
   const [savingIntent, setSavingIntent] = useState(false)
   const [intentSaved, setIntentSaved] = useState(false)
-  const [activeOverride, setActiveOverride] = useState<string | null>(initialOverride)
-  const [savingOverride, setSavingOverride] = useState(false)
-  const [overrideSaved, setOverrideSaved] = useState(false)
   const [bookingCtaLabel, setBookingCtaLabel] = useState<string | null>(initialBookingCtaLabel)
   const [editingBookingLabel, setEditingBookingLabel] = useState(false)
   const [bookingLabelDraft, setBookingLabelDraft] = useState(initialBookingCtaLabel ?? "")
@@ -488,19 +485,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setActiveIntent(intent)
     setSavingIntent(true)
     await updatePrimaryIntent(intent)
+    await updatePrimaryActionOverride(null)
     setSavingIntent(false)
     setIntentSaved(true)
     setTimeout(() => setIntentSaved(false), 2500)
-  }
-
-  async function saveOverride(key: string | null) {
-    if (key === activeOverride) return
-    setActiveOverride(key)
-    setSavingOverride(true)
-    await updatePrimaryActionOverride(key)
-    setSavingOverride(false)
-    setOverrideSaved(true)
-    setTimeout(() => setOverrideSaved(false), 2500)
   }
 
   async function saveBookingLabel(label: string | null) {
@@ -898,7 +886,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           <div style={{ padding: "26px 20px 0" }}>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Pages</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <HubTile label="Home" sub="Headline, photos, Featured Update" onClick={() => setView("home")} />
+              <HubTile label="Home" sub="First Impression, button, Featured Update" onClick={() => setView("home")} />
               <HubTile label="About" sub="Your story, what you offer" onClick={() => setView("about")} />
               <HubTile label="Contact" sub="How customers reach you" onClick={() => setView("contact")} />
               {showCatalog && <HubTile label={catalogTileLabel} sub={catalogTileSub} onClick={() => setView("catalog")} />}
@@ -986,142 +974,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "24px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>{ctaSection.title}</div>
-        <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>{ctaSection.helper}</p>
-        <div style={{ borderRadius: 26, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)" }}>
-          <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
-            {ctaPhotos[0]?.url ? (
-              isVideoMedia(ctaPhotos[0].url) ? <VideoThumb src={ctaPhotos[0].url} /> : <img src={ctaPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
-            )}
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
-            <PhotoEditBadge onClick={() => setPhotoPickerSlot("cta")} />
-            <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
-              <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{ctaSection.title}</h3>
-            </div>
-          </div>
-          <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <button onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
-              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ctaSection.title}</span>
-            </button>
-            <button onClick={() => startEdit("tagline", String(config.tagline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Short hook</span>
-              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.tagline || "Add a hook")}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ margin: "24px 20px 0" }}>
-        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>{photoSections.gallery.title}</div>
-        <button onClick={() => setView("photos")} style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: 16, borderRadius: 20, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)", color: "white", textAlign: "left", cursor: "pointer" }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
-            {galleryPhotos[0]?.url ? (
-              <img src={galleryPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 900 }}>None</div>
-            )}
-          </div>
-          <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>{photoSections.gallery.title}</span>
-            <span style={{ display: "block", fontSize: 14, color: "rgba(255,255,255,0.72)" }}>{galleryPhotos.length ? `${galleryPhotos.length} photos` : "Add photos to your gallery"}</span>
-          </span>
-          <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
-        </button>
-      </div>
-      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
-      <div id="featured-update" style={{ padding: "0 20px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
-          <div>
-            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Featured Update</div>
-            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Show what matters right now.</h2>
-            <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
-              Put one sale, product drop, event, or booking push below the homepage hero.
-            </p>
-          </div>
-          <button onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {announcementEnabled ? "On" : "Off"}
-          </button>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
-            <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative", backgroundColor: "rgba(255,255,255,0.06)" }}>
-              {announcementImage ? (
-                isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
-              )}
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
-              <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
-            </div>
-            {announcementStyle !== "image" && (
-              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
-                This photo only shows live once Style below is set to "Image."
-              </p>
-            )}
-            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Preview</div>
-            <div style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.35, color: announcementMutedColor }}>Found drafted this for you. Edit it before or after it goes live.</div>
-            <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
-            <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
-            <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
-              {announcementLabel}
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
-            <button onClick={() => startEdit("announcement_title", announcementTitle)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit headline</span>
-                <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementTitle}</span>
-              </span>
-              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
-            </button>
-            <button onClick={() => startEdit("announcement_body", announcementBody)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit message</span>
-                <span style={{ display: "block", fontSize: 14, lineHeight: 1.35, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementBody}</span>
-              </span>
-              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
-            </button>
-          </div>
-
-          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button text</div>
-            <div style={{ fontWeight: 900 }}>{announcementLabel}</div>
-          </button>
-
-          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Style</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
-                <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Button goes to</div>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
-              {announcementTargets.map(target => (
-                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
-                  {target.label}
-                </button>
-              ))}
-              <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
-                Custom link
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
       {(() => {
-        // Every industry_category gets a Main Button picker now - this used
+        // Every industry_category gets a Main Website Button picker now - this used
         // to fall through to null (no picker at all, no explanation) for 17
         // of 22 industries, and separately had a real bug: it checked
         // industryCategory === 'pet' but the actual manifest value is
@@ -1169,9 +1023,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ padding: "0 20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                 <div>
-                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Main Button</h2>
+                  <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Main Website Button</div>
+                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Choose what customers do next.</h2>
                   <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    What do you want visitors to do first?
+                    This controls the main button customers see at the top of your site and on the mobile bar.
                   </p>
                 </div>
                 {intentSaved && (
@@ -1220,104 +1075,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
       {(() => {
-        const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
-        const availableActions = getAvailablePrimaryActions(industryCategory, effectiveAddons, company.phone)
-        // Only worth showing when there's a real choice - a business with
-        // just one working option has nothing to override.
-        if (availableActions.length < 2) return null
-        const autoLabel = getSiteCTAs(
-          { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: null },
-          effectiveAddons
-        ).primary.label
-
-        return (
-          <>
-            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
-            <div style={{ padding: "0 20px" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                <div>
-                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Primary Action</h2>
-                  <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    Found automatically picks the best button for your hero and mobile bar. Override it here if you want full control.
-                  </p>
-                </div>
-                {overrideSaved && (
-                  <div style={{ fontSize: 11, color: GREEN, fontWeight: 700, backgroundColor: `${GREEN}15`, padding: "4px 12px", borderRadius: 100 }}>
-                    Live
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button
-                  onClick={() => saveOverride(null)}
-                  disabled={savingOverride}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "14px 18px", borderRadius: 16, cursor: savingOverride ? "default" : "pointer",
-                    backgroundColor: !activeOverride ? `${GREEN}18` : "rgba(255,255,255,0.03)",
-                    border: `1.5px solid ${!activeOverride ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
-                    textAlign: "left",
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: !activeOverride ? GREEN : "rgba(255,255,255,0.8)", marginBottom: 2 }}>
-                      Auto â€” {autoLabel}
-                    </div>
-                    <div style={{ fontSize: 12, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                      Found picks the best option as your setup changes
-                    </div>
-                  </div>
-                  {!activeOverride && (
-                    <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-                {availableActions.map(opt => {
-                  const isActive = activeOverride === opt.key
-                  return (
-                    <button
-                      key={opt.key}
-                      onClick={() => saveOverride(opt.key)}
-                      disabled={savingOverride}
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "14px 18px", borderRadius: 16, cursor: savingOverride ? "default" : "pointer",
-                        backgroundColor: isActive ? `${GREEN}18` : "rgba(255,255,255,0.03)",
-                        border: `1.5px solid ${isActive ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
-                        textAlign: "left",
-                      }}
-                    >
-                      <div style={{ fontSize: 14, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.8)" }}>
-                        {opt.label}
-                      </div>
-                      {isActive && (
-                        <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12"/>
-                          </svg>
-                        </div>
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          </>
-        )
-      })()}
-      {(() => {
         const defaultLabel = SCHEDULING_CTA[industryCategory]?.label
         if (!defaultLabel) return null
         return (
           <>
             <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
             <div style={{ padding: "0 20px" }}>
-              <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Booking Button Text</h2>
+              <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Button Words</h2>
               <p style={{ margin: "4px 0 12px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                What your booking button says, if you use one.
+                Only change this if you want a different booking label than Found's default.
               </p>
               {editingBookingLabel ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1399,6 +1165,145 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </>
         )
       })()}
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
+      <div id="featured-update" style={{ padding: "0 20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 14, alignItems: "flex-start", marginBottom: 14 }}>
+          <div>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Featured Update</div>
+            <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Show what matters right now.</h2>
+            <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+              Put one sale, product drop, event, or booking push below the first screen customers see.
+            </p>
+          </div>
+          <button onClick={toggleFeaturedUpdate} style={{ padding: "10px 14px", borderRadius: 999, border: `1px solid ${announcementEnabled ? GREEN + "55" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementEnabled ? `${GREEN}18` : "rgba(255,255,255,0.06)", color: announcementEnabled ? GREEN : "rgba(255,255,255,0.72)", fontWeight: 900, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {announcementEnabled ? "On" : "Off"}
+          </button>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
+          <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
+            <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative", backgroundColor: "rgba(255,255,255,0.06)" }}>
+              {announcementImage ? (
+                isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+              )}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
+              <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+            </div>
+            {announcementStyle !== "image" && (
+              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
+                This photo only shows live once Style below is set to "Image."
+              </p>
+            )}
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Preview</div>
+            <div style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.35, color: announcementMutedColor }}>Found drafted this for you. Edit it before or after it goes live.</div>
+            <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
+            <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
+            <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
+              {announcementLabel}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+            <button onClick={() => startEdit("announcement_title", announcementTitle)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit headline</span>
+                <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementTitle}</span>
+              </span>
+              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+            </button>
+            <button onClick={() => startEdit("announcement_body", announcementBody)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit message</span>
+                <span style={{ display: "block", fontSize: 14, lineHeight: 1.35, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementBody}</span>
+              </span>
+              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+            </button>
+          </div>
+
+          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button text</div>
+            <div style={{ fontWeight: 900 }}>{announcementLabel}</div>
+          </button>
+
+          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Style</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
+                <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
+                  {style}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Button goes to</div>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
+              {announcementTargets.map(target => (
+                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                  {target.label}
+                </button>
+              ))}
+              <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                Custom link
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {!isFoodCatalog && (
+      <>
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
+      <div style={{ padding: "0 20px" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Services Preview</div>
+        <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Services shown on your homepage.</h2>
+        <p style={{ margin: "6px 0 14px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+          This preview comes from your Services page. Edit your services there, and the homepage updates automatically.
+        </p>
+        <button onClick={() => setView("services")} style={{ width: "100%", padding: "15px 18px", borderRadius: 16, border: `1px solid ${GREEN}55`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
+          Edit services
+        </button>
+      </div>
+      </>
+      )}
+
+      <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "28px 0" }}/>
+      <div style={{ padding: "0 20px" }}>
+        <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Footer Call to Action</div>
+        <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Final section before the footer.</h2>
+        <p style={{ margin: "6px 0 14px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+          This is the last callout near the bottom of your homepage, right above the footer. Current headline: {ctaSection.title}
+        </p>
+      </div>
+      <div style={{ margin: "0 20px" }}>
+        <div style={{ borderRadius: 26, overflow: "hidden", border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.035)" }}>
+          <div style={{ position: "relative", height: 160, overflow: "hidden" }}>
+            {ctaPhotos[0]?.url ? (
+              isVideoMedia(ctaPhotos[0].url) ? <VideoThumb src={ctaPhotos[0].url} /> : <img src={ctaPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+            )}
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.1) 0%, rgba(8,10,9,0.72) 100%)" }}/>
+            <PhotoEditBadge onClick={() => setPhotoPickerSlot("cta")} />
+            <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+              <h3 style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 900, color: "white" }}>{ctaSection.title}</h3>
+            </div>
+          </div>
+          <div style={{ padding: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <button onClick={() => startEdit("cta_headline", String(config.cta_headline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ctaSection.title}</span>
+            </button>
+            <button onClick={() => startEdit("tagline", String(config.tagline ?? ""))} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.09)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Short hook</span>
+              <span style={{ display: "block", fontSize: 15, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(config.tagline || "Add a hook")}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       </>
       )}
 

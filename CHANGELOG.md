@@ -1,3 +1,21 @@
+## Session: August 7, 2026 - Home Editor Language and Flow Cleanup
+**AI:** Codex
+**Worked on:** Shawn's Ryan test: Home editor needed owner language and live-site order. Team chose "First Impression" instead of web jargon like "hero".
+
+### Built
+- Reordered Home editor so First Impression comes first, Main Website Button comes next, Featured Update follows, then Services Preview and Footer Call to Action near the bottom.
+- Removed the Home Gallery strip from Home editing; Gallery stays managed from the Gallery page.
+- Removed the separate Primary Action picker and renamed Main Button to Main Website Button. Saving it now clears the old hidden primary-action override.
+- Renamed Booking Button Text to Button Words for the optional booking label override.
+- Added Services Preview handoff for non-food businesses only.
+- Labeled the bottom section Footer Call to Action and added a current-headline reference.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
 ## Session: August 7, 2026 - Hours Tab Redesign (Jony-Led)
 **AI:** Claude Code (Sonnet)
 **Worked on:** Live-test feedback: "5 open days" counter meant nothing to Shawn, and two buttons (Done at top, Save Changes at bottom) both felt like "finished" but only one saved. He wanted to edit one day directly, not all 7 at once. Brought straight to Jony per Shawn's explicit request.
