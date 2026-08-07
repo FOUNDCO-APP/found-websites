@@ -1,5 +1,21 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - One-Tap Share (Web Share API)
+
+### Where We Left Off
+- Next item off the photo-system roadmap after template parity: a one-tap share button, using the Web Share API (`navigator.share`) to open the phone's native share sheet - already confirmed earlier tonight this works today in-browser, no native app or Meta API review needed for this piece specifically.
+- Real design question before building: share the actual photo file (useful for Instagram/Facebook, since a bare link usually doesn't post as an image) or just a link (simpler, matches the existing album-share pattern already in this file)? Asked Shawn directly rather than guessing - he chose file-sharing with a fallback.
+
+### What Changed
+- New `handleSharePhoto()` in `photos/page.tsx`: fetches the photo, shares it as a real file via `navigator.share({ files: [...] })` when `navigator.canShare` confirms file support; falls back to link-sharing (same `navigator.share({ url })` pattern already used for album sharing), then to clipboard-copy if Web Share isn't available at all.
+- New Share button (standard share glyph) added to `PhotoCard` tiles (top-right corner - the one open spot after tonight's Jony-led layout, offset lower on video tiles to clear the VIDEO badge) and as a 5th button in `PhotoLightroom`'s bottom action bar.
+- Unbranded only - shares the real photo as-is. A branded/canvas-rendered version was explicitly scoped as a separate fast-follow, not built now.
+
+### Test Next
+- Shawn: tap Share on a photo tile and in the full-screen viewer, confirm the real photo (not just a link) shows up in the iOS share sheet and can be sent to Instagram/Messages/etc.
+
+---
+
 ## 2026-08-06 - Gallery Template Parity (Impact, Cinematic, Editorial)
 
 ### Where We Left Off

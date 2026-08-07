@@ -1,3 +1,19 @@
+## Session: August 6, 2026 - One-Tap Share (Web Share API)
+**AI:** Claude Code (Sonnet)
+**Worked on:** Next roadmap item after template parity - one-tap photo sharing via the Web Share API. Asked Shawn directly whether to share the real photo file or just a link, since it's a real behavior/complexity tradeoff, not a rubber-stamp detail; he chose the real file.
+
+### Built
+- `handleSharePhoto()`: fetches the image, shares it as a real `File` via `navigator.share({ files })` when supported, falls back to link-share (matching the existing album-share convention already in this file) then clipboard-copy.
+- Share button on `PhotoCard` (top-right, the one open tile corner after tonight's layout pass) and as a 5th button in `PhotoLightroom`'s action bar.
+- Unbranded photo only - branded/canvas-rendered sharing is a separate fast-follow per the team's original scoping, not built now.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: confirm Share opens the iOS share sheet with the actual photo (not a link) from both the tile and the full-screen viewer.
+
+---
 ## Session: August 6, 2026 - Gallery Template Parity (Impact, Cinematic, Editorial)
 **AI:** Claude Code (Sonnet)
 **Worked on:** Place on Site's Gallery destination only had somewhere to show up on 3 of 6 templates. Team picked up template parity as top-priority; code investigation corrected the team's initial assumptions (Impact's assumed CTA-bleed doesn't exist; Cinematic isn't an easy port - its comments state a deliberate 2-photo-moment rhythm rule a literal strip would break). Team reconvened, real disagreement over breaking that rule vs. owner photos not showing up anywhere, landed on template-appropriate treatments. Shawn approved, asked it followed exactly.
