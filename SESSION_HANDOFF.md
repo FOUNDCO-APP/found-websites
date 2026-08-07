@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Fix: Schedule Actions Failed Under Admin View As
+
+### Where We Left Off
+- Shawn testing live: tried saving Ryan's multi-block hours while viewing his account as admin, got "Could not save availability. Please try again."
+- Root cause: `schedule/actions.ts` used a session-bound Supabase client for every write (Hours, time-off blocks, booking cancellation). Under admin View As, that client's RLS check runs against the admin's own real auth identity, not the impersonated customer - so the database silently rejected the write even though the code's own authorization check (`requireScheduleAccess`) had already correctly approved it. Pre-existing gap, not introduced tonight - just never triggered until someone tried to save Hours while impersonating a customer.
+
+### What Changed
+- `saveAvailability`, `blockDate`, `blockRange`, `removeBlock`, `cancelBooking` all switched from the session-bound client to the admin/service-role client - matching the pattern already used everywhere else authorization is checked explicitly in code.
+
+### Test Next
+- Shawn: retry saving Ryan's multi-block hours while viewing as admin, confirm it saves cleanly this time.
+
+### Also flagged, not yet addressed
+- Real UX feedback from the same test: the Hours tab's single global "Edit" toggle (top of card) puts all 7 days into edit mode at once rather than per-day, and Save/Done require scrolling back to the top and bottom of the card. Shawn expected to edit one day directly. This predates tonight's multi-block work - worth a team round on its own, not fixed yet.
+
+---
+
 ## 2026-08-07 - Workstream 1 (Part 2): Upgrade Prompt + Comparison
 
 ### Where We Left Off

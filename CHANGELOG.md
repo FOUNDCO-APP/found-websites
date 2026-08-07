@@ -1,3 +1,23 @@
+## Session: August 7, 2026 - Fix: Schedule Actions Failed Under Admin View As
+**AI:** Claude Code (Sonnet)
+**Worked on:** Live bug caught mid-test - saving hours while viewing Ryan's account as admin returned "Could not save availability."
+
+### Root cause
+- Every write in `schedule/actions.ts` used a session-bound (RLS-enforced) Supabase client. Under admin View As, RLS checks the admin's own real identity, not the impersonated customer, so the write was silently rejected even though the code's own authorization check had already approved it correctly. Pre-existing gap, surfaced for the first time tonight.
+
+### Built
+- Switched `saveAvailability`, `blockDate`, `blockRange`, `removeBlock`, `cancelBooking` to the admin/service-role client.
+
+### Verification
+- `npm run build` passed clean.
+
+### Also flagged, not fixed
+- Real UX feedback: Hours tab's single "Edit" toggle puts all 7 days into edit mode at once instead of per-day, and Save/Done require scrolling to the top and bottom of the card. Predates tonight's work - candidate for its own team round.
+
+### Test Next
+- Shawn: retry saving Ryan's hours under View As, confirm it works now.
+
+---
 ## Session: August 7, 2026 - Workstream 1 (Part 2): Upgrade Prompt + Comparison
 **AI:** Claude Code (Sonnet)
 **Worked on:** Completes workstream 1. Followed the team's "celebrate, then solve" framing - lead with the real win, name the friction second, no hard sell at the moment of good news.
