@@ -3,6 +3,7 @@ import { getCompany } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
+import { hasAddonAccess } from "@/lib/featureAccess"
 
 export async function GET() {
   const user = await getAuthUser()
@@ -13,12 +14,17 @@ export async function GET() {
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
   const stripeConnect = await getStripeConnectStatus(company?.stripe_connect_account_id)
   let customDomain: string | null = null
+  let hasCalendar = false
   if (company?.id) {
     const admin = createAdminClient()
-    const { data: config } = await admin.from("website_config").select("custom_domain").eq("company_id", company.id).single()
+    const [{ data: config }, { data: addonRows }] = await Promise.all([
+      admin.from("website_config").select("custom_domain").eq("company_id", company.id).single(),
+      admin.from("addon_subscriptions").select("addon_slug").eq("company_id", company.id).eq("active", true),
+    ])
     customDomain = config?.custom_domain ?? null
+    hasCalendar = hasAddonAccess(plan, "reservation_calendar", (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company?.included_addon_slug ?? null, company?.disabled_addons ?? [])
   }
-  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, stripe_connect_ready: stripeConnect.ready, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: company?.default_tax_rate ?? 0, customDomain })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, primaryIntent: company?.primary_intent ?? null, plan, hasCalendar, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, stripe_connect_ready: stripeConnect.ready, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: company?.default_tax_rate ?? 0, customDomain })
 }
 
 export async function PATCH(req: Request) {

@@ -145,6 +145,9 @@ function LeadsPageInner() {
   const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [formIntent, setFormIntent] = useState<string | null>(null)
   const [companyName, setCompanyName] = useState("")
+  const [primaryIntent, setPrimaryIntent] = useState<string | null>(null)
+  const [hasCalendar, setHasCalendar] = useState(false)
+  const [showComparison, setShowComparison] = useState(false)
   const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
   const [showClosedSection, setShowClosedSection] = useState(false)
   const [showIntentPicker, setShowIntentPicker] = useState(false)
@@ -159,6 +162,7 @@ function LeadsPageInner() {
   const view = searchParams.get("view")
   const isOrdersView = view === "orders"
   const isReservationsView = view === "reservations"
+  const isSchedulingIntent = primaryIntent === "reserve" || primaryIntent === "book"
   const pageLabel = isOrdersView
     ? { singular: "Order", plural: "Orders", new: "New Order", hasTemperature: false }
     : isReservationsView
@@ -183,6 +187,8 @@ function LeadsPageInner() {
       setSubIndustry(sd.subIndustry ?? null)
       setFormIntent(sd.formIntent ?? null)
       setCompanyName(sd.name ?? "")
+      setPrimaryIntent(sd.primaryIntent ?? null)
+      setHasCalendar(Boolean(sd.hasCalendar))
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -313,6 +319,30 @@ function LeadsPageInner() {
           </svg>
         </button>
       </div>
+
+      {/* Upgrade prompt — celebrate the real leads first, then name the
+          friction they're about to feel. Only for businesses taking
+          reservation requests manually (no calendar add-on active). */}
+      {isReservationsView && isSchedulingIntent && !hasCalendar && visibleLeads.length > 0 && (
+        <div style={{
+          marginBottom: 20, padding: "18px 20px", borderRadius: 18,
+          background: `linear-gradient(135deg, ${SIGNAL_GREEN}18, rgba(255,255,255,0.03))`,
+          border: `1px solid ${SIGNAL_GREEN}30`,
+        }}>
+          <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>
+            You've got real booking requests coming in.
+          </p>
+          <p style={{ margin: "0 0 14px", ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+            Right now you'll confirm each one yourself. A live calendar can do that automatically — customers pick an open time and it's confirmed on the spot, no back-and-forth.
+          </p>
+          <button onClick={() => setShowComparison(true)} style={{
+            padding: "10px 16px", borderRadius: 999, border: `1px solid ${SIGNAL_GREEN}55`,
+            background: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 800, cursor: "pointer",
+          }}>
+            Show me a comparison
+          </button>
+        </div>
+      )}
 
       {/* Search bar */}
       {(openLeads.length > 0 || closedLeads.length > 0) && (
@@ -661,7 +691,65 @@ function LeadsPageInner() {
           onClose={() => setShowIntentPicker(false)}
         />
       )}
+
+      {/* Basic vs automated calendar comparison */}
+      {showComparison && (
+        <BookingComparisonSheet onClose={() => setShowComparison(false)} />
+      )}
     </main>
+  )
+}
+
+function BookingComparisonSheet({ onClose }: { onClose: () => void }) {
+  const rows: { label: string; basic: string; full: string }[] = [
+    { label: "Customer picks a time", basic: "Submits a request, no confirmed slot yet", full: "Picks an open slot on a live calendar" },
+    { label: "Confirmation", basic: "You call or text to confirm", full: "Confirmed instantly, no back-and-forth" },
+    { label: "Your work", basic: "You track requests and reply one by one", full: "You just show up — it's already on your schedule" },
+    { label: "Reminders", basic: "None — up to you", full: "Automatic, sent to the customer" },
+  ]
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 90, backdropFilter: "blur(6px)" }} />
+      <div style={{
+        position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 95,
+        maxHeight: "82vh", overflowY: "auto",
+        borderRadius: "26px 26px 0 0", background: "#111613", border: "1px solid rgba(255,255,255,0.1)",
+        padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+      }}>
+        <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 18px" }} />
+        <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `${SIGNAL_GREEN}cc` }}>WHAT CHANGES</p>
+        <h3 style={{ margin: "0 0 18px", ...TYPE.title, color: "white" }}>Manual requests vs. a live calendar</h3>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+          {rows.map(row => (
+            <div key={row.label} style={{ borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}>
+              <div style={{ padding: "8px 14px", background: "rgba(255,255,255,0.04)", ...TYPE.footnote, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>{row.label}</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+                <div style={{ padding: "12px 14px", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p style={{ margin: "0 0 4px", ...TYPE.footnote, fontWeight: 800, color: "rgba(255,255,255,0.4)" }}>Now</p>
+                  <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>{row.basic}</p>
+                </div>
+                <div style={{ padding: "12px 14px" }}>
+                  <p style={{ margin: "0 0 4px", ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>Automated</p>
+                  <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(255,255,255,0.9)", lineHeight: 1.4 }}>{row.full}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <a href="/more" style={{
+          display: "block", textAlign: "center", padding: "15px 0", borderRadius: 14, border: "none",
+          backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, textDecoration: "none",
+          ...TYPE.subhead, fontWeight: 800,
+        }}>
+          See upgrade options →
+        </a>
+        <button onClick={onClose} style={{ display: "block", width: "100%", textAlign: "center", marginTop: 10, padding: "13px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", background: "transparent", color: "rgba(255,255,255,0.6)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+          Not right now
+        </button>
+      </div>
+    </>
   )
 }
 
