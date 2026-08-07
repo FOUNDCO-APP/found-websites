@@ -1,3 +1,20 @@
+## Session: August 7, 2026 - Home Featured Update Editor Matches Live Preview
+**AI:** Codex
+**Worked on:** Shawn approved the team direction to make Featured Update feel as intuitive as First Impression and to show a clearer Services Preview reference.
+
+### Built
+- Featured Update preview now respects the selected look: Image shows the uploaded photo live; non-image looks show text-only styling and mark the photo as off for that look.
+- Renamed controls to `Headline`, `Supporting line`, `Button`, and `Look`.
+- Combined Featured Update button text and destination into one control with "Goes to:" shown beside the button wording.
+- Services Preview now displays up to three live service/product examples from the Services page before the `Edit services` action.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Home Main Website Button Truthful Labels
 **AI:** Codex
 **Worked on:** Shawn's Ryan test showed the editor saying "Shop Now" while the live site showed "Our Products" and routed to Services. Team direction: editor labels must come from the same CTA resolver as the public site.

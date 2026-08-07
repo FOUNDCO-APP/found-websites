@@ -702,6 +702,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementSubtleColor = announcementIsLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)"
   const announcementControlBg = announcementIsLight ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.06)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
+  const announcementUsesImage = announcementStyle === "image"
+  const announcementTargetLabel = announcementTargets.find(target => target.href === announcementHref)?.label ?? (announcementHref.startsWith("http") ? "Custom link" : announcementHref)
+  const servicesPreviewItems = services.slice(0, 3)
   const activeLayoutType = getLayout(industryCategory, vibe, activeLayout)
   const photoSections = getSitePhotoSections({
     config,
@@ -1075,66 +1078,72 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          <div style={{ borderRadius: 24, padding: 18, background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
-            <div style={{ height: 130, borderRadius: 18, overflow: "hidden", marginBottom: 14, position: "relative", backgroundColor: "rgba(255,255,255,0.06)" }}>
-              {announcementImage ? (
-                isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              ) : (
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
-              )}
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.48), transparent)" }}/>
-              <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
-            </div>
-            {announcementStyle !== "image" && (
-              <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)" }}>
-                This photo only shows live once Style below is set to "Image."
-              </p>
+          <div style={{ borderRadius: 26, overflow: "hidden", background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
+            {announcementUsesImage ? (
+              <div style={{ minHeight: 250, position: "relative", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
+                {announcementImage ? (
+                  isVideoMedia(announcementImage) ? <VideoThumb src={announcementImage} /> : <img src={announcementImage} alt="" style={{ width: "100%", height: "100%", minHeight: 250, objectFit: "cover" }} />
+                ) : (
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, #1a2a1a 0%, #0d1a0d 50%, #080A09 100%)" }}/>
+                )}
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(8,10,9,0.12) 0%, rgba(8,10,9,0.78) 100%)" }}/>
+                <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+                <div style={{ position: "absolute", left: 18, right: 18, bottom: 18 }}>
+                  <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.78)", marginBottom: 8 }}>Live preview</div>
+                  <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: "white", letterSpacing: 0 }}>{announcementTitle}</h3>
+                  <p style={{ margin: "10px 0 0", fontSize: 15, lineHeight: 1.45, color: "rgba(255,255,255,0.78)" }}>{announcementBody}</p>
+                  <div style={{ marginTop: 14, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.18)", color: "white", fontSize: 13, fontWeight: 900 }}>
+                    {announcementLabel}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ position: "relative", padding: 18 }}>
+                <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
+                  <div style={{ ...TYPE.caption, color: GREEN }}>Live preview</div>
+                  {announcementImage && (
+                    <div style={{ padding: "5px 8px", borderRadius: 999, backgroundColor: announcementControlBg, border: `1px solid ${announcementControlBorder}`, color: announcementSubtleColor, fontSize: 11, fontWeight: 900 }}>
+                      Photo off in this look
+                    </div>
+                  )}
+                </div>
+                <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
+                <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
+                <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
+                  {announcementLabel}
+                </div>
+              </div>
             )}
-            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Preview</div>
-            <div style={{ margin: "0 0 10px", fontSize: 12, lineHeight: 1.35, color: announcementMutedColor }}>Found drafted this for you. Edit it before or after it goes live.</div>
-            <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
-            <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
-            <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
-              {announcementLabel}
-            </div>
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
             <button onClick={() => startEdit("announcement_title", announcementTitle)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit headline</span>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
                 <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementTitle}</span>
               </span>
               <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
             </button>
             <button onClick={() => startEdit("announcement_body", announcementBody)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Edit message</span>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Supporting line</span>
                 <span style={{ display: "block", fontSize: 14, lineHeight: 1.35, color: "rgba(255,255,255,0.72)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementBody}</span>
               </span>
               <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
             </button>
           </div>
 
-          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button text</div>
-            <div style={{ fontWeight: 900 }}>{announcementLabel}</div>
-          </button>
-
           <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Style</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
-                <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Button goes to</div>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto" }}>
+            <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button</span>
+                <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
+                <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>Goes to: {announcementTargetLabel}</span>
+              </span>
+              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+            </button>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto", marginTop: 12 }}>
               {announcementTargets.map(target => (
                 <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
                   {target.label}
@@ -1143,6 +1152,18 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
                 Custom link
               </button>
+            </div>
+          </div>
+
+          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Look</div>
+            <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update appears on your homepage.</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
+                <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
+                  {style}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -1156,9 +1177,31 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <p style={{ margin: "6px 0 14px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
           This preview comes from your Services page. Edit your services there, and the homepage updates automatically.
         </p>
-        <button onClick={() => setView("services")} style={{ width: "100%", padding: "15px 18px", borderRadius: 16, border: `1px solid ${GREEN}55`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
-          Edit services
-        </button>
+        <div style={{ borderRadius: 22, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.035)", overflow: "hidden" }}>
+          {servicesPreviewItems.length > 0 ? servicesPreviewItems.map((service, index) => (
+            <div key={`${service.name}-${index}`} style={{ padding: 16, borderBottom: index === servicesPreviewItems.length - 1 ? "none" : "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                <div style={{ width: 34, height: 34, borderRadius: 12, backgroundColor: `${GREEN}18`, color: GREEN, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 900, flexShrink: 0 }}>
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 16, lineHeight: 1.2, fontWeight: 900, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{service.name || "Service"}</div>
+                  <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.35, color: "rgba(255,255,255,0.52)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{service.description || "Add a short description on the Services page."}</div>
+                </div>
+              </div>
+            </div>
+          )) : (
+            <div style={{ padding: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 900, color: "white" }}>No services added yet.</div>
+              <div style={{ marginTop: 5, fontSize: 13, lineHeight: 1.35, color: "rgba(255,255,255,0.52)" }}>Add services once, and this homepage preview fills itself in.</div>
+            </div>
+          )}
+          <div style={{ padding: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            <button onClick={() => setView("services")} style={{ width: "100%", padding: "15px 18px", borderRadius: 16, border: `1px solid ${GREEN}55`, backgroundColor: `${GREEN}18`, color: GREEN, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
+              Edit services
+            </button>
+          </div>
+        </div>
       </div>
       </>
       )}

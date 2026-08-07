@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Home Featured Update Preview Cleanup
+
+- [x] Featured Update now uses one live-feeling preview instead of a disconnected image/card/control stack.
+- [x] Non-image looks no longer imply the uploaded photo is live; they show "Photo off in this look."
+- [x] Featured Update controls now use plain labels: Headline, Supporting line, Button, Look.
+- [x] Button wording and destination now live together in one Button control.
+- [x] Services Preview now shows examples from the Services page before the Edit services action.
+- [ ] Shawn QA: Ryan Home > Featured Update feels as intuitive as First Impression.
+- [ ] Shawn QA: Featured Update Look = Image is the only mode that shows the uploaded photo as live.
+- [ ] Shawn QA: Services Preview examples match Ryan's Services page.
+
+---
+
 ## 2026-08-07 - Main Website Button Truthful Labels
 
 - [x] Main Website Button now uses public-site CTA labels instead of hardcoded editor labels.

@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Home Featured Update Editor Matches Live Preview
+
+### Where We Left Off
+- Shawn reviewed the improved Ryan Home editor and approved the team direction, but the Featured Update still felt less intuitive than First Impression.
+- Main issue: the editor showed the rhino photo even when the selected update look was `Default`, which made the owner think that image was live. Controls were also split across "Edit message", "Button text", "Style", and "Button goes to" instead of reading like one website section.
+- Team decision: make Featured Update follow the same mental model as First Impression: one live-feeling preview, plain labels, button text and destination together. Also add a small Services Preview reference so owners see that homepage services come from the Services page.
+
+### What Changed
+- Featured Update preview now changes based on the selected look. `Image` shows the photo with text over it; non-image looks show the written update and mark any uploaded photo as "Photo off in this look."
+- Renamed the editor labels to owner language: `Headline`, `Supporting line`, `Button`, and `Look`.
+- Combined button wording and destination into one Button control with "Goes to:" shown directly under the button text.
+- Replaced `Style` with `Look` and added helper text: "Choose how this update appears on your homepage."
+- Services Preview now shows up to three current services/products from the Services page, plus the existing `Edit services` action.
+- Footer Call to Action was intentionally left alone.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+### Test Next
+- Shawn: on Ryan, open Edit Website > Home > Featured Update. Confirm the preview feels like the public section, the labels are plain, and changing Look to Image is the only time the uploaded photo appears as live.
+- Confirm the Button area shows both the button words and where it goes.
+- Confirm Services Preview shows examples from Ryan's Services page and `Edit services` still jumps to Services.
+
+---
+
 ## 2026-08-07 - Home Main Website Button Truthful Labels
 
 ### Where We Left Off
