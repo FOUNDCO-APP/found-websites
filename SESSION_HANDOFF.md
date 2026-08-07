@@ -1,5 +1,14 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Featured Update Button and Banner Wording Polish
+
+- Shawn's QA screenshot showed the Featured Update Button destination chips overflowing off-screen, "Goes to: /services" using technical URL language, and "Look / Default" not reading like owner language.
+- Team fix: destination choices now wrap in a two-column grid, custom URL is labeled "Other page", the destination summary says "Opens Services page" style language, and `Look` is now `Banner style`.
+- The underlying `default` style remains supported but displays to owners as `Clean`.
+- Verification: `git diff --check`, `npx tsc --noEmit`, and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-07 - Featured Update Wrapped Like Homepage
 
 ### Where We Left Off

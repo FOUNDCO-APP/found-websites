@@ -1,3 +1,19 @@
+## Session: August 7, 2026 - Featured Update Button and Banner Wording Polish
+**AI:** Codex
+
+### Built
+- Featured Update destination choices now wrap inside the Button card instead of scrolling off-screen.
+- Replaced technical destination copy like `/services` with owner language like `Opens Services page`.
+- Renamed `Look` to `Banner style`; the default style now displays as `Clean`.
+- Renamed `Custom link` chip to `Other page`.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Featured Update Wrapped Like Homepage
 **AI:** Codex
 **Worked on:** Shawn showed that Featured Update still did not match the Homepage/First Impression editor pattern. Team direction: one wrapped editing surface, passive photo helper, no loose control stack.

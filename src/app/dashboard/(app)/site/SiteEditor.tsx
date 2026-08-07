@@ -703,6 +703,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
   const announcementUsesImage = announcementStyle === "image"
   const announcementTargetLabel = announcementTargets.find(target => target.href === announcementHref)?.label ?? (announcementHref.startsWith("http") ? "Custom link" : announcementHref)
+  const announcementDestinationText = announcementHref.startsWith("http") ? "Opens your custom link" : `Opens ${announcementTargetLabel} page`
+  const announcementLookOptions: { value: AnnouncementStyle; label: string }[] = [
+    { value: "default", label: "Clean" },
+    { value: "light", label: "Light" },
+    { value: "dark", label: "Dark" },
+    { value: "accent", label: "Accent" },
+    { value: "image", label: "Photo" },
+  ]
   const servicesPreviewItems = services.slice(0, 3)
   const activeLayoutType = getLayout(industryCategory, vibe, activeLayout)
   const photoSections = getSitePhotoSections({
@@ -1136,29 +1144,29 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button</span>
                 <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
-                <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>Goes to: {announcementTargetLabel}</span>
+                <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>{announcementDestinationText}</span>
               </span>
               <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
             </button>
-            <div style={{ display: "flex", gap: 8, overflowX: "auto", marginTop: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 12 }}>
               {announcementTargets.map(target => (
-                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {target.label}
                 </button>
               ))}
-              <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ flex: "0 0 auto", padding: "10px 13px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
-                Custom link
+              <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementHref.startsWith("http") ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref.startsWith("http") ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref.startsWith("http") ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                Other page
               </button>
             </div>
           </div>
 
           <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Look</div>
-            <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update appears on your homepage.</div>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Banner style</div>
+            <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update banner looks on your homepage.</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {(["default", "light", "dark", "accent", "image"] as AnnouncementStyle[]).map(style => (
-                <button key={style} onClick={() => saveConfigField("announcement_style", style)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, textTransform: "capitalize", cursor: "pointer" }}>
-                  {style}
+              {announcementLookOptions.map(style => (
+                <button key={style.value} onClick={() => saveConfigField("announcement_style", style.value)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style.value ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style.value ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style.value ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                  {style.label}
                 </button>
               ))}
             </div>

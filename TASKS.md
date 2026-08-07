@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Featured Update Button/Banner Polish
+
+- [x] Destination choices no longer overflow horizontally.
+- [x] Button destination summary now uses owner language instead of URL paths.
+- [x] `Look` renamed to `Banner style`.
+- [x] `Default` displayed as `Clean`; `Custom link` displayed as `Other page`.
+- [ ] Shawn QA: Featured Update Button card fits cleanly on iPhone.
+
+---
+
 ## 2026-08-07 - Featured Update Wrapped Like Homepage
 
 - [x] Featured Update preview and edit rows are now inside one wrapper like First Impression.
