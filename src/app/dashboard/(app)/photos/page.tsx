@@ -388,6 +388,31 @@ function PhotosPageInner() {
     setShareAlbum(null)
   }
 
+  async function handleSharePhoto(photo: Photo) {
+    async function shareLink() {
+      if (navigator.share) {
+        await navigator.share({ url: photo.url }).catch(() => {})
+      } else {
+        await navigator.clipboard.writeText(photo.url)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      }
+    }
+    try {
+      const res = await fetch(photo.url)
+      const blob = await res.blob()
+      const ext = blob.type.split("/")[1] || "jpg"
+      const file = new File([blob], `photo.${ext}`, { type: blob.type })
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file] }).catch(() => {})
+      } else {
+        await shareLink()
+      }
+    } catch {
+      await shareLink()
+    }
+  }
+
   function openCamera() {
     if (!activeAlbum) {
       window.dispatchEvent(new CustomEvent("found:open-camera"))
@@ -595,6 +620,7 @@ function PhotosPageInner() {
             onView={p => openLightroom(p, albumPhotos)}
             onFlag={flag}
             onPlace={openPlacement}
+            onShare={handleSharePhoto}
             onRequestDelete={setDeleteConfirmPhoto}
             selectMode={selectMode}
             selectedIds={selectedIds}
@@ -638,6 +664,7 @@ function PhotosPageInner() {
             onView={p => openLightroom(p, currentPhotos)}
             onFlag={flag}
             onPlace={openPlacement}
+            onShare={handleSharePhoto}
             onRequestDelete={setDeleteConfirmPhoto}
             selectMode={selectMode}
             selectedIds={selectedIds}
@@ -671,6 +698,7 @@ function PhotosPageInner() {
           onClose={() => setLightroomIndex(null)}
           onFlag={flag}
           onPlace={openPlacement}
+          onShare={handleSharePhoto}
           onRemove={remove}
         />
       )}
@@ -815,12 +843,13 @@ function PhotosPageInner() {
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onRemove }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShare, onRemove }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
   onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  onShare?: (photo: Photo) => void
   onRemove: (photo: Photo) => void
 }) {
   const [index, setIndex] = useState(initialIndex)
@@ -999,6 +1028,27 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onRemo
           )
         })()}
 
+        {/* Share */}
+        {onShare && (
+          <button onClick={() => onShare(photo)} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+            background: "none", border: "none", cursor: "pointer", padding: 0,
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%",
+              backgroundColor: "rgba(255,255,255,0.1)",
+              border: "2px solid rgba(255,255,255,0.14)",
+              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Share</span>
+          </button>
+        )}
+
         {/* Trash — Delete */}
         <button onClick={handleDelete} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
@@ -1025,12 +1075,13 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onRemo
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onPlace, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onPlace, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  onShare?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
   selectedIds?: Set<string>
@@ -1082,6 +1133,7 @@ function DateGroupedGrid({
                 onView={onView}
                 onFlag={onFlag}
                 onPlace={onPlace}
+                onShare={onShare}
                 onRequestDelete={onRequestDelete}
                 selectMode={selectMode}
                 selected={selectedIds?.has(photo.id)}
@@ -1562,11 +1614,12 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode, selected, onToggleSelect }: {
+function PhotoCard({ photo, onView, onFlag, onPlace, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
   photo: Photo
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  onShare?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
   selected?: boolean
@@ -1696,6 +1749,22 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onRequestDelete, selectMode
               </>
             )
           })()}
+        </button>
+      )}
+      {onShare && !selectMode && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onShare(photo) }}
+          aria-label="Share photo"
+          style={{
+            position: "absolute", top: isVideo ? 36 : 8, right: 8,
+            width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer",
+            backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
         </button>
       )}
       {onRequestDelete && !selectMode && (
