@@ -8,6 +8,7 @@ import { SCHEDULING_CTA } from "@/lib/industryCTAs"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
+import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import ReservationForm from "./ReservationForm"
 import BookingCalendar from "@/components/public/BookingCalendar"
 import type { Metadata } from "next"
@@ -57,6 +58,12 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
     .maybeSingle()
 
   const hasCalendar = hasAddonAccess(company.plan, "reservation_calendar", addon ? ["reservation_calendar"] : [], company.included_addon_slug, company.disabled_addons ?? [])
+
+  // Final backstop, independent of which path activated the add-on (free
+  // switch, paid checkout, Stripe sync, or an admin/manual edit that bypassed
+  // all of those) - cheap no-op once real hours exist, since it only ever
+  // writes when the company has zero rows.
+  if (hasCalendar) await ensureDefaultAvailability(company.id)
 
   // Fetch working days to grey non-working days on the calendar (no API calls from client)
   let workingDays: number[] = []

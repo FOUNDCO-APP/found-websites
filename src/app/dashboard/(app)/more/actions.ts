@@ -3,6 +3,7 @@
 import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
+import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
@@ -18,6 +19,7 @@ async function markAddonActive(
     stripe_subscription_item_id: stripeSubscriptionItemId,
     active: true,
   }, { onConflict: "company_id,addon_slug" })
+  if (!error && addonSlug === "reservation_calendar") await ensureDefaultAvailability(companyId)
   if (error) throw new Error(`markAddonActive failed: ${error.message}`)
 }
 const PLAN_PRICE_IDS = new Set([
@@ -136,6 +138,7 @@ export async function switchIncludedAddon(companyId: string, addonSlug: string |
   if (!company || company.plan !== "found_pro") return { success: false, error: "Not available on this plan." }
   const { error } = await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
   if (error) return { success: false, error: error.message }
+  if (addonSlug === "reservation_calendar") await ensureDefaultAvailability(companyId)
   return { success: true }
 }
 

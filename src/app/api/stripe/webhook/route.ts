@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { Resend } from "resend"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -87,6 +88,9 @@ async function syncSubscriptionToSupabase(
       })),
       { onConflict: "company_id,addon_slug" },
     )
+    if (activeAddonRows.some(row => row.addonSlug === "reservation_calendar")) {
+      await ensureDefaultAvailability(companyId)
+    }
   }
 
   const { data: existingRows } = await supabase

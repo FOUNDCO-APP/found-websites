@@ -88,6 +88,7 @@ export default function SchedulePage() {
   const [saveMsg, setSaveMsg]         = useState("")
   const [tab, setTab]                 = useState<"calendar" | "bookings" | "hours">("calendar")
   const [hasScheduleChanges, setHasScheduleChanges] = useState(false)
+  const [hasSavedData, setHasSavedData] = useState(false)
 
   // Block form
   const [blockType, setBlockType]     = useState<"single" | "range">("single")
@@ -110,6 +111,7 @@ export default function SchedulePage() {
     ]).then(([av, bl, bk]) => {
       if (av.companyId) setCompanyId(av.companyId)
       if (av.days?.length) {
+        setHasSavedData(true)
         setDays(prev => {
           const map = new Map(av.days.map((d: DayConfig) => [d.day_of_week, d]))
           return prev.map((p, i) => {
@@ -142,6 +144,7 @@ export default function SchedulePage() {
     setSaveMsg(result.success ? "Saved!" : (result.error ?? "Error saving"))
     if (result.success) {
       setHasScheduleChanges(false)
+      setHasSavedData(true)
       setEditingHours(false)
       setShowBookingSettings(false)
     }
@@ -323,7 +326,22 @@ export default function SchedulePage() {
             }}>
               <div>
                 <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Weekly hours</p>
-                <p style={{ margin: 0, ...TYPE.headline, color: "white" }}>{openDays.length} open days</p>
+                <p style={{ margin: "0 0 6px", ...TYPE.headline, color: "white" }}>{openDays.length} open days</p>
+                {!loading && (
+                  hasScheduleChanges ? (
+                    <span style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: "#FFB800", background: "rgba(255,184,0,0.14)", borderRadius: 999, padding: "3px 9px" }}>
+                      Unsaved changes
+                    </span>
+                  ) : hasSavedData ? (
+                    <span style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: GREEN, background: `${GREEN}14`, borderRadius: 999, padding: "3px 9px" }}>
+                      Live on your site
+                    </span>
+                  ) : (
+                    <span style={{ display: "inline-block", fontSize: 11, fontWeight: 800, color: "#FF3B30", background: "rgba(255,59,48,0.14)", borderRadius: 999, padding: "3px 9px" }}>
+                      Not saved yet — tap Save below
+                    </span>
+                  )
+                )}
               </div>
               <button onClick={() => setEditingHours(v => !v)} style={{ border: "1px solid rgba(255,255,255,0.1)", background: editingHours ? `${GREEN}14` : "rgba(255,255,255,0.04)", color: editingHours ? GREEN : `rgba(255,255,255,${TEXT_OPACITY.secondary})`, borderRadius: 999, padding: "8px 12px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>
                 {editingHours ? "Done" : "Edit"}
@@ -411,7 +429,7 @@ export default function SchedulePage() {
             )}
           </div>
 
-          {(editingHours || showBookingSettings || hasScheduleChanges) && (
+          {(editingHours || showBookingSettings || hasScheduleChanges || (!loading && !hasSavedData)) && (
             <>
               <button
                 onClick={handleSave}
