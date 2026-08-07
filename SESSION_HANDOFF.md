@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Hours Tab Redesign (Jony-Led)
+
+### Where We Left Off
+- After the admin View As fix, Shawn live-tested again and found the Hours tab itself confusing: the "5 open days" header meant nothing to him, and there were two different buttons that both felt like "I'm finished" (Done at the top, Save Changes at the bottom) but only one actually saved - he used Save Changes instinctively and never understood what Done was for. He wanted to edit a single day (Saturday) directly, not be forced into an all-7-days edit mode.
+- Brought straight to Jony per Shawn's explicit request. Real recommendation, not a vague "make it clearer": kill the meaningless counter, remove Done as a concept entirely, make each day independently tappable/expandable with its own docked Save, keep one "Edit all days" bulk option using the identical per-day editor.
+
+### What Changed
+- Header counter replaced with a real summary: "Open 5 days · Closed Sun, Mon" (or "Open every day"/"Closed every day"), plus a warning badge if a day is marked open with no time block set.
+- Removed the global `editingHours` boolean entirely - replaced with `expandedDays: Set<number>`, so any individual day (or all of them) can be expanded independently.
+- Tapping a day now expands just that day inline with its toggle, time blocks, and a docked "Save [Day]" button - no scrolling, no all-days edit mode required.
+- "Edit all days" stays as an explicit bulk option, same per-day editor, all seven expanded at once, with one sticky "Save Changes" bar instead of seven docked buttons.
+- "Cancel" now actually reverts unsaved edits back to the last-saved state (previously "Done" just hid the edit UI without reverting anything).
+
+### Test Next
+- Shawn: tap into a single day, change its hours, confirm Save appears right there and works without scrolling. Try "Edit all days" separately and confirm the bulk flow with the sticky Save bar still works.
+
+---
+
 ## 2026-08-07 - Fix: Schedule Actions Failed Under Admin View As
 
 ### Where We Left Off

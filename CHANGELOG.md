@@ -1,3 +1,21 @@
+## Session: August 7, 2026 - Hours Tab Redesign (Jony-Led)
+**AI:** Claude Code (Sonnet)
+**Worked on:** Live-test feedback: "5 open days" counter meant nothing to Shawn, and two buttons (Done at top, Save Changes at bottom) both felt like "finished" but only one saved. He wanted to edit one day directly, not all 7 at once. Brought straight to Jony per Shawn's explicit request.
+
+### Built
+- Header counter → real summary ("Open 5 days · Closed Sun, Mon"), plus a warning if a day is open with no time set.
+- Replaced global `editingHours` boolean with `expandedDays: Set<number>` - any day (or all) independently expandable.
+- Tap a day → expands inline with its own toggle, blocks, and docked "Save [Day]" button, no scrolling.
+- "Edit all days" kept as explicit bulk option, same editor, one sticky Save bar instead of seven per-row buttons.
+- "Cancel" now actually reverts unsaved edits (previously just hid them).
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: single-day edit + bulk "Edit all days" both need a retest.
+
+---
 ## Session: August 7, 2026 - Fix: Schedule Actions Failed Under Admin View As
 **AI:** Claude Code (Sonnet)
 **Worked on:** Live bug caught mid-test - saving hours while viewing Ryan's account as admin returned "Could not save availability."
