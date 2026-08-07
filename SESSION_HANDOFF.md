@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-06 - Booking System: Retail/Makers/Nonprofit CTAs, /book Route, Custom Label
+
+### Where We Left Off
+- Real live-customer issue: Ryan (bike shop, industry "retail," Found Pro) switched his free included add-on from Shopping Cart to Reservation Calendar. Dashboard side worked; public site still showed "Our Products" pointing at a product page, because retail had no scheduling CTA defined at all - a real, working `/reserve` booking page existed, just nothing on the public site linked to it for retail.
+- Root cause: retail was deliberately excluded from Reservation Calendar in the original locked plan (food/wellness/beauty/fitness/healthcare/pet/education only). The free included-addon switcher doesn't enforce that industry-relevance check the way the paid add-on flow does, so Ryan ended up in a configuration the rest of the system was never wired to support.
+- Shawn made the real call: open booking to every industry, not just the original locked subset - a bike shop needs repair/fitting appointments, and other retail businesses have similar real scheduling needs. Ran this through several team rounds (copy review for industry-appropriate CTA labels, then a slug/architecture round, each with real scrutiny - several of Claude's draft proposals got corrected by the team before shipping).
+- **Important process note:** Claude briefed an early team meeting with a factual error - claimed 7 industries had no scheduling CTA when only 3 actually did (retail, makers_crafts, nonprofit; automotive/creative_services/professional_services/home_services already had working entries). Caught before shipping, corrected with the team's explicit sign-off on the narrower, accurate scope. See `feedback_team_approval_process` memory for the full record - this is exactly why every premise gets verified against the real code before a team round, not after.
+
+### What Changed
+- `industryCTAs.ts`: added real scheduling CTAs for the 3 genuinely-missing industries - retail ("Book an Appointment"), makers_crafts ("Request a Commission"), nonprofit ("Plan Your Visit"). Automotive/creative_services/professional_services/home_services deliberately left untouched - they already worked, nobody asked to change them.
+- Route renamed `/reserve` → `/book` site-wide (team's call: "reserve" was picked with restaurants in mind, doesn't fit a bike shop or an accountant; URL and label are intentionally decoupled, same pattern that already let one href serve "Reserve a Table" and "Schedule Service" without confusion). `/reserve` kept as a permanent redirect for any existing bookmarks/GBP links/receipts.
+- New `companies.booking_cta_label` column (migration 056) + a new "Booking Button Text" section in Site Editor - industry default preset, or a capped 24-character custom override (e.g. Ryan could type "Book a Repair" instead of the default "Book an Appointment"). Wired through `getSiteCTAs`/`getAvailablePrimaryActions` so the override applies everywhere the CTA shows - hero, sticky bar, the `/book` page itself.
+
+### Test Next
+- Shawn: confirm Ryan's site now shows "Book an Appointment" (or whatever he sets it to) linking to a working `/book` page. Confirm `/reserve` still works via redirect. Confirm the new Site Editor section lets him type a custom label.
+
+---
+
 ## 2026-08-06 - One-Tap Share (Web Share API)
 
 ### Where We Left Off

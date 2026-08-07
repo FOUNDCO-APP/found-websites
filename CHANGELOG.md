@@ -1,3 +1,29 @@
+## Session: August 6, 2026 - Booking System: Retail/Makers/Nonprofit CTAs, /book Route, Custom Label
+**AI:** Claude Code (Sonnet)
+**Worked on:** Real live-customer bug (Ryan, bike shop/retail, Found Pro) - switched to the Reservation Calendar add-on, dashboard worked, public site still showed a stale "Our Products" link because retail had no scheduling CTA at all. Root cause: retail was deliberately excluded from booking in the original locked plan; the free included-addon switcher doesn't enforce that exclusion the way the paid add-on flow does. Shawn decided to open booking to every industry instead of patching retail alone - bike repairs, fittings, and similar retail scheduling needs are real, not edge cases.
+
+### Process note
+- Claude briefed an early team round with a factual error - said 7 industries had no scheduling CTA when only 3 actually did. Caught and corrected before shipping, with the team's explicit sign-off on the narrower, verified scope. Full record in `feedback_team_approval_process` memory.
+
+### Team-approved, corrected scope
+- Only retail, makers_crafts, and nonprofit get new CTAs - the only 3 industries confirmed (against the actual code, not memory) to have none. Automotive/creative_services/professional_services/home_services already had working entries and were left untouched.
+- Route renamed `/reserve` → `/book`, decoupled permanently from the CTA label (same pattern that already let one href serve multiple different button texts). `/reserve` kept as a permanent redirect.
+- New owner-editable `booking_cta_label` override (curated default + capped 24-char custom field) in Site Editor, wired through the existing `getSiteCTAs` CTA-resolution pipeline so it applies everywhere consistently.
+
+### Built
+- `industryCTAs.ts`: 3 new SCHEDULING_CTA entries, all hrefs updated to `/book`, `schedulingCTAFor()` helper applies the label override when set.
+- `src/app/[slug]/book/` (moved from `reserve/`), `src/app/[slug]/reserve/page.tsx` now a permanent redirect.
+- Migration 056: `companies.booking_cta_label text NULL`.
+- Site Editor: new "Booking Button Text" section (industry default vs. custom, 24-char cap).
+- Updated every other `/reserve` reference site-wide (SiteAnnouncement targets, siteCopy nudge links, dashboard page picker, revalidatePath calls).
+
+### Verification
+- `npm run build` passed clean. Migration run directly against the live database.
+
+### Test Next
+- Shawn: confirm Ryan's site shows a real, working booking CTA and that `/reserve` still redirects correctly.
+
+---
 ## Session: August 6, 2026 - One-Tap Share (Web Share API)
 **AI:** Claude Code (Sonnet)
 **Worked on:** Next roadmap item after template parity - one-tap photo sharing via the Web Share API. Asked Shawn directly whether to share the real photo file or just a link, since it's a real behavior/complexity tradeoff, not a rubber-stamp detail; he chose the real file.
