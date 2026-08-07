@@ -1,3 +1,21 @@
+## Session: August 7, 2026 - Workstream 1 (Part 2): Upgrade Prompt + Comparison
+**AI:** Claude Code (Sonnet)
+**Worked on:** Completes workstream 1. Followed the team's "celebrate, then solve" framing - lead with the real win, name the friction second, no hard sell at the moment of good news.
+
+### Built
+- `/api/company-slug`: added `primaryIntent`, `plan`, computed `hasCalendar`.
+- Upgrade banner on the Reservations view - shown only with real incoming leads present, on a scheduling-intent business without the calendar add-on.
+- `BookingComparisonSheet` - static Now-vs-Automated comparison, links out to the existing `/more` upgrade flow.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: test-submit a reservation request on a qualifying business, confirm the banner and comparison sheet both work.
+
+Both halves of workstream 1 and all of workstream 2 are complete for this session.
+
+---
 ## Session: August 7, 2026 - Workstream 1 (Part 1): Universal Booking Action Button
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn wants any business, not just food/wellness-type industries, to be able to turn on Booking as their main action button. Explicit ask before building: don't break the existing action-button flow. Traced the full system first and confirmed the change is purely additive - every industry already has a working CTA, new picker options never touch an existing business's saved selection.

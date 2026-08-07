@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Workstream 1 (Part 2): Upgrade Prompt + Comparison
+
+### Where We Left Off
+- Completes workstream 1. Team's "celebrate, then solve" framing (Angela's guidance from the earlier design round): don't sell the moment they land on the page, lead with the real win, name the friction only after.
+
+### What Changed
+- `/api/company-slug` now also returns `primaryIntent`, `plan`, and a computed `hasCalendar`.
+- New upgrade banner on the Reservations view (`/leads?view=reservations`) - only shows when there are real incoming reservation leads, on a business using a scheduling action button without the calendar add-on. Leads with "You've got real booking requests coming in," names the manual-confirmation friction second, offers "Show me a comparison" instead of a hard sell.
+- New `BookingComparisonSheet` - simple static side-by-side (Now vs. Automated) covering confirmation, the owner's manual work, and reminders. Links to the existing `/more` upgrade flow rather than duplicating it inline.
+
+### Test Next
+- Shawn: on a test business with a scheduling action button and no calendar add-on, submit a test reservation request, confirm the upgrade banner appears on the Reservations tab and the comparison sheet opens correctly.
+
+Both halves of workstream 1 and all of workstream 2 are now complete for this session.
+
+---
+
 ## 2026-08-07 - Workstream 1 (Part 1): Universal Booking Action Button
 
 ### Where We Left Off
