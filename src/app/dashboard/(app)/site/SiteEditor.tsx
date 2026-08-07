@@ -12,7 +12,7 @@ import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
-import { getSiteCTAs } from "@/lib/industryCTAs"
+import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
@@ -307,6 +307,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
   const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
   const showCatalog = isFoodCatalog || isShopCatalog
+  const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
   const catalogCopy = isFoodCatalog
     ? {
         pageLabel: "Menu Page",
@@ -671,11 +672,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementStyleRaw = typeof config.announcement_style === "string" ? config.announcement_style : "default"
   const announcementStyle: AnnouncementStyle = (["default", "light", "dark", "accent", "image"].includes(announcementStyleRaw) ? announcementStyleRaw : "default") as AnnouncementStyle
   const announcementImage = announcementPhotos[0]?.url ?? null
-  const announcementTargets = isFoodCatalog
-    ? [{ label: "Menu", href: "/menu" }, { label: "Reservations", href: "/book" }, { label: "Contact", href: "/contact" }]
-    : isShopCatalog
-      ? [{ label: "Shop", href: "/shop" }, { label: "Products", href: "/shop" }, { label: "Contact", href: "/contact" }]
-      : [{ label: "Services", href: "/services" }, { label: "Estimate", href: "/estimate" }, { label: "Contact", href: "/contact" }]
+  const announcementTargets = [
+    ...getAvailablePrimaryActions(industryCategory, effectiveAddons, company.phone, bookingCtaLabel)
+      .map(action => ({
+        label: action.label,
+        href: getSiteCTAs(
+          { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: action.key, booking_cta_label: bookingCtaLabel },
+          effectiveAddons
+        ).primary.href,
+      })),
+    { label: "Contact", href: "/contact" },
+  ].filter((target, index, all) => all.findIndex(item => item.href === target.href) === index)
   const announcementNearbyCopy = [
     config.hero_title,
     config.hero_subtitle,
@@ -702,10 +709,24 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementSubtleColor = announcementIsLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
   const announcementUsesImage = announcementStyle === "image"
-  const announcementTargetLabel = announcementTargets.find(target => target.href === announcementHref)?.label ?? (announcementHref.startsWith("http") ? "Custom link" : announcementHref)
-  const announcementDestinationText = announcementHref.startsWith("http") ? "Opens your custom link" : `Opens ${announcementTargetLabel} page`
+  const announcementSelectedStyle = announcementStyle === "default" ? "dark" : announcementStyle
+  const announcementContentHref = getSiteCTAs(
+    { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: "content", booking_cta_label: bookingCtaLabel },
+    effectiveAddons
+  ).primary.href
+  const announcementStaleContentHref = ["/shop", "/menu", "/order", "/services"].includes(announcementHref)
+  const announcementResolvedHref = announcementTargets.some(target => target.href === announcementHref)
+    ? announcementHref
+    : announcementStaleContentHref
+      ? announcementContentHref
+      : announcementTargets[0]?.href ?? "/contact"
+  const announcementTargetLabel = announcementTargets.find(target => target.href === announcementResolvedHref)?.label ?? (announcementResolvedHref.startsWith("http") ? "custom link" : "that page")
+  const announcementDestinationText = announcementResolvedHref.startsWith("tel:")
+    ? "Starts a phone call"
+    : announcementResolvedHref.startsWith("http")
+      ? "Opens your custom link"
+      : `Opens ${announcementTargetLabel} page`
   const announcementLookOptions: { value: AnnouncementStyle; label: string }[] = [
-    { value: "default", label: "Clean" },
     { value: "light", label: "Light" },
     { value: "dark", label: "Dark" },
     { value: "accent", label: "Accent" },
@@ -990,7 +1011,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           : SHOP_LIKE.includes(industryCategory)
           ? ['shop', 'reserve', 'visit', 'call']
           : ['quote', 'reserve', 'contact', 'call']
-        const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
         const describeCta = (intent: string, href: string) => {
           if (href === '/services' && SHOP_LIKE.includes(industryCategory)) return 'Takes customers to your products and services page'
           if (href === '/services') return 'Takes customers to your services page'
@@ -1150,7 +1170,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 12 }}>
               {announcementTargets.map(target => (
-                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementResolvedHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementResolvedHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementResolvedHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {target.label}
                 </button>
               ))}
@@ -1165,7 +1185,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update banner looks on your homepage.</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {announcementLookOptions.map(style => (
-                <button key={style.value} onClick={() => saveConfigField("announcement_style", style.value)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementStyle === style.value ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementStyle === style.value ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementStyle === style.value ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
+                <button key={style.value} onClick={() => saveConfigField("announcement_style", style.value)} style={{ padding: "9px 12px", borderRadius: 999, border: `1px solid ${announcementSelectedStyle === style.value ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementSelectedStyle === style.value ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementSelectedStyle === style.value ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer" }}>
                   {style.label}
                 </button>
               ))}

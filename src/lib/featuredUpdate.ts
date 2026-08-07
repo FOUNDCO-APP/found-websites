@@ -1,4 +1,5 @@
 import type { Company, WebsiteConfig } from "@/types/company"
+import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
 
 export type FeaturedUpdateDraft = {
   eyebrow: string
@@ -9,6 +10,8 @@ export type FeaturedUpdateDraft = {
 }
 
 type DraftCompany = Pick<Company, "name" | "industry_category" | "sub_industry"> & {
+  phone?: string | null
+  booking_cta_label?: string | null
   website_config?: WebsiteConfig | null
 }
 
@@ -152,6 +155,39 @@ function overlapsNearby(text: string, nearbyCopy: unknown[]) {
   })
 }
 
+function safeFeaturedHref(company: DraftCompany, href: string, activeAddons: string[], fallbackHref: string) {
+  const trimmed = href.trim()
+  if (!trimmed) return fallbackHref
+  if (trimmed.startsWith("http") || trimmed.startsWith("tel:")) return trimmed
+
+  const safeActions = getAvailablePrimaryActions(company.industry_category, activeAddons, company.phone ?? null, company.booking_cta_label ?? null)
+    .map(action => ({
+      key: action.key,
+      href: getSiteCTAs(
+        {
+          industry_category: company.industry_category,
+          primary_intent: "content",
+          phone: company.phone ?? null,
+          primary_action_override: action.key,
+          booking_cta_label: company.booking_cta_label ?? null,
+        },
+        activeAddons
+      ).primary.href,
+    }))
+  const safeTargets = [
+    ...getAvailablePrimaryActions(company.industry_category, activeAddons, company.phone ?? null, company.booking_cta_label ?? null)
+      .map(action => safeActions.find(item => item.key === action.key)?.href)
+      .filter((target): target is string => Boolean(target)),
+    "/contact",
+  ]
+  const contentHref = safeActions.find(action => action.key === "content")?.href
+  const staleContentHref = ["/shop", "/menu", "/order", "/services"].includes(trimmed)
+
+  if (safeTargets.includes(trimmed)) return trimmed
+  if (staleContentHref && contentHref) return contentHref
+  return safeTargets[0] ?? fallbackHref
+}
+
 export function getFeaturedUpdateDraft(company: DraftCompany, nearbyCopy: unknown[] = [], activeAddons: string[] = []): FeaturedUpdateDraft | null {
   const draft = defaultDraft(company, activeAddons)
   if (overlapsNearby(draft.title, nearbyCopy) || overlapsNearby(draft.body, nearbyCopy)) {
@@ -175,7 +211,7 @@ export function getFeaturedUpdatePublicCopy(company: DraftCompany, nearbyCopy: u
   const title = isGenericFeaturedCopy(config?.announcement_title) ? draft.title : String(config?.announcement_title).trim()
   const body = isGenericFeaturedCopy(config?.announcement_body) ? draft.body : String(config?.announcement_body).trim()
   const label = isGenericFeaturedCopy(config?.announcement_cta_label) ? draft.label : String(config?.announcement_cta_label).trim()
-  const href = String(config?.announcement_cta_href ?? "").trim() || draft.href
+  const href = safeFeaturedHref(company, String(config?.announcement_cta_href ?? "").trim(), activeAddons, draft.href)
 
   if (overlapsNearby(title, nearbyCopy) || overlapsNearby(body, nearbyCopy)) return null
 

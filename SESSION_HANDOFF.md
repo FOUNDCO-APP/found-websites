@@ -1,5 +1,15 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Featured Update Destinations Use Real Active Site Paths
+
+- Shawn found Ryan's Featured Update button options still exposed `Shop` and `Products` together, selected both because they shared `/shop`, and showed "Opens Shop page" even though Ryan does not have the shopping-cart add-on active.
+- Team fix: Featured Update button destinations now come from the same active-add-on CTA resolver as Main Website Button, then dedupe by real destination. Disabled shop/order paths are not offered.
+- Public Featured Update links now guard stale saved paths too: if an old `/shop`, `/order`, `/menu`, or `/services` value is no longer valid for the business setup, it falls back to the real content destination customers can actually open.
+- Banner Style now offers only `Light`, `Dark`, `Accent`, and `Photo`. Existing saved `default` values visually map to `Dark` until changed.
+- Verification: `git diff --check`, `npx tsc --noEmit`, and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-07 - Featured Update Button and Banner Wording Polish
 
 - Shawn's QA screenshot showed the Featured Update Button destination chips overflowing off-screen, "Goes to: /services" using technical URL language, and "Look / Default" not reading like owner language.

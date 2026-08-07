@@ -1,3 +1,20 @@
+## Session: August 7, 2026 - Featured Update Destinations Use Real Active Site Paths
+**AI:** Codex
+
+### Built
+- Featured Update button destinations now use the same active-add-on CTA resolver as Main Website Button.
+- Duplicate destinations are deduped, so Ryan no longer gets separate `Shop` and `Products` choices pointing at the same path.
+- Disabled shop/order paths are not offered in the editor.
+- Public Featured Update links now protect against stale saved paths like `/shop` when that destination is no longer valid.
+- Banner Style choices now remove `Clean`; existing saved `default` values visually map to `Dark`.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Featured Update Button and Banner Wording Polish
 **AI:** Codex
 

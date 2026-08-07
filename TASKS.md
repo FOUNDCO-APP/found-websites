@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Featured Update Dynamic Destinations
+
+- [x] Featured Update button choices now respect active add-ons and live site paths.
+- [x] Duplicate destination choices are deduped.
+- [x] Stale public Featured Update paths fall back to a valid customer-facing content path.
+- [x] Removed `Clean` from Banner Style owner choices; old saved default maps to Dark visually.
+- [ ] Shawn QA: Ryan Featured Update no longer shows Shop when shopping cart is inactive.
+- [ ] Shawn QA: clicking Products/Services/Contact updates the destination without opening the link edit sheet.
+
+---
+
 ## 2026-08-07 - Featured Update Button/Banner Polish
 
 - [x] Destination choices no longer overflow horizontally.
