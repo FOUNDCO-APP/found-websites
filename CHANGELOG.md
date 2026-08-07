@@ -1,3 +1,19 @@
+## Session: August 7, 2026 - Home Main Website Button Truthful Labels
+**AI:** Codex
+**Worked on:** Shawn's Ryan test showed the editor saying "Shop Now" while the live site showed "Our Products" and routed to Services. Team direction: editor labels must come from the same CTA resolver as the public site.
+
+### Built
+- Main Website Button options now resolve labels through `getSiteCTAs()` with effective add-ons.
+- Destination-aware helper text replaces hardcoded generic descriptions.
+- Removed the Home-only "Button Words" booking-label control.
+- Removed unused primary-action override prop plumbing from the Site editor entrypoint.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
 ## Session: August 7, 2026 - Home Editor Language and Flow Cleanup
 **AI:** Codex
 **Worked on:** Shawn's Ryan test: Home editor needed owner language and live-site order. Team chose "First Impression" instead of web jargon like "hero".

@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Main Website Button Truthful Labels
+
+- [x] Main Website Button now uses public-site CTA labels instead of hardcoded editor labels.
+- [x] Ryan-style retail businesses without shopping cart no longer see misleading "Shop Now" for a Services destination.
+- [x] Removed Home "Button Words" booking-only control.
+- [ ] Shawn QA: Ryan's Main Website Button options match the live public button labels and destinations.
+
+---
+
 ## 2026-08-07 - Home Editor Owner-Language Cleanup
 
 - [x] Team certified "First Impression" as the owner-facing replacement for "hero".

@@ -1,5 +1,31 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Home Main Website Button Truthful Labels
+
+### Where We Left Off
+- Shawn tested Ryan's retail/bike-shop account side by side with the public site. The Home editor's Main Website Button showed "Shop Now", but the live button resolved to "Our Products" and sent customers to the Services page because Ryan does not currently have an active shopping-cart path.
+- Team decision: the editor must never show an internal intent label that differs from the live customer-facing button. It should use the same CTA resolver as the public site.
+- Shawn also found "Button Words" confusing because it only controlled booking-label text, not the Home button generally. Team direction: remove it from Home; booking wording belongs in a booking/page setup flow later.
+
+### What Changed
+- Main Website Button options now call `getSiteCTAs()` with the same effective add-ons as the public site.
+- Retail/makers businesses without shopping cart now show the live content label, e.g. "Our Products", instead of misleading "Shop Now".
+- Helper text is destination-aware, e.g. products/services page, online shop, services page, menu, order online, booking, estimate, contact, or phone call.
+- Removed the Home "Button Words" section and its local booking-label state/actions from `SiteEditor.tsx`.
+- Removed the now-unused `primaryActionOverride` prop from the Site editor server page.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+### Test Next
+- Shawn: on Ryan, go to Edit Website > Home > Main Website Button. Confirm the first retail content option no longer says "Shop Now" unless the live destination is actually the online shop.
+- Confirm choosing Call Us / Book a Repair / Our Products updates the public desktop/mobile CTA consistently.
+- Confirm "Button Words" is gone from Home.
+
+---
+
 ## 2026-08-07 - Home Editor Language and Flow Cleanup
 
 ### Where We Left Off
