@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Workstream 2: Multi-Block Daily Hours
+
+### Where We Left Off
+- Follow-up to the zero-available-days fix: Shawn's real worry was that a continuously-open 9-5 calendar means an owner has to keep watching it to know when someone's actually coming in, especially if the day isn't fully booked.
+- First team pass over-scoped this as a weekly-republish workflow (owner logs in every week, curates blocks, publishes). Shawn caught it and corrected: he just wants multiple fixed time windows per day (e.g. 9-11am, 1-3pm, 6-8pm), set once, same permanent model as today's Hours tab - not a weekly chore. Team re-scoped accordingly and confirmed this actually resolves the original worry directly (no gap to babysit if the calendar only ever shows real, intentional windows).
+- This is "workstream 2" of a larger two-workstream plan; workstream 1 (universal booking action button + leads/upsell chain) is separate, still to come.
+
+### What Changed
+- Migration 057: `company_availability` moved from one row per day to one row per (day, block), capped at 3 blocks/day via a new `(company_id, day_of_week, block_order)` unique constraint.
+- `saveAvailability()` now does delete-then-insert of the full flattened block set (not upsert), so removing a block in the UI actually removes its row instead of leaving it stale.
+- `getAvailableSlots()` walks each working block separately when generating bookable times.
+- `/[slug]/book/page.tsx`'s `workingDays` query deduped (multiple blocks per day now return multiple rows for the same day_of_week).
+- Hours tab: each day shows a stacked list of blocks with per-block time pickers, a remove button per block, and an "Add time block" action that disappears once 3 blocks exist.
+
+### Test Next
+- Shawn: on a test business, set a day to have 2-3 separate blocks (e.g. 9-11am and 1-3pm), save, confirm the public `/book` calendar only shows real slots inside those windows - not the gap between them.
+
+---
+
 ## 2026-08-07 - Fix: Calendar Can No Longer Go Live With Zero Available Days
 
 ### Where We Left Off

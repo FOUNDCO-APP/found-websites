@@ -1,3 +1,21 @@
+## Session: August 7, 2026 - Workstream 2: Multi-Block Daily Hours
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn's real worry was a continuously-open 9-5 calendar forcing the owner to keep watching it. First team pass over-scoped this as weekly-republish; Shawn corrected it to a much smaller ask - multiple fixed time windows per day, set once, permanent, same model as the existing Hours tab.
+
+### Built
+- Migration 057: `company_availability` now one row per (day, block), capped at 3 blocks/day.
+- `saveAvailability()`: delete-then-insert of the full flattened set, so removed blocks actually disappear.
+- `getAvailableSlots()`: walks each working block separately.
+- `book/page.tsx`: deduped `workingDays` query.
+- Hours tab: stacked per-day block list, add/remove per block, capped at 3.
+
+### Verification
+- `npm run build` passed clean. Migration run directly against the live database.
+
+### Test Next
+- Shawn: set 2-3 blocks on one day, confirm the public calendar only shows slots inside those windows, not the gap between them.
+
+---
 ## Session: August 7, 2026 - Fix: Calendar Can No Longer Go Live With Zero Available Days
 **AI:** Claude Code (Sonnet)
 **Worked on:** Follow-up to last night's booking work - Ryan set his hours (9-5 Mon-Fri) in the dashboard but his public booking calendar showed zero bookable days. Root cause: the Hours tab shows sensible defaults before anything is saved, visually identical to a real saved schedule, so an owner whose desired hours happen to match the defaults has no reason to hit Save. `company_availability` stayed empty; the public calendar only shows days it finds a real row for.
