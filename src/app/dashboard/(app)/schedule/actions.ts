@@ -3,7 +3,7 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { companyHasAddonAccess } from "@/lib/dashboard/entitlements"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 async function requireScheduleAccess(companyId?: string) {
   const user = await getAuthUser()
@@ -34,7 +34,7 @@ type DayConfig = {
 export async function saveAvailability(companyId: string, days: DayConfig[]) {
   const access = await requireScheduleAccess(companyId)
   if (!access.ok) return { success: false, error: access.error }
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const rows = days.map(d => ({
     company_id: companyId,
@@ -65,7 +65,7 @@ export async function saveAvailability(companyId: string, days: DayConfig[]) {
 export async function blockDate(companyId: string, blockDate: string, label?: string) {
   const access = await requireScheduleAccess(companyId)
   if (!access.ok) return { success: false, error: access.error }
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("availability_blocks").insert({
     company_id: companyId,
     block_date: blockDate,
@@ -78,7 +78,7 @@ export async function blockDate(companyId: string, blockDate: string, label?: st
 export async function blockRange(companyId: string, rangeStart: string, rangeEnd: string, label?: string) {
   const access = await requireScheduleAccess(companyId)
   if (!access.ok) return { success: false, error: access.error }
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("availability_blocks").insert({
     company_id: companyId,
     range_start: rangeStart,
@@ -92,7 +92,7 @@ export async function blockRange(companyId: string, rangeStart: string, rangeEnd
 export async function removeBlock(blockId: string) {
   const access = await requireScheduleAccess()
   if (!access.ok) return { success: false, error: access.error }
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { error } = await supabase.from("availability_blocks").delete().eq("id", blockId).eq("company_id", access.company.id)
   if (error) return { success: false, error: error.message }
   return { success: true }
@@ -101,7 +101,7 @@ export async function removeBlock(blockId: string) {
 export async function cancelBooking(bookingId: string) {
   const access = await requireScheduleAccess()
   if (!access.ok) return { success: false, error: access.error }
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   const { error } = await supabase
     .from("bookings")
     .update({ status: "cancelled" })
