@@ -23,6 +23,7 @@ export async function ensureDefaultAvailability(companyId: string) {
   const defaultDays = [0, 1, 2, 3, 4, 5, 6].map(day_of_week => ({
     company_id: companyId,
     day_of_week,
+    block_order: 0,
     is_working: day_of_week >= 1 && day_of_week <= 5, // Mon-Fri
     start_time: "09:00",
     end_time: "17:00",
@@ -32,5 +33,5 @@ export async function ensureDefaultAvailability(companyId: string) {
 
   await admin
     .from("company_availability")
-    .upsert(defaultDays, { onConflict: "company_id,day_of_week" })
+    .upsert(defaultDays, { onConflict: "company_id,day_of_week,block_order" })
 }

@@ -20,6 +20,7 @@ async function requireScheduleAccess(companyId?: string) {
 }
 type DayConfig = {
   day_of_week: number
+  block_order: number
   is_working: boolean
   start_time: string
   end_time: string
@@ -27,15 +28,18 @@ type DayConfig = {
   buffer_minutes: number
 }
 
+// Rows are the full flattened set (up to 3 blocks per day) - delete-then-
+// insert instead of upsert so removing a block actually removes its row
+// instead of leaving a stale one behind.
 export async function saveAvailability(companyId: string, days: DayConfig[]) {
   const access = await requireScheduleAccess(companyId)
   if (!access.ok) return { success: false, error: access.error }
   const supabase = await createClient()
 
-  // Upsert all 7 rows (one per day of week)
   const rows = days.map(d => ({
     company_id: companyId,
     day_of_week: d.day_of_week,
+    block_order: d.block_order,
     is_working: d.is_working,
     start_time: d.start_time,
     end_time: d.end_time,
@@ -43,9 +47,13 @@ export async function saveAvailability(companyId: string, days: DayConfig[]) {
     buffer_minutes: d.buffer_minutes,
   }))
 
-  const { error } = await supabase
-    .from("company_availability")
-    .upsert(rows, { onConflict: "company_id,day_of_week" })
+  const { error: deleteError } = await supabase.from("company_availability").delete().eq("company_id", companyId)
+  if (deleteError) {
+    console.error("[saveAvailability] delete", deleteError.message)
+    return { success: false, error: "Could not save availability. Please try again." }
+  }
+
+  const { error } = await supabase.from("company_availability").insert(rows)
 
   if (error) {
     console.error("[saveAvailability]", error.message)

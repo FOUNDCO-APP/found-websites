@@ -22,14 +22,21 @@ const BUFFER_OPTIONS = [
   { value: 60, label: "1 hour" },
 ]
 
+type TimeBlock = {
+  block_order: number
+  start_time: string
+  end_time: string
+}
+
 type DayConfig = {
   day_of_week: number
   is_working: boolean
-  start_time: string
-  end_time: string
+  blocks: TimeBlock[]
   slot_duration_minutes: number
   buffer_minutes: number
 }
+
+const MAX_BLOCKS_PER_DAY = 3
 
 type Block = {
   id: string
@@ -58,8 +65,7 @@ function defaultDay(dayOfWeek: number): DayConfig {
   return {
     day_of_week: dayOfWeek,
     is_working: weekday,
-    start_time: "09:00",
-    end_time: "17:00",
+    blocks: weekday ? [{ block_order: 0, start_time: "09:00", end_time: "17:00" }] : [],
     slot_duration_minutes: 60,
     buffer_minutes: 0,
   }
@@ -113,10 +119,23 @@ export default function SchedulePage() {
       if (av.days?.length) {
         setHasSavedData(true)
         setDays(prev => {
-          const map = new Map(av.days.map((d: DayConfig) => [d.day_of_week, d]))
+          type Row = { day_of_week: number; block_order: number; is_working: boolean; start_time: string; end_time: string; slot_duration_minutes: number; buffer_minutes: number }
+          const byDay = new Map<number, Row[]>()
+          for (const row of av.days as Row[]) {
+            if (!byDay.has(row.day_of_week)) byDay.set(row.day_of_week, [])
+            byDay.get(row.day_of_week)!.push(row)
+          }
           return prev.map((p, i) => {
-            const override = map.get(i)
-            return override ? { ...p, ...override } : p
+            const rows = byDay.get(i)
+            if (!rows || rows.length === 0) return p
+            const workingRows = rows.filter(r => r.is_working).sort((a, b) => a.block_order - b.block_order)
+            return {
+              ...p,
+              is_working: rows.some(r => r.is_working),
+              blocks: workingRows.map(r => ({ block_order: r.block_order, start_time: r.start_time, end_time: r.end_time })),
+              slot_duration_minutes: rows[0].slot_duration_minutes,
+              buffer_minutes: rows[0].buffer_minutes,
+            }
           })
         })
       }
@@ -125,12 +144,42 @@ export default function SchedulePage() {
     }).finally(() => setLoading(false))
   }, [prefix])
 
-  function updateDay(dow: number, patch: Partial<DayConfig>) {
+  function toggleDayOpen(dow: number) {
     setHasScheduleChanges(true)
-    setDays(prev => prev.map(d => d.day_of_week === dow ? { ...d, ...patch } : d))
+    setDays(prev => prev.map(d => {
+      if (d.day_of_week !== dow) return d
+      const nowOpen = !d.is_working
+      return { ...d, is_working: nowOpen, blocks: nowOpen && d.blocks.length === 0 ? [{ block_order: 0, start_time: "09:00", end_time: "17:00" }] : d.blocks }
+    }))
   }
 
-  function updateOpenDays(patch: Partial<DayConfig>) {
+  function updateBlock(dow: number, blockOrder: number, patch: Partial<TimeBlock>) {
+    setHasScheduleChanges(true)
+    setDays(prev => prev.map(d => d.day_of_week === dow
+      ? { ...d, blocks: d.blocks.map(b => b.block_order === blockOrder ? { ...b, ...patch } : b) }
+      : d
+    ))
+  }
+
+  function addBlock(dow: number) {
+    setHasScheduleChanges(true)
+    setDays(prev => prev.map(d => {
+      if (d.day_of_week !== dow || d.blocks.length >= MAX_BLOCKS_PER_DAY) return d
+      const last = d.blocks[d.blocks.length - 1]
+      return { ...d, blocks: [...d.blocks, { block_order: d.blocks.length, start_time: last?.end_time ?? "09:00", end_time: "17:00" }] }
+    }))
+  }
+
+  function removeBlockAt(dow: number, blockOrder: number) {
+    setHasScheduleChanges(true)
+    setDays(prev => prev.map(d => {
+      if (d.day_of_week !== dow) return d
+      const resequenced = d.blocks.filter(b => b.block_order !== blockOrder).map((b, i) => ({ ...b, block_order: i }))
+      return { ...d, blocks: resequenced }
+    }))
+  }
+
+  function updateOpenDays(patch: Partial<Pick<DayConfig, "slot_duration_minutes" | "buffer_minutes">>) {
     setHasScheduleChanges(true)
     setDays(prev => prev.map(d => d.is_working ? { ...d, ...patch } : d))
   }
@@ -139,7 +188,28 @@ export default function SchedulePage() {
     if (!companyId) return
     setSaving(true)
     setSaveMsg("")
-    const result = await saveAvailability(companyId, days)
+    const rows = days.flatMap(d =>
+      d.is_working && d.blocks.length > 0
+        ? d.blocks.map(b => ({
+            day_of_week: d.day_of_week,
+            block_order: b.block_order,
+            is_working: true,
+            start_time: b.start_time,
+            end_time: b.end_time,
+            slot_duration_minutes: d.slot_duration_minutes,
+            buffer_minutes: d.buffer_minutes,
+          }))
+        : [{
+            day_of_week: d.day_of_week,
+            block_order: 0,
+            is_working: false,
+            start_time: "09:00",
+            end_time: "17:00",
+            slot_duration_minutes: d.slot_duration_minutes,
+            buffer_minutes: d.buffer_minutes,
+          }]
+    )
+    const result = await saveAvailability(companyId, rows)
     setSaving(false)
     setSaveMsg(result.success ? "Saved!" : (result.error ?? "Error saving"))
     if (result.success) {
@@ -354,7 +424,7 @@ export default function SchedulePage() {
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     {editingHours && (
                       <button
-                        onClick={() => updateDay(day.day_of_week, { is_working: !day.is_working })}
+                        onClick={() => toggleDayOpen(day.day_of_week)}
                         style={{
                           width: 42, height: 25, borderRadius: 999, border: "none", cursor: "pointer",
                           background: day.is_working ? GREEN : "rgba(255,255,255,0.12)",
@@ -374,7 +444,9 @@ export default function SchedulePage() {
                       </p>
                       {!editingHours && (
                         <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${day.is_working ? TEXT_OPACITY.secondary : TEXT_OPACITY.disabled})` }}>
-                          {day.is_working ? `${formatTime12(day.start_time)} - ${formatTime12(day.end_time)}` : "Closed"}
+                          {day.is_working && day.blocks.length > 0
+                            ? day.blocks.map(b => `${formatTime12(b.start_time)} - ${formatTime12(b.end_time)}`).join(", ")
+                            : "Closed"}
                         </p>
                       )}
                     </div>
@@ -386,15 +458,30 @@ export default function SchedulePage() {
                   </div>
 
                   {editingHours && day.is_working && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-                      <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                        Opens
-                        <input type="time" value={day.start_time} onChange={e => updateDay(day.day_of_week, { start_time: e.target.value })} style={inputStyle} />
-                      </label>
-                      <label style={{ display: "flex", flexDirection: "column", gap: 6, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-                        Closes
-                        <input type="time" value={day.end_time} onChange={e => updateDay(day.day_of_week, { end_time: e.target.value })} style={inputStyle} />
-                      </label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+                      {day.blocks.map(block => (
+                        <div key={block.block_order} style={{ display: "flex", alignItems: "flex-end", gap: 8, padding: "10px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                            Opens
+                            <input type="time" value={block.start_time} onChange={e => updateBlock(day.day_of_week, block.block_order, { start_time: e.target.value })} style={inputStyle} />
+                          </label>
+                          <label style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+                            Closes
+                            <input type="time" value={block.end_time} onChange={e => updateBlock(day.day_of_week, block.block_order, { end_time: e.target.value })} style={inputStyle} />
+                          </label>
+                          {day.blocks.length > 1 && (
+                            <button onClick={() => removeBlockAt(day.day_of_week, block.block_order)} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: "rgba(255,59,48,0.14)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF3B30" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {day.blocks.length < MAX_BLOCKS_PER_DAY && (
+                        <button onClick={() => addBlock(day.day_of_week)} style={{ display: "flex", alignItems: "center", gap: 6, border: "none", background: "transparent", color: GREEN, fontSize: 13, fontWeight: 700, cursor: "pointer", padding: "4px 0" }}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add time block
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

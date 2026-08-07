@@ -74,7 +74,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
       .select("day_of_week")
       .eq("company_id", company.id)
       .eq("is_working", true)
-    workingDays = (availability ?? []).map((a: { day_of_week: number }) => a.day_of_week)
+    workingDays = Array.from(new Set((availability ?? []).map((a: { day_of_week: number }) => a.day_of_week)))
     nextAvailable = await getNextAvailableText(company.id)
   }
 

@@ -38,20 +38,20 @@ export async function getAvailableSlots(companyId: string, dateStr: string): Pro
   // Parse day-of-week from UTC noon (avoids timezone day-shift)
   const dayOfWeek = new Date(dateStr + "T12:00:00Z").getUTCDay()
 
-  // 1. Working hours for this day
-  const { data: avail } = await admin
+  // 1. Working hours for this day - up to 3 separate blocks (e.g. 9-11am, 1-3pm)
+  const { data: availRows } = await admin
     .from("company_availability")
     .select("is_working, start_time, end_time, slot_duration_minutes, buffer_minutes")
     .eq("company_id", companyId)
     .eq("day_of_week", dayOfWeek)
-    .single()
+    .eq("is_working", true)
+    .order("block_order")
 
-  if (!avail || !avail.is_working) return []
+  if (!availRows || availRows.length === 0) return []
 
-  const duration = avail.slot_duration_minutes ?? 60
-  const buffer = avail.buffer_minutes ?? 0
-  const startMin = timeToMinutes(avail.start_time)
-  const endMin = timeToMinutes(avail.end_time)
+  const duration = availRows[0].slot_duration_minutes ?? 60
+  const buffer = availRows[0].buffer_minutes ?? 0
+  const workingBlocks = availRows.map(r => ({ startMin: timeToMinutes(r.start_time), endMin: timeToMinutes(r.end_time) }))
 
   // 2. Check for blocking rules
   const { data: blocks } = await admin
@@ -88,15 +88,17 @@ export async function getAvailableSlots(companyId: string, dateStr: string): Pro
     ? today.getHours() * 60 + today.getMinutes() + 30
     : 0
 
-  // 5. Generate slots
+  // 5. Generate slots - walk each working block separately, same rules as before
   const slots: TimeSlot[] = []
-  for (let t = startMin; t + duration <= endMin; t += duration) {
-    if (t < nowMin) continue
-    const slotEnd = t + duration
-    const slotEndBuf = slotEnd + buffer
-    if (timeBlocks.some(b => t < b.end && slotEndBuf > b.start)) continue
-    if (taken.some(b => t < b.end && slotEnd > b.start)) continue
-    slots.push({ start: minutesToTime(t), end: minutesToTime(slotEnd), display: toDisplay(t) })
+  for (const { startMin, endMin } of workingBlocks) {
+    for (let t = startMin; t + duration <= endMin; t += duration) {
+      if (t < nowMin) continue
+      const slotEnd = t + duration
+      const slotEndBuf = slotEnd + buffer
+      if (timeBlocks.some(b => t < b.end && slotEndBuf > b.start)) continue
+      if (taken.some(b => t < b.end && slotEnd > b.start)) continue
+      slots.push({ start: minutesToTime(t), end: minutesToTime(slotEnd), display: toDisplay(t) })
+    }
   }
 
   return slots
