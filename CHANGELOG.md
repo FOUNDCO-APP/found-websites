@@ -1,3 +1,24 @@
+## Session: August 7, 2026 - Workstream 1 (Part 1): Universal Booking Action Button
+**AI:** Claude Code (Sonnet)
+**Worked on:** Shawn wants any business, not just food/wellness-type industries, to be able to turn on Booking as their main action button. Explicit ask before building: don't break the existing action-button flow. Traced the full system first and confirmed the change is purely additive - every industry already has a working CTA, new picker options never touch an existing business's saved selection.
+
+### Real finding that reshaped scope
+- Basic-tier reservation requests already land as real leads today; food businesses already get their inbox relabeled "Reservations" when they lack the calendar add-on. This was already half-built, just limited to 10 of 22 industries.
+
+### Built
+- Main Button picker: "Book Appointments" now selectable for the 13 previously-excluded industries.
+- `toolPolicy.ts`: inbox relabels to "Reservations" (filtered) for any industry when the action button is a scheduling intent and the calendar add-on isn't active - extends the existing food-only pattern universally. `primaryIntent` threaded through `DashboardNav`/`DashboardPages`.
+
+### Not yet built
+- In-context upgrade prompt + side-by-side comparison on the Reservations view - separate follow-up.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: set Main Button to "Book Appointments" on a newly-included industry, confirm inbox relabels and filters, confirm public CTA shows correctly.
+
+---
 ## Session: August 7, 2026 - Workstream 2: Multi-Block Daily Hours
 **AI:** Claude Code (Sonnet)
 **Worked on:** Shawn's real worry was a continuously-open 9-5 calendar forcing the owner to keep watching it. First team pass over-scoped this as weekly-republish; Shawn corrected it to a much smaller ask - multiple fixed time windows per day, set once, permanent, same model as the existing Hours tab.

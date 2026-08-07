@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Workstream 1 (Part 1): Universal Booking Action Button
+
+### Where We Left Off
+- Shawn's bigger vision: any business, not just food/wellness-type industries, should be able to turn on "Booking" as their site's main action button - like a contact form that any business might want. Explicit concern before building: don't break the existing action-button flow other businesses already rely on.
+- Investigated the full flow first (Main Button picker -> `primary_intent` column -> `getSiteCTAs` resolution) and confirmed it was safe: every industry already has a working CTA behind scheduling intents, and adding new picker options is purely additive - it never touches any business's already-saved selection.
+- Also discovered something that changed the shape of the remaining work: basic-tier reservation requests already land as real leads today (type `reservation_request`), and food businesses already get their inbox relabeled "Reservations" when they lack the calendar add-on. Shawn's vision was already half-built, just limited to 10 of 22 industries.
+
+### What Changed
+- `SiteEditor.tsx`'s Main Button picker: added "Book Appointments" as a selectable option for the 13 industries that never had one (retail, makers_crafts, home_services, professional_services, and 9 others).
+- `toolPolicy.ts`: the dashboard inbox now relabels to "Reservations" (filtered view) whenever a business's action button is a scheduling intent but they lack the calendar add-on - extending the food-only pattern to every industry. New `primaryIntent` param threaded through `DashboardNav`/`DashboardPages` and their two call sites (`dashboard/(app)/layout.tsx`, `more/page.tsx`).
+
+### Not Yet Built
+- The in-context "want to upgrade?" prompt and side-by-side comparison view on that Reservations tab - this is workstream 1's second half, still needs its own build.
+
+### Test Next
+- Shawn: on a test business from one of the 13 newly-included industries, set the Main Button to "Book Appointments," confirm the dashboard inbox relabels to "Reservations" and filters correctly, and confirm the public site's CTA shows the right industry-specific label.
+
+---
+
 ## 2026-08-07 - Workstream 2: Multi-Block Daily Hours
 
 ### Where We Left Off
