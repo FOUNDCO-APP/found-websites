@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Featured Update Wrapped Like Homepage
+
+- [x] Featured Update preview and edit rows are now inside one wrapper like First Impression.
+- [x] Removed the overlapping clickable-looking "Photo off in this look" pill.
+- [x] Added passive helper text for photos saved while a non-image look is selected.
+- [ ] Shawn QA: Featured Update feels like one connected editing card on mobile.
+- [ ] Shawn QA: photo helper is readable and does not compete with the camera button.
+
+---
+
 ## 2026-08-07 - Home Featured Update Preview Cleanup
 
 - [x] Featured Update now uses one live-feeling preview instead of a disconnected image/card/control stack.

@@ -700,7 +700,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementTextColor = announcementIsLight ? "#111111" : "white"
   const announcementMutedColor = announcementIsLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.72)"
   const announcementSubtleColor = announcementIsLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)"
-  const announcementControlBg = announcementIsLight ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.06)"
   const announcementControlBorder = announcementIsLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"
   const announcementUsesImage = announcementStyle === "image"
   const announcementTargetLabel = announcementTargets.find(target => target.href === announcementHref)?.label ?? (announcementHref.startsWith("http") ? "Custom link" : announcementHref)
@@ -1077,8 +1076,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </button>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
-          <div style={{ borderRadius: 26, overflow: "hidden", background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, opacity: announcementEnabled ? 1 : 0.62 }}>
+        <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, borderRadius: 26, overflow: "hidden", border: `1px solid ${announcementEnabled ? GREEN + "33" : "rgba(255,255,255,0.1)"}`, backgroundColor: "rgba(255,255,255,0.035)", paddingBottom: 14, opacity: announcementEnabled ? 1 : 0.62 }}>
+          <div style={{ overflow: "hidden", background: announcementStyle === "light" ? "#f6f7f4" : announcementStyle === "accent" ? `linear-gradient(145deg, ${GREEN}26, rgba(255,255,255,0.05))` : "linear-gradient(145deg, rgba(50,208,116,0.11), rgba(255,255,255,0.045))", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
             {announcementUsesImage ? (
               <div style={{ minHeight: 250, position: "relative", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)" }}>
                 {announcementImage ? (
@@ -1100,24 +1099,22 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             ) : (
               <div style={{ position: "relative", padding: 18 }}>
                 <PhotoEditBadge onClick={() => setPhotoPickerSlot("announcement")} />
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
-                  <div style={{ ...TYPE.caption, color: GREEN }}>Live preview</div>
-                  {announcementImage && (
-                    <div style={{ padding: "5px 8px", borderRadius: 999, backgroundColor: announcementControlBg, border: `1px solid ${announcementControlBorder}`, color: announcementSubtleColor, fontSize: 11, fontWeight: 900 }}>
-                      Photo off in this look
-                    </div>
-                  )}
-                </div>
+                <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 10 }}>Live preview</div>
                 <h3 style={{ margin: 0, fontSize: 28, lineHeight: 1.05, fontWeight: 900, color: announcementTextColor, letterSpacing: 0 }}>{announcementTitle}</h3>
                 <p style={{ margin: "12px 0 0", fontSize: 16, lineHeight: 1.5, color: announcementMutedColor }}>{announcementBody}</p>
                 <div style={{ marginTop: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "10px 14px", borderRadius: 999, backgroundColor: announcementStyle === "light" ? GREEN : "rgba(255,255,255,0.1)", border: `1px solid ${announcementStyle === "light" ? GREEN : announcementControlBorder}`, color: announcementStyle === "light" ? "#07130d" : announcementTextColor, fontSize: 13, fontWeight: 900 }}>
                   {announcementLabel}
                 </div>
+                {announcementImage && (
+                  <p style={{ margin: "12px 44px 0 0", fontSize: 12, lineHeight: 1.35, color: announcementSubtleColor, fontWeight: 700 }}>
+                    Photo is saved for this update, but this look does not show photos. Choose Image below to use it.
+                  </p>
+                )}
               </div>
             )}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 10, padding: "4px 14px 0" }}>
             <button onClick={() => startEdit("announcement_title", announcementTitle)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Headline</span>
@@ -1134,7 +1131,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </button>
           </div>
 
-          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
+          <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", color: "white", textAlign: "left", cursor: "pointer" }}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button</span>
@@ -1155,7 +1152,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             </div>
           </div>
 
-          <div style={{ padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
+          <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Look</div>
             <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose how this update appears on your homepage.</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>

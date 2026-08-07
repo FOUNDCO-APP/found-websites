@@ -1,3 +1,19 @@
+## Session: August 7, 2026 - Featured Update Wrapped Like Homepage
+**AI:** Codex
+**Worked on:** Shawn showed that Featured Update still did not match the Homepage/First Impression editor pattern. Team direction: one wrapped editing surface, passive photo helper, no loose control stack.
+
+### Built
+- Featured Update preview and edit rows now sit inside one parent wrapper.
+- Removed the overlapping clickable-looking "Photo off in this look" pill.
+- Added passive helper copy for non-image looks when a photo is saved but not shown.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Home Featured Update Editor Matches Live Preview
 **AI:** Codex
 **Worked on:** Shawn approved the team direction to make Featured Update feel as intuitive as First Impression and to show a clearer Services Preview reference.

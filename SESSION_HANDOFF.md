@@ -1,5 +1,30 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Featured Update Wrapped Like Homepage
+
+### Where We Left Off
+- Shawn compared screenshots of the Homepage First Impression editor and Featured Update editor. First Impression felt right because the live preview, headline row, supporting line row, and AI row all lived inside one wrapper.
+- Featured Update still felt separate because the preview, Headline, Supporting line, Button, and Look controls were loose stacked cards. The "Photo off in this look" pill also overlapped the camera button and looked tappable.
+- Team direction: make Featured Update share the First Impression pattern. One parent editing surface, preview at top, controls inside the same wrapper. Convert the photo-off pill into passive helper text.
+
+### What Changed
+- Featured Update now has one outer wrapped editing surface around preview, Headline, Supporting line, Button, and Look.
+- Removed the clickable-looking "Photo off in this look" pill.
+- Added plain helper text under non-image previews: photo is saved for the update, but this look does not show photos; choose Image to use it.
+- Kept the camera button clear and separate from helper text.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+### Test Next
+- Shawn: open Ryan > Edit Website > Home > Featured Update. Confirm it now feels like one wrapped editor, like the Homepage card.
+- Confirm the photo helper no longer hides behind the camera or looks clickable.
+- Confirm the live preview button still looks like part of the public section.
+
+---
+
 ## 2026-08-07 - Home Featured Update Editor Matches Live Preview
 
 ### Where We Left Off
