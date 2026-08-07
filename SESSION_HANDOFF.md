@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Fix: Calendar Can No Longer Go Live With Zero Available Days
+
+### Where We Left Off
+- Follow-up to last night's booking work: Ryan set his hours to 9-5 Mon-Fri in the dashboard's Hours tab, but his public booking calendar showed zero bookable days at all.
+- Root cause: the Hours tab renders sensible Mon-Fri 9-5 defaults on load, before anything is fetched or saved - visually identical to a real saved schedule. Since the defaults already matched what Ryan wanted, he had no reason to think anything needed saving. `company_availability` stayed completely empty for his company; the public calendar only enables days it finds a real row for, so zero rows meant every day showed as unavailable.
+- Team explicitly ruled out a quick UI-only patch (a banner is easy to miss, same category of problem as invisible unsaved state) in favor of the real fix: seed real default rows the moment the calendar add-on actually activates, so the empty-table state can't occur in the first place.
+- Shawn was explicit he did NOT want any placeholder/assumed hours written into Ryan's specific account, since those weren't confirmed as his real hours - the fix built here is the general systemic one, not a data patch for Ryan's account.
+- Mid-build, Shawn asked whether this covers every activation path and every template - a scope-verification round found the original 3-path plan (free switch, paid checkout, Stripe webhook) was real but incomplete (an admin tool and manual DB edits could still bypass it), so a 4th backstop was added directly in the public `/book` page load itself.
+
+### What Changed
+- New `src/lib/bookings/ensureDefaultAvailability(companyId)` - checks for zero existing rows, seeds Mon-Fri 9-5 defaults only if genuinely empty, never touches real saved hours.
+- Wired into 4 places: `switchIncludedAddon()` (free Pro-plan switch), `markAddonActive()` (paid checkout, 3 call sites converge here), the Stripe webhook's subscription-sync handler, and a final backstop in `/[slug]/book/page.tsx` itself (catches any activation path that bypasses the app entirely - admin tools, manual DB edits).
+- Confirmed template-agnostic - this is shared dashboard/backend logic, not per-template code, so it applies to every business on all 6 templates automatically with no separate template work needed (unlike the earlier gallery-strip parity fix).
+- Added a saved/unsaved status badge to the Hours tab ("Live on your site" / "Unsaved changes" / "Not saved yet - tap Save below"), and made the Save button reachable even before the owner starts editing - previously it only appeared once something was actively being changed.
+
+### Test Next
+- Shawn: have Ryan open his Hours tab and confirm it now shows a clear status badge rather than looking ambiguously "already correct." Confirm a fresh test business activating the calendar add-on gets real bookable days immediately, with no manual save required first.
+
+---
+
 ## 2026-08-06 - Booking System: Retail/Makers/Nonprofit CTAs, /book Route, Custom Label
 
 ### Where We Left Off

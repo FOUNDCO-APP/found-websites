@@ -1,3 +1,25 @@
+## Session: August 7, 2026 - Fix: Calendar Can No Longer Go Live With Zero Available Days
+**AI:** Claude Code (Sonnet)
+**Worked on:** Follow-up to last night's booking work - Ryan set his hours (9-5 Mon-Fri) in the dashboard but his public booking calendar showed zero bookable days. Root cause: the Hours tab shows sensible defaults before anything is saved, visually identical to a real saved schedule, so an owner whose desired hours happen to match the defaults has no reason to hit Save. `company_availability` stayed empty; the public calendar only shows days it finds a real row for.
+
+### Team decision
+- Explicitly rejected a UI-only patch (banner/graying) as insufficient - "same category of failure, depends on the owner noticing something." Real fix: seed real availability rows the moment the add-on activates, removing the empty-table state entirely, paired with a lightweight status indicator for the ongoing-editing case.
+- Shawn explicitly declined writing placeholder/assumed hours into Ryan's specific account - this is the general systemic fix, not a manual data patch.
+- Mid-build scope-verification found the original 3-path plan (free switch, paid checkout, Stripe webhook) was real but incomplete - admin tools and manual DB edits could bypass all three - so a 4th backstop was added.
+
+### Built
+- `src/lib/bookings/ensureDefaultAvailability.ts` - seeds Mon-Fri 9-5 only when a company has zero rows; never touches real saved hours.
+- Wired into `switchIncludedAddon()`, `markAddonActive()` (covers 3 paid-checkout call sites), the Stripe webhook sync handler, and a final backstop directly in `/[slug]/book/page.tsx`'s page load.
+- Confirmed template-agnostic - shared backend logic, applies to all 6 templates automatically, no per-template work needed.
+- Hours tab: new saved/unsaved status badge, Save button now reachable even before the owner starts editing.
+
+### Verification
+- `npm run build` passed clean.
+
+### Test Next
+- Shawn: confirm Ryan's Hours tab shows the new status badge, and that a fresh test business activating the calendar add-on gets real bookable days with no manual save required first.
+
+---
 ## Session: August 6, 2026 - Booking System: Retail/Makers/Nonprofit CTAs, /book Route, Custom Label
 **AI:** Claude Code (Sonnet)
 **Worked on:** Real live-customer bug (Ryan, bike shop/retail, Found Pro) - switched to the Reservation Calendar add-on, dashboard worked, public site still showed a stale "Our Products" link because retail had no scheduling CTA at all. Root cause: retail was deliberately excluded from booking in the original locked plan; the free included-addon switcher doesn't enforce that exclusion the way the paid add-on flow does. Shawn decided to open booking to every industry instead of patching retail alone - bike repairs, fittings, and similar retail scheduling needs are real, not edge cases.
