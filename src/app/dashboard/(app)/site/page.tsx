@@ -47,6 +47,7 @@ export default async function SitePage() {
       plan={company.plan}
       subscriptionStatus={company.subscription_status}
       primaryActionOverride={company.primary_action_override ?? null}
+      bookingCtaLabel={company.booking_cta_label ?? null}
       vibe={company.vibe ?? 'bold'}
       layoutOverride={company.layout_override ?? null}
       primaryColor={company.primary_color}

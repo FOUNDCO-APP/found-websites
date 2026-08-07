@@ -8,7 +8,7 @@ type Props = {
   activeAddons?: string[]
 }
 
-const TARGETS = new Set(["/", "/contact", "/shop", "/menu", "/services", "/reserve", "/estimate", "/gallery"])
+const TARGETS = new Set(["/", "/contact", "/shop", "/menu", "/services", "/book", "/estimate", "/gallery"])
 
 function safeHref(value: unknown, fallback: string) {
   if (typeof value !== "string") return fallback

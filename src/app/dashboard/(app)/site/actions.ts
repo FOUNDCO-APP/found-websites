@@ -580,7 +580,7 @@ export async function updatePrimaryIntent(intent: string) {
   if (error) return { error: error.message }
 
   revalidatePath(`/${ctx.company.slug}`)
-  revalidatePath(`/${ctx.company.slug}/reserve`)
+  revalidatePath(`/${ctx.company.slug}/book`)
   revalidatePath(`/${ctx.company.slug}/menu`)
   return { success: true }
 }
@@ -779,6 +779,27 @@ export async function updatePrimaryActionOverride(key: string | null) {
   if (error) return { error: error.message }
 
   revalidatePath(`/${ctx.company.slug}`)
+  return { success: true }
+}
+
+// null/empty = use the industry's default booking CTA label. A short
+// (≤24 char) custom string overrides it everywhere that label is shown -
+// hero, sticky bar, the /book page itself.
+export async function updateBookingCtaLabel(label: string | null) {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const trimmed = label?.trim().slice(0, 24) || null
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ booking_cta_label: trimmed })
+    .eq("id", ctx.company.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/book`)
   return { success: true }
 }
 

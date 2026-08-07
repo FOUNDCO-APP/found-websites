@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateBookingCtaLabel, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -12,7 +12,7 @@ import { polishServices, polishWebsiteField, getAboutHeroSubtitle } from "@/lib/
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
-import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
+import { getAvailablePrimaryActions, getSiteCTAs, SCHEDULING_CTA } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
@@ -37,6 +37,7 @@ type Props = {
   plan: string | null
   subscriptionStatus: string | null
   primaryActionOverride: string | null
+  bookingCtaLabel: string | null
   vibe: string
   layoutOverride: string | null
   primaryColor: string
@@ -45,7 +46,7 @@ type Props = {
   disabledAddons: string[]
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, vibe, layoutOverride: initialLayoutOverride, primaryColor: initialPrimaryColor, navbarDark: initialNavbarDark, includedAddonSlug, disabledAddons }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, primaryActionOverride: initialOverride, bookingCtaLabel: initialBookingCtaLabel, vibe, layoutOverride: initialLayoutOverride, primaryColor: initialPrimaryColor, navbarDark: initialNavbarDark, includedAddonSlug, disabledAddons }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -69,6 +70,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [activeOverride, setActiveOverride] = useState<string | null>(initialOverride)
   const [savingOverride, setSavingOverride] = useState(false)
   const [overrideSaved, setOverrideSaved] = useState(false)
+  const [bookingCtaLabel, setBookingCtaLabel] = useState<string | null>(initialBookingCtaLabel)
+  const [editingBookingLabel, setEditingBookingLabel] = useState(false)
+  const [bookingLabelDraft, setBookingLabelDraft] = useState(initialBookingCtaLabel ?? "")
+  const [savingBookingLabel, setSavingBookingLabel] = useState(false)
   const [activeLayout, setActiveLayout] = useState<string | null>(initialLayoutOverride)
   const [savingLayout, setSavingLayout] = useState(false)
   const [activeColor, setActiveColor] = useState(initialPrimaryColor)
@@ -498,6 +503,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setTimeout(() => setOverrideSaved(false), 2500)
   }
 
+  async function saveBookingLabel(label: string | null) {
+    setSavingBookingLabel(true)
+    await updateBookingCtaLabel(label)
+    setBookingCtaLabel(label)
+    setSavingBookingLabel(false)
+    setEditingBookingLabel(false)
+  }
+
   async function saveLayout(key: string | null) {
     if (key === activeLayout) return
     setActiveLayout(key)
@@ -684,7 +697,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const announcementStyle: AnnouncementStyle = (["default", "light", "dark", "accent", "image"].includes(announcementStyleRaw) ? announcementStyleRaw : "default") as AnnouncementStyle
   const announcementImage = announcementPhotos[0]?.url ?? null
   const announcementTargets = isFoodCatalog
-    ? [{ label: "Menu", href: "/menu" }, { label: "Reservations", href: "/reserve" }, { label: "Contact", href: "/contact" }]
+    ? [{ label: "Menu", href: "/menu" }, { label: "Reservations", href: "/book" }, { label: "Contact", href: "/contact" }]
     : isShopCatalog
       ? [{ label: "Shop", href: "/shop" }, { label: "Products", href: "/shop" }, { label: "Contact", href: "/contact" }]
       : [{ label: "Services", href: "/services" }, { label: "Estimate", href: "/estimate" }, { label: "Contact", href: "/contact" }]
@@ -1289,6 +1302,97 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   )
                 })}
               </div>
+            </div>
+          </>
+        )
+      })()}
+      {(() => {
+        const defaultLabel = SCHEDULING_CTA[industryCategory]?.label
+        if (!defaultLabel) return null
+        return (
+          <>
+            <div style={{ height: 1, backgroundColor: "rgba(255,255,255,0.05)", margin: "32px 0" }}/>
+            <div style={{ padding: "0 20px" }}>
+              <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Booking Button Text</h2>
+              <p style={{ margin: "4px 0 12px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                What your booking button says, if you use one.
+              </p>
+              {editingBookingLabel ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <input
+                    value={bookingLabelDraft}
+                    onChange={e => setBookingLabelDraft(e.target.value.slice(0, 24))}
+                    placeholder={defaultLabel}
+                    maxLength={24}
+                    style={{
+                      padding: "14px 16px", borderRadius: 14, border: "1.5px solid rgba(255,255,255,0.14)",
+                      backgroundColor: "rgba(255,255,255,0.04)", color: "white", fontSize: 14, fontWeight: 600,
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button
+                      onClick={() => saveBookingLabel(bookingLabelDraft.trim() || null)}
+                      disabled={savingBookingLabel}
+                      style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 14, fontWeight: 800, cursor: savingBookingLabel ? "default" : "pointer" }}
+                    >
+                      {savingBookingLabel ? "Saving…" : "Save"}
+                    </button>
+                    <button
+                      onClick={() => { setEditingBookingLabel(false); setBookingLabelDraft(bookingCtaLabel ?? "") }}
+                      disabled={savingBookingLabel}
+                      style={{ flex: 1, padding: "12px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 14, fontWeight: 700, cursor: savingBookingLabel ? "default" : "pointer" }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <button
+                    onClick={() => saveBookingLabel(null)}
+                    disabled={savingBookingLabel}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "14px 18px", borderRadius: 16, cursor: savingBookingLabel ? "default" : "pointer",
+                      backgroundColor: !bookingCtaLabel ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                      border: `1.5px solid ${!bookingCtaLabel ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                      textAlign: "left",
+                    }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 700, color: !bookingCtaLabel ? GREEN : "rgba(255,255,255,0.8)" }}>
+                      {defaultLabel}
+                    </div>
+                    {!bookingCtaLabel && (
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => { setEditingBookingLabel(true); setBookingLabelDraft(bookingCtaLabel ?? "") }}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "14px 18px", borderRadius: 16, cursor: "pointer",
+                      backgroundColor: bookingCtaLabel ? `${GREEN}18` : "rgba(255,255,255,0.03)",
+                      border: `1.5px solid ${bookingCtaLabel ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
+                      textAlign: "left",
+                    }}
+                  >
+                    <div style={{ fontSize: 14, fontWeight: 700, color: bookingCtaLabel ? GREEN : "rgba(255,255,255,0.8)" }}>
+                      {bookingCtaLabel ? bookingCtaLabel : "Other — write your own"}
+                    </div>
+                    {bookingCtaLabel && (
+                      <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={BLACK} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )

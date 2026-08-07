@@ -97,6 +97,7 @@ export type Company = {
   industry_category: string
   primary_intent: string
   primary_action_override?: string | null
+  booking_cta_label?: string | null
   layout_override?: string | null
   included_addon_slug?: string | null
   disabled_addons?: string[] | null
@@ -151,6 +152,6 @@ export const intentHref: Record<string, string> = {
   quote: '/estimate',
   shop: '/shop',
   contact: '/contact',
-  reserve: '/reserve',
+  reserve: '/book',
   menu: '/menu',
 }

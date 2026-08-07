@@ -64,7 +64,7 @@ export function getSiteCopy(
       return {
         nudgeText: "Ready to dine with us?",
         nudgeLabel: "Reserve a Table",
-        nudgeHref: "/reserve",
+        nudgeHref: "/book",
         galleryCta: subIndustry ? vocabCta : "Reserve your table today.",
         galleryCtaHeading,
         faqQ: "How do I make a reservation?",
@@ -77,7 +77,7 @@ export function getSiteCopy(
       return {
         nudgeText: "Ready to schedule?",
         nudgeLabel: "Book an Appointment",
-        nudgeHref: "/reserve",
+        nudgeHref: "/book",
         galleryCta: subIndustry ? vocabCta : "Book your appointment today.",
         galleryCtaHeading,
         faqQ: "How do I book an appointment?",

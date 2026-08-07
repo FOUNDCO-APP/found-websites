@@ -4,27 +4,32 @@ export type CTA = { label: string; href: string }
 
 // The scheduling action — upgradeable to full calendar add-on
 export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
-  food:                  { label: "Reserve a Table",     href: "/reserve" },
-  wellness:              { label: "Book Now",             href: "/reserve" },
-  beauty:                { label: "Book Now",             href: "/reserve" },
-  fitness:               { label: "Book a Class",         href: "/reserve" },
-  healthcare:            { label: "Book Appointment",     href: "/reserve" },
+  food:                  { label: "Reserve a Table",     href: "/book" },
+  wellness:              { label: "Book Now",             href: "/book" },
+  beauty:                { label: "Book Now",             href: "/book" },
+  fitness:               { label: "Book a Class",         href: "/book" },
+  healthcare:            { label: "Book Appointment",     href: "/book" },
   home_services:         { label: "Get a Free Quote",     href: "/estimate" },
   cleaning:              { label: "Get a Free Quote",     href: "/estimate" },
   landscaping:           { label: "Get a Free Quote",     href: "/estimate" },
-  events:                { label: "Book Your Date",       href: "/reserve" },
-  pet_services:          { label: "Book Now",             href: "/reserve" },
-  automotive:            { label: "Schedule Service",     href: "/reserve" },
-  real_estate:           { label: "Schedule a Tour",      href: "/reserve" },
-  creative_services:     { label: "Book a Consultation",  href: "/reserve" },
-  home_based_food:       { label: "Place an Order",       href: "/reserve" },
-  education:             { label: "Book a Session",       href: "/reserve" },
-  music_performance:     { label: "Book Now",             href: "/reserve" },
-  professional_services: { label: "Schedule a Call",      href: "/reserve" },
-  childcare:             { label: "Schedule a Tour",      href: "/reserve" },
-  home_property:         { label: "Schedule a Visit",     href: "/reserve" },
+  events:                { label: "Book Your Date",       href: "/book" },
+  pet_services:          { label: "Book Now",             href: "/book" },
+  automotive:            { label: "Schedule Service",     href: "/book" },
+  real_estate:           { label: "Schedule a Tour",      href: "/book" },
+  creative_services:     { label: "Book a Consultation",  href: "/book" },
+  home_based_food:       { label: "Place an Order",       href: "/book" },
+  education:             { label: "Book a Session",       href: "/book" },
+  music_performance:     { label: "Book Now",             href: "/book" },
+  professional_services: { label: "Schedule a Call",      href: "/book" },
+  childcare:             { label: "Schedule a Tour",      href: "/book" },
+  home_property:         { label: "Schedule a Visit",     href: "/book" },
   audio_visual:          { label: "Get a Free Quote",     href: "/estimate" },
-  // retail, makers_crafts, nonprofit → no scheduling CTA
+  // Team-approved 2026-08-06 - these 3 were the only industries genuinely
+  // missing a scheduling CTA (confirmed against this file directly, after
+  // an earlier draft wrongly assumed 4 more were also missing).
+  retail:                { label: "Book an Appointment",  href: "/book" },
+  makers_crafts:         { label: "Request a Commission", href: "/book" },
+  nonprofit:             { label: "Plan Your Visit",      href: "/book" },
 }
 
 // The content action — upgradeable via online_ordering or shopping_cart add-ons
@@ -102,11 +107,17 @@ function fallbackCTA(primaryIntent: string, phone: string | null): CTA {
 // "reserve" today still works fine if they add online ordering next month).
 export type PrimaryActionKey = "order" | "shop" | "reserve" | "content" | "call"
 
-function resolveActionKey(key: PrimaryActionKey, industry: string, activeAddons: string[], phone: string | null): CTA | null {
+function schedulingCTAFor(industry: string, bookingCtaLabel?: string | null): CTA | null {
+  const base = SCHEDULING_CTA[industry]
+  if (!base) return null
+  return bookingCtaLabel ? { ...base, label: bookingCtaLabel } : base
+}
+
+function resolveActionKey(key: PrimaryActionKey, industry: string, activeAddons: string[], phone: string | null, bookingCtaLabel?: string | null): CTA | null {
   switch (key) {
     case "order": return ORDERING_INDUSTRIES.has(industry) && activeAddons.includes("online_ordering") ? orderingCTA() : null
     case "shop": return SHOPPING_INDUSTRIES.has(industry) && activeAddons.includes("shopping_cart") ? shoppingCTA() : null
-    case "reserve": return SCHEDULING_CTA[industry] ?? null
+    case "reserve": return schedulingCTAFor(industry, bookingCtaLabel)
     case "content": return CONTENT_CTA[industry] ?? null
     case "call": return phone ? callCTA(phone) : null
     default: return null
@@ -116,26 +127,26 @@ function resolveActionKey(key: PrimaryActionKey, industry: string, activeAddons:
 // Every real option actually available to this business right now, in a
 // fixed priority order - used both to resolve a manual override safely and
 // to find a genuine "other" option for the secondary/sticky-bar slot.
-function availableOptions(industry: string, activeAddons: string[], phone: string | null): { key: PrimaryActionKey; cta: CTA }[] {
+function availableOptions(industry: string, activeAddons: string[], phone: string | null, bookingCtaLabel?: string | null): { key: PrimaryActionKey; cta: CTA }[] {
   const keys: PrimaryActionKey[] = ["order", "shop", "reserve", "content", "call"]
   return keys
-    .map(key => ({ key, cta: resolveActionKey(key, industry, activeAddons, phone) }))
+    .map(key => ({ key, cta: resolveActionKey(key, industry, activeAddons, phone, bookingCtaLabel) }))
     .filter((o): o is { key: PrimaryActionKey; cta: CTA } => o.cta !== null)
 }
 
 // What the dashboard's "primary action" picker should actually offer -
 // only real, currently-working options, never something that doesn't
 // function for this business's current setup.
-export function getAvailablePrimaryActions(industry: string, activeAddons: string[], phone: string | null): { key: PrimaryActionKey; label: string }[] {
-  return availableOptions(industry, activeAddons, phone).map(o => ({ key: o.key, label: o.cta.label }))
+export function getAvailablePrimaryActions(industry: string, activeAddons: string[], phone: string | null, bookingCtaLabel?: string | null): { key: PrimaryActionKey; label: string }[] {
+  return availableOptions(industry, activeAddons, phone, bookingCtaLabel).map(o => ({ key: o.key, label: o.cta.label }))
 }
 
 // Auto-mode primary: same intent-driven logic every layout already used
 // directly, just centralized and now addon-aware for content intents too.
-function autoPrimaryCTA(company: { industry_category: string; primary_intent: string; phone: string | null }, activeAddons: string[]): CTA {
+function autoPrimaryCTA(company: { industry_category: string; primary_intent: string; phone: string | null; booking_cta_label?: string | null }, activeAddons: string[]): CTA {
   const intent = company.primary_intent
   if (SCHEDULING_INTENTS.has(intent)) {
-    return SCHEDULING_CTA[company.industry_category] ?? fallbackCTA(intent, company.phone)
+    return schedulingCTAFor(company.industry_category, company.booking_cta_label) ?? fallbackCTA(intent, company.phone)
   }
   if (CONTENT_INTENTS.has(intent)) {
     return contentCTAFor(company.industry_category, activeAddons) ?? fallbackCTA(intent, company.phone)
@@ -151,10 +162,10 @@ function autoPrimaryCTA(company: { industry_category: string; primary_intent: st
 // defined as "whichever real option isn't already the primary," not as
 // its own separate guess.
 export function getSiteCTAs(
-  company: { industry_category: string; primary_intent: string; phone: string | null; primary_action_override?: string | null },
+  company: { industry_category: string; primary_intent: string; phone: string | null; primary_action_override?: string | null; booking_cta_label?: string | null },
   activeAddons: string[]
 ): { primary: CTA; secondary: CTA | null; isAuto: boolean } {
-  const options = availableOptions(company.industry_category, activeAddons, company.phone)
+  const options = availableOptions(company.industry_category, activeAddons, company.phone, company.booking_cta_label)
   const overrideKey = (company.primary_action_override ?? null) as PrimaryActionKey | null
   const overrideOption = overrideKey ? options.find(o => o.key === overrideKey) ?? null : null
 
