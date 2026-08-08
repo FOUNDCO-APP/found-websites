@@ -688,7 +688,7 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   const originalBytes = await file.arrayBuffer()
   const cleanedBytes = await removeLightLogoBackground(originalBytes, file.type)
   const bytes = cleanedBytes ?? Buffer.from(originalBytes)
-  const analysisBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const analysisBytes = new Uint8Array(bytes).buffer
   const contentType = cleanedBytes ? "image/png" : file.type
   const storedExt = cleanedBytes ? "png" : ext
   // Cache-bust: same filename every re-upload would otherwise keep serving

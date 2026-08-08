@@ -44,7 +44,7 @@ export async function uploadLogoFile(
     ? await removeLightLogoBackground(originalBytes, file.type)
     : null
   const bytes = cleanedBytes ?? Buffer.from(originalBytes)
-  const analysisBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const analysisBytes = new Uint8Array(bytes).buffer
   const storedExt = cleanedBytes ? "png" : ext
   const contentType = cleanedBytes ? "image/png" : file.type
   const path = variant === "light"
