@@ -1,3 +1,18 @@
+## Session: August 8, 2026 - Photos Filter Sheet Refinement
+**AI:** Codex
+
+### Built
+- Replaced the visible Photos filter chip row with a compact iOS-style descending-lines filter button.
+- Added a bottom filter sheet for `All`, `Favorites`, and `Not on site` with counts and owner-friendly descriptions.
+- Kept the main Photos tabs clean: `All Photos`, `Gallery`, and `Albums`.
+- Active filters now show as a small status line under the tabs.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Photos IA Cleanup: Favorites and Albums
 **AI:** Codex
 

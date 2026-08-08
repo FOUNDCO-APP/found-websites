@@ -112,6 +112,7 @@ function PhotosPageInner() {
   const [placingSlot, setPlacingSlot] = useState<string | null>(null)
   const [placeReassignConfirm, setPlaceReassignConfirm] = useState<{ slot: string; label: string } | null>(null)
   const [photoNotice, setPhotoNotice] = useState<PhotoNotice | null>(null)
+  const [showPhotoFilters, setShowPhotoFilters] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const photoNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -567,69 +568,65 @@ function PhotosPageInner() {
           zIndex: 30,
           padding: "0 24px 14px",
           display: "flex",
+          flexDirection: "column",
           gap: 0,
           background: "linear-gradient(to bottom, rgba(8,10,9,0.98) 0%, rgba(8,10,9,0.94) 78%, rgba(8,10,9,0) 100%)",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
         }}>
-          {(["all", "website", "albums"] as View[]).map(v => {
-            const active = view === v
-            return (
-              <button key={v} onClick={() => { setView(v); if (v !== "all") setPhotoFilter("all") }} style={{
-                flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
-                backgroundColor: "transparent",
-                borderBottom: `2px solid ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.08)"}`,
-                color: active ? "white" : "rgba(255,255,255,0.3)",
-                ...TYPE.footnote, fontWeight: active ? 700 : 400,
-                transition: "all 0.15s ease",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-              }}>
-                {TAB_LABELS[v]}
-                {TAB_COUNTS[v] > 0 && (
-                  <span style={{
-                    fontSize: 10, fontWeight: 700,
-                    backgroundColor: active ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
-                    color: active ? FOUND_BLACK : "rgba(255,255,255,0.4)",
-                    borderRadius: 100, padding: "2px 6px",
-                  }}>{TAB_COUNTS[v]}</span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {!activeAlbum && view === "all" && photos.length > 0 && (
-        <div style={{ padding: "0 24px 18px", display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none" }}>
-          {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
-            const active = photoFilter === filter
-            return (
-              <button
-                key={filter}
-                onClick={() => setPhotoFilter(filter)}
-                style={{
-                  flex: "0 0 auto",
-                  minHeight: 34,
-                  padding: "0 13px",
-                  borderRadius: 999,
-                  border: `1px solid ${active ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.11)"}`,
-                  backgroundColor: active ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.055)",
-                  color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  ...TYPE.footnote,
-                  fontWeight: 800,
-                }}
-              >
-                {FILTER_LABELS[filter]}
-                {FILTER_COUNTS[filter] > 0 && (
-                  <span style={{ fontSize: 10, fontWeight: 900, color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{FILTER_COUNTS[filter]}</span>
-                )}
-              </button>
-            )
-          })}
+          <div style={{ display: "flex", alignItems: "stretch", gap: 10, width: "100%" }}>
+            <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 0 }}>
+              {(["all", "website", "albums"] as View[]).map(v => {
+                const active = view === v
+                return (
+                  <button key={v} onClick={() => { setView(v); if (v !== "all") setPhotoFilter("all") }} style={{
+                    flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
+                    backgroundColor: "transparent",
+                    borderBottom: `2px solid ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.08)"}`,
+                    color: active ? "white" : "rgba(255,255,255,0.3)",
+                    ...TYPE.footnote, fontWeight: active ? 700 : 400,
+                    transition: "all 0.15s ease",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+                  }}>
+                    {TAB_LABELS[v]}
+                    {TAB_COUNTS[v] > 0 && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700,
+                        backgroundColor: active ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
+                        color: active ? FOUND_BLACK : "rgba(255,255,255,0.4)",
+                        borderRadius: 100, padding: "2px 6px",
+                      }}>{TAB_COUNTS[v]}</span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              onClick={() => setShowPhotoFilters(true)}
+              disabled={view !== "all" || photos.length === 0}
+              aria-label="Filter photos"
+              style={{
+                width: 42,
+                minHeight: 42,
+                borderRadius: 14,
+                border: `1px solid ${view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.1)"}`,
+                backgroundColor: view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.055)",
+                color: view === "all" && photoFilter !== "all" ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: view === "all" && photos.length > 0 ? "pointer" : "default",
+                opacity: view === "all" && photos.length > 0 ? 1 : 0.34,
+              }}
+            >
+              <FilterLinesIcon />
+            </button>
+          </div>
+          {view === "all" && photoFilter !== "all" && (
+            <p style={{ margin: "8px 0 0", ...TYPE.caption, color: "rgba(255,255,255,0.48)" }}>
+              Showing {FILTER_LABELS[photoFilter].toLowerCase()} photos.
+            </p>
+          )}
         </div>
       )}
 
@@ -810,6 +807,16 @@ function PhotosPageInner() {
           copied={copied}
           onShare={handleShare}
           onClose={() => setShareAlbum(null)}
+        />
+      )}
+
+      {showPhotoFilters && (
+        <PhotoFilterSheet
+          active={photoFilter}
+          labels={FILTER_LABELS}
+          counts={FILTER_COUNTS}
+          onSelect={(filter) => { setPhotoFilter(filter); setShowPhotoFilters(false) }}
+          onClose={() => setShowPhotoFilters(false)}
         />
       )}
 
@@ -1575,6 +1582,127 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
         </button>
       )}
     </div>
+  )
+}
+
+function FilterLinesIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 7h14" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+      <path d="M7.5 12h9" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+      <path d="M10 17h4" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function PhotoFilterSheet({ active, labels, counts, onSelect, onClose }: {
+  active: PhotoFilter
+  labels: Record<PhotoFilter, string>
+  counts: Record<PhotoFilter, number>
+  onSelect: (filter: PhotoFilter) => void
+  onClose: () => void
+}) {
+  const descriptions: Record<PhotoFilter, string> = {
+    all: "Everything in your photo library.",
+    favorites: "Your best shots, saved for quick access.",
+    unused: "Photos not in your gallery or on a page.",
+  }
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.58)",
+          backdropFilter: "blur(7px)",
+          WebkitBackdropFilter: "blur(7px)",
+          zIndex: 80,
+        }}
+      />
+      <div style={{
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 90,
+        backgroundColor: "#151816",
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        border: "1px solid rgba(255,255,255,0.09)",
+        padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
+        boxShadow: "0 -24px 80px rgba(0,0,0,0.5)",
+      }}>
+        <div style={{ width: 42, height: 4, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.22)", margin: "0 auto 20px" }} />
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
+          <div>
+            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 950, letterSpacing: "0.16em", textTransform: "uppercase", color: SIGNAL_GREEN }}>Filter photos</p>
+            <h2 style={{ margin: 0, fontSize: 26, lineHeight: 1.05, fontWeight: 900, color: "white" }}>Show me</h2>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close filters"
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: "50%",
+              border: "none",
+              backgroundColor: "rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.7)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
+            const selected = active === filter
+            return (
+              <button
+                key={filter}
+                onClick={() => onSelect(filter)}
+                style={{
+                  minHeight: 68,
+                  borderRadius: 18,
+                  border: `1px solid ${selected ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.09)"}`,
+                  backgroundColor: selected ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.045)",
+                  color: "white",
+                  cursor: "pointer",
+                  padding: "0 16px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  textAlign: "left",
+                }}
+              >
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ display: "block", fontSize: 16, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.92)" }}>{labels[filter]}</span>
+                  <span style={{ display: "block", marginTop: 3, fontSize: 12, lineHeight: 1.35, fontWeight: 650, color: "rgba(255,255,255,0.48)" }}>{descriptions[filter]}</span>
+                </span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                  <span style={{ fontSize: 13, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{counts[filter]}</span>
+                  {selected && (
+                    <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </span>
+                  )}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </>
   )
 }
 

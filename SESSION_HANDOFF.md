@@ -1,5 +1,16 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Photos Filter Sheet Refinement
+
+- Shawn approved the team/Jony direction to remove the visible filter chips under Photos and use a cleaner iOS Photos-style filter control.
+- Photos tabs now stay focused on `All Photos`, `Gallery`, and `Albums`.
+- The old visible `All / Favorites / Not on site` chip row is now behind a compact descending-lines filter icon to the right of the tabs.
+- Tapping the filter icon opens a bottom sheet with `All`, `Favorites`, and `Not on site`, each with plain-language descriptions and counts.
+- The filter control is only active on `All Photos`; switching to `Gallery` or `Albums` resets back to all photos.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Photos IA Cleanup: Favorites and Albums
 
 - Shawn corrected the previous photo direction: the website photo flow already works, and the priority is reorganizing the Photos page so it feels premium and owner-friendly.
