@@ -37,7 +37,7 @@ export default async function SubscribePage({ params }: { params: Promise<{ slug
   return (
     <section className="min-h-screen" style={{ background: "#f9f9f9" }}>
       {/* Hero */}
-      <div className="relative" style={{ background: gradient, padding: "56px 24px 48px" }}>
+      <div className="relative" style={{ background: gradient, padding: "72px 24px 56px" }}>
         <div className="max-w-lg mx-auto text-center">
           <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)" }}>
             {company.name}
@@ -52,9 +52,9 @@ export default async function SubscribePage({ params }: { params: Promise<{ slug
       </div>
 
       {/* Perks + Form */}
-      <div className="max-w-lg mx-auto" style={{ padding: "0 20px 60px" }}>
+      <div className="max-w-lg mx-auto" style={{ padding: "28px 20px 76px" }}>
         {/* Perks */}
-        <div style={{ margin: "-24px 0 28px", backgroundColor: "white", borderRadius: 16, padding: "20px 22px", boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
+        <div style={{ margin: "0 0 28px", backgroundColor: "white", borderRadius: 16, padding: "20px 22px", boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
           <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 800, letterSpacing: "0.18em", textTransform: "uppercase", color: primary }}>
             What you get
           </p>

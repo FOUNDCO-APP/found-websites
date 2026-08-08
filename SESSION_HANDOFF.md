@@ -1,5 +1,17 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Email Signup Modal and Subscribe Fix
+
+- Shawn QA confirmed public signup entry points are correctly gated: email-marketing sites show them, non-email-marketing sites do not.
+- New issue from Lucky screenshots: `/subscribe` looked visually broken on mobile, the sticky public CTA crowded the form, and saving a signup could fail with `Could not save this signup.`
+- Team decision: homepage `Join the List` should open a premium modal; `/subscribe` remains for QR codes, shared links, and footer/direct traffic.
+- API fix: `/api/subscribe` no longer relies on a fragile Supabase `upsert` conflict target. It now finds an existing contact by company/email and updates it, otherwise inserts a new contact.
+- UX fix: public sticky CTA bar now hides on `/subscribe` and `/unsubscribe`.
+- Visual fix: standalone `/subscribe` page spacing was loosened so the perks card no longer tucks under the hero.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Public Email Signup Entry Points
 
 - Shawn verified Lucky's subscriber flow works, then flagged the real UX issue: public guest websites did not give customers an obvious place to join the list.

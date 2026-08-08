@@ -1,3 +1,19 @@
+## Session: August 8, 2026 - Email Signup Modal and Subscribe Fix
+**AI:** Codex
+
+### Built
+- Homepage `Join the List` now opens a signup modal for a faster, more premium public flow.
+- The standalone `/subscribe` page remains for QR codes, shared links, and footer/direct traffic.
+- `/api/subscribe` now updates existing contacts by company/email or inserts new contacts without depending on a database conflict rule.
+- Public sticky CTA bar is hidden on `/subscribe` and `/unsubscribe`.
+- Standalone subscribe page spacing was cleaned up so the perks card and form do not feel tucked behind the hero.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Public Email Signup Entry Points
 **AI:** Codex
 

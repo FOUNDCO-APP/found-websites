@@ -34,6 +34,7 @@ export default function StickyCtaBar({
   }, [delayUntilScroll])
 
   // Hide when already on the destination page
+  if (pathname.endsWith("/subscribe") || pathname.endsWith("/unsubscribe")) return null
   if (matchPath && (pathname === matchPath || pathname.endsWith(matchPath))) return null
   if (!pastHero) return null
 

@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Email Signup Modal and Subscribe Fix
+
+- [x] Keep `/subscribe` available for QR/direct links.
+- [x] Change homepage `Join the List` into a modal signup flow.
+- [x] Hide the sticky public CTA bar on `/subscribe` and `/unsubscribe`.
+- [x] Fix `/api/subscribe` so existing contacts update without relying on a database conflict rule.
+- [x] Polish standalone `/subscribe` spacing.
+- [x] Verify `git diff --check` and `npm run build`.
+- [ ] Shawn QA: homepage `Join the List` opens a modal and successfully saves.
+- [ ] Shawn QA: footer/direct `/subscribe` page looks clean and saves.
+
+---
+
 ## 2026-08-08 - Public Email Signup Entry Points
 
 - [x] Add a shared public homepage signup section gated by the effective `email_marketing` add-on.
@@ -7,8 +20,8 @@
 - [x] Keep the implementation shared across templates instead of Lucky-only.
 - [x] Update Marketing dashboard copy so owners understand customers can join from the website or QR/link.
 - [x] Verify `git diff --check` and `npm run build`.
-- [ ] Shawn QA: Lucky or another email-marketing site shows `Stay in the loop.` near the bottom of the homepage.
-- [ ] Shawn QA: a site without email marketing does not show the signup section or footer link.
+- [x] Shawn QA: Lucky or another email-marketing site shows `Stay in the loop.` near the bottom of the homepage.
+- [x] Shawn QA: a site without email marketing does not show the signup section or footer link.
 
 ---
 

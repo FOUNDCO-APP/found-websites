@@ -34,12 +34,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Upsert contact by email (or phone if no email)
+    const emailValue = email?.toLowerCase().trim() || null
+    const phoneValue = phone?.trim() || null
+
     const contactData: Record<string, unknown> = {
       company_id,
       name: name.trim(),
-      phone: phone?.trim() || null,
-      email: email?.toLowerCase().trim() || null,
+      phone: phoneValue,
+      email: emailValue,
       source: "subscribe_page",
       email_subscribed: true,
       sms_subscribed: true,
@@ -53,12 +55,26 @@ export async function POST(req: NextRequest) {
     if (pet_birthday_month) contactData.pet_birthday_month = Number(pet_birthday_month)
     if (pet_birthday_day) contactData.pet_birthday_day = Number(pet_birthday_day)
 
-    if (email) {
-      const { error } = await admin
+    if (emailValue) {
+      const { data: existingRows, error: lookupError } = await admin
         .from("contacts")
-        .upsert(contactData, { onConflict: "company_id,email", ignoreDuplicates: false })
+        .select("id")
+        .eq("company_id", company_id)
+        .eq("email", emailValue)
+        .limit(1)
+
+      if (lookupError) {
+        console.error("[subscribe] lookup error:", lookupError)
+        return NextResponse.json({ error: "Could not save this signup." }, { status: 500 })
+      }
+
+      const existing = existingRows?.[0]
+      const { error } = existing
+        ? await admin.from("contacts").update(contactData).eq("id", existing.id)
+        : await admin.from("contacts").insert(contactData)
+
       if (error) {
-        console.error("[subscribe] upsert error:", error)
+        console.error("[subscribe] save error:", error)
         return NextResponse.json({ error: "Could not save this signup." }, { status: 500 })
       }
     } else {
