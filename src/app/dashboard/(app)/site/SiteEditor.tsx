@@ -50,6 +50,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
   const [editValue, setEditValue] = useState("")
+  const [announcementPagePickerOpen, setAnnouncementPagePickerOpen] = useState(false)
   const [regenerating, setRegenerating] = useState<Section | null>(null)
   const [saved, setSaved] = useState<string | null>(null)
   const [editingService, setEditingService] = useState<number | null>(null)
@@ -378,6 +379,31 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         setConfig(prev => ({ ...prev, [field]: previousValue }))
         setSaved(null)
         flashSaveError()
+      }
+    })
+  }
+
+  function saveAnnouncementButtonAction(target: { label: string; href: string }) {
+    const updates = {
+      announcement_cta_href: target.href,
+      announcement_cta_label: target.label,
+    }
+    const previousHref = config.announcement_cta_href
+    const previousLabel = config.announcement_cta_label
+    setConfig(prev => ({ ...prev, ...updates }))
+    setSaved("announcement_cta_href")
+    setTimeout(() => setSaved(null), 2500)
+    startTransition(async () => {
+      const results = await Promise.all([
+        updateSiteField("announcement_cta_href", target.href),
+        updateSiteField("announcement_cta_label", target.label),
+      ])
+      if (results.some(result => result && "error" in result)) {
+        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref, announcement_cta_label: previousLabel }))
+        setSaved(null)
+        flashSaveError()
+      } else {
+        flashSaveNotice("Featured update button was saved.", publicSiteOrigin)
       }
     })
   }
@@ -714,18 +740,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { industry_category: industryCategory, primary_intent: activeIntent, phone: company.phone, primary_action_override: "content", booking_cta_label: bookingCtaLabel },
     effectiveAddons
   ).primary.href
+  const announcementPageTargets = [
+    { label: "Home", href: "/" },
+    { label: "About", href: "/about" },
+    { label: vocabServicesLabel, href: announcementContentHref },
+    { label: bookingCtaLabel || "Booking", href: "/book" },
+    { label: "Gallery", href: "/gallery" },
+    { label: "Contact", href: "/contact" },
+  ].filter((target, index, all) => all.findIndex(item => item.href === target.href) === index)
   const announcementStaleContentHref = ["/shop", "/menu", "/order", "/services"].includes(announcementHref)
   const announcementResolvedHref = announcementTargets.some(target => target.href === announcementHref)
     ? announcementHref
     : announcementStaleContentHref
       ? announcementContentHref
       : announcementTargets[0]?.href ?? "/contact"
-  const announcementTargetLabel = announcementTargets.find(target => target.href === announcementResolvedHref)?.label ?? (announcementResolvedHref.startsWith("http") ? "custom link" : "that page")
-  const announcementDestinationText = announcementResolvedHref.startsWith("tel:")
-    ? "Starts a phone call"
-    : announcementResolvedHref.startsWith("http")
-      ? "Opens your custom link"
-      : `Opens ${announcementTargetLabel} page`
   const announcementLookOptions: { value: AnnouncementStyle; label: string }[] = [
     { value: "light", label: "Light" },
     { value: "dark", label: "Dark" },
@@ -1160,25 +1188,28 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
 
           <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
-            <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", padding: 0, border: "none", background: "transparent", color: "white", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button</span>
-                <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
-                <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>{announcementDestinationText}</span>
-              </span>
-              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
-            </button>
+            <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button action</div>
+            <div style={{ fontSize: 12, lineHeight: 1.35, color: "rgba(255,255,255,0.48)", marginBottom: 10 }}>Choose what happens when customers tap the button.</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 12 }}>
               {announcementTargets.map(target => (
-                <button key={target.href} onClick={() => saveConfigField("announcement_cta_href", target.href)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementResolvedHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementResolvedHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementResolvedHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <button key={target.href} onClick={() => saveAnnouncementButtonAction(target)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementResolvedHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementResolvedHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementResolvedHref === target.href ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {target.label}
                 </button>
               ))}
-              <button onClick={() => startEdit("announcement_cta_href", announcementHref)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementHref.startsWith("http") ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref.startsWith("http") ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref.startsWith("http") ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <button onClick={() => setAnnouncementPagePickerOpen(true)} style={{ minWidth: 0, padding: "10px 12px", borderRadius: 999, border: `1px solid ${announcementHref.startsWith("http") ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementHref.startsWith("http") ? `${GREEN}1f` : "rgba(255,255,255,0.04)", color: announcementHref.startsWith("http") ? GREEN : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: 900, cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 Other page
               </button>
             </div>
           </div>
+
+          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+            <span style={{ minWidth: 0 }}>
+              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button words</span>
+              <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
+              <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>This is what customers see on the button.</span>
+            </span>
+            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+          </button>
 
           <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Banner style</div>
@@ -1785,6 +1816,33 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </>
         )
       })()}
+      {announcementPagePickerOpen && (
+        <>
+          <div onClick={() => setAnnouncementPagePickerOpen(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
+            <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 8 }}>Other page</div>
+            <h3 style={{ margin: "0 0 6px", fontSize: 22, lineHeight: 1.15, fontWeight: 900, color: "white" }}>Choose a page.</h3>
+            <p style={{ margin: "0 0 18px", fontSize: 14, lineHeight: 1.45, color: "rgba(255,255,255,0.62)" }}>
+              Pick where this Featured Update button should send customers.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 9 }}>
+              {announcementPageTargets.map(target => (
+                <button
+                  key={target.href}
+                  onClick={() => { saveAnnouncementButtonAction(target); setAnnouncementPagePickerOpen(false) }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 16px", borderRadius: 16, border: `1px solid ${announcementResolvedHref === target.href ? GREEN + "66" : "rgba(255,255,255,0.12)"}`, backgroundColor: announcementResolvedHref === target.href ? `${GREEN}1f` : "rgba(255,255,255,0.045)", color: announcementResolvedHref === target.href ? GREEN : "white", fontSize: 15, fontWeight: 900, cursor: "pointer", textAlign: "left" }}
+                >
+                  <span>{target.label}</span>
+                  {announcementResolvedHref === target.href && <span style={{ fontSize: 12, color: GREEN }}>Selected</span>}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setAnnouncementPagePickerOpen(false)} style={{ width: "100%", marginTop: 14, padding: "14px 0", borderRadius: 16, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
       {editing && (
         <div onTouchStart={handleEditorTouchStart} onTouchMove={handleEditorTouchMove} style={{ position: "fixed", inset: 0, zIndex: 90, backgroundColor: "#111613", display: "flex", flexDirection: "column", overflow: "hidden", overscrollBehavior: "none", touchAction: "none" }}>
           <div style={{ flexShrink: 0, padding: "calc(env(safe-area-inset-top, 0px) + 12px) 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(17,22,19,0.98)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)" }}>
@@ -1805,7 +1863,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   contact_form_subtitle: "Form Supporting Line",
                   announcement_title: "Featured Update Headline",
                   announcement_body: "Featured Update Copy",
-                  announcement_cta_label: "Featured Update Button",
+                  announcement_cta_label: "Featured Update Button Words",
                   announcement_cta_href: "Featured Update Link",
                 }[editing] ?? editing}
               </div>

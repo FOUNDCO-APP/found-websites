@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Featured Update Button Action/Words Split
+
+- [x] Featured Update now separates Button action from Button words.
+- [x] Action choices update visible button words at the same time.
+- [x] Other page opens a page picker instead of raw `/path` or `tel:` editing.
+- [ ] Shawn QA: choosing Call Us changes the public button to call and updates the visible words.
+- [ ] Shawn QA: Other page picker feels owner-friendly and does not expose technical links.
+
+---
+
 ## 2026-08-07 - Featured Update Dynamic Destinations
 
 - [x] Featured Update button choices now respect active add-ons and live site paths.

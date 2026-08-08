@@ -1,3 +1,19 @@
+## Session: August 7, 2026 - Featured Update Button Action vs Button Words
+**AI:** Codex
+
+### Built
+- Split Featured Update button controls into `Button action` and `Button words`.
+- Action choices now save the destination and visible button text together.
+- `Other page` now opens a plain page picker instead of the raw link editor.
+- Updated the button-words edit sheet label to make clear it only changes visible text.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Featured Update Destinations Use Real Active Site Paths
 **AI:** Codex
 

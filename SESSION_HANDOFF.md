@@ -1,5 +1,15 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Featured Update Button Action vs Button Words
+
+- Shawn found the remaining UX issue: choosing `Call Us` or `Contact` changed the action, but the visible button could still say `See our services`, and `Other page` opened raw technical values like `tel:` or `/services`.
+- Team fix: Featured Update now separates `Button action` from `Button words`.
+- Selecting an action now saves both the destination and the visible words together, so `Call Us` becomes a call action with `Call Us` button text.
+- `Other page` now opens a plain page picker (`Home`, `About`, services/products page, booking, `Gallery`, `Contact`) instead of exposing raw URLs.
+- Verification: `git diff --check`, `npx tsc --noEmit`, and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-07 - Featured Update Destinations Use Real Active Site Paths
 
 - Shawn found Ryan's Featured Update button options still exposed `Shop` and `Products` together, selected both because they shared `/shop`, and showed "Opens Shop page" even though Ryan does not have the shopping-cart add-on active.
