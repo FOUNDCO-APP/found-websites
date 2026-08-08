@@ -1,3 +1,20 @@
+## Session: August 8, 2026 - Photos IA Cleanup: Favorites and Albums
+**AI:** Codex
+
+### Built
+- Reorganized the dashboard Photos page around owner-facing tabs: `All Photos`, `On Website`, `Favorites`, and `Albums`.
+- Removed the main Photos `Social` tab and old Social Assistant workspace from the active UI.
+- Kept the star action, but it now reads as `Favorite` instead of Social.
+- `On Website` now shows photos used anywhere on the public website, including gallery-hearted photos and exact section placements.
+- Photos page album language now consistently says Albums.
+- Empty states were rewritten in plain owner language.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Email Signup Modal and Subscribe Fix
 **AI:** Codex
 

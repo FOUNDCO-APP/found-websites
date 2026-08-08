@@ -1,5 +1,19 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Photos IA Cleanup: Favorites and Albums
+
+- Shawn corrected the previous photo direction: the website photo flow already works, and the priority is reorganizing the Photos page so it feels premium and owner-friendly.
+- Team/Jony direction: remove the broken Social promise from the Photos page, keep the star as `Favorites`, remove `Unsorted`, and make Albums the owner-facing folder/share concept.
+- Photos page tabs are now `All Photos`, `On Website`, `Favorites`, and `Albums`.
+- `All Photos` shows every uploaded/taken photo. `On Website` now includes both hearted gallery photos and photos placed into website sections (`website_section` or `in_gallery`). `Favorites` uses the existing `for_social` storage field for now but no longer exposes Social language.
+- The old Social Assistant workspace and social-post sheet are removed from the active Photos page UI/bundle. The underlying `/dashboard/api/social-posts` route and database field still exist for a future deliberate rebuild.
+- Albums language is now fixed to Albums on the Photos page instead of industry-specific Projects/Collections labels.
+- Empty states now use plain owner language: take your first photo, no website photos yet, star your best photos, create an album.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+- Pending next phase: add `Add to product` / `Add to menu item` from the photo action flow for retail, shopping cart, and restaurant businesses.
+
+---
+
 ## 2026-08-08 - Email Signup Modal and Subscribe Fix
 
 - Shawn QA confirmed public signup entry points are correctly gated: email-marketing sites show them, non-email-marketing sites do not.

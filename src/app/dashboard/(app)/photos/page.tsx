@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
@@ -30,31 +30,7 @@ type Album = {
   created_at: string
 }
 
-type View = "queue" | "website" | "social" | "projects"
-type SocialFormat = "square" | "portrait" | "story"
-type SocialStatus = "draft" | "shared" | "downloaded" | "archived"
-
-type SocialDraft = {
-  id: string
-  photo_id: string
-  format: SocialFormat
-  caption: string
-  status: SocialStatus
-  created_at: string
-  updated_at: string
-  photo_url: string | null
-  photo_created_at: string | null
-}
-
-type CompanyMeta = {
-  name: string
-  slug: string
-  primaryColor: string
-  phone: string | null
-  city: string | null
-  state: string | null
-}
-
+type View = "all" | "website" | "favorites" | "albums"
 function dateGroupLabel(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
@@ -101,7 +77,7 @@ export default function PhotosPage() {
 }
 
 function PhotosPageInner() {
-  const [view, setView] = useState<View>("queue")
+  const [view, setView] = useState<View>("all")
   const [photos, setPhotos] = useState<Photo[]>([])
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
@@ -116,15 +92,9 @@ function PhotosPageInner() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [downloadingZip, setDownloadingZip] = useState(false)
-  const [selectedSocialDraft, setSelectedSocialDraft] = useState<SocialDraft | null>(null)
-  const [socialDrafts, setSocialDrafts] = useState<SocialDraft[]>([])
-  const [socialGenerating, setSocialGenerating] = useState(false)
-  const [socialError, setSocialError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
   const [customDomain, setCustomDomain] = useState<string | null>(null)
-  const [companyMeta, setCompanyMeta] = useState<CompanyMeta>({ name: "Your Business", slug: "", primaryColor: SIGNAL_GREEN, phone: null, city: null, state: null })
-  const [industry, setIndustry] = useState<string | null>(null)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
@@ -142,7 +112,7 @@ function PhotosPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const albumLabel = albumLabelFor(industry)
+  const albumLabel = { singular: "Album", plural: "Albums", create: "New Album" }
 
   useEffect(() => {
     const albumId = searchParams.get("album")
@@ -175,24 +145,12 @@ function PhotosPageInner() {
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
-      fetch("/api/social-posts").then(r => r.json()).catch(() => ({ drafts: [], tableReady: true })),
-    ]).then(([pd, ad, sd, sp]) => {
+    ]).then(([pd, ad, sd]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setCustomDomain(sd.customDomain ?? null)
-      setCompanyMeta({
-        name: sd.name ?? "Your Business",
-        slug: sd.slug ?? "",
-        primaryColor: sd.primaryColor ?? SIGNAL_GREEN,
-        phone: sd.phone ?? null,
-        city: sd.city ?? null,
-        state: sd.state ?? null,
-      })
-      setIndustry(sd.industry ?? null)
       setIsPro(sd.isPro ?? false)
-      setSocialDrafts(sp.drafts ?? [])
-      if (sp.tableReady === false) setSocialError("Social post drafts need the new database update before they can be saved.")
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -209,7 +167,7 @@ function PhotosPageInner() {
       if (albumId) {
         const target = albums.find(a => a.id === albumId)
         if (target) {
-          setView("projects")
+          setView("albums")
           setActiveAlbum(target)
         }
       }
@@ -363,41 +321,6 @@ function PhotosPageInner() {
     }
   }
 
-  async function generateSocialPosts(photoIds?: string[]) {
-    setSocialGenerating(true)
-    setSocialError(null)
-    try {
-      const res = await fetch("/api/social-posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoIds: photoIds ?? social.map(p => p.id) }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? "Could not make posts yet.")
-      setSocialDrafts(data.drafts ?? [])
-      if ((data.drafts ?? []).length > 0) setView("social")
-    } catch (err) {
-      setSocialError(err instanceof Error ? err.message : "Could not make posts yet.")
-    } finally {
-      setSocialGenerating(false)
-    }
-  }
-
-  async function updateSocialDraft(id: string, patch: Partial<Pick<SocialDraft, "caption" | "status">>) {
-    setSocialDrafts(prev => prev.map(d => d.id === id ? { ...d, ...patch, updated_at: new Date().toISOString() } : d))
-    setSelectedSocialDraft(prev => prev?.id === id ? { ...prev, ...patch, updated_at: new Date().toISOString() } : prev)
-    try {
-      const res = await fetch("/api/social-posts", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...patch }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? "Could not save social draft.")
-    } catch (err) {
-      setSocialError(err instanceof Error ? err.message : "Could not save social draft.")
-    }
-  }
   async function handleShare(album: Album) {
     const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${album.slug}`
     if (navigator.share) {
@@ -493,23 +416,23 @@ function PhotosPageInner() {
     setShowCamera(false)
   }
 
-  const unsorted  = photos.filter(p => !p.for_website && !p.for_social)
-  const website = photos.filter(p => p.for_website)
-  const social  = photos.filter(p => p.for_social)
+  const allPhotos = photos
+  const website = photos.filter(p => p.for_website || p.in_gallery || Boolean(p.website_section))
+  const favorites  = photos.filter(p => p.for_social)
 
   const albumPhotos = activeAlbum
     ? photos.filter(p => p.album_id === activeAlbum.id)
     : []
 
   const currentPhotos =
-    view === "queue"   ? unsorted :
+    view === "all"   ? allPhotos :
     view === "website" ? website :
-    view === "social"  ? social : []
+    view === "favorites"  ? favorites : []
 
   const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
 
-  const TAB_COUNTS = { queue: unsorted.length, website: website.length, social: social.length, projects: albums.length }
-  const TAB_LABELS = { queue: "Unsorted", website: "Website", social: "Social", projects: albumLabel.plural }
+  const TAB_COUNTS = { all: allPhotos.length, website: website.length, favorites: favorites.length, albums: albums.length }
+  const TAB_LABELS = { all: "All Photos", website: "On Website", favorites: "Favorites", albums: "Albums" }
 
   function openLightroom(photo: Photo, source: Photo[]) {
     const index = source.findIndex(p => p.id === photo.id)
@@ -600,7 +523,7 @@ function PhotosPageInner() {
       {/* Tabs â€” hidden when inside an album */}
       {!activeAlbum && (
         <div style={{ padding: "0 24px 20px", display: "flex", gap: 0 }}>
-          {(["queue", "website", "social", "projects"] as View[]).map(v => {
+          {(["all", "website", "favorites", "albums"] as View[]).map(v => {
             const active = view === v
             return (
               <button key={v} onClick={() => setView(v)} style={{
@@ -653,17 +576,7 @@ function PhotosPageInner() {
             onAdd={openCamera}
             showAddCta
           />
-        ) : view === "social" ? (
-          <SocialWorkspace
-            drafts={socialDrafts}
-            photos={social}
-            generating={socialGenerating}
-            error={socialError}
-            onGenerate={() => generateSocialPosts()}
-            onOpenDraft={setSelectedSocialDraft}
-            onViewPhoto={p => openLightroom(p, social)}
-          />
-        ) : view === "projects" ? (
+        ) : view === "albums" ? (
           <ProjectsTab
             albums={albums}
             photos={photos}
@@ -693,17 +606,17 @@ function PhotosPageInner() {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             emptyTitle={
-              view === "queue"   ? "Take a photo or video." :
+              view === "all"   ? "Take your first photo." :
               view === "website" ? "No website photos yet." :
-              "No social photos yet."
+              "Star your best photos."
             }
             emptySub={
-              view === "queue"   ? "Tap the camera icon at the top to take photos and video." :
-              view === "website" ? "Heart any photo and it'll appear here, ready for your site." :
-              "Star any photo and Found will format it with your branding."
+              view === "all"   ? "Tap the camera button to take photos or upload from your phone." :
+              view === "website" ? "Heart a photo for your gallery, or use Add to Site to place it on a page." :
+              "Favorites are the photos you want to come back to first."
             }
             emptyIcon={
-              view === "queue" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> :
+              view === "all" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> :
               view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             }
@@ -747,17 +660,6 @@ function PhotosPageInner() {
         />
       )}
 
-      {/* Social post sheet */}
-      {selectedSocialDraft && (
-        <SocialPostSheet
-          draft={selectedSocialDraft}
-          company={companyMeta}
-          onClose={() => setSelectedSocialDraft(null)}
-          onCaptionChange={(caption) => updateSocialDraft(selectedSocialDraft.id, { caption })}
-          onStatus={(status) => updateSocialDraft(selectedSocialDraft.id, { status })}
-        />
-      )}
-
       {/* Share album sheet */}
       {shareAlbum && (
         <ShareSheet
@@ -779,7 +681,7 @@ function PhotosPageInner() {
             <div style={{ fontSize: 30, marginBottom: 10 }}>🗑️</div>
             <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>Delete this one?</p>
             <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
-              It'll be gone for good, including anywhere it's used on your site or in a social post.
+              It'll be gone for good, including anywhere it's used on your site or in an album.
             </p>
             <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
               <button
@@ -1004,7 +906,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destin
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Website</span>
         </button>
 
-        {/* Star â€” Social */}
+        {/* Star - Favorites */}
         <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -1024,7 +926,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destin
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
           </div>
-          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Social</span>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
         </button>
 
         {/* Add to Site */}
@@ -1175,300 +1077,7 @@ function DateGroupedGrid({
   )
 }
 
-function formatLabel(format: SocialFormat) {
-  if (format === "square") return "Square"
-  if (format === "portrait") return "Portrait"
-  return "Story"
-}
-
-function formatSize(format: SocialFormat) {
-  if (format === "square") return { width: 1080, height: 1080, label: "1080 x 1080" }
-  if (format === "portrait") return { width: 1080, height: 1350, label: "1080 x 1350" }
-  return { width: 1080, height: 1920, label: "1080 x 1920" }
-}
-
-function SocialWorkspace({ drafts, photos, generating, error, onGenerate, onOpenDraft, onViewPhoto }: {
-  drafts: SocialDraft[]
-  photos: Photo[]
-  generating: boolean
-  error: string | null
-  onGenerate: () => void
-  onOpenDraft: (draft: SocialDraft) => void
-  onViewPhoto: (photo: Photo) => void
-}) {
-  const ready = drafts.filter(d => d.status !== "archived" && d.photo_url)
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <div style={{ borderRadius: 24, padding: 22, background: "linear-gradient(135deg, rgba(50,208,116,0.15), rgba(255,255,255,0.035))", border: `1px solid ${SIGNAL_GREEN}24` }}>
-        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: SIGNAL_GREEN }}>SOCIAL ASSISTANT</p>
-        <h2 style={{ margin: "0 0 10px", fontSize: "1.65rem", lineHeight: 1.05, fontWeight: 300, color: "white", letterSpacing: "-0.04em" }}>Turn today&apos;s work into posts.</h2>
-        <p style={{ margin: "0 0 18px", ...TYPE.subhead, fontWeight: 400, lineHeight: 1.65, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Star the photos worth sharing. Found makes branded post drafts you can share, download, or caption-copy from your phone.
-        </p>
-        <button onClick={onGenerate} disabled={generating || photos.length === 0} style={{
-          width: "100%", border: "none", borderRadius: 999, padding: "15px 18px",
-          backgroundColor: photos.length === 0 ? "rgba(255,255,255,0.08)" : SIGNAL_GREEN,
-          color: photos.length === 0 ? "rgba(255,255,255,0.35)" : FOUND_BLACK,
-          ...TYPE.subhead, fontWeight: 800, cursor: photos.length === 0 ? "default" : "pointer",
-          boxShadow: photos.length === 0 ? "none" : `0 0 26px ${SIGNAL_GREEN}30`,
-        }}>
-          {generating ? "Making posts..." : ready.length > 0 ? "Make More Posts" : "Make Posts"}
-        </button>
-        {error && <p style={{ margin: "12px 0 0", ...TYPE.footnote, color: "rgba(255,160,80,0.85)", lineHeight: 1.5 }}>{error}</p>}
-      </div>
-
-      {ready.length > 0 && (
-        <section>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <h3 style={{ margin: 0, ...TYPE.headline, color: "white" }}>Ready Posts</h3>
-            <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{ready.length}</span>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {ready.map(draft => (
-              <button key={draft.id} onClick={() => onOpenDraft(draft)} style={{
-                border: "1px solid rgba(255,255,255,0.08)", padding: 0, borderRadius: 18, overflow: "hidden",
-                backgroundColor: "rgba(255,255,255,0.04)", textAlign: "left", cursor: "pointer",
-              }}>
-                <div style={{ position: "relative", aspectRatio: draft.format === "story" ? "9/14" : draft.format === "portrait" ? "4/5" : "1", backgroundColor: "rgba(255,255,255,0.05)" }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={draft.photo_url ?? ""} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.72), transparent 58%)" }} />
-                  <div style={{ position: "absolute", left: 10, right: 10, bottom: 10 }}>
-                    <span style={{ display: "inline-flex", borderRadius: 999, padding: "5px 8px", backgroundColor: "rgba(0,0,0,0.62)", color: "white", fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" }}>{formatLabel(draft.format)}</span>
-                  </div>
-                </div>
-                <div style={{ padding: "10px 11px" }}>
-                  <p style={{ margin: 0, ...TYPE.caption, color: draft.status === "draft" ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{draft.status === "draft" ? "Ready to share" : draft.status}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <section>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <h3 style={{ margin: 0, ...TYPE.headline, color: "white" }}>Starred Photos</h3>
-          <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{photos.length}</span>
-        </div>
-        {photos.length === 0 ? (
-          <div style={{ padding: "40px 18px", textAlign: "center", borderRadius: 22, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.06)" }}>
-            <p style={{ margin: "0 0 8px", fontSize: "1.25rem", fontWeight: 300, color: "white" }}>No social photos yet.</p>
-            <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, lineHeight: 1.6, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Open a photo and tap the star. Found will turn it into branded social posts.</p>
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
-            {photos.map(photo => <PhotoCard key={photo.id} photo={photo} onView={onViewPhoto} />)}
-          </div>
-        )}
-      </section>
-    </div>
-  )
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.crossOrigin = "anonymous"
-    img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = src
-  })
-}
-
-function coverRect(imgW: number, imgH: number, boxW: number, boxH: number) {
-  const scale = Math.max(boxW / imgW, boxH / imgH)
-  const width = imgW * scale
-  const height = imgH * scale
-  return { x: (boxW - width) / 2, y: (boxH - height) / 2, width, height }
-}
-
-function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
-  const words = text.split(" ")
-  const lines: string[] = []
-  let line = ""
-  for (const word of words) {
-    const test = line ? `${line} ${word}` : word
-    if (ctx.measureText(test).width > maxWidth && line) {
-      lines.push(line)
-      line = word
-    } else {
-      line = test
-    }
-  }
-  if (line) lines.push(line)
-  return lines
-}
-
-async function drawSocialCanvas(canvas: HTMLCanvasElement, draft: SocialDraft, company: CompanyMeta, caption: string) {
-  if (!draft.photo_url) return
-  const size = formatSize(draft.format)
-  canvas.width = size.width
-  canvas.height = size.height
-  const ctx = canvas.getContext("2d")
-  if (!ctx) return
-
-  ctx.fillStyle = "#080A09"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  const img = await loadImage(draft.photo_url)
-  const rect = coverRect(img.naturalWidth || img.width, img.naturalHeight || img.height, canvas.width, canvas.height)
-  ctx.drawImage(img, rect.x, rect.y, rect.width, rect.height)
-
-  const grad = ctx.createLinearGradient(0, canvas.height * 0.42, 0, canvas.height)
-  grad.addColorStop(0, "rgba(0,0,0,0)")
-  grad.addColorStop(0.56, "rgba(0,0,0,0.58)")
-  grad.addColorStop(1, "rgba(0,0,0,0.9)")
-  ctx.fillStyle = grad
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-  const pad = Math.round(canvas.width * 0.07)
-  const footerHeight = Math.round(canvas.height * 0.145)
-  ctx.fillStyle = company.primaryColor || SIGNAL_GREEN
-  ctx.fillRect(0, canvas.height - 10, canvas.width, 10)
-
-  ctx.fillStyle = "rgba(8,10,9,0.76)"
-  ctx.fillRect(pad, canvas.height - footerHeight - pad, canvas.width - pad * 2, footerHeight)
-
-  ctx.fillStyle = "#ffffff"
-  ctx.font = `900 ${Math.round(canvas.width * 0.052)}px Arial, sans-serif`
-  ctx.textBaseline = "top"
-  ctx.fillText(company.name || "Your Business", pad * 1.35, canvas.height - footerHeight - pad + 28)
-
-  ctx.font = `700 ${Math.round(canvas.width * 0.028)}px Arial, sans-serif`
-  ctx.fillStyle = "rgba(255,255,255,0.72)"
-  const url = company.slug ? `${company.slug}.foundco.app` : "foundco.app"
-  const meta = [url, company.phone].filter(Boolean).join("  |  ")
-  ctx.fillText(meta, pad * 1.35, canvas.height - footerHeight - pad + 88)
-
-  const captionLine = caption.split("\n").find(Boolean) ?? "Recent work"
-  ctx.font = `800 ${Math.round(canvas.width * 0.038)}px Arial, sans-serif`
-  ctx.fillStyle = "rgba(255,255,255,0.92)"
-  const lines = wrapCanvasText(ctx, captionLine, canvas.width - pad * 2).slice(0, 2)
-  let y = canvas.height - footerHeight - pad - 92
-  for (const line of lines) {
-    ctx.fillText(line, pad, y)
-    y += Math.round(canvas.width * 0.048)
-  }
-}
-
-function SocialPostSheet({ draft, company, onClose, onCaptionChange, onStatus }: {
-  draft: SocialDraft
-  company: CompanyMeta
-  onClose: () => void
-  onCaptionChange: (caption: string) => void
-  onStatus: (status: SocialStatus) => void
-}) {
-  const [caption, setCaption] = useState(draft.caption)
-  const [message, setMessage] = useState<string | null>(null)
-  const [working, setWorking] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  useEffect(() => {
-    setCaption(draft.caption)
-  }, [draft.id, draft.caption])
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    drawSocialCanvas(canvas, draft, company, caption).catch(() => setMessage("This photo could not be rendered yet."))
-  }, [draft, company, caption])
-
-  function canvasBlob(): Promise<Blob> {
-    return new Promise((resolve, reject) => {
-      const canvas = canvasRef.current
-      if (!canvas) return reject(new Error("Missing canvas"))
-      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Could not export image")), "image/png", 0.95)
-    })
-  }
-
-  async function copyCaption() {
-    await navigator.clipboard.writeText(caption)
-    onCaptionChange(caption)
-    setMessage("Caption copied")
-  }
-
-  async function downloadImage() {
-    setWorking(true)
-    try {
-      const blob = await canvasBlob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${company.slug || "found"}-${draft.format}-post.png`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-      await navigator.clipboard.writeText(caption).catch(() => {})
-      onCaptionChange(caption)
-      onStatus("downloaded")
-      setMessage("Image downloaded. Caption copied.")
-    } catch {
-      setMessage("Download failed. Try saving the image from your browser.")
-    } finally {
-      setWorking(false)
-    }
-  }
-
-  async function shareImage() {
-    setWorking(true)
-    try {
-      const blob = await canvasBlob()
-      const file = new File([blob], `${company.slug || "found"}-${draft.format}-post.png`, { type: "image/png" })
-      const canShareFile = typeof navigator !== "undefined" && "canShare" in navigator && navigator.canShare?.({ files: [file] })
-      if (canShareFile) {
-        await navigator.share({ files: [file], text: caption, title: company.name })
-        onCaptionChange(caption)
-        onStatus("shared")
-        setMessage("Shared")
-      } else {
-        await downloadImage()
-        setMessage("Sharing files is not available here, so Found downloaded it and copied the caption.")
-      }
-    } catch {
-      setMessage("Share canceled or unavailable.")
-    } finally {
-      setWorking(false)
-    }
-  }
-
-  const size = formatSize(draft.format)
-
-  return (
-    <>
-      <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)" }}/>
-      <div style={{ position: "fixed", inset: "auto 0 0", zIndex: 90, maxHeight: "92dvh", overflowY: "auto", backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 20px max(34px, env(safe-area-inset-bottom))" }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 18px" }}/>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, marginBottom: 16 }}>
-          <div>
-            <p style={{ margin: "0 0 6px", ...TYPE.caption, color: SIGNAL_GREEN }}>{formatLabel(draft.format)} Post</p>
-            <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>{size.label}</h3>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.75)", cursor: "pointer" }}>x</button>
-        </div>
-
-        <div style={{ borderRadius: 22, overflow: "hidden", backgroundColor: "#050705", border: "1px solid rgba(255,255,255,0.08)", marginBottom: 16 }}>
-          <canvas ref={canvasRef} style={{ display: "block", width: "100%", aspectRatio: `${size.width}/${size.height}` }} />
-        </div>
-
-        <label style={{ display: "block", marginBottom: 14 }}>
-          <span style={{ display: "block", marginBottom: 8, ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>Caption</span>
-          <textarea value={caption} onChange={e => setCaption(e.target.value)} onBlur={() => onCaptionChange(caption)} rows={6} style={{ width: "100%", boxSizing: "border-box", resize: "vertical", borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.055)", color: "white", padding: 14, ...TYPE.subhead, fontWeight: 400, lineHeight: 1.55, outline: "none" }} />
-        </label>
-
-        {message && <p style={{ margin: "0 0 12px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{message}</p>}
-        <div style={{ display: "grid", gap: 10 }}>
-          <button onClick={shareImage} disabled={working} style={{ width: "100%", border: "none", borderRadius: 999, padding: "16px 18px", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, ...TYPE.subhead, fontWeight: 850, cursor: "pointer" }}>{working ? "Working..." : "Share Post"}</button>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <button onClick={downloadImage} disabled={working} style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 999, padding: "14px 12px", backgroundColor: "rgba(255,255,255,0.055)", color: "white", ...TYPE.footnote, fontWeight: 750, cursor: "pointer" }}>Download</button>
-            <button onClick={copyCaption} style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: 999, padding: "14px 12px", backgroundColor: "rgba(255,255,255,0.055)", color: "white", ...TYPE.footnote, fontWeight: 750, cursor: "pointer" }}>Copy Caption</button>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
-// â”€â”€ Projects tab â”€â”€
+// Albums tab
 // â”€â”€ Album title editor (inside album detail header) â”€â”€
 function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Album, name: string) => void }) {
   const [editing, setEditing] = useState(false)
@@ -1745,7 +1354,7 @@ function PhotoCard({ photo, onView, onFlag, onPlace, destinations, onShare, onRe
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }}
-            aria-label={photo.for_social ? "Remove from social" : "Add to social"}
+            aria-label={photo.for_social ? "Remove from favorites" : "Add to favorites"}
             style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_social ? "#FFB800" : "none"} stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

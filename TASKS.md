@@ -1,5 +1,23 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Photos IA Cleanup: Favorites and Albums
+
+- [x] Rename Photos tabs to owner-facing language: All Photos, On Website, Favorites, Albums.
+- [x] Remove the Social tab from the main Photos page.
+- [x] Keep the star but relabel it as Favorite instead of Social.
+- [x] Make On Website include hearted gallery photos and photos placed on exact website sections.
+- [x] Rename Collections/Projects language in this screen to Albums.
+- [x] Update empty states to plain owner language.
+- [x] Remove the old Social Assistant workspace from the active Photos page bundle.
+- [x] Verify `git diff --check` and `npm run build`.
+- [ ] Shawn QA: Photos page tabs read All Photos, On Website, Favorites, Albums.
+- [ ] Shawn QA: hearting a photo shows it under On Website and still feeds the public gallery.
+- [ ] Shawn QA: starring a photo shows it under Favorites and no Social wording appears.
+- [ ] Shawn QA: long press/Add to Site still opens the placement sheet and saves to the chosen website section.
+- [ ] Next phase: add Add to Product / Add to Menu Item flow for shopping cart and restaurant businesses.
+
+---
+
 ## 2026-08-08 - Email Signup Modal and Subscribe Fix
 
 - [x] Keep `/subscribe` available for QR/direct links.
