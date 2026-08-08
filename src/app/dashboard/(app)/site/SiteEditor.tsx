@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, uploadCompanyLogoWhiteFile, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, removeCompanyLogo, uploadCompanyLogoWhiteFile, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -156,6 +156,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [logoWhiteUrl, setLogoWhiteUrl] = useState(company.logo_white_url ?? null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingWhiteLogo, setUploadingWhiteLogo] = useState(false)
+  const [removingLogo, setRemovingLogo] = useState(false)
   const [logoReview, setLogoReview] = useState<{ url: string; whiteUrl: string | null } | null>(null)
   const [savingLogoChoice, setSavingLogoChoice] = useState(false)
 
@@ -220,6 +221,36 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       flashSaveError("Couldn't process that logo. Try a different file.")
     } finally {
       setUploadingWhiteLogo(false)
+    }
+  }
+
+  function confirmRemoveLogo() {
+    setConfirmAction({
+      title: "Remove logo?",
+      message: "This removes the uploaded color and white logo from your site. Found will use your business name as the logo instead.",
+      confirmLabel: "Remove logo",
+      onConfirm: () => {
+        setConfirmAction(null)
+        void handleRemoveLogo()
+      },
+    })
+  }
+
+  async function handleRemoveLogo() {
+    const previousLogoUrl = logoUrl
+    const previousLogoWhiteUrl = logoWhiteUrl
+    setRemovingLogo(true)
+    setLogoUrl(null)
+    setLogoWhiteUrl(null)
+    setLogoReview(null)
+    const result = await removeCompanyLogo()
+    setRemovingLogo(false)
+    if ("error" in result) {
+      setLogoUrl(previousLogoUrl)
+      setLogoWhiteUrl(previousLogoWhiteUrl)
+      flashSaveError(result.error || "Couldn't remove that logo. Try again.")
+    } else {
+      flashSaveNotice("Logo removed. Found will use your business name.", publicSiteOrigin)
     }
   }
 
@@ -1695,9 +1726,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.045)", border: `1.5px dashed ${GREEN}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {uploadingLogo ? (
                   <Spinner color={GREEN} />
-                ) : logoUrl ? (
+                ) : logoUrl || logoWhiteUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl} alt="Your logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 6 }} />
+                  <img src={(logoUrl || logoWhiteUrl)!} alt="Your logo" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 6 }} />
                 ) : (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={`${GREEN}66`} strokeWidth="1.5" strokeLinecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
                 )}
@@ -1706,7 +1737,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Logo</div>
               <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
-                {uploadingLogo ? "Uploading..." : logoUrl ? "Tap to replace" : "Tap to upload"}
+                {uploadingLogo ? "Uploading..." : logoUrl || logoWhiteUrl ? "Tap to replace" : "Tap to upload"}
               </div>
               {logoUrl && !logoWhiteUrl && !uploadingLogo && (
                 <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
@@ -1714,6 +1745,23 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 </div>
               )}
             </div>
+            {(logoUrl || logoWhiteUrl) && (
+              <button
+                type="button"
+                onClick={confirmRemoveLogo}
+                aria-label="Remove logo"
+                title="Remove logo"
+                disabled={uploadingLogo || removingLogo}
+                style={{
+                  width: 34, height: 34, borderRadius: "50%", border: "1px solid rgba(255,107,107,0.26)",
+                  backgroundColor: "rgba(255,107,107,0.08)", color: "#ff8a80",
+                  fontSize: 18, lineHeight: 1, fontWeight: 700, cursor: uploadingLogo || removingLogo ? "default" : "pointer",
+                  flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {removingLogo ? <Spinner color="#ff8a80" /> : "x"}
+              </button>
+            )}
           </div>
           <BizInfoField label="Business name" value={businessInfo.name} placeholder="Your business name" saving={savingBizField === "name"} justSaved={savedBizField === "name"} onSave={v => saveBusinessField("name", v)} />
           <BizInfoField label="Phone" value={businessInfo.phone} placeholder="(520) 555-0100" type="tel" saving={savingBizField === "phone"} justSaved={savedBizField === "phone"} onSave={v => saveBusinessField("phone", v)} />

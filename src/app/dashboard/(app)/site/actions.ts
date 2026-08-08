@@ -773,6 +773,28 @@ export async function updateCompanyLogoWhiteUrl(whiteUrl: string | null): Promis
   return { success: true }
 }
 
+export async function removeCompanyLogo(): Promise<{ success: boolean } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ logo_url: null, logo_white_url: null })
+    .eq("id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
+
 export async function uploadCompanyLogoWhiteFile(formData: FormData): Promise<{ whiteUrl: string } | { error: string }> {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
