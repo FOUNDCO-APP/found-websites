@@ -498,7 +498,7 @@ function PhotosPageInner() {
 
   const activeAllTabLabel = photoFilter === "favorites" ? "Favorites" : photoFilter === "unused" ? "Not on site" : "All Photos"
   const activeAllTabCount = photoFilter === "favorites" ? favorites.length : photoFilter === "unused" ? unused.length : allPhotos.length
-  const TAB_LABELS = { all: activeAllTabLabel, website: "Gallery", albums: "Albums" }
+  const TAB_LABELS = { all: activeAllTabLabel, website: "Gallery", albums: albumLabel.plural }
   const ACTIVE_TAB_COUNTS = { all: activeAllTabCount, website: gallery.length, albums: albums.length }
   const FILTER_LABELS = { all: "All Photos", favorites: "Favorites", unused: "Not on site" }
   const FILTER_COUNTS = { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
