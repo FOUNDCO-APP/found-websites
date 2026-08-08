@@ -1,5 +1,14 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-07 - Featured Update Button Grouping Polish
+
+- Shawn approved the action/words split but wanted both pieces visually grouped so owners understand they belong together.
+- Team fix: `Button words` now lives inside the same wrapped `Button action` card.
+- Helper copy changed from "This is what customers see on the button" to the clearer owner instruction: "Change what customers see on the button."
+- Verification: `git diff --check`, `npx tsc --noEmit`, and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-07 - Featured Update Button Action vs Button Words
 
 - Shawn found the remaining UX issue: choosing `Call Us` or `Contact` changed the action, but the visible button could still say `See our services`, and `Other page` opened raw technical values like `tel:` or `/services`.

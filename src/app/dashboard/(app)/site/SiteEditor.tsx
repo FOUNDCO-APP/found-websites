@@ -1200,16 +1200,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 Other page
               </button>
             </div>
+            <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, width: "100%", marginTop: 12, padding: 14, borderRadius: 16, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button words</span>
+                <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
+                <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>Change what customers see on the button.</span>
+              </span>
+              <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
+            </button>
           </div>
-
-          <button onClick={() => startEdit("announcement_cta_label", announcementLabel)} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)", color: "white", textAlign: "left", cursor: "pointer" }}>
-            <span style={{ minWidth: 0 }}>
-              <span style={{ display: "block", ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 5 }}>Button words</span>
-              <span style={{ display: "block", fontSize: 16, fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 320 }}>{announcementLabel}</span>
-              <span style={{ display: "block", marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.48)", fontWeight: 800 }}>This is what customers see on the button.</span>
-            </span>
-            <span style={{ color: GREEN, fontSize: 13, fontWeight: 900, flexShrink: 0 }}>Edit</span>
-          </button>
 
           <div style={{ margin: "0 14px", padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.045)" }}>
             <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.48)", marginBottom: 4 }}>Banner style</div>

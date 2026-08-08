@@ -1,5 +1,13 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-07 - Featured Update Button Grouping Polish
+
+- [x] Button action and Button words now live in one visual wrapper.
+- [x] Button words helper now says "Change what customers see on the button."
+- [ ] Shawn QA: Button action/words read as one connected control.
+
+---
+
 ## 2026-08-07 - Featured Update Button Action/Words Split
 
 - [x] Featured Update now separates Button action from Button words.

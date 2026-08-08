@@ -1,3 +1,17 @@
+## Session: August 7, 2026 - Featured Update Button Grouping Polish
+**AI:** Codex
+
+### Built
+- Moved `Button words` inside the same Featured Update card as `Button action`.
+- Changed helper copy to `Change what customers see on the button.`
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Featured Update Button Action vs Button Words
 **AI:** Codex
 
