@@ -469,8 +469,10 @@ function PhotosPageInner() {
 
   const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
 
-  const TAB_COUNTS = { all: allPhotos.length, website: gallery.length, albums: albums.length }
-  const TAB_LABELS = { all: "All Photos", website: "Gallery", albums: "Albums" }
+  const activeAllTabLabel = photoFilter === "favorites" ? "Favorites" : photoFilter === "unused" ? "Not on site" : "All Photos"
+  const activeAllTabCount = photoFilter === "favorites" ? favorites.length : photoFilter === "unused" ? unused.length : allPhotos.length
+  const TAB_LABELS = { all: activeAllTabLabel, website: "Gallery", albums: "Albums" }
+  const ACTIVE_TAB_COUNTS = { all: activeAllTabCount, website: gallery.length, albums: albums.length }
   const FILTER_LABELS = { all: "All Photos", favorites: "Favorites", unused: "Not on site" }
   const FILTER_COUNTS = { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
 
@@ -566,7 +568,7 @@ function PhotosPageInner() {
           position: "sticky",
           top: "calc(max(env(safe-area-inset-top), 14px) + 47px)",
           zIndex: 30,
-          padding: "0 24px 12px",
+          padding: "8px 24px 12px",
           display: "flex",
           flexDirection: "column",
           gap: 0,
@@ -574,9 +576,9 @@ function PhotosPageInner() {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          boxShadow: "0 -96px 0 #080A09",
         }}>
-          <div style={{ display: "flex", alignItems: "stretch", gap: 10, width: "100%" }}>
+          <div style={{ position: "absolute", left: 0, right: 0, top: -140, height: 140, backgroundColor: "#080A09", pointerEvents: "none" }} />
+          <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "stretch", gap: 10, width: "100%" }}>
             <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 0 }}>
               {(["all", "website", "albums"] as View[]).map(v => {
                 const active = view === v
@@ -591,13 +593,13 @@ function PhotosPageInner() {
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
                   }}>
                     {TAB_LABELS[v]}
-                    {TAB_COUNTS[v] > 0 && (
+                    {ACTIVE_TAB_COUNTS[v] > 0 && (
                       <span style={{
                         fontSize: 10, fontWeight: 700,
                         backgroundColor: active ? SIGNAL_GREEN : "rgba(255,255,255,0.1)",
                         color: active ? FOUND_BLACK : "rgba(255,255,255,0.4)",
                         borderRadius: 100, padding: "2px 6px",
-                      }}>{TAB_COUNTS[v]}</span>
+                      }}>{ACTIVE_TAB_COUNTS[v]}</span>
                     )}
                   </button>
                 )
@@ -608,7 +610,7 @@ function PhotosPageInner() {
               disabled={view !== "all" || photos.length === 0}
               aria-label="Filter photos"
               style={{
-                width: view === "all" && photoFilter !== "all" ? 96 : 42,
+                width: 42,
                 minHeight: 42,
                 borderRadius: 14,
                 border: `1px solid ${view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.1)"}`,
@@ -617,18 +619,12 @@ function PhotosPageInner() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 7,
                 cursor: view === "all" && photos.length > 0 ? "pointer" : "default",
                 opacity: view === "all" && photos.length > 0 ? 1 : 0.34,
-                transition: "width 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease",
+                transition: "background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease",
               }}
             >
               <FilterLinesIcon />
-              {view === "all" && photoFilter !== "all" && (
-                <span style={{ fontSize: 11, fontWeight: 900, lineHeight: 1, whiteSpace: "nowrap" }}>
-                  {photoFilter === "favorites" ? "Favs" : "Off-site"} {FILTER_COUNTS[photoFilter]}
-                </span>
-              )}
             </button>
           </div>
           {showPhotoFilters && (
@@ -1596,6 +1592,19 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
     favorites: "Your best shots, saved for quick access.",
     unused: "Photos not in your gallery or on a page.",
   }
+  const icons: Record<PhotoFilter, React.ReactNode> = {
+    all: <FilterLinesIcon />,
+    favorites: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#FF4B8B" stroke="#FF4B8B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+    ),
+    unused: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+      </svg>
+    ),
+  }
 
   return (
     <>
@@ -1610,30 +1619,19 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
       />
       <div style={{
         position: "absolute",
-        top: "calc(100% + 8px)",
+        top: "calc(100% + 10px)",
         right: 24,
-        width: "min(284px, calc(100vw - 48px))",
+        width: "min(356px, calc(100vw - 48px))",
         zIndex: 32,
-        backgroundColor: "rgba(21,24,22,0.96)",
-        borderRadius: 22,
-        border: "1px solid rgba(255,255,255,0.11)",
-        padding: 8,
-        boxShadow: "0 20px 64px rgba(0,0,0,0.48)",
-        backdropFilter: "blur(20px)",
-        WebkitBackdropFilter: "blur(20px)",
+        backgroundColor: "rgba(246,248,246,0.9)",
+        borderRadius: 28,
+        border: "1px solid rgba(255,255,255,0.62)",
+        padding: 12,
+        boxShadow: "0 24px 80px rgba(0,0,0,0.38)",
+        backdropFilter: "blur(34px) saturate(1.35)",
+        WebkitBackdropFilter: "blur(34px) saturate(1.35)",
       }}>
-        <div style={{
-          position: "absolute",
-          top: -7,
-          right: 18,
-          width: 14,
-          height: 14,
-          backgroundColor: "rgba(21,24,22,0.96)",
-          borderLeft: "1px solid rgba(255,255,255,0.11)",
-          borderTop: "1px solid rgba(255,255,255,0.11)",
-          transform: "rotate(45deg)",
-        }} />
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, position: "relative" }}>
           {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
             const selected = active === filter
             return (
@@ -1641,29 +1639,45 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
                 key={filter}
                 onClick={() => onSelect(filter)}
                 style={{
-                  minHeight: 58,
-                  borderRadius: 16,
+                  minHeight: 74,
+                  borderRadius: 20,
                   border: "none",
-                  backgroundColor: selected ? `${SIGNAL_GREEN}16` : "transparent",
-                  color: "white",
+                  backgroundColor: selected ? "rgba(50,208,116,0.16)" : "transparent",
+                  color: "#0A0C0B",
                   cursor: "pointer",
-                  padding: "0 12px",
+                  padding: "0 14px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 12,
+                  gap: 14,
                   textAlign: "left",
                 }}
               >
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 15, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.92)" }}>{labels[filter]}</span>
-                  <span style={{ display: "block", marginTop: 2, fontSize: 11, lineHeight: 1.32, fontWeight: 650, color: "rgba(255,255,255,0.46)" }}>{descriptions[filter]}</span>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                  <span style={{
+                    width: 42,
+                    height: 42,
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(255,255,255,0.72)",
+                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04)",
+                    color: selected ? SIGNAL_GREEN : "rgba(10,12,11,0.62)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    {icons[filter]}
+                  </span>
+                  <span style={{ minWidth: 0 }}>
+                    <span style={{ display: "block", fontSize: 20, fontWeight: 780, color: selected ? "#0E6D37" : "#101211" }}>{labels[filter]}</span>
+                    <span style={{ display: "block", marginTop: 2, fontSize: 13, lineHeight: 1.28, fontWeight: 560, color: "rgba(10,12,11,0.52)" }}>{descriptions[filter]}</span>
+                  </span>
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <span style={{ fontSize: 13, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{counts[filter]}</span>
+                  <span style={{ fontSize: 17, fontWeight: 760, color: selected ? "#0E6D37" : "rgba(10,12,11,0.42)" }}>{counts[filter]}</span>
                   {selected && (
-                    <span style={{ width: 22, height: 22, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <span style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </span>

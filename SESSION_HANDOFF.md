@@ -1,5 +1,16 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Photos Filter Native Panel and Header Fix
+
+- Shawn approved the team direction to make the Photos filter feel closer to iOS/iMessage/Codex system panels and fix the first-load clipping.
+- Active filters now replace the first tab label/count (`Favorites 3` or `Not on site 4`) instead of expanding the filter button.
+- The filter button is square again and only indicates active state through color.
+- The filter menu is now a larger, softer translucent panel with more breathing room, left-side icons, larger rows, and count/check affordances on the right.
+- The sticky tabs now paint a solid black cover above the tab row to prevent the Photos title/action row from half-showing through during load or scroll.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Photos Filter Popover and Sticky Bar Polish
 
 - Shawn approved the team direction to make the Photos filter feel like an iOS-style anchored menu instead of a bottom sheet.

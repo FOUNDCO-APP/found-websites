@@ -1,3 +1,18 @@
+## Session: August 8, 2026 - Photos Filter Native Panel and Header Fix
+**AI:** Codex
+
+### Built
+- Changed active filters to replace the first Photos tab label/count.
+- Restored the filter button to a square active-state control.
+- Redesigned the Photos filter popover into a larger, softer native-feeling panel.
+- Added a solid black cover above the sticky Photos tabs to prevent first-load and scroll clipping.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Photos Filter Popover and Sticky Bar Polish
 **AI:** Codex
 
