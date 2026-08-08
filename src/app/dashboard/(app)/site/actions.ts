@@ -773,6 +773,32 @@ export async function updateCompanyLogoWhiteUrl(whiteUrl: string | null): Promis
   return { success: true }
 }
 
+export async function uploadCompanyLogoWhiteFile(formData: FormData): Promise<{ whiteUrl: string } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const file = formData.get("file") as File | null
+  if (!file || !file.size) return { error: "No file selected." }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png"
+  const allowed = ["png", "jpg", "jpeg", "webp", "svg", "gif"]
+  if (!allowed.includes(ext)) return { error: "PNG, JPG, WEBP, or SVG only." }
+  if (file.size > 5 * 1024 * 1024) return { error: "File must be under 5 MB." }
+
+  const bytes = Buffer.from(await file.arrayBuffer())
+  const path = `logos/${ctx.company.id}/logo-white-custom-${Date.now()}.${ext}`
+
+  const { error } = await ctx.admin.storage
+    .from("company-assets")
+    .upload(path, bytes, { contentType: file.type, upsert: true })
+  if (error) return { error: error.message }
+
+  const whiteUrl = ctx.admin.storage.from("company-assets").getPublicUrl(path).data.publicUrl
+  const result = await updateCompanyLogoWhiteUrl(whiteUrl)
+  if ("error" in result) return result
+  return { whiteUrl }
+}
+
 export async function updateCompanyField(field: string, value: string) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
