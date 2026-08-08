@@ -80,6 +80,8 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
         </div>
       </section>
 
+      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
+
       {/* ── GALLERY STRIP ── */}
       {galleryImages.length > 0 && (
         <div className="flex gap-0.5 overflow-x-auto scrollbar-hide md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
@@ -98,8 +100,6 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
           ))}
         </div>
       )}
-
-      <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
 
       <CatalogShowcase company={company} activeAddons={activeAddons} />
 
