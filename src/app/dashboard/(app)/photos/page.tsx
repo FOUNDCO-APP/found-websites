@@ -27,6 +27,12 @@ type Album = {
   id: string
   name: string
   slug: string
+  album_type?: "album" | "job" | null
+  customer_name?: string | null
+  customer_phone?: string | null
+  customer_email?: string | null
+  service_address?: string | null
+  cover_photo_id?: string | null
   created_at: string
 }
 
@@ -98,6 +104,7 @@ function PhotosPageInner() {
   const [downloadingZip, setDownloadingZip] = useState(false)
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
+  const [industry, setIndustry] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState<string | null>(null)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -113,13 +120,21 @@ function PhotosPageInner() {
   const [placeReassignConfirm, setPlaceReassignConfirm] = useState<{ slot: string; label: string } | null>(null)
   const [photoNotice, setPhotoNotice] = useState<PhotoNotice | null>(null)
   const [showPhotoFilters, setShowPhotoFilters] = useState(false)
+  const [newJobCustomerName, setNewJobCustomerName] = useState("")
+  const [newJobAddress, setNewJobAddress] = useState("")
+  const [newJobPhone, setNewJobPhone] = useState("")
+  const [newJobEmail, setNewJobEmail] = useState("")
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const photoNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const albumLabel = { singular: "Album", plural: "Albums", create: "New Album" }
+  const serviceIndustries = new Set(["home_property", "contractors", "construction", "landscaping", "audio_visual", "automotive", "events"])
+  const usesJobs = serviceIndustries.has(industry ?? "")
+  const albumLabel = usesJobs
+    ? { singular: "Job", plural: "Jobs", create: "New Job" }
+    : { singular: "Album", plural: "Albums", create: "New Album" }
 
   useEffect(() => {
     const albumId = searchParams.get("album")
@@ -156,6 +171,7 @@ function PhotosPageInner() {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
+      setIndustry(sd.industry ?? null)
       setCustomDomain(sd.customDomain ?? null)
       setIsPro(sd.isPro ?? false)
       setLoading(false)
@@ -316,17 +332,31 @@ function PhotosPageInner() {
   }
 
   async function createAlbum() {
-    if (!newAlbumName.trim()) return
+    const name = usesJobs
+      ? (newJobCustomerName.trim() || newJobAddress.trim() || newAlbumName.trim())
+      : newAlbumName.trim()
+    if (!name) return
     setSavingAlbum(true)
     const res = await fetch("/api/albums", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newAlbumName.trim() }),
+      body: JSON.stringify({
+        name,
+        album_type: usesJobs ? "job" : "album",
+        customer_name: usesJobs ? newJobCustomerName : undefined,
+        customer_phone: usesJobs ? newJobPhone : undefined,
+        customer_email: usesJobs ? newJobEmail : undefined,
+        service_address: usesJobs ? newJobAddress : undefined,
+      }),
     })
     const data = await res.json()
     if (data.album) {
       setAlbums(prev => [data.album, ...prev])
       setNewAlbumName("")
+      setNewJobCustomerName("")
+      setNewJobAddress("")
+      setNewJobPhone("")
+      setNewJobEmail("")
       setShowNewAlbum(false)
       setActiveAlbum(data.album)
       setShowAddOptions(true)
@@ -735,8 +765,24 @@ function PhotosPageInner() {
             newName={newAlbumName}
             saving={savingAlbum}
             onShowNew={() => setShowNewAlbum(true)}
-            onHideNew={() => { setShowNewAlbum(false); setNewAlbumName("") }}
+            onHideNew={() => {
+              setShowNewAlbum(false)
+              setNewAlbumName("")
+              setNewJobCustomerName("")
+              setNewJobAddress("")
+              setNewJobPhone("")
+              setNewJobEmail("")
+            }}
             onNameChange={setNewAlbumName}
+            usesJobs={usesJobs}
+            newJobCustomerName={newJobCustomerName}
+            newJobAddress={newJobAddress}
+            newJobPhone={newJobPhone}
+            newJobEmail={newJobEmail}
+            onJobCustomerNameChange={setNewJobCustomerName}
+            onJobAddressChange={setNewJobAddress}
+            onJobPhoneChange={setNewJobPhone}
+            onJobEmailChange={setNewJobEmail}
             onCreate={createAlbum}
             onOpen={setActiveAlbum}
             onShare={setShareAlbum}
@@ -1284,8 +1330,10 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
 }
 
 function ProjectsTab({
-  albums, photos, albumLabel, isPro, showNew, newName, saving,
-  onShowNew, onHideNew, onNameChange, onCreate, onOpen, onShare, onUpgrade, onDelete,
+  albums, photos, albumLabel, isPro, showNew, newName, saving, usesJobs,
+  newJobCustomerName, newJobAddress, newJobPhone, newJobEmail,
+  onShowNew, onHideNew, onNameChange, onJobCustomerNameChange, onJobAddressChange, onJobPhoneChange, onJobEmailChange,
+  onCreate, onOpen, onShare, onUpgrade, onDelete,
 }: {
   albums: Album[]
   photos: Photo[]
@@ -1294,31 +1342,97 @@ function ProjectsTab({
   showNew: boolean
   newName: string
   saving: boolean
+  usesJobs: boolean
+  newJobCustomerName: string
+  newJobAddress: string
+  newJobPhone: string
+  newJobEmail: string
   onShowNew: () => void
   onHideNew: () => void
   onNameChange: (s: string) => void
+  onJobCustomerNameChange: (s: string) => void
+  onJobAddressChange: (s: string) => void
+  onJobPhoneChange: (s: string) => void
+  onJobEmailChange: (s: string) => void
   onCreate: () => void
   onOpen: (a: Album) => void
   onShare: (a: Album) => void
   onUpgrade: () => void
   onDelete: (a: Album) => void
 }) {
+  const canCreate = usesJobs
+    ? Boolean(newJobCustomerName.trim() || newJobAddress.trim() || newName.trim())
+    : Boolean(newName.trim())
+  const newFieldStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "13px 16px",
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    color: "white",
+    fontSize: "0.9375rem",
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {showNew ? (
         <div style={{ borderRadius: 20, padding: 20, backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}22`, marginBottom: 6 }}>
           <div style={{ ...TYPE.caption, color: SIGNAL_GREEN, marginBottom: 14 }}>{albumLabel.create}</div>
-          <input
-            autoFocus
-            value={newName}
-            onChange={e => onNameChange(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && onCreate()}
-            placeholder={`${albumLabel.singular} nameâ€¦`}
-            style={{ width: "100%", padding: "13px 16px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "0.9375rem", outline: "none", boxSizing: "border-box", fontFamily: "inherit", marginBottom: 12 }}
-          />
+          {usesJobs ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+              <input
+                autoFocus
+                value={newJobCustomerName}
+                onChange={e => onJobCustomerNameChange(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && canCreate && onCreate()}
+                placeholder="Customer name"
+                style={newFieldStyle}
+              />
+              <input
+                value={newJobAddress}
+                onChange={e => onJobAddressChange(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && canCreate && onCreate()}
+                placeholder="Job address"
+                style={newFieldStyle}
+              />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <input
+                  value={newJobPhone}
+                  onChange={e => onJobPhoneChange(e.target.value)}
+                  placeholder="Phone"
+                  inputMode="tel"
+                  style={newFieldStyle}
+                />
+                <input
+                  value={newJobEmail}
+                  onChange={e => onJobEmailChange(e.target.value)}
+                  placeholder="Email"
+                  type="email"
+                  style={newFieldStyle}
+                />
+              </div>
+              <input
+                value={newName}
+                onChange={e => onNameChange(e.target.value)}
+                placeholder="Job name if different"
+                style={newFieldStyle}
+              />
+            </div>
+          ) : (
+            <input
+              autoFocus
+              value={newName}
+              onChange={e => onNameChange(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && onCreate()}
+              placeholder={`${albumLabel.singular} name...`}
+              style={{ ...newFieldStyle, marginBottom: 12 }}
+            />
+          )}
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onHideNew} style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-            <button onClick={onCreate} disabled={!newName.trim() || saving} style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: newName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.3)", fontSize: "0.8125rem", fontWeight: 700, cursor: newName.trim() ? "pointer" : "default" }}>
+            <button onClick={onCreate} disabled={!canCreate || saving} style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: canCreate ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: canCreate ? FOUND_BLACK : "rgba(255,255,255,0.3)", fontSize: "0.8125rem", fontWeight: 700, cursor: canCreate ? "pointer" : "default" }}>
               {saving ? "Creatingâ€¦" : `Create ${albumLabel.singular}`}
             </button>
           </div>
@@ -1347,7 +1461,7 @@ function ProjectsTab({
           </div>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>Create your first {albumLabel.singular.toLowerCase()}.</p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            Group photos by job, client, or event.<br/>Share a branded link with any client.
+            {usesJobs ? "Capture the customer, address, and job photos in one place." : "Group photos by job, client, or event."}<br/>Share a branded link with any client.
           </p>
         </div>
       ) : (
@@ -1371,6 +1485,11 @@ function ProjectsTab({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ ...TYPE.headline, color: "white", marginBottom: 3 }}>{album.name}</div>
+                  {album.service_address && (
+                    <div style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {album.service_address}
+                    </div>
+                  )}
                   <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
                     {count} photo{count !== 1 ? "s" : ""}
                   </div>

@@ -12,6 +12,19 @@ function toSlug(name: string) {
     .slice(0, 60)
 }
 
+type AlbumRow = {
+  id: string
+  name: string
+  slug: string
+  album_type?: string | null
+  customer_name?: string | null
+  customer_phone?: string | null
+  customer_email?: string | null
+  service_address?: string | null
+  cover_photo_id?: string | null
+  created_at: string
+}
+
 export async function GET() {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ albums: [] }, { status: 401 })
@@ -19,11 +32,20 @@ export async function GET() {
   if (!company) return NextResponse.json({ albums: [] })
 
   const admin = createAdminClient()
-  const { data } = await admin
+  let { data, error }: { data: AlbumRow[] | null; error: { message: string } | null } = await admin
     .from("photo_albums")
-    .select("id, name, slug, created_at")
+    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
+
+  if (error) {
+    const fallback = await admin
+      .from("photo_albums")
+      .select("id, name, slug, created_at")
+      .eq("company_id", company.id)
+      .order("created_at", { ascending: false })
+    data = fallback.data
+  }
 
   const albumIds = (data ?? []).map((a: { id: string }) => a.id)
   let coverMap: Record<string, string> = {}
@@ -40,7 +62,7 @@ export async function GET() {
     }
   }
 
-  const albums = (data ?? []).map((a: { id: string; name: string; slug: string; created_at: string }) => ({
+  const albums = (data ?? []).map((a: AlbumRow) => ({
     ...a,
     cover_url: coverMap[a.id] ?? null,
   }))
@@ -54,7 +76,7 @@ export async function POST(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { name } = await req.json()
+  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -71,11 +93,33 @@ export async function POST(req: Request) {
     slug = `${slug}-${existing.length + 1}`
   }
 
-  const { data, error } = await admin
+  const insertPayload = {
+    company_id: company.id,
+    name: name.trim(),
+    slug,
+    album_type: album_type === "job" ? "job" : "album",
+    customer_name: customer_name?.trim() || null,
+    customer_phone: customer_phone?.trim() || null,
+    customer_email: customer_email?.trim() || null,
+    service_address: service_address?.trim() || null,
+    cover_photo_id: cover_photo_id || null,
+  }
+
+  let { data, error }: { data: AlbumRow | null; error: { message: string } | null } = await admin
     .from("photo_albums")
-    .insert({ company_id: company.id, name: name.trim(), slug })
+    .insert(insertPayload)
     .select()
     .single()
+
+  if (error) {
+    const fallback = await admin
+      .from("photo_albums")
+      .insert({ company_id: company.id, name: name.trim(), slug })
+      .select()
+      .single()
+    data = fallback.data
+    error = fallback.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ album: data })
