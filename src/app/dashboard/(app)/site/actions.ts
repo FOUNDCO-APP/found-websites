@@ -748,6 +748,31 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   return { url: logoUrl, whiteUrl: darkBackgroundLogoUrl }
 }
 
+export async function updateCompanyLogoWhiteUrl(whiteUrl: string | null): Promise<{ success: boolean } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+  if (whiteUrl && !whiteUrl.includes("/storage/v1/object/public/company-assets/logos/")) {
+    return { error: "Logo URL not allowed" }
+  }
+
+  const { error } = await ctx.admin
+    .from("companies")
+    .update({ logo_white_url: whiteUrl })
+    .eq("id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath("/dashboard/site")
+  return { success: true }
+}
+
 export async function updateCompanyField(field: string, value: string) {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }

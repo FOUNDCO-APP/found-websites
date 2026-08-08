@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -155,6 +155,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const [logoUrl, setLogoUrl] = useState(company.logo_url ?? null)
   const [logoWhiteUrl, setLogoWhiteUrl] = useState(company.logo_white_url ?? null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoReview, setLogoReview] = useState<{ url: string; whiteUrl: string | null } | null>(null)
+  const [savingLogoChoice, setSavingLogoChoice] = useState(false)
 
   async function handleLogoUpload(file: File) {
     setUploadingLogo(true)
@@ -168,6 +170,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       if ("url" in result) {
         setLogoUrl(result.url)
         setLogoWhiteUrl(result.whiteUrl)
+        setLogoReview({ url: result.url, whiteUrl: result.whiteUrl })
       } else {
         flashSaveError(result.error || "Couldn't upload that logo. Try again.")
       }
@@ -176,6 +179,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     } finally {
       setUploadingLogo(false)
     }
+  }
+
+  async function saveLogoDarkChoice(useWhite: boolean) {
+    if (!logoReview) return
+    const nextWhiteUrl = useWhite ? logoReview.whiteUrl : null
+    setSavingLogoChoice(true)
+    const result = await updateCompanyLogoWhiteUrl(nextWhiteUrl)
+    setSavingLogoChoice(false)
+    if ("error" in result) {
+      flashSaveError(result.error || "Couldn't update that logo choice.")
+      return
+    }
+    setLogoWhiteUrl(nextWhiteUrl)
+    setLogoReview(null)
   }
 
   async function saveBusinessField(field: "name" | "phone" | "email" | "city" | "state" | "address" | "zip", value: string) {
@@ -1700,6 +1717,51 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
       </>
+      )}
+
+      {logoReview && (
+        <>
+          <div onClick={() => !savingLogoChoice && setLogoReview(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 60, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{
+            position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 70,
+            backgroundColor: "#111613", borderTop: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "26px 26px 0 0", padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)",
+            boxShadow: "0 -24px 70px rgba(0,0,0,0.45)",
+          }}>
+            <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 20px" }}/>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
+              <div>
+                <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>Logo</div>
+                <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Check both backgrounds.</h3>
+              </div>
+              <button onClick={() => setLogoReview(null)} disabled={savingLogoChoice} aria-label="Close logo preview" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: savingLogoChoice ? "default" : "pointer", flexShrink: 0 }}>x</button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              <div style={{ borderRadius: 16, padding: 14, backgroundColor: "#ffffff", border: "1px solid rgba(255,255,255,0.1)" }}>
+                <div style={{ height: 70, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={logoReview.url} alt="Logo on light" style={{ maxWidth: "100%", maxHeight: 52, objectFit: "contain" }} />
+                </div>
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#111111" }}>Light</div>
+              </div>
+              <div style={{ borderRadius: 16, padding: 14, backgroundColor: "#111111", border: "1px solid rgba(255,255,255,0.12)" }}>
+                <div style={{ height: 70, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <img src={logoReview.whiteUrl || logoReview.url} alt="Logo on dark" style={{ maxWidth: "100%", maxHeight: 52, objectFit: "contain" }} />
+                </div>
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#ffffff" }}>Dark</div>
+              </div>
+            </div>
+
+            {logoReview.whiteUrl ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <button onClick={() => saveLogoDarkChoice(false)} disabled={savingLogoChoice} style={{ padding: "13px 12px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.78)", fontSize: 13, fontWeight: 900, cursor: savingLogoChoice ? "default" : "pointer" }}>Use color</button>
+                <button onClick={() => saveLogoDarkChoice(true)} disabled={savingLogoChoice} style={{ padding: "13px 12px", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 900, cursor: savingLogoChoice ? "default" : "pointer" }}>{savingLogoChoice ? "Saving..." : "Use white"}</button>
+              </div>
+            ) : (
+              <button onClick={() => setLogoReview(null)} disabled={savingLogoChoice} style={{ width: "100%", padding: "13px 12px", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 900, cursor: "pointer" }}>Done</button>
+            )}
+          </div>
+        </>
       )}
 
       {photoPickerSlot && (() => {
