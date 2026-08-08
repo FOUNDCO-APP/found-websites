@@ -589,7 +589,7 @@ function PhotosPageInner() {
       {!activeAlbum && (
         <div style={{
           position: "sticky",
-          top: "calc(max(env(safe-area-inset-top), 14px) + 47px)",
+          top: "calc(max(env(safe-area-inset-top), 14px) + 32px)",
           zIndex: 30,
           padding: "6px 24px 10px",
           display: "flex",
@@ -1609,11 +1609,6 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
   onSelect: (filter: PhotoFilter) => void
   onClose: () => void
 }) {
-  const descriptions: Record<PhotoFilter, string> = {
-    all: "Everything in your photo library.",
-    favorites: "Your best shots, saved for quick access.",
-    unused: "Photos not in your gallery or on a page.",
-  }
   const icons: Record<PhotoFilter, React.ReactNode> = {
     all: <FilterLinesIcon />,
     favorites: (
@@ -1643,7 +1638,7 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
         position: "absolute",
         top: "calc(100% + 8px)",
         right: 24,
-        width: "min(316px, calc(100vw - 48px))",
+        width: "min(286px, calc(100vw - 48px))",
         zIndex: 32,
         backgroundColor: "rgba(15,18,16,0.96)",
         borderRadius: 22,
@@ -1663,8 +1658,8 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
                 style={{
                   minHeight: 60,
                   borderRadius: 16,
-                  border: selected ? `1px solid ${SIGNAL_GREEN}44` : "1px solid transparent",
-                  backgroundColor: selected ? `${SIGNAL_GREEN}18` : "transparent",
+                  border: "1px solid transparent",
+                  backgroundColor: selected ? "rgba(255,255,255,0.055)" : "transparent",
                   color: "white",
                   cursor: "pointer",
                   padding: "0 12px",
@@ -1677,12 +1672,12 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
               >
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                   <span style={{
-                    width: 34,
-                    height: 34,
+                    width: 32,
+                    height: 32,
                     borderRadius: "50%",
-                    backgroundColor: selected ? `${SIGNAL_GREEN}20` : "rgba(255,255,255,0.07)",
+                    backgroundColor: "rgba(255,255,255,0.07)",
                     boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
-                    color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
+                    color: "rgba(255,255,255,0.66)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -1691,12 +1686,11 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
                     {icons[filter]}
                   </span>
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 16, fontWeight: 850, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.94)" }}>{labels[filter]}</span>
-                    <span style={{ display: "block", marginTop: 2, fontSize: 11, lineHeight: 1.28, fontWeight: 620, color: "rgba(255,255,255,0.46)" }}>{descriptions[filter]}</span>
+                    <span style={{ display: "block", fontSize: 17, fontWeight: 780, color: "rgba(255,255,255,0.95)" }}>{labels[filter]}</span>
                   </span>
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <span style={{ fontSize: 14, fontWeight: 850, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.36)" }}>{counts[filter]}</span>
+                  <span style={{ fontSize: 14, fontWeight: 780, color: "rgba(255,255,255,0.42)" }}>{counts[filter]}</span>
                   {selected && (
                     <span style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
