@@ -85,7 +85,9 @@ export default function Navbar({ company, transparent = false, hasShop = false }
   const navLinkWeight = "font-medium"
   const inactiveColor = isOnDark ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
   const barColor = isOnDark ? "#ffffff" : isCalm ? "#555555" : "#1a1a1a"
-  const brandTextColor = logoColor(isOnDark ? "dark" : "light", primary)
+  const brandTextColor = isOverlay
+    ? "#ffffff"
+    : logoColor(isNavDark ? "dark" : "light", primary)
 
   return (
     <>
