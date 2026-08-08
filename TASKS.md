@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Edit Website Dynamic Pages and Wrapper Consistency
+
+- [x] Edit Website dropdown now hides inactive Shop unless the effective shopping-cart add-on is active.
+- [x] Food businesses still show Menu in Edit Website.
+- [x] Retail/makers businesses without shopping cart now use Products & Services owner language for the services page.
+- [x] About, Contact, and Services/Products & Services edit controls now sit inside one connected wrapper like Homepage.
+- [ ] Shawn QA: Ryan no longer sees Shop in the Edit Website page dropdown while shopping/cart is inactive.
+- [ ] Shawn QA: About, Contact, and Products & Services feel visually grouped like Homepage.
+
+---
+
 ## 2026-08-07 - Featured Update Button Grouping Polish
 
 - [x] Button action and Button words now live in one visual wrapper.

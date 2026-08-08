@@ -1,5 +1,16 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Edit Website Dynamic Pages and Wrapper Consistency
+
+- Shawn approved the team direction to verify that edit sections use the same connected wrapper pattern as Homepage and to hide inactive pages from the Edit Website page switcher.
+- Team fix: the Edit Website page dropdown and hub no longer show `Shop` just because a company is retail or makers/crafts. `Shop` only appears when the effective `shopping_cart` add-on is active. Food businesses still show `Menu`.
+- Retail/makers businesses without shopping cart now see the normal services route labeled `Products & Services` in Edit Website, which better matches owner language without implying checkout is enabled.
+- About, Contact, and Services/Products & Services now wrap their preview and edit controls in one connected card, matching the Homepage/Featured Update pattern.
+- Gallery and Menu/Product manager pages intentionally remain tool-style flows; they are not simple public-section edit cards.
+- Verification: `git diff --check`, `npx tsc --noEmit`, and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-07 - Featured Update Button Grouping Polish
 
 - Shawn approved the action/words split but wanted both pieces visually grouped so owners understand they belong together.

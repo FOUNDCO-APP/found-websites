@@ -1,3 +1,19 @@
+## Session: August 8, 2026 - Edit Website Dynamic Pages and Wrapper Consistency
+**AI:** Codex
+
+### Built
+- Edit Website page switcher now shows Shop only when the effective shopping-cart add-on is active.
+- Food businesses still show Menu.
+- Retail/makers businesses without shopping cart now see Products & Services instead of a misleading Shop entry.
+- About, Contact, and Services/Products & Services now group their preview and edit controls inside one connected card, matching the Homepage/Featured Update rhythm.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 7, 2026 - Featured Update Button Grouping Polish
 **AI:** Codex
 

@@ -305,10 +305,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   const publicSiteOrigin = getPublicSiteOrigin(company.slug, (config?.custom_domain as string | null | undefined) ?? null)
   const publicSiteHost = publicSiteOrigin.replace(/^https?:\/\//, "")
-  const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
-  const isShopCatalog = industryCategory === "retail" || industryCategory === "makers_crafts" || activeAddons.includes("shopping_cart") || activeIntent === "shop"
-  const showCatalog = isFoodCatalog || isShopCatalog
   const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
+  const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
+  const isShopCatalog = effectiveAddons.includes("shopping_cart")
+  const showCatalog = isFoodCatalog || isShopCatalog
   const catalogCopy = isFoodCatalog
     ? {
         pageLabel: "Menu Page",
@@ -897,6 +897,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
   const catalogTileLabel = isFoodCatalog ? "Menu" : "Shop"
   const catalogTileSub = isFoodCatalog ? "What guests order from" : "What you sell, priced"
+  const servicesPageLabel = industryCategory === "retail" || industryCategory === "makers_crafts" ? "Products & Services" : "Services"
 
   // Lateral quick-nav between the "Pages" sections, so owners can jump
   // Home -> About -> Contact etc. without detouring back through the hub.
@@ -905,7 +906,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     { view: "about", label: "About" },
     { view: "contact", label: "Contact" },
     ...(showCatalog ? [{ view: "catalog" as View, label: catalogTileLabel }] : []),
-    ...(!isFoodCatalog ? [{ view: "services" as View, label: "Services" }] : []),
+    ...(!isFoodCatalog ? [{ view: "services" as View, label: servicesPageLabel }] : []),
     { view: "photos", label: "Gallery" },
   ]
 
@@ -936,7 +937,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <HubTile label="About" sub="Your story, what you offer" onClick={() => setView("about")} />
               <HubTile label="Contact" sub="How customers reach you" onClick={() => setView("contact")} />
               {showCatalog && <HubTile label={catalogTileLabel} sub={catalogTileSub} onClick={() => setView("catalog")} />}
-              {!isFoodCatalog && <HubTile label="Services" sub="What you offer, priced" onClick={() => setView("services")} />}
+              {!isFoodCatalog && <HubTile label={servicesPageLabel} sub="What you offer, priced" onClick={() => setView("services")} />}
               <HubTile label="Gallery" sub="Photos customers see" flag={galleryPhotos.length === 0 ? "Add photos" : undefined} onClick={() => setView("photos")} />
             </div>
           </div>
@@ -1309,7 +1310,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+      <div style={{ margin: "16px 20px 0", padding: 20, borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", display: "flex", flexDirection: "column" as const, gap: 10 }}>
         <div style={{ position: "relative", height: 230, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {aboutPhotos[0]?.url ? (
             isVideoMedia(aboutPhotos[0].url) ? <VideoThumb src={aboutPhotos[0].url} /> : <img src={aboutPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1356,7 +1357,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         </div>
       </div>
 
-      <div style={{ margin: "16px 20px 0", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+      <div style={{ margin: "16px 20px 0", padding: 20, borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", display: "flex", flexDirection: "column" as const, gap: 10 }}>
         <div style={{ position: "relative", height: 200, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {contactPhotos[0]?.url ? (
             isVideoMedia(contactPhotos[0].url) ? <VideoThumb src={contactPhotos[0].url} /> : <img src={contactPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -1426,14 +1427,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
       {view === "services" && !isFoodCatalog && (
       <>
-      <BackHeader label="Services" onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
+      <BackHeader label={servicesPageLabel} onBack={() => setView("hub")} pages={pagesNavItems} currentView={view} onNavigate={setView} />
       <div style={{ padding: "10px 20px 0" }}>
         <SectionIntro title={photoSections.services.title} body="Keep the service list short, plain, and easy to understand." />
         <div style={{ marginTop: 18 }}>
-          <PageTab label="Services" href={`${publicSiteOrigin}/services`} />
+          <PageTab label={servicesPageLabel} href={`${publicSiteOrigin}/services`} />
         </div>
 
-        <div style={{ position: "relative", height: 180, marginTop: 16, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div style={{ marginTop: 16, padding: 20, borderRadius: 24, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+        <div style={{ position: "relative", height: 180, borderRadius: 20, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)" }}>
           {servicesPhotos[0]?.url ? (
             isVideoMedia(servicesPhotos[0].url) ? <VideoThumb src={servicesPhotos[0].url} /> : <img src={servicesPhotos[0].url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           ) : (
@@ -1462,7 +1464,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           </div>
         )}
 
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 10 }}>
           {services.map((svc, i) => {
             const search = servicesSearch.trim().toLowerCase()
             if (search && !svc.name.toLowerCase().includes(search)) return null
@@ -1516,6 +1518,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           )}
 
           <AIBar label="AI rewrites all service descriptions" isLoading={regenerating === "services"} color={GREEN} onTap={() => handleRegenerate("services")} />
+        </div>
         </div>
       </div>
       </>
