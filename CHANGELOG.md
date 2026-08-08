@@ -1,3 +1,17 @@
+## Session: August 8, 2026 - Photos Filter Visual Polish
+**AI:** Codex
+
+### Built
+- Removed the extra filtered-view status line under the Photos tabs.
+- Removed the Favorite photos explainer card above the grid.
+- Filtered views now keep the same clean `THIS WEEK` rhythm as the normal Photos grid.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Photos Filter Sheet Refinement
 **AI:** Codex
 

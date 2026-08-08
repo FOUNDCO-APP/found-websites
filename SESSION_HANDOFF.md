@@ -1,5 +1,15 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Photos Filter Visual Polish
+
+- Shawn approved the team direction to keep filtered Photos views visually identical to the normal gallery grid.
+- Removed the `Showing favorites photos` / `Showing not on site photos` status line under the tabs.
+- Removed the extra Favorite photos explainer card so filtered views start cleanly at `THIS WEEK`.
+- The active green filter icon remains the only visual cue that a filter is applied.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Photos Filter Sheet Refinement
 
 - Shawn approved the team/Jony direction to remove the visible filter chips under Photos and use a cleaner iOS Photos-style filter control.

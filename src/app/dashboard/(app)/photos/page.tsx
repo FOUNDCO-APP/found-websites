@@ -618,15 +618,10 @@ function PhotosPageInner() {
                 cursor: view === "all" && photos.length > 0 ? "pointer" : "default",
                 opacity: view === "all" && photos.length > 0 ? 1 : 0.34,
               }}
-            >
-              <FilterLinesIcon />
-            </button>
-          </div>
-          {view === "all" && photoFilter !== "all" && (
-            <p style={{ margin: "8px 0 0", ...TYPE.caption, color: "rgba(255,255,255,0.48)" }}>
-              Showing {FILTER_LABELS[photoFilter].toLowerCase()} photos.
-            </p>
-          )}
+          >
+            <FilterLinesIcon />
+          </button>
+        </div>
         </div>
       )}
 
@@ -714,20 +709,6 @@ function PhotosPageInner() {
           />
         ) : (
           <>
-          {view === "all" && photoFilter === "favorites" && favorites.length > 0 && (
-            <div style={{
-              margin: "0 0 18px",
-              padding: "14px 15px",
-              borderRadius: 16,
-              border: "1px solid rgba(255,75,139,0.18)",
-              backgroundColor: "rgba(255,75,139,0.075)",
-            }}>
-              <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.9)" }}>Favorite photos</p>
-              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.45, fontWeight: 650, color: "rgba(255,255,255,0.55)" }}>
-                Keep your best shots here so they are easy to find, download, or use on your site.
-              </p>
-            </div>
-          )}
           <DateGroupedGrid
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
