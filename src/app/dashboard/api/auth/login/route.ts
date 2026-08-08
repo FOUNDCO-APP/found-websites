@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = String(email).toLowerCase().trim()
+  const ipLimit = checkPublicRateLimit(req, { key: "password-login-ip", limit: 25, windowMs: 15 * 60 * 1000 })
+  if (!ipLimit.allowed) return rateLimitResponse(ipLimit)
+
   const limit = checkPublicRateLimit(req, { key: `password-login:${normalizedEmail}`, limit: 8, windowMs: 15 * 60 * 1000 })
   if (!limit.allowed) return rateLimitResponse(limit)
 

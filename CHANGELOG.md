@@ -1,3 +1,24 @@
+## Session: August 8, 2026 - Security Hardening Sprint 1
+**AI:** Codex
+
+### Built
+- Added hidden form-loaded timestamps to public contact, estimate, and reservation forms.
+- Expanded the shared spam guard so impossible instant submissions count as bot-like behavior when combined with other spam signals.
+- Added IP-level throttling to password login and magic-link login.
+- Added throttling and oversized-payload rejection to public QR endpoints.
+- Tightened the admin login cookie with explicit `sameSite: "lax"` and a shorter 8-hour lifetime.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+### Remaining Platform Checks
+- Confirm GitHub secret scanning and push protection in repository settings.
+- Confirm Vercel security settings match launch posture.
+- Consider Cloudflare Turnstile only if spam continues after the lighter protections.
+
+---
+
 ## Session: August 8, 2026 - Lead Spam Protection and RC Bicycles Cleanup
 **AI:** Codex
 

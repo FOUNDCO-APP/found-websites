@@ -1,5 +1,5 @@
 "use client"
-import { useActionState } from "react"
+import { useActionState, useMemo } from "react"
 import { submitLead } from "@/app/actions/leads"
 
 const initialState = { success: false, error: "" }
@@ -14,6 +14,7 @@ export default function ContactForm({
   primaryColor: string
 }) {
   const [state, formAction, pending] = useActionState(submitLead, initialState)
+  const formLoadedAt = useMemo(() => String(Date.now()), [])
 
   if (state.success) {
     return (
@@ -37,6 +38,7 @@ export default function ContactForm({
       <input type="hidden" name="company_id" value={companyId} />
       <input type="hidden" name="request_type" value="inquiry" />
       <input type="hidden" name="request_source" value="contact_form" />
+      <input type="hidden" name="form_loaded_at" value={formLoadedAt} />
       <input
         type="text"
         name="website"

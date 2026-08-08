@@ -6,6 +6,7 @@ type SpamInput = {
   service?: string | null
   companyName?: string | null
   honeypot?: string | null
+  loadedAt?: string | null
 }
 
 export type SpamCheck = {
@@ -74,6 +75,15 @@ export function checkLeadSpam(input: SpamInput): SpamCheck {
     reasons.push("hidden field filled")
   }
 
+  const loadedAt = Number(input.loadedAt)
+  if (Number.isFinite(loadedAt) && loadedAt > 0) {
+    const ageMs = Date.now() - loadedAt
+    if (ageMs >= 0 && ageMs < 1200) {
+      score += 4
+      reasons.push("submitted too fast")
+    }
+  }
+
   const domain = emailDomain(email)
   if (domain && SALES_DOMAINS.some(d => domain === d || domain.endsWith(`.${d}`) || allText.includes(d))) {
     score += 5
@@ -119,4 +129,3 @@ export function checkLeadSpam(input: SpamInput): SpamCheck {
 
   return { isSpam: score >= 5, score, reasons }
 }
-

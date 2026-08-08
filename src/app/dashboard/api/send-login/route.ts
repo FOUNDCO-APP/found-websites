@@ -13,6 +13,9 @@ export async function POST(req: NextRequest) {
     }
 
     const normalizedEmail = String(email).toLowerCase().trim()
+    const ipLimit = checkPublicRateLimit(req, { key: "magic-login-ip", limit: 20, windowMs: 15 * 60 * 1000 })
+    if (!ipLimit.allowed) return rateLimitResponse(ipLimit)
+
     const limit = checkPublicRateLimit(req, { key: `magic-login:${normalizedEmail}`, limit: 5, windowMs: 15 * 60 * 1000 })
     if (!limit.allowed) return rateLimitResponse(limit)
 

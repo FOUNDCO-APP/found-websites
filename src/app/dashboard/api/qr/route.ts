@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 export async function GET(req: NextRequest) {
+  const limit = checkPublicRateLimit(req, { key: "dashboard-qr-generate", limit: 30, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
+
   const { searchParams } = new URL(req.url)
   const data = searchParams.get("data")
   if (!data) return NextResponse.json({ error: "Missing data" }, { status: 400 })
+  if (data.length > 500) return NextResponse.json({ error: "QR data is too long" }, { status: 400 })
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(data)}&margin=20`
 

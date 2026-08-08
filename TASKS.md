@@ -1,5 +1,20 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Security Hardening Sprint 1
+
+- [x] Add hidden form-loaded timestamp to public contact, estimate, and reservation forms.
+- [x] Teach spam guard to score impossible instant submissions as bot-like behavior.
+- [x] Add IP-level throttling to password login.
+- [x] Add IP-level throttling to magic-link login.
+- [x] Add throttling and payload-size guard to public QR endpoints.
+- [x] Tighten admin login cookie with explicit same-site behavior and shorter lifetime.
+- [x] Verify `git diff --check` and `npm run build`.
+- [ ] Owner/platform check: confirm GitHub secret scanning and push protection are enabled.
+- [ ] Owner/platform check: confirm Vercel security settings match launch posture.
+- [ ] Future decision: add Cloudflare Turnstile only if spam pressure continues after hidden-field, timing, and rate-limit protections.
+
+---
+
 ## 2026-08-08 - Lead Spam Protection and RC Bicycles Cleanup
 
 - [x] Add shared spam guard for website lead/reservation submissions.

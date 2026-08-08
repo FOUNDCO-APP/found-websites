@@ -1,5 +1,5 @@
 "use client"
-import { useActionState } from "react"
+import { useActionState, useMemo } from "react"
 import { submitLead } from "@/app/actions/leads"
 
 const initialState = { success: false, error: "" }
@@ -69,6 +69,7 @@ export default function EstimateForm({
   industryCategory?: string
 }) {
   const [state, formAction, pending] = useActionState(submitLead, initialState)
+  const formLoadedAt = useMemo(() => String(Date.now()), [])
   const extraFields = getExtraFields(industryCategory)
 
   if (state.success) {
@@ -93,6 +94,7 @@ export default function EstimateForm({
       <input type="hidden" name="company_id" value={companyId} />
       <input type="hidden" name="request_type" value="estimate_request" />
       <input type="hidden" name="request_source" value="estimate_form" />
+      <input type="hidden" name="form_loaded_at" value={formLoadedAt} />
       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
       {/* Name + Phone */}

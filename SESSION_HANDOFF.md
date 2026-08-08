@@ -1,5 +1,18 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Security Hardening Sprint 1
+
+- Team direction: keep Found secure at every public entry point without making real customers fight a CAPTCHA unless the current lightweight protections prove insufficient.
+- Public contact, estimate, and reservation forms now send a hidden form-loaded timestamp. The shared spam guard treats impossible instant submissions as bot-like behavior when combined with other spam signals.
+- Password login now has IP-level throttling in addition to the existing per-email throttling.
+- Magic-link login now has IP-level throttling in addition to the existing per-email throttling.
+- Public QR image endpoints now have request throttling and reject oversized QR payloads.
+- Admin login cookie now explicitly uses `sameSite: "lax"` and an 8-hour lifetime, matching the safer admin support-view session window.
+- Security posture notes: code-level protections are shipped; platform settings still need owner-side verification in GitHub/Vercel/Cloudflare where applicable, especially push protection/secret scanning, Vercel deployment protection, and optional Turnstile if spam pressure continues.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Lead Spam Protection and RC Bicycles Cleanup
 
 - Shawn paused template work to focus on Ryan / RC Bicycles spam leads. Team direction: keep the inbox useful without deleting anything risky.

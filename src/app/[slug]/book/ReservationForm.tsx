@@ -1,5 +1,5 @@
 "use client"
-import { useActionState } from "react"
+import { useActionState, useMemo } from "react"
 import { submitReservation } from "@/app/actions/leads"
 
 const initialState = { success: false, error: "" }
@@ -16,6 +16,7 @@ export default function ReservationForm({
   companyPhone?: string | null
 }) {
   const [state, formAction, pending] = useActionState(submitReservation, initialState)
+  const formLoadedAt = useMemo(() => String(Date.now()), [])
 
   const today = new Date().toISOString().split("T")[0]
 
@@ -49,6 +50,7 @@ export default function ReservationForm({
   return (
     <form action={formAction} className="space-y-5">
       <input type="hidden" name="company_id" value={companyId} />
+      <input type="hidden" name="form_loaded_at" value={formLoadedAt} />
       <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

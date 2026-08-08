@@ -24,6 +24,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const partySize = (formData.get("party_size") as string)?.trim()
   const notes = (formData.get("notes") as string)?.trim()
   const website = (formData.get("website") as string)?.trim()
+  const formLoadedAt = (formData.get("form_loaded_at") as string)?.trim()
 
   if (!companyId || !name || !phone || !email || !date || !time) {
     return { success: false, error: "Name, phone, email, date, and time are required." }
@@ -40,7 +41,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
     .select("name, email, phone, plan")
     .eq("id", companyId)
     .single()
-  const spamCheck = checkLeadSpam({ name, phone, email, message: notes, companyName: company?.name, honeypot: website })
+  const spamCheck = checkLeadSpam({ name, phone, email, message: notes, companyName: company?.name, honeypot: website, loadedAt: formLoadedAt })
 
   const { error } = await supabase
     .from("leads")
@@ -125,6 +126,7 @@ export async function submitLead(_: unknown, formData: FormData) {
   const service = (formData.get("service") as string)?.trim()
   const message = (formData.get("message") as string)?.trim()
   const website = (formData.get("website") as string)?.trim()
+  const formLoadedAt = (formData.get("form_loaded_at") as string)?.trim()
   const requestType = normalizeSubmittedRequestType(formData.get("request_type"))
   const requestSource = normalizeSubmittedRequestSource(formData.get("request_source"))
 
@@ -154,7 +156,7 @@ export async function submitLead(_: unknown, formData: FormData) {
     .select("name, email, phone, plan, primary_intent")
     .eq("id", companyId)
     .single()
-  const spamCheck = checkLeadSpam({ name, phone, email, service, message, companyName: company?.name, honeypot: website })
+  const spamCheck = checkLeadSpam({ name, phone, email, service, message, companyName: company?.name, honeypot: website, loadedAt: formLoadedAt })
 
   const { error } = await supabase
     .from("leads")
