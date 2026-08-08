@@ -143,11 +143,22 @@ export async function DELETE(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { id, storage_path } = await req.json()
+  const { id } = await req.json()
   const admin = createAdminClient()
 
-  if (storage_path) await admin.storage.from(BUCKET).remove([storage_path])
+  const { data: photo } = await admin
+    .from("company_photos")
+    .select("url, storage_path")
+    .eq("id", id)
+    .eq("company_id", company.id)
+    .single()
+
+  if (photo?.storage_path) await admin.storage.from(BUCKET).remove([photo.storage_path])
   await admin.from("company_photos").delete().eq("id", id).eq("company_id", company.id)
+  if (photo?.url) {
+    await admin.from("media").delete().eq("company_id", company.id).eq("url", photo.url)
+    await admin.from("media").delete().eq("company_id", company.id).eq("thumbnail_url", photo.url)
+  }
 
   return NextResponse.json({ success: true })
 }

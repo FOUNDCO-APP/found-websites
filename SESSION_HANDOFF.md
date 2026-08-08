@@ -1716,3 +1716,27 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 3. Confirm the new Site Studio header and readiness cards feel natural on iPhone.
 4. Check each major section for clarity: Home, Featured Update, About, Contact, Products/Menu, Services, Gallery, Custom Domain.
 5. If the pass feels good, continue launch checklist; if not, bring screenshots back to the team before coding.
+
+---
+
+## August 8, 2026 - Current Handoff: Photos Page Language + Placement Cleanup
+
+### Latest completed work
+- Team-approved Photos cleanup is implemented for launch.
+- Heart now means Favorites only.
+- Gallery is now an explicit photo action/tab for customer-facing gallery photos.
+- Add to Site now only places a photo on a specific website page/section.
+- Featured Update was removed from the Photos placement sheet; owners should manage that from Edit Website.
+- Website gallery was removed from the Add to Site sheet because Gallery is handled directly on photo thumbnails.
+- Public Gallery no longer pulls old legacy `media` rows that could leave deleted test photos stuck online.
+
+### Verification
+- `cmd /c npm run build` passed.
+- `git diff --check` passed with only the normal CRLF warnings.
+
+### Next human QA
+1. Open Photos for Ryan or Lucky.
+2. Heart a photo and confirm it appears under Favorites.
+3. Tap Gallery on a photo and confirm it appears under Gallery and on the live Gallery/New Arrivals area.
+4. Tap Use on page and confirm the sheet only shows page photo choices like Home top photo, Home bottom photo, About page photo, Services page photo, Contact page photo, and Products/Menu page photo.
+5. Confirm Featured Update is not offered from Photos anymore.

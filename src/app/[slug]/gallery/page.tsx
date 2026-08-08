@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { intentLabel, intentHref } from "@/types/company"
@@ -28,7 +27,6 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     : await getCompanyBySlug(slug)
   if (!company) notFound()
 
-  const supabase = await createClient()
   const admin = createAdminClient()
 
   const plan = company.plan ?? null
@@ -73,11 +71,10 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
   // ── Pro: album-organized gallery ─────────────────────────────────────────
   if (isPro) {
-    const [albumsResult, albumPhotosResult, unsortedResult, mediaResult] = await Promise.all([
+    const [albumsResult, albumPhotosResult, unsortedResult] = await Promise.all([
       admin.from("photo_albums").select("id, name, slug").eq("company_id", company.id).order("created_at", { ascending: false }),
       admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
       admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("for_website", true).is("album_id", null).order("created_at", { ascending: false }),
-      supabase.from("media").select("id, url, thumbnail_url").eq("company_id", company.id).eq("website_flag", true).eq("type", "photo"),
     ])
 
     // Group album photos by album_id
@@ -96,10 +93,9 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
       }))
       .filter(a => a.photoCount > 0)
 
-    // Flat section: hearted but unsorted + legacy media
+    // Flat section: owner-managed gallery photos.
     const unsortedUrls = (unsortedResult.data ?? []).map(p => p.url)
-    const legacyUrls = (mediaResult.data ?? []).map(p => p.thumbnail_url || p.url).filter(u => !unsortedUrls.includes(u))
-    const flatPhotos = [...unsortedUrls, ...legacyUrls]
+    const flatPhotos = [...unsortedUrls]
 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
     const ctaImg = ctaSectionPhoto ?? albums[0]?.coverUrl ?? flatPhotos[0] ?? pickImg(imgs, 0)
@@ -153,7 +149,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
               </section>
             )}
 
-            {/* Unsorted + legacy photos */}
+            {/* Owner-managed gallery photos */}
             {flatPhotos.length > 0 && (
               <section className="bg-white pt-2 pb-10">
                 {albums.length > 0 && (
@@ -204,15 +200,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   }
 
   // ── Base plan: flat grid (unchanged) ─────────────────────────────────────
-  const [mediaResult, dashboardResult] = await Promise.all([
-    supabase
-      .from("media")
-      .select("id, url, thumbnail_url, type")
-      .eq("company_id", company.id)
-      .eq("website_flag", true)
-      .eq("type", "photo")
-      .order("gallery_order", { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: false }),
+  const [dashboardResult] = await Promise.all([
     admin
       .from("company_photos")
       .select("id, url")
@@ -222,8 +210,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   ])
 
   const dashUrls = (dashboardResult.data ?? []).map(p => p.url)
-  const mediaUrls = (mediaResult.data ?? []).map(p => p.thumbnail_url || p.url).filter(u => !dashUrls.includes(u))
-  const ownerPhotos = [...dashUrls, ...mediaUrls]
+  const ownerPhotos = [...dashUrls]
   const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: string[] = [...ownerPhotos, ...stockPhotos.filter(url => !ownerPhotos.includes(url))]
   const hasPhotos = allPhotos.length > 0

@@ -68,6 +68,7 @@ function destinationLabelForSlot(slot: string | null, destinations?: PhotoDestin
 }
 
 function photoSitePlacementLabel(photo: Photo, destinations?: PhotoDestination[] | null) {
+  if (photo.website_section === "announcement") return null
   return destinationLabelForSlot(photo.website_section, destinations)
     ?? (photo.in_gallery ? destinationLabelForSlot("gallery", destinations) : null)
 }
@@ -189,11 +190,21 @@ function PhotosPageInner() {
     }).catch(console.error)
   }
 
+  async function toggleGallery(photo: Photo) {
+    const inGallery = photo.in_gallery || (photo.for_website && !photo.website_section)
+    const include = !inGallery
+    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, in_gallery: include, for_website: include || Boolean(p.website_section) } : p))
+    const result = include ? await placePhoto(photo.id, "gallery") : await removeFromGallery(photo.id)
+    if (result && "error" in result) {
+      setPhotos(prev => prev.map(p => p.id === photo.id ? photo : p))
+    }
+  }
+
   async function remove(photo: Photo) {
     await fetch("/api/photos", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: photo.id, storage_path: photo.url }),
+      body: JSON.stringify({ id: photo.id }),
     })
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
@@ -417,7 +428,7 @@ function PhotosPageInner() {
   }
 
   const allPhotos = photos
-  const website = photos.filter(p => p.for_website || p.in_gallery || Boolean(p.website_section))
+  const gallery = photos.filter(p => p.in_gallery || (p.for_website && !p.website_section))
   const favorites  = photos.filter(p => p.for_social)
 
   const albumPhotos = activeAlbum
@@ -426,13 +437,13 @@ function PhotosPageInner() {
 
   const currentPhotos =
     view === "all"   ? allPhotos :
-    view === "website" ? website :
+    view === "website" ? gallery :
     view === "favorites"  ? favorites : []
 
   const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
 
-  const TAB_COUNTS = { all: allPhotos.length, website: website.length, favorites: favorites.length, albums: albums.length }
-  const TAB_LABELS = { all: "All Photos", website: "On Website", favorites: "Favorites", albums: "Albums" }
+  const TAB_COUNTS = { all: allPhotos.length, website: gallery.length, favorites: favorites.length, albums: albums.length }
+  const TAB_LABELS = { all: "All Photos", website: "Gallery", favorites: "Favorites", albums: "Albums" }
 
   function openLightroom(photo: Photo, source: Photo[]) {
     const index = source.findIndex(p => p.id === photo.id)
@@ -564,6 +575,7 @@ function PhotosPageInner() {
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
             onFlag={flag}
+            onGallery={toggleGallery}
             onPlace={openPlacement}
             onShare={handleSharePhoto}
             onRequestDelete={setDeleteConfirmPhoto}
@@ -599,6 +611,7 @@ function PhotosPageInner() {
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
             onFlag={flag}
+            onGallery={toggleGallery}
             onPlace={openPlacement}
             onShare={handleSharePhoto}
             onRequestDelete={setDeleteConfirmPhoto}
@@ -607,18 +620,18 @@ function PhotosPageInner() {
             onToggleSelect={toggleSelect}
             emptyTitle={
               view === "all"   ? "Take your first photo." :
-              view === "website" ? "No website photos yet." :
-              "Star your best photos."
+              view === "website" ? "No gallery photos yet." :
+              "No favorites yet."
             }
             emptySub={
               view === "all"   ? "Tap the camera button to take photos or upload from your phone." :
-              view === "website" ? "Heart a photo for your gallery, or use Add to Site to place it on a page." :
-              "Favorites are the photos you want to come back to first."
+              view === "website" ? "Tap Add to Gallery on any photo customers should see." :
+              "Heart the photos you want to find quickly later."
             }
             emptyIcon={
               view === "all" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> :
-              view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> :
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
             }
             onAdd={undefined}
             showAddCta={false}
@@ -633,6 +646,7 @@ function PhotosPageInner() {
           initialIndex={lightroomIndex}
           onClose={() => setLightroomIndex(null)}
           onFlag={flag}
+          onGallery={toggleGallery}
           onPlace={openPlacement}
           destinations={destinations}
           onShare={handleSharePhoto}
@@ -640,7 +654,7 @@ function PhotosPageInner() {
         />
       )}
 
-      {/* Place on Site sheet */}
+      {/* Add to Site sheet */}
       {placingPhoto && (
         <PlacementSheet
           photo={photos.find(p => p.id === placingPhoto.id) ?? placingPhoto}
@@ -769,11 +783,12 @@ function PhotosPageInner() {
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destinations, onShare, onRemove }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPlace, destinations, onShare, onRemove }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
   onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onGallery: (photo: Photo) => void
   onPlace?: (photo: Photo) => void
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
@@ -883,57 +898,59 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destin
         display: "flex", alignItems: "flex-end", justifyContent: "space-around",
         padding: `72px 32px max(env(safe-area-inset-bottom, 0px), 36px)`,
       }}>
-        {/* Heart â€” Website */}
-        <button onClick={() => onFlag(photo.id, "for_website", photo.for_website)} style={{
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-        }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: "50%",
-            backgroundColor: photo.for_website ? "rgba(255,75,139,0.28)" : "rgba(255,255,255,0.1)",
-            border: `2px solid ${photo.for_website ? "rgba(255,75,139,0.55)" : "rgba(255,255,255,0.14)"}`,
-            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.18s ease",
-          }}>
-            <svg width="25" height="25" viewBox="0 0 24 24"
-              fill={photo.for_website ? "#FF4B8B" : "none"}
-              stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.75)"}
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </div>
-          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Website</span>
-        </button>
-
-        {/* Star - Favorites */}
+        {/* Heart - private favorite */}
         <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
         }}>
           <div style={{
             width: 64, height: 64, borderRadius: "50%",
-            backgroundColor: photo.for_social ? "rgba(255,184,0,0.22)" : "rgba(255,255,255,0.1)",
-            border: `2px solid ${photo.for_social ? "rgba(255,184,0,0.5)" : "rgba(255,255,255,0.14)"}`,
+            backgroundColor: photo.for_social ? "rgba(255,75,139,0.28)" : "rgba(255,255,255,0.1)",
+            border: `2px solid ${photo.for_social ? "rgba(255,75,139,0.55)" : "rgba(255,255,255,0.14)"}`,
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.18s ease",
+          }}>
+            <svg width="25" height="25" viewBox="0 0 24 24"
+              fill={photo.for_social ? "#FF4B8B" : "none"}
+              stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.75)"}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
+        </button>
+
+        {/* Gallery - public photo gallery */}
+        <button onClick={() => onGallery(photo)} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%",
+            backgroundColor: (photo.in_gallery || (photo.for_website && !photo.website_section)) ? "rgba(50,208,116,0.2)" : "rgba(255,255,255,0.1)",
+            border: `2px solid ${(photo.in_gallery || (photo.for_website && !photo.website_section)) ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
             backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", justifyContent: "center",
             transition: "all 0.18s ease",
           }}>
             <svg width="24" height="24" viewBox="0 0 24 24"
-              fill={photo.for_social ? "#FFB800" : "none"}
-              stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.75)"}
+              fill="none"
+              stroke={(photo.in_gallery || (photo.for_website && !photo.website_section)) ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"}
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
             </svg>
           </div>
-          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FFB800" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: (photo.in_gallery || (photo.for_website && !photo.website_section)) ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>
+            {(photo.in_gallery || (photo.for_website && !photo.website_section)) ? "In Gallery" : "Gallery"}
+          </span>
         </button>
 
         {/* Add to Site */}
         {onPlace && (() => {
-          const active = Boolean(photo.website_section || photo.in_gallery)
+          const active = Boolean(photo.website_section && photo.website_section !== "announcement")
           const activeColor = active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.75)"
-          const label = active ? `On ${photoSitePlacementLabel(photo, destinations) ?? "site"}` : "Add to Site"
+          const label = active ? `On ${photoSitePlacementLabel(photo, destinations) ?? "page"}` : "Use on Page"
           return (
             <button onClick={() => onPlace(photo)} style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
@@ -1003,11 +1020,12 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destin
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onGallery?: (photo: Photo) => void
   onPlace?: (photo: Photo) => void
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
@@ -1061,6 +1079,7 @@ function DateGroupedGrid({
                 photo={photo}
                 onView={onView}
                 onFlag={onFlag}
+                onGallery={onGallery}
                 onPlace={onPlace}
                 destinations={destinations}
                 onShare={onShare}
@@ -1251,10 +1270,11 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView, onFlag, onPlace, destinations, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
+function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
   photo: Photo
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onGallery?: (photo: Photo) => void
   onPlace?: (photo: Photo) => void
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
@@ -1338,48 +1358,55 @@ function PhotoCard({ photo, onView, onFlag, onPlace, destinations, onShare, onRe
         <div style={{ position: "absolute", right: 8, top: 8, padding: "5px 7px", borderRadius: 999, backgroundColor: "rgba(0,0,0,0.72)", color: "white", fontSize: 10, fontWeight: 900, letterSpacing: "0.08em", pointerEvents: "none" }}>VIDEO</div>
       )}
       <div style={{ position: "absolute", inset: 0, pointerEvents: "none", boxShadow: isVideo ? "inset 0 0 0 1px rgba(255,255,255,0.05)" : "none" }} />
-      {/* Heart / Star - always visible, tappable straight from the thumbnail
+      {/* Favorite / Gallery - always visible, tappable straight from the thumbnail
           now instead of only inside the enlarged viewer. Hidden in select
           mode so a tap always means "select," not "toggle a flag." */}
-      {onFlag && !selectMode && (
+      {(onFlag || onGallery) && !selectMode && (
         <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4 }}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_website", photo.for_website) }}
-            aria-label={photo.for_website ? "Remove from website" : "Add to website"}
-            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_website ? "#FF4B8B" : "none"} stroke={photo.for_website ? "#FF4B8B" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
+          {onFlag && (
           <button
             onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }}
             aria-label={photo.for_social ? "Remove from favorites" : "Add to favorites"}
             style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_social ? "#FFB800" : "none"} stroke={photo.for_social ? "#FFB800" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_social ? "#FF4B8B" : "none"} stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
             </svg>
           </button>
+          )}
+          {onGallery && (() => {
+            const inGallery = photo.in_gallery || (photo.for_website && !photo.website_section)
+            return (
+          <button
+            onClick={(e) => { e.stopPropagation(); onGallery(photo) }}
+            aria-label={inGallery ? "Remove from gallery" : "Add to gallery"}
+            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={inGallery ? SIGNAL_GREEN : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </button>
+            )
+          })()}
         </div>
       )}
       {onPlace && !selectMode && (
         <button
           onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
-          aria-label={photo.website_section || photo.in_gallery ? `Change site placement: ${photoSitePlacementLabel(photo, destinations) ?? "site"}` : "Add to site"}
+          aria-label={photo.website_section && photo.website_section !== "announcement" ? `Change page photo: ${photoSitePlacementLabel(photo, destinations) ?? "page"}` : "Use on page"}
           style={{
             position: "absolute", bottom: 8, left: 8,
             height: 23, maxWidth: "calc(100% - 48px)", padding: "0 8px", borderRadius: 7,
-            border: photo.website_section || photo.in_gallery ? `1px solid ${SIGNAL_GREEN}88` : "none", cursor: "pointer",
-            backgroundColor: photo.website_section || photo.in_gallery ? "rgba(0,0,0,0.68)" : "rgba(0,0,0,0.55)",
+            border: photo.website_section && photo.website_section !== "announcement" ? `1px solid ${SIGNAL_GREEN}88` : "none", cursor: "pointer",
+            backgroundColor: photo.website_section && photo.website_section !== "announcement" ? "rgba(0,0,0,0.68)" : "rgba(0,0,0,0.55)",
             backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", gap: 4, justifyContent: "center",
           }}
         >
           {(() => {
-            const active = Boolean(photo.website_section || photo.in_gallery)
+            const active = Boolean(photo.website_section && photo.website_section !== "announcement")
             const activeColor = active ? "rgba(255,255,255,0.94)" : "rgba(255,255,255,0.85)"
-            const label = active ? (photoSitePlacementLabel(photo, destinations) ?? "On site") : "Add to site"
+            const label = active ? (photoSitePlacementLabel(photo, destinations) ?? "On page") : "Use on page"
             return (
               <>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1474,16 +1501,13 @@ function DestinationRow({ dest, photo, placingSlot, onPlace }: {
         <DestinationGlyph icon={dest.icon} color={iconColor} />
         <span style={{ display: "grid", gap: 3, minWidth: 0 }}>
           <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
-          {dest.subLabel ? (
-            <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.52)", lineHeight: 1.25 }}>{dest.subLabel}</span>
-          ) : null}
         </span>
       </span>
       {isPlacing ? (
         <Spinner size={16} color={SIGNAL_GREEN} />
       ) : isGallery ? (
         active ? (
-          <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>In - tap to remove</span>
+          <span style={{ ...TYPE.footnote, fontWeight: 800, color: SIGNAL_GREEN }}>Added</span>
         ) : (
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         )
@@ -1494,7 +1518,7 @@ function DestinationRow({ dest, photo, placingSlot, onPlace }: {
   )
 }
 
-// ── Placement sheet — "Place on Site" destination picker ──
+// ── Placement sheet — "Add to Site" destination picker ──
 function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, onPlace, onConfirmReplace, onCancelConfirm, onClose }: {
   photo: Photo
   destinations: PhotoDestination[] | null
@@ -1523,8 +1547,8 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
       <div onClick={handleClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 90, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", opacity: open ? 1 : 0, transition: "opacity 320ms ease" }} />
       <div className={`placement-sheet${open ? " placement-sheet-open" : ""}`} style={{ padding: "18px 20px calc(env(safe-area-inset-bottom, 0px) + 26px)" }}>
         <div style={{ width: 38, height: 4, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.16)", margin: "0 auto 18px" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, overflow: "hidden", flexShrink: 0, backgroundColor: "rgba(255,255,255,0.05)" }}>
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.05)", marginBottom: 14 }}>
             {isVideoMedia(photo.url, photo.mime_type) ? (
               <VideoPreviewTile src={photo.url} />
             ) : (
@@ -1533,8 +1557,8 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
             )}
           </div>
           <div style={{ minWidth: 0 }}>
-            <p style={{ margin: 0, ...TYPE.caption, color: `${SIGNAL_GREEN}cc` }}>PLACE ON SITE</p>
-            <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Where does this go?</h3>
+            <p style={{ margin: 0, ...TYPE.caption, color: `${SIGNAL_GREEN}cc` }}>ADD TO SITE</p>
+            <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Where do you want this photo?</h3>
           </div>
         </div>
 

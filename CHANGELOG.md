@@ -2129,3 +2129,22 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 2. Confirm the top says Site Studio / Make the site ready.
 3. Tap each readiness signal and confirm it jumps to the right section.
 4. Confirm Home, Featured Update, About, Contact, Products/Menu, Services, Gallery, and Custom Domain read like guided owner tasks.
+
+---
+
+## August 8, 2026 - Photos Page Launch Cleanup
+**AI:** Codex
+**Worked on:** Simplified Photos so non-technical owners understand Favorites, Gallery, and page photo placement.
+
+### Completed
+- Renamed the Photos flow around owner language: All Photos, Gallery, Favorites, and Albums.
+- Heart now saves a photo to Favorites instead of implying website placement.
+- Gallery is now its own explicit action on each photo.
+- Add to Site now uses a larger preview and asks where the owner wants the photo.
+- Removed Featured Update and Website gallery from Add to Site to avoid mixing page placement with homepage feature/banner controls.
+- Public Gallery now reads owner-managed gallery photos instead of legacy media fallback rows.
+- Deleting a photo now also removes matching legacy media records so old test images do not stay stuck on public Gallery pages.
+
+### Verification
+- `cmd /c npm run build` passed.
+- `git diff --check` passed with only the repo's normal CRLF warning.

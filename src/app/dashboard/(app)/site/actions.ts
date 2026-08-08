@@ -259,12 +259,12 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   const isHero = section === "hero"
   const isRemoving = section === null
 
-  if (isHero) {
+  if (!isRemoving && !isGallery) {
     await ctx.admin
       .from("company_photos")
       .update({ website_section: null })
       .eq("company_id", ctx.company.id)
-      .eq("website_section", "hero")
+      .eq("website_section", section)
   }
 
   // Update company_photos section tag. Public pages only fetch photos marked
@@ -636,7 +636,7 @@ export async function toggleGalleryPhoto(photoId: string, include: boolean) {
 
   const { error } = await ctx.admin
     .from("company_photos")
-    .update({ in_gallery: include, ...(include ? { for_website: true } : {}) })
+    .update({ in_gallery: include, ...(include || photo.website_section ? { for_website: true } : { for_website: false }) })
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }

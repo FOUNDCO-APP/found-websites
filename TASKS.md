@@ -822,3 +822,10 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] Owner QA: no confusing "tap to edit" wording remains in the main edit slate.
 - [ ] Owner QA: photo/gallery guidance makes stock vs owner photos understandable.
 - [ ] Owner QA: Custom Domain reads as a launch trust step.
+
+### Photos Page QA - August 8, 2026
+- [ ] Owner QA: Heart adds/removes a photo from Favorites only.
+- [ ] Owner QA: Gallery adds/removes a photo from the public gallery/New Arrivals area.
+- [ ] Owner QA: Add to Site only shows specific page photo destinations.
+- [ ] Owner QA: Featured Update is managed from Edit Website, not Photos.
+- [ ] Owner QA: Deleted test photos do not remain on the public Gallery page.
