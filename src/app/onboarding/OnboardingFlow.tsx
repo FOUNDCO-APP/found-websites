@@ -2058,6 +2058,10 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                               </div>
                             </div>
                             {/* Smart fork — only shown when no decision made yet */}
+                            <p className="text-xs leading-relaxed" style={{ color: tk.muted }}>
+                              Found can use both versions: your color logo on light sections and your white logo on dark sections.
+                            </p>
+
                             {!answers.navbarDark && !answers.logoWhiteUrl && (
                               <div className="space-y-2">
                                 {(logoTheme === "dark" || logoTheme === "unknown" || !logoTheme) && (
@@ -2076,8 +2080,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                       <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
                                     </div>
                                     <div>
-                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Use automatic light logo</span>
-                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Found will create a light version for dark backgrounds. Best for simple logos.</span>
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Use both automatically</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Color logo on light sections, automatic light logo on dark sections. Best for simple logos.</span>
                                     </div>
                                   </button>
                                   <label className="w-full flex items-center gap-3 rounded-xl border p-4 text-left cursor-pointer transition hover:opacity-80"
@@ -2096,8 +2100,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                       )}
                                     </div>
                                     <div className="flex-1">
-                                      <span className="block text-sm font-black" style={{ color: tk.text }}>I have a version for dark backgrounds</span>
-                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Upload the white or light logo your designer made for dark backgrounds.</span>
+                                      <span className="block text-sm font-black" style={{ color: tk.text }}>Upload my white logo</span>
+                                      <span className="block text-xs mt-0.5" style={{ color: tk.muted }}>Found will use your color logo on light sections and this version on dark sections.</span>
                                       {logoWhiteError && <p className="text-xs font-black text-red-500 mt-1">{logoWhiteError}</p>}
                                     </div>
                                     <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
@@ -2116,9 +2120,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                   <div className="h-1.5 rounded" style={{ width: "65%", backgroundColor: "rgba(255,255,255,0.65)" }} />
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
-                                  {logoTheme === "light"
-                                    ? "Light logo detected - dark backgrounds will use the automatic light version."
-                                    : "Automatic light logo selected for dark backgrounds."}
+                                  Using both - color logo on light sections, automatic light logo on dark sections.
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("navbarDark", false)}>
@@ -2137,8 +2139,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                                 </div>
                                 <p className="flex-1 text-xs font-black" style={{ color: answers.primaryColor }}>
                                   {logoTheme === "light"
-                                    ? `Light logo detected - light backgrounds use ${logoAutoDarkUrl ? "the automatic dark version" : "a dark version"}.`
-                                    : "Dark-background logo uploaded ✓"}
+                                    ? `Using both - dark sections use your uploaded logo, light sections use ${logoAutoDarkUrl ? "the automatic dark version" : "a dark version"}.`
+                                    : "Using both - color logo on light sections, white logo on dark sections."}
                                 </p>
                                 <button type="button" className="text-xs font-black underline shrink-0"
                                   style={{ color: tk.muted }} onClick={() => set("logoWhiteUrl", "")}>

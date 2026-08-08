@@ -86,6 +86,8 @@ export default async function EstimatePrintPage({
   const textLow  = isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.42)"
   const badgeBg  = isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.16)"
   const badgeBdr = isLight ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.28)"
+  const mastheadLogoUrl = !isLight && company.logo_white_url ? company.logo_white_url : company.logo_url
+  const mastheadLogoNeedsPlate = Boolean(mastheadLogoUrl && mastheadLogoUrl === company.logo_url && !isLight)
 
   return (
     <>
@@ -205,15 +207,15 @@ export default async function EstimatePrintPage({
 
               {/* Company */}
               <div className="pg-head-left">
-                {company.logo_url ? (
-                  <div style={{ background: "white", borderRadius: 8, padding: "7px 12px", display: "inline-block", marginBottom: 12 }}>
-                    <img src={company.logo_url} alt={companyName} style={{ height: 34, maxWidth: 160, objectFit: "contain", display: "block" }} />
+                {mastheadLogoUrl ? (
+                  <div style={{ background: mastheadLogoNeedsPlate ? "white" : "transparent", borderRadius: 8, padding: mastheadLogoNeedsPlate ? "7px 12px" : "0", display: "inline-block", marginBottom: 12 }}>
+                    <img src={mastheadLogoUrl} alt={companyName} style={{ height: 34, maxWidth: 160, objectFit: "contain", display: "block" }} />
                   </div>
                 ) : (
                   <div style={{ fontSize: 24, fontWeight: 900, color: textHigh, letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 12 }}>{companyName}</div>
                 )}
                 <div style={{ lineHeight: 1.9 }}>
-                  {company.logo_url && (
+                  {mastheadLogoUrl && (
                     <div style={{ fontSize: 14, fontWeight: 700, color: textHigh, marginBottom: 1 }}>{companyName}</div>
                   )}
                   {(company.city || company.state) && (

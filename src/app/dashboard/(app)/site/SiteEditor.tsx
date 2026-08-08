@@ -1761,9 +1761,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 18 }}>
               <div>
                 <div style={{ ...TYPE.caption, color: `${GREEN}cc`, marginBottom: 6 }}>Logo</div>
-                <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Check both backgrounds.</h3>
+                <h3 style={{ margin: 0, ...TYPE.title, color: "white" }}>Choose how your logo switches.</h3>
                 <p style={{ margin: "8px 0 0", ...TYPE.footnote, color: "rgba(255,255,255,0.52)", lineHeight: 1.45 }}>
-                  Found uses your color logo on light sections. Dark sections can use the color logo, an automatic white version, or a white logo file from your designer.
+                  Found can use your color logo on light sections and your white logo on dark sections, like a cinematic hero that turns into a white nav as visitors scroll.
                 </p>
               </div>
               <button onClick={() => setLogoReview(null)} disabled={savingLogoChoice} aria-label="Close logo preview" style={{ width: 38, height: 38, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: 20, fontWeight: 500, cursor: savingLogoChoice ? "default" : "pointer", flexShrink: 0 }}>x</button>
@@ -1774,24 +1774,24 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 <div style={{ height: 70, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <img src={logoReview.url} alt="Logo on light" style={{ maxWidth: "100%", maxHeight: 52, objectFit: "contain" }} />
                 </div>
-                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#111111" }}>Light</div>
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#111111" }}>Light sections</div>
               </div>
               <div style={{ borderRadius: 16, padding: 14, backgroundColor: "#111111", border: "1px solid rgba(255,255,255,0.12)" }}>
                 <div style={{ height: 70, display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <img src={logoReview.whiteUrl || logoReview.url} alt="Logo on dark" style={{ maxWidth: "100%", maxHeight: 52, objectFit: "contain" }} />
                 </div>
-                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#ffffff" }}>Dark</div>
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#ffffff" }}>Dark sections</div>
               </div>
             </div>
 
             {logoReview.whiteUrl ? (
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <button onClick={() => saveLogoDarkChoice(false)} disabled={savingLogoChoice || uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.78)", fontSize: 13, fontWeight: 900, cursor: savingLogoChoice || uploadingWhiteLogo ? "default" : "pointer" }}>Use color</button>
-                  <button onClick={() => saveLogoDarkChoice(true)} disabled={savingLogoChoice || uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 900, cursor: savingLogoChoice || uploadingWhiteLogo ? "default" : "pointer" }}>{savingLogoChoice ? "Saving..." : "Use white"}</button>
+                  <button onClick={() => saveLogoDarkChoice(false)} disabled={savingLogoChoice || uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.78)", fontSize: 13, fontWeight: 900, cursor: savingLogoChoice || uploadingWhiteLogo ? "default" : "pointer" }}>Use color only</button>
+                  <button onClick={() => saveLogoDarkChoice(true)} disabled={savingLogoChoice || uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 900, cursor: savingLogoChoice || uploadingWhiteLogo ? "default" : "pointer" }}>{savingLogoChoice ? "Saving..." : "Use both"}</button>
                 </div>
                 <label style={{ marginTop: 10, display: "block", width: "100%", padding: "12px", borderRadius: 14, border: "1px dashed rgba(255,255,255,0.16)", backgroundColor: "rgba(255,255,255,0.035)", color: "rgba(255,255,255,0.68)", fontSize: 13, fontWeight: 900, textAlign: "center", cursor: uploadingWhiteLogo ? "default" : "pointer", boxSizing: "border-box" }}>
-                  {uploadingWhiteLogo ? "Uploading..." : "Upload a white logo instead"}
+                  {uploadingWhiteLogo ? "Uploading..." : "Replace white logo"}
                   <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden disabled={uploadingWhiteLogo || savingLogoChoice}
                     onChange={e => e.target.files?.[0] && handleWhiteLogoUpload(e.target.files[0])} />
                 </label>
@@ -1799,10 +1799,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             ) : (
               <>
                 <div style={{ marginBottom: 10, padding: "12px 14px", borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.58)", ...TYPE.footnote, lineHeight: 1.45 }}>
-                  We could not safely make this one all white automatically. If your logo gets lost on dark backgrounds, upload a white version.
+                  We could not safely make this one all white automatically. If your logo gets lost on dark backgrounds, upload a white version and Found will use both.
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <button onClick={() => setLogoReview(null)} disabled={uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.78)", fontSize: 13, fontWeight: 900, cursor: uploadingWhiteLogo ? "default" : "pointer" }}>Use color</button>
+                  <button onClick={() => setLogoReview(null)} disabled={uploadingWhiteLogo} style={{ padding: "13px 12px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.78)", fontSize: 13, fontWeight: 900, cursor: uploadingWhiteLogo ? "default" : "pointer" }}>Use color only</button>
                   <label style={{ display: "block", padding: "13px 12px", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 13, fontWeight: 900, textAlign: "center", cursor: uploadingWhiteLogo ? "default" : "pointer", boxSizing: "border-box" }}>
                     {uploadingWhiteLogo ? "Uploading..." : "Upload white"}
                     <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden disabled={uploadingWhiteLogo}
