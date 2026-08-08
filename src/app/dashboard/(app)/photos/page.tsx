@@ -74,6 +74,28 @@ function groupPhotosByDate(photos: Photo[]): Array<{ label: string; photos: Phot
   return Array.from(map.entries()).map(([label, photos]) => ({ label, photos }))
 }
 
+function destinationLabelForSlot(slot: string | null, destinations?: PhotoDestination[] | null) {
+  if (!slot) return null
+  const found = destinations?.find(d => d.slot === slot)?.label
+  const label = found ?? ({
+    hero: "Top",
+    cta: "Bottom",
+    about: "About",
+    services: "Services",
+    contact: "Contact",
+    shop: "Shop",
+    order: "Menu",
+    announcement: "Update",
+    gallery: "Gallery",
+  } as Record<string, string>)[slot] ?? "Site"
+  return label.split(" — ")[0]
+}
+
+function photoSitePlacementLabel(photo: Photo, destinations?: PhotoDestination[] | null) {
+  return destinationLabelForSlot(photo.website_section, destinations)
+    ?? (photo.in_gallery ? destinationLabelForSlot("gallery", destinations) : null)
+}
+
 export default function PhotosPage() {
   return <Suspense><PhotosPageInner /></Suspense>
 }
@@ -622,6 +644,7 @@ function PhotosPageInner() {
             onPlace={openPlacement}
             onShare={handleSharePhoto}
             onRequestDelete={setDeleteConfirmPhoto}
+            destinations={destinations}
             selectMode={selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
@@ -698,6 +721,7 @@ function PhotosPageInner() {
           onClose={() => setLightroomIndex(null)}
           onFlag={flag}
           onPlace={openPlacement}
+          destinations={destinations}
           onShare={handleSharePhoto}
           onRemove={remove}
         />
@@ -843,12 +867,13 @@ function PhotosPageInner() {
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShare, onRemove }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, destinations, onShare, onRemove }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
   onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
   onRemove: (photo: Photo) => void
 }) {
@@ -1005,7 +1030,8 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShar
         {/* Add to Site */}
         {onPlace && (() => {
           const active = Boolean(photo.website_section || photo.in_gallery)
-          const activeColor = active ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"
+          const activeColor = active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.75)"
+          const label = active ? `On ${photoSitePlacementLabel(photo, destinations) ?? "site"}` : "Add to Site"
           return (
             <button onClick={() => onPlace(photo)} style={{
               display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
@@ -1013,7 +1039,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShar
             }}>
               <div style={{
                 width: 64, height: 64, borderRadius: "50%",
-                backgroundColor: active ? "rgba(50,208,116,0.22)" : "rgba(255,255,255,0.1)",
+                backgroundColor: active ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.1)",
                 border: `2px solid ${active ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
                 backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
                 display: "flex", alignItems: "center", justifyContent: "center",
@@ -1023,7 +1049,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShar
                   <rect x="3" y="4" width="18" height="16" rx="2"/><rect x="7" y="9" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
                 </svg>
               </div>
-              <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Add to Site</span>
+              <span style={{ maxWidth: 86, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "0.6875rem", fontWeight: 700, color: active ? "rgba(255,255,255,0.82)" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>{label}</span>
             </button>
           )
         })()}
@@ -1075,12 +1101,13 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onPlace, onShar
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onPlace, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
@@ -1133,6 +1160,7 @@ function DateGroupedGrid({
                 onView={onView}
                 onFlag={onFlag}
                 onPlace={onPlace}
+                destinations={destinations}
                 onShare={onShare}
                 onRequestDelete={onRequestDelete}
                 selectMode={selectMode}
@@ -1614,11 +1642,12 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView, onFlag, onPlace, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
+function PhotoCard({ photo, onView, onFlag, onPlace, destinations, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
   photo: Photo
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
   onPlace?: (photo: Photo) => void
+  destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
   onRequestDelete?: (photo: Photo) => void
   selectMode?: boolean
@@ -1728,24 +1757,27 @@ function PhotoCard({ photo, onView, onFlag, onPlace, onShare, onRequestDelete, s
       {onPlace && !selectMode && (
         <button
           onClick={(e) => { e.stopPropagation(); onPlace(photo) }}
-          aria-label="Add to site"
+          aria-label={photo.website_section || photo.in_gallery ? `Change site placement: ${photoSitePlacementLabel(photo, destinations) ?? "site"}` : "Add to site"}
           style={{
             position: "absolute", bottom: 8, left: 8,
-            height: 22, padding: "0 8px", borderRadius: 7, border: "none", cursor: "pointer",
-            backgroundColor: photo.website_section || photo.in_gallery ? `${SIGNAL_GREEN}30` : "rgba(0,0,0,0.55)",
+            height: 23, maxWidth: "calc(100% - 48px)", padding: "0 8px", borderRadius: 7,
+            border: photo.website_section || photo.in_gallery ? `1px solid ${SIGNAL_GREEN}88` : "none", cursor: "pointer",
+            backgroundColor: photo.website_section || photo.in_gallery ? "rgba(0,0,0,0.68)" : "rgba(0,0,0,0.55)",
             backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
             display: "flex", alignItems: "center", gap: 4, justifyContent: "center",
           }}
         >
           {(() => {
-            const activeColor = photo.website_section || photo.in_gallery ? SIGNAL_GREEN : "rgba(255,255,255,0.85)"
+            const active = Boolean(photo.website_section || photo.in_gallery)
+            const activeColor = active ? "rgba(255,255,255,0.94)" : "rgba(255,255,255,0.85)"
+            const label = active ? (photoSitePlacementLabel(photo, destinations) ?? "On site") : "Add to site"
             return (
               <>
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={activeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="4" width="18" height="16" rx="2"/>
                   <rect x="6.5" y="8" width="7" height="6" rx="1" fill={activeColor} stroke="none"/>
                 </svg>
-                <span style={{ fontSize: 9, fontWeight: 900, letterSpacing: "0.02em", color: activeColor }}>ADD TO SITE</span>
+                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 9, fontWeight: 900, letterSpacing: "0.02em", color: activeColor, textTransform: "uppercase" }}>{label}</span>
               </>
             )
           })()}
