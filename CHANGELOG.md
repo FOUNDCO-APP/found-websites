@@ -1,3 +1,19 @@
+## Session: August 8, 2026 - Marketing Subscriber Count Fix
+**AI:** Codex
+
+### Built
+- Marketing now counts contacts with `email_subscribed = true` and an email address, regardless of the contact's original source.
+- Marketing send API uses the same corrected subscriber definition.
+- Marketing helper copy now says subscribers are opted-in email contacts, not every contact.
+- Subscribe API now checks insert/upsert errors so a failed save cannot look successful.
+
+### Verification
+- Live Lucky query now returns `1` email subscriber with the corrected logic.
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Security Hardening Sprint 2
 **AI:** Codex
 

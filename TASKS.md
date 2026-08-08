@@ -1,5 +1,17 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Marketing Subscriber Count Fix
+
+- [x] Reproduce Lucky mismatch: contact exists and is email opted-in, but source is `website`.
+- [x] Remove overly strict `source = subscribe_page` filter from Marketing page counts.
+- [x] Remove overly strict `source = subscribe_page` filter from Marketing send API.
+- [x] Update Marketing helper copy to explain subscribers are opted-in email contacts, not every contact.
+- [x] Make subscribe API return an error if Supabase insert/upsert fails.
+- [x] Verify corrected Lucky query returns `1` email subscriber.
+- [x] Verify `git diff --check` and `npm run build`.
+
+---
+
 ## 2026-08-08 - Security Hardening Sprint 2
 
 - [x] Confirm Lucky public form smoke test still submits normally.

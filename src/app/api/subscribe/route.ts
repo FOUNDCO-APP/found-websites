@@ -54,11 +54,19 @@ export async function POST(req: NextRequest) {
     if (pet_birthday_day) contactData.pet_birthday_day = Number(pet_birthday_day)
 
     if (email) {
-      await admin
+      const { error } = await admin
         .from("contacts")
         .upsert(contactData, { onConflict: "company_id,email", ignoreDuplicates: false })
+      if (error) {
+        console.error("[subscribe] upsert error:", error)
+        return NextResponse.json({ error: "Could not save this signup." }, { status: 500 })
+      }
     } else {
-      await admin.from("contacts").insert(contactData)
+      const { error } = await admin.from("contacts").insert(contactData)
+      if (error) {
+        console.error("[subscribe] insert error:", error)
+        return NextResponse.json({ error: "Could not save this signup." }, { status: 500 })
+      }
     }
 
     return NextResponse.json({ success: true })

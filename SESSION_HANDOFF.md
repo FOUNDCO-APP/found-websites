@@ -1,5 +1,16 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Marketing Subscriber Count Fix
+
+- Shawn signed up through Lucky's public subscribe link and saw success, but the Marketing compose audience still showed `0`.
+- Root cause: Lucky's existing opted-in contact had `email_subscribed = true` but `source = "website"`. Marketing was incorrectly requiring `source = "subscribe_page"` in addition to the real opt-in flag.
+- Team fix: Marketing page and send API now count/send to contacts with `email_subscribed = true` and an email address, regardless of original source.
+- Subscribe API now checks Supabase insert/upsert errors and returns a real error instead of showing success if a signup fails to save.
+- Live data verification: Lucky currently resolves to `1` email subscriber with the corrected query.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Security Hardening Sprint 2
 
 - Lucky public form smoke test passed after Sprint 1, confirming real customer submissions still work.

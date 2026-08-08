@@ -472,7 +472,7 @@ export default function MarketingClient({
         <span style={{ color: "white", fontWeight: 700 }}>{campaigns.length}</span> campaigns sent
       </p>
       <p style={{ margin: "0 0 20px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-        Subscribers are people who opted in through your public website — not your contacts list.
+        Subscribers are people marked as opted in to email — not every contact.
       </p>
 
       {/* Hero card — no icon, just headline + button */}
