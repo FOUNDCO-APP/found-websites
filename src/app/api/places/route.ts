@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 type AddressComponent = {
   long_name: string
@@ -23,12 +24,21 @@ export async function GET(req: NextRequest) {
   const key = process.env.GOOGLE_PLACES_API_KEY
   if (!key) return NextResponse.json({ predictions: [] })
 
+  const limit = checkPublicRateLimit(req, { key: "places-public", limit: 60, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
+
   const lat = req.nextUrl.searchParams.get("lat")
   const lng = req.nextUrl.searchParams.get("lng")
   if (lat && lng) {
+    const latNumber = Number(lat)
+    const lngNumber = Number(lng)
+    if (!Number.isFinite(latNumber) || !Number.isFinite(lngNumber) || Math.abs(latNumber) > 90 || Math.abs(lngNumber) > 180) {
+      return NextResponse.json({ location: null }, { status: 400 })
+    }
+
     const url =
       `https://maps.googleapis.com/maps/api/geocode/json` +
-      `?latlng=${encodeURIComponent(`${lat},${lng}`)}` +
+      `?latlng=${encodeURIComponent(`${latNumber},${lngNumber}`)}` +
       `&result_type=locality|administrative_area_level_2|administrative_area_level_1` +
       `&key=${key}`
 
@@ -39,6 +49,7 @@ export async function GET(req: NextRequest) {
 
   const q = req.nextUrl.searchParams.get("q") ?? ""
   if (q.length < 2) return NextResponse.json({ predictions: [] })
+  if (q.length > 80) return NextResponse.json({ predictions: [] }, { status: 400 })
 
   const url =
     `https://maps.googleapis.com/maps/api/place/autocomplete/json` +

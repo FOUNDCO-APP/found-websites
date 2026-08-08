@@ -1,5 +1,19 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Security Hardening Sprint 2
+
+- [x] Confirm Lucky public form smoke test still submits normally.
+- [x] Replace unauthenticated public marketing sender with guarded dashboard sender.
+- [x] Require dashboard ownership before stock-photo route can update a company website image.
+- [x] Add throttling and input validation to public Places lookup.
+- [x] Add throttling to dashboard Places autocomplete.
+- [x] Point dashboard Places input at secured `/dashboard/api/places-autocomplete`.
+- [x] Review cron routes for `CRON_SECRET`.
+- [x] Confirm Stripe webhook signature check is present.
+- [x] Verify `git diff --check` and `npm run build`.
+
+---
+
 ## 2026-08-08 - Security Hardening Sprint 1
 
 - [x] Add hidden form-loaded timestamp to public contact, estimate, and reservation forms.

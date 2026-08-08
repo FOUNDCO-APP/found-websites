@@ -1,3 +1,22 @@
+## Session: August 8, 2026 - Security Hardening Sprint 2
+**AI:** Codex
+
+### Built
+- Replaced the public marketing send implementation with the guarded dashboard marketing sender.
+- Added login, company ownership, and throttling checks to the stock-photo update route.
+- Added throttling and input validation to public Places lookup.
+- Added throttling to dashboard Places autocomplete and pointed the dashboard Places input at that secured route.
+
+### Reviewed
+- Cron routes already require `CRON_SECRET`.
+- Stripe webhook already verifies the Stripe signature before processing events.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Security Hardening Sprint 1
 **AI:** Codex
 

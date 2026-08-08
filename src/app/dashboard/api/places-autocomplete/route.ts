@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 async function geocodeBias(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
   try {
@@ -18,8 +19,12 @@ export async function GET(req: NextRequest) {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ predictions: [] }, { status: 401 })
 
+  const limit = checkPublicRateLimit(req, { key: "places-dashboard", limit: 120, windowMs: 10 * 60 * 1000 })
+  if (!limit.allowed) return rateLimitResponse(limit)
+
   const q = req.nextUrl.searchParams.get("q")?.trim()
   if (!q || q.length < 2) return NextResponse.json({ predictions: [] })
+  if (q.length > 120) return NextResponse.json({ predictions: [] }, { status: 400 })
 
   const bias = req.nextUrl.searchParams.get("bias")?.trim()
 

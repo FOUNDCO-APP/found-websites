@@ -1,5 +1,18 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Security Hardening Sprint 2
+
+- Lucky public form smoke test passed after Sprint 1, confirming real customer submissions still work.
+- Team follow-up: inspect public API/webhook entry points for service-role access, external API cost abuse, and missing owner checks.
+- Public `/api/marketing/send` no longer contains unauthenticated service-role email-sending logic. It now routes through the dashboard marketing sender, which requires dashboard access and the `email_marketing` add-on.
+- `/api/stock-photo` now requires a logged-in dashboard user, verifies the requested company belongs to that user, and has request throttling before calling Pexels or updating `website_config`.
+- Public `/api/places` now has request throttling plus query length and lat/lng validation before calling Google Places/Geocoding.
+- Dashboard Places autocomplete now has request throttling and the shared `PlacesInput` component points to `/dashboard/api/places-autocomplete`, the secured route that already requires a logged-in dashboard user.
+- Cron routes were reviewed and already require `CRON_SECRET`. Stripe webhook already verifies the Stripe signature.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Security Hardening Sprint 1
 
 - Team direction: keep Found secure at every public entry point without making real customers fight a CAPTCHA unless the current lightweight protections prove insufficient.

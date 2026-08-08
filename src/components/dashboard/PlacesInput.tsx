@@ -29,7 +29,7 @@ export default function PlacesInput({
       try {
         const qs = new URLSearchParams({ q })
         if (locationBias) qs.set("bias", locationBias)
-        const res = await fetch(`/api/places-autocomplete?${qs}`)
+        const res = await fetch(`/dashboard/api/places-autocomplete?${qs}`)
         const data = await res.json()
         if (data.predictions?.length > 0) {
           setPredictions(data.predictions)

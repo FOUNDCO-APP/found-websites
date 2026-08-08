@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { getCompany } from "@/lib/dashboard/getCompany"
+import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createClient } from "@/lib/supabase/server"
 import { fetchStockPhoto } from "@/lib/pexels"
 
@@ -6,10 +9,21 @@ import { fetchStockPhoto } from "@/lib/pexels"
 // Fetches a Pexels photo and saves it to website_config so it's never fetched again.
 export async function POST(request: NextRequest) {
   try {
+    const limit = checkPublicRateLimit(request, { key: "stock-photo", limit: 12, windowMs: 10 * 60 * 1000 })
+    if (!limit.allowed) return rateLimitResponse(limit)
+
+    const user = await getAuthUser()
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
     const { companyId, industryCategory, vibe, city } = await request.json()
 
     if (!companyId || !industryCategory) {
       return NextResponse.json({ error: "companyId and industryCategory required" }, { status: 400 })
+    }
+
+    const company = await getCompany(user.id, user.email ?? "")
+    if (!company || company.id !== companyId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
     const photoUrl = await fetchStockPhoto(industryCategory, vibe, city)
