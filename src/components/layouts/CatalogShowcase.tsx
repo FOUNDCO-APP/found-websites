@@ -40,6 +40,10 @@ export default function CatalogShowcase({ company, activeAddons = [] }: { compan
   const linkLabel = isFood ? "View full menu" : "Shop all products"
   const items = rows.slice(0, 10)
   const loop = items.length >= 4 ? [...items, ...items] : items
+  const imageFrameClass = isFood ? "bg-neutral-100" : "bg-neutral-50 p-4"
+  const imageClass = isFood
+    ? "h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+    : "h-full w-full object-contain transition-transform duration-700 ease-out group-hover:scale-[1.03]"
 
   return (
     <section className="overflow-hidden bg-white pb-28 pt-28 md:py-28">
@@ -63,8 +67,8 @@ export default function CatalogShowcase({ company, activeAddons = [] }: { compan
             const image = itemImage(item)
             return (
               <Link key={`${item.category}-${item.name}-${index}`} href={href} className="group block w-[74vw] max-w-[320px] shrink-0 overflow-hidden rounded-[26px] border border-neutral-200 bg-white text-left shadow-[0_18px_50px_rgba(0,0,0,0.08)] md:w-[300px]" style={{ textDecoration: "none" }}>
-                <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100">
-                  {image && <img src={image} alt={item.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />}
+                <div className={`relative aspect-[4/3] overflow-hidden ${imageFrameClass}`}>
+                  {image && <img src={image} alt={item.name} className={imageClass} />}
                 </div>
                 <div className="p-5">
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: primary }}>{item.category}</p>
