@@ -486,41 +486,29 @@ function PhotosPageInner() {
   return (
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
 
-      {/* Header */}
-      <div style={{ padding: "32px 24px 20px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-        <div>
-          {activeAlbum ? (
-            <>
-              <button onClick={() => setActiveAlbum(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
-              </button>
-              <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
-              <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>Photos</h1>
-              <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                {photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
-              </p>
-            </>
-          )}
-        </div>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          {!selectMode && photos.length > 0 && (
-            <button onClick={() => setSelectMode(true)} style={{
-              padding: "10px 16px", borderRadius: 100,
-              backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
-            }}>
-              Select
+      {activeAlbum ? (
+        <div style={{ padding: "18px 24px 10px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+          <div>
+            <button onClick={() => setActiveAlbum(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
             </button>
-          )}
-          {activeAlbum && (
+            <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
+            <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            {!selectMode && photos.length > 0 && (
+              <button onClick={() => setSelectMode(true)} style={{
+                padding: "10px 16px", borderRadius: 100,
+                backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+              }}>
+                Select
+              </button>
+            )}
             <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
               display: "flex", alignItems: "center", gap: 6,
               padding: "10px 16px", borderRadius: 100,
@@ -542,25 +530,60 @@ function PhotosPageInner() {
                 </svg>
               )}
             </button>
-          )}
-          <button onClick={openCamera} disabled={uploading} style={{
-            width: 44, height: 44, borderRadius: "50%",
-            backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
-          }}>
-            {uploading ? (
-              <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            )}
-          </button>
+            <button onClick={openCamera} disabled={uploading} style={{
+              width: 44, height: 44, borderRadius: "50%",
+              backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
+            }}>
+              {uploading ? (
+                <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
-        <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleUpload} style={{ display: "none" }} />
-      </div>
+      ) : (
+        <div style={{ padding: "16px 24px 8px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>Photos</h1>
+            <p style={{ margin: "2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              {photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
+            {!selectMode && photos.length > 0 && (
+              <button onClick={() => setSelectMode(true)} style={{
+                padding: "10px 16px", borderRadius: 100,
+                backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+              }}>
+                Select
+              </button>
+            )}
+            <button onClick={openCamera} disabled={uploading} aria-label="Add photo" style={{
+              width: 44, height: 44, borderRadius: "50%",
+              backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
+            }}>
+              {uploading ? (
+                <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+      <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleUpload} style={{ display: "none" }} />
 
       {/* Tabs â€” hidden when inside an album */}
       {!activeAlbum && (
@@ -568,7 +591,7 @@ function PhotosPageInner() {
           position: "sticky",
           top: "calc(max(env(safe-area-inset-top), 14px) + 47px)",
           zIndex: 30,
-          padding: "8px 24px 12px",
+          padding: "6px 24px 10px",
           display: "flex",
           flexDirection: "column",
           gap: 0,
@@ -577,7 +600,6 @@ function PhotosPageInner() {
           WebkitBackdropFilter: "blur(16px)",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}>
-          <div style={{ position: "absolute", left: 0, right: 0, top: -140, height: 140, backgroundColor: "#080A09", pointerEvents: "none" }} />
           <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "stretch", gap: 10, width: "100%" }}>
             <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 0 }}>
               {(["all", "website", "albums"] as View[]).map(v => {
@@ -1619,19 +1641,19 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
       />
       <div style={{
         position: "absolute",
-        top: "calc(100% + 10px)",
+        top: "calc(100% + 8px)",
         right: 24,
-        width: "min(356px, calc(100vw - 48px))",
+        width: "min(316px, calc(100vw - 48px))",
         zIndex: 32,
-        backgroundColor: "rgba(246,248,246,0.9)",
-        borderRadius: 28,
-        border: "1px solid rgba(255,255,255,0.62)",
-        padding: 12,
-        boxShadow: "0 24px 80px rgba(0,0,0,0.38)",
-        backdropFilter: "blur(34px) saturate(1.35)",
-        WebkitBackdropFilter: "blur(34px) saturate(1.35)",
+        backgroundColor: "rgba(15,18,16,0.96)",
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.11)",
+        padding: 8,
+        boxShadow: "0 18px 54px rgba(0,0,0,0.46)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
       }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, position: "relative" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative" }}>
           {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
             const selected = active === filter
             return (
@@ -1639,28 +1661,28 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
                 key={filter}
                 onClick={() => onSelect(filter)}
                 style={{
-                  minHeight: 74,
-                  borderRadius: 20,
-                  border: "none",
-                  backgroundColor: selected ? "rgba(50,208,116,0.16)" : "transparent",
-                  color: "#0A0C0B",
+                  minHeight: 60,
+                  borderRadius: 16,
+                  border: selected ? `1px solid ${SIGNAL_GREEN}44` : "1px solid transparent",
+                  backgroundColor: selected ? `${SIGNAL_GREEN}18` : "transparent",
+                  color: "white",
                   cursor: "pointer",
-                  padding: "0 14px",
+                  padding: "0 12px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  gap: 14,
+                  gap: 12,
                   textAlign: "left",
                 }}
               >
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 14, minWidth: 0 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                   <span style={{
-                    width: 42,
-                    height: 42,
+                    width: 34,
+                    height: 34,
                     borderRadius: "50%",
-                    backgroundColor: "rgba(255,255,255,0.72)",
-                    boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04)",
-                    color: selected ? SIGNAL_GREEN : "rgba(10,12,11,0.62)",
+                    backgroundColor: selected ? `${SIGNAL_GREEN}20` : "rgba(255,255,255,0.07)",
+                    boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.08)",
+                    color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -1669,15 +1691,15 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
                     {icons[filter]}
                   </span>
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: "block", fontSize: 20, fontWeight: 780, color: selected ? "#0E6D37" : "#101211" }}>{labels[filter]}</span>
-                    <span style={{ display: "block", marginTop: 2, fontSize: 13, lineHeight: 1.28, fontWeight: 560, color: "rgba(10,12,11,0.52)" }}>{descriptions[filter]}</span>
+                    <span style={{ display: "block", fontSize: 16, fontWeight: 850, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.94)" }}>{labels[filter]}</span>
+                    <span style={{ display: "block", marginTop: 2, fontSize: 11, lineHeight: 1.28, fontWeight: 620, color: "rgba(255,255,255,0.46)" }}>{descriptions[filter]}</span>
                   </span>
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                  <span style={{ fontSize: 17, fontWeight: 760, color: selected ? "#0E6D37" : "rgba(10,12,11,0.42)" }}>{counts[filter]}</span>
+                  <span style={{ fontSize: 14, fontWeight: 850, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.36)" }}>{counts[filter]}</span>
                   {selected && (
-                    <span style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <span style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </span>
