@@ -60,7 +60,7 @@ export default function StickyCtaBar({
         <a
           href={href}
           className="btn w-full text-white"
-          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "999px" }}
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "var(--button-radius, 6px)" }}
         >
           {label}
         </a>
@@ -68,7 +68,7 @@ export default function StickyCtaBar({
         <Link
           href={href}
           className="btn w-full text-white"
-          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "999px" }}
+          style={{ backgroundColor: color, borderColor: color, display: "block", textAlign: "center", padding: "12px 20px", borderWidth: 0, borderRadius: "var(--button-radius, 6px)" }}
         >
           {label}
         </Link>
