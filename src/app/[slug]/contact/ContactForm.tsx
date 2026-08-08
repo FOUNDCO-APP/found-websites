@@ -37,6 +37,14 @@ export default function ContactForm({
       <input type="hidden" name="company_id" value={companyId} />
       <input type="hidden" name="request_type" value="inquiry" />
       <input type="hidden" name="request_source" value="contact_form" />
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="hidden"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>

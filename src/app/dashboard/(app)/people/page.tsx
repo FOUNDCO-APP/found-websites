@@ -135,7 +135,7 @@ export default async function PeoplePage() {
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
-  const people = groupLeads((leads ?? []) as LeadItem[])
+  const people = groupLeads(((leads ?? []) as LeadItem[]).filter(lead => lead.status !== "spam"))
   const bm = getBusinessModel(company.industry_category, null)
   const tabLabel = company.industry_category === "food" ? "Guests" : bm.tabLabel
   const tabLabelSingular = company.industry_category === "food" ? "Guest" : bm.tabLabelSingular
@@ -150,4 +150,3 @@ export default async function PeoplePage() {
     />
   )
 }
-

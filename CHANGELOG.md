@@ -1,3 +1,20 @@
+## Session: August 8, 2026 - Lead Spam Protection and RC Bicycles Cleanup
+**AI:** Codex
+
+### Built
+- Added a shared lead spam guard for public contact, estimate, and reservation submissions.
+- Added hidden bot fields to public lead/reservation forms.
+- Obvious spam is now saved as `status = spam` instead of being deleted, and it skips owner notification emails, customer auto-replies, and contact auto-save.
+- Dashboard inbox now hides spam from normal work, search, counts, and customer records while keeping a collapsed `Spam hidden` section for recovery.
+- Added owner controls to `Mark as spam` and `Not spam`.
+- Cleaned Ryan / RC Bicycles live data by marking 10 obvious spam leads as spam while keeping Shawn Lopez's test lead open.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Edit Website Dynamic Pages and Wrapper Consistency
 **AI:** Codex
 

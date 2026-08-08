@@ -18,7 +18,7 @@ export default async function HomePage() {
   const [{ data: allLeadsRaw }, { data: lastPhotoRow }, { data: siteConfig }] = await Promise.all([
     admin
       .from("leads")
-      .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type")
+      .select("id, name, email, phone, message, created_at, partial_answers, temperature, source, type, status")
       .eq("company_id", company.id)
       .neq("type", "onboarding_abandoned")
       .order("created_at", { ascending: false })
@@ -41,6 +41,7 @@ export default async function HomePage() {
   // so first occurrence = most recent submission per unique person)
   const seen = new Set<string>()
   const allLeads = (allLeadsRaw ?? []).filter(l => {
+    if (l.status === "spam") return false
     const key = l.phone?.replace(/\D/g, "") || l.email?.toLowerCase() || l.id
     if (seen.has(key)) return false
     seen.add(key)

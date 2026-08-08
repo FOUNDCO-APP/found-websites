@@ -1,5 +1,23 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-08 - Lead Spam Protection and RC Bicycles Cleanup
+
+- [x] Add shared spam guard for website lead/reservation submissions.
+- [x] Add hidden bot field to public contact, estimate, and reservation forms.
+- [x] Save obvious spam as `status = spam` without deleting the record.
+- [x] Skip owner notification emails, customer auto-replies, and contact auto-save for obvious spam.
+- [x] Hide spam from normal inbox search/open/done workflow.
+- [x] Add collapsed `Spam hidden` recovery section with `Not spam`.
+- [x] Add manual `Mark as spam` action for owner cleanup.
+- [x] Exclude spam from dashboard home counts, navigation badges, and People/Customers.
+- [x] Mark 10 obvious RC Bicycles spam leads as spam in live Supabase.
+- [x] Keep Shawn Lopez test lead open.
+- [x] Verify `git diff --check` and `npm run build`.
+- [ ] Shawn QA: Ryan / RC Bicycles inbox shows only the real open test lead by default.
+- [ ] Shawn QA: collapsed `Spam hidden` section can restore a lead with `Not spam`.
+
+---
+
 ## 2026-08-08 - Edit Website Dynamic Pages and Wrapper Consistency
 
 - [x] Edit Website dropdown now hides inactive Shop unless the effective shopping-cart add-on is active.

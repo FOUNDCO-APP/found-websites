@@ -71,7 +71,12 @@ export async function PATCH(req: Request) {
   if (email !== undefined)       updates.email = email?.trim() || null
   if (message !== undefined)     updates.message = message?.trim() || null
   if (temperature !== undefined) updates.temperature = temperature
-  if (status !== undefined)      updates.status = status
+  if (status !== undefined) {
+    if (!["open", "closed", "spam"].includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+    }
+    updates.status = status
+  }
 
   const admin = createAdminClient()
   const { data, error } = await admin

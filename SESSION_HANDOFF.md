@@ -1,5 +1,18 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Lead Spam Protection and RC Bicycles Cleanup
+
+- Shawn paused template work to focus on Ryan / RC Bicycles spam leads. Team direction: keep the inbox useful without deleting anything risky.
+- Public contact, estimate, and reservation forms now include a hidden `website` field. Bots that fill it are silently accepted but saved as spam.
+- New shared spam guard lives at `src/lib/security/spamGuard.ts`. It checks honeypots, known spam/sales domains, marketing pitch language, links, words in phone fields, and mostly-phone messages.
+- Obvious spam submissions are saved with `status = "spam"` and `partial_answers.spam_check`, but they do not trigger owner emails, customer auto-replies, or contact auto-save.
+- Dashboard inbox hides spam from normal open/search/done work and shows a collapsed `Spam hidden` recovery section. Owners can mark a normal lead as spam or restore a spam lead with `Not spam`.
+- Dashboard home counts, navigation badges, and the People/Customers list now exclude spam so junk does not look like business activity.
+- Live cleanup completed for RC Bicycles: 10 obvious spam leads were marked `spam`; Shawn Lopez test lead stayed `open`.
+- Verification: `git diff --check` passed and `npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Edit Website Dynamic Pages and Wrapper Consistency
 
 - Shawn approved the team direction to verify that edit sections use the same connected wrapper pattern as Homepage and to hide inactive pages from the Edit Website page switcher.

@@ -93,6 +93,7 @@ export default function EstimateForm({
       <input type="hidden" name="company_id" value={companyId} />
       <input type="hidden" name="request_type" value="estimate_request" />
       <input type="hidden" name="request_source" value="estimate_form" />
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
 
       {/* Name + Phone */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

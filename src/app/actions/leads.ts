@@ -11,6 +11,7 @@ import {
 } from "@/lib/emailBuilders"
 import { normalizeSubmittedRequestSource, normalizeSubmittedRequestType } from "@/lib/dashboard/requestKinds"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
+import { checkLeadSpam } from "@/lib/security/spamGuard"
 
 export async function submitReservation(_: unknown, formData: FormData) {
   const resend = new Resend(process.env.RESEND_API_KEY)
@@ -22,6 +23,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const time = (formData.get("time") as string)?.trim()
   const partySize = (formData.get("party_size") as string)?.trim()
   const notes = (formData.get("notes") as string)?.trim()
+  const website = (formData.get("website") as string)?.trim()
 
   if (!companyId || !name || !phone || !email || !date || !time) {
     return { success: false, error: "Name, phone, email, date, and time are required." }
@@ -33,6 +35,12 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const supabase = await createClient()
   const leadId = crypto.randomUUID()
   const replyToken = crypto.randomUUID()
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name, email, phone, plan")
+    .eq("id", companyId)
+    .single()
+  const spamCheck = checkLeadSpam({ name, phone, email, message: notes, companyName: company?.name, honeypot: website })
 
   const { error } = await supabase
     .from("leads")
@@ -44,8 +52,14 @@ export async function submitReservation(_: unknown, formData: FormData) {
       email: email || null,
       message: notes || null,
       type: "reservation_request",
+      status: spamCheck.isSpam ? "spam" : "open",
       reply_token: replyToken,
-      partial_answers: { date, time, party_size: partySize || null },
+      partial_answers: {
+        date,
+        time,
+        party_size: partySize || null,
+        ...(spamCheck.isSpam ? { spam_check: spamCheck } : {}),
+      },
     })
 
   if (error) {
@@ -53,11 +67,7 @@ export async function submitReservation(_: unknown, formData: FormData) {
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name, email, phone, plan")
-    .eq("id", companyId)
-    .single()
+  if (spamCheck.isSpam) return { success: true }
 
   const replyUrl = `https://foundco.app/reply/${replyToken}`
   const [hour, minute] = time.split(":")
@@ -114,6 +124,7 @@ export async function submitLead(_: unknown, formData: FormData) {
   const email = (formData.get("email") as string)?.trim()
   const service = (formData.get("service") as string)?.trim()
   const message = (formData.get("message") as string)?.trim()
+  const website = (formData.get("website") as string)?.trim()
   const requestType = normalizeSubmittedRequestType(formData.get("request_type"))
   const requestSource = normalizeSubmittedRequestSource(formData.get("request_source"))
 
@@ -138,6 +149,12 @@ export async function submitLead(_: unknown, formData: FormData) {
   const supabase = await createClient()
   const leadId = crypto.randomUUID()
   const replyToken = crypto.randomUUID()
+  const { data: company } = await supabase
+    .from("companies")
+    .select("name, email, phone, plan, primary_intent")
+    .eq("id", companyId)
+    .single()
+  const spamCheck = checkLeadSpam({ name, phone, email, service, message, companyName: company?.name, honeypot: website })
 
   const { error } = await supabase
     .from("leads")
@@ -151,9 +168,11 @@ export async function submitLead(_: unknown, formData: FormData) {
       message: message || null,
       type: requestType,
       source: requestSource,
-      status: "open",
+      status: spamCheck.isSpam ? "spam" : "open",
       reply_token: replyToken,
-      partial_answers: Object.keys(partialAnswers).length > 0 ? partialAnswers : null,
+      partial_answers: Object.keys(partialAnswers).length > 0 || spamCheck.isSpam
+        ? { ...partialAnswers, ...(spamCheck.isSpam ? { spam_check: spamCheck } : {}) }
+        : null,
     })
 
   if (error) {
@@ -161,12 +180,7 @@ export async function submitLead(_: unknown, formData: FormData) {
     return { success: false, error: "Something went wrong. Please call us directly." }
   }
 
-  // Look up company to get owner email, name, and plan
-  const { data: company } = await supabase
-    .from("companies")
-    .select("name, email, phone, plan, primary_intent")
-    .eq("id", companyId)
-    .single()
+  if (spamCheck.isSpam) return { success: true }
 
   const replyUrl = `https://foundco.app/reply/${replyToken}`
 
@@ -212,4 +226,3 @@ export async function submitLead(_: unknown, formData: FormData) {
 
   return { success: true }
 }
-

@@ -150,6 +150,7 @@ function LeadsPageInner() {
   const [showComparison, setShowComparison] = useState(false)
   const [filterTemp, setFilterTemp] = useState<"all" | "hot" | "warm" | "cold">("all")
   const [showClosedSection, setShowClosedSection] = useState(false)
+  const [showSpamSection, setShowSpamSection] = useState(false)
   const [showIntentPicker, setShowIntentPicker] = useState(false)
   const [search, setSearch] = useState("")
 
@@ -226,7 +227,7 @@ function LeadsPageInner() {
     }).catch(console.error)
   }
 
-  function updateStatusLocal(id: string, status: "open" | "closed") {
+  function updateStatusLocal(id: string, status: "open" | "closed" | "spam") {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l))
     fetch("/api/leads", {
       method: "PATCH",
@@ -251,13 +252,15 @@ function LeadsPageInner() {
     // Default view: exclude orders (Orders tab) and reservations (Reservations tab)
     return !isOnlineOrder(l) && !isReservationLead(l)
   })
+  const spamLeads = visibleLeads.filter(l => l.status === "spam")
+  const workingLeads = visibleLeads.filter(l => l.status !== "spam")
   const openLeads = visibleLeads.filter(l => !l.status || l.status === "open")
   const closedLeads = visibleLeads.filter(l => l.status === "closed")
 
   const searchQuery = search.toLowerCase().trim()
   const searchActive = searchQuery.length > 0
   const searchResults = searchActive
-    ? visibleLeads.filter(l =>
+    ? workingLeads.filter(l =>
         l.name?.toLowerCase().includes(searchQuery) ||
         l.phone?.toLowerCase().includes(searchQuery) ||
         l.email?.toLowerCase().includes(searchQuery)
@@ -301,9 +304,9 @@ function LeadsPageInner() {
             </button>
             )}
           </div>
-          {(openLeads.length > 0 || closedLeads.length > 0) && (
+          {(openLeads.length > 0 || closedLeads.length > 0 || spamLeads.length > 0) && (
             <p style={{ margin: "6px 0 0", color: "white", opacity: TEXT_OPACITY.tertiary, ...TYPE.caption }}>
-              {openLeads.length} open{closedLeads.length > 0 ? ` · ${closedLeads.length} done` : ""}
+              {openLeads.length} open{closedLeads.length > 0 ? ` · ${closedLeads.length} done` : ""}{spamLeads.length > 0 ? ` · ${spamLeads.length} spam hidden` : ""}
             </p>
           )}
         </div>
@@ -323,7 +326,7 @@ function LeadsPageInner() {
       {/* Upgrade prompt — celebrate the real leads first, then name the
           friction they're about to feel. Only for businesses taking
           reservation requests manually (no calendar add-on active). */}
-      {isReservationsView && isSchedulingIntent && !hasCalendar && visibleLeads.length > 0 && (
+      {isReservationsView && isSchedulingIntent && !hasCalendar && workingLeads.length > 0 && (
         <div style={{
           marginBottom: 20, padding: "18px 20px", borderRadius: 18,
           background: `linear-gradient(135deg, ${SIGNAL_GREEN}18, rgba(255,255,255,0.03))`,
@@ -345,7 +348,7 @@ function LeadsPageInner() {
       )}
 
       {/* Search bar */}
-      {(openLeads.length > 0 || closedLeads.length > 0) && (
+      {(openLeads.length > 0 || closedLeads.length > 0 || spamLeads.length > 0) && (
         <div style={{ position: "relative", marginBottom: 16 }}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
@@ -660,6 +663,40 @@ function LeadsPageInner() {
         </div>
       )}
 
+      {/* Spam is hidden from normal work but recoverable if Found guessed wrong. */}
+      {!searchActive && !loading && spamLeads.length > 0 && (
+        <div style={{ marginTop: 18 }}>
+          <button onClick={() => setShowSpamSection(v => !v)} style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "13px 18px", borderRadius: 16,
+            backgroundColor: "rgba(255,255,255,0.025)",
+            border: "1px solid rgba(255,255,255,0.06)",
+            cursor: "pointer",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              </svg>
+              <span style={{ color: "rgba(255,255,255,0.4)", ...TYPE.subhead, fontWeight: 600 }}>
+                Spam hidden ({spamLeads.length})
+              </span>
+            </div>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: showSpamSection ? "rotate(90deg)" : "none", transition: "transform 0.2s ease" }}>
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+
+          {showSpamSection && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 8 }}>
+              {spamLeads.map(lead => (
+                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={false} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Detail sheet */}
       {selectedLead && (
         <LeadDetailSheet
@@ -676,6 +713,14 @@ function LeadsPageInner() {
             updateStatusLocal(id, "closed")
           }}
           onReopen={(id) => {
+            updateStatusLocal(id, "open")
+            setSelectedLead(prev => prev ? { ...prev, status: "open" } : null)
+          }}
+          onMarkSpam={(id) => {
+            updateStatusLocal(id, "spam")
+            setSelectedLead(prev => prev ? { ...prev, status: "spam" } : null)
+          }}
+          onNotSpam={(id) => {
             updateStatusLocal(id, "open")
             setSelectedLead(prev => prev ? { ...prev, status: "open" } : null)
           }}
@@ -945,7 +990,7 @@ function LeadCard({
 
 type SheetMode = "view" | "edit" | "done"
 
-function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, onSaved, onMarkDone, onReopen, onCreateEstimate }: {
+function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, onSaved, onMarkDone, onReopen, onMarkSpam, onNotSpam, onCreateEstimate }: {
   lead: LeadRow
   intentLabel: FormIntentLabel
   industry: string | null
@@ -954,6 +999,8 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   onSaved: (lead: LeadRow) => void
   onMarkDone: (id: string) => void
   onReopen: (id: string) => void
+  onMarkSpam: (id: string) => void
+  onNotSpam: (id: string) => void
   onCreateEstimate: (id: string) => void
 }) {
   const [mode, setMode] = useState<SheetMode>("view")
@@ -968,6 +1015,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   const [savingContact, setSavingContact] = useState(false)
 
   const isDone = lead.status === "closed"
+  const isSpam = lead.status === "spam"
   const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\D/g, "")}` : null
   const smsHref = lead.phone ? `sms:${lead.phone.replace(/\D/g, "")}` : null
   const emailHref = lead.email ? `mailto:${lead.email}` : null
@@ -1104,7 +1152,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
                 <h2 style={{ margin: "0 0 8px", color: "white", ...TYPE.title }}>
                   {lead.name || "Unknown"}
                 </h2>
-                {intentLabel.hasTemperature && !isDone && (
+                {intentLabel.hasTemperature && !isDone && !isSpam && (
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 100, backgroundColor: `${tempColor}18` }}>
                     <div style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: tempColor }}/>
                     <span style={{ color: tempColor, ...TYPE.caption }}>
@@ -1118,8 +1166,14 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
                     <span style={{ color: SIGNAL_GREEN, ...TYPE.caption }}>Done</span>
                   </div>
                 )}
+                {isSpam && (
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 100, backgroundColor: "rgba(255,255,255,0.08)" }}>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+                    <span style={{ color: "rgba(255,255,255,0.5)", ...TYPE.caption }}>Spam</span>
+                  </div>
+                )}
               </div>
-              {!isDone && (
+              {!isDone && !isSpam && (
                 <button onClick={() => setMode("edit")} style={{
                   padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(255,255,255,0.12)",
                   backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)",
@@ -1130,7 +1184,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
               )}
             </div>
 
-            {onlineOrder && (
+            {onlineOrder && !isSpam && (
               <div style={{ marginBottom: 18, padding: 18, borderRadius: 18, backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
                   <div>
@@ -1163,7 +1217,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
             )}
 
             {/* Mark as Done / Reopen — TOP position for online orders */}
-            {onlineOrder && (
+            {onlineOrder && !isSpam && (
               isDone ? (
                 <button onClick={() => onReopen(lead.id)} style={{ width: "100%", marginBottom: 16, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                   Reopen
@@ -1179,7 +1233,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
             )}
 
             {/* Call / Text (orders) — Call / Text / Email (regular leads) */}
-            {(phoneHref || smsHref || (!onlineOrder && emailHref)) && (
+            {!isSpam && (phoneHref || smsHref || (!onlineOrder && emailHref)) && (
               <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
                 {phoneHref && (
                   <a href={phoneHref} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 0", borderRadius: 18, backgroundColor: `${SIGNAL_GREEN}15`, textDecoration: "none" }}>
@@ -1202,7 +1256,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
               </div>
             )}
 
-            {isEstimateRequest && !onlineOrder && !isDone && (
+            {isEstimateRequest && !onlineOrder && !isDone && !isSpam && (
               <button onClick={() => onCreateEstimate(lead.id)} style={{ width: "100%", marginBottom: 24, padding: "15px 0", borderRadius: 16, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 850, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15h6"/></svg>
                 Create Estimate
@@ -1229,7 +1283,17 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
             </div>
 
             {/* Mark as Done / Reopen — bottom position for regular leads only */}
-            {!onlineOrder && (
+            {isSpam ? (
+              <button onClick={() => onNotSpam(lead.id)} style={{ width: "100%", marginBottom: 12, padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
+                Not spam
+              </button>
+            ) : (
+              <button onClick={() => onMarkSpam(lead.id)} style={{ width: "100%", marginBottom: 12, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.42)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                Mark as spam
+              </button>
+            )}
+
+            {!onlineOrder && !isSpam && (
               isDone ? (
                 <button onClick={() => onReopen(lead.id)} style={{ width: "100%", padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                   Reopen
@@ -1389,13 +1453,3 @@ function DetailRow({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
