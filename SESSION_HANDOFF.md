@@ -1,5 +1,15 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Photos Filter Popover and Sticky Bar Polish
+
+- Shawn approved the team direction to make the Photos filter feel like an iOS-style anchored menu instead of a bottom sheet.
+- The filter control now expands near the top-right filter button, opening down and left from the control area.
+- Active filtered states now show directly inside the filter button (`Favs` or `Off-site` plus count), so owners can tell which filter is active without extra page copy.
+- The sticky Photos tab bar now uses a solid black background with an upward black paint extension and no bottom gradient, preventing scrolled content from showing through the gap.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+
+---
+
 ## 2026-08-08 - Photos Filter Visual Polish
 
 - Shawn approved the team direction to keep filtered Photos views visually identical to the normal gallery grid.

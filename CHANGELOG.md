@@ -1,3 +1,17 @@
+## Session: August 8, 2026 - Photos Filter Popover and Sticky Bar Polish
+**AI:** Codex
+
+### Built
+- Replaced the bottom Photos filter sheet with an anchored top-right popover.
+- Added active filter wording and count inside the filter button.
+- Made the sticky Photos tab bar solid black and removed the transparent gradient behavior.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Photos Filter Visual Polish
 **AI:** Codex
 

@@ -471,7 +471,7 @@ function PhotosPageInner() {
 
   const TAB_COUNTS = { all: allPhotos.length, website: gallery.length, albums: albums.length }
   const TAB_LABELS = { all: "All Photos", website: "Gallery", albums: "Albums" }
-  const FILTER_LABELS = { all: "All", favorites: "Favorites", unused: "Not on site" }
+  const FILTER_LABELS = { all: "All Photos", favorites: "Favorites", unused: "Not on site" }
   const FILTER_COUNTS = { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
 
   function openLightroom(photo: Photo, source: Photo[]) {
@@ -566,13 +566,15 @@ function PhotosPageInner() {
           position: "sticky",
           top: "calc(max(env(safe-area-inset-top), 14px) + 47px)",
           zIndex: 30,
-          padding: "0 24px 14px",
+          padding: "0 24px 12px",
           display: "flex",
           flexDirection: "column",
           gap: 0,
-          background: "linear-gradient(to bottom, rgba(8,10,9,0.98) 0%, rgba(8,10,9,0.94) 78%, rgba(8,10,9,0) 100%)",
+          background: "#080A09",
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          boxShadow: "0 -96px 0 #080A09",
         }}>
           <div style={{ display: "flex", alignItems: "stretch", gap: 10, width: "100%" }}>
             <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 0 }}>
@@ -606,7 +608,7 @@ function PhotosPageInner() {
               disabled={view !== "all" || photos.length === 0}
               aria-label="Filter photos"
               style={{
-                width: 42,
+                width: view === "all" && photoFilter !== "all" ? 96 : 42,
                 minHeight: 42,
                 borderRadius: 14,
                 border: `1px solid ${view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.1)"}`,
@@ -615,13 +617,29 @@ function PhotosPageInner() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                gap: 7,
                 cursor: view === "all" && photos.length > 0 ? "pointer" : "default",
                 opacity: view === "all" && photos.length > 0 ? 1 : 0.34,
+                transition: "width 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease",
               }}
-          >
-            <FilterLinesIcon />
-          </button>
-        </div>
+            >
+              <FilterLinesIcon />
+              {view === "all" && photoFilter !== "all" && (
+                <span style={{ fontSize: 11, fontWeight: 900, lineHeight: 1, whiteSpace: "nowrap" }}>
+                  {photoFilter === "favorites" ? "Favs" : "Off-site"} {FILTER_COUNTS[photoFilter]}
+                </span>
+              )}
+            </button>
+          </div>
+          {showPhotoFilters && (
+            <PhotoFilterPopover
+              active={photoFilter}
+              labels={FILTER_LABELS}
+              counts={FILTER_COUNTS}
+              onSelect={(filter) => { setPhotoFilter(filter); setShowPhotoFilters(false) }}
+              onClose={() => setShowPhotoFilters(false)}
+            />
+          )}
         </div>
       )}
 
@@ -788,16 +806,6 @@ function PhotosPageInner() {
           copied={copied}
           onShare={handleShare}
           onClose={() => setShareAlbum(null)}
-        />
-      )}
-
-      {showPhotoFilters && (
-        <PhotoFilterSheet
-          active={photoFilter}
-          labels={FILTER_LABELS}
-          counts={FILTER_COUNTS}
-          onSelect={(filter) => { setPhotoFilter(filter); setShowPhotoFilters(false) }}
-          onClose={() => setShowPhotoFilters(false)}
         />
       )}
 
@@ -1576,7 +1584,7 @@ function FilterLinesIcon() {
   )
 }
 
-function PhotoFilterSheet({ active, labels, counts, onSelect, onClose }: {
+function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
   active: PhotoFilter
   labels: Record<PhotoFilter, string>
   counts: Record<PhotoFilter, number>
@@ -1596,53 +1604,36 @@ function PhotoFilterSheet({ active, labels, counts, onSelect, onClose }: {
         style={{
           position: "fixed",
           inset: 0,
-          backgroundColor: "rgba(0,0,0,0.58)",
-          backdropFilter: "blur(7px)",
-          WebkitBackdropFilter: "blur(7px)",
-          zIndex: 80,
+          backgroundColor: "transparent",
+          zIndex: 31,
         }}
       />
       <div style={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 90,
-        backgroundColor: "#151816",
-        borderTopLeftRadius: 28,
-        borderTopRightRadius: 28,
-        border: "1px solid rgba(255,255,255,0.09)",
-        padding: "10px 20px calc(env(safe-area-inset-bottom, 0px) + 24px)",
-        boxShadow: "0 -24px 80px rgba(0,0,0,0.5)",
+        position: "absolute",
+        top: "calc(100% + 8px)",
+        right: 24,
+        width: "min(284px, calc(100vw - 48px))",
+        zIndex: 32,
+        backgroundColor: "rgba(21,24,22,0.96)",
+        borderRadius: 22,
+        border: "1px solid rgba(255,255,255,0.11)",
+        padding: 8,
+        boxShadow: "0 20px 64px rgba(0,0,0,0.48)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
       }}>
-        <div style={{ width: 42, height: 4, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.22)", margin: "0 auto 20px" }} />
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
-          <div>
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 950, letterSpacing: "0.16em", textTransform: "uppercase", color: SIGNAL_GREEN }}>Filter photos</p>
-            <h2 style={{ margin: 0, fontSize: 26, lineHeight: 1.05, fontWeight: 900, color: "white" }}>Show me</h2>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close filters"
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              border: "none",
-              backgroundColor: "rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.7)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{
+          position: "absolute",
+          top: -7,
+          right: 18,
+          width: 14,
+          height: 14,
+          backgroundColor: "rgba(21,24,22,0.96)",
+          borderLeft: "1px solid rgba(255,255,255,0.11)",
+          borderTop: "1px solid rgba(255,255,255,0.11)",
+          transform: "rotate(45deg)",
+        }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative" }}>
           {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
             const selected = active === filter
             return (
@@ -1650,13 +1641,13 @@ function PhotoFilterSheet({ active, labels, counts, onSelect, onClose }: {
                 key={filter}
                 onClick={() => onSelect(filter)}
                 style={{
-                  minHeight: 68,
-                  borderRadius: 18,
-                  border: `1px solid ${selected ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.09)"}`,
-                  backgroundColor: selected ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.045)",
+                  minHeight: 58,
+                  borderRadius: 16,
+                  border: "none",
+                  backgroundColor: selected ? `${SIGNAL_GREEN}16` : "transparent",
                   color: "white",
                   cursor: "pointer",
-                  padding: "0 16px",
+                  padding: "0 12px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -1665,8 +1656,8 @@ function PhotoFilterSheet({ active, labels, counts, onSelect, onClose }: {
                 }}
               >
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 16, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.92)" }}>{labels[filter]}</span>
-                  <span style={{ display: "block", marginTop: 3, fontSize: 12, lineHeight: 1.35, fontWeight: 650, color: "rgba(255,255,255,0.48)" }}>{descriptions[filter]}</span>
+                  <span style={{ display: "block", fontSize: 15, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.92)" }}>{labels[filter]}</span>
+                  <span style={{ display: "block", marginTop: 2, fontSize: 11, lineHeight: 1.32, fontWeight: 650, color: "rgba(255,255,255,0.46)" }}>{descriptions[filter]}</span>
                 </span>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
                   <span style={{ fontSize: 13, fontWeight: 900, color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{counts[filter]}</span>
