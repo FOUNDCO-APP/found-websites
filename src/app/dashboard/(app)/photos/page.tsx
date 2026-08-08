@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
@@ -130,11 +130,8 @@ function PhotosPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const serviceIndustries = new Set(["home_property", "contractors", "construction", "landscaping", "audio_visual", "automotive", "events"])
-  const usesJobs = serviceIndustries.has(industry ?? "")
-  const albumLabel = usesJobs
-    ? { singular: "Job", plural: "Jobs", create: "New Job" }
-    : { singular: "Album", plural: "Albums", create: "New Album" }
+  const albumLabel = albumLabelFor(industry)
+  const usesJobs = ["Job", "Project"].includes(albumLabel.singular)
 
   useEffect(() => {
     const albumId = searchParams.get("album")
