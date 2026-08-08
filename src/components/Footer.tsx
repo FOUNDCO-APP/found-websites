@@ -65,12 +65,7 @@ export default function Footer({ company }: { company: Company }) {
               {company.logo_white_url ? (
                 <img src={company.logo_white_url} alt={company.name} className="h-10 w-auto" />
               ) : company.logo_url ? (
-                // Footer is always dark — white-plate fallback, same as Navbar.
-                // A CSS invert filter turns any opaque (non-transparent) logo
-                // file into a solid white block, so it's never used here.
-                <div style={{ display: "inline-flex", alignItems: "center", backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 10px" }}>
-                  <img src={company.logo_url} alt={company.name} className="h-10 w-auto" />
-                </div>
+                <img src={company.logo_url} alt={company.name} className="h-10 w-auto" />
               ) : (
                 <BrandMark name={company.name} primary={logoColor("dark", primary)} />
               )}

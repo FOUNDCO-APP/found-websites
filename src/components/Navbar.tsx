@@ -138,17 +138,9 @@ export default function Navbar({ company, transparent = false, hasShop = false }
                     }} />
                 </div>
               ) : isOnDark ? (
-                // No dedicated white logo: show the real logo true-color on a
-                // small white plate. A CSS invert filter only makes sense for
-                // logos with real transparency - on an opaque JPEG/PNG it
-                // turns the whole image into a solid white block.
-                <div style={{
-                  height: "48px", maxWidth: "160px",
-                  display: "inline-flex", alignItems: "center",
-                  backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 12px",
-                }}>
+                <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url!} alt={company.name}
-                    className="h-full w-auto object-contain" />
+                    className="h-full w-full object-contain object-left" />
                 </div>
               ) : (
                 <div style={{ height: "48px", width: "160px" }}>
@@ -285,14 +277,9 @@ export default function Navbar({ company, transparent = false, hasShop = false }
                     className="h-full w-full object-contain object-left" />
                 </div>
               ) : company.logo_url ? (
-                // This overlay is always dark - same white-plate fallback as the header.
-                <div style={{
-                  height: "48px", maxWidth: "160px",
-                  display: "inline-flex", alignItems: "center",
-                  backgroundColor: "#ffffff", borderRadius: "8px", padding: "6px 12px",
-                }}>
+                <div style={{ height: "48px", width: "160px" }}>
                   <img src={company.logo_url} alt={company.name}
-                    className="h-full w-auto object-contain" />
+                    className="h-full w-full object-contain object-left" />
                 </div>
               ) : (
                 <BrandMark name={company.name} color="#ffffff" vibe={vibe} />

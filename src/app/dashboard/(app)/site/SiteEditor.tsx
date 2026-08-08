@@ -944,13 +944,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
           <div style={{ padding: "26px 20px 0" }}>
             <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 12 }}>Business info</div>
-            <button onClick={() => setView("businessInfo")} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: 16, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.035)", textAlign: "left", cursor: "pointer" }}>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 17, fontWeight: 700, color: "white", marginBottom: 3 }}>Name, phone, email, address</span>
-                <span style={{ display: "block", fontSize: 15, fontWeight: 500, lineHeight: 1.4, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Used everywhere on your site - not just one page</span>
-              </span>
-              <TapChevronBadge />
-            </button>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <HubTile label="Logo" sub={logoUrl ? "Replace your logo" : "Upload your logo"} flag={!logoUrl ? "Add logo" : undefined} onClick={() => setView("businessInfo")} />
+              <HubTile label="Contact Info" sub="Name, phone, email, address" onClick={() => setView("businessInfo")} />
+            </div>
           </div>
 
           <div style={{ padding: "26px 20px 0" }}>
@@ -1644,7 +1641,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       <>
       <BackHeader label="Business Info" onBack={() => setView("hub")} />
       <div style={{ padding: "10px 20px 0" }}>
-        <SectionIntro title="Used everywhere on your site." body="Your name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
+        <SectionIntro title="Used everywhere on your site." body="Your logo, name, phone, email, and address show up in the footer, contact page, and nav - not just one place." />
         <div style={{ marginTop: 18, display: "flex", flexDirection: "column" as const, gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
             <label style={{ cursor: uploadingLogo ? "default" : "pointer", flexShrink: 0 }}>

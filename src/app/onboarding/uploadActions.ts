@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { createDarkLogoVariant, createWhiteLogoVariant } from "@/lib/logoVariants"
+import { createDarkLogoVariant, createWhiteLogoVariant, removeLightLogoBackground } from "@/lib/logoVariants"
 import { extractLogoColors } from "@/lib/logoColors"
 
 const BUCKET = "company-assets"
@@ -39,16 +39,23 @@ export async function uploadLogoFile(
   const supabase = getAdminClient()
   await ensureBucket(supabase)
 
+  const originalBytes = await file.arrayBuffer()
+  const cleanedBytes = variant === "primary" || variant === "lightBackground"
+    ? await removeLightLogoBackground(originalBytes, file.type)
+    : null
+  const bytes = cleanedBytes ?? Buffer.from(originalBytes)
+  const analysisBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const storedExt = cleanedBytes ? "png" : ext
+  const contentType = cleanedBytes ? "image/png" : file.type
   const path = variant === "light"
-    ? `logos/${sessionId}/logo-light.${ext}`
+    ? `logos/${sessionId}/logo-light.${storedExt}`
     : variant === "lightBackground"
-      ? `logos/${sessionId}/logo-light-background.${ext}`
-      : `logos/${sessionId}/logo.${ext}`
-  const bytes = await file.arrayBuffer()
+      ? `logos/${sessionId}/logo-light-background.${storedExt}`
+      : `logos/${sessionId}/logo.${storedExt}`
 
   const { error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, bytes, { contentType: file.type, upsert: true })
+    .upload(path, bytes, { contentType, upsert: true })
 
   if (error) {
     console.error("[upload] logo error:", error.message)
@@ -60,7 +67,7 @@ export async function uploadLogoFile(
   let autoDarkUrl: string | undefined
   let autoWhiteUrl: string | undefined
   if (variant === "primary") {
-    const darkBytes = await createDarkLogoVariant(bytes, file.type)
+    const darkBytes = await createDarkLogoVariant(analysisBytes, contentType)
     if (darkBytes) {
       const darkPath = `logos/${sessionId}/logo-dark.png`
       const { error: darkError } = await supabase.storage
@@ -71,7 +78,7 @@ export async function uploadLogoFile(
       }
     }
 
-    const whiteBytes = await createWhiteLogoVariant(bytes, file.type)
+    const whiteBytes = await createWhiteLogoVariant(analysisBytes, contentType)
     if (whiteBytes) {
       const whitePath = `logos/${sessionId}/logo-white-auto.png`
       const { error: whiteError } = await supabase.storage
@@ -83,7 +90,7 @@ export async function uploadLogoFile(
     }
   }
 
-  const dominantColors = await extractLogoColors(bytes, file.type)
+  const dominantColors = await extractLogoColors(analysisBytes, contentType)
   const dominantColor = dominantColors[0]
 
   return { success: true, url: publicUrl, autoDarkUrl, autoWhiteUrl, dominantColor, dominantColors: dominantColors.length ? dominantColors : undefined }

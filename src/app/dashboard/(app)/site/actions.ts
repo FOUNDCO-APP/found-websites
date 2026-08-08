@@ -9,7 +9,7 @@ import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
 import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
-import { createWhiteLogoVariant } from "@/lib/logoVariants"
+import { createDarkLogoVariant, createWhiteLogoVariant, detectLogoTone, removeLightLogoBackground } from "@/lib/logoVariants"
 import { extractLogoColors } from "@/lib/logoColors"
 import type { MenuCategory } from "@/types/company"
 
@@ -685,20 +685,37 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   if (!allowed.includes(ext)) return { error: "PNG, JPG, WEBP, or SVG only." }
   if (file.size > 5 * 1024 * 1024) return { error: "File must be under 5 MB." }
 
-  const bytes = await file.arrayBuffer()
+  const originalBytes = await file.arrayBuffer()
+  const cleanedBytes = await removeLightLogoBackground(originalBytes, file.type)
+  const bytes = cleanedBytes ?? Buffer.from(originalBytes)
+  const analysisBytes = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  const contentType = cleanedBytes ? "image/png" : file.type
+  const storedExt = cleanedBytes ? "png" : ext
   // Cache-bust: same filename every re-upload would otherwise keep serving
   // a stale cached image at the same URL after a replace.
-  const path = `logos/${ctx.company.id}/logo-${Date.now()}.${ext}`
+  const path = `logos/${ctx.company.id}/logo-${Date.now()}.${storedExt}`
 
   const { error } = await ctx.admin.storage
     .from("company-assets")
-    .upload(path, bytes, { contentType: file.type, upsert: true })
+    .upload(path, bytes, { contentType, upsert: true })
   if (error) return { error: error.message }
 
   const { data: { publicUrl } } = ctx.admin.storage.from("company-assets").getPublicUrl(path)
 
+  let darkUrl: string | null = null
+  const darkBytes = await createDarkLogoVariant(analysisBytes, contentType)
+  if (darkBytes) {
+    const darkPath = `logos/${ctx.company.id}/logo-dark-${Date.now()}.png`
+    const { error: darkError } = await ctx.admin.storage
+      .from("company-assets")
+      .upload(darkPath, darkBytes, { contentType: "image/png", upsert: true })
+    if (!darkError) {
+      darkUrl = ctx.admin.storage.from("company-assets").getPublicUrl(darkPath).data.publicUrl
+    }
+  }
+
   let whiteUrl: string | null = null
-  const whiteBytes = await createWhiteLogoVariant(bytes, file.type)
+  const whiteBytes = await createWhiteLogoVariant(analysisBytes, contentType)
   if (whiteBytes) {
     const whitePath = `logos/${ctx.company.id}/logo-white-${Date.now()}.png`
     const { error: whiteError } = await ctx.admin.storage
@@ -709,9 +726,13 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
     }
   }
 
+  const tone = await detectLogoTone(analysisBytes, contentType)
+  const logoUrl = tone === "light" && darkUrl ? darkUrl : publicUrl
+  const darkBackgroundLogoUrl = tone === "light" ? publicUrl : whiteUrl
+
   const { error: dbError } = await ctx.admin
     .from("companies")
-    .update({ logo_url: publicUrl, logo_white_url: whiteUrl })
+    .update({ logo_url: logoUrl, logo_white_url: darkBackgroundLogoUrl })
     .eq("id", ctx.company.id)
   if (dbError) return { error: dbError.message }
 
@@ -724,7 +745,7 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
-  return { url: publicUrl, whiteUrl }
+  return { url: logoUrl, whiteUrl: darkBackgroundLogoUrl }
 }
 
 export async function updateCompanyField(field: string, value: string) {
