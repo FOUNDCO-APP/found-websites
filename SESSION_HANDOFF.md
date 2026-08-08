@@ -1728,6 +1728,8 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 - Gallery/Favorites taps now show a short confirmation pill so owners know the tap worked.
 - Thumbnail and full-screen photo actions now put Gallery before Favorites to match the tab order.
 - Photos tabs now stay visible while scrolling.
+- Main Photos tabs are now All Photos, Gallery, and Albums; Favorites moved into the All Photos filter row.
+- All Photos filters now include All, Favorites, and Not on site.
 - Add to Site now only places a photo on a specific website page/section.
 - Featured Update was removed from the Photos placement sheet; owners should manage that from Edit Website.
 - Website gallery was removed from the Add to Site sheet because Gallery is handled directly on photo thumbnails.
@@ -1745,3 +1747,4 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 4. Tap Use on page and confirm the sheet only shows page photo choices like Home top photo, Home bottom photo, About page photo, Services page photo, Contact page photo, and Products/Menu page photo.
 5. Confirm Featured Update is not offered from Photos anymore.
 6. Scroll down and confirm the Photos tabs stay visible.
+7. Confirm Favorites is a filter under All Photos, not a top-level tab.

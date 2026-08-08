@@ -30,7 +30,8 @@ type Album = {
   created_at: string
 }
 
-type View = "all" | "website" | "favorites" | "albums"
+type View = "all" | "website" | "albums"
+type PhotoFilter = "all" | "favorites" | "unused"
 type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" }
 function dateGroupLabel(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -80,6 +81,7 @@ export default function PhotosPage() {
 
 function PhotosPageInner() {
   const [view, setView] = useState<View>("all")
+  const [photoFilter, setPhotoFilter] = useState<PhotoFilter>("all")
   const [photos, setPhotos] = useState<Photo[]>([])
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
@@ -450,20 +452,26 @@ function PhotosPageInner() {
   const allPhotos = photos
   const gallery = photos.filter(p => p.in_gallery || (p.for_website && !p.website_section))
   const favorites  = photos.filter(p => p.for_social)
+  const unused = photos.filter(p => !p.in_gallery && !p.website_section)
+  const filteredAllPhotos =
+    photoFilter === "favorites" ? favorites :
+    photoFilter === "unused" ? unused :
+    allPhotos
 
   const albumPhotos = activeAlbum
     ? photos.filter(p => p.album_id === activeAlbum.id)
     : []
 
   const currentPhotos =
-    view === "all"   ? allPhotos :
-    view === "website" ? gallery :
-    view === "favorites"  ? favorites : []
+    view === "all" ? filteredAllPhotos :
+    view === "website" ? gallery : []
 
   const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
 
-  const TAB_COUNTS = { all: allPhotos.length, website: gallery.length, favorites: favorites.length, albums: albums.length }
-  const TAB_LABELS = { all: "All Photos", website: "Gallery", favorites: "Favorites", albums: "Albums" }
+  const TAB_COUNTS = { all: allPhotos.length, website: gallery.length, albums: albums.length }
+  const TAB_LABELS = { all: "All Photos", website: "Gallery", albums: "Albums" }
+  const FILTER_LABELS = { all: "All", favorites: "Favorites", unused: "Not on site" }
+  const FILTER_COUNTS = { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
 
   function openLightroom(photo: Photo, source: Photo[]) {
     const index = source.findIndex(p => p.id === photo.id)
@@ -564,10 +572,10 @@ function PhotosPageInner() {
           backdropFilter: "blur(16px)",
           WebkitBackdropFilter: "blur(16px)",
         }}>
-          {(["all", "website", "favorites", "albums"] as View[]).map(v => {
+          {(["all", "website", "albums"] as View[]).map(v => {
             const active = view === v
             return (
-              <button key={v} onClick={() => setView(v)} style={{
+              <button key={v} onClick={() => { setView(v); if (v !== "all") setPhotoFilter("all") }} style={{
                 flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
                 backgroundColor: "transparent",
                 borderBottom: `2px solid ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.08)"}`,
@@ -584,6 +592,40 @@ function PhotosPageInner() {
                     color: active ? FOUND_BLACK : "rgba(255,255,255,0.4)",
                     borderRadius: 100, padding: "2px 6px",
                   }}>{TAB_COUNTS[v]}</span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {!activeAlbum && view === "all" && photos.length > 0 && (
+        <div style={{ padding: "0 24px 18px", display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none" }}>
+          {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
+            const active = photoFilter === filter
+            return (
+              <button
+                key={filter}
+                onClick={() => setPhotoFilter(filter)}
+                style={{
+                  flex: "0 0 auto",
+                  minHeight: 34,
+                  padding: "0 13px",
+                  borderRadius: 999,
+                  border: `1px solid ${active ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.11)"}`,
+                  backgroundColor: active ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.055)",
+                  color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  ...TYPE.footnote,
+                  fontWeight: 800,
+                }}
+              >
+                {FILTER_LABELS[filter]}
+                {FILTER_COUNTS[filter] > 0 && (
+                  <span style={{ fontSize: 10, fontWeight: 900, color: active ? SIGNAL_GREEN : "rgba(255,255,255,0.42)" }}>{FILTER_COUNTS[filter]}</span>
                 )}
               </button>
             )
@@ -674,6 +716,21 @@ function PhotosPageInner() {
             onDelete={deleteAlbum}
           />
         ) : (
+          <>
+          {view === "all" && photoFilter === "favorites" && favorites.length > 0 && (
+            <div style={{
+              margin: "0 0 18px",
+              padding: "14px 15px",
+              borderRadius: 16,
+              border: "1px solid rgba(255,75,139,0.18)",
+              backgroundColor: "rgba(255,75,139,0.075)",
+            }}>
+              <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 900, color: "rgba(255,255,255,0.9)" }}>Favorite photos</p>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: 1.45, fontWeight: 650, color: "rgba(255,255,255,0.55)" }}>
+                Keep your best shots here so they are easy to find, download, or use on your site.
+              </p>
+            </div>
+          )}
           <DateGroupedGrid
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
@@ -686,23 +743,26 @@ function PhotosPageInner() {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             emptyTitle={
-              view === "all"   ? "Take your first photo." :
               view === "website" ? "No gallery photos yet." :
-              "No favorites yet."
+              photoFilter === "favorites" ? "No favorites yet." :
+              photoFilter === "unused" ? "Every photo is being used." :
+              "Take your first photo."
             }
             emptySub={
-              view === "all"   ? "Tap the camera button to take photos or upload from your phone." :
               view === "website" ? "Tap Add to Gallery on any photo customers should see." :
-              "Heart the photos you want to find quickly later."
+              photoFilter === "favorites" ? "Heart the photos you want to find quickly later." :
+              photoFilter === "unused" ? "New photos that are not in your gallery or on a page will show here." :
+              "Tap the camera button to take photos or upload from your phone."
             }
             emptyIcon={
-              view === "all" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> :
               view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> :
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              photoFilter === "favorites" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
             }
             onAdd={undefined}
             showAddCta={false}
           />
+          </>
         )}
       </div>
 

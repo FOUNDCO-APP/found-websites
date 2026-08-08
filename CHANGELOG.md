@@ -2143,6 +2143,8 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Gallery and Favorites taps now show an immediate confirmation pill.
 - Gallery now appears before Favorites on photo thumbnails and in the full-screen viewer.
 - Photos tabs now stay visible while scrolling.
+- Favorites moved from a top-level tab into the All Photos filter row.
+- Added All Photos filters for All, Favorites, and Not on site.
 - Add to Site now uses a larger preview and asks where the owner wants the photo.
 - Removed Featured Update and Website gallery from Add to Site to avoid mixing page placement with homepage feature/banner controls.
 - Public Gallery now reads owner-managed `in_gallery` photos instead of generic `for_website` placement rows or legacy media fallback rows.
