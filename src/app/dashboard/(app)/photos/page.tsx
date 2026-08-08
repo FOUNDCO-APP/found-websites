@@ -31,6 +31,7 @@ type Album = {
 }
 
 type View = "all" | "website" | "favorites" | "albums"
+type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" }
 function dateGroupLabel(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
@@ -108,8 +109,10 @@ function PhotosPageInner() {
   const [destinationsLoading, setDestinationsLoading] = useState(false)
   const [placingSlot, setPlacingSlot] = useState<string | null>(null)
   const [placeReassignConfirm, setPlaceReassignConfirm] = useState<{ slot: string; label: string } | null>(null)
+  const [photoNotice, setPhotoNotice] = useState<PhotoNotice | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
+  const photoNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -156,6 +159,18 @@ function PhotosPageInner() {
     }).catch(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    return () => {
+      if (photoNoticeTimerRef.current) clearTimeout(photoNoticeTimerRef.current)
+    }
+  }, [])
+
+  function showPhotoNotice(notice: PhotoNotice) {
+    if (photoNoticeTimerRef.current) clearTimeout(photoNoticeTimerRef.current)
+    setPhotoNotice(notice)
+    photoNoticeTimerRef.current = setTimeout(() => setPhotoNotice(null), 1800)
+  }
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -183,6 +198,9 @@ function PhotosPageInner() {
 
   async function flag(id: string, field: "for_website" | "for_social", current: boolean) {
     setPhotos(prev => prev.map(p => p.id === id ? { ...p, [field]: !current } : p))
+    if (field === "for_social") {
+      showPhotoNotice({ text: current ? "Removed from Favorites" : "Added to Favorites", tone: "favorite" })
+    }
     fetch("/api/photos", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -194,9 +212,11 @@ function PhotosPageInner() {
     const inGallery = photo.in_gallery || (photo.for_website && !photo.website_section)
     const include = !inGallery
     setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, in_gallery: include, for_website: include || Boolean(p.website_section) } : p))
+    showPhotoNotice({ text: include ? "Added to Gallery" : "Removed from Gallery", tone: "gallery" })
     const result = include ? await placePhoto(photo.id, "gallery") : await removeFromGallery(photo.id)
     if (result && "error" in result) {
       setPhotos(prev => prev.map(p => p.id === photo.id ? photo : p))
+      showPhotoNotice({ text: "Gallery update did not save", tone: "page" })
     }
   }
 
@@ -533,7 +553,17 @@ function PhotosPageInner() {
 
       {/* Tabs â€” hidden when inside an album */}
       {!activeAlbum && (
-        <div style={{ padding: "0 24px 20px", display: "flex", gap: 0 }}>
+        <div style={{
+          position: "sticky",
+          top: "calc(max(env(safe-area-inset-top), 14px) + 47px)",
+          zIndex: 30,
+          padding: "0 24px 14px",
+          display: "flex",
+          gap: 0,
+          background: "linear-gradient(to bottom, rgba(8,10,9,0.98) 0%, rgba(8,10,9,0.94) 78%, rgba(8,10,9,0) 100%)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+        }}>
           {(["all", "website", "favorites", "albums"] as View[]).map(v => {
             const active = view === v
             return (
@@ -564,7 +594,44 @@ function PhotosPageInner() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes lrFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes photoNoticeIn {
+          from { opacity: 0; transform: translate(-50%, 10px) scale(0.98); }
+          to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+        }
       `}</style>
+
+      {photoNotice && (
+        <div style={{
+          position: "fixed",
+          left: "50%",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
+          transform: "translateX(-50%)",
+          zIndex: 90,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 14px",
+          borderRadius: 999,
+          backgroundColor: "rgba(18,22,20,0.94)",
+          border: `1px solid ${photoNotice.tone === "favorite" ? "rgba(255,75,139,0.44)" : photoNotice.tone === "gallery" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.18)"}`,
+          boxShadow: "0 16px 44px rgba(0,0,0,0.32)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          animation: "photoNoticeIn 180ms ease-out both",
+          pointerEvents: "none",
+        }}>
+          {photoNotice.tone === "gallery" ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          ) : photoNotice.tone === "favorite" ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF4B8B" stroke="#FF4B8B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          ) : null}
+          <span style={{ fontSize: 13, fontWeight: 850, color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap" }}>{photoNotice.text}</span>
+        </div>
+      )}
 
       {/* Content */}
       <div style={{ flex: 1, padding: "0 24px 32px" }}>
@@ -898,29 +965,6 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
         display: "flex", alignItems: "flex-end", justifyContent: "space-around",
         padding: `72px 32px max(env(safe-area-inset-bottom, 0px), 36px)`,
       }}>
-        {/* Heart - private favorite */}
-        <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
-          background: "none", border: "none", cursor: "pointer", padding: 0,
-        }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: "50%",
-            backgroundColor: photo.for_social ? "rgba(255,75,139,0.28)" : "rgba(255,255,255,0.1)",
-            border: `2px solid ${photo.for_social ? "rgba(255,75,139,0.55)" : "rgba(255,255,255,0.14)"}`,
-            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.18s ease",
-          }}>
-            <svg width="25" height="25" viewBox="0 0 24 24"
-              fill={photo.for_social ? "#FF4B8B" : "none"}
-              stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.75)"}
-              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </div>
-          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
-        </button>
-
         {/* Gallery - public photo gallery */}
         <button onClick={() => onGallery(photo)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
@@ -944,6 +988,29 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: (photo.in_gallery || (photo.for_website && !photo.website_section)) ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>
             {(photo.in_gallery || (photo.for_website && !photo.website_section)) ? "In Gallery" : "Gallery"}
           </span>
+        </button>
+
+        {/* Heart - private favorite */}
+        <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+          background: "none", border: "none", cursor: "pointer", padding: 0,
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: "50%",
+            backgroundColor: photo.for_social ? "rgba(255,75,139,0.28)" : "rgba(255,255,255,0.1)",
+            border: `2px solid ${photo.for_social ? "rgba(255,75,139,0.55)" : "rgba(255,255,255,0.14)"}`,
+            backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.18s ease",
+          }}>
+            <svg width="25" height="25" viewBox="0 0 24 24"
+              fill={photo.for_social ? "#FF4B8B" : "none"}
+              stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.75)"}
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </div>
+          <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
         </button>
 
         {/* Add to Site */}
@@ -1362,32 +1429,32 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
           now instead of only inside the enlarged viewer. Hidden in select
           mode so a tap always means "select," not "toggle a flag." */}
       {(onFlag || onGallery) && !selectMode && (
-        <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 4 }}>
-          {onFlag && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }}
-            aria-label={photo.for_social ? "Remove from favorites" : "Add to favorites"}
-            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill={photo.for_social ? "#FF4B8B" : "none"} stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          </button>
-          )}
+        <div style={{ position: "absolute", top: 8, left: 8, display: "flex", gap: 6 }}>
           {onGallery && (() => {
             const inGallery = photo.in_gallery || (photo.for_website && !photo.website_section)
             return (
           <button
             onClick={(e) => { e.stopPropagation(); onGallery(photo) }}
             aria-label={inGallery ? "Remove from gallery" : "Add to gallery"}
-            style={{ width: 26, height: 26, borderRadius: 8, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 31, height: 31, borderRadius: 10, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={inGallery ? SIGNAL_GREEN : "rgba(255,255,255,0.7)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={inGallery ? SIGNAL_GREEN : "rgba(255,255,255,0.76)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
             </svg>
           </button>
             )
           })()}
+          {onFlag && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onFlag(photo.id, "for_social", photo.for_social) }}
+            aria-label={photo.for_social ? "Remove from favorites" : "Add to favorites"}
+            style={{ width: 31, height: 31, borderRadius: 10, border: "none", padding: 0, cursor: "pointer", backgroundColor: "rgba(0,0,0,0.58)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill={photo.for_social ? "#FF4B8B" : "none"} stroke={photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.76)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          </button>
+          )}
         </div>
       )}
       {onPlace && !selectMode && (

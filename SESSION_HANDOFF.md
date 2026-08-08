@@ -1725,9 +1725,13 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 - Team-approved Photos cleanup is implemented for launch.
 - Heart now means Favorites only.
 - Gallery is now an explicit photo action/tab for customer-facing gallery photos.
+- Gallery/Favorites taps now show a short confirmation pill so owners know the tap worked.
+- Thumbnail and full-screen photo actions now put Gallery before Favorites to match the tab order.
+- Photos tabs now stay visible while scrolling.
 - Add to Site now only places a photo on a specific website page/section.
 - Featured Update was removed from the Photos placement sheet; owners should manage that from Edit Website.
 - Website gallery was removed from the Add to Site sheet because Gallery is handled directly on photo thumbnails.
+- Public Gallery now reads `in_gallery` photos only, instead of any `for_website` page-placement photo.
 - Public Gallery no longer pulls old legacy `media` rows that could leave deleted test photos stuck online.
 
 ### Verification
@@ -1740,3 +1744,4 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 3. Tap Gallery on a photo and confirm it appears under Gallery and on the live Gallery/New Arrivals area.
 4. Tap Use on page and confirm the sheet only shows page photo choices like Home top photo, Home bottom photo, About page photo, Services page photo, Contact page photo, and Products/Menu page photo.
 5. Confirm Featured Update is not offered from Photos anymore.
+6. Scroll down and confirm the Photos tabs stay visible.

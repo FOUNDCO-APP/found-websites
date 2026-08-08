@@ -74,7 +74,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     const [albumsResult, albumPhotosResult, unsortedResult] = await Promise.all([
       admin.from("photo_albums").select("id, name, slug").eq("company_id", company.id).order("created_at", { ascending: false }),
       admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
-      admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("for_website", true).is("album_id", null).order("created_at", { ascending: false }),
+      admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
     ])
 
     // Group album photos by album_id
@@ -205,14 +205,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
       .from("company_photos")
       .select("id, url")
       .eq("company_id", company.id)
-      .eq("for_website", true)
+      .eq("in_gallery", true)
       .order("created_at", { ascending: false }),
   ])
 
   const dashUrls = (dashboardResult.data ?? []).map(p => p.url)
   const ownerPhotos = [...dashUrls]
   const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
-  const allPhotos: string[] = [...ownerPhotos, ...stockPhotos.filter(url => !ownerPhotos.includes(url))]
+  const allPhotos: string[] = ownerPhotos.length
+    ? ownerPhotos
+    : stockPhotos.filter(Boolean)
   const hasPhotos = allPhotos.length > 0
   const ctaImg = ctaSectionPhoto ?? ownerPhotos[0] ?? pickImg(imgs, 0)
 

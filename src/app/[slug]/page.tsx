@@ -50,7 +50,8 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
       .select("url, website_section, in_gallery")
       .eq("company_id", company.id)
       .eq("for_website", true)
-      .or("in_gallery.eq.true,website_section.in.(hero,about,cta,announcement)"),
+      .or("in_gallery.eq.true,website_section.in.(hero,about,cta,announcement)")
+      .order("created_at", { ascending: false }),
   ])
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
   const { primary: primaryCTA, secondary: secondaryCTA } = getSiteCTAs(company, activeAddons)

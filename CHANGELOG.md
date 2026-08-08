@@ -2140,9 +2140,12 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Renamed the Photos flow around owner language: All Photos, Gallery, Favorites, and Albums.
 - Heart now saves a photo to Favorites instead of implying website placement.
 - Gallery is now its own explicit action on each photo.
+- Gallery and Favorites taps now show an immediate confirmation pill.
+- Gallery now appears before Favorites on photo thumbnails and in the full-screen viewer.
+- Photos tabs now stay visible while scrolling.
 - Add to Site now uses a larger preview and asks where the owner wants the photo.
 - Removed Featured Update and Website gallery from Add to Site to avoid mixing page placement with homepage feature/banner controls.
-- Public Gallery now reads owner-managed gallery photos instead of legacy media fallback rows.
+- Public Gallery now reads owner-managed `in_gallery` photos instead of generic `for_website` placement rows or legacy media fallback rows.
 - Deleting a photo now also removes matching legacy media records so old test images do not stay stuck on public Gallery pages.
 
 ### Verification
