@@ -13,6 +13,7 @@ export type DestinationIcon = "home" | "person" | "wrench" | "phone" | "tag" | "
 export type PhotoDestination = {
   slot: string
   label: string
+  subLabel?: string
   icon: DestinationIcon
   group?: "home"
   toggle?: boolean
@@ -49,6 +50,7 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
     isFoodCatalog,
   })
   const vocab = getVocab(ctx.company.sub_industry ?? null, industryCategory)
+  const hasHomepagePhotoStrip = ["impact", "portrait", "wellness_luxe", "wellness_cinematic"].includes(layout)
 
   const destinations: PhotoDestination[] = [
     { slot: "hero", label: "Home top", icon: "home", group: "home" },
@@ -68,7 +70,15 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
     destinations.push({ slot: "announcement", label: sections.announcement.page + " — Featured Update", icon: "star" })
   }
 
-  destinations.push({ slot: "gallery", label: vocab.galleryLabel, icon: "grid", toggle: true })
+  destinations.push({
+    slot: "gallery",
+    label: hasHomepagePhotoStrip ? "Homepage photos" : "Website gallery",
+    subLabel: hasHomepagePhotoStrip
+      ? `Also appears on the ${vocab.galleryLabel} page`
+      : `Appears on the ${vocab.galleryLabel} page`,
+    icon: "grid",
+    toggle: true,
+  })
 
   return destinations
 }

@@ -1470,9 +1470,14 @@ function DestinationRow({ dest, photo, placingSlot, onPlace }: {
         backgroundColor: isGallery ? "transparent" : active ? `${SIGNAL_GREEN}14` : "rgba(255,255,255,0.04)",
       }}
     >
-      <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
         <DestinationGlyph icon={dest.icon} color={iconColor} />
-        <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
+        <span style={{ display: "grid", gap: 3, minWidth: 0 }}>
+          <span style={{ ...TYPE.subhead, fontWeight: 600, color: "white" }}>{dest.label}</span>
+          {dest.subLabel ? (
+            <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.52)", lineHeight: 1.25 }}>{dest.subLabel}</span>
+          ) : null}
+        </span>
       </span>
       {isPlacing ? (
         <Spinner size={16} color={SIGNAL_GREEN} />

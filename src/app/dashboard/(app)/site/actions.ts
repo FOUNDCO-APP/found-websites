@@ -267,10 +267,11 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
       .eq("website_section", "hero")
   }
 
-  // Update company_photos section tag
+  // Update company_photos section tag. Public pages only fetch photos marked
+  // for the website, so placement must set both fields together.
   await ctx.admin
     .from("company_photos")
-    .update({ website_section: section })
+    .update({ website_section: section, ...(isRemoving ? {} : { for_website: true }) })
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
 
@@ -635,7 +636,7 @@ export async function toggleGalleryPhoto(photoId: string, include: boolean) {
 
   const { error } = await ctx.admin
     .from("company_photos")
-    .update({ in_gallery: include })
+    .update({ in_gallery: include, ...(include ? { for_website: true } : {}) })
     .eq("id", photoId)
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
