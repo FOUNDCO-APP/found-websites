@@ -1647,7 +1647,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
             <label style={{ cursor: uploadingLogo ? "default" : "pointer", flexShrink: 0 }}>
               <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden disabled={uploadingLogo}
                 onChange={e => e.target.files?.[0] && handleLogoUpload(e.target.files[0])} />
-              <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", backgroundColor: "#ffffff", border: `1.5px dashed ${GREEN}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.045)", border: `1.5px dashed ${GREEN}44`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {uploadingLogo ? (
                   <Spinner color={GREEN} />
                 ) : logoUrl ? (
