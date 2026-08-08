@@ -59,8 +59,6 @@ export default function Navbar({ company, transparent = false, hasShop = false }
   const pathname = usePathname()
   const isHome = pathname === "/"
   const isNavDark = !!company.navbar_dark
-  // colorLogoReady: never true on dark-nav sites (white logo always shown)
-  const [colorLogoReady, setColorLogoReady] = useState(!(transparent && isHome) && !isNavDark)
   const primary = company.primary_color
   const vibe = company.vibe || "bold"
   const isCalm = vibe === "calm" || vibe === "warm"
@@ -72,23 +70,11 @@ export default function Navbar({ company, transparent = false, hasShop = false }
     return () => window.removeEventListener("scroll", onScroll)
   }, [transparent])
 
-  // Wait for background transition to finish before showing color logo
-  // Skip entirely on dark-nav sites - color logo never shows
-  useEffect(() => {
-    if (!transparent || !isHome || isNavDark) return
-    let t: ReturnType<typeof setTimeout>
-    if (scrolled) {
-      t = setTimeout(() => setColorLogoReady(true), 280)
-    } else {
-      setColorLogoReady(false)
-    }
-    return () => clearTimeout(t)
-  }, [scrolled, transparent, isHome, isNavDark])
-
   // Only overlay on the homepage - inner pages always get sticky navbar
   const isOverlay = transparent && isHome && !scrolled
   // isOnDark: logo and text should be white (either transparent hero or always-dark navbar)
   const isOnDark = isOverlay || isNavDark
+  const showColorLogo = !isOnDark
 
   const isActive = (href: string) => pathname === href
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
@@ -118,23 +104,23 @@ export default function Navbar({ company, transparent = false, hasShop = false }
           <Link href="/" className="flex items-center shrink-0">
             {company.logo_url || company.logo_white_url ? (
               company.logo_white_url ? (
-                // Background transitions first (500ms), logos swap after bg is white
-                // Scrolling down: 450ms delay so color logo only appears on white bg
-                // Scrolling up: swap instantly before bg becomes transparent
+                // Color logo appears on light nav; white logo appears over dark
+                // hero/nav surfaces. Keep the swap tied to nav state so there
+                // is no blank pause while scrolling.
                 <div className="relative" style={{ height: "48px", width: "160px" }}>
                   {company.logo_url && (
                     <img src={company.logo_url} alt={company.name}
                       className="h-full w-auto object-contain"
                       style={{
-                        opacity: colorLogoReady ? 1 : 0,
-                        transition: "opacity 150ms ease",
+                        opacity: showColorLogo ? 1 : 0,
+                        transition: "opacity 120ms ease",
                       }} />
                   )}
                   <img src={company.logo_white_url} alt={company.name}
                     className="absolute top-0 left-0 h-full w-auto object-contain"
                     style={{
-                      opacity: (isOverlay || !colorLogoReady) ? 1 : 0,
-                      transition: "opacity 200ms ease",
+                      opacity: showColorLogo ? 0 : 1,
+                      transition: "opacity 120ms ease",
                     }} />
                 </div>
               ) : isOnDark ? (
