@@ -78,8 +78,8 @@ function destinationLabelForSlot(slot: string | null, destinations?: PhotoDestin
   if (!slot) return null
   const found = destinations?.find(d => d.slot === slot)?.label
   const label = found ?? ({
-    hero: "Top",
-    cta: "Bottom",
+    hero: "Home top",
+    cta: "Home bottom",
     about: "About",
     services: "Services",
     contact: "Contact",

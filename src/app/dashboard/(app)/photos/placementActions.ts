@@ -51,8 +51,8 @@ export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] |
   const vocab = getVocab(ctx.company.sub_industry ?? null, industryCategory)
 
   const destinations: PhotoDestination[] = [
-    { slot: "hero", label: "Top", icon: "home", group: "home" },
-    { slot: "cta", label: "Bottom", icon: "home", group: "home" },
+    { slot: "hero", label: "Home top", icon: "home", group: "home" },
+    { slot: "cta", label: "Home bottom", icon: "home", group: "home" },
     { slot: "about", label: sections.about.page, icon: "person" },
     { slot: "services", label: sections.services.page, icon: "wrench" },
     { slot: "contact", label: sections.contact.page, icon: "phone" },

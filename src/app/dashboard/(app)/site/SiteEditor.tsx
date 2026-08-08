@@ -169,7 +169,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function handleLogoUpload(file: File) {
     setUploadingLogo(true)
     try {
-      // No client-side resize/JPEG conversion here on purpose â€” that would
+      // No client-side resize/JPEG conversion here on purpose - that would
       // flatten a transparent PNG to opaque before it ever reaches the
       // server, which is exactly what breaks the white-logo generation.
       const fd = new FormData()
@@ -2038,7 +2038,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         <SectionIntro title="Change how your whole site looks." body="Color, style, and theme apply everywhere - every page, not just Home." />
       </div>
 
-      {/* â”€â”€ COLOR â”€â”€ */}
+      {/* COLOR */}
       <div style={{ padding: "18px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
@@ -2062,7 +2062,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                 }}
               >
-                <span>{detectingLogoColors ? "Reading your logoâ€¦" : "Match my logo"}</span>
+                <span>{detectingLogoColors ? "Reading your logo..." : "Match my logo"}</span>
                 {company.logo_url && <img src={company.logo_url} alt="" style={{ height: 20, width: 20, objectFit: "contain", borderRadius: 4, flexShrink: 0 }} />}
               </button>
             ) : (
@@ -2134,7 +2134,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )}
       </div>
 
-      {/* â”€â”€ STYLE â”€â”€ */}
+      {/* STYLE */}
       {(() => {
         const LAYOUT_OPTIONS: { key: LayoutType; label: string; desc: string }[] = [
           { key: "impact",    label: "Impact",    desc: "Bold and high-contrast. Big type, fast first impression." },
@@ -2231,10 +2231,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                   border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
                 }}>
                 <div style={{ height: 56, borderRadius: 8, border: "1px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1 }}>Auto</span>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1 }}>Suggested</span>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Auto â€” {autoLabel}</div>
-                <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>Fits your industry</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Suggested: {autoLabel}</div>
+                <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>Recommended for this business</div>
               </button>
               {LAYOUT_OPTIONS.map(opt => {
                 const isActive = activeLayout === opt.key
@@ -2259,7 +2259,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         )
       })()}
 
-      {/* â”€â”€ THEME â”€â”€ */}
+      {/* THEME */}
       <div style={{ padding: "26px 20px 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <div>
