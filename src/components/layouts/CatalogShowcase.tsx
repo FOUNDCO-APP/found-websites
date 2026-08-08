@@ -42,7 +42,7 @@ export default function CatalogShowcase({ company, activeAddons = [] }: { compan
   const loop = items.length >= 4 ? [...items, ...items] : items
 
   return (
-    <section className="overflow-hidden bg-white py-20 md:py-28">
+    <section className="overflow-hidden bg-white pb-28 pt-28 md:py-28">
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -62,9 +62,9 @@ export default function CatalogShowcase({ company, activeAddons = [] }: { compan
           {loop.map((item, index) => {
             const image = itemImage(item)
             return (
-              <Link key={`${item.category}-${item.name}-${index}`} href={href} className="group block w-[74vw] max-w-[320px] shrink-0 overflow-hidden rounded-[28px] border border-neutral-200 bg-white text-left shadow-[0_18px_50px_rgba(0,0,0,0.08)] md:w-[300px]" style={{ textDecoration: "none" }}>
-                <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
-                  {image && <img src={image} alt={item.name} className="h-full w-full object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.03]" />}
+              <Link key={`${item.category}-${item.name}-${index}`} href={href} className="group block w-[74vw] max-w-[320px] shrink-0 overflow-hidden rounded-[26px] border border-neutral-200 bg-white text-left shadow-[0_18px_50px_rgba(0,0,0,0.08)] md:w-[300px]" style={{ textDecoration: "none" }}>
+                <div className="relative aspect-[4/3] overflow-hidden bg-neutral-100">
+                  {image && <img src={image} alt={item.name} className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />}
                 </div>
                 <div className="p-5">
                   <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: primary }}>{item.category}</p>
