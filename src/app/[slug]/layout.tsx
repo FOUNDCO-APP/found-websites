@@ -238,7 +238,7 @@ export default async function CompanyLayout({
       ))}
       <Navbar company={company} transparent={layout === "cinematic"} hasShop={activeAddons.includes("shopping_cart")} />
       <main className="flex-1 pb-24 md:pb-0">{children}</main>
-      <Footer company={company} />
+      <Footer company={company} activeAddons={activeAddons} />
       <StickyCtaBar
         label={barCTA.label}
         href={barCTA.href}

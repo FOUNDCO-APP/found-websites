@@ -10,6 +10,7 @@ import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
+import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
 
 export default function PortraitLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
@@ -302,6 +303,7 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
           </div>
         </InView>
       </section>
+      <EmailSignupSection company={company} activeAddons={activeAddons} />
     </>
   )
 }

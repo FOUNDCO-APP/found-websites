@@ -1,5 +1,17 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-08 - Public Email Signup Entry Points
+
+- Shawn verified Lucky's subscriber flow works, then flagged the real UX issue: public guest websites did not give customers an obvious place to join the list.
+- Team direction: make signup discoverable on public sites without creating template-specific one-offs.
+- Public homepages now show a shared `Stay in the loop.` signup section near the bottom only when the effective `email_marketing` add-on is active.
+- Public footers now add a `Join our list` quick link only when the effective `email_marketing` add-on is active.
+- Dashboard Marketing copy now tells owners: customers can join from the website or through the QR/link share flow.
+- Verification: `git diff --check` passed and `cmd /c npm run build` passed. Existing warning only: Next.js middleware convention deprecation.
+- Pending QA: confirm a site with email marketing active shows the homepage signup section and footer link, and a site without email marketing does not.
+
+---
+
 ## 2026-08-08 - Marketing Subscriber Count Fix
 
 - Shawn signed up through Lucky's public subscribe link and saw success, but the Marketing compose audience still showed `0`.

@@ -1,3 +1,18 @@
+## Session: August 8, 2026 - Public Email Signup Entry Points
+**AI:** Codex
+
+### Built
+- Added a shared public homepage section: `Stay in the loop.` with a `Join the List` button to `/subscribe`.
+- Added a public footer `Join our list` quick link.
+- Both public entry points are gated by the effective `email_marketing` add-on, so inactive sites stay unchanged.
+- Updated the Marketing dashboard helper copy to explain that customers can join from the website or through the QR/link.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npm run build` passed; only existing Next.js middleware deprecation warning remains.
+
+---
+
 ## Session: August 8, 2026 - Marketing Subscriber Count Fix
 **AI:** Codex
 

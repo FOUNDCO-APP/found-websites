@@ -41,8 +41,9 @@ const socialIcons: Record<string, { label: string; path: string }> = {
   },
 }
 
-export default function Footer({ company }: { company: Company }) {
+export default function Footer({ company, activeAddons = [] }: { company: Company; activeAddons?: string[] }) {
   const primary = company.primary_color
+  const hasEmailMarketing = activeAddons.includes("email_marketing")
   const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
   const ctaHref = company.primary_intent === "call"
     ? `tel:${company.phone?.replace(/\D/g, "")}`
@@ -105,6 +106,7 @@ export default function Footer({ company }: { company: Company }) {
                 FOOD_INDUSTRIES.has(company.industry_category) ? ["Menu", "/menu"] : ["Services", "/services"],
                 ["Gallery", "/gallery"],
                 ["Contact", "/contact"],
+                ...(hasEmailMarketing ? [["Join our list", "/subscribe"] as [string, string]] : []),
               ] as [string, string][]).map(([label, href]) => (
                 <li key={label}>
                   <Link href={href} className="hover:text-white transition-colors">

@@ -9,6 +9,7 @@ import FindUsSection from "@/components/layouts/FindUsSection"
 import CatalogShowcase from "@/components/layouts/CatalogShowcase"
 import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
+import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
 
 const INK = "#111715"
@@ -194,6 +195,7 @@ export default function WellnessCinematicLayout({ company, activeAddons, primary
           </div>
         </InView>
       </section>
+      <EmailSignupSection company={company} activeAddons={activeAddons} />
     </>
   )
 }

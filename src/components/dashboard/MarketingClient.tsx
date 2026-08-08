@@ -472,7 +472,7 @@ export default function MarketingClient({
         <span style={{ color: "white", fontWeight: 700 }}>{campaigns.length}</span> campaigns sent
       </p>
       <p style={{ margin: "0 0 20px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-        Subscribers are people marked as opted in to email — not every contact.
+        Customers can join from your website, or you can share this QR code.
       </p>
 
       {/* Hero card — no icon, just headline + button */}
@@ -499,7 +499,7 @@ export default function MarketingClient({
           </div>
         </div>
         <p style={{ margin: "0 0 16px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, textAlign: "center" as const }}>
-          Customers scan this to join your list
+          Customers scan this to join your list.
         </p>
         <div style={{ display: "flex", gap: 10 }}>
           <button onClick={handleQR} disabled={qrWorking}
