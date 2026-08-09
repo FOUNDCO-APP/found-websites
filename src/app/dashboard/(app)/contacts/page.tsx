@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useTransition } from "react"
 import { getContacts, addContact, deleteContact, updateContact } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor, contactCategoriesFor } from "@/lib/dashboard/typography"
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 
 type Contact = {
   id: string
@@ -235,9 +236,7 @@ export default function ContactsPage() {
 
       {/* Loading */}
       {loading && (
-        <div style={{ paddingTop: 60, textAlign: "center", color: "rgba(255,255,255,0.2)", ...TYPE.footnote }}>
-          Loading…
-        </div>
+        <DashboardLoadingState compact />
       )}
 
       {/* Empty state */}

@@ -9,6 +9,7 @@ import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 
 type Photo = {
   id: string
@@ -789,7 +790,7 @@ function PhotosPageInner() {
       {/* Content */}
       <div style={{ flex: 1, padding: "0 24px 32px" }}>
         {loading ? (
-          <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", ...TYPE.footnote }}>Loadingâ€¦</div>
+          <DashboardLoadingState compact />
         ) : activeAlbum ? (
           <DateGroupedGrid
             photos={albumPhotos}
@@ -2116,7 +2117,9 @@ function PlacementSheet({ photo, destinations, loading, placingSlot, confirm, on
             </div>
           )
         })() : loading || !destinations ? (
-          <div style={{ padding: "30px 0", textAlign: "center", color: "rgba(255,255,255,0.3)", ...TYPE.footnote }}>Loading...</div>
+          <div style={{ padding: "30px 0", display: "flex", justifyContent: "center" }}>
+            <Spinner color={SIGNAL_GREEN} />
+          </div>
         ) : (() => {
           const homeDests = destinations.filter(d => d.group === "home")
           const otherDests = destinations.filter(d => d.group !== "home")

@@ -6,6 +6,7 @@ import { TYPE, TEXT_OPACITY, ICON, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, 
 import { getBusinessModel } from "@/lib/getBusinessModel"
 import { addContact } from "../contacts/actions"
 import LeadContactSheet from "@/components/dashboard/LeadContactSheet"
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import { dashboardInboxIntentFor, isOrderRequest, isReservationRequest } from "@/lib/dashboard/requestKinds"
 
 type LeadRow = {
@@ -561,9 +562,7 @@ function LeadsPageInner() {
 
       {/* Main content */}
       {!searchActive && loading ? (
-        <div style={{ paddingTop: 80, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 16 }}>
-          Loading…
-        </div>
+        <DashboardLoadingState compact />
       ) : !searchActive && filteredOpen.length === 0 && filterTemp !== "all" ? (
         <div style={{ paddingTop: 60, textAlign: "center" }}>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.02em" }}>
