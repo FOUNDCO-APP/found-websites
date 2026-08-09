@@ -111,7 +111,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return {
     metadataBase: new URL(origin),
-    title: { absolute: title },
+    title: albumName,
     description,
     alternates: { canonical: url },
     openGraph: {
