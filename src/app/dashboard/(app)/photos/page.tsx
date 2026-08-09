@@ -399,7 +399,7 @@ function PhotosPageInner() {
   }
 
   async function renameAlbum(album: Album, name: string) {
-    const trimmed = album.album_type === "job" ? toDisplayTitle(name) : name.trim()
+    const trimmed = (usesJobs || album.album_type === "job") ? toDisplayTitle(name) : name.trim()
     if (!trimmed || trimmed === album.name) return
     const res = await fetch("/api/albums", {
       method: "PATCH",
@@ -554,7 +554,7 @@ function PhotosPageInner() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ minWidth: 0 }}>
-              <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
+              <AlbumTitleEditor album={activeAlbum} usesJobs={usesJobs} onRename={renameAlbum} />
               {albumContextLine(activeAlbum) && (
                 <p style={{ margin: "8px 0 0", ...TYPE.subhead, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.35 }}>
                   {albumContextLine(activeAlbum)}
@@ -1325,11 +1325,12 @@ function DateGroupedGrid({
 
 // Albums tab
 // â”€â”€ Album title editor (inside album detail header) â”€â”€
-function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Album, name: string) => void }) {
+function AlbumTitleEditor({ album, usesJobs, onRename }: { album: Album; usesJobs?: boolean; onRename: (a: Album, name: string) => void }) {
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState(album.name)
+  const displayName = albumDisplayName(album, usesJobs)
+  const [name, setName] = useState(displayName)
 
-  useEffect(() => { setName(album.name) }, [album.name])
+  useEffect(() => { setName(albumDisplayName(album, usesJobs)) }, [album.name, album.album_type, usesJobs])
 
   function save() {
     onRename(album, name)
@@ -1361,7 +1362,7 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
 
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
-      <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white", lineHeight: 1.02, overflowWrap: "anywhere" }}>{album.name}</h1>
+      <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white", lineHeight: 1.02, overflowWrap: "anywhere" }}>{displayName}</h1>
       <button onClick={() => setEditing(true)} style={{ border: "none", background: "none", padding: "4px", cursor: "pointer", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, display: "flex", alignItems: "center", flexShrink: 0, marginTop: 2 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>

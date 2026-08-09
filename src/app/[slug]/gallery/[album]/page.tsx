@@ -89,17 +89,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const admin = createAdminClient()
   const album = await findAlbum(admin, company.id, albumSlug, true)
 
-  const { data: cover } = album
-    ? await admin
-      .from("company_photos")
-      .select("url")
-      .eq("company_id", company.id)
-      .eq("album_id", album.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    : { data: null }
-
   const albumLabel = albumLabelFor(company.industry_category)
   const albumName = album ? displayAlbumName(album, albumLabel.singular === "Job") : albumLabel.plural
   const title = `${albumName} - ${company.name}`
@@ -107,7 +96,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description = context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
   const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
   const url = `${origin}/gallery/${albumSlug}`
-  const image = absoluteImageUrl(cover?.url || company.logo_url || undefined, origin)
+  const image = absoluteImageUrl(`/gallery/${albumSlug}/opengraph-image`, origin)
 
   return {
     metadataBase: new URL(origin),
