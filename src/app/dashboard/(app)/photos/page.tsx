@@ -33,6 +33,7 @@ type Album = {
   customer_email?: string | null
   service_address?: string | null
   cover_photo_id?: string | null
+  cover_url?: string | null
   created_at: string
 }
 
@@ -79,6 +80,10 @@ function photoSitePlacementLabel(photo: Photo, destinations?: PhotoDestination[]
   if (photo.website_section === "announcement") return null
   return destinationLabelForSlot(photo.website_section, destinations)
     ?? (photo.in_gallery ? destinationLabelForSlot("gallery", destinations) : null)
+}
+
+function albumContextLine(album: Album) {
+  return [album.customer_name, album.service_address].filter(Boolean).join(" · ")
 }
 
 export default function PhotosPage() {
@@ -330,7 +335,7 @@ function PhotosPageInner() {
 
   async function createAlbum() {
     const name = usesJobs
-      ? (newJobCustomerName.trim() || newJobAddress.trim() || newAlbumName.trim())
+      ? (newAlbumName.trim() || newJobCustomerName.trim() || newJobAddress.trim())
       : newAlbumName.trim()
     if (!name) return
     setSavingAlbum(true)
@@ -514,64 +519,72 @@ function PhotosPageInner() {
     <main style={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
 
       {activeAlbum ? (
-        <div style={{ padding: "18px 24px 10px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
-          <div>
-            <button onClick={() => setActiveAlbum(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-              <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
-            </button>
-            <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
-            <p style={{ margin: "4px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
-            </p>
-          </div>
+        <div style={{ padding: "22px 24px 18px" }}>
+          <button onClick={() => setActiveAlbum(null)} style={{ background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, marginBottom: 14 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={`rgba(255,255,255,${TEXT_OPACITY.tertiary})`} strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{albumLabel.plural}</span>
+          </button>
 
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            {!selectMode && photos.length > 0 && (
-              <button onClick={() => setSelectMode(true)} style={{
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ minWidth: 0 }}>
+              <AlbumTitleEditor album={activeAlbum} onRename={renameAlbum} />
+              {albumContextLine(activeAlbum) && (
+                <p style={{ margin: "8px 0 0", ...TYPE.subhead, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.35 }}>
+                  {albumContextLine(activeAlbum)}
+                </p>
+              )}
+              <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
+              {!selectMode && photos.length > 0 && (
+                <button onClick={() => setSelectMode(true)} style={{
+                  padding: "10px 16px", borderRadius: 100,
+                  backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+                }}>
+                  Select
+                </button>
+              )}
+              <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
+                display: "flex", alignItems: "center", gap: 6,
                 padding: "10px 16px", borderRadius: 100,
-                backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+                backgroundColor: isPro ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.06)",
+                border: `1px solid ${isPro ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.1)"}`,
+                color: isPro ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
+                cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
               }}>
-                Select
+                {!isPro && (
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                )}
+                Share
+                {isPro && (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                  </svg>
+                )}
               </button>
-            )}
-            <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "10px 16px", borderRadius: 100,
-              backgroundColor: isPro ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.06)",
-              border: `1px solid ${isPro ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.1)"}`,
-              color: isPro ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-              cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
-            }}>
-              {!isPro && (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                </svg>
-              )}
-              Share
-              {isPro && (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                </svg>
-              )}
-            </button>
-            <button onClick={openCamera} disabled={uploading} style={{
-              width: 44, height: 44, borderRadius: "50%",
-              backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
-            }}>
-              {uploading ? (
-                <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                  <circle cx="12" cy="13" r="4"/>
-                </svg>
-              )}
-            </button>
+              <button onClick={openCamera} disabled={uploading} style={{
+                width: 44, height: 44, borderRadius: "50%",
+                backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
+              }}>
+                {uploading ? (
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -747,6 +760,7 @@ function PhotosPageInner() {
             selectMode={selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
+            gridColumns="repeat(3, 1fr)"
             emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
             emptySub="Tap the camera button to add photos."
             onAdd={openCamera}
@@ -907,7 +921,7 @@ function PhotosPageInner() {
       {/* Add to project — choose how */}
       {showAddOptions && activeAlbum && (
         <AddToAlbumSheet
-          albumName={activeAlbum.name}
+          album={activeAlbum}
           onTakePhoto={handleTakePhotoFromSheet}
           onUpload={handleUploadFromSheet}
           onUseExisting={() => { setShowAddOptions(false); setShowExistingPicker(true) }}
@@ -1204,7 +1218,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta
+  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta, gridColumns = "1fr 1fr"
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
@@ -1222,6 +1236,7 @@ function DateGroupedGrid({
   emptyIcon?: React.ReactNode
   onAdd?: () => void
   showAddCta?: boolean
+  gridColumns?: string
 }) {
   if (photos.length === 0) {
     return (
@@ -1256,7 +1271,7 @@ function DateGroupedGrid({
           <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 10 }}>
             {group.label}
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3 }}>
+          <div style={{ display: "grid", gridTemplateColumns: gridColumns, gap: 3 }}>
             {group.photos.map(photo => (
               <PhotoCard
                 key={photo.id}
@@ -1295,7 +1310,7 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
 
   if (editing) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 2 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 4 }}>
         <input
           autoFocus
           value={name}
@@ -1303,20 +1318,22 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
           onKeyDown={e => { if (e.key === "Enter") save(); if (e.key === "Escape") setEditing(false) }}
           style={{
             background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.18)",
-            borderRadius: 10, padding: "6px 12px", color: "white",
-            fontSize: "1.5rem", fontWeight: 300, letterSpacing: "-0.03em",
+            borderRadius: 14, padding: "12px 14px", color: "white",
+            fontSize: "1.75rem", fontWeight: 500, letterSpacing: "-0.03em",
             outline: "none", width: "100%",
           }}
         />
-        <button onClick={save} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", flexShrink: 0 }}>Save</button>
-        <button onClick={() => setEditing(false)} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", flexShrink: 0 }}>Cancel</button>
+        <div style={{ display: "flex", gap: 16 }}>
+          <button onClick={save} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Save</button>
+          <button onClick={() => setEditing(false)} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{album.name}</h1>
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, minWidth: 0 }}>
+      <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white", lineHeight: 1.02, overflowWrap: "anywhere" }}>{album.name}</h1>
       <button onClick={() => setEditing(true)} style={{ border: "none", background: "none", padding: "4px", cursor: "pointer", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, display: "flex", alignItems: "center", flexShrink: 0, marginTop: 2 }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -1358,7 +1375,7 @@ function ProjectsTab({
   onDelete: (a: Album) => void
 }) {
   const canCreate = usesJobs
-    ? Boolean(newJobCustomerName.trim() || newJobAddress.trim() || newName.trim())
+    ? Boolean(newName.trim() || newJobCustomerName.trim() || newJobAddress.trim())
     : Boolean(newName.trim())
   const newFieldStyle: React.CSSProperties = {
     width: "100%",
@@ -1381,6 +1398,13 @@ function ProjectsTab({
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
               <input
                 autoFocus
+                value={newName}
+                onChange={e => onNameChange(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && canCreate && onCreate()}
+                placeholder="Job name"
+                style={newFieldStyle}
+              />
+              <input
                 value={newJobCustomerName}
                 onChange={e => onJobCustomerNameChange(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && canCreate && onCreate()}
@@ -1410,12 +1434,6 @@ function ProjectsTab({
                   style={newFieldStyle}
                 />
               </div>
-              <input
-                value={newName}
-                onChange={e => onNameChange(e.target.value)}
-                placeholder="Job name if different"
-                style={newFieldStyle}
-              />
             </div>
           ) : (
             <input
@@ -2053,13 +2071,14 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
 }
 
 // â”€â”€ Add to project sheet â”€â”€
-function AddToAlbumSheet({ albumName, onTakePhoto, onUpload, onUseExisting, onClose }: {
-  albumName: string
+function AddToAlbumSheet({ album, onTakePhoto, onUpload, onUseExisting, onClose }: {
+  album: Album
   onTakePhoto: () => void
   onUpload: () => void
   onUseExisting: () => void
   onClose: () => void
 }) {
+  const context = albumContextLine(album)
   const options = [
     {
       label: "Take Photo",
@@ -2099,10 +2118,15 @@ function AddToAlbumSheet({ albumName, onTakePhoto, onUpload, onUseExisting, onCl
   return (
     <>
       <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px calc(env(safe-area-inset-bottom, 0px) + 32px)" }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px calc(env(safe-area-inset-bottom, 0px) + 36px)" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
-        <h3 style={{ margin: "0 0 6px", ...TYPE.title, color: "white" }}>Add to {albumName}</h3>
-        <p style={{ margin: "0 0 22px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+        <h3 style={{ margin: "0 0 6px", ...TYPE.title, color: "white", lineHeight: 1.08, overflowWrap: "anywhere" }}>Add photos to {album.name}</h3>
+        {context && (
+          <p style={{ margin: "0 0 8px", ...TYPE.footnote, fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.35 }}>
+            {context}
+          </p>
+        )}
+        <p style={{ margin: "0 0 24px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
           Choose how you&apos;d like to add photos or video.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
