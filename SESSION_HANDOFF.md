@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Worker Roles/Permissions (4 commits)
+
+### Where We Left Off
+- Team round (Steve leading, Craig/Priya/Angela/Marcus/Chris weighing in) picked worker roles/permissions as the top priority off the Jobs/service-industry pipeline - an HVAC-style company needs techs in the field who can capture job photos without seeing leads, contacts, estimates, or being able to edit/publish the website. Shawn approved the team's plan and asked it be built end to end, pushing after each step.
+- Confirmed before building: zero multi-user-per-company concept existed anywhere in the codebase (one Supabase Auth login = one company, via `companies.user_id`/`email`). RLS is a no-op on every tenant table (`using(true)`) - real authorization has always lived in application code. The Found Business plan page already promises this exact feature in marketing copy; this was unbuilt until now.
+
+### What Changed
+1. **Schema + resolver** (`208e879`): new `company_members` table (migration 058, run live - script stays local/gitignored like all `scripts/*.mjs`, same convention as migration 057 etc.). `getCompany`/`getAllCompanies`/`hasMultipleCompanies` extended to resolve worker access alongside owner access. New `getCompanyRole()`/`requireOwnerAccess()` - the real app-level permission boundary, following the same pattern as the existing `requireScheduleAccess` (RLS can't be trusted here, per the earlier admin-View-As schedule bug).
+2. **Server-action enforcement** (`4f2b721`): `requireOwnerAccess()` wired into every sensitive surface - Leads/Contacts/People (CRM, templates, email history), Estimates + Schedule/Booking (via the shared `requireDashboardAddonAccess`/`Page`/`requireDashboardFeaturePage` choke points in `entitlements.ts`), Site editing/publishing (`site/actions.ts`'s `getContext()`, which also covers photo placement to hero/about/gallery), Marketing, Payments Connect, Locations, Rate Sheet, Menu/Products, and the dashboard home page itself (was pulling raw lead PII - a worker's first screen after login could not be left unguarded).
+3. **Invite flow** (`4958249`): new owner-facing `/team` page (linked from Edit Website > Site-wide). Reuses the existing magic-link login infra - `generateLink` creates/reuses the worker's Supabase Auth user, inserts `company_members` (role: worker, status: active), emails a one-tap link straight to camera. Owner can remove access any time (status: revoked). Also caught and fixed a gap while wiring this: `site/page.tsx` itself wasn't gated yet even though its save actions were.
+4. **Nav/UX + a real regression catch** (`206cbce`): `DashboardNav` now takes a `role` prop from `layout.tsx` (via `getCompanyRole`). Workers see exactly two tabs - Photos and a stripped-down More screen (company name + Sign Out only - without this a worker would have had no way to sign out at all). Separately: found and fixed that `getCompanyRole()` didn't account for Found admin's "View As" override, which already bypasses ownership in `getCompany()` - without the fix, every `requireOwnerAccess()` check from step 2 would have wrongly treated an admin support/demo session as a restricted worker. Fixed at the source so it's corrected everywhere at once.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after every one of the 4 commits.
+- `git diff --check` passed each time (line-ending warnings only, pre-existing repo convention).
+- Not yet tested live by Shawn.
+
+### Test Next
+- Owner: go to Edit Website > Team, invite a real email address, confirm the invite email arrives and the magic link works.
+- Confirm a freshly invited worker lands on Photos (not Home), sees only Photos + More in the nav, and More shows just company name + Sign Out.
+- Confirm a worker cannot reach `/leads`, `/contacts`, `/people`, `/estimates`, `/site`, `/marketing`, `/locations`, `/menu`, `/products`, `/schedule`, `/team` directly by URL (should redirect to `/photos` or show empty data).
+- Confirm a worker CAN capture/upload photos and create/view Jobs.
+- Important: confirm Found admin "View As" on a real customer account still has full owner access (leads, estimates, site editing) - this is the regression step 4 fixed, worth a direct re-check.
+- Owner: confirm "Remove" on the Team page actually revokes access (worker gets redirected/blocked on next load).
+
+---
+
 ## 2026-08-09 - Job Leads Connected to Estimate Builder
 
 ### Where We Left Off

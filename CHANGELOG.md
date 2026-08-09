@@ -1,3 +1,20 @@
+## Session: August 9, 2026 - Worker Roles/Permissions
+**AI:** Claude
+
+### Built
+- `company_members` table (migration 058, run live) + `getCompanyRole()`/`requireOwnerAccess()` in `getCompany.ts` - the real app-level permission boundary (RLS is a no-op on tenant tables in this project).
+- Owner-only enforcement wired into every sensitive surface: Leads, Contacts, People, Estimates, Schedule, Site editing/publishing (`site/actions.ts`), Marketing, Payments Connect, Locations, Rate Sheet, Menu/Products, and the dashboard home page.
+- New `/team` page: owner invites a worker by email via the existing magic-link infra; worker gets camera/Jobs access only. Owner can revoke.
+- `DashboardNav` now takes a `role` prop; workers see Photos + a minimal More (Sign Out only).
+- Fixed a real regression found mid-build: `getCompanyRole()` now treats Found admin's "View As" override as owner-equivalent access - without this, every owner-only check added this session would have wrongly restricted admin support/demo sessions.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after each of the 4 commits (`208e879`, `4f2b721`, `4958249`, `206cbce`).
+- `git diff --check` passed each time.
+- Not yet tested live by Shawn - see SESSION_HANDOFF.md for the test list.
+
+---
+
 ## Session: August 9, 2026 - Job Leads Connected to Estimate Builder
 **AI:** Codex
 

@@ -1,5 +1,21 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Worker Roles/Permissions
+
+- [x] company_members table + owner/worker access resolver (migration 058, additive).
+- [x] Enforce owner-only access on Leads/Contacts/People/Estimates/Schedule/Site editing/Marketing/Payments/Locations/Rate Sheet/Menu/Products/dashboard home.
+- [x] Owner-facing /team invite flow (magic-link based, reuses existing login infra).
+- [x] Worker nav restricted to Photos + minimal More (Sign Out only).
+- [x] Fix admin "View As" regression caught while building nav (getCompanyRole now treats admin override as owner-equivalent).
+- [x] Verify `npx tsc --noEmit` and `npm run build` after each of the 4 commits.
+- [ ] Shawn QA: invite a real worker end to end (email arrives, magic link works, lands on Photos).
+- [ ] Shawn QA: worker cannot reach owner-only pages by direct URL.
+- [ ] Shawn QA: admin View As still has full owner access on a real customer account.
+- [ ] Shawn QA: Team page "Remove" actually revokes access.
+- [ ] Next phase (not started): reverse Jobs<->Estimates link (create/attach a Job from the Estimate builder), "Ask about this job" with real job context, OG/link-preview caching diagnosis, cover photo selector + per-photo notes.
+
+---
+
 ## 2026-08-09 - Job Leads Connected to Estimate Builder
 
 - [x] Job/shared-work leads show Create Estimate even outside the estimate-only inbox.
