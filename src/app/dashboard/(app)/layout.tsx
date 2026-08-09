@@ -124,7 +124,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                   {company.name}
                 </span>
                 {memberRole === "owner" && (
-                  <AccountMenu companyName={company.name} primaryColor={company.primary_color} hasMultiple={hasMultiple} />
+                  <AccountMenu hasMultiple={hasMultiple} />
                 )}
               </div>
             )}
