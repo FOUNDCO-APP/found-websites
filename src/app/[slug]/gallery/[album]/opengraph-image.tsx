@@ -128,47 +128,48 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
       <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.58)" }} />
       <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 12, background: accent }} />
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flex: 1, padding: 76, gap: 52, alignItems: "center" }}>
+      <div style={{ position: "relative", display: "flex", flex: 1, padding: 76, gap: 52, alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", flex: 1.08, minWidth: 0 }}>
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logo} alt="" style={{ width: 260, maxHeight: 86, objectFit: "contain", objectPosition: "left center", marginBottom: 48 }} />
           ) : (
-            <div style={{ fontSize: 34, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", marginBottom: 48 }}>{company.name}</div>
+            <div style={{ display: "flex", fontSize: 34, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", marginBottom: 48 }}>{company.name}</div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 16 }}>
-            <div style={{ width: 54, height: 4, borderRadius: 4, background: accent }} />
-            <div style={{ fontSize: 20, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", color: accent }}>
+            <div style={{ display: "flex", width: 54, height: 4, borderRadius: 4, background: accent }} />
+            <div style={{ display: "flex", fontSize: 20, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", color: accent }}>
               {isJob ? "Job Photos" : "Photo Gallery"}
             </div>
           </div>
-          <div style={{ fontSize: title.length > 32 ? 62 : 76, lineHeight: 0.96, fontWeight: 900, letterSpacing: -3, marginBottom: 22 }}>
+          <div style={{ display: "flex", fontSize: title.length > 32 ? 62 : 76, lineHeight: 0.96, fontWeight: 900, letterSpacing: 0, marginBottom: 22 }}>
             {title}
           </div>
-          <div style={{ fontSize: 30, lineHeight: 1.25, color: "rgba(255,255,255,0.76)", fontWeight: 650 }}>
+          <div style={{ display: "flex", fontSize: 30, lineHeight: 1.25, color: "rgba(255,255,255,0.76)", fontWeight: 650 }}>
             {context || `Shared by ${company.name}`}
           </div>
         </div>
 
         <div style={{ width: 390, height: 430, display: "flex", gap: 14 }}>
-          {photoUrls.length > 0 ? (
-            <>
-              <div style={{ flex: 1.25, borderRadius: 34, overflow: "hidden", border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.08)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photoUrls[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-              </div>
-              <div style={{ flex: 0.9, display: "flex", flexDirection: "column", gap: 14 }}>
-                {[photoUrls[1], photoUrls[2]].map((url, index) => (
-                  <div key={index} style={{ flex: 1, borderRadius: 28, overflow: "hidden", border: "1px solid rgba(255,255,255,0.16)", background: "rgba(255,255,255,0.08)" }}>
-                    {url && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          ) : (
+          {photoUrls.length > 0 && (
+            <div style={{ display: "flex", flex: 1.25, borderRadius: 34, overflow: "hidden", border: "1px solid rgba(255,255,255,0.18)", background: "rgba(255,255,255,0.08)" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photoUrls[0]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            </div>
+          )}
+          {photoUrls.length > 0 && (
+            <div style={{ flex: 0.9, display: "flex", flexDirection: "column", gap: 14 }}>
+              {[photoUrls[1], photoUrls[2]].map((url, index) => (
+                <div key={index} style={{ display: "flex", flex: 1, borderRadius: 28, overflow: "hidden", border: "1px solid rgba(255,255,255,0.16)", background: "rgba(255,255,255,0.08)" }}>
+                  {url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {photoUrls.length === 0 && (
             <div style={{ flex: 1, borderRadius: 34, border: "1px solid rgba(255,255,255,0.16)", background: "rgba(255,255,255,0.07)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.55)", fontSize: 30, fontWeight: 800 }}>
               Photos
             </div>

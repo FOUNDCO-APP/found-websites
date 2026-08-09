@@ -115,21 +115,11 @@ export async function POST(req: Request) {
     cover_photo_id: cover_photo_id || null,
   }
 
-  let { data, error }: { data: AlbumRow | null; error: { message: string } | null } = await admin
+  const { data, error }: { data: AlbumRow | null; error: { message: string } | null } = await admin
     .from("photo_albums")
     .insert(insertPayload)
     .select()
     .single()
-
-  if (error) {
-    const fallback = await admin
-      .from("photo_albums")
-      .insert({ company_id: company.id, name: name.trim(), slug })
-      .select()
-      .single()
-    data = fallback.data
-    error = fallback.error
-  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ album: data })
@@ -141,15 +131,31 @@ export async function PATCH(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { id, name } = await req.json()
-  if (!id || !name?.trim()) return NextResponse.json({ error: "Missing fields" }, { status: 400 })
+  const body = await req.json()
+  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id } = body
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
   const admin = createAdminClient()
-  const nextName = name.trim()
-  const slug = await uniqueAlbumSlug(admin, company.id, nextName, id)
+  const updates: Record<string, string | null> = {}
+
+  if (typeof name === "string") {
+    const nextName = name.trim()
+    if (!nextName) return NextResponse.json({ error: "Name required" }, { status: 400 })
+    updates.name = nextName
+    updates.slug = await uniqueAlbumSlug(admin, company.id, nextName, id)
+  }
+
+  if ("customer_name" in body) updates.customer_name = typeof customer_name === "string" && customer_name.trim() ? customer_name.trim() : null
+  if ("customer_phone" in body) updates.customer_phone = typeof customer_phone === "string" && customer_phone.trim() ? customer_phone.trim() : null
+  if ("customer_email" in body) updates.customer_email = typeof customer_email === "string" && customer_email.trim() ? customer_email.trim() : null
+  if ("service_address" in body) updates.service_address = typeof service_address === "string" && service_address.trim() ? service_address.trim() : null
+  if ("cover_photo_id" in body) updates.cover_photo_id = typeof cover_photo_id === "string" && cover_photo_id.trim() ? cover_photo_id.trim() : null
+
+  if (Object.keys(updates).length === 0) return NextResponse.json({ error: "No updates" }, { status: 400 })
+
   const { data, error } = await admin
     .from("photo_albums")
-    .update({ name: nextName, slug })
+    .update(updates)
     .eq("id", id)
     .eq("company_id", company.id)
     .select()

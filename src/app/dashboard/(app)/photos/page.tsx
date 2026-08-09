@@ -413,6 +413,19 @@ function PhotosPageInner() {
     }
   }
 
+  async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address">>) {
+    const res = await fetch("/api/albums", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: album.id, ...details }),
+    })
+    const data = await res.json()
+    if (data.album) {
+      setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, ...data.album } : a))
+      if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, ...data.album } : prev)
+    }
+  }
+
   async function handleShare(album: Album) {
     const title = albumDisplayName(album, usesJobs)
     const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${albumPublicSlug(album, usesJobs)}`
@@ -559,6 +572,9 @@ function PhotosPageInner() {
                 <p style={{ margin: "8px 0 0", ...TYPE.subhead, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.35 }}>
                   {albumContextLine(activeAlbum)}
                 </p>
+              )}
+              {usesJobs && (
+                <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
               )}
               <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
@@ -1372,6 +1388,96 @@ function AlbumTitleEditor({ album, usesJobs, onRename }: { album: Album; usesJob
   )
 }
 
+function JobDetailsEditor({
+  album,
+  onSave,
+}: {
+  album: Album
+  onSave: (album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address">>) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [customerName, setCustomerName] = useState(album.customer_name ?? "")
+  const [address, setAddress] = useState(album.service_address ?? "")
+  const [phone, setPhone] = useState(album.customer_phone ?? "")
+  const [email, setEmail] = useState(album.customer_email ?? "")
+  const hasDetails = Boolean(album.customer_name || album.service_address || album.customer_phone || album.customer_email)
+
+  useEffect(() => {
+    setCustomerName(album.customer_name ?? "")
+    setAddress(album.service_address ?? "")
+    setPhone(album.customer_phone ?? "")
+    setEmail(album.customer_email ?? "")
+    setEditing(false)
+  }, [album.id, album.customer_name, album.service_address, album.customer_phone, album.customer_email])
+
+  async function save() {
+    setSaving(true)
+    await onSave(album, {
+      customer_name: customerName,
+      service_address: address,
+      customer_phone: phone,
+      customer_email: email,
+    })
+    setSaving(false)
+    setEditing(false)
+  }
+
+  const fieldStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    color: "white",
+    ...TYPE.subhead,
+    outline: "none",
+    boxSizing: "border-box",
+  }
+
+  if (!editing) {
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        style={{
+          marginTop: 10,
+          padding: "10px 12px",
+          borderRadius: 13,
+          border: `1px solid ${hasDetails ? "rgba(255,255,255,0.1)" : `${SIGNAL_GREEN}33`}`,
+          backgroundColor: hasDetails ? "rgba(255,255,255,0.04)" : `${SIGNAL_GREEN}10`,
+          color: hasDetails ? `rgba(255,255,255,${TEXT_OPACITY.secondary})` : SIGNAL_GREEN,
+          ...TYPE.footnote,
+          fontWeight: 700,
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        {hasDetails ? "Edit customer details" : "Add customer or address"}
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 12, padding: 14, borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB DETAILS</div>
+      <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer name" style={fieldStyle} />
+      <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Job address" style={fieldStyle} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" style={fieldStyle} />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" style={fieldStyle} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
+        <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function ProjectsTab({
   albums, photos, albumLabel, isPro, showNew, newName, saving, usesJobs,
   newJobCustomerName, newJobAddress, newJobPhone, newJobEmail,
@@ -1533,6 +1639,11 @@ function ProjectsTab({
                   {context && (
                     <div style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {context}
+                    </div>
+                  )}
+                  {usesJobs && !context && (
+                    <div style={{ ...TYPE.footnote, color: `${SIGNAL_GREEN}aa`, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 700 }}>
+                      Add customer or address
                     </div>
                   )}
                   <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
