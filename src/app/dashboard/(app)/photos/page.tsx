@@ -168,6 +168,14 @@ function PhotosPageInner() {
     const albumId = searchParams.get("album")
     const upload = searchParams.get("upload")
     const camera = searchParams.get("camera")
+    const tab = searchParams.get("tab") ?? searchParams.get("view")
+    const startNew = searchParams.get("new")
+    if (tab === "jobs" || tab === "albums") {
+      setView("albums")
+      if (startNew === "1") setShowNewAlbum(true)
+      router.replace("/photos")
+      return
+    }
     if (camera === "1") {
       if (albumId) pendingAlbumIdRef.current = albumId
       setShowCamera(true)
@@ -795,16 +803,17 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
-            onFlag={flag}
-            onGallery={toggleGallery}
-            onPlace={openPlacement}
-            onShare={handleSharePhoto}
-            onRequestDelete={setDeleteConfirmPhoto}
+            onFlag={usesJobs ? undefined : flag}
+            onGallery={usesJobs ? undefined : toggleGallery}
+            onPlace={usesJobs ? undefined : openPlacement}
+            onShare={usesJobs ? undefined : handleSharePhoto}
+            onRequestDelete={usesJobs ? undefined : setDeleteConfirmPhoto}
             destinations={destinations}
             selectMode={selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
-            gridColumns="repeat(3, 1fr)"
+            gridColumns={usesJobs ? "repeat(2, minmax(0, 1fr))" : "repeat(3, 1fr)"}
+            cardVariant={usesJobs ? "job" : "library"}
             emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
             emptySub="Tap the camera button to add photos."
             onAdd={openCamera}
@@ -1263,7 +1272,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta, gridColumns = "1fr 1fr"
+  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta, gridColumns = "1fr 1fr", cardVariant = "library"
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
@@ -1282,6 +1291,7 @@ function DateGroupedGrid({
   onAdd?: () => void
   showAddCta?: boolean
   gridColumns?: string
+  cardVariant?: "library" | "job"
 }) {
   if (photos.length === 0) {
     return (
@@ -1331,6 +1341,7 @@ function DateGroupedGrid({
                 selectMode={selectMode}
                 selected={selectedIds?.has(photo.id)}
                 onToggleSelect={onToggleSelect}
+                variant={cardVariant}
               />
             ))}
           </div>
@@ -1687,7 +1698,7 @@ function ProjectsTab({
 }
 
 // â”€â”€ Photo card â€” tap to open lightroom â”€â”€
-function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selected, onToggleSelect }: {
+function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selected, onToggleSelect, variant = "library" }: {
   photo: Photo
   onView: (photo: Photo) => void
   onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
@@ -1699,8 +1710,10 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
   selectMode?: boolean
   selected?: boolean
   onToggleSelect?: (id: string) => void
+  variant?: "library" | "job"
 }) {
   const isVideo = isVideoMedia(photo.url, photo.mime_type)
+  const isJobWorkspace = variant === "job"
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressFired = useRef(false)
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
@@ -1729,7 +1742,15 @@ function PhotoCard({ photo, onView, onFlag, onGallery, onPlace, destinations, on
 
   return (
     <div
-      style={{ position: "relative", borderRadius: 16, overflow: "hidden", aspectRatio: "1", backgroundColor: isVideo ? "#111813" : "transparent", border: isVideo ? "1px solid rgba(255,255,255,0.08)" : "none" }}
+      style={{
+        position: "relative",
+        borderRadius: isJobWorkspace ? 18 : 16,
+        overflow: "hidden",
+        aspectRatio: isJobWorkspace ? "4 / 3" : "1",
+        backgroundColor: isVideo || isJobWorkspace ? "#111813" : "transparent",
+        border: isJobWorkspace ? "1px solid rgba(255,255,255,0.08)" : isVideo ? "1px solid rgba(255,255,255,0.08)" : "none",
+        boxShadow: isJobWorkspace ? "0 16px 36px rgba(0,0,0,0.22)" : "none",
+      }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={clearLongPress}

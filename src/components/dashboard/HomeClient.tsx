@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { TYPE, TEXT_OPACITY, GREEN, BLACK, avatarColorFor } from "@/lib/dashboard/typography"
+import { TYPE, TEXT_OPACITY, GREEN, BLACK, avatarColorFor, albumLabelFor } from "@/lib/dashboard/typography"
 import type { SmartNextStep } from "@/lib/dashboard/smartNextStep"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
@@ -229,11 +229,16 @@ export default function HomeClient({
   const guestWordPl = industry === "food" ? "guests" : "leads"
 
   // Context-aware second tile priority: Share → Add Photo → Edit My Site
-  const tile2 = (!isActive || totalCount === 0)
-    ? "share"
-    : !photoThisWeek
-      ? "photo"
-      : "edit"
+  const homeAlbumLabel = industry ? albumLabelFor(industry) : null
+  const usesJobWorkflow = homeAlbumLabel ? ["Job", "Project"].includes(homeAlbumLabel.singular) : false
+
+  const tile2 = usesJobWorkflow
+    ? "job"
+    : (!isActive || totalCount === 0)
+      ? "share"
+      : !photoThisWeek
+        ? "photo"
+        : "edit"
 
   const fade = (delay: number) => ({
     opacity: mounted ? 1 : 0,
@@ -365,6 +370,28 @@ export default function HomeClient({
           </button>
 
           {/* Context tile */}
+          {tile2 === "job" && (
+            <Link
+              href="/photos?tab=jobs&new=1"
+              style={{
+                flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between",
+                padding: "20px 18px 18px", borderRadius: 24, minHeight: 118,
+                background: "linear-gradient(150deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                textDecoration: "none",
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.68)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="7" width="18" height="14" rx="2"/>
+                <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: "0.9375rem", fontWeight: 700, color: "white", marginBottom: 3 }}>Start Job</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 400, color: "rgba(255,255,255,0.38)", lineHeight: 1.4 }}>Customer, photos, estimate</div>
+              </div>
+            </Link>
+          )}
+
           {tile2 === "share" && (
             <button
               onClick={handleShare}
@@ -544,4 +571,3 @@ export default function HomeClient({
     </main>
   )
 }
-
