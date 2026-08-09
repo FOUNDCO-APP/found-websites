@@ -3,6 +3,7 @@ import { getCompany, hasMultipleCompanies, isAdminOverrideActive, getCompanyRole
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
+import AccountMenu from "@/components/dashboard/AccountMenu"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
@@ -108,37 +109,24 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <FoundWordmark height={18} color="white" />
             </Link>
 
-            {/* Company name / switcher */}
+            {/* Company name + account menu. Business switching (when
+                relevant) and everything else account-level - Team, Business
+                Info, Billing, Sign Out - now lives behind this one icon
+                instead of a page-nav destination or a plain text link. */}
             {company?.name && (
-              hasMultiple ? (
-                // Text link, not a button - but name + caret together is the
-                // near-universal "this is swappable" signal (Slack, Notion,
-                // Stripe all pair the current-entity name with a small caret
-                // right next to it). Plain underlined text alone doesn't
-                // carry that meaning - underline reads as "more info," not
-                // "swap this." This goes to a company picker page, not an
-                // inline dropdown, so still no pill/background/button.
-                <Link href="/select" style={{
-                  display: "inline-flex", alignItems: "center", gap: 4,
-                  fontSize: 12, fontWeight: 700,
-                  color: "rgba(255,255,255,0.85)",
-                  textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.32)", textUnderlineOffset: "3px",
-                }}>
-                  <span style={{ maxWidth: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{company.name}</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </Link>
-              ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{
                   fontSize: 12, fontWeight: 700,
                   color: "rgba(255,255,255,0.75)",
-                  maxWidth: 180,
+                  maxWidth: 150,
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {company.name}
                 </span>
-              )
+                {memberRole === "owner" && (
+                  <AccountMenu companyName={company.name} primaryColor={company.primary_color} hasMultiple={hasMultiple} />
+                )}
+              </div>
             )}
           </div>
         </header>

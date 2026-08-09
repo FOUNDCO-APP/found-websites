@@ -1032,7 +1032,6 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <HubTile label="Design" sub="Color, style, theme" onClick={() => setView("design")} />
               <HubTile label="Photo library" sub="All your photos" href="/photos" />
               <HubTile label="Domain" sub={publicSiteHost} onClick={() => setView("domain")} />
-              <HubTile label="Team" sub="Add crew for job photos" href="/team" />
             </div>
           </div>
         </>
