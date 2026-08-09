@@ -2,11 +2,39 @@
 
 import { useEffect, useState } from "react"
 import type { CSSProperties } from "react"
+import { isVideoMedia } from "@/lib/mediaKind"
 
 type SharedPhoto = {
   id: string
   url: string
+  mime_type?: string | null
   created_at?: string | null
+}
+
+function GridVideoTile({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%", backgroundColor: "#111" }}>
+      <video
+        src={src}
+        muted
+        autoPlay
+        loop
+        playsInline
+        preload="metadata"
+        onLoadedData={() => setLoaded(true)}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0.4 }}
+      />
+      <div style={{
+        position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+        width: 32, height: 32, borderRadius: "50%",
+        backgroundColor: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.25)",
+        display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none",
+      }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      </div>
+    </div>
+  )
 }
 
 export default function AlbumPhotoGrid({ photos }: { photos: SharedPhoto[] }) {
@@ -53,13 +81,17 @@ export default function AlbumPhotoGrid({ photos }: { photos: SharedPhoto[] }) {
               cursor: "zoom-in",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={photo.url}
-              alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              loading="lazy"
-            />
+            {isVideoMedia(photo.url, photo.mime_type) ? (
+              <GridVideoTile src={photo.url} />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={photo.url}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                loading="lazy"
+              />
+            )}
           </button>
         ))}
       </div>
@@ -148,19 +180,35 @@ export default function AlbumPhotoGrid({ photos }: { photos: SharedPhoto[] }) {
             </button>
           )}
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={activePhoto.url}
-            alt=""
-            onClick={event => event.stopPropagation()}
-            style={{
-              maxWidth: "100vw",
-              maxHeight: "100dvh",
-              objectFit: "contain",
-              borderRadius: 0,
-              boxShadow: "none",
-            }}
-          />
+          {isVideoMedia(activePhoto.url, activePhoto.mime_type) ? (
+            <video
+              key={activePhoto.url}
+              src={activePhoto.url}
+              controls
+              autoPlay
+              playsInline
+              onClick={event => event.stopPropagation()}
+              style={{
+                maxWidth: "100vw",
+                maxHeight: "100dvh",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={activePhoto.url}
+              alt=""
+              onClick={event => event.stopPropagation()}
+              style={{
+                maxWidth: "100vw",
+                maxHeight: "100dvh",
+                objectFit: "contain",
+                borderRadius: 0,
+                boxShadow: "none",
+              }}
+            />
+          )}
 
           {activeIndex !== null && activeIndex < photos.length - 1 && (
             <button

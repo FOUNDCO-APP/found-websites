@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { isVideoMedia } from "@/lib/mediaKind"
 
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
@@ -66,15 +67,19 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
   const { data: photos } = album
     ? await admin
       .from("company_photos")
-      .select("url")
+      .select("url, mime_type")
       .eq("company_id", company.id)
       .eq("album_id", album.id)
       .order("created_at", { ascending: true })
-      .limit(1)
+      .limit(5)
     : { data: [] }
 
-  const photoUrls = ((photos ?? []) as Array<{ url: string }>).map(photo => photo.url).filter(Boolean)
-  const cover = photoUrls[0] || company.logo_url || undefined
+  // OG images are always static - next/og can't render a video element, so
+  // a video happening to be the first upload would silently break the
+  // whole link preview. Skip forward to the first real still photo.
+  const stillPhoto = ((photos ?? []) as Array<{ url: string; mime_type: string | null }>)
+    .find(photo => photo.url && !isVideoMedia(photo.url, photo.mime_type))
+  const cover = stillPhoto?.url || company.logo_url || undefined
 
   return new ImageResponse(
     <div

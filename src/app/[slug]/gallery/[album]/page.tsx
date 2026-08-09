@@ -137,7 +137,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
 
   const { data: photos } = await admin
     .from("company_photos")
-    .select("id, url, created_at")
+    .select("id, url, mime_type, created_at")
     .eq("company_id", company.id)
     .eq("album_id", album.id)
     .order("created_at", { ascending: true })
