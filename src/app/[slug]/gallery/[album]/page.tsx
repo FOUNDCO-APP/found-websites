@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
-import Link from "next/link"
 import type { Metadata } from "next"
 import { albumLabelFor } from "@/lib/dashboard/typography"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import AlbumPhotoGrid from "./AlbumPhotoGrid"
+import JobLeadCapture from "./JobLeadCapture"
 
 type AlbumPageRow = {
   id: string
@@ -148,7 +148,6 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
   const albumLabel = albumLabelFor(company.industry_category)
   const isJob = album.album_type === "job" || albumLabel.singular === "Job"
   const context = publicAlbumContext(album)
-  const ctaLabel = isJob ? `Ask about this ${albumLabel.singular.toLowerCase()}` : "Contact Us"
   const albumName = displayAlbumName(album, isJob)
 
   return (
@@ -171,15 +170,15 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
                 {allPhotos.length} photo{allPhotos.length !== 1 ? "s" : ""} · {albumDate}
               </p>
             </div>
-            <Link href="/contact" style={{
-              display: "inline-flex", alignItems: "center", gap: 6,
-              padding: "12px 22px", borderRadius: 100,
-              backgroundColor: primary, textDecoration: "none",
-              fontSize: 13, fontWeight: 700, color: "white",
-            }}>
-              {ctaLabel}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-            </Link>
+            <JobLeadCapture
+              companyId={company.id}
+              businessName={company.name}
+              subjectTitle={albumName}
+              primaryColor={primary}
+              ctaLabel={isJob ? "Ask about a project like this" : "Ask about work like this"}
+              requestType={isJob ? "estimate_request" : "contact"}
+              messagePrefix={isJob ? "I'm interested in a project like" : "I'm interested in work like"}
+            />
           </div>
           <div style={{ height: 3, width: 40, borderRadius: 2, backgroundColor: primary, marginTop: 22 }}/>
         </div>

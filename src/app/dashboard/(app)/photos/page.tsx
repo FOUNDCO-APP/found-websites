@@ -1627,7 +1627,13 @@ function ProjectsTab({
           </p>
         </div>
       ) : (
-        albums.map(album => {
+        <>
+          {showNew && usesJobs && albums.length > 0 && (
+            <div style={{ margin: "18px 0 10px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+              Continue a job
+            </div>
+          )}
+          {albums.map(album => {
           const count = photos.filter(p => p.album_id === album.id).length
           const thumb = photos.find(p => p.album_id === album.id)
           const context = albumContextLine(album)
@@ -1691,7 +1697,8 @@ function ProjectsTab({
               </div>
             </div>
           )
-        })
+          })}
+        </>
       )}
     </div>
   )
@@ -2244,6 +2251,7 @@ function AddToAlbumSheet({ album, onTakePhoto, onUpload, onUseExisting, onClose 
   onClose: () => void
 }) {
   const context = albumContextLine(album)
+  const displayName = albumDisplayName(album, album.album_type === "job")
   const options = [
     {
       label: "Take Photo",
@@ -2268,8 +2276,8 @@ function AddToAlbumSheet({ album, onTakePhoto, onUpload, onUseExisting, onClose 
       ),
     },
     {
-      label: "Use Existing Photo",
-      sub: "Pick from photos already in Found",
+      label: "Use photo from Found",
+      sub: "Pick one already in your library",
       onClick: onUseExisting,
       primary: false,
       icon: (
@@ -2285,15 +2293,12 @@ function AddToAlbumSheet({ album, onTakePhoto, onUpload, onUseExisting, onClose 
       <div onClick={onClose} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.65)", zIndex: 60, backdropFilter: "blur(4px)" }}/>
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 70, backgroundColor: "#101411", borderTop: "1px solid rgba(255,255,255,0.1)", borderRadius: "28px 28px 0 0", padding: "14px 24px calc(env(safe-area-inset-bottom, 0px) + 36px)" }}>
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
-        <h3 style={{ margin: "0 0 6px", ...TYPE.title, color: "white", lineHeight: 1.08, overflowWrap: "anywhere" }}>Add photos to {album.name}</h3>
+        <h3 style={{ margin: "0 0 8px", ...TYPE.title, color: "white", lineHeight: 1.08, overflowWrap: "anywhere" }}>Add photos to {displayName}</h3>
         {context && (
-          <p style={{ margin: "0 0 8px", ...TYPE.footnote, fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.35 }}>
+          <p style={{ margin: "0 0 22px", ...TYPE.subhead, fontWeight: 600, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.35 }}>
             {context}
           </p>
         )}
-        <p style={{ margin: "0 0 24px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Choose how you&apos;d like to add photos or video.
-        </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {options.map(opt => (
             <button key={opt.label} onClick={opt.onClick} style={{
@@ -2343,7 +2348,7 @@ function ExistingPhotoPicker({ photos, onClose, onConfirm }: {
     <div style={{ position: "fixed", inset: 0, zIndex: 80, backgroundColor: "#0B0F0D", display: "flex", flexDirection: "column" }}>
       <div style={{ padding: "20px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button onClick={onClose} style={{ background: "none", border: "none", color: "white", ...TYPE.body, cursor: "pointer" }}>Cancel</button>
-        <h3 style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: "white" }}>Use Existing Photo</h3>
+        <h3 style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: "white" }}>Use photo from Found</h3>
         <button
           onClick={() => onConfirm(Array.from(selected))}
           disabled={selected.size === 0}
