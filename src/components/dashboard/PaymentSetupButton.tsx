@@ -20,7 +20,7 @@ const COLORS = {
 
 export default function PaymentSetupButton({
   children = "Continue secure setup",
-  returnTo = "/more?payments=connected",
+  returnTo = "/billing?payments=connected",
   variant = "green",
   compact = false,
   handoffNote = "You will leave Found briefly for secure payment setup, then return here.",

@@ -8,8 +8,8 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
 
 function cleanReturnPath(value: unknown) {
-  if (typeof value !== "string" || !value.startsWith("/")) return "/more?payments=connected"
-  if (value.startsWith("//")) return "/more?payments=connected"
+  if (typeof value !== "string" || !value.startsWith("/")) return "/billing?payments=connected"
+  if (value.startsWith("//")) return "/billing?payments=connected"
   return value
 }
 

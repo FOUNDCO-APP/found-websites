@@ -2226,7 +2226,7 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
             </div>
           ))}
         </div>
-        <a href="/more" onClick={onClose} style={{
+        <a href="/billing" onClick={onClose} style={{
           display: "block", width: "100%", padding: "16px 0", borderRadius: 14, border: "none",
           backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, textDecoration: "none",
           ...TYPE.subhead, fontWeight: 700, cursor: "pointer", textAlign: "center",

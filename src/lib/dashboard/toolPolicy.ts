@@ -22,6 +22,7 @@ type DashboardToolPolicyInput = {
 
 const SCHEDULING_INTENTS = new Set(["reserve", "book"])
 
+const SITE_TOOL: DashboardTool = { id: "site", path: "/site", label: "Edit My Site", group: "website", description: "Words, photos, and pages - rewrite for me" }
 const SCHEDULE_TOOL: DashboardTool = { id: "schedule", path: "/schedule", label: "Schedule", group: "work_schedule", description: "Calendar, availability, and booked work" }
 const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Email", group: "marketing", description: "Send updates and bring customers back" }
 const CAMERA_TOOL: DashboardTool = { id: "camera", path: "/photos?camera=1", label: "Camera", group: "website", description: "Shoot and sort later" }
@@ -117,9 +118,10 @@ function availableFoodTools(activeAddons: string[], plan: string | null | undefi
     ...(hasCalendar ? [SCHEDULE_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
+    SITE_TOOL,
     ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
-    { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
+    { id: "more", path: "/more", label: "More", group: "settings", description: "Every page, in one place" },
   ]
 }
 
@@ -153,9 +155,10 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
     ...(hasProducts ? [PRODUCTS_TOOL] : []),
     CAMERA_TOOL,
     { id: "photos", path: "/photos", label: "Photos", group: "website", description: "Photos for your site and finished work" },
+    SITE_TOOL,
     ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
-    { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
+    { id: "more", path: "/more", label: "More", group: "settings", description: "Every page, in one place" },
   ]
 }
 
@@ -220,7 +223,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   return [
     byId.get("home") ?? { id: "home", path: "/", label: "Home", group: "website", description: "Your daily starting point" },
     ...middle,
-    byId.get("more") ?? { id: "more", path: "/more", label: "More", group: "settings", description: "Settings and secondary tools" },
+    byId.get("more") ?? { id: "more", path: "/more", label: "More", group: "settings", description: "Every page, in one place" },
   ]
 }
 

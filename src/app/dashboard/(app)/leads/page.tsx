@@ -802,7 +802,7 @@ function BookingComparisonSheet({ onClose }: { onClose: () => void }) {
           ))}
         </div>
 
-        <a href="/more" style={{
+        <a href="/billing" style={{
           display: "block", textAlign: "center", padding: "15px 0", borderRadius: 14, border: "none",
           backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, textDecoration: "none",
           ...TYPE.subhead, fontWeight: 800,

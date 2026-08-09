@@ -55,7 +55,7 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
   if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
-    redirect("/more?addon_unavailable=1")
+    redirect("/billing?addon_unavailable=1")
   }
 
   return { user, company, activeAddons }
@@ -76,7 +76,7 @@ export async function requireDashboardFeaturePage(feature: Feature) {
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
   if (!getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
-    redirect("/more?addon_unavailable=1")
+    redirect("/billing?addon_unavailable=1")
   }
 
   return { user, company, activeAddons }
