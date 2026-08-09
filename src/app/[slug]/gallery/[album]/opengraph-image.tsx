@@ -23,12 +23,6 @@ function albumSlugFromName(name: string) {
     .slice(0, 60)
 }
 
-function hexOrFallback(color: string | null | undefined, fallback = "#30D158") {
-  if (!color || !/^#[0-9a-f]{6}$/i.test(color)) return fallback
-  const normalized = color.toUpperCase()
-  return normalized === "#000000" || normalized === "#111111" || normalized === "#212121" ? fallback : color
-}
-
 async function findAlbum(admin: ReturnType<typeof createAdminClient>, companyId: string, albumSlug: string) {
   const select = "id, name, slug, album_type, customer_name, service_address"
 
@@ -68,7 +62,6 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
   const admin = createAdminClient()
   const album = await findAlbum(admin, company.id, albumSlug)
   const logo = company.logo_white_url || company.logo_url
-  const accent = hexOrFallback(company.accent_color_1 || company.primary_color)
 
   const { data: photos } = album
     ? await admin
@@ -113,15 +106,13 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
       )}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.28) 38%, rgba(0,0,0,0.08) 100%)" }} />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.24) 0%, rgba(0,0,0,0.04) 48%, rgba(0,0,0,0.36) 100%)" }} />
-      <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 14, background: accent }} />
-      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(120deg, ${accent}42 0%, ${accent}18 30%, rgba(0,0,0,0) 68%)` }} />
 
       <div style={{ position: "absolute", left: 74, top: 70, display: "flex", alignItems: "center" }}>
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logo} alt="" style={{ width: 300, maxHeight: 104, objectFit: "contain", objectPosition: "left center" }} />
+          <img src={logo} alt="" style={{ width: 560, maxHeight: 190, objectFit: "contain", objectPosition: "left center" }} />
         ) : (
-          <div style={{ display: "flex", fontSize: 38, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", color: "white" }}>{company.name}</div>
+          <div style={{ display: "flex", fontSize: 76, fontWeight: 900, letterSpacing: 5, textTransform: "uppercase", color: "white" }}>{company.name}</div>
         )}
       </div>
     </div>,
