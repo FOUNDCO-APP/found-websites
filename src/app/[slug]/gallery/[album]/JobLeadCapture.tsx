@@ -74,8 +74,8 @@ export default function JobLeadCapture({
                   <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 850, letterSpacing: "0.16em", textTransform: "uppercase", color: primaryColor }}>
                     {businessName}
                   </p>
-                  <h2 style={{ margin: 0, fontSize: 30, lineHeight: 1.02, letterSpacing: "-0.04em", color: "#101010" }}>
-                    Ask about work like this.
+                  <h2 style={{ margin: 0, fontSize: 28, lineHeight: 1.06, letterSpacing: "-0.035em", color: "#101010" }}>
+                    Interested in this work?
                   </h2>
                   <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.45, color: "#666", fontWeight: 550 }}>
                     Tell {businessName} what you have in mind. This will mention {subjectTitle}.
