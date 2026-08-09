@@ -32,6 +32,26 @@ function isReservationLead(lead: LeadRow) {
   return isReservationRequest(lead)
 }
 
+function hasTextAnswer(value: unknown) {
+  return typeof value === "string" && value.trim().length > 0
+}
+
+function isEstimateReadyLead(lead: LeadRow, isEstimatePage = false) {
+  if (isEstimatePage) return true
+  if (isOnlineOrder(lead) || isReservationLead(lead) || lead.status === "spam") return false
+
+  const type = String(lead.type ?? "").toLowerCase()
+  const source = String(lead.source ?? "").toLowerCase()
+  const answers = lead.partial_answers ?? {}
+
+  return type.includes("estimate")
+    || type.includes("quote")
+    || source.includes("estimate")
+    || hasTextAnswer(answers.project_type)
+    || hasTextAnswer(answers.job_address)
+    || hasTextAnswer(answers.property_address)
+}
+
 function orderItems(lead: LeadRow) {
   const items = lead.partial_answers?.items
   return Array.isArray(items) ? items as { name?: string; quantity?: number; unit_amount?: number }[] : []
@@ -551,7 +571,7 @@ function LeadsPageInner() {
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {searchResults.map(lead => (
-              <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+              <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={isEstimateReadyLead(lead, pageLabel.plural === "Estimate Requests")} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
             ))}
             <p style={{ margin: "12px 0 0", textAlign: "center", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
               {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
@@ -606,7 +626,7 @@ function LeadsPageInner() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {hotLeads.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={isEstimateReadyLead(lead, pageLabel.plural === "Estimate Requests")} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -619,7 +639,7 @@ function LeadsPageInner() {
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {items.map(lead => (
-                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
+                  <LeadCard key={lead.id} lead={lead} hasTemperature={pageLabel.hasTemperature} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={isEstimateReadyLead(lead, pageLabel.plural === "Estimate Requests")} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} onMarkDone={(id) => updateStatusLocal(id, "closed")} />
                 ))}
               </div>
             </div>
@@ -655,7 +675,7 @@ function LeadsPageInner() {
           {showClosedSection && (
             <div style={{ display: "flex", flexDirection: "column", gap: 3, marginTop: 8 }}>
               {closedLeads.map(lead => (
-                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={pageLabel.plural === "Estimate Requests"} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} />
+                <LeadCard key={lead.id} lead={lead} hasTemperature={false} industry={industry} companyName={companyName} onSelect={setSelectedLead} onTempChange={updateTemp} isEstimateRequest={isEstimateReadyLead(lead, pageLabel.plural === "Estimate Requests")} onCreateEstimate={(id) => router.push(`/estimates?fromLead=${id}`)} />
               ))}
             </div>
           )}
@@ -1027,7 +1047,7 @@ function LeadDetailSheet({ lead, intentLabel, industry, companyName, onClose, on
   const shippingAddress = typeof lead.partial_answers?.shipping_address === "string" ? lead.partial_answers.shipping_address : ""
   const orderNotes = typeof lead.partial_answers?.notes === "string" ? lead.partial_answers.notes : ""
   const orderTotal = formatCents(lead.partial_answers?.subtotal_cents)
-  const isEstimateRequest = intentLabel.plural === "Estimate Requests"
+  const isEstimateRequest = isEstimateReadyLead(lead, intentLabel.plural === "Estimate Requests")
 
   function printKitchenTicket() {
     const htmlEscape = (value: unknown) => String(value ?? "")

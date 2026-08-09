@@ -765,8 +765,10 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
     selectSuggestion(initialLead)
     const answers = initialLead.partial_answers ?? {}
     const addressAnswer = ["job_address", "property_address", "address", "service_address", "event_address", "location"].map(key => answers[key]).find(value => typeof value === "string" && value.trim())
+    const projectAnswer = ["project_type", "job_name", "job_title", "project_name", "service"].map(key => answers[key]).find(value => typeof value === "string" && value.trim())
     if (typeof addressAnswer === "string") setAddress(addressAnswer)
-    if (initialLead.message && !newDesc.trim()) setNewDesc(initialLead.message.trim())
+    if (typeof projectAnswer === "string" && !newDesc.trim()) setNewDesc(projectAnswer.trim())
+    else if (initialLead.message && !newDesc.trim()) setNewDesc(initialLead.message.trim())
   }, [initialLead]) // eslint-disable-line react-hooks/exhaustive-deps
   function saveDefaultTax() {
     onSaveDefaultTax(taxRate)
