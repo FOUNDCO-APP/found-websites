@@ -1,3 +1,10 @@
+## Session: August 9, 2026 - Regression Fix: Gallery Showed Zero Photos (`8de2548`)
+**AI:** Claude
+
+Self-inflicted regression, caught by Shawn within minutes: the blank-video fix below added `mime_type` to 4 `.select()` calls across the gallery pages, assuming it was a real `company_photos` column. It isn't - confirmed against the live schema, it's never been persisted, only echoed back transiently in the upload API's own POST response. Selecting a nonexistent column made every one of those queries silently return zero rows instead of erroring loudly, so the HVAC test account's gallery went from "video shows blank" to "nothing shows at all." Fixed by removing `mime_type` from every select; `isVideoMedia()` already falls back to URL file-extension detection, which is how it actually works everywhere else in this codebase. Verified 11 real rows exist for the Hvac company directly against the live DB before pushing the fix.
+
+---
+
 ## Session: August 9, 2026 - Blank Videos on Public Gallery + Job Pages
 **AI:** Claude
 

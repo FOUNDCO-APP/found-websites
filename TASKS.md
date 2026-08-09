@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Regression Fix: Gallery Showed Zero Photos
+
+- [x] Root-caused: company_photos has no mime_type column, my earlier fix's .select() calls silently failed.
+- [x] Removed mime_type from all 4 select() calls; isVideoMedia() works from URL extension alone.
+- [x] Verified 11 real rows exist for Hvac test company directly against live DB before pushing.
+- [x] Verify `npx tsc --noEmit` and `npm run build`.
+- [ ] Shawn QA: HVAC /gallery shows all 11 photos again, video plays correctly.
+
+---
+
 ## 2026-08-09 - Blank Videos on Public Gallery + Job Pages
 
 - [x] Fix public /gallery page to render video (grid tile + lightbox), both plan tiers.

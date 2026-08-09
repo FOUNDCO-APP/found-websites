@@ -1,5 +1,13 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Regression Fix: Gallery Showed Zero Photos (`8de2548`)
+
+Shawn caught this live within minutes of the blank-video fix shipping: the HVAC test account's `/gallery` page went from "video shows blank" to "nothing shows at all - Check back soon," despite having 11 real gallery photos. Root cause: `company_photos` has no `mime_type` column at all (confirmed directly against the live schema) - it's never been a real persisted field, only something the upload API echoes back in its own POST response right after a video upload. The blank-video fix below had added `mime_type` to four `.select()` calls assuming it was real; selecting a nonexistent column makes Postgres reject the whole query, so all four silently returned zero rows. Fixed by removing `mime_type` from every select - `isVideoMedia()` still works correctly from the URL's file extension alone, which is how video detection actually works everywhere else in this codebase already. Verified directly against the live DB (11 real rows for the Hvac company) before pushing the fix. `npx tsc --noEmit` and `npm run build` passed clean.
+
+**Test next:** confirm the HVAC test account's `/gallery` page shows all 11 photos again, including the video playing correctly.
+
+---
+
 ## 2026-08-09 - Blank Videos on Public Gallery + Job Pages (2 commits)
 
 ### Where We Left Off
