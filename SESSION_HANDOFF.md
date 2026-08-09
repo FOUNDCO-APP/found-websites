@@ -1790,3 +1790,132 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 5. Confirm Featured Update is not offered from Photos anymore.
 6. Scroll down and confirm the Photos tabs stay visible.
 7. Confirm Favorites is a filter under All Photos, not a top-level tab.
+
+---
+
+## August 9, 2026 - Current Handoff: Photos, Jobs, Shared Job Pages
+
+### Current repository state
+- Branch: `main`.
+- Last known pushed commit: `8048e91` (`Polish shared gallery photo viewer`).
+- Working tree was clean immediately after the last push.
+- Recent verification: `npm run build` passed after the code changes listed below.
+
+### Latest pushed commits
+- `07fa138` - `Unify dashboard loading states`
+  - Added `src/components/dashboard/DashboardLoadingState.tsx`.
+  - Replaced corrupted/plain loading states in dashboard route loading, Photos, Contacts, Requests/Leads, and Estimates.
+  - Owner-facing loading should use the Found dark skeleton/spinner language, not raw `Loading...` text or mojibake.
+- `45bb714` - `Simplify job gallery OG image`
+  - Simplified shared job Open Graph image to focus on one project photo plus business identity.
+  - Removed customer name and address from the OG image.
+- `93c2b5c` - `Enlarge job OG logo`
+  - Removed the left accent strip and brand tint overlay from the OG image.
+  - Increased the business logo/fallback mark so it is visible in iMessage/Facebook cards.
+- `b452593` - `Simplify shared job gallery page`
+  - Added `src/app/[slug]/gallery/[album]/AlbumPhotoGrid.tsx`.
+  - Removed the redundant business-name eyebrow above the public job title.
+  - Hid service address from public shared job pages by default.
+  - Kept customer name as internal/share context for now.
+  - Made public job photos tappable.
+- `8048e91` - `Polish shared gallery photo viewer`
+  - Reworked the public shared job photo viewer into a black, full-screen, high-z-index viewer.
+  - Uses `100dvh`, quiet close/count/previous/next controls, and no card-like rounded frame.
+
+### Locked product decisions from the team
+- Photos:
+  - Heart means Favorites. It does not publish anything.
+  - The four-square Gallery icon means the photo appears in the public website gallery/New Arrivals strip.
+  - `Use on page` means place the photo on a specific website page/section.
+  - Featured Update is managed from Edit Website, not from Photos.
+  - Deleted/removed public gallery photos must not remain stuck online through legacy `media` rows.
+- Photos layout:
+  - Keep the dark Found photo-workspace language.
+  - Filter opens as a compact dark popover near the filter button, not a white iOS glass sheet.
+  - Tabs should stay visible while scrolling without dead air, gradients, or a half-visible header.
+- Jobs:
+  - For service industries, the third Photos tab is `Jobs`, not `Albums` or `Projects`.
+  - Job creation starts with the job name, then customer name, address, phone, and email.
+  - Job names should display in title case when presented to owners or shared publicly.
+  - All Photos should include job photos too; Jobs are a workspace on top of the same photo library.
+- Public shared job pages:
+  - The public page title is the job name, such as `Kitchen Remodel`.
+  - Do not repeat the business name as an eyebrow directly above the title because the logo/header already provides that identity.
+  - Hide the street address by default for privacy. Add an explicit owner control later if showing the address becomes needed.
+  - Tapping shared job photos should open a premium black lightbox/viewer.
+- Shared link previews:
+  - The OG image should not repeat job title, customer name, or address inside the image.
+  - The OG image should be one strong job photo with the business logo/fallback identity.
+  - The title/URL text below the image is handled by iMessage/Facebook metadata.
+
+### Earlier work from this run that must not be lost
+- Hamburger menu / How It Works issue:
+  - Anchor navigation was unreliable after clicking other menu items.
+  - Direction moved toward avoiding fragile anchors and using a dedicated How It Works page/flow where needed while preserving SEO/AEO/GEO.
+- Template design:
+  - Cinematic/wellness templates were improved, but the team standard is that templates and hero marketing imagery must match honestly.
+  - Do not imply Google reviews or other unavailable features in template imagery.
+  - Premium spa/salon templates should feel like the Found hero imagery, not generic stock layouts.
+- Edit Website UX:
+  - Replace technical labels with owner-facing language.
+  - `Hero` language was rejected for owners; use plain language like `Homepage` / `First impression`.
+  - Homepage editor order: first screen, main website button, featured update, automated services preview, final section before footer.
+  - Homepage gallery/strip imagery should come from Gallery photos automatically, not be a confusing manual Home editor section.
+  - Main website button and Featured Update button controls must clearly explain what customers see and where the button sends them.
+  - Shop/Menu/Booking navigation and edit sections must be dynamic based on activated features/add-ons.
+- Menu/order UX:
+  - Prices should render as money, e.g. `$1.00`, not `1`.
+  - Menu item cards need to handle missing photos gracefully without ugly fake illustrations.
+  - Menu management should be one clear place for categories/items/photos/pickup-delivery and must scale to 30-50+ items.
+- Spam/security:
+  - Ryan spam/inquiry cleanup led to spam protection direction: invisible friction first, owner spam marking, rate limits/honeypots where appropriate.
+  - Avoid CAPTCHA unless abuse requires it because it adds customer friction.
+- Email signup:
+  - Signup block appears only when email marketing is enabled for the business.
+  - Subscribe flow was fixed enough for Lucky: Shawn subscribed and received an email.
+  - Email dashboard still needs a premium pass: subscriber visibility, better QR wording, and branded emails.
+
+### Jobs/service-industry pipeline
+The team direction is to make Found Business feel lighter and better than CompanyCam for small service companies.
+
+Core flow:
+1. Owner or worker arrives at a job.
+2. They create a Job with job name first, then customer name, address, phone, and optional email.
+3. They capture photos directly into that Job.
+4. The Job becomes a shareable branded client gallery.
+5. The Job later connects to Estimates so photos/customer/address can carry into a quote.
+6. If accepted, the customer pays through Stripe, then the Job can track work/progress/final payment.
+
+Open implementation pipeline:
+- Add an explicit cover photo selector for Jobs. Until then, first/primary photo may be used.
+- Add photo notes inside a Job: after taking/uploading a photo, allow a short note for that specific photo.
+- Add Job notes or scope notes for the overall job.
+- Connect Jobs to Estimates:
+  - From Jobs: create an estimate using this customer/address/photos.
+  - From Estimates: attach or create a Job while writing the estimate.
+- Add worker roles/permissions:
+  - Default worker role: camera/job capture only.
+  - Owner can grant estimates or broader permissions later.
+  - Workers should not be able to publish website/gallery photos unless the owner grants that power.
+- Add service-company search/filter:
+  - Jobs by customer name, address, date, worker, and status.
+  - Photos by job, worker/uploader, favorites, on site, not on site.
+- Add shared-job privacy controls:
+  - Default: address hidden.
+  - Future: owner can choose whether client name/address show on shared link.
+- Improve `Ask about this job`:
+  - Should eventually open a contact form with job context instead of a generic contact page.
+- Make Facebook/iMessage sharing reliable:
+  - OG can be cached by platforms. When testing, use a new job/link or a cache-busting path if available.
+
+### Next human QA
+1. Open Photos on Barrio Builders.
+2. Confirm the third tab says `Jobs` immediately, never `Projects`.
+3. Create a new job with a mixed-case/lowercase name and confirm the owner-facing display is title case.
+4. Confirm the Jobs list shows enough context to identify the job, ideally customer name and/or address under the title.
+5. Open a job, tap Share, send it through iMessage, and confirm the preview has a clean photo/logo image.
+6. Open the shared job page and confirm:
+   - no redundant business-name eyebrow above the job title,
+   - no street address shown by default,
+   - photos tap open into the black full-screen viewer,
+   - the page does not show corrupted loading text.

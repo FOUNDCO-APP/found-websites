@@ -800,3 +800,43 @@ Why: Business owners do not need to be resold tools they already have. More shou
 **[2026-07-06] - Schedule tabs stay available while scrolling; empty states define tab jobs.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi
 Why: Calendar, Bookings, and Hours are separate jobs. Owners should understand that Calendar is this week, Bookings is history/detail, and Hours is setup. The tab switcher can stay sticky, but the title should not freeze or crowd the work.
+
+**[2026-08-09] - Photos language is locked: Heart = Favorites, Gallery icon = public Gallery, Use on page = page placement.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Marcus Webb
+Why: Heart psychologically means favorite. Using it for website publishing creates confusion. The four-square Gallery icon maps to the Gallery tab and public website gallery/New Arrivals. `Use on page` is the deliberate action for assigning a photo to a specific website section such as Home top, Home bottom, About, Services, Contact, or Products/Menu.
+
+**[2026-08-09] - Featured Update must be managed from Edit Website, not Photos.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Marcus Webb
+Why: Featured Update is a composed homepage promotion with headline, supporting line, button, destination, style, and optional image. Choosing it from Photos made owners think a picture alone controlled the whole promotion. The owner should edit that feature where the whole feature is visible.
+
+**[2026-08-09] - For service industries, Photos uses Jobs instead of Albums.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Priya Nair
+Why: HVAC, builders, plumbers, installers, photographers, and similar businesses think in jobs/projects at a customer location, not generic albums. The Jobs workspace should collect customer context, location context, and photos in one place while still keeping every photo in All Photos.
+
+**[2026-08-09] - New Job starts with job name first.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts
+Why: On-site, the owner thinks "Bathroom Remodel" or "AC Install" before they think through a database form. Job name first also makes sharing and later estimate creation clearer.
+
+**[2026-08-09] - Shared job pages hide street address by default.**
+Approved by: Shawn + Steve Jobs + Angela Ahrendts + Priya Nair
+Why: Job pages are meant to be shareable with clients and potentially social platforms. A street address can be private or sensitive. Until there is an explicit owner control for shared-link privacy, the public page should not expose the address by default.
+
+**[2026-08-09] - Shared job page should not repeat the business name as an eyebrow above the title.**
+Approved by: Shawn + Jony Ive + Steve Jobs
+Why: The business logo/header already communicates brand identity. Repeating `Barrio Builders` above `Kitchen Remodel` creates visual redundancy and makes the page feel less premium.
+
+**[2026-08-09] - Shared job OG image should be one strong photo plus business identity only.**
+Approved by: Shawn + Jony Ive + Marcus Webb
+Why: iMessage/Facebook already show the title and URL below the image. Repeating the job title, customer name, or address inside the OG image makes the card noisy and can leak private context. The preview image should make the business look good: one photo, logo/fallback identity, no collage clutter, no arbitrary accent strip.
+
+**[2026-08-09] - Public shared job photos open in a black full-screen viewer.**
+Approved by: Shawn + Jony Ive + Chris Lattner
+Why: The shared job gallery is a client-facing showcase. Tapping a photo should feel modern and premium, not like a small modal card over a web page. The viewer should use a black stage, quiet controls, and no page bleed-through.
+
+**[2026-08-09] - Dashboard loading states should use the Found skeleton/spinner pattern.**
+Approved by: Shawn + Jony Ive + Craig Federighi
+Why: Raw `Loading...` text and corrupted loading copy make the app feel broken, especially on mobile network transitions. Loading should feel intentional and branded while data arrives.
+
+**[2026-08-09] - Jobs must become the bridge between Photos and Estimates.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair
+Why: Service owners need one flow: create a job at a location, capture photos/notes, write an estimate, collect payment, and share progress/results. Found should beat CompanyCam for small businesses by being lighter, faster, and connected to estimates/payments.

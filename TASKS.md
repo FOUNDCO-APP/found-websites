@@ -829,3 +829,46 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] Owner QA: Add to Site only shows specific page photo destinations.
 - [ ] Owner QA: Featured Update is managed from Edit Website, not Photos.
 - [ ] Owner QA: Deleted test photos do not remain on the public Gallery page.
+
+### Photos + Jobs QA - August 9, 2026
+- [ ] Owner QA: Photos opens without corrupted `Loading...` text or mojibake.
+- [ ] Owner QA: All Photos, Gallery, and Jobs tabs keep the dark Found photo-workspace feel.
+- [ ] Owner QA: The filter opens as a compact dark popover near the filter button.
+- [ ] Owner QA: Heart only controls Favorites.
+- [ ] Owner QA: Gallery icon only controls public website gallery/New Arrivals.
+- [ ] Owner QA: `Use on page` only opens page/section photo placement choices.
+- [ ] Owner QA: Service companies see `Jobs`, not `Albums` or `Projects`.
+- [ ] Owner QA: Jobs tab label never flashes `Projects` on load.
+- [ ] Owner QA: New Job form asks for job name first, then customer name, address, phone, and email.
+- [ ] Owner QA: Job names display in title case in the Jobs list and job detail.
+- [ ] Owner QA: Jobs list gives enough context to distinguish repeat jobs, such as customer name and/or address.
+- [ ] Owner QA: Job detail has more breathing room than the normal photo grid and feels like its own workspace.
+- [ ] Owner QA: Shared job link opens the public branded job page instead of the Found 404.
+- [ ] Owner QA: Public shared job page does not show a duplicate business-name eyebrow above the job title.
+- [ ] Owner QA: Public shared job page hides street address by default.
+- [ ] Owner QA: Public shared job photos open in the black full-screen viewer.
+- [ ] Owner QA: iMessage/Facebook preview uses the job photo/logo OG image and does not show customer name/address inside the image.
+
+### Active Pipeline - Service Industry Jobs
+- [ ] Cover photo selector for each Job.
+- [ ] Photo notes inside Jobs.
+- [ ] Job-level notes or scope summary.
+- [ ] Connect Jobs to Estimates: create estimate from a job and attach/create job from an estimate.
+- [ ] Worker role: camera/job capture only by default.
+- [ ] Owner-controlled worker permissions for estimates, publishing website photos, and broader dashboard access.
+- [ ] Search/filter Jobs by customer, address, worker, date, and status.
+- [ ] Search/filter Photos by job, worker/uploader, favorites, on-site, and not-on-site.
+- [ ] Add shared-link privacy controls for customer name and street address.
+- [ ] Make `Ask about this job` open a job-aware contact form instead of a generic contact page.
+
+### Active Pipeline - Email Marketing
+- [ ] Email dashboard should show who is on the list, not only subscriber count.
+- [ ] Rename `Share QR` to `Download QR code` unless actual QR sharing is implemented.
+- [ ] Keep `Share Link` for sending the signup URL.
+- [ ] Upgrade campaign templates from plain text to branded, premium email layouts.
+
+### Active Pipeline - Menu / Ordering
+- [ ] Menu editor should scale cleanly for 30-50+ items.
+- [ ] Add search/collapsible categories for long menus.
+- [ ] Keep money formatting consistent across menus, carts, and ordering: `$1.00`, not `1`.
+- [ ] Missing product/menu photos need a premium fallback that does not look fake or cheap.
