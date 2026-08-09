@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { albumLabelFor } from "@/lib/dashboard/typography"
+import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 type AlbumPageRow = {
   id: string
@@ -19,6 +20,21 @@ function albumContext(album: Pick<AlbumPageRow, "customer_name" | "service_addre
   return [album.customer_name, album.service_address].filter(Boolean).join(" · ")
 }
 
+function absoluteImageUrl(url: string | undefined, origin: string) {
+  if (!url) return undefined
+  if (/^https?:\/\//i.test(url)) return url
+  return new URL(url, origin).toString()
+}
+
+function albumSlugFromName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 60)
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; album: string }> }): Promise<Metadata> {
   const { slug, album: albumSlug } = await params
   const company = slug.startsWith("__domain__")
@@ -27,12 +43,20 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!company) return { title: "Gallery" }
 
   const admin = createAdminClient()
-  const { data: album } = await admin
+  let { data: album } = await admin
     .from("photo_albums")
     .select("id, name, customer_name, service_address")
     .eq("company_id", company.id)
     .eq("slug", albumSlug)
-    .single()
+    .maybeSingle()
+
+  if (!album) {
+    const { data: matches } = await admin
+      .from("photo_albums")
+      .select("id, name, customer_name, service_address")
+      .eq("company_id", company.id)
+    album = matches?.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
+  }
 
   const { data: cover } = album
     ? await admin
@@ -49,17 +73,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const title = album ? `${album.name} - ${company.name}` : `${albumLabel.plural} - ${company.name}`
   const context = album ? albumContext(album) : ""
   const description = context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
-  const image = cover?.url || company.logo_url || undefined
+  const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
+  const url = `${origin}/gallery/${albumSlug}`
+  const image = absoluteImageUrl(cover?.url || company.logo_url || undefined, origin)
 
   return {
+    metadataBase: new URL(origin),
     title,
     description,
+    alternates: { canonical: url },
     openGraph: {
       title,
       description,
+      url,
       siteName: company.name,
       type: "website",
-      ...(image && { images: [{ url: image, alt: album?.name ?? company.name }] }),
+      ...(image && { images: [{ url: image, alt: album?.name ?? company.name, width: 1200, height: 630 }] }),
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
@@ -80,12 +109,20 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
 
   const admin = createAdminClient()
 
-  const { data: album } = await admin
+  let { data: album } = await admin
     .from("photo_albums")
     .select("id, name, slug, album_type, customer_name, service_address, created_at")
     .eq("company_id", company.id)
     .eq("slug", albumSlug)
-    .single<AlbumPageRow>()
+    .maybeSingle<AlbumPageRow>()
+
+  if (!album) {
+    const { data: matches } = await admin
+      .from("photo_albums")
+      .select("id, name, slug, album_type, customer_name, service_address, created_at")
+      .eq("company_id", company.id)
+    album = matches?.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
+  }
 
   if (!album) notFound()
 

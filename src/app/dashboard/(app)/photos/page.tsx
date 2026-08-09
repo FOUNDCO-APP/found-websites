@@ -86,6 +86,14 @@ function albumContextLine(album: Album) {
   return [album.customer_name, album.service_address].filter(Boolean).join(" · ")
 }
 
+function toDisplayTitle(value: string) {
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/\b[a-z]/g, letter => letter.toUpperCase())
+}
+
 export default function PhotosPage() {
   return <Suspense><PhotosPageInner /></Suspense>
 }
@@ -135,7 +143,7 @@ function PhotosPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
-  const albumLabel = albumLabelFor(industry)
+  const albumLabel = industry === null ? { singular: "Job", plural: "Jobs", create: "New Job" } : albumLabelFor(industry)
   const usesJobs = ["Job", "Project"].includes(albumLabel.singular)
 
   useEffect(() => {
@@ -334,9 +342,10 @@ function PhotosPageInner() {
   }
 
   async function createAlbum() {
-    const name = usesJobs
+    const rawName = usesJobs
       ? (newAlbumName.trim() || newJobCustomerName.trim() || newJobAddress.trim())
       : newAlbumName.trim()
+    const name = usesJobs ? toDisplayTitle(rawName) : rawName.trim()
     if (!name) return
     setSavingAlbum(true)
     const res = await fetch("/api/albums", {
@@ -373,7 +382,7 @@ function PhotosPageInner() {
   }
 
   async function renameAlbum(album: Album, name: string) {
-    const trimmed = name.trim()
+    const trimmed = album.album_type === "job" ? toDisplayTitle(name) : name.trim()
     if (!trimmed || trimmed === album.name) return
     const res = await fetch("/api/albums", {
       method: "PATCH",
@@ -382,8 +391,8 @@ function PhotosPageInner() {
     })
     const data = await res.json()
     if (data.album) {
-      setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, name: data.album.name } : a))
-      if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, name: data.album.name } : prev)
+      setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, ...data.album } : a))
+      if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, ...data.album } : prev)
     }
   }
 
@@ -1310,7 +1319,7 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
 
   if (editing) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 4 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
         <input
           autoFocus
           value={name}
@@ -1323,9 +1332,9 @@ function AlbumTitleEditor({ album, onRename }: { album: Album; onRename: (a: Alb
             outline: "none", width: "100%",
           }}
         />
-        <div style={{ display: "flex", gap: 16 }}>
-          <button onClick={save} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Save</button>
+        <div style={{ display: "flex", gap: 18, justifyContent: "flex-end", alignItems: "center" }}>
           <button onClick={() => setEditing(false)} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
+          <button onClick={save} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Save</button>
         </div>
       </div>
     )
@@ -1483,6 +1492,7 @@ function ProjectsTab({
         albums.map(album => {
           const count = photos.filter(p => p.album_id === album.id).length
           const thumb = photos.find(p => p.album_id === album.id)
+          const context = albumContextLine(album)
           return (
             <div key={album.id} style={{ borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div onClick={() => onOpen(album)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", cursor: "pointer" }}>
@@ -1500,9 +1510,9 @@ function ProjectsTab({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ ...TYPE.headline, color: "white", marginBottom: 3 }}>{album.name}</div>
-                  {album.service_address && (
+                  {context && (
                     <div style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {album.service_address}
+                      {context}
                     </div>
                   )}
                   <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>

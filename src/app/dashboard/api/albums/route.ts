@@ -12,6 +12,27 @@ function toSlug(name: string) {
     .slice(0, 60)
 }
 
+async function uniqueAlbumSlug(admin: ReturnType<typeof createAdminClient>, companyId: string, name: string, exceptId?: string) {
+  const base = toSlug(name) || "album"
+  const { data: existing } = await admin
+    .from("photo_albums")
+    .select("id, slug")
+    .eq("company_id", companyId)
+    .like("slug", `${base}%`)
+
+  const taken = new Set(
+    (existing ?? [])
+      .filter(row => row.id !== exceptId)
+      .map(row => row.slug)
+  )
+
+  if (!taken.has(base)) return base
+
+  let index = 2
+  while (taken.has(`${base}-${index}`)) index += 1
+  return `${base}-${index}`
+}
+
 type AlbumRow = {
   id: string
   name: string
@@ -80,18 +101,7 @@ export async function POST(req: Request) {
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
   const admin = createAdminClient()
-  let slug = toSlug(name)
-
-  // ensure unique slug within company
-  const { data: existing } = await admin
-    .from("photo_albums")
-    .select("slug")
-    .eq("company_id", company.id)
-    .like("slug", `${slug}%`)
-
-  if (existing && existing.length > 0) {
-    slug = `${slug}-${existing.length + 1}`
-  }
+  const slug = await uniqueAlbumSlug(admin, company.id, name)
 
   const insertPayload = {
     company_id: company.id,
@@ -135,9 +145,11 @@ export async function PATCH(req: Request) {
   if (!id || !name?.trim()) return NextResponse.json({ error: "Missing fields" }, { status: 400 })
 
   const admin = createAdminClient()
+  const nextName = name.trim()
+  const slug = await uniqueAlbumSlug(admin, company.id, nextName, id)
   const { data, error } = await admin
     .from("photo_albums")
-    .update({ name: name.trim() })
+    .update({ name: nextName, slug })
     .eq("id", id)
     .eq("company_id", company.id)
     .select()
