@@ -18,8 +18,10 @@ function initial(name: string) {
 
 export default function CompanyPicker({
   companies,
+  roles = {},
 }: {
   companies: CompanyRow[]
+  roles?: Record<string, "owner" | "worker" | null>
 }) {
   // Set the moment a business is tapped before the hard navigation starts.
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -74,17 +76,30 @@ export default function CompanyPicker({
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin: "0 0 3px",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "white",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}>
-                  {company.name}
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "white",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}>
+                    {company.name}
+                  </p>
+                  {roles[company.id] === "worker" && (
+                    <span style={{
+                      flexShrink: 0,
+                      fontSize: 10, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase",
+                      color: "#FF9500", backgroundColor: "rgba(255,149,0,0.12)",
+                      border: "1px solid rgba(255,149,0,0.25)",
+                      borderRadius: 6, padding: "2px 7px",
+                    }}>
+                      Team member
+                    </span>
+                  )}
+                </div>
                 <p style={{
                   margin: 0,
                   fontSize: 12,
@@ -93,7 +108,7 @@ export default function CompanyPicker({
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
                 }}>
-                  {company.slug}.{ROOT_DOMAIN} - {planLabel(company.plan)}
+                  {company.slug}.{ROOT_DOMAIN} - {roles[company.id] === "worker" ? "Camera & job photos only" : planLabel(company.plan)}
                 </p>
               </div>
 

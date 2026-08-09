@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getAllCompanies } from "@/lib/dashboard/getCompany"
+import { getAllCompanies, getCompanyRole } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import FoundWordmark from "@/components/FoundWordmark"
 import CompanyPicker from "@/components/dashboard/CompanyPicker"
@@ -18,6 +18,14 @@ export default async function SelectPage() {
   if (companies.length === 0) {
     redirect("/login?error=no_company")
   }
+
+  // Same email can own one business and be a worker on another (a real
+  // scenario found live-testing worker roles) - the picker must make that
+  // distinction obvious, not render every row identically.
+  const roleEntries = await Promise.all(
+    companies.map(async (company) => [company.id, await getCompanyRole(user.id, user.email ?? "", company)] as const)
+  )
+  const roles = Object.fromEntries(roleEntries) as Record<string, "owner" | "worker" | null>
 
   return (
     <div style={{ minHeight: "100dvh", backgroundColor: FOUND_BLACK, display: "flex", flexDirection: "column" }}>
@@ -46,10 +54,12 @@ export default async function SelectPage() {
           Choose a business.
         </h1>
         <p style={{ margin: "0 0 24px", fontSize: 15, color: "rgba(255,255,255,0.35)" }}>
-          You manage {companies.length} sites on Found.
+          {Object.values(roles).some(role => role === "worker")
+            ? `You have access to ${companies.length} businesses on Found.`
+            : `You manage ${companies.length} sites on Found.`}
         </p>
 
-        <CompanyPicker companies={companies} />
+        <CompanyPicker companies={companies} roles={roles} />
       </div>
       </main>
 
