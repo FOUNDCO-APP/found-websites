@@ -1,14 +1,54 @@
 "use client"
 import { useState, useEffect, useRef, useCallback } from "react"
 import InView from "@/components/InView"
+import { isVideoMedia } from "@/lib/mediaKind"
+
+export type GalleryMedia = {
+  url: string
+  mimeType?: string | null
+}
 
 interface GalleryLightboxProps {
-  photos: string[]
+  photos: (string | GalleryMedia)[]
   companyName: string
   primary: string
 }
 
-export default function GalleryLightbox({ photos, companyName, primary }: GalleryLightboxProps) {
+function normalize(items: (string | GalleryMedia)[]): GalleryMedia[] {
+  return items.map(item => typeof item === "string" ? { url: item } : item)
+}
+
+function GridVideoTile({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <div className="relative w-full" style={{ backgroundColor: "#111111" }}>
+      <video
+        src={src}
+        muted
+        autoPlay
+        loop
+        playsInline
+        preload="metadata"
+        onLoadedData={() => setLoaded(true)}
+        className="w-full h-auto block hover:opacity-90 transition-opacity duration-200"
+        style={{ opacity: loaded ? 1 : 0.4 }}
+      />
+      <div
+        className="absolute pointer-events-none flex items-center justify-center"
+        style={{
+          left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+          width: 40, height: 40, borderRadius: "50%",
+          backgroundColor: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.25)",
+        }}
+      >
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+      </div>
+    </div>
+  )
+}
+
+export default function GalleryLightbox({ photos: rawPhotos, companyName, primary }: GalleryLightboxProps) {
+  const photos = normalize(rawPhotos)
   const [selected, setSelected] = useState<number | null>(null)
   const touchStartX = useRef<number>(0)
 
@@ -44,30 +84,40 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
   // Clean up scroll lock if component unmounts while open
   useEffect(() => () => { document.body.style.overflow = "" }, [])
 
+  const selectedMedia = selected !== null ? photos[selected] : null
+  const selectedIsVideo = selectedMedia ? isVideoMedia(selectedMedia.url, selectedMedia.mimeType) : false
+
   return (
     <>
       {/* ── Masonry grid ── */}
       <div className="masonry px-0.5">
-        {photos.map((url, i) => (
-          <InView key={i} className="masonry-item" delay={i < 6 ? i * 40 : 0} distance={0}>
-            <button
-              onClick={() => open(i)}
-              className="block w-full cursor-zoom-in focus:outline-none"
-              aria-label={`View photo ${i + 1}`}
-            >
-              <img
-                src={url}
-                alt={`${companyName} — photo ${i + 1}`}
-                className="w-full h-auto block hover:opacity-90 transition-opacity duration-200"
-                loading={i < 4 ? "eager" : "lazy"}
-              />
-            </button>
-          </InView>
-        ))}
+        {photos.map((media, i) => {
+          const isVideo = isVideoMedia(media.url, media.mimeType)
+          return (
+            <InView key={i} className="masonry-item" delay={i < 6 ? i * 40 : 0} distance={0}>
+              <button
+                onClick={() => open(i)}
+                className="block w-full cursor-zoom-in focus:outline-none"
+                aria-label={isVideo ? `View video ${i + 1}` : `View photo ${i + 1}`}
+              >
+                {isVideo ? (
+                  <GridVideoTile src={media.url} />
+                ) : (
+                  <img
+                    src={media.url}
+                    alt={`${companyName} — photo ${i + 1}`}
+                    className="w-full h-auto block hover:opacity-90 transition-opacity duration-200"
+                    loading={i < 4 ? "eager" : "lazy"}
+                  />
+                )}
+              </button>
+            </InView>
+          )
+        })}
       </div>
 
       {/* ── Lightbox overlay ── */}
-      {selected !== null && (
+      {selected !== null && selectedMedia && (
         <div
           className="fixed inset-0 z-[200] flex flex-col items-center justify-center gap-6 px-6"
           style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
@@ -94,14 +144,27 @@ export default function GalleryLightbox({ photos, companyName, primary }: Galler
             </svg>
           </button>
 
-          {/* Photo */}
-          <img
-            src={photos[selected]}
-            alt={`${companyName} — photo ${selected + 1}`}
-            className="object-contain"
-            style={{ maxHeight: "75vh", maxWidth: "100%"  }}
-            onClick={e => e.stopPropagation()}
-          />
+          {/* Photo or video */}
+          {selectedIsVideo ? (
+            <video
+              key={selectedMedia.url}
+              src={selectedMedia.url}
+              controls
+              autoPlay
+              playsInline
+              className="object-contain"
+              style={{ maxHeight: "75vh", maxWidth: "100%" }}
+              onClick={e => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={selectedMedia.url}
+              alt={`${companyName} — photo ${selected + 1}`}
+              className="object-contain"
+              style={{ maxHeight: "75vh", maxWidth: "100%"  }}
+              onClick={e => e.stopPropagation()}
+            />
+          )}
 
           {/* Controls row — prev · counter · next */}
           {photos.length > 1 && (
