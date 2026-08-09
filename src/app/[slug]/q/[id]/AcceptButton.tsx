@@ -448,23 +448,30 @@ export default function AcceptButton({
             {companyName} has been notified and will be in touch to schedule your project.
           </p>
 
-          <div style={{ borderRadius: 16, backgroundColor: "#FAFAF8", border: "1px solid #EFEFEB", padding: "16px 18px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-              <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                {paymentCompleted && isBalancePayment ? "Balance paid" : remainingAmount > 0 ? "Deposit paid" : "Amount paid"}
-              </span>
-              <span style={{ color, fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(paymentCompleted && isBalancePayment ? amountDueNow : depositAmount)}</span>
-            </div>
-            {!paymentCompleted && remainingAmount > 0 && (
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #EFEFEB" }}>
-                <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700 }}>Due at completion</span>
-                <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(remainingAmount)}</span>
+          {/* Only claim money moved when a real payment actually happened -
+              hasStripe false means handleSimpleAccept() ran, which never
+              sends a payment claim to the server at all. Showing a dollar
+              amount here in that case would tell the customer they were
+              charged when nothing was collected. */}
+          {hasStripe && (
+            <div style={{ borderRadius: 16, backgroundColor: "#FAFAF8", border: "1px solid #EFEFEB", padding: "16px 18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                  {paymentCompleted && isBalancePayment ? "Balance paid" : remainingAmount > 0 ? "Deposit paid" : "Amount paid"}
+                </span>
+                <span style={{ color, fontSize: 20, fontWeight: 850, letterSpacing: "-0.02em" }}>{fmt(paymentCompleted && isBalancePayment ? amountDueNow : depositAmount)}</span>
               </div>
-            )}
-          </div>
+              {!paymentCompleted && remainingAmount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, marginTop: 8, paddingTop: 8, borderTop: "1px solid #EFEFEB" }}>
+                  <span style={{ color: "#8A8A84", fontSize: 12, fontWeight: 700 }}>Due at completion</span>
+                  <span style={{ color: "#444", fontSize: 14, fontWeight: 700 }}>{fmt(remainingAmount)}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <p style={{ margin: "16px 0 0", color: "#B8B8B2", fontSize: 12 }}>
-            A receipt has been sent to your email.
+            {hasStripe ? "A receipt has been sent to your email." : "No payment was collected - they'll follow up with next steps."}
           </p>
         </div>
 
