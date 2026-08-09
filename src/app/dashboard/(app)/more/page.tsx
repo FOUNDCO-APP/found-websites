@@ -170,7 +170,17 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const user = await requireDashboardAccess()
 
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
-  if (company && !(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
+  if (company && !(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) {
+    return (
+      <main style={{ padding: "28px 20px 60px" }}>
+        <h1 style={{ margin: "0 0 6px", ...TYPE.largeTitle, color: "white" }}>{company.name}</h1>
+        <p style={{ margin: "0 0 32px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          You have camera access for job photos.
+        </p>
+        <SignOutButton />
+      </main>
+    )
+  }
   const sp = await searchParams
   const addonAdded = sp.addon_added ?? null
   const addonUnavailable = sp.addon_unavailable === "1"

@@ -1,5 +1,5 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
-import { getCompany, hasMultipleCompanies, isAdminOverrideActive } from "@/lib/dashboard/getCompany"
+import { getCompany, hasMultipleCompanies, isAdminOverrideActive, getCompanyRole } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
@@ -29,6 +29,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ])
 
   if (!user && !company) redirect("/admin")
+
+  const memberRole = company
+    ? await getCompanyRole(user?.id ?? "", user?.email ?? "", company)
+    : null
 
   const viewingAsAdmin = Boolean(adminKeyValid && company)
 
@@ -189,6 +193,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])}
         plan={company?.plan ?? null}
         primaryIntent={company?.primary_intent ?? null}
+        role={memberRole === "worker" ? "worker" : "owner"}
       />
 
       <style>{`

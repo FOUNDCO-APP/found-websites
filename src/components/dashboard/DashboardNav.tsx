@@ -28,6 +28,7 @@ export default function DashboardNav({
   activeAddons = [],
   plan = null,
   primaryIntent = null,
+  role = "owner",
 }: {
   companyName?: string | null
   newLeadCount?: number
@@ -41,7 +42,9 @@ export default function DashboardNav({
   activeAddons?: string[]
   plan?: string | null
   primaryIntent?: string | null
+  role?: "owner" | "worker"
 }) {
+  const isWorker = role === "worker"
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const activeView = searchParams.get("view")
@@ -55,7 +58,13 @@ export default function DashboardNav({
   const defaultTabs = getDefaultDashboardTools({ industry, subIndustry, activeAddons, plan, primaryIntent })
   const allAvailable = getAvailableDashboardTools({ industry, subIndustry, activeAddons, plan, primaryIntent })
   const storageKey = getDashboardToolStorageKey(companyName, industry, activeAddons, subIndustry)
-  const [tabs, setTabs] = useState<Tab[]>(defaultTabs)
+  // Workers only ever have Jobs/photo capture - every other server action
+  // and page already denies them, so the nav shouldn't offer a way in.
+  // No customization, no localStorage, no badge counts (those are leads).
+  const photosTool = allAvailable.find(tool => tool.id === "photos")
+  const moreTool = allAvailable.find(tool => tool.id === "more")
+  const workerTabs: Tab[] = [photosTool, moreTool].filter((t): t is Tab => Boolean(t))
+  const [tabs, setTabs] = useState<Tab[]>(isWorker ? workerTabs : defaultTabs)
   const [seenAt, setSeenAt] = useState<Record<BadgeBucket, string | null>>({ leads: null, orders: null, reservations: null })
 
   const [albums, setAlbums]                 = useState<Album[]>([])
@@ -101,15 +110,17 @@ export default function DashboardNav({
   }
 
   useEffect(() => {
+    if (isWorker) { setTabs(workerTabs); return }
     try {
       const saved = window.localStorage.getItem(storageKey)
       if (!saved) { setTabs(defaultTabs); return }
       const savedIds = JSON.parse(saved) as string[]
       setTabs(buildTabs(savedIds))
     } catch { setTabs(defaultTabs) }
-  }, [storageKey, industry, subIndustry, addonKey])
+  }, [storageKey, industry, subIndustry, addonKey, isWorker])
 
   useEffect(() => {
+    if (isWorker) return
     function onNavChanged() {
       try {
         const saved = window.localStorage.getItem(storageKey)
@@ -120,7 +131,7 @@ export default function DashboardNav({
     }
     window.addEventListener("found:dashboard-tabs-updated", onNavChanged)
     return () => window.removeEventListener("found:dashboard-tabs-updated", onNavChanged)
-  }, [storageKey, industry, subIndustry, addonKey])
+  }, [storageKey, industry, subIndustry, addonKey, isWorker])
 
   // Home page quick-action "Camera" button opens this sheet
   useEffect(() => {

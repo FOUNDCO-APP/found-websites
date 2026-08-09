@@ -192,6 +192,12 @@ export async function getCompanyRole(
   const isOwner = company.user_id === userId || (!!company.email && company.email === userEmail)
   if (isOwner) return "owner"
 
+  // Found admin "View As" already bypasses ownership entirely in
+  // getCompany() to resolve the company - it must get the same full
+  // access downstream, or every owner-only action in this project would
+  // wrongly treat a support/demo session as a restricted worker.
+  if (await isAdminOverrideActive()) return "owner"
+
   const admin = createAdminClient()
   const { data } = await admin
     .from("company_members")
