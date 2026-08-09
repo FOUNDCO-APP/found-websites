@@ -1,5 +1,40 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Live QA Follow-Up: 3 Real Bugs + Nav/Settings Restructure (7 commits)
+
+### Where We Left Off
+Shawn live-tested the worker-roles feature end to end on Barrio Builders (invited `supershawn@email.com` as a worker) and found 3 real issues, plus used the Team-placement discussion to drive a larger, deliberate nav restructure. Team-approved throughout, pushed after each step per Shawn's explicit direction.
+
+### Bugs found live-testing, all fixed
+1. **Admin View As silently bypassed the worker restriction** (`f27c25d`) - real access-control gap, not the reported "confusion." `admin_key`/`found_admin_view`/`found_admin_company_id` are httpOnly cookies set by the "View As" support tool, completely separate from the Supabase Auth session - `SignOutButton` never cleared them. A stale View As session from earlier admin use silently granted full owner access to a worker-restricted account. New `src/lib/auth/clientSignOut.ts` (`performSignOut()`) is now the one place sign-out logic lives, used by both `SignOutButton` and the new `AccountMenu`.
+2. **"Deposit paid $X" shown when no payment was taken** (`08697ef`) - traced to `AcceptButton.tsx`: when a business has no Stripe Connect, `handleSimpleAccept()` never sends a payment claim to the server at all (server correctly left `payment_status` untouched - the database was never wrong), but the client success card showed the same "Deposit paid" copy regardless. Now gated on `hasStripe`.
+3. **Same email owning one business + working another showed every account identically** (`36b005b`) - `CompanyPicker.tsx` now shows an amber "Team member" badge and "Camera & job photos only" for worker-only access, and `/select`'s header copy adjusts when any entry is worker-only.
+
+### Nav/Settings restructure (Shawn's direction, Jony leading UI/UX)
+Real problem surfaced through the "where should Team live" discussion: More had ~700 lines doing double duty as page-navigation AND account/billing/settings. Team round pushed back hard before building (Chris/Marcus flagged top-right corner nav is bad phone ergonomics and against category norms like CompanyCam; Steve named the scope creep directly) before landing on the final shape:
+- **More (bottom dock tab)** is now purely the grouped page-navigation list (`DashboardPages`), untouched otherwise.
+- **New top-right `AccountMenu`** (`bca8f20`) - circular avatar (company initial on the company's own `primary_color`), always visible for owners, opens an anchored popover reusing the exact Photos-filter interaction pattern. Rows: Switch Business (if `hasMultiple`) → Team → Business Info → Billing & Plan → Sign Out.
+- **New `/billing`** (`0e79420`) - Plan card, all 3 upgrade banners, add-ons panel, payment setup, Manage billing portal - moved verbatim from More. All Stripe/addon/upgrade redirect targets updated from `/more` to `/billing` (`entitlements.ts`, `more/actions.ts`, `payments/connect/route.ts` incl. `refresh_url`, `PaymentSetupButton`'s default, the Photos/Leads upgrade CTAs, a reservation-reminder email nudge).
+- **New `/business-info`** (`0e79420`) - signed-in-as, change password, install prompt, get help. Retired `BusinessNameEditor` (deleted) rather than rebuild - it PATCHed the exact same `companies.name` field Site Editor's Contact Info tile already edits; Business Info links to `/site` for that instead of hosting a third copy.
+- **`toolPolicy.ts`** gained a `site` tool (Edit My Site) - it had no entry point at all except the one card in More, closed as a real gap while stripping More down.
+- **Team tile removed from Site Editor's Site-wide section** - the original bug this whole thread started from.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after every one of the 7 commits.
+- `git diff --check` passed each time (line-ending warnings only).
+- Not yet tested live by Shawn.
+
+### Test Next
+- Confirm admin View As on a real customer account has full access again (the actual regression fix - retest the exact scenario that broke).
+- Confirm the estimate-accept page on a no-Stripe-Connect business no longer claims a payment was taken.
+- Confirm `/select` shows the amber "Team member" badge correctly for worker-only access.
+- Tap the new top-right avatar icon: confirm Switch Business (if applicable), Team, Business Info, Billing & Plan, and Sign Out all work and land in the right place.
+- Confirm More (bottom tab) now shows only page navigation, no plan/billing/account content.
+- Confirm `/billing` shows the plan card, addons, and upgrade banners correctly, and that addon purchase / plan upgrade / payment setup flows still redirect back to `/billing` correctly (not a 404 on `/more`).
+- Confirm `/business-info` shows signed-in-as, change password, install, and get help, and that "Logo, name & contact info" correctly opens Site Editor.
+
+---
+
 ## 2026-08-09 - Worker Roles/Permissions (4 commits)
 
 ### Where We Left Off

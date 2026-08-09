@@ -1,3 +1,24 @@
+## Session: August 9, 2026 - Live QA Follow-Up: 3 Bugs + Nav/Settings Restructure
+**AI:** Claude
+
+### Built
+- Fixed Sign Out to also clear admin View As override cookies (`f27c25d`) - real access-control gap where a stale admin session silently granted full owner access to a worker-restricted account. New `src/lib/auth/clientSignOut.ts` is now the single source of truth for sign-out logic.
+- Fixed misleading "Deposit paid $X" copy on the estimate-accept page when a business has no Stripe Connect (`08697ef`) - client-only bug, the database was never wrong.
+- Labeled owner vs. worker-only access in the company picker with an amber "Team member" badge (`36b005b`).
+- Split Billing/Plan (`0e79420`) and Business Info (`0e79420`) out of More into their own pages, updating every Stripe/addon/upgrade redirect target from `/more` to `/billing` across `entitlements.ts`, `more/actions.ts`, `payments/connect/route.ts`, `PaymentSetupButton`, in-app upgrade CTAs, and an email nudge (`f900460` caught two the first pass missed).
+- New top-right `AccountMenu` (`bca8f20`) - avatar icon opening Switch Business/Team/Business Info/Billing & Plan/Sign Out, reusing the Photos filter's anchored-popover pattern. More (bottom dock tab) is now pure page navigation.
+- Retired `BusinessNameEditor` (duplicate of Site Editor's Contact Info tile) and removed the Team tile from Site Editor's Site-wide section - the original misplacement bug.
+
+### Process note
+- The nav restructure went through multiple real team rounds before any code: Chris/Marcus pushed back on top-right corner nav for mobile ergonomics reasons (CompanyCam and the field-service category keep everything in the bottom bar), Steve named the scope-creep risk directly, and Shawn's own refinement (More becomes pure nav, top-right becomes account/settings, frequency-based placement) is what actually shipped - not the first proposal.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after each of 7 commits.
+- `git diff --check` passed each time.
+- Not yet tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - Worker Roles/Permissions
 **AI:** Claude
 

@@ -1,5 +1,25 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Live QA Follow-Up: 3 Bugs + Nav/Settings Restructure
+
+- [x] Fix Sign Out to also clear admin View As override cookies (real access-control gap, not confusion).
+- [x] Fix misleading "Deposit paid" copy on estimate-accept page when business has no Stripe Connect.
+- [x] Label owner vs. worker-only access in the company picker (`/select`).
+- [x] Split Billing/Plan and Business Info out of More into their own pages.
+- [x] Add top-right AccountMenu (Switch Business, Team, Business Info, Billing & Plan, Sign Out).
+- [x] Strip More down to pure page navigation.
+- [x] Remove Team tile from Site Editor's Site-wide section.
+- [x] Add "site" tool to toolPolicy.ts registry (Edit My Site had no other entry point).
+- [x] Retire BusinessNameEditor (duplicate of Site Editor's Contact Info tile).
+- [x] Verify `npx tsc --noEmit` and `npm run build` after each of 7 commits.
+- [ ] Shawn QA: admin View As has full access again on a real customer account.
+- [ ] Shawn QA: no-Stripe-Connect estimate accept no longer claims a payment.
+- [ ] Shawn QA: new AccountMenu (avatar icon) - all 5 rows work correctly.
+- [ ] Shawn QA: More/Billing/Business Info split - nothing lost, nothing 404s.
+- [ ] Next phase (not started): reverse Jobs<->Estimates link, "Ask about this job" with real context, OG/link-preview caching diagnosis, cover photo selector + per-photo notes.
+
+---
+
 ## 2026-08-09 - Worker Roles/Permissions
 
 - [x] company_members table + owner/worker access resolver (migration 058, additive).
