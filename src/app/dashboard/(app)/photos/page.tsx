@@ -94,6 +94,23 @@ function toDisplayTitle(value: string) {
     .replace(/\b[a-z]/g, letter => letter.toUpperCase())
 }
 
+function toSlug(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 60)
+}
+
+function albumDisplayName(album: Album, usesJobs?: boolean) {
+  return usesJobs || album.album_type === "job" ? toDisplayTitle(album.name) : album.name
+}
+
+function albumPublicSlug(album: Album, usesJobs?: boolean) {
+  return toSlug(albumDisplayName(album, usesJobs)) || album.slug
+}
+
 export default function PhotosPage() {
   return <Suspense><PhotosPageInner /></Suspense>
 }
@@ -397,9 +414,10 @@ function PhotosPageInner() {
   }
 
   async function handleShare(album: Album) {
-    const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${album.slug}`
+    const title = albumDisplayName(album, usesJobs)
+    const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${albumPublicSlug(album, usesJobs)}`
     if (navigator.share) {
-      await navigator.share({ title: album.name, url }).catch(() => {})
+      await navigator.share({ title, url }).catch(() => {})
     } else {
       await navigator.clipboard.writeText(url)
       setCopied(true)
@@ -887,6 +905,7 @@ function PhotosPageInner() {
           album={shareAlbum}
           siteSlug={siteSlug}
           customDomain={customDomain}
+          usesJobs={usesJobs}
           copied={copied}
           onShare={handleShare}
           onClose={() => setShareAlbum(null)}
@@ -1509,7 +1528,7 @@ function ProjectsTab({
                   )}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ ...TYPE.headline, color: "white", marginBottom: 3 }}>{album.name}</div>
+                  <div style={{ ...TYPE.headline, color: "white", marginBottom: 3 }}>{albumDisplayName(album, usesJobs)}</div>
                   {context && (
                     <div style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {context}
@@ -2236,15 +2255,17 @@ function ExistingPhotoPicker({ photos, onClose, onConfirm }: {
 }
 
 // â”€â”€ Share sheet â”€â”€
-function ShareSheet({ album, siteSlug, customDomain, copied, onShare, onClose }: {
+function ShareSheet({ album, siteSlug, customDomain, usesJobs, copied, onShare, onClose }: {
   album: Album
   siteSlug: string
   customDomain: string | null
+  usesJobs: boolean
   copied: boolean
   onShare: (album: Album) => void
   onClose: () => void
 }) {
-  const url = siteSlug ? `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${album.slug}` : null
+  const displayName = albumDisplayName(album, usesJobs)
+  const url = siteSlug ? `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${albumPublicSlug(album, usesJobs)}` : null
 
   return (
     <>
@@ -2253,7 +2274,7 @@ function ShareSheet({ album, siteSlug, customDomain, copied, onShare, onClose }:
         <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.15)", margin: "0 auto 22px" }}/>
         <h3 style={{ margin: "0 0 6px", ...TYPE.title, color: "white" }}>Share with Client</h3>
         <p style={{ margin: "0 0 22px", ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          Send this link to your client. They&apos;ll see only photos from <strong style={{ color: "white", fontWeight: 700 }}>{album.name}</strong>.
+          Send this link to your client. They&apos;ll see only photos from <strong style={{ color: "white", fontWeight: 700 }}>{displayName}</strong>.
         </p>
         {url && (
           <div style={{ borderRadius: 14, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", padding: "14px 16px", marginBottom: 16, overflow: "hidden" }}>

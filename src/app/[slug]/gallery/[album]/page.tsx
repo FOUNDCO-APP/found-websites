@@ -17,7 +17,7 @@ type AlbumPageRow = {
 }
 
 function albumContext(album: Pick<AlbumPageRow, "customer_name" | "service_address">) {
-  return [album.customer_name, album.service_address].filter(Boolean).join(" · ")
+  return [album.customer_name, album.service_address].filter(Boolean).join(" - ")
 }
 
 function absoluteImageUrl(url: string | undefined, origin: string) {
@@ -35,6 +35,50 @@ function albumSlugFromName(name: string) {
     .slice(0, 60)
 }
 
+function displayAlbumName(album: Pick<AlbumPageRow, "name" | "album_type">, forceJob = false) {
+  if (!forceJob && album.album_type !== "job") return album.name
+  return album.name
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .replace(/\b[a-z]/g, letter => letter.toUpperCase())
+}
+
+async function findAlbum(
+  admin: ReturnType<typeof createAdminClient>,
+  companyId: string,
+  albumSlug: string,
+  includeJobFields: boolean,
+) {
+  const select = includeJobFields
+    ? "id, name, slug, album_type, customer_name, service_address, created_at"
+    : "id, name, slug, created_at"
+
+  const direct = await admin
+    .from("photo_albums")
+    .select(select)
+    .eq("company_id", companyId)
+    .eq("slug", albumSlug)
+    .maybeSingle<AlbumPageRow>()
+
+  if (direct.error && includeJobFields) {
+    return findAlbum(admin, companyId, albumSlug, false)
+  }
+  if (direct.data) return direct.data as AlbumPageRow
+
+  const matches = await admin
+    .from("photo_albums")
+    .select(select)
+    .eq("company_id", companyId)
+
+  if (matches.error && includeJobFields) {
+    return findAlbum(admin, companyId, albumSlug, false)
+  }
+
+  const rows = (matches.data ?? []) as unknown as AlbumPageRow[]
+  return rows.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string; album: string }> }): Promise<Metadata> {
   const { slug, album: albumSlug } = await params
   const company = slug.startsWith("__domain__")
@@ -43,20 +87,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!company) return { title: "Gallery" }
 
   const admin = createAdminClient()
-  let { data: album } = await admin
-    .from("photo_albums")
-    .select("id, name, customer_name, service_address")
-    .eq("company_id", company.id)
-    .eq("slug", albumSlug)
-    .maybeSingle()
-
-  if (!album) {
-    const { data: matches } = await admin
-      .from("photo_albums")
-      .select("id, name, customer_name, service_address")
-      .eq("company_id", company.id)
-    album = matches?.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
-  }
+  const album = await findAlbum(admin, company.id, albumSlug, true)
 
   const { data: cover } = album
     ? await admin
@@ -70,7 +101,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     : { data: null }
 
   const albumLabel = albumLabelFor(company.industry_category)
-  const title = album ? `${album.name} - ${company.name}` : `${albumLabel.plural} - ${company.name}`
+  const albumName = album ? displayAlbumName(album, albumLabel.singular === "Job") : albumLabel.plural
+  const title = `${albumName} - ${company.name}`
   const context = album ? albumContext(album) : ""
   const description = context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
   const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
@@ -88,7 +120,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       url,
       siteName: company.name,
       type: "website",
-      ...(image && { images: [{ url: image, alt: album?.name ?? company.name, width: 1200, height: 630 }] }),
+      ...(image && { images: [{ url: image, alt: albumName, width: 1200, height: 630 }] }),
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
@@ -109,20 +141,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
 
   const admin = createAdminClient()
 
-  let { data: album } = await admin
-    .from("photo_albums")
-    .select("id, name, slug, album_type, customer_name, service_address, created_at")
-    .eq("company_id", company.id)
-    .eq("slug", albumSlug)
-    .maybeSingle<AlbumPageRow>()
-
-  if (!album) {
-    const { data: matches } = await admin
-      .from("photo_albums")
-      .select("id, name, slug, album_type, customer_name, service_address, created_at")
-      .eq("company_id", company.id)
-    album = matches?.find(row => albumSlugFromName(row.name) === albumSlug) ?? null
-  }
+  const album = await findAlbum(admin, company.id, albumSlug, true)
 
   if (!album) notFound()
 
@@ -137,9 +156,10 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
   const primary = company.primary_color ?? "#32D074"
   const albumDate = new Date(album.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
   const albumLabel = albumLabelFor(company.industry_category)
-  const isJob = album.album_type === "job"
+  const isJob = album.album_type === "job" || albumLabel.singular === "Job"
   const context = albumContext(album)
   const ctaLabel = isJob ? `Ask about this ${albumLabel.singular.toLowerCase()}` : "Contact Us"
+  const albumName = displayAlbumName(album, isJob)
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" }}>
@@ -153,7 +173,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
                 {company.name}
               </p>
               <h1 style={{ margin: "0 0 8px", fontSize: "clamp(34px, 8vw, 58px)", lineHeight: 0.98, fontWeight: 800, color: "#111", letterSpacing: "-0.04em" }}>
-                {album.name}
+                {albumName}
               </h1>
               {context && (
                 <p style={{ margin: "0 0 8px", fontSize: 15, color: "#777", fontWeight: 650, lineHeight: 1.35 }}>
