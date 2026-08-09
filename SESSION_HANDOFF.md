@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Blank Videos on Public Gallery + Job Pages (2 commits)
+
+### Where We Left Off
+Shawn made a new HVAC test account, uploaded short videos, added them to the public Gallery (the four-square icon, `in_gallery`) - and the public site showed a blank tile where the video should be. Traced it directly: video uploads were clearly added to the product after the public-facing gallery pages were built, and none of them ever got updated to handle video. Found and fixed three separate occurrences of the identical root cause.
+
+### What Changed
+- `GalleryLightbox.tsx` + `[slug]/gallery/page.tsx` (`091a0fb`) - the main public gallery page (both plan tiers) rendered every item as a plain `<img>`. Now uses the same `isVideoMedia()` helper the dashboard Photos page already relies on to show a muted autoplay video tile in the grid and real `<video controls>` in the fullscreen lightbox. Also guarded the CTA background image and album-cover-photo picks to skip video URLs (both are always-static slots).
+- `AlbumPhotoGrid.tsx` + `[slug]/gallery/[album]/page.tsx` (`68c66d1`) - the shared Job public page (what every "Ask about this job" lead links back to) had the exact same bug, fixed the same way. This one matters more - Jobs' whole value prop is the shareable client gallery.
+- `[slug]/gallery/[album]/opengraph-image.tsx` (`68c66d1`) - found a third occurrence while in this code: the OG/social-preview image generator for shared job links picked whatever photo was uploaded first with zero video filtering. `next/og` can't render a video at all, so a video as someone's first upload would have silently broken the entire iMessage/Facebook link preview. Now skips forward to the first real still photo.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after both commits.
+- Not yet tested live by Shawn.
+
+### Test Next
+- On the HVAC test account, confirm the video that showed blank on `/gallery` now plays (grid thumbnail autoplays muted, tapping opens it with real controls).
+- Same check on a Job's shared public page (`/gallery/[job-slug]`).
+- Share a job link that has a video as its first photo to iMessage/Messenger and confirm the preview image isn't broken.
+
+### Also flagged, not yet built
+- Upload speed/limit: no cap on files-per-batch, uploads run strictly sequential (not parallel), video gets zero client-side compression before upload. Team-scoped fix (12-file soft cap, 3-way concurrency, real "Uploading X of Y" progress) - approved shape, not yet implemented. Applies to both Photos and Jobs since they share the same upload path.
+
+---
+
 ## 2026-08-09 - Live QA Follow-Up: 3 Real Bugs + Nav/Settings Restructure (7 commits)
 
 ### Where We Left Off

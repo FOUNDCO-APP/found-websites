@@ -1,3 +1,18 @@
+## Session: August 9, 2026 - Blank Videos on Public Gallery + Job Pages
+**AI:** Claude
+
+### Built
+- Fixed the public `/gallery` page (`GalleryLightbox.tsx`, both plan tiers) to actually render video - it was rendering every gallery item as `<img>` with zero video awareness, so a video just showed blank (`091a0fb`).
+- Fixed the identical bug on the shared Job public page (`AlbumPhotoGrid.tsx`) - the page every "Ask about this job" lead links back to (`68c66d1`).
+- Fixed a third occurrence in the same investigation: the OG/social-preview image generator for shared job links could pick a video as the cover photo, which `next/og` can't render at all - would have silently broken the entire iMessage/Facebook link preview (`68c66d1`).
+- All three reuse the existing `isVideoMedia()` helper and the dashboard Photos page's own video-tile treatment (muted autoplay grid tile, real `<video controls>` in the expanded view) rather than inventing new patterns.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after both commits.
+- Not yet tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - Live QA Follow-Up: 3 Bugs + Nav/Settings Restructure
 **AI:** Claude
 

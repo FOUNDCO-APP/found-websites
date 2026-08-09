@@ -1,5 +1,19 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Blank Videos on Public Gallery + Job Pages
+
+- [x] Fix public /gallery page to render video (grid tile + lightbox), both plan tiers.
+- [x] Guard CTA background image and album-cover picks to skip video URLs.
+- [x] Fix the same bug on the shared Job public page (AlbumPhotoGrid.tsx).
+- [x] Fix OG/social-preview image generator to skip video when picking a cover photo.
+- [x] Verify `npx tsc --noEmit` and `npm run build` after both commits.
+- [ ] Shawn QA: HVAC test account video now shows/plays on public gallery.
+- [ ] Shawn QA: same check on a Job's shared public page.
+- [ ] Shawn QA: sharing a job link with a video-first album to iMessage doesn't break the preview.
+- [ ] Next (approved shape, not built): upload speed/limit - 12-file soft cap, 3-way concurrency instead of sequential, real progress indicator. Affects Photos and Jobs both.
+
+---
+
 ## 2026-08-09 - Live QA Follow-Up: 3 Bugs + Nav/Settings Restructure
 
 - [x] Fix Sign Out to also clear admin View As override cookies (real access-control gap, not confusion).
