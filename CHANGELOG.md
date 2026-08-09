@@ -1,3 +1,20 @@
+## Session: August 9, 2026 - Job Leads Connected to Estimate Builder
+**AI:** Codex
+
+### Built
+- Job/shared-work leads now show `Create Estimate` when they land in the dashboard, even outside the estimate-only inbox.
+- Creating an estimate from one of these leads pre-fills customer info and uses the job/project title first for the work description when available.
+
+### Verification
+- `npm run build` passed.
+- `git diff --check` passed.
+- Shawn confirmed live: tapped Create Estimate from a job-page lead, estimate screen opened with customer info and description prefilled correctly.
+
+### Process Note
+- Codex ran out of credits right after this shipped (commit `0cfd503`), before docs were updated. Backfilled by Claude from Shawn's session summary and live confirmation.
+
+---
+
 ## Session: August 8, 2026 - Photos Filter Native Panel and Header Fix
 **AI:** Codex
 

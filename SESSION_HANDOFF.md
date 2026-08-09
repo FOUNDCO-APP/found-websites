@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Job Leads Connected to Estimate Builder
+
+### Where We Left Off
+- Codex follow-up to the shared job/photo-page lead capture work: leads created from a shared job/project page landed in the dashboard, but did not show a clear `Create Estimate` action outside the estimate-only inbox, and starting an estimate from one meant re-typing the customer's info and work description by hand.
+
+### What Changed
+- Job/shared-work leads now show `Create Estimate` when they land in the dashboard, even outside the estimate-only inbox view.
+- Starting an estimate from one of these leads now pre-fills customer info, and uses the job/project title first for the work description when available.
+
+### Verification
+- `npm run build` passed.
+- `git diff --check` passed.
+- Shawn tested live: tapped `Create Estimate` on a lead created from a shared job page, confirmed the estimate screen opened with customer info filled in and the work description started from the job title/context.
+
+### Process Note
+- Codex ran out of credits immediately after this shipped, before the doc trio (`SESSION_HANDOFF.md`/`TASKS.md`/`CHANGELOG.md`) could be updated - commit `0cfd503` on `main`, code-only, no doc changes. Backfilled here from Shawn's session summary plus his live pass/fail confirmation.
+
+---
+
 ## 2026-08-08 - Photos Filter Native Panel and Header Fix
 
 - Shawn approved the team direction to make the Photos filter feel closer to iOS/iMessage/Codex system panels and fix the first-load clipping.

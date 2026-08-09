@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Job Leads Connected to Estimate Builder
+
+- [x] Job/shared-work leads show Create Estimate even outside the estimate-only inbox.
+- [x] Creating an estimate from a job lead pre-fills customer info.
+- [x] Estimate work description uses the job/project title first when available.
+- [x] Verify `npm run build` and `git diff --check`.
+- [x] Shawn QA: tapped Create Estimate on a job-page lead, confirmed prefilled customer info and job-title-based description.
+
+---
+
 ## 2026-08-08 - Photos IA Cleanup: Favorites and Albums
 
 - [x] Rename Photos tabs to owner-facing language: All Photos, On Website, Favorites, Albums.
