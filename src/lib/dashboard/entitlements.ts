@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany, type CompanyRow } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess, type CompanyRow } from "@/lib/dashboard/getCompany"
 import { hasAddonAccess, getFeatureAccess, type AddonSlug, type Feature } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
@@ -28,6 +28,12 @@ export async function requireDashboardAddonAccess(addon: AddonSlug) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { ok: false as const, response: NextResponse.json({ error: "No company" }, { status: 404 }) }
 
+  // Business tools (estimates, scheduling, ordering, etc.) are owner-only
+  // for now - workers get Jobs/photo capture only. See getCompanyRole().
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    return { ok: false as const, response: NextResponse.json({ error: "Not available for your account" }, { status: 403 }) }
+  }
+
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
   if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
     return { ok: false as const, response: NextResponse.json({ error: "Feature not available on this plan" }, { status: 403 }) }
@@ -42,6 +48,10 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) redirect("/login")
+
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    redirect("/photos")
+  }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
   if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
@@ -59,6 +69,10 @@ export async function requireDashboardFeaturePage(feature: Feature) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) redirect("/login")
+
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    redirect("/photos")
+  }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
   if (!getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {

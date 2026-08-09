@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe/connect"
 
@@ -65,6 +65,9 @@ export async function POST(req: Request) {
 
     const company = await getCompany(authUser.id, authUser.email ?? "")
     if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+    if (!(await requireOwnerAccess(authUser.id, authUser.email ?? "", company))) {
+      return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+    }
     const companyRecord = company
 
     const stripe = getStripe()

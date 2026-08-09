@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -8,6 +8,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ items: [] }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ items: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ items: [] })
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -24,6 +25,7 @@ export async function PUT(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { items } = await req.json()
   const admin = createAdminClient()

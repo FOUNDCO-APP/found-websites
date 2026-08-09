@@ -1,5 +1,5 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import HomeClient from "@/components/dashboard/HomeClient"
@@ -12,6 +12,8 @@ export default async function HomePage() {
 
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
   if (!company) redirect(user ? "/login" : "/admin")
+  // Workers land straight on Jobs/Photos, never the lead-data home screen.
+  if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
 
   const admin = createAdminClient()
 

@@ -1,7 +1,7 @@
 "use server"
 
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { companyHasAddonAccess } from "@/lib/dashboard/entitlements"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -12,6 +12,7 @@ async function requireScheduleAccess(companyId?: string) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { ok: false as const, error: "No company" }
   if (companyId && companyId !== company.id) return { ok: false as const, error: "No company" }
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return { ok: false as const, error: "Not available for your account" }
 
   const allowed = await companyHasAddonAccess(company, "reservation_calendar")
   if (!allowed) return { ok: false as const, error: "Booking Calendar is not available on this plan." }

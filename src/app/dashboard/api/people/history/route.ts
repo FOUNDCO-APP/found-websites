@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 
@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ emailSends: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ emailSends: [] })
 
   const { searchParams } = new URL(req.url)
   const email = searchParams.get("email")

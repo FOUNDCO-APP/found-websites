@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { companyHasFeatureAccess } from "@/lib/dashboard/entitlements"
 
 export async function getContacts() {
@@ -10,6 +10,7 @@ export async function getContacts() {
   if (!user) return []
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return []
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return []
   if (!(await companyHasFeatureAccess(company, "contact_database"))) return []
 
   const admin = createAdminClient()
@@ -33,6 +34,7 @@ export async function addContact(input: {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return { error: "Not available for your account" }
   if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   if (!input.name?.trim()) return { error: "Name is required" }
@@ -60,6 +62,7 @@ export async function deleteContact(id: string) {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return { error: "Not available for your account" }
   if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   const admin = createAdminClient()
@@ -85,6 +88,7 @@ export async function updateContact(input: {
   if (!user) return { error: "Not authenticated" }
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return { error: "No company found" }
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return { error: "Not available for your account" }
   if (!(await companyHasFeatureAccess(company, "contact_database"))) return { error: "Not available on this plan" }
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }

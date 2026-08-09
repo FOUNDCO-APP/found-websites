@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(req: NextRequest) {
@@ -8,6 +8,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ templates: [] }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ templates: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ templates: [] })
 
   const { searchParams } = new URL(req.url)
   const context = searchParams.get("context") ?? "lead"
@@ -30,6 +31,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { name, subject, body, context, channel } = await req.json()
   if (!name || !body || !context || !channel) {
@@ -52,6 +54,7 @@ export async function DELETE(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")

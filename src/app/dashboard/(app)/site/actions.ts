@@ -3,7 +3,7 @@
 import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
@@ -97,6 +97,9 @@ async function getContext() {
   if (!user) return null
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return null
+  // Site editing/publishing is owner-only for now - workers get Jobs/photo
+  // capture only. See getCompanyRole() for the enforcement rationale.
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return null
   return { user, company, admin: createAdminClient() }
 }
 

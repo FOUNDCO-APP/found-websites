@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) return NextResponse.json({ error: "Email not configured" }, { status: 503 })

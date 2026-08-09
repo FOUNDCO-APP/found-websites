@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 function clean(v: unknown, max = 200): string {
@@ -12,6 +12,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ locations: [] }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ locations: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ locations: [] })
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
@@ -62,6 +64,7 @@ export async function PATCH(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   if (!body?.id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
@@ -90,6 +93,7 @@ export async function DELETE(req: NextRequest) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")

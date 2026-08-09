@@ -1,5 +1,5 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import SignOutButton from "@/components/dashboard/SignOutButton"
 import BusinessNameEditor from "@/components/dashboard/BusinessNameEditor"
@@ -170,6 +170,7 @@ export default async function MorePage({ searchParams }: { searchParams: Promise
   const user = await requireDashboardAccess()
 
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
+  if (company && !(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
   const sp = await searchParams
   const addonAdded = sp.addon_added ?? null
   const addonUnavailable = sp.addon_unavailable === "1"

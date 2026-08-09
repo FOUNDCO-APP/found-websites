@@ -1,5 +1,5 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/admin"
 import MarketingClient from "@/components/dashboard/MarketingClient"
@@ -9,6 +9,7 @@ export default async function MarketingPage() {
 
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
   if (!company) redirect(user ? "/login" : "/admin")
+  if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
 
   const admin = createAdminClient()
 

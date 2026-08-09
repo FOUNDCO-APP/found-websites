@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -9,6 +9,7 @@ export async function GET() {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ leads: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ leads: [] })
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json()
   const { name, phone, email, notes, temperature } = body
@@ -60,6 +62,7 @@ export async function PATCH(req: Request) {
 
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json()
   const { id, name, phone, email, message, temperature, status } = body
