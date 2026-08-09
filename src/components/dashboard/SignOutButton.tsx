@@ -2,6 +2,7 @@
 
 import { createBrowserClient } from "@supabase/ssr"
 import { useRouter } from "next/navigation"
+import { clearAdminOverride } from "@/lib/auth/adminSession"
 
 export default function SignOutButton() {
   const router = useRouter()
@@ -13,6 +14,11 @@ export default function SignOutButton() {
     )
     await supabase.auth.signOut()
     document.cookie = "found_company_id=; max-age=0; path=/"
+    // admin_key/found_admin_view/found_admin_company_id are httpOnly -
+    // only a server action can clear them. Without this, a leftover View
+    // As session silently carries over to whoever signs in next in this
+    // browser.
+    await clearAdminOverride()
     router.push("/login")
     router.refresh()
   }
