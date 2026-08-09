@@ -5,6 +5,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { albumLabelFor } from "@/lib/dashboard/typography"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import AlbumPhotoGrid from "./AlbumPhotoGrid"
 
 type AlbumPageRow = {
   id: string
@@ -16,8 +17,8 @@ type AlbumPageRow = {
   created_at: string
 }
 
-function albumContext(album: Pick<AlbumPageRow, "customer_name" | "service_address">) {
-  return [album.customer_name, album.service_address].filter(Boolean).join(" - ")
+function publicAlbumContext(album: Pick<AlbumPageRow, "customer_name">) {
+  return album.customer_name?.trim() ?? ""
 }
 
 function absoluteImageUrl(url: string | undefined, origin: string) {
@@ -92,7 +93,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const albumLabel = albumLabelFor(company.industry_category)
   const albumName = album ? displayAlbumName(album, albumLabel.singular === "Job") : albumLabel.plural
   const title = `${albumName} - ${company.name}`
-  const context = album ? albumContext(album) : ""
+  const context = album ? publicAlbumContext(album) : ""
   const description = context ? `${context}. Photos shared by ${company.name}.` : `Photos shared by ${company.name}.`
   const origin = getPublicSiteOrigin(company.slug, company.website_config?.custom_domain)
   const url = `${origin}/gallery/${albumSlug}`
@@ -146,7 +147,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
   const albumDate = new Date(album.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })
   const albumLabel = albumLabelFor(company.industry_category)
   const isJob = album.album_type === "job" || albumLabel.singular === "Job"
-  const context = albumContext(album)
+  const context = publicAlbumContext(album)
   const ctaLabel = isJob ? `Ask about this ${albumLabel.singular.toLowerCase()}` : "Contact Us"
   const albumName = displayAlbumName(album, isJob)
 
@@ -158,9 +159,6 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
             <div style={{ maxWidth: 620 }}>
-              <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 900, letterSpacing: "0.15em", textTransform: "uppercase", color: "#999" }}>
-                {company.name}
-              </p>
               <h1 style={{ margin: "0 0 8px", fontSize: "clamp(34px, 8vw, 58px)", lineHeight: 0.98, fontWeight: 800, color: "#111", letterSpacing: "-0.04em" }}>
                 {albumName}
               </h1>
@@ -195,23 +193,7 @@ export default async function ClientAlbumPage({ params }: { params: Promise<{ sl
             <p style={{ fontSize: 14, color: "#aaa" }}>Check back shortly as we add photos to this {albumLabel.singular.toLowerCase()}.</p>
           </div>
         ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(112px, 1fr))",
-            gap: 5,
-          }}>
-            {allPhotos.map(photo => (
-              <div key={photo.id} style={{ borderRadius: 10, overflow: "hidden", aspectRatio: "1", backgroundColor: "#eee" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={photo.url}
-                  alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
+          <AlbumPhotoGrid photos={allPhotos} />
         )}
       </main>
 
