@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url))
   }
 
-  // Verify the user actually owns this company
+  // Verify the user actually has access to this company - either as owner
+  // or as an active worker (company_members).
   const admin = createAdminClient()
   const { data: company } = await admin
     .from("companies")
@@ -44,7 +45,19 @@ export async function GET(req: NextRequest) {
     .or(`user_id.eq.${userId},email.eq.${userEmail ?? ""}`)
     .maybeSingle()
 
-  if (!company) {
+  let hasAccess = Boolean(company)
+  if (!hasAccess) {
+    const { data: member } = await admin
+      .from("company_members")
+      .select("id")
+      .eq("company_id", id)
+      .eq("status", "active")
+      .or(`user_id.eq.${userId},email.eq.${userEmail ?? ""}`)
+      .maybeSingle()
+    hasAccess = Boolean(member)
+  }
+
+  if (!hasAccess) {
     return NextResponse.redirect(new URL("/", req.url))
   }
 

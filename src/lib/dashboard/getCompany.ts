@@ -53,6 +53,20 @@ export async function isAdminOverrideActive(): Promise<boolean> {
   return Boolean(adminView === "1" && adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY)
 }
 
+// Company IDs this user can access as an active worker (company_members),
+// on top of whatever they own outright via companies.user_id/email. A
+// separate lookup rather than a join because company_members is additive —
+// most users never have a row here at all.
+async function getMemberCompanyIds(userId: string, userEmail: string): Promise<string[]> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from("company_members")
+    .select("company_id")
+    .eq("status", "active")
+    .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+  return (data ?? []).map((row: { company_id: string }) => row.company_id)
+}
+
 export async function getCompany(
   userId: string,
   userEmail: string
@@ -105,8 +119,24 @@ export async function getCompany(
     .limit(1)
     .maybeSingle()
 
-  if (data) Sentry.setTag("company_slug", (data as CompanyRow).slug)
-  return (data as CompanyRow) ?? null
+  if (data) {
+    Sentry.setTag("company_slug", (data as CompanyRow).slug)
+    return data as CompanyRow
+  }
+
+  // Not an owner — check worker access (company_members) before giving up.
+  const memberCompanyIds = await getMemberCompanyIds(userId, userEmail)
+  if (memberCompanyIds.length === 0) return null
+
+  const targetId = selectedId && memberCompanyIds.includes(selectedId) ? selectedId : memberCompanyIds[0]
+  const { data: memberCompany } = await admin
+    .from("companies")
+    .select(SELECT_FIELDS)
+    .eq("id", targetId)
+    .maybeSingle()
+
+  if (memberCompany) Sentry.setTag("company_slug", (memberCompany as CompanyRow).slug)
+  return (memberCompany as CompanyRow) ?? null
 }
 
 export async function getAllCompanies(
@@ -114,22 +144,71 @@ export async function getAllCompanies(
   userEmail: string
 ): Promise<CompanyRow[]> {
   const admin = createAdminClient()
-  const { data } = await admin
+  const [{ data: owned }, memberCompanyIds] = await Promise.all([
+    admin
+      .from("companies")
+      .select(SELECT_FIELDS)
+      .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+      .order("created_at", { ascending: false }),
+    getMemberCompanyIds(userId, userEmail),
+  ])
+
+  const ownedRows = (owned ?? []) as CompanyRow[]
+  if (memberCompanyIds.length === 0) return ownedRows
+
+  const ownedIds = new Set(ownedRows.map(row => row.id))
+  const newMemberIds = memberCompanyIds.filter(id => !ownedIds.has(id))
+  if (newMemberIds.length === 0) return ownedRows
+
+  const { data: memberRows } = await admin
     .from("companies")
     .select(SELECT_FIELDS)
-    .or(`user_id.eq.${userId},email.eq.${userEmail}`)
-    .order("created_at", { ascending: false })
-  return (data ?? []) as CompanyRow[]
+    .in("id", newMemberIds)
+  return [...ownedRows, ...((memberRows ?? []) as CompanyRow[])]
 }
 
 export async function hasMultipleCompanies(
   userId: string,
   userEmail: string
 ): Promise<boolean> {
+  const companies = await getAllCompanies(userId, userEmail)
+  return companies.length > 1
+}
+
+export type MemberRole = "owner" | "worker"
+
+// The real permission boundary — call this in any server action/route that
+// a worker must NOT reach (leads, contacts, estimates, site editing,
+// marketing, payments, business settings). Workers may only reach
+// Jobs/photo-capture surfaces. Never rely on hiding the button in the UI
+// alone; RLS is a no-op on tenant tables in this project (see
+// requireScheduleAccess precedent), so this app-level check is the actual
+// enforcement.
+export async function getCompanyRole(
+  userId: string,
+  userEmail: string,
+  company: Pick<CompanyRow, "id" | "user_id" | "email">
+): Promise<MemberRole | null> {
+  const isOwner = company.user_id === userId || (!!company.email && company.email === userEmail)
+  if (isOwner) return "owner"
+
   const admin = createAdminClient()
-  const { count } = await admin
-    .from("companies")
-    .select("id", { count: "exact", head: true })
+  const { data } = await admin
+    .from("company_members")
+    .select("role")
+    .eq("company_id", company.id)
+    .eq("status", "active")
     .or(`user_id.eq.${userId},email.eq.${userEmail}`)
-  return (count ?? 0) > 1
+    .maybeSingle()
+
+  return data ? ((data.role as MemberRole) ?? "worker") : null
+}
+
+export async function requireOwnerAccess(
+  userId: string,
+  userEmail: string,
+  company: Pick<CompanyRow, "id" | "user_id" | "email">
+): Promise<boolean> {
+  const role = await getCompanyRole(userId, userEmail, company)
+  return role === "owner"
 }
