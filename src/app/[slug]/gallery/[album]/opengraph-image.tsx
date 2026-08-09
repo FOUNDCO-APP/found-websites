@@ -67,7 +67,7 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
   const { data: photos } = album
     ? await admin
       .from("company_photos")
-      .select("url, mime_type")
+      .select("url")
       .eq("company_id", company.id)
       .eq("album_id", album.id)
       .order("created_at", { ascending: true })
@@ -77,8 +77,10 @@ export default async function AlbumOgImage({ params }: { params: Promise<{ slug:
   // OG images are always static - next/og can't render a video element, so
   // a video happening to be the first upload would silently break the
   // whole link preview. Skip forward to the first real still photo.
-  const stillPhoto = ((photos ?? []) as Array<{ url: string; mime_type: string | null }>)
-    .find(photo => photo.url && !isVideoMedia(photo.url, photo.mime_type))
+  // company_photos has no mime_type column - isVideoMedia falls back to
+  // the URL's file extension.
+  const stillPhoto = ((photos ?? []) as Array<{ url: string }>)
+    .find(photo => photo.url && !isVideoMedia(photo.url))
   const cover = stillPhoto?.url || company.logo_url || undefined
 
   return new ImageResponse(

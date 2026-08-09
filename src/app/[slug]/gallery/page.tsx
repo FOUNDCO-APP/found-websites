@@ -51,7 +51,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   // final CTA read as an obvious, jarring mismatch.
   const { data: ctaSectionRow } = await admin
     .from("company_photos")
-    .select("url, mime_type")
+    .select("url")
     .eq("company_id", company.id)
     .eq("for_website", true)
     .eq("website_section", "cta")
@@ -60,7 +60,10 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     .maybeSingle()
   // The CTA band is always a still background image, never a playable
   // video slot - skip it here rather than let a picked video fail silently.
-  const ctaSectionPhoto = ctaSectionRow && !isVideoMedia(ctaSectionRow.url, ctaSectionRow.mime_type) ? ctaSectionRow.url : null
+  // company_photos has no mime_type column - isVideoMedia falls back to the
+  // URL's file extension, which is how video detection works everywhere
+  // else in this codebase too (mime_type is never actually persisted).
+  const ctaSectionPhoto = ctaSectionRow && !isVideoMedia(ctaSectionRow.url) ? ctaSectionRow.url : null
   const config = company.website_config
   const siteCopy = getSiteCopy(company.primary_intent, {
     name: company.name,
@@ -76,8 +79,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   if (isPro) {
     const [albumsResult, albumPhotosResult, unsortedResult] = await Promise.all([
       admin.from("photo_albums").select("id, name, slug").eq("company_id", company.id).order("created_at", { ascending: false }),
-      admin.from("company_photos").select("id, url, mime_type, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
-      admin.from("company_photos").select("id, url, mime_type").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
+      admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
+      admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
     ])
 
     // Group album photos by album_id
@@ -85,7 +88,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     for (const photo of albumPhotosResult.data ?? []) {
       if (!photo.album_id) continue
       if (!photosByAlbum.has(photo.album_id)) photosByAlbum.set(photo.album_id, [])
-      photosByAlbum.get(photo.album_id)!.push({ url: photo.url, mimeType: photo.mime_type })
+      photosByAlbum.get(photo.album_id)!.push({ url: photo.url })
     }
 
     const albums = (albumsResult.data ?? [])
@@ -93,16 +96,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
         const albumPhotos = photosByAlbum.get(album.id) ?? []
         // Cover tile is a plain <img>, never a playable video slot - pick
         // the first still photo, not just the first item.
-        const coverUrl = albumPhotos.find(p => !isVideoMedia(p.url, p.mimeType))?.url ?? null
+        const coverUrl = albumPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
         return { ...album, coverUrl, photoCount: albumPhotos.length }
       })
       .filter(a => a.photoCount > 0)
 
     // Flat section: owner-managed gallery photos.
-    const flatPhotos: GalleryMedia[] = (unsortedResult.data ?? []).map(p => ({ url: p.url, mimeType: p.mime_type }))
+    const flatPhotos: GalleryMedia[] = (unsortedResult.data ?? []).map(p => ({ url: p.url }))
 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
-    const firstStillFlatPhoto = flatPhotos.find(p => !isVideoMedia(p.url, p.mimeType))?.url ?? null
+    const firstStillFlatPhoto = flatPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
     const ctaImg = ctaSectionPhoto ?? albums[0]?.coverUrl ?? firstStillFlatPhoto ?? pickImg(imgs, 0)
 
     return (
@@ -208,19 +211,19 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const [dashboardResult] = await Promise.all([
     admin
       .from("company_photos")
-      .select("id, url, mime_type")
+      .select("id, url")
       .eq("company_id", company.id)
       .eq("in_gallery", true)
       .order("created_at", { ascending: false }),
   ])
 
-  const ownerPhotos: GalleryMedia[] = (dashboardResult.data ?? []).map(p => ({ url: p.url, mimeType: p.mime_type }))
+  const ownerPhotos: GalleryMedia[] = (dashboardResult.data ?? []).map(p => ({ url: p.url }))
   const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: (string | GalleryMedia)[] = ownerPhotos.length
     ? ownerPhotos
     : stockPhotos.filter(Boolean)
   const hasPhotos = allPhotos.length > 0
-  const firstStillOwnerPhoto = ownerPhotos.find(p => !isVideoMedia(p.url, p.mimeType))?.url ?? null
+  const firstStillOwnerPhoto = ownerPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
   const ctaImg = ctaSectionPhoto ?? firstStillOwnerPhoto ?? pickImg(imgs, 0)
 
   return (

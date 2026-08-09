@@ -7,7 +7,6 @@ import { isVideoMedia } from "@/lib/mediaKind"
 type SharedPhoto = {
   id: string
   url: string
-  mime_type?: string | null
   created_at?: string | null
 }
 
@@ -81,7 +80,7 @@ export default function AlbumPhotoGrid({ photos }: { photos: SharedPhoto[] }) {
               cursor: "zoom-in",
             }}
           >
-            {isVideoMedia(photo.url, photo.mime_type) ? (
+            {isVideoMedia(photo.url) ? (
               <GridVideoTile src={photo.url} />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
@@ -180,7 +179,7 @@ export default function AlbumPhotoGrid({ photos }: { photos: SharedPhoto[] }) {
             </button>
           )}
 
-          {isVideoMedia(activePhoto.url, activePhoto.mime_type) ? (
+          {isVideoMedia(activePhoto.url) ? (
             <video
               key={activePhoto.url}
               src={activePhoto.url}
