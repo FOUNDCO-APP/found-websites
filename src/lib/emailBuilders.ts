@@ -229,7 +229,7 @@ export function buildReservationEmail({
             <p style="margin:0 0 14px;font-size:13px;color:#666666;line-height:1.6;">
               The Found Booking Calendar shows customers only your available times — they pick a slot, it's confirmed instantly. No back-and-forth required.
             </p>
-            <a href="https://my.foundco.app/more" style="display:inline-block;background:#111111;color:#ffffff;font-size:12px;font-weight:800;padding:11px 22px;border-radius:50px;text-decoration:none;">
+            <a href="https://my.foundco.app/billing" style="display:inline-block;background:#111111;color:#ffffff;font-size:12px;font-weight:800;padding:11px 22px;border-radius:50px;text-decoration:none;">
               See how it works →
             </a>
           </td>

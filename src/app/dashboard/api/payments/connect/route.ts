@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     async function createAccountLink(id: string) {
       return stripeClient.accountLinks.create({
         account: id,
-        refresh_url: `${APP_BASE}/more?payments=refresh`,
+        refresh_url: `${APP_BASE}/billing?payments=refresh`,
         return_url: `${APP_BASE}${returnTo}`,
         type: "account_onboarding",
         collection_options: { fields: "eventually_due" },
