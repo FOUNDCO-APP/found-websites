@@ -350,12 +350,22 @@ export async function POST(req: NextRequest) {
     const companyId = session.metadata?.company_id
     if (!companyId) return NextResponse.json({ received: true })
 
+    // plan is deliberately NOT set here. checkout.session.completed and
+    // customer.subscription.created both fire for a new subscription and
+    // Stripe does not guarantee their order - this handler used to
+    // hardcode plan: "found" (Starter) regardless of what was actually
+    // purchased, which could silently overwrite the correct plan the
+    // subscription-created handler below had just set correctly from the
+    // real price id. customer.subscription.created/updated is the sole
+    // source of truth for plan; this handler only owns customer id/status.
+    // Found 2026-08-09: a real paying test account (Found Business) sat
+    // reset to Starter in the database for weeks while Stripe kept
+    // billing the correct plan.
     await supabase
       .from("companies")
       .update({
         stripe_customer_id: session.customer as string,
         subscription_status: "active",
-        plan: "found",
       })
       .eq("id", companyId)
 
