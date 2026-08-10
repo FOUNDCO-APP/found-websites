@@ -341,9 +341,9 @@ export default function DashboardNav({
               detail: { photo: { ...photo, album_id: albumId ?? null } },
             }))
             uploadStatus.complete(true)
-          } catch {
+          } catch (uploadError) {
             // Keep going - one bad file shouldn't stop the rest from uploading
-            uploadStatus.complete(false)
+            uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
           }
         }
       }

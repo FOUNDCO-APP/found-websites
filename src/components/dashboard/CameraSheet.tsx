@@ -201,7 +201,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       } catch (uploadError) {
         setError(uploadError instanceof Error ? uploadError.message : "Photo upload failed")
         setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-        uploadStatus.complete(false)
+        uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
       }
     }, "image/jpeg", 0.92)
   }
@@ -247,7 +247,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Video upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-      uploadStatus.complete(false)
+      uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
     }
   }
 
@@ -269,7 +269,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Annotated photo upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
-      uploadStatus.complete(false)
+      uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
     }
   }
 

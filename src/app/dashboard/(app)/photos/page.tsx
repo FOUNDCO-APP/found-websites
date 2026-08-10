@@ -260,9 +260,9 @@ function PhotosPageInner() {
             uploadedCount++
             setPhotos(prev => [{ ...newPhoto, album_id: albumId ?? null }, ...prev])
             uploadStatus.complete(true)
-          } catch {
+          } catch (uploadError) {
             // Keep going - one bad file shouldn't stop the rest from uploading
-            uploadStatus.complete(false)
+            uploadStatus.complete(false, uploadError instanceof Error ? uploadError.message : undefined)
           }
         }
       }

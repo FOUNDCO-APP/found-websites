@@ -8,11 +8,12 @@ type UploadBatch = {
   done: number
   failed: number
   settledAt: number | null
+  lastError: string | null
 }
 
 type UploadStatusContextValue = {
   start: (count: number) => void
-  complete: (success: boolean) => void
+  complete: (success: boolean, errorMessage?: string) => void
   dismiss: () => void
 }
 
@@ -44,17 +45,18 @@ export default function UploadStatusProvider({ children }: { children: React.Rea
       if (prev && prev.done + prev.failed < prev.total) {
         return { ...prev, total: prev.total + count }
       }
-      return { total: count, done: 0, failed: 0, settledAt: null }
+      return { total: count, done: 0, failed: 0, settledAt: null, lastError: null }
     })
   }, [])
 
-  const complete = useCallback((success: boolean) => {
+  const complete = useCallback((success: boolean, errorMessage?: string) => {
     setBatch(prev => {
       if (!prev) return prev
       const next: UploadBatch = {
         ...prev,
         done: prev.done + (success ? 1 : 0),
         failed: prev.failed + (success ? 0 : 1),
+        lastError: success ? prev.lastError : (errorMessage ?? prev.lastError),
       }
       const finished = next.done + next.failed >= next.total
       next.settledAt = finished ? Date.now() : null
@@ -99,9 +101,10 @@ function UploadStatusBanner({ batch, onDismiss }: { batch: UploadBatch | null; o
     headline = okCount > 0
       ? `${batch.failed} of ${batch.total} couldn't upload`
       : batch.total === 1 ? "Upload failed" : `All ${batch.total} uploads failed`
-    subline = okCount > 0
+    const base = okCount > 0
       ? "The rest are saved. Check your connection and try the others again."
       : "Check your connection and try again."
+    subline = batch.lastError ? `${base} (${batch.lastError})` : base
   } else {
     headline = batch.total === 1 ? "Uploading photo..." : `Uploading ${batch.done + batch.failed + 1} of ${batch.total}...`
   }
