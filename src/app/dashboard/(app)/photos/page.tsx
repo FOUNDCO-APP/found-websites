@@ -47,7 +47,7 @@ const UPLOAD_CONCURRENCY = 3
 
 type View = "all" | "website" | "albums"
 type PhotoFilter = "all" | "favorites" | "unused"
-type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" }
+type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" | "delete" }
 function dateGroupLabel(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const days = Math.floor(diff / 86400000)
@@ -138,6 +138,8 @@ function PhotosPageInner() {
   const [savingAlbum, setSavingAlbum] = useState(false)
   const [shareAlbum, setShareAlbum] = useState<Album | null>(null)
   const [deleteConfirmPhoto, setDeleteConfirmPhoto] = useState<Photo | null>(null)
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false)
+  const [deletingSelected, setDeletingSelected] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [downloadingZip, setDownloadingZip] = useState(false)
@@ -314,6 +316,7 @@ function PhotosPageInner() {
       body: JSON.stringify({ id: photo.id }),
     })
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
+    showPhotoNotice({ text: "Photo deleted", tone: "delete" })
   }
 
   async function setCoverPhoto(photo: Photo) {
@@ -412,6 +415,27 @@ function PhotosPageInner() {
       setPhotoError("Couldn't download those photos. Try again.")
     } finally {
       setDownloadingZip(false)
+    }
+  }
+
+  async function deleteSelected() {
+    if (selectedIds.size === 0 || deletingSelected) return
+    setDeletingSelected(true)
+    const ids = Array.from(selectedIds)
+    try {
+      await Promise.all(ids.map(id =>
+        fetch("/api/photos", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        }).catch(() => null)
+      ))
+      setPhotos(prev => prev.filter(p => !selectedIds.has(p.id)))
+      showPhotoNotice({ text: ids.length === 1 ? "Photo deleted" : `${ids.length} photos deleted`, tone: "delete" })
+      exitSelectMode()
+    } finally {
+      setDeletingSelected(false)
+      setShowBulkDeleteConfirm(false)
     }
   }
 
@@ -826,7 +850,7 @@ function PhotosPageInner() {
           padding: "10px 14px",
           borderRadius: 999,
           backgroundColor: "rgba(18,22,20,0.94)",
-          border: `1px solid ${photoNotice.tone === "favorite" ? "rgba(255,75,139,0.44)" : photoNotice.tone === "gallery" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.18)"}`,
+          border: `1px solid ${photoNotice.tone === "favorite" ? "rgba(255,75,139,0.44)" : photoNotice.tone === "gallery" ? `${SIGNAL_GREEN}66` : photoNotice.tone === "delete" ? "rgba(255,107,90,0.44)" : "rgba(255,255,255,0.18)"}`,
           boxShadow: "0 16px 44px rgba(0,0,0,0.32)",
           backdropFilter: "blur(18px)",
           WebkitBackdropFilter: "blur(18px)",
@@ -840,6 +864,10 @@ function PhotosPageInner() {
           ) : photoNotice.tone === "favorite" ? (
             <svg width="15" height="15" viewBox="0 0 24 24" fill="#FF4B8B" stroke="#FF4B8B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          ) : photoNotice.tone === "delete" ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FF6B5A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
             </svg>
           ) : null}
           <span style={{ fontSize: 13, fontWeight: 850, color: "rgba(255,255,255,0.92)", whiteSpace: "nowrap" }}>{photoNotice.text}</span>
@@ -952,7 +980,7 @@ function PhotosPageInner() {
           onPlace={openPlacement}
           destinations={destinations}
           onShare={handleSharePhoto}
-          onRemove={remove}
+          onRequestDelete={setDeleteConfirmPhoto}
           album={lightroomSource === "album" ? activeAlbum : null}
           onSetCover={setCoverPhoto}
           onNoteSave={savePhotoNote}
@@ -996,8 +1024,8 @@ function PhotosPageInner() {
           one irreversible action available straight from the thumbnail. */}
       {deleteConfirmPhoto && (
         <>
-          <div onClick={() => setDeleteConfirmPhoto(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 80, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
-          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 90, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
+          <div onClick={() => setDeleteConfirmPhoto(null)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 150, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 151, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
             <div style={{ fontSize: 30, marginBottom: 10 }}>🗑️</div>
             <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>Delete this one?</p>
             <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
@@ -1059,37 +1087,103 @@ function PhotosPageInner() {
       {selectMode && (
         <div style={{
           position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 75,
-          padding: "14px 20px max(env(safe-area-inset-bottom, 0px), 20px)",
-          backgroundColor: "rgba(15,18,16,0.94)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          padding: "16px 24px max(env(safe-area-inset-bottom, 0px), 22px)",
+          background: "linear-gradient(to top, rgba(8,10,9,0.97) 0%, rgba(8,10,9,0.94) 70%, rgba(8,10,9,0.86) 100%)",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
         }}>
-          <button onClick={exitSelectMode} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", ...TYPE.body, cursor: "pointer", padding: 0 }}>
-            Cancel
-          </button>
-          <span style={{ ...TYPE.footnote, color: "rgba(255,255,255,0.5)" }}>
-            {selectedIds.size === 0 ? "Tap photos to select" : `${selectedIds.size} selected`}
-          </span>
-          <button
-            onClick={downloadSelected}
-            disabled={selectedIds.size === 0 || downloadingZip}
-            style={{
-              padding: "12px 20px", borderRadius: 100, border: "none",
-              backgroundColor: selectedIds.size === 0 ? "rgba(255,255,255,0.08)" : SIGNAL_GREEN,
-              color: selectedIds.size === 0 ? "rgba(255,255,255,0.35)" : FOUND_BLACK,
-              ...TYPE.footnote, fontWeight: 800, cursor: selectedIds.size === 0 ? "default" : "pointer",
-            }}
-          >
-            {downloadingZip ? "Zipping..." : "Download"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <button onClick={exitSelectMode} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", ...TYPE.body, cursor: "pointer", padding: 0 }}>
+              Cancel
+            </button>
+            <span style={{ ...TYPE.footnote, fontWeight: 700, color: "rgba(255,255,255,0.55)" }}>
+              {selectedIds.size === 0 ? "Tap photos to select" : `${selectedIds.size} selected`}
+            </span>
+            <div style={{ width: 46 }} aria-hidden="true" />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", gap: 56 }}>
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              disabled={selectedIds.size === 0}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 9, background: "none", border: "none", cursor: selectedIds.size === 0 ? "default" : "pointer", padding: 0 }}
+            >
+              <div style={{
+                width: 60, height: 60, borderRadius: "50%",
+                backgroundColor: selectedIds.size === 0 ? "rgba(255,255,255,0.06)" : "rgba(255,70,70,0.14)",
+                border: `2px solid ${selectedIds.size === 0 ? "rgba(255,255,255,0.1)" : "rgba(255,70,70,0.3)"}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={selectedIds.size === 0 ? "rgba(255,255,255,0.25)" : "rgba(255,100,100,0.9)"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: selectedIds.size === 0 ? "rgba(255,255,255,0.3)" : "rgba(255,100,100,0.85)" }}>Delete</span>
+            </button>
+            <button
+              onClick={downloadSelected}
+              disabled={selectedIds.size === 0 || downloadingZip}
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 9, background: "none", border: "none", cursor: selectedIds.size === 0 ? "default" : "pointer", padding: 0 }}
+            >
+              <div style={{
+                width: 60, height: 60, borderRadius: "50%",
+                backgroundColor: selectedIds.size === 0 ? "rgba(255,255,255,0.06)" : `${SIGNAL_GREEN}18`,
+                border: `2px solid ${selectedIds.size === 0 ? "rgba(255,255,255,0.1)" : `${SIGNAL_GREEN}44`}`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                {downloadingZip ? (
+                  <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN, animation: "spin 0.7s linear infinite" }} />
+                ) : (
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={selectedIds.size === 0 ? "rgba(255,255,255,0.25)" : SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                )}
+              </div>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: selectedIds.size === 0 ? "rgba(255,255,255,0.3)" : SIGNAL_GREEN }}>
+                {downloadingZip ? "Zipping..." : "Download"}
+              </span>
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Bulk delete confirm - same friendly, non-system-warning tone as the
+          single-photo delete, scaled to the selected count. */}
+      {showBulkDeleteConfirm && (
+        <>
+          <div onClick={() => !deletingSelected && setShowBulkDeleteConfirm(false)} style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.72)", zIndex: 150, backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}/>
+          <div style={{ position: "fixed", left: 20, right: 20, top: "50%", transform: "translateY(-50%)", zIndex: 151, borderRadius: 24, backgroundColor: "#161616", border: "1px solid rgba(255,255,255,0.1)", padding: "26px 22px", boxShadow: "0 24px 70px rgba(0,0,0,0.5)" }}>
+            <div style={{ fontSize: 30, marginBottom: 10 }}>🗑️</div>
+            <p style={{ margin: "0 0 8px", fontSize: 19, fontWeight: 800, color: "white", lineHeight: 1.3 }}>
+              Delete {selectedIds.size} photo{selectedIds.size !== 1 ? "s" : ""}?
+            </p>
+            <p style={{ margin: "0 0 22px", fontSize: 15, lineHeight: 1.5, color: "rgba(255,255,255,0.72)" }}>
+              They'll be gone for good, including anywhere they're used on your site or in an album.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+              <button
+                onClick={deleteSelected}
+                disabled={deletingSelected}
+                style={{ padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: "rgba(255,70,70,0.16)", color: "#FF6B6B", fontSize: 15, fontWeight: 900, cursor: deletingSelected ? "default" : "pointer" }}
+              >
+                {deletingSelected ? "Deleting..." : `Yes, delete ${selectedIds.size === 1 ? "it" : "them"}`}
+              </button>
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                disabled={deletingSelected}
+                style={{ padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: "rgba(255,255,255,0.75)", fontSize: 15, fontWeight: 800, cursor: deletingSelected ? "default" : "pointer" }}
+              >
+                Keep them
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </main>
   )
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPlace, destinations, onShare, onRemove, album, onSetCover, onNoteSave }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, album, onSetCover, onNoteSave }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
@@ -1098,7 +1192,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
   onPlace?: (photo: Photo) => void
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
-  onRemove: (photo: Photo) => void
+  onRequestDelete: (photo: Photo) => void
   album?: Album | null
   onSetCover?: (photo: Photo) => void
   onNoteSave?: (photo: Photo, note: string) => Promise<void>
@@ -1138,6 +1232,13 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
     return () => window.removeEventListener("keydown", handleKey)
   }, [photos.length])
 
+  // Deletion now happens externally (through the shared confirm dialog) -
+  // if the array this viewer was given shrinks to nothing, close instead of
+  // showing a black screen with nothing in it.
+  useEffect(() => {
+    if (photos.length === 0) onCloseRef.current()
+  }, [photos.length])
+
   function onTouchStart(e: React.TouchEvent) {
     setTouchStart(e.touches[0].clientX)
   }
@@ -1149,16 +1250,6 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
       else setIndex(i => Math.max(0, i - 1))
     }
     setTouchStart(null)
-  }
-
-  function handleDelete() {
-    const remaining = photos.length
-    onRemove(photo)
-    if (remaining === 1) {
-      onClose()
-    } else {
-      setIndex(i => Math.min(i, remaining - 2))
-    }
   }
 
   if (!photo) return null
@@ -1378,7 +1469,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
         )}
 
         {/* Trash — Delete */}
-        <button onClick={handleDelete} style={{
+        <button onClick={() => onRequestDelete(photo)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
         }}>

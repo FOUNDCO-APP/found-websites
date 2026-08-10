@@ -42,9 +42,19 @@ export async function uploadDashboardMedia(file: File | Blob, options?: { fileNa
     const form = new FormData()
     form.append("file", file, fileName)
     if (albumId) form.append("album_id", albumId)
-    const res = await fetch(endpoint, { method: "POST", body: form })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok || !data.photo) throw new Error(data.error || "Upload failed")
+    let res: Response
+    try {
+      res = await fetch(endpoint, { method: "POST", body: form })
+    } catch (networkError) {
+      throw new Error(`Network error - ${networkError instanceof Error ? networkError.message : "request failed"}`)
+    }
+    const rawText = await res.text()
+    let data: { photo?: DashboardMediaUpload; error?: string } = {}
+    try { data = JSON.parse(rawText) } catch { /* non-JSON response, fall through with raw text below */ }
+    if (!res.ok || !data.photo) {
+      const detail = data.error || (rawText ? rawText.slice(0, 120) : null)
+      throw new Error(detail ? `Upload failed (${res.status}): ${detail}` : `Upload failed (${res.status})`)
+    }
     return data.photo as DashboardMediaUpload
   }
 

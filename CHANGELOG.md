@@ -1,3 +1,29 @@
+## Session: August 10, 2026 - Delete Confirmation/Feedback, Bulk Delete, Select-Mode Redesign
+**AI:** Claude
+
+### Found via Shawn's live testing
+Deleting a photo from the full-screen viewer gave no confirmation and no feedback - no way to know it actually worked. Select mode (multi-photo) could only download, not delete. Also direct design feedback: the select-mode bottom bar read as unfinessed - a plain row of text buttons, inconsistent with the more considered circular-icon-button design already used in the full-screen photo viewer.
+
+### Team round
+Steve: two trust problems in one report - can't tell if delete worked, and a basic bulk action is missing. Jony: traced the "unfinessed" feeling to two different visual languages existing side by side (Lightroom's real icon-button bottom bar vs. select mode's plain text row) - bring select mode up to the same standard instead of a third style. Craig: found the actual bug behind "nothing tells me it worked" - a proper delete-confirmation dialog already exists for the grid thumbnail's delete icon, but the Lightroom's own Delete button bypassed it entirely and deleted instantly with zero confirmation. Priya: bulk delete needs its own real confirmation, scaled to the count, never silent. Chris: keep it one-thumb-reachable, don't balloon the bar's height for polish's sake.
+
+### Built
+- Lightroom's Delete button now routes through the same confirmation dialog the grid thumbnail already used, instead of deleting instantly with no confirmation.
+- Added a "Photo deleted" / "N photos deleted" confirmation notice (reusing the existing gallery/favorite notice-pill pattern) after any successful delete, single or bulk.
+- Bulk delete added to select mode, with its own confirm dialog scaled to the selected count ("Delete 6 photos?").
+- Rebuilt the select-mode bottom bar to match the Lightroom's own circular-icon-button design (Delete + Download side by side) instead of the old plain text-button row.
+- Also improved upload error diagnostics further: real HTTP status code and response detail now surface in the failure message instead of a generic "Upload failed" fallback, since that's what Shawn actually saw on his last failed batch and it wasn't specific enough to diagnose.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+1. Delete a photo from the full-screen viewer, confirm the same "Delete this one?" dialog now appears (it previously skipped straight to deleting).
+2. Select multiple photos, confirm Delete now appears next to Download as a matching circular button, and bulk-deleting works with its own confirmation.
+3. If an upload ever fails again, check whether the banner now shows a specific status code/detail instead of generic "Upload failed."
+
+---
+
 ## Session: August 10, 2026 - Chased a Second Upload Failure Past the Storage-Path Fix
 **AI:** Claude
 

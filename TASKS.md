@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Delete Confirmation/Feedback, Bulk Delete, Select-Mode Redesign
+
+- [x] Team round: Lightroom's Delete button was skipping the existing confirm dialog entirely (grid thumbnail already had one); no feedback after any delete; select mode could only download, not delete; select-mode bar visually inconsistent with the Lightroom's own icon-button design.
+- [x] Lightroom Delete now routes through the same confirm dialog as the grid, instead of deleting instantly.
+- [x] "Photo deleted" / "N photos deleted" notice after any successful delete (single or bulk), reusing the existing notice-pill pattern.
+- [x] Bulk delete added to select mode with its own scaled confirm dialog.
+- [x] Select-mode bottom bar rebuilt with circular icon buttons (Delete + Download) matching the Lightroom's visual language.
+- [x] Upload error diagnostics improved further - real HTTP status/response detail instead of generic "Upload failed" text.
+- [ ] Shawn QA: delete confirmation + feedback, bulk delete, and the redesigned select-mode bar all work as expected.
+
 ## 2026-08-10 - Chased "Only 1 of N Uploads Succeeds" Past the Storage-Path Fix
 
 - [x] Confirmed via Vercel API that both prior upload fixes (single-file bug, storage-path collision) were genuinely live in production when Shawn hit this again - not a deploy-lag issue.
