@@ -418,7 +418,7 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
   if (!file) return { error: "No file" }
 
   const ext = file.name.split(".").pop() ?? "jpg"
-  const path = `${ctx.company.id}/menu/${Date.now()}.${ext}`
+  const path = `${ctx.company.id}/menu/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
   const arrayBuffer = await file.arrayBuffer()
 
   const { error } = await ctx.admin.storage

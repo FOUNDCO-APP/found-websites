@@ -86,7 +86,7 @@ export async function POST(req: Request) {
   if (!file) return NextResponse.json({ error: "No file" }, { status: 400 })
 
   const ext = safeExtension(file.name, file.type)
-  const path = `${company.id}/${Date.now()}.${ext}`
+  const path = `${company.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
   const arrayBuffer = await file.arrayBuffer()
   const { error: uploadError } = await admin.storage
