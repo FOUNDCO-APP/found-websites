@@ -8,7 +8,7 @@
 - [x] Bulk delete added to select mode with its own scaled confirm dialog.
 - [x] Select-mode bottom bar rebuilt with circular icon buttons (Delete + Download) matching the Lightroom's visual language.
 - [x] Upload error diagnostics improved further - real HTTP status/response detail instead of generic "Upload failed" text.
-- [ ] Shawn QA: delete confirmation + feedback, bulk delete, and the redesigned select-mode bar all work as expected.
+- [x] Shawn QA: delete confirmation + feedback, bulk delete, and the redesigned select-mode bar all work as expected. Confirmed 2026-08-10.
 
 ## 2026-08-10 - Chased "Only 1 of N Uploads Succeeds" Past the Storage-Path Fix
 
