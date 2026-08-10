@@ -10,6 +10,7 @@ import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
+import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type Photo = {
   id: string
@@ -129,7 +130,7 @@ function PhotosPageInner() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
+  const uploadStatus = useUploadStatus()
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null)
   const [showNewAlbum, setShowNewAlbum] = useState(false)
@@ -243,10 +244,9 @@ function PhotosPageInner() {
     const albumId = pendingAlbumIdRef.current
 
     setUploading(true)
-    setUploadProgress({ done: 0, total: files.length })
+    uploadStatus.start(files.length)
     setPhotoError(null)
     let uploadedCount = 0
-    let completedCount = 0
     try {
       // Bounded concurrency - a few uploads at once, not one-at-a-time and
       // not unlimited parallel, matching the same pattern used for the nav
@@ -259,19 +259,16 @@ function PhotosPageInner() {
             const newPhoto = await uploadDashboardMedia(file, { albumId })
             uploadedCount++
             setPhotos(prev => [{ ...newPhoto, album_id: albumId ?? null }, ...prev])
+            uploadStatus.complete(true)
           } catch {
             // Keep going - one bad file shouldn't stop the rest from uploading
-          } finally {
-            completedCount++
-            setUploadProgress({ done: completedCount, total: files.length })
+            uploadStatus.complete(false)
           }
         }
       }
       await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker))
 
-      if (uploadedCount === 0) {
-        setPhotoError("Upload failed - try again")
-      } else if (albumId) {
+      if (uploadedCount > 0 && albumId) {
         const target = albums.find(a => a.id === albumId)
         if (target) {
           setView("albums")
@@ -281,7 +278,6 @@ function PhotosPageInner() {
       pendingAlbumIdRef.current = null
     } finally {
       setUploading(false)
-      setUploadProgress(null)
       if (fileRef.current) fileRef.current.value = ""
     }
   }
@@ -815,36 +811,6 @@ function PhotosPageInner() {
           to { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
       `}</style>
-
-      {uploadProgress && (
-        <div style={{
-          position: "fixed",
-          left: "50%",
-          bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
-          transform: "translateX(-50%)",
-          zIndex: 200,
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "10px 20px",
-          borderRadius: 999,
-          backgroundColor: "rgba(8,10,9,0.92)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-        }}>
-          <div style={{
-            width: 14, height: 14, borderRadius: "50%",
-            border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN,
-            animation: "spin 0.7s linear infinite",
-          }} />
-          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
-            {uploadProgress.total > 1 ? `Uploading ${uploadProgress.done} of ${uploadProgress.total}...` : "Uploading..."}
-          </span>
-        </div>
-      )}
 
       {photoNotice && (
         <div style={{

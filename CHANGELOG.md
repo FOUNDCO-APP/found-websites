@@ -1,3 +1,28 @@
+## Session: August 10, 2026 - One Shared Upload-Status Banner for the Whole App
+**AI:** Claude
+
+### Found via Shawn's live testing
+Uploading 3 photos to a job worked correctly (progress counted up "1 of 3, 2 of 3" as expected) but only 1 photo actually landed - traced to a real race condition (see entry below). Separately, Shawn's design feedback: the progress indicator itself was too easy to miss - wanted something big and obvious, and pointed out this needs to work everywhere in the app (albums, other folder types, live camera capture), not just Jobs, since Found serves many kinds of businesses with their own photo-organization systems.
+
+### Team round (2026-08-10)
+Steve: the real issue is trust - uploads can silently fail, so success/failure has to be unambiguous. Jony: pushed back on a literal full-screen takeover - big and unmissable, but anchored in context, not a disconnected blocking screen. Craig: since failures are real, the UI needs three distinct states (uploading / done / needs attention), not a transient message that vanishes either way. Angela: must never trap someone mid-task - dismissing the indicator never cancels the underlying upload. Chris: has to be one single shared system wired into every upload entry point (nav FAB, job/album library upload, live camera capture) instead of three separate implementations.
+
+### Built
+- `UploadStatusProvider.tsx` (new) - a single React context + hook (`useUploadStatus`) mounted once at the dashboard layout level, so it's available on every dashboard page regardless of which screen or business type triggered the upload, and persists across navigation.
+- One shared banner: large bold typography, top-anchored, real progress bar, dismissible without canceling anything. Auto-dismisses ~2.6s after a fully clean success; stays on screen indefinitely if anything failed, with a plain-language message (distinguishes "some failed, the rest are saved" from "all failed").
+- Wired into all three real upload entry points: the nav FAB (`DashboardNav.tsx`), job/album library upload (`photos/page.tsx`), and live camera capture - photo, video, and annotated-photo saves (`CameraSheet.tsx`).
+- Retired three separate local progress pills/toasts that this replaces (each screen previously built its own).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+1. Upload 3+ photos to a Job from the library, confirm the big banner shows live progress and a clean "3 photos added" on success.
+2. Take a live camera photo, confirm the same banner appears (not the old small pill).
+3. Force a failure (e.g. airplane mode mid-upload) and confirm the banner stays up with a clear "didn't upload" message instead of disappearing.
+
+---
+
 ## Session: August 10, 2026 - Real Bug: Job Photo Upload Was Single-File-Only + Mojibake Sweep
 **AI:** Claude
 

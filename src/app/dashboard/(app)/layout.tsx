@@ -3,6 +3,7 @@ import { getCompany, hasMultipleCompanies, isAdminOverrideActive, getCompanyRole
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
+import UploadStatusProvider from "@/components/dashboard/UploadStatusProvider"
 import AccountMenu from "@/components/dashboard/AccountMenu"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
@@ -90,6 +91,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     : [{ leads: 0, orders: 0, reservations: 0, leadLatestAt: null, orderLatestAt: null, reservationLatestAt: null }, [] as string[]]
 
   return (
+    <UploadStatusProvider>
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
 
       {/* Main content shifts right of sidebar on desktop */}
@@ -205,5 +207,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
         }
       `}</style>
     </div>
+    </UploadStatusProvider>
   )
 }

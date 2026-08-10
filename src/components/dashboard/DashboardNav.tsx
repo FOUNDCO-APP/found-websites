@@ -9,6 +9,7 @@ import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSh
 import FoundWordmark from "@/components/FoundWordmark"
 import { DashboardToolIcon } from "@/components/dashboard/DashboardToolIcon"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type Tab = DashboardTool
 type Album = { id: string; name: string; cover_url: string | null }
@@ -81,17 +82,14 @@ export default function DashboardNav({
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null)
   const [newAlbumName, setNewAlbumName]     = useState("")
   const [creating, setCreating]             = useState(false)
-  const [uploading, setUploading]           = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [preparingUpload, setPreparingUpload] = useState(false)
-  const [toast, setToast]                   = useState<string | null>(null)
   const [pendingSegment, setPendingSegment] = useState<string | null>(null)
+  const uploadStatus = useUploadStatus()
 
   const newAlbumInputRef = useRef<HTMLInputElement>(null)
   const fileRef          = useRef<HTMLInputElement>(null)
   const uploadRef        = useRef<HTMLInputElement>(null)
   const pendingAlbumRef  = useRef<string | null>(null)
-  const toastTimer       = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     fetch(`${prefix}/api/albums`)
@@ -302,18 +300,11 @@ export default function DashboardNav({
     window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
       detail: { photo: { ...photo, album_id: albumId ?? null } },
     }))
-    showToastMsg(albumId ? `Saved to ${albums.find(a => a.id === albumId)?.name ?? "album"}` : "Photo saved")
   }
 
   function handleCameraClose() {
     pendingAlbumRef.current = null
     setShowCamera(false)
-  }
-
-  function showToastMsg(msg: string) {
-    if (toastTimer.current) clearTimeout(toastTimer.current)
-    setToast(msg)
-    toastTimer.current = setTimeout(() => setToast(null), 3000)
   }
 
   async function handleNavUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -326,15 +317,10 @@ export default function DashboardNav({
     // Native pickers don't let a web app cap selection up front, so trim
     // after the fact instead of erroring out - keeps a single batch fast
     // enough to finish before someone loses signal or walks away.
-    const trimmed = picked.length > MAX_UPLOAD_BATCH
     const files = picked.slice(0, MAX_UPLOAD_BATCH)
 
-    setUploading(true)
-    setUploadProgress({ done: 0, total: files.length })
+    uploadStatus.start(files.length)
     const albumId = pendingAlbumRef.current
-    let uploadedCount = 0
-    let completedCount = 0
-    let lastWasVideo = false
     try {
       // Bounded concurrency, not one-at-a-time and not unlimited parallel -
       // full sequential meant N files was N full round trips end to end;
@@ -346,8 +332,6 @@ export default function DashboardNav({
           const file = files[nextIndex++]
           try {
             const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
-            uploadedCount++
-            lastWasVideo = photo.media_type === "video"
             if (albumId) {
               setAlbums(prev => prev.map(a =>
                 a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
@@ -356,31 +340,17 @@ export default function DashboardNav({
             window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
               detail: { photo: { ...photo, album_id: albumId ?? null } },
             }))
+            uploadStatus.complete(true)
           } catch {
             // Keep going - one bad file shouldn't stop the rest from uploading
-          } finally {
-            completedCount++
-            setUploadProgress({ done: completedCount, total: files.length })
+            uploadStatus.complete(false)
           }
         }
       }
       await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker))
-
-      const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
-      if (uploadedCount === 0) {
-        showToastMsg("Upload failed - try again")
-      } else {
-        const label = uploadedCount === 1
-          ? (lastWasVideo ? "Video saved" : "Photo saved")
-          : `${uploadedCount} photos saved`
-        const trimNote = trimmed ? ` - add the rest in a second batch` : ""
-        showToastMsg((albumName ? `${label} to ${albumName}` : label) + trimNote)
-      }
     } finally {
       pendingAlbumRef.current = null
       e.target.value = ""
-      setUploading(false)
-      setUploadProgress(null)
     }
   }
 
@@ -521,7 +491,7 @@ export default function DashboardNav({
           that gap, entirely outside this page, so this can only ever be
           a heuristic (window focus returning), not a guarantee. Replaced
           by the real progress pill the instant actual file data arrives. */}
-      {preparingUpload && !uploadProgress && (
+      {preparingUpload && (
         <div style={{
           position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
           zIndex: 200,
@@ -543,59 +513,6 @@ export default function DashboardNav({
           <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
             Preparing...
           </span>
-        </div>
-      )}
-
-      {/* Real progress instead of a bare "uploading" spinner with no count.
-          Shown for every upload, not just multi-file batches - a single
-          video can take several real seconds (no compression on video
-          yet, unlike photos), and silence during that wait reads as
-          frozen, not "the end toast will cover it." Confirmed live by
-          Shawn 2026-08-09: a single 5-second video took ~5-6s with zero
-          visible feedback before this was widened. */}
-      {uploadProgress && (
-        <div style={{
-          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
-          zIndex: 200,
-          backgroundColor: "rgba(8,10,9,0.92)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 100,
-          padding: "10px 20px",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          display: "flex", alignItems: "center", gap: 8,
-          animation: "pickerFade 0.2s ease",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-        }}>
-          <div style={{
-            width: 14, height: 14, borderRadius: "50%",
-            border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN,
-            animation: "nav-spin 0.7s linear infinite",
-          }} />
-          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
-            {uploadProgress.total > 1 ? `Uploading ${uploadProgress.done} of ${uploadProgress.total}...` : "Uploading..."}
-          </span>
-        </div>
-      )}
-
-      {toast && (
-        <div style={{
-          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
-          zIndex: 200,
-          backgroundColor: "rgba(8,10,9,0.92)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 100,
-          padding: "10px 20px",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          display: "flex", alignItems: "center", gap: 8,
-          animation: "pickerFade 0.2s ease",
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5"/>
-          </svg>
-          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>{toast}</span>
         </div>
       )}
 

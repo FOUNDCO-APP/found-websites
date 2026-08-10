@@ -1,5 +1,35 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-10 - Real Bug: Silent Photo Loss From Concurrent Upload Path Collisions
+
+### Where We Left Off
+Shawn live-tested the upload fix from the entry below and reported the progress indicator itself worked ("1 of 3, 2 of 3") but only 1 photo actually landed afterward - also gave direct design feedback that the indicator was too easy to miss, and that it needs to work app-wide (any business's albums/folders, plus live camera capture), not just Jobs.
+
+### Root Cause Found
+Checked the live database directly instead of guessing - confirmed only 1 of 3 photos actually saved. The multipart photo-upload path (`/api/photos` route.ts) built its storage filename from `Date.now()` alone with no random component, unlike the signed-upload (video) path which already had one. Once uploads became concurrent - first from yesterday's nav-upload fix, then today's job-detail fix - two files landing in the same millisecond got an identical storage path; `upsert: false` made the second/third request fail outright, and the client silently swallowed the error. Also found and fixed the one other `upsert:false` upload path with the same bug class (menu item photos); left the two `upsert:true` logo uploads alone since a collision there just overwrites rather than silently drops data.
+
+### What Changed (this bug)
+- Added the same random-suffix pattern already used elsewhere to `photos/route.ts` and the menu-photo upload action.
+
+### Team Round: Upload Status UX (2026-08-10)
+Shawn's ask: something big, obvious, "right in my face," as the default for every upload surface including the camera - and explicitly not scoped to Jobs, since Found serves many business types with their own photo/folder systems. Team: Steve (trust - failures must be unambiguous), Jony (big but anchored in context, not a full-screen block), Craig (three real states: uploading/done/needs attention, since failures are now known to be real), Angela (never traps someone mid-task - dismissing never cancels the upload), Chris (one shared system across every entry point, not three separate ones).
+
+### What Changed (design work)
+- New `UploadStatusProvider.tsx` - a single context/hook mounted once at the dashboard layout level, so every dashboard page and business type gets the same banner automatically, and it persists across navigation.
+- Replaced three separate local progress pills/toasts (nav FAB, job/album upload, and DashboardNav's upload toast messages) with this one shared banner.
+- Wired into all three real upload entry points, including live camera capture (photo/video/annotated) in `CameraSheet.tsx` - not just library uploads.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Not yet re-tested live by Shawn.
+
+### Test Next
+- Upload 3+ photos to a Job, confirm the big banner shows live progress and lands on a clean success state.
+- Take a live camera photo, confirm the same banner appears (not the old small pill).
+- Force a failure (e.g. airplane mode mid-upload) and confirm the banner stays up with a clear message instead of disappearing.
+
+---
+
 ## 2026-08-10 - Real Bug: Job Photo Upload Was Single-File-Only + Mojibake Sweep (`79b8fee`)
 
 ### Where We Left Off

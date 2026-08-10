@@ -3,6 +3,7 @@
 import React, { useRef, useState, useEffect } from "react"
 import AnnotationEditor from "@/components/dashboard/AnnotationEditor"
 import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type AspectRatio = "16:9" | "4:3" | "1:1"
 type CameraMode = "photo" | "video"
@@ -41,6 +42,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
   onUploaded: (photo: UploadedPhoto) => void
   pendingAlbumId?: string | null
 }) {
+  const uploadStatus    = useUploadStatus()
   const videoRef        = useRef<HTMLVideoElement>(null)
   const canvasRef       = useRef<HTMLCanvasElement>(null)
   const streamRef       = useRef<MediaStream | null>(null)
@@ -190,13 +192,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
       const form = new FormData()
       form.append("file", blob, `photo-${id}.jpg`)
       if (pendingAlbumId) form.append("album_id", pendingAlbumId)
+      uploadStatus.start(1)
       try {
         const photo = await uploadDashboardMedia(blob, { fileName: `photo-${id}.jpg`, albumId: pendingAlbumId ?? null })
         onUploaded(photo)
         setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+        uploadStatus.complete(true)
       } catch (uploadError) {
         setError(uploadError instanceof Error ? uploadError.message : "Photo upload failed")
         setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
+        uploadStatus.complete(false)
       }
     }, "image/jpeg", 0.92)
   }
@@ -233,13 +238,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     const form = new FormData()
     form.append("file", blob, `video-${id}.${ext}`)
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
+    uploadStatus.start(1)
     try {
       const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
       onUploaded(photo)
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+      uploadStatus.complete(true)
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Video upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
+      uploadStatus.complete(false)
     }
   }
 
@@ -252,13 +260,16 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
     const form = new FormData()
     form.append("file", blob, `annotated-${id}.jpg`)
     if (pendingAlbumId) form.append("album_id", pendingAlbumId)
+    uploadStatus.start(1)
     try {
       const photo = await uploadDashboardMedia(blob, { fileName: `annotated-${id}.jpg`, albumId: pendingAlbumId ?? null })
       onUploaded(photo)
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false, photoId: photo.id, storagePath: photo.storage_path } : c))
+      uploadStatus.complete(true)
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : "Annotated photo upload failed")
       setCaptures(prev => prev.map(c => c.id === id ? { ...c, uploading: false } : c))
+      uploadStatus.complete(false)
     }
   }
 

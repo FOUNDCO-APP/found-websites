@@ -1,5 +1,13 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Shared Upload-Status Banner (App-Wide, All Business Types)
+
+- [x] Team round: big/unmissable but not a full-screen block, three real states (uploading/done/needs attention), never traps mid-task, one shared system not three separate ones.
+- [x] `UploadStatusProvider.tsx` - context + hook, mounted once at the dashboard layout level so every business type/folder system (Jobs, Albums, whatever a given industry calls it) gets the same banner automatically.
+- [x] Wired into nav FAB upload, job/album library upload, and live camera capture (photo/video/annotated) - the 3 real upload entry points.
+- [x] Replaces the old small per-screen progress pills (2026-08-09 entry below) and DashboardNav's upload toasts.
+- [ ] Shawn QA: banner shows for library uploads, camera shots, and clearly communicates partial/full failure without disappearing.
+
 ## 2026-08-09 - Real Billing Bug: Webhook Silently Reset Plan to Starter
 
 - [x] Root-caused Taco Shop showing Starter despite active paid Business subscription.
