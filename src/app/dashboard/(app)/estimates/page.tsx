@@ -60,6 +60,15 @@ type Estimate = {
   created_at: string
   updated_at?: string | null
   estimate_line_items?: LineItem[]
+  job_id?: string | null
+}
+
+type JobAlbum = {
+  id: string
+  name: string
+  slug: string
+  album_type?: string | null
+  customer_name?: string | null
 }
 
 type EstimateFilter = "open" | "needs_payment" | "paid" | "all"
@@ -645,6 +654,44 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
   const [newCat, setNewCat] = useState("labor")
   const [pricingMode, setPricingMode] = useState<"flat" | "rate">("flat")
   const [addingItem, setAddingItem] = useState(true)
+  const [jobs, setJobs] = useState<JobAlbum[]>([])
+  const [jobId, setJobId] = useState<string | null>(null)
+  const [showJobPicker, setShowJobPicker] = useState(false)
+  const [creatingJob, setCreatingJob] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/albums").then(r => r.json()).then(d => {
+      setJobs(((d.albums ?? []) as JobAlbum[]).filter(a => a.album_type === "job"))
+    }).catch(() => {})
+  }, [])
+
+  async function handleCreateJob() {
+    if (creatingJob) return
+    setCreatingJob(true)
+    try {
+      const name = [clientFirst.trim(), clientLast.trim()].filter(Boolean).join(" ") || "New Job"
+      const res = await fetch("/api/albums", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          album_type: "job",
+          customer_name: name,
+          customer_phone: clientPhone.trim() || null,
+          customer_email: clientEmail.trim() || null,
+          service_address: address.trim() || null,
+        }),
+      })
+      const data = await res.json()
+      if (data.album) {
+        setJobs(prev => [data.album, ...prev])
+        setJobId(data.album.id)
+        setShowJobPicker(false)
+      }
+    } finally {
+      setCreatingJob(false)
+    }
+  }
 
   const subtotal = lineItems.reduce((s, i) => s + i.quantity * i.unit_price, 0)
   const taxAmt = subtotal * taxRate
@@ -831,6 +878,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
         property_address: address,
         line_items: lineItems,
         tax_rate: taxRate,
+        job_id: jobId,
       })
     } catch {
       setSaveError("Could not save. Check the customer name and try again.")
@@ -917,6 +965,44 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
         <section ref={el => { sectionRefs.current[1] = el }} style={sectionBlockStyle}>
           {sectionAnchor("2", "Job")}
           <PlacesInput value={address} onChange={setAddress} locationBias={locationBias} style={fieldStyle} />
+
+          <div style={{ marginTop: 14 }}>
+            {jobId ? (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: `${SIGNAL_GREEN}14`, border: `1px solid ${SIGNAL_GREEN}40` }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN, textTransform: "uppercase", letterSpacing: "0.06em" }}>Linked to Job</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {jobs.find(j => j.id === jobId)?.name ?? "Job"}
+                  </div>
+                </div>
+                <button onClick={() => setJobId(null)} style={{ flexShrink: 0, background: "none", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 10, padding: "7px 12px", color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  Unlink
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowJobPicker(v => !v)} style={{ width: "100%", padding: "12px 14px", borderRadius: 14, border: "1.5px dashed rgba(255,255,255,0.18)", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontSize: 14, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
+                + Link to a Job
+              </button>
+            )}
+
+            {showJobPicker && !jobId && (
+              <div style={{ marginTop: 8, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", overflow: "hidden" }}>
+                <button onClick={handleCreateJob} disabled={creatingJob} style={{ width: "100%", textAlign: "left", padding: "12px 14px", background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)", color: SIGNAL_GREEN, fontSize: 14, fontWeight: 750, cursor: creatingJob ? "default" : "pointer" }}>
+                  {creatingJob ? "Creating..." : `+ Create new Job${clientFirst.trim() ? ` for ${clientFirst.trim()}` : ""}`}
+                </button>
+                {jobs.length === 0 ? (
+                  <div style={{ padding: "12px 14px", color: "rgba(255,255,255,0.35)", fontSize: 13 }}>No existing Jobs yet</div>
+                ) : jobs.map(job => (
+                  <button key={job.id} onClick={() => { setJobId(job.id); setShowJobPicker(false) }} style={{ width: "100%", textAlign: "left", padding: "12px 14px", background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>{job.name}</div>
+                    {job.customer_name && job.customer_name !== job.name && (
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>{job.customer_name}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         <hr style={dividerStyle} />
@@ -1138,6 +1224,55 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [newCat, setNewCat] = useState("labor")
   const [fullEstimate, setFullEstimate] = useState<Estimate | null>(null)
   const hasFetched = useRef(false)
+  const [jobs, setJobs] = useState<JobAlbum[]>([])
+  const [showJobPicker, setShowJobPicker] = useState(false)
+  const [attachingJob, setAttachingJob] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/albums").then(r => r.json()).then(d => {
+      setJobs(((d.albums ?? []) as JobAlbum[]).filter(a => a.album_type === "job"))
+    }).catch(() => {})
+  }, [])
+
+  async function attachJob(jobIdToAttach: string | null) {
+    setAttachingJob(true)
+    try {
+      await onUpdate({ job_id: jobIdToAttach })
+      setFullEstimate(prev => prev ? { ...prev, job_id: jobIdToAttach } : null)
+      setShowJobPicker(false)
+    } finally {
+      setAttachingJob(false)
+    }
+  }
+
+  async function handleCreateAndAttachJob() {
+    if (attachingJob) return
+    setAttachingJob(true)
+    try {
+      const name = est.client_name || "New Job"
+      const res = await fetch("/api/albums", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          album_type: "job",
+          customer_name: name,
+          customer_phone: est.client_phone || null,
+          customer_email: est.client_email || null,
+          service_address: est.property_address || null,
+        }),
+      })
+      const data = await res.json()
+      if (data.album) {
+        setJobs(prev => [data.album, ...prev])
+        await onUpdate({ job_id: data.album.id })
+        setFullEstimate(prev => prev ? { ...prev, job_id: data.album.id } : null)
+        setShowJobPicker(false)
+      }
+    } finally {
+      setAttachingJob(false)
+    }
+  }
 
   useEffect(() => {
     // Lock body scroll while sheet is open
@@ -1441,6 +1576,46 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
                   </svg>
                   <a href={`mailto:${est.client_email}`} style={{ color: SIGNAL_GREEN, fontSize: 14, textDecoration: "none" }}>{est.client_email}</a>
                 </div>
+              )}
+            </div>
+
+            {/* Job link */}
+            <div style={{ marginBottom: 20 }}>
+              {est.job_id ? (
+                <a href="/photos?tab=jobs" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: `${SIGNAL_GREEN}14`, border: `1px solid ${SIGNAL_GREEN}40` }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN, textTransform: "uppercase", letterSpacing: "0.06em" }}>Linked to Job</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {jobs.find(j => j.id === est.job_id)?.name ?? "View job photos"}
+                    </div>
+                  </div>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </a>
+              ) : (
+                <>
+                  <button onClick={() => setShowJobPicker(v => !v)} style={{ width: "100%", padding: "12px 14px", borderRadius: 14, border: "1.5px dashed rgba(255,255,255,0.18)", backgroundColor: "transparent", color: "rgba(255,255,255,0.55)", fontSize: 14, fontWeight: 700, cursor: "pointer", textAlign: "left" }}>
+                    + Attach to a Job
+                  </button>
+                  {showJobPicker && (
+                    <div style={{ marginTop: 8, borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)", overflow: "hidden" }}>
+                      <button onClick={handleCreateAndAttachJob} disabled={attachingJob} style={{ width: "100%", textAlign: "left", padding: "12px 14px", background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)", color: SIGNAL_GREEN, fontSize: 14, fontWeight: 750, cursor: attachingJob ? "default" : "pointer" }}>
+                        {attachingJob ? "Working..." : `+ Create new Job for ${est.client_name}`}
+                      </button>
+                      {jobs.length === 0 ? (
+                        <div style={{ padding: "12px 14px", color: "rgba(255,255,255,0.35)", fontSize: 13 }}>No existing Jobs yet</div>
+                      ) : jobs.map(job => (
+                        <button key={job.id} onClick={() => attachJob(job.id)} disabled={attachingJob} style={{ width: "100%", textAlign: "left", padding: "12px 14px", background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: attachingJob ? "default" : "pointer" }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>{job.name}</div>
+                          {job.customer_name && job.customer_name !== job.name && (
+                            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>{job.customer_name}</div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

@@ -34,7 +34,7 @@ export async function PATCH(req: Request, { params }: Params) {
   const { company } = guard
 
   const body = await req.json()
-  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, line_items, tax_rate, sent_at, accepted_at } = body
+  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, line_items, tax_rate, sent_at, accepted_at, job_id } = body
 
   const { admin } = guard
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
@@ -53,6 +53,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (payment_link_sent_at !== undefined) updates.payment_link_sent_at = payment_link_sent_at
   if (sent_at !== undefined) updates.sent_at = sent_at
   if (accepted_at !== undefined) updates.accepted_at = accepted_at
+  if (job_id !== undefined) updates.job_id = job_id || null
 
   if (line_items !== undefined) {
     const items = line_items.map((item: Record<string, unknown>, i: number) => ({
