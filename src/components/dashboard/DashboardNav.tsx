@@ -14,6 +14,13 @@ type Tab = DashboardTool
 type Album = { id: string; name: string; cover_url: string | null }
 type BadgeBucket = "leads" | "orders" | "reservations"
 
+// Team-approved 2026-08-09: a real cap (native pickers won't enforce one
+// up front) plus bounded concurrency instead of one-at-a-time or
+// unlimited-parallel uploads. Applies everywhere this handler is used -
+// Photos and Jobs share this exact upload path.
+const MAX_UPLOAD_BATCH = 12
+const UPLOAD_CONCURRENCY = 3
+
 
 export default function DashboardNav({
   companyName,
@@ -75,6 +82,7 @@ export default function DashboardNav({
   const [newAlbumName, setNewAlbumName]     = useState("")
   const [creating, setCreating]             = useState(false)
   const [uploading, setUploading]           = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [toast, setToast]                   = useState<string | null>(null)
   const [pendingSegment, setPendingSegment] = useState<string | null>(null)
 
@@ -287,34 +295,52 @@ export default function DashboardNav({
   }
 
   async function handleNavUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length === 0) { e.target.value = ""; return }
+    const picked = Array.from(e.target.files ?? [])
+    if (picked.length === 0) { e.target.value = ""; return }
+
+    // Native pickers don't let a web app cap selection up front, so trim
+    // after the fact instead of erroring out - keeps a single batch fast
+    // enough to finish before someone loses signal or walks away.
+    const trimmed = picked.length > MAX_UPLOAD_BATCH
+    const files = picked.slice(0, MAX_UPLOAD_BATCH)
+
     setUploading(true)
+    setUploadProgress({ done: 0, total: files.length })
     const albumId = pendingAlbumRef.current
     let uploadedCount = 0
+    let completedCount = 0
     let lastWasVideo = false
     try {
-      // One request per file, in sequence - keeps album cover-photo
-      // assignment and upload feedback predictable even when several
-      // photos are picked at once, which the file input already allowed
-      // but this handler used to silently ignore past the first file.
-      for (const file of files) {
-        try {
-          const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
-          uploadedCount++
-          lastWasVideo = photo.media_type === "video"
-          if (albumId) {
-            setAlbums(prev => prev.map(a =>
-              a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
-            ))
+      // Bounded concurrency, not one-at-a-time and not unlimited parallel -
+      // full sequential meant N files was N full round trips end to end;
+      // unlimited parallel can choke a weak job-site connection instead of
+      // speeding it up. A few at once is the actual middle ground.
+      let nextIndex = 0
+      async function worker() {
+        while (nextIndex < files.length) {
+          const file = files[nextIndex++]
+          try {
+            const photo = await uploadDashboardMedia(file, { albumId, endpoint: `${prefix}/api/photos` })
+            uploadedCount++
+            lastWasVideo = photo.media_type === "video"
+            if (albumId) {
+              setAlbums(prev => prev.map(a =>
+                a.id === albumId && !a.cover_url ? { ...a, cover_url: photo.url } : a
+              ))
+            }
+            window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
+              detail: { photo: { ...photo, album_id: albumId ?? null } },
+            }))
+          } catch {
+            // Keep going - one bad file shouldn't stop the rest from uploading
+          } finally {
+            completedCount++
+            setUploadProgress({ done: completedCount, total: files.length })
           }
-          window.dispatchEvent(new CustomEvent("found:photo-uploaded", {
-            detail: { photo: { ...photo, album_id: albumId ?? null } },
-          }))
-        } catch {
-          // Keep going - one bad file shouldn't stop the rest from uploading
         }
       }
+      await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker))
+
       const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
       if (uploadedCount === 0) {
         showToastMsg("Upload failed â€” try again")
@@ -322,12 +348,14 @@ export default function DashboardNav({
         const label = uploadedCount === 1
           ? (lastWasVideo ? "Video saved" : "Photo saved")
           : `${uploadedCount} photos saved`
-        showToastMsg(albumName ? `${label} to ${albumName}` : label)
+        const trimNote = trimmed ? ` - add the rest in a second batch` : ""
+        showToastMsg((albumName ? `${label} to ${albumName}` : label) + trimNote)
       }
     } finally {
       pendingAlbumRef.current = null
       e.target.value = ""
       setUploading(false)
+      setUploadProgress(null)
     }
   }
 
@@ -462,6 +490,34 @@ export default function DashboardNav({
       />
 
       {/* â”€â”€ Toast â”€â”€ */}
+      {/* Real progress instead of a bare "uploading" spinner with no count -
+          only shown for multi-file batches, a single upload's end toast is
+          feedback enough on its own. */}
+      {uploadProgress && uploadProgress.total > 1 && (
+        <div style={{
+          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+          zIndex: 200,
+          backgroundColor: "rgba(8,10,9,0.92)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 100,
+          padding: "10px 20px",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          display: "flex", alignItems: "center", gap: 8,
+          animation: "pickerFade 0.2s ease",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 14, height: 14, borderRadius: "50%",
+            border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN,
+            animation: "nav-spin 0.7s linear infinite",
+          }} />
+          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
+            Uploading {uploadProgress.done} of {uploadProgress.total}...
+          </span>
+        </div>
+      )}
+
       {toast && (
         <div style={{
           position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
