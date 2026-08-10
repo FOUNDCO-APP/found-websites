@@ -1,3 +1,25 @@
+## Session: August 10, 2026 - Test-Account Discounts Were Getting Wasted on Proration Invoices
+**AI:** Claude
+
+### Built
+- Root-caused why Taco Shop showed $69/mo billed after its Starter -> Business upgrade, despite having used a promo code. The existing test-discount coupons (`found_1_first_invoice`, `found_business_1_first_invoice_68_off`) are `duration: once` - they discount whichever Stripe invoice comes next, no matter what it is. The upgrade happened mid-cycle, so the next invoice was a near-$0 proration adjustment; the discount got consumed there instead of a real bill, leaving the subscription at full price afterward. Confirmed against live Stripe invoice and subscription data (not assumed).
+- Built new `duration: forever` coupons scoped to internal test accounts only, leaving the real-customer once-off onboarding coupons untouched: `found_1_forever_business` ($68 off Business/mo) and `found_1_forever_pro` ($38 off Pro/mo).
+- Created promotion code `F0UND1138` -> `found_1_forever_pro`, fulfilling the original ask for a Pro-plan test code that lands at $1.
+- Applied `found_1_forever_business` directly to Taco Shop's live subscription; confirmed the discount is attached with no end date.
+
+### Final resolution - practice accounts moved off Stripe billing entirely
+- Shawn clarified the underlying intent: test coupons were covering two different needs that deserved different tools - his own practice accounts vs. real network/referral/trade promos.
+- Practice accounts don't need a discounted Stripe subscription at all - `is_comp` (`toggleComp()`, already built in `admin/businesses/actions.ts`) marks an account fully active in the app's own database, independent of Stripe.
+- Canceled 11 real live Stripe subscriptions (Audio Pro, Hats, Hvac, Lucky, music, Rosa's Mexican Food, T-Shirts, Taco Shop, Tacos x2, Taquero Mucho) and set `is_comp: true` on all 32 practice accounts with a stripe_customer_id (RC Bicycles excluded, still billing normally). Verified against the database after the run.
+- Nereidas salón was previously assumed to be a real paying customer in older docs; Shawn confirmed 2026-08-10 it's actually his own practice account and included it in the comp batch - corrects that stale assumption going forward.
+- The real `once` onboarding coupons and the new `forever` coupons (`found_1_forever_business`/`found_1_forever_pro`, promo `F0UND1138`) are untouched and reserved for genuine prospects/trade deals, not practice accounts.
+
+### Test next
+1. Spot-check a comped account (e.g. Taco Shop, Hvac) still shows full plan access with no billing prompts.
+2. Confirm RC Bicycles is still billing normally as expected.
+
+---
+
 ## Session: August 9, 2026 - Real Billing Bug: Webhook Silently Reset Plan to Starter
 **AI:** Claude
 

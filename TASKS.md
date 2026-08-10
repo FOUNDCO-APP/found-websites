@@ -11,7 +11,22 @@
 - [ ] Shawn QA: Taco Shop dashboard now shows Found Business correctly.
 - [ ] Shawn QA: fresh real plan upgrade on a test account sticks correctly (no silent reset).
 - [ ] Follow-up, not yet investigated: 22 companies have a stripe_customer_id that doesn't exist in live Stripe - likely test-mode ids from before live billing was wired up mid-July. Needs its own look.
-- [ ] Still pending: F0UND1138 promo code ($38 off Pro = $1) - not yet created, needs the coupon-write permission on the new restricted key exercised.
+
+## 2026-08-10 - Test-Account Discounts: "Once" Coupons Were Getting Wasted on Proration Invoices
+
+- [x] Root-caused why Taco Shop showed $69/mo after upgrading Starter -> Business: the existing `found_1_first_invoice` / `found_business_1_first_invoice_68_off` coupons are `duration: once`, which discounts whichever Stripe invoice comes next. Because the upgrade happened mid-cycle, the "next invoice" was a $0 proration adjustment, not a real bill - the discount got spent there instead, leaving the subscription at full price going forward. Confirmed live via Stripe invoice/subscription data, not guessed.
+- [x] Built new `duration: forever` coupons for internal test accounts, separate from the real-customer once-off onboarding coupons (left untouched): `found_1_forever_business` ($68 off Business, forever), `found_1_forever_pro` ($38 off Pro, forever).
+- [x] Created promo code `F0UND1138` -> `found_1_forever_pro` (max_redemptions 25), satisfies the original Pro-plan $1 test-discount request.
+- [x] Applied `found_1_forever_business` directly to Taco Shop's live subscription, then superseded by the decision below - see final resolution.
+
+### Final resolution: practice accounts don't need coupons at all - use `is_comp`
+- [x] Shawn clarified test coupons served two different purposes that need different tools: (1) Shawn's own practice accounts testing the product, (2) real promo codes for network/referral/trade prospects.
+- [x] For (1): practice accounts should never be on real Stripe billing in the first place - `is_comp` (`toggleComp()` in `admin/businesses/actions.ts`) already exists for exactly this and is Stripe-independent.
+- [x] Canceled 11 real live Stripe subscriptions: Audio Pro, Hats, Hvac, Lucky, music, Rosa's Mexican Food, T-Shirts, Taco Shop, Tacos (x2), Taquero Mucho.
+- [x] Set `is_comp: true` + `subscription_status: 'active'` on all 32 practice accounts (everyone with a stripe_customer_id except RC Bicycles, left billing normally). Verified in DB after the run.
+- [x] Corrected a stale assumption: Nereidas salón was previously thought to be a real customer; Shawn confirmed 2026-08-10 it's actually his own account too, now comped.
+- [x] For (2): kept the real `once` coupons untouched for genuine signups; the new `forever` coupons (`found_1_forever_business`, `found_1_forever_pro` / promo `F0UND1138`) stay live and reserved for real network/trade deals, not practice accounts.
+- [ ] Shawn QA: spot-check a couple of comped accounts (Taco Shop, Hvac) still show full plan access with no billing prompts.
 
 ---
 
