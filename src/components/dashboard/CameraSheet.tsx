@@ -639,7 +639,7 @@ export default function CameraSheet({ onClose, onUploaded, pendingAlbumId }: {
                     Delete this {cap.isVideo ? "video" : "photo"}?
                   </p>
                   <p style={{ margin: "0 0 28px", fontSize: 14, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
-                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading â€” it will be discarded."}
+                    {cap.photoId ? "This will permanently remove it from your account." : "This hasn't finished uploading - it will be discarded."}
                   </p>
                   <div style={{ display: "flex", gap: 12 }}>
                     <button

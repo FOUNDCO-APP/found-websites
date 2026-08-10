@@ -1,3 +1,26 @@
+## Session: August 10, 2026 - Real Bug: Job Photo Upload Was Single-File-Only + Mojibake Sweep
+**AI:** Claude
+
+### Found via Shawn's live testing
+Testing a new HVAC job on his phone: the "Create" button showed garbled characters, and adding photos right after creating a job only allowed picking one photo at a time (iOS opened a single-photo preview instead of the multi-select grid), and confirming that selection did nothing - silently returned to the Jobs list with no photo added.
+
+### Root causes
+- The job-detail "Add photo -> Upload from Library" path (`photos/page.tsx`) is a separate, older upload entry point from the one fixed on 2026-08-09 - that earlier fix only touched the global nav FAB's upload flow (`DashboardNav.tsx`), not this one. This input had no `multiple` attribute and `handleUpload` only ever read `e.target.files?.[0]`, silently dropping everything else - that's exactly what produces iOS's single-photo preview instead of a multi-select grid, and a silent no-op when someone tries to pick more than one.
+- The "Create" button text was literal mojibake in the source (`"Creatingâ€¦"` instead of "Creating...") - a UTF-8-as-Latin1 encoding corruption. Swept the whole `src/` tree for the same corruption pattern and found 4 more real user-facing instances beyond the one Shawn hit (a nav upload-failure toast, a job-name placeholder and Create button in the separate nav FAB quick-create flow, a camera delete-confirmation dialog, and a Pro-upgrade feature bullet). Left comment-only instances alone (harmless, invisible to users).
+
+### Fixed
+- `photos/page.tsx`: `handleUpload` rewritten to accept multiple files with the same bounded-concurrency pattern (`MAX_UPLOAD_BATCH`/`UPLOAD_CONCURRENCY`) already proven in the nav upload fix, plus a matching progress pill. File input now has `multiple`.
+- All 5 real mojibake instances replaced with plain ASCII across `photos/page.tsx`, `DashboardNav.tsx`, `CameraSheet.tsx`.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+1. Create a new HVAC job, confirm the "Create" button text renders clean.
+2. Immediately add photos from Library, select several at once, confirm the multi-select grid appears (not a single-photo preview) and all selected photos actually upload with a progress pill.
+
+---
+
 ## Session: August 10, 2026 - Jobs Round 1: Notes, Photo Notes, Cover Photo, Address Privacy
 **AI:** Claude
 

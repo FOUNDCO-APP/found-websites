@@ -41,6 +41,9 @@ type Album = {
   created_at: string
 }
 
+const MAX_UPLOAD_BATCH = 12
+const UPLOAD_CONCURRENCY = 3
+
 type View = "all" | "website" | "albums"
 type PhotoFilter = "all" | "favorites" | "unused"
 type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" }
@@ -126,6 +129,7 @@ function PhotosPageInner() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
   const [photoError, setPhotoError] = useState<string | null>(null)
   const [activeAlbum, setActiveAlbum] = useState<Album | null>(null)
   const [showNewAlbum, setShowNewAlbum] = useState(false)
@@ -230,15 +234,44 @@ function PhotosPageInner() {
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const picked = Array.from(e.target.files ?? [])
+    if (picked.length === 0) { if (fileRef.current) fileRef.current.value = ""; return }
+
+    // Native pickers don't let a web app cap selection up front, so trim
+    // after the fact instead of erroring out.
+    const files = picked.slice(0, MAX_UPLOAD_BATCH)
     const albumId = pendingAlbumIdRef.current
+
     setUploading(true)
+    setUploadProgress({ done: 0, total: files.length })
     setPhotoError(null)
+    let uploadedCount = 0
+    let completedCount = 0
     try {
-      const newPhoto = await uploadDashboardMedia(file, { albumId })
-      setPhotos(prev => [{ ...newPhoto, album_id: albumId ?? null }, ...prev])
-      if (albumId) {
+      // Bounded concurrency - a few uploads at once, not one-at-a-time and
+      // not unlimited parallel, matching the same pattern used for the nav
+      // upload flow.
+      let nextIndex = 0
+      async function worker() {
+        while (nextIndex < files.length) {
+          const file = files[nextIndex++]
+          try {
+            const newPhoto = await uploadDashboardMedia(file, { albumId })
+            uploadedCount++
+            setPhotos(prev => [{ ...newPhoto, album_id: albumId ?? null }, ...prev])
+          } catch {
+            // Keep going - one bad file shouldn't stop the rest from uploading
+          } finally {
+            completedCount++
+            setUploadProgress({ done: completedCount, total: files.length })
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(UPLOAD_CONCURRENCY, files.length) }, worker))
+
+      if (uploadedCount === 0) {
+        setPhotoError("Upload failed - try again")
+      } else if (albumId) {
         const target = albums.find(a => a.id === albumId)
         if (target) {
           setView("albums")
@@ -246,10 +279,9 @@ function PhotosPageInner() {
         }
       }
       pendingAlbumIdRef.current = null
-    } catch (error) {
-      setPhotoError(error instanceof Error ? error.message : "Upload failed")
     } finally {
       setUploading(false)
+      setUploadProgress(null)
       if (fileRef.current) fileRef.current.value = ""
     }
   }
@@ -697,7 +729,7 @@ function PhotosPageInner() {
           </div>
         </div>
       )}
-      <input ref={fileRef} type="file" accept="image/*,video/*" onChange={handleUpload} style={{ display: "none" }} />
+      <input ref={fileRef} type="file" accept="image/*,video/*" multiple onChange={handleUpload} style={{ display: "none" }} />
 
       {/* Tabs â€” hidden when inside an album */}
       {!activeAlbum && (
@@ -783,6 +815,36 @@ function PhotosPageInner() {
           to { opacity: 1; transform: translate(-50%, 0) scale(1); }
         }
       `}</style>
+
+      {uploadProgress && (
+        <div style={{
+          position: "fixed",
+          left: "50%",
+          bottom: "calc(env(safe-area-inset-bottom, 0px) + 92px)",
+          transform: "translateX(-50%)",
+          zIndex: 200,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: "10px 20px",
+          borderRadius: 999,
+          backgroundColor: "rgba(8,10,9,0.92)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 14, height: 14, borderRadius: "50%",
+            border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN,
+            animation: "spin 0.7s linear infinite",
+          }} />
+          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
+            {uploadProgress.total > 1 ? `Uploading ${uploadProgress.done} of ${uploadProgress.total}...` : "Uploading..."}
+          </span>
+        </div>
+      )}
 
       {photoNotice && (
         <div style={{
@@ -1813,7 +1875,7 @@ function ProjectsTab({
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={onHideNew} style={{ flex: 1, padding: "13px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
             <button onClick={onCreate} disabled={!canCreate || saving} style={{ flex: 2, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: canCreate ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: canCreate ? FOUND_BLACK : "rgba(255,255,255,0.3)", fontSize: "0.8125rem", fontWeight: 700, cursor: canCreate ? "pointer" : "default" }}>
-              {saving ? "Creatingâ€¦" : `Create ${albumLabel.singular}`}
+              {saving ? "Creating..." : `Create ${albumLabel.singular}`}
             </button>
           </div>
         </div>
@@ -2436,7 +2498,7 @@ function UpgradeSheet({ onClose }: { onClose: () => void }) {
           Share organized project galleries with clients. Upgrade to unlock client sharing.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-          {["Share project galleries with clients", "Branded gallery link â€” your colors", "Client sees only the photos you choose"].map(f => (
+          {["Share project galleries with clients", "Branded gallery link - your colors", "Client sees only the photos you choose"].map(f => (
             <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 18, height: 18, borderRadius: "50%", backgroundColor: `${SIGNAL_GREEN}18`, border: `1px solid ${SIGNAL_GREEN}33`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>

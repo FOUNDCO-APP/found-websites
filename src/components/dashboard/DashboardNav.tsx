@@ -368,7 +368,7 @@ export default function DashboardNav({
 
       const albumName = albumId ? albums.find(a => a.id === albumId)?.name : null
       if (uploadedCount === 0) {
-        showToastMsg("Upload failed â€” try again")
+        showToastMsg("Upload failed - try again")
       } else {
         const label = uploadedCount === 1
           ? (lastWasVideo ? "Video saved" : "Photo saved")
@@ -728,7 +728,7 @@ export default function DashboardNav({
                       if (e.key === "Enter")  handleCreate()
                       if (e.key === "Escape") { setShowNewAlbum(false); setNewAlbumName("") }
                     }}
-                    placeholder={`${albumLabel.singular} nameâ€¦`}
+                    placeholder={`${albumLabel.singular} name...`}
                     style={{ width: "100%", background: "none", border: "none", outline: "none", color: "white", fontSize: "0.9375rem", fontFamily: "inherit", boxSizing: "border-box", marginBottom: 12 }}
                   />
                   <div style={{ display: "flex", gap: 8 }}>
@@ -743,7 +743,7 @@ export default function DashboardNav({
                       disabled={!newAlbumName.trim() || creating}
                       style={{ flex: 2, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: newAlbumName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.07)", color: newAlbumName.trim() ? FOUND_BLACK : `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontSize: "0.8125rem", fontWeight: 700, cursor: newAlbumName.trim() ? "pointer" : "default" }}
                     >
-                      {creating ? "Creatingâ€¦" : "Create & Shoot"}
+                      {creating ? "Creating..." : "Create & Shoot"}
                     </button>
                   </div>
                 </div>
