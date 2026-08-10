@@ -1,5 +1,49 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-10 - Real Bug: Job Photo Upload Was Single-File-Only + Mojibake Sweep (`79b8fee`)
+
+### Where We Left Off
+Shawn live-tested Jobs round 1 on his phone: the "Create" button on a new job showed garbled characters, and adding photos right after creating the job only let him pick one photo at a time (iOS opened a single-photo preview instead of a multi-select grid), and confirming that one selection silently did nothing - just returned to the Jobs list with no photo added.
+
+### Root Cause Found
+Two separate bugs. (1) The job-detail "Add photo -> Upload from Library" path in `photos/page.tsx` is a completely different, older upload entry point from the one fixed 2026-08-09 - that earlier fix only touched the global nav FAB's upload flow (`DashboardNav.tsx`). This input had no `multiple` attribute and `handleUpload` only ever read `e.target.files?.[0]`, dropping everything else - exactly what produces iOS's single-photo preview and a silent no-op on multi-select. (2) The "Create" button text was literal mojibake in the source (a mis-encoded ellipsis). Swept all of `src/` for the same corruption pattern and found 4 more real user-facing instances beyond the one Shawn hit.
+
+### What Changed
+- `photos/page.tsx`: `handleUpload` rewritten with the same bounded-concurrency pattern (`MAX_UPLOAD_BATCH`/`UPLOAD_CONCURRENCY`) already proven in the nav fix, plus a matching progress pill. File input now has `multiple`.
+- 5 real mojibake instances fixed across `photos/page.tsx`, `DashboardNav.tsx`, `CameraSheet.tsx` (comment-only instances left alone - harmless, invisible to users).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Not yet re-tested live by Shawn (in progress as of this handoff).
+
+### Test Next
+- Create a new job, confirm "Create" renders clean text.
+- Add several photos from Library right after creating a job, confirm the multi-select grid appears and all selected photos actually upload with visible progress.
+
+---
+
+## 2026-08-10 - Jobs Round 1: Job Notes, Photo Notes, Cover Photo Selector, Address Privacy Toggle (`52e3bfb`)
+
+### Where We Left Off
+Team-round prioritization of the 7 remaining Jobs-pipeline items: job-level notes was judged the real gap (a job with only photos isn't a job record), bundled with photo notes and a cover photo selector since all three live on the same job-detail screen and are low-risk CRUD. Granular worker permissions was deliberately excluded - flagged as needing its own dedicated security-reviewed cycle, not bundled with routine feature work.
+
+### What Changed
+- Migration 060: `photo_albums.notes`, `photo_albums.show_address_public` (default false), `company_photos.note`.
+- Job notes editor, photo-note caption in the photo viewer, "Set as Cover" button (job photos only, replaces the Add-to-Site slot in that context).
+- Closed a real pre-existing gap found along the way: `cover_photo_id` existed in the schema since migration 050 but was never read or written anywhere - three separate places (dashboard job list, the albums API's own cover computation, public Pro gallery list) were each independently guessing "most recent photo" instead. All three now prefer the owner's chosen cover.
+- Address privacy toggle in Job Details, off by default - customer name still shows on the shared link as before (intentional, not part of the gap).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Live-tested immediately by Shawn - surfaced the two bugs documented in the entry above this one.
+
+### Test Next
+- See the 2026-08-10 upload-bug entry above (found during this feature's live test).
+- Confirm cover photo selection shows correctly in both the dashboard Jobs list and the public gallery list.
+- Confirm the address toggle correctly shows/hides the street address on the shared job link.
+
+---
+
 ## 2026-08-09 - Real Billing Bug Found Live: Webhook Silently Reset Plan to Starter (`5fbc352`)
 
 ### Where We Left Off
