@@ -490,10 +490,14 @@ export default function DashboardNav({
       />
 
       {/* â”€â”€ Toast â”€â”€ */}
-      {/* Real progress instead of a bare "uploading" spinner with no count -
-          only shown for multi-file batches, a single upload's end toast is
-          feedback enough on its own. */}
-      {uploadProgress && uploadProgress.total > 1 && (
+      {/* Real progress instead of a bare "uploading" spinner with no count.
+          Shown for every upload, not just multi-file batches - a single
+          video can take several real seconds (no compression on video
+          yet, unlike photos), and silence during that wait reads as
+          frozen, not "the end toast will cover it." Confirmed live by
+          Shawn 2026-08-09: a single 5-second video took ~5-6s with zero
+          visible feedback before this was widened. */}
+      {uploadProgress && (
         <div style={{
           position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
           zIndex: 200,
@@ -513,7 +517,7 @@ export default function DashboardNav({
             animation: "nav-spin 0.7s linear infinite",
           }} />
           <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
-            Uploading {uploadProgress.done} of {uploadProgress.total}...
+            {uploadProgress.total > 1 ? `Uploading ${uploadProgress.done} of ${uploadProgress.total}...` : "Uploading..."}
           </span>
         </div>
       )}
