@@ -1,3 +1,25 @@
+## Session: August 10, 2026 - Jobs Round 1: Notes, Photo Notes, Cover Photo, Address Privacy
+**AI:** Claude
+
+### Built
+Team-approved round 1 of the Jobs pipeline (job notes prioritized as the real gap - a job with only photos and no record of work performed isn't really a job tool - bundled with cover photo and photo notes since all three live on the same job-detail screen; granular worker permissions deliberately excluded and kept as its own future security-reviewed cycle).
+
+- Migration 060: `photo_albums.notes`, `photo_albums.show_address_public` (default false), `company_photos.note`.
+- Job-level notes: `JobNotesEditor` on the job detail header - tap-to-edit card, same pattern as the existing customer-details editor.
+- Photo notes: tap-to-edit caption row in the dashboard photo viewer, job photos only.
+- Cover photo selector: "Set as Cover" button in the photo viewer (job photos only, takes the Add-to-Site button's slot since site placement doesn't apply to job photos). This closed a real existing gap - `cover_photo_id` already existed in the schema (migration 050) but was never actually read or written anywhere; three different places (dashboard job list, the albums API's own cover computation, and the public Pro gallery list) were each independently guessing "most recent photo" instead. All three now prefer the owner's chosen cover photo when one is set.
+- Address privacy toggle: checkbox in Job Details, off by default - shows the street address on the shared job link only when an owner explicitly turns it on. Scoped to address only; customer name continues to show on the shared link as before (that was intentional, not part of the gap).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+1. On a job, set a cover photo from the photo viewer and confirm it shows in the Jobs list and the public gallery list.
+2. Add job notes and a photo note, confirm both persist after reload.
+3. Toggle "Show address on shared link" on, confirm the address appears on the public job page; confirm it's hidden when off (the default).
+
+---
+
 ## Session: August 10, 2026 - Test-Account Discounts Were Getting Wasted on Proration Invoices
 **AI:** Claude
 

@@ -78,25 +78,30 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   // ── Pro: album-organized gallery ─────────────────────────────────────────
   if (isPro) {
     const [albumsResult, albumPhotosResult, unsortedResult] = await Promise.all([
-      admin.from("photo_albums").select("id, name, slug").eq("company_id", company.id).order("created_at", { ascending: false }),
+      admin.from("photo_albums").select("id, name, slug, cover_photo_id").eq("company_id", company.id).order("created_at", { ascending: false }),
       admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
       admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
     ])
 
     // Group album photos by album_id
     const photosByAlbum = new Map<string, GalleryMedia[]>()
+    const photoUrlById = new Map<string, string>()
     for (const photo of albumPhotosResult.data ?? []) {
       if (!photo.album_id) continue
       if (!photosByAlbum.has(photo.album_id)) photosByAlbum.set(photo.album_id, [])
       photosByAlbum.get(photo.album_id)!.push({ url: photo.url })
+      photoUrlById.set(photo.id, photo.url)
     }
 
     const albums = (albumsResult.data ?? [])
       .map(album => {
         const albumPhotos = photosByAlbum.get(album.id) ?? []
-        // Cover tile is a plain <img>, never a playable video slot - pick
-        // the first still photo, not just the first item.
-        const coverUrl = albumPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
+        // Cover tile is a plain <img>, never a playable video slot - prefer
+        // the owner's explicitly chosen cover photo, then fall back to the
+        // first still photo (never just the first item, which could be a video).
+        const chosenCoverUrl = album.cover_photo_id ? photoUrlById.get(album.cover_photo_id) : undefined
+        const chosenCover = chosenCoverUrl && !isVideoMedia(chosenCoverUrl) ? chosenCoverUrl : null
+        const coverUrl = chosenCover ?? albumPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
         return { ...album, coverUrl, photoCount: albumPhotos.length }
       })
       .filter(a => a.photoCount > 0)

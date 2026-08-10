@@ -14,11 +14,14 @@ type AlbumPageRow = {
   album_type?: string | null
   customer_name?: string | null
   service_address?: string | null
+  show_address_public?: boolean | null
   created_at: string
 }
 
-function publicAlbumContext(album: Pick<AlbumPageRow, "customer_name">) {
-  return album.customer_name?.trim() ?? ""
+function publicAlbumContext(album: Pick<AlbumPageRow, "customer_name" | "service_address" | "show_address_public">) {
+  const name = album.customer_name?.trim() ?? ""
+  const address = album.show_address_public ? album.service_address?.trim() ?? "" : ""
+  return [name, address].filter(Boolean).join(" · ")
 }
 
 function absoluteImageUrl(url: string | undefined, origin: string) {
@@ -52,7 +55,7 @@ async function findAlbum(
   includeJobFields: boolean,
 ) {
   const select = includeJobFields
-    ? "id, name, slug, album_type, customer_name, service_address, created_at"
+    ? "id, name, slug, album_type, customer_name, service_address, show_address_public, created_at"
     : "id, name, slug, created_at"
 
   const direct = await admin

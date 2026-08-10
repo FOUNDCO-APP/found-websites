@@ -43,6 +43,8 @@ type AlbumRow = {
   customer_email?: string | null
   service_address?: string | null
   cover_photo_id?: string | null
+  notes?: string | null
+  show_address_public?: boolean | null
   created_at: string
 }
 
@@ -55,7 +57,7 @@ export async function GET() {
   const admin = createAdminClient()
   let { data, error }: { data: AlbumRow[] | null; error: { message: string } | null } = await admin
     .from("photo_albums")
-    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, created_at")
+    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
@@ -69,23 +71,37 @@ export async function GET() {
   }
 
   const albumIds = (data ?? []).map((a: { id: string }) => a.id)
-  let coverMap: Record<string, string> = {}
+  let latestMap: Record<string, string> = {}
+  let coverPhotoMap: Record<string, string> = {}
   if (albumIds.length > 0) {
-    const { data: covers } = await admin
+    const { data: recent } = await admin
       .from("company_photos")
       .select("album_id, url")
       .eq("company_id", company.id)
       .in("album_id", albumIds)
       .order("created_at", { ascending: false })
       .limit(albumIds.length * 2)
-    for (const c of (covers ?? [])) {
-      if (c.album_id && !coverMap[c.album_id]) coverMap[c.album_id] = c.url
+    for (const c of (recent ?? [])) {
+      if (c.album_id && !latestMap[c.album_id]) latestMap[c.album_id] = c.url
+    }
+
+    const coverPhotoIds = (data ?? [])
+      .map((a: AlbumRow) => a.cover_photo_id)
+      .filter((id): id is string => !!id)
+    if (coverPhotoIds.length > 0) {
+      const { data: covers } = await admin
+        .from("company_photos")
+        .select("id, url")
+        .in("id", coverPhotoIds)
+      for (const c of (covers ?? [])) coverPhotoMap[c.id] = c.url
     }
   }
 
+  // Prefer the owner's explicitly chosen cover photo; fall back to the most
+  // recently uploaded photo in the album when no cover has been set yet.
   const albums = (data ?? []).map((a: AlbumRow) => ({
     ...a,
-    cover_url: coverMap[a.id] ?? null,
+    cover_url: (a.cover_photo_id && coverPhotoMap[a.cover_photo_id]) || latestMap[a.id] || null,
   }))
 
   return NextResponse.json({ albums })
@@ -97,7 +113,7 @@ export async function POST(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id } = await req.json()
+  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -113,6 +129,7 @@ export async function POST(req: Request) {
     customer_email: customer_email?.trim() || null,
     service_address: service_address?.trim() || null,
     cover_photo_id: cover_photo_id || null,
+    notes: notes?.trim() || null,
   }
 
   const { data, error }: { data: AlbumRow | null; error: { message: string } | null } = await admin
@@ -132,11 +149,11 @@ export async function PATCH(req: Request) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id } = body
+  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public } = body
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
   const admin = createAdminClient()
-  const updates: Record<string, string | null> = {}
+  const updates: Record<string, string | boolean | null> = {}
 
   if (typeof name === "string") {
     const nextName = name.trim()
@@ -150,6 +167,8 @@ export async function PATCH(req: Request) {
   if ("customer_email" in body) updates.customer_email = typeof customer_email === "string" && customer_email.trim() ? customer_email.trim() : null
   if ("service_address" in body) updates.service_address = typeof service_address === "string" && service_address.trim() ? service_address.trim() : null
   if ("cover_photo_id" in body) updates.cover_photo_id = typeof cover_photo_id === "string" && cover_photo_id.trim() ? cover_photo_id.trim() : null
+  if ("notes" in body) updates.notes = typeof notes === "string" && notes.trim() ? notes.trim() : null
+  if ("show_address_public" in body) updates.show_address_public = !!show_address_public
 
   if (Object.keys(updates).length === 0) return NextResponse.json({ error: "No updates" }, { status: 400 })
 

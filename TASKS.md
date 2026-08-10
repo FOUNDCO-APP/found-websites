@@ -994,16 +994,16 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] Owner QA: iMessage/Facebook preview uses the job photo/logo OG image and does not show customer name/address inside the image.
 
 ### Active Pipeline - Service Industry Jobs
-- [ ] Cover photo selector for each Job.
-- [ ] Photo notes inside Jobs.
-- [ ] Job-level notes or scope summary.
-- [ ] Connect Jobs to Estimates: create estimate from a job and attach/create job from an estimate.
-- [ ] Worker role: camera/job capture only by default.
-- [ ] Owner-controlled worker permissions for estimates, publishing website photos, and broader dashboard access.
+- [x] Connect Jobs to Estimates: create estimate from a job and attach/create job from an estimate. Shipped - `estimates.job_id`, picker/create UI in both the estimate builder and detail sheet.
+- [x] Worker role: camera/job capture only by default. Shipped - `company_members`/`getCompanyRole()`, DashboardNav restricts workers to Photos + More only.
+- [x] Make `Ask about this job` open a job-aware contact form instead of a generic contact page. Shipped - `JobLeadCapture` component on the public job/gallery album page.
+- [x] Cover photo selector for each Job. Shipped 2026-08-10 - "Set as Cover" button in the photo viewer (job photos only, replaces the Add-to-Site slot); `photo_albums.cover_photo_id` was already in the schema but unused, now actually read/written by the dashboard job list, job detail cover fallback, and the public Pro gallery list (all three previously computed "most recent photo" independently).
+- [x] Photo notes inside Jobs. Shipped 2026-08-10 - tap-to-edit caption row in the photo viewer, job photos only. New `company_photos.note` column.
+- [x] Job-level notes or scope summary. Shipped 2026-08-10 - `JobNotesEditor` on the job detail header (tap-to-edit card, same pattern as the customer-details editor). New `photo_albums.notes` column.
+- [x] Add an owner-facing privacy toggle for customer name/street address on the shared job link. Shipped 2026-08-10, scoped to address only (customer name was already intentionally shown) - checkbox in Job Details, off by default. New `photo_albums.show_address_public` column.
+- [ ] Owner-controlled worker permissions for estimates, publishing website photos, and broader dashboard access (only the default camera-only worker role exists - no per-worker granular toggle yet). Deliberately kept out of this round - team called this its own security-reviewed cycle, not bundled with the CRUD work above.
 - [ ] Search/filter Jobs by customer, address, worker, date, and status.
 - [ ] Search/filter Photos by job, worker/uploader, favorites, on-site, and not-on-site.
-- [ ] Add shared-link privacy controls for customer name and street address.
-- [ ] Make `Ask about this job` open a job-aware contact form instead of a generic contact page.
 
 ### Active Pipeline - Email Marketing
 - [ ] Email dashboard should show who is on the list, not only subscriber count.

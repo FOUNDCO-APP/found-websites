@@ -19,6 +19,7 @@ type Photo = {
   website_section: string | null
   in_gallery: boolean
   album_id: string | null
+  note?: string | null
   created_at: string
   media_type?: "photo" | "video"
   mime_type?: string | null
@@ -35,6 +36,8 @@ type Album = {
   service_address?: string | null
   cover_photo_id?: string | null
   cover_url?: string | null
+  notes?: string | null
+  show_address_public?: boolean | null
   created_at: string
 }
 
@@ -284,6 +287,22 @@ function PhotosPageInner() {
     setPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
 
+  async function setCoverPhoto(photo: Photo) {
+    if (!activeAlbum) return
+    await updateAlbumDetails(activeAlbum, { cover_photo_id: photo.id })
+    setAlbums(prev => prev.map(a => a.id === activeAlbum.id ? { ...a, cover_photo_id: photo.id, cover_url: photo.url } : a))
+  }
+
+  async function savePhotoNote(photo: Photo, note: string) {
+    const trimmed = note.trim() || null
+    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, note: trimmed } : p))
+    await fetch("/api/photos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: photo.id, note: trimmed }),
+    }).catch(console.error)
+  }
+
   async function openPlacement(photo: Photo) {
     setPlacingPhoto(photo)
     setPlaceReassignConfirm(null)
@@ -422,7 +441,7 @@ function PhotosPageInner() {
     }
   }
 
-  async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address">>) {
+  async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address" | "notes" | "show_address_public" | "cover_photo_id">>) {
     const res = await fetch("/api/albums", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -583,7 +602,10 @@ function PhotosPageInner() {
                 </p>
               )}
               {usesJobs && (
-                <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
+                <>
+                  <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
+                  <JobNotesEditor album={activeAlbum} onSave={updateAlbumDetails} />
+                </>
               )}
               <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
@@ -902,6 +924,9 @@ function PhotosPageInner() {
           destinations={destinations}
           onShare={handleSharePhoto}
           onRemove={remove}
+          album={lightroomSource === "album" ? activeAlbum : null}
+          onSetCover={setCoverPhoto}
+          onNoteSave={savePhotoNote}
         />
       )}
 
@@ -1035,7 +1060,7 @@ function PhotosPageInner() {
 }
 
 // â”€â”€ Lightroom viewer â”€â”€
-function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPlace, destinations, onShare, onRemove }: {
+function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPlace, destinations, onShare, onRemove, album, onSetCover, onNoteSave }: {
   photos: Photo[]
   initialIndex: number
   onClose: () => void
@@ -1045,13 +1070,34 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
   onRemove: (photo: Photo) => void
+  album?: Album | null
+  onSetCover?: (photo: Photo) => void
+  onNoteSave?: (photo: Photo, note: string) => Promise<void>
 }) {
   const [index, setIndex] = useState(initialIndex)
   const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [editingNote, setEditingNote] = useState(false)
+  const [noteDraft, setNoteDraft] = useState("")
+  const [savingNote, setSavingNote] = useState(false)
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
 
   const photo = photos[Math.min(index, photos.length - 1)]
+  const isJobPhoto = album?.album_type === "job"
+  const isCover = isJobPhoto && album?.cover_photo_id === photo?.id
+
+  useEffect(() => {
+    setEditingNote(false)
+    setNoteDraft(photo?.note ?? "")
+  }, [photo?.id, photo?.note])
+
+  async function saveNote() {
+    if (!photo || !onNoteSave) return
+    setSavingNote(true)
+    await onNoteSave(photo, noteDraft)
+    setSavingNote(false)
+    setEditingNote(false)
+  }
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -1145,11 +1191,44 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 55%, transparent 100%)",
-        paddingTop: 72,
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 32px)",
-        display: "flex", alignItems: "flex-end", justifyContent: "space-around",
-        padding: `72px 32px max(env(safe-area-inset-bottom, 0px), 36px)`,
+        display: "flex", flexDirection: "column", gap: 14,
+        padding: `56px 24px max(env(safe-area-inset-bottom, 0px), 36px)`,
       }}>
+        {/* Photo note - job photos only */}
+        {isJobPhoto && onNoteSave && (
+          editingNote ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <input
+                value={noteDraft}
+                onChange={e => setNoteDraft(e.target.value)}
+                placeholder="Add a note about this photo..."
+                autoFocus
+                style={{
+                  flex: 1, padding: "10px 14px", borderRadius: 100,
+                  border: "1px solid rgba(255,255,255,0.18)", backgroundColor: "rgba(255,255,255,0.1)",
+                  color: "white", ...TYPE.footnote, outline: "none",
+                }}
+              />
+              <button onClick={saveNote} disabled={savingNote} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.footnote, fontWeight: 700, cursor: "pointer", padding: "6px 4px" }}>
+                {savingNote ? "..." : "Save"}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setEditingNote(true)}
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+              <span style={{ ...TYPE.footnote, color: photo?.note ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)" }}>
+                {photo?.note || "Add a note about this photo"}
+              </span>
+            </button>
+          )
+        )}
+
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around" }}>
         {/* Gallery - public photo gallery */}
         <button onClick={() => onGallery(photo)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
@@ -1198,8 +1277,31 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
         </button>
 
+        {/* Cover photo - job photos only, replaces Add to Site in this context */}
+        {isJobPhoto && onSetCover && (
+          <button onClick={() => onSetCover(photo)} disabled={isCover} style={{
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
+            background: "none", border: "none", cursor: isCover ? "default" : "pointer", padding: 0,
+          }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: "50%",
+              backgroundColor: isCover ? "rgba(50,208,116,0.2)" : "rgba(255,255,255,0.1)",
+              border: `2px solid ${isCover ? "rgba(50,208,116,0.5)" : "rgba(255,255,255,0.14)"}`,
+              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill={isCover ? SIGNAL_GREEN : "none"} stroke={isCover ? SIGNAL_GREEN : "rgba(255,255,255,0.75)"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: isCover ? SIGNAL_GREEN : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>
+              {isCover ? "Cover Photo" : "Set as Cover"}
+            </span>
+          </button>
+        )}
+
         {/* Add to Site */}
-        {onPlace && (() => {
+        {!isJobPhoto && onPlace && (() => {
           const active = Boolean(photo.website_section && photo.website_section !== "announcement")
           const activeColor = active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.75)"
           const label = active ? `On ${photoSitePlacementLabel(photo, destinations) ?? "page"}` : "Use on Page"
@@ -1265,6 +1367,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           </div>
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "rgba(255,100,100,0.75)", letterSpacing: "0.02em" }}>Delete</span>
         </button>
+        </div>
       </div>
     </div>
   )
@@ -1405,7 +1508,7 @@ function JobDetailsEditor({
   onSave,
 }: {
   album: Album
-  onSave: (album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address">>) => Promise<void>
+  onSave: (album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address" | "show_address_public">>) => Promise<void>
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -1413,6 +1516,7 @@ function JobDetailsEditor({
   const [address, setAddress] = useState(album.service_address ?? "")
   const [phone, setPhone] = useState(album.customer_phone ?? "")
   const [email, setEmail] = useState(album.customer_email ?? "")
+  const [showAddressPublic, setShowAddressPublic] = useState(Boolean(album.show_address_public))
   const hasDetails = Boolean(album.customer_name || album.service_address || album.customer_phone || album.customer_email)
 
   useEffect(() => {
@@ -1420,8 +1524,9 @@ function JobDetailsEditor({
     setAddress(album.service_address ?? "")
     setPhone(album.customer_phone ?? "")
     setEmail(album.customer_email ?? "")
+    setShowAddressPublic(Boolean(album.show_address_public))
     setEditing(false)
-  }, [album.id, album.customer_name, album.service_address, album.customer_phone, album.customer_email])
+  }, [album.id, album.customer_name, album.service_address, album.customer_phone, album.customer_email, album.show_address_public])
 
   async function save() {
     setSaving(true)
@@ -1430,6 +1535,7 @@ function JobDetailsEditor({
       service_address: address,
       customer_phone: phone,
       customer_email: email,
+      show_address_public: showAddressPublic,
     })
     setSaving(false)
     setEditing(false)
@@ -1476,10 +1582,122 @@ function JobDetailsEditor({
       <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB DETAILS</div>
       <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer name" style={fieldStyle} />
       <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Job address" style={fieldStyle} />
+      <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
+        <input
+          type="checkbox"
+          checked={showAddressPublic}
+          onChange={e => setShowAddressPublic(e.target.checked)}
+          style={{ marginTop: 3 }}
+        />
+        <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+          Show this address on the shared job link (off by default — the customer's name still shows either way)
+        </span>
+      </label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" style={fieldStyle} />
         <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" style={fieldStyle} />
       </div>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
+        <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>
+          {saving ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function JobNotesEditor({
+  album,
+  onSave,
+}: {
+  album: Album
+  onSave: (album: Album, details: Partial<Pick<Album, "notes">>) => Promise<void>
+}) {
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [notes, setNotes] = useState(album.notes ?? "")
+
+  useEffect(() => {
+    setNotes(album.notes ?? "")
+    setEditing(false)
+  }, [album.id, album.notes])
+
+  async function save() {
+    setSaving(true)
+    await onSave(album, { notes })
+    setSaving(false)
+    setEditing(false)
+  }
+
+  const fieldStyle: React.CSSProperties = {
+    width: "100%",
+    minHeight: 90,
+    padding: "12px 14px",
+    borderRadius: 12,
+    border: "1px solid rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    color: "white",
+    ...TYPE.subhead,
+    outline: "none",
+    boxSizing: "border-box",
+    resize: "vertical",
+    fontFamily: "inherit",
+  }
+
+  if (!editing) {
+    if (album.notes) {
+      return (
+        <button
+          onClick={() => setEditing(true)}
+          style={{
+            marginTop: 10,
+            padding: 14,
+            borderRadius: 16,
+            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: "rgba(255,255,255,0.04)",
+            textAlign: "left",
+            cursor: "pointer",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB NOTES</div>
+          <div style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap" }}>{album.notes}</div>
+        </button>
+      )
+    }
+    return (
+      <button
+        onClick={() => setEditing(true)}
+        style={{
+          marginTop: 10,
+          padding: "10px 12px",
+          borderRadius: 13,
+          border: `1px solid ${SIGNAL_GREEN}33`,
+          backgroundColor: `${SIGNAL_GREEN}10`,
+          color: SIGNAL_GREEN,
+          ...TYPE.footnote,
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        Add job notes
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 10, padding: 14, borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB NOTES</div>
+      <textarea
+        value={notes}
+        onChange={e => setNotes(e.target.value)}
+        placeholder="What was done, what was found, parts used..."
+        style={fieldStyle}
+        autoFocus
+      />
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
         <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
         <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>
@@ -1636,14 +1854,15 @@ function ProjectsTab({
           {albums.map(album => {
           const count = photos.filter(p => p.album_id === album.id).length
           const thumb = photos.find(p => p.album_id === album.id)
+          const coverUrl = album.cover_url ?? thumb?.url ?? null
           const context = albumContextLine(album)
           return (
             <div key={album.id} style={{ borderRadius: 18, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
               <div onClick={() => onOpen(album)} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", cursor: "pointer" }}>
                 <div style={{ width: 52, height: 52, borderRadius: 12, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)", flexShrink: 0 }}>
-                  {thumb ? (
+                  {coverUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={thumb.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={coverUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

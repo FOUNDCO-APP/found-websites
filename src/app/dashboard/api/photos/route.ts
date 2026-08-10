@@ -35,7 +35,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("company_photos")
-    .select("id, url, storage_path, for_website, for_social, website_section, in_gallery, album_id, created_at")
+    .select("id, url, storage_path, for_website, for_social, website_section, in_gallery, album_id, note, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
@@ -115,7 +115,7 @@ export async function PATCH(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { id, for_website, for_social, website_section, album_id } = await req.json()
+  const { id, for_website, for_social, website_section, album_id, note } = await req.json()
   if (!id) return NextResponse.json({ error: "No id" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -124,6 +124,7 @@ export async function PATCH(req: Request) {
   if (for_social !== undefined) update.for_social = for_social
   if (website_section !== undefined) update.website_section = website_section
   if (album_id !== undefined) update.album_id = album_id
+  if (note !== undefined) update.note = typeof note === "string" && note.trim() ? note.trim() : null
 
   const { data, error } = await admin
     .from("company_photos")
