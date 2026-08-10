@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -96,6 +96,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ drafts: [] }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ drafts: [] })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ drafts: [] })
 
   const result = await draftsForCompany(company.id)
   if (tableMissing(result.error)) return NextResponse.json({ drafts: [], tableReady: false })
@@ -108,6 +109,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => ({}))
   const requestedPhotoIds = Array.isArray(body.photoIds) ? body.photoIds.filter(Boolean) : []
@@ -148,6 +150,7 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { id, caption, status } = await req.json()
   if (!id) return NextResponse.json({ error: "Missing draft id" }, { status: 400 })

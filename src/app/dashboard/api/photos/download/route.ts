@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import JSZip from "jszip"
@@ -7,12 +7,14 @@ import JSZip from "jszip"
 // Owner-selected photo export - not "download everything," just whichever
 // photos they picked. Zips them in memory and streams the result back;
 // fine for the batch sizes an owner picks by hand, not meant for a
-// thousands-of-photos bulk export.
+// thousands-of-photos bulk export. Owner-only - a worker's access is
+// scoped to capturing photos, not bulk-exporting the company's library.
 export async function POST(req: Request) {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   const ids = Array.isArray(body?.ids) ? body.ids.filter((id: unknown) => typeof id === "string") : []

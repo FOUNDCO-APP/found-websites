@@ -37,7 +37,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const viewingAsAdmin = Boolean(adminKeyValid && company)
 
-  const [leadCounts, paidAddonSlugs] = company?.id
+  // Lead/order/reservation counts (and their latest-activity timestamps)
+  // are owner-only data - a worker's browser shouldn't receive them just
+  // because this layout wraps every dashboard route, even though workers
+  // can never reach the Leads page itself to see the detail behind them.
+  const isOwnerForCounts = memberRole === "owner"
+
+  const [leadCounts, paidAddonSlugs] = company?.id && isOwnerForCounts
     ? await Promise.all([
         admin
           .from("leads")

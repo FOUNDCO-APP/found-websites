@@ -4,9 +4,27 @@ import Stripe from "stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
+import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
+
+// Every action below mutates billing/subscription state for a companyId
+// the caller supplies directly - without this, any authenticated user
+// (owner of a different company, or a camera-only worker) could act on a
+// company that isn't theirs just by knowing or guessing its id. Found
+// 2026-08-09 during the worker-role security audit; this gap predates
+// the worker feature entirely - it's a general cross-tenant hole that
+// happened to surface while auditing worker boundaries.
+async function requireCompanyOwner(companyId: string): Promise<boolean> {
+  if (!companyId) return false
+  const user = await getAuthUser()
+  if (!user) return false
+  const company = await getCompany(user.id, user.email ?? "")
+  if (!company || company.id !== companyId) return false
+  return requireOwnerAccess(user.id, user.email ?? "", company)
+}
 async function markAddonActive(
   admin: ReturnType<typeof createAdminClient>,
   companyId: string,
@@ -75,6 +93,7 @@ async function getUpgradePortalConfiguration(stripe: Stripe, targetPriceId: stri
 }
 
 export async function purchaseAddon(companyId: string, addonSlug: string): Promise<{ success: boolean; error?: string }> {
+  if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
   const stripe = getStripe()
   if (!stripe || !companyId || !addonSlug) return { success: false, error: "Missing required fields." }
 
@@ -133,6 +152,7 @@ export async function purchaseAddon(companyId: string, addonSlug: string): Promi
 // data shape's job, not extra logic here.
 export async function switchIncludedAddon(companyId: string, addonSlug: string | null): Promise<{ success: boolean; error?: string }> {
   if (!companyId) return { success: false, error: "Missing company." }
+  if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
   const admin = createAdminClient()
   const { data: company } = await admin.from("companies").select("plan").eq("id", companyId).single()
   if (!company || company.plan !== "found_pro") return { success: false, error: "Not available on this plan." }
@@ -145,6 +165,7 @@ export async function switchIncludedAddon(companyId: string, addonSlug: string |
 export async function startAddonCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const addonSlug = formData.get("addonSlug") as string
+  if (!(await requireCompanyOwner(companyId))) redirect("/billing?addon_unavailable=1")
   const stripe = getStripe()
   if (!stripe || !companyId || !addonSlug) redirect("/billing?addon_unavailable=1")
 
@@ -338,6 +359,7 @@ async function getActiveSubscription(stripe: Stripe, customerId: string) {
 }
 
 async function resolveUpgradeContext(companyId: string, targetPlan: string) {
+  if (!(await requireCompanyOwner(companyId))) return { error: "Not authorized." as const }
   const stripe = getStripe()
   if (!stripe || !companyId || !targetPlan) return { error: "Payments are not ready yet." as const }
 
@@ -436,6 +458,7 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
 // Opens Stripe Customer Portal — handles cancel, update payment method
 export async function openBillingPortal(formData: FormData) {
   const companyId = formData.get("companyId") as string
+  if (!(await requireCompanyOwner(companyId))) return
   const stripe = getStripe()
   if (!stripe || !companyId) return
 
@@ -461,6 +484,7 @@ export async function openBillingPortal(formData: FormData) {
 export async function startUpgradeCheckout(formData: FormData) {
   const companyId = formData.get("companyId") as string
   const targetPlan = formData.get("targetPlan") as string
+  if (!(await requireCompanyOwner(companyId))) return
   const stripe = getStripe()
   if (!stripe || !companyId || !targetPlan) return
 

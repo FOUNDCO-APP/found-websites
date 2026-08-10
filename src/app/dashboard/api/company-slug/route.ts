@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
@@ -9,6 +9,11 @@ export async function GET() {
   const user = await getAuthUser()
   if (!user) return NextResponse.json({ slug: null }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
+  // Basic slug/industry/plan info is needed by worker-accessible pages
+  // (Photos) too, so this stays readable for anyone with company access -
+  // just strip the billing/payments-adjacent fields for non-owners rather
+  // than blocking the whole endpoint.
+  const isOwner = company ? await requireOwnerAccess(user.id, user.email ?? "", company) : false
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
@@ -24,7 +29,7 @@ export async function GET() {
     customDomain = config?.custom_domain ?? null
     hasCalendar = hasAddonAccess(plan, "reservation_calendar", (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company?.included_addon_slug ?? null, company?.disabled_addons ?? [])
   }
-  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, primaryIntent: company?.primary_intent ?? null, plan, hasCalendar, isPro, stripe_connect_account_id: company?.stripe_connect_account_id ?? null, stripe_connect_ready: stripeConnect.ready, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: company?.default_tax_rate ?? 0, customDomain })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, primaryIntent: company?.primary_intent ?? null, plan, hasCalendar, isPro, stripe_connect_account_id: isOwner ? (company?.stripe_connect_account_id ?? null) : null, stripe_connect_ready: isOwner ? stripeConnect.ready : false, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: isOwner ? (company?.default_tax_rate ?? 0) : 0, customDomain })
 }
 
 export async function PATCH(req: Request) {
@@ -32,6 +37,7 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
   const body = await req.json()
   const admin = createAdminClient()
 
