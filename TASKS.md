@@ -1,5 +1,21 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Upload Speed/Limits + Estimate<->Job Reverse Link
+
+- [x] 12-file soft cap on multi-file uploads (Photos + Jobs share this path).
+- [x] Bounded concurrency (3 at a time) replacing sequential uploads.
+- [x] Real "Uploading X of Y" progress indicator.
+- [x] Migration 059: estimates.job_id references photo_albums(id).
+- [x] BuilderSheet: "Link to a Job" - pick existing or create new, pre-filled.
+- [x] DetailSheet: "Attach to a Job" / tap-through to linked Job's photos.
+- [x] Verify `npx tsc --noEmit` and `npm run build` after both commits.
+- [ ] Shawn QA: select 15+ files, confirm 12-cap + progress pill.
+- [ ] Shawn QA: create estimate with new Job, confirm pre-fill.
+- [ ] Shawn QA: attach existing estimate to a Job, confirm it persists.
+- [ ] Next on Jobs pipeline (not started): "Ask about this job" real context, cover photo selector + per-photo notes, Job/scope notes, worker permissions beyond camera-only, search/filter + privacy toggle (low priority, deferred).
+
+---
+
 ## 2026-08-09 - Regression Fix: Gallery Showed Zero Photos
 
 - [x] Root-caused: company_photos has no mime_type column, my earlier fix's .select() calls silently failed.

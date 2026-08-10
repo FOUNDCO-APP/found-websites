@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Upload Speed/Limits + Estimate<->Job Reverse Link (2 commits)
+
+### Where We Left Off
+Picked up the two "ready to build" items from the earlier team-approved backlog.
+
+### What Changed
+1. **Upload speed/limits** (`2129c61`) - `DashboardNav.tsx`'s `handleNavUpload` (the shared multi-file upload path for both Photos and Jobs) now has a 12-file soft cap per batch (trims and tells the owner to add the rest in a second batch, since native pickers can't enforce a cap at selection time), bounded concurrency (3 uploads at once, replacing strict one-at-a-time), and a real "Uploading X of Y" progress pill - the `uploading` boolean existed before but was never actually rendered anywhere, so multi-file uploads had zero visible feedback until the end-of-batch toast. Client-side video compression is still out of scope for this pass (team-approved deferral).
+2. **Estimate <-> Job reverse link** (`e42e62b`) - migration 059 (run live) added `estimates.job_id` referencing `photo_albums(id)`. New estimate builder now has "Link to a Job" in the existing Job step (pick existing or create new, pre-filled from what's already typed). Existing estimates (DetailSheet) show "Attach to a Job" if unlinked, or a tap-through card to the Job's photos if linked. Both reuse the existing `/api/albums` endpoint rather than new API surface.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after both commits.
+- Not yet tested live by Shawn.
+
+### Test Next
+- Select 15+ photos/videos at once in Jobs or Photos, confirm only 12 upload and a "add the rest in a second batch" message shows, confirm the "Uploading X of Y" pill is visible and counts up.
+- Create a new estimate, use "Link to a Job" to create a new Job on the spot, confirm it's pre-filled with the customer info already typed.
+- Open an existing unlinked estimate, use "Attach to a Job," confirm both picking an existing Job and creating a new one work, and the linked state persists after closing/reopening.
+
+---
+
 ## 2026-08-09 - Fix: Uneven Gallery Grid From Non-Square Video Tiles (`f991b7f`)
 
 Shawn reported the gallery grid looked "ugly"/unbalanced after the video fix - gaps under landscape video tiles. Root cause: `globals.css` already has a deliberate rule (with its own explanatory comment) forcing every gallery tile to a uniform 1:1 square crop, specifically because the team had already hit and fixed this exact uneven-grid problem once before for photos of different orientations. That CSS only ever targeted `<img>` - the `<video>` added for gallery videos never got the same treatment, so it rendered at its natural (usually landscape) shape and left a gap. Fixed `GridVideoTile` in `GalleryLightbox.tsx` to get the identical square/cover treatment (matches `AlbumPhotoGrid.tsx`'s video tile, which was already built correctly and never had this bug). Also extended the CSS selector itself (`.masonry-item img, .masonry-item video`) so this can't silently break again. `npx tsc --noEmit` and `npm run build` passed clean.

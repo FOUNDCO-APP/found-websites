@@ -1,3 +1,16 @@
+## Session: August 9, 2026 - Upload Speed/Limits + Estimate<->Job Reverse Link
+**AI:** Claude
+
+### Built
+- `DashboardNav.tsx`'s shared multi-file upload handler (Photos + Jobs both use it): 12-file soft cap, bounded concurrency (3 at a time, was strictly sequential), and a real "Uploading X of Y" progress pill where none existed before (`2129c61`).
+- Migration 059: `estimates.job_id` references `photo_albums(id)`. Estimate builder can now link/create a Job while writing an estimate (pre-filled from typed customer info); existing estimates can attach to a Job after the fact via DetailSheet. Reuses the existing `/api/albums` endpoint (`e42e62b`).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after both commits.
+- Not yet tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - Regression Fix: Gallery Showed Zero Photos (`8de2548`)
 **AI:** Claude
 
