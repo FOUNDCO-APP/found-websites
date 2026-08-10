@@ -1,3 +1,22 @@
+## Session: August 10, 2026 - Chased a Second Upload Failure Past the Storage-Path Fix
+**AI:** Claude
+
+### Found via Shawn's live testing
+After the storage-path collision fix shipped, Shawn still saw only 1 of 2 and 1 of 3 photos land. Verified via the Vercel API that both prior fixes were genuinely live (not a deploy-lag false alarm), and via a direct database query that only 1 row actually existed - a real, different failure. Leading hypothesis: concurrent uploads racing on Supabase's session refresh token (only one of several simultaneous requests can win a token rotation; the rest get silently logged out mid-batch). Consistent with a later test (5 photos) succeeding completely - an intermittent, timing-dependent race, not something tied to file count.
+
+### Built
+- Stopped swallowing upload errors - the shared banner's failure state now shows the real thrown error message, so any future occurrence gives concrete proof instead of another guess.
+- `ensureFreshSession()` in `uploadDashboardMedia.ts` - called once before any concurrent upload batch fires (nav upload + job/album upload), forcing Supabase's token refresh to happen a single time, sequentially, before multiple requests can race on it.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Root cause not 100% confirmed (no repro with the error text visible yet) - applied as a safe preventive fix regardless, since it's low-risk and directly addresses the leading hypothesis.
+
+### Test next
+Retest a multi-photo upload. If it still fails, the banner will now show the real error text - report it back verbatim rather than just "it failed."
+
+---
+
 ## Session: August 10, 2026 - One Shared Upload-Status Banner for the Whole App
 **AI:** Claude
 

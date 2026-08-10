@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Chased "Only 1 of N Uploads Succeeds" Past the Storage-Path Fix
+
+- [x] Confirmed via Vercel API that both prior upload fixes (single-file bug, storage-path collision) were genuinely live in production when Shawn hit this again - not a deploy-lag issue.
+- [x] Confirmed via direct DB query only 1 photo actually landed - a real, different failure, not the same bug recurring.
+- [x] Leading hypothesis: concurrent uploads racing on Supabase's session refresh - simultaneous requests can share the same (single-use, rotating) refresh token cookie; only one wins, the rest get silently logged out mid-batch. Consistent with the pattern being intermittent (Shawn's next test with 5 photos: all 5 succeeded) rather than tied to file count.
+- [x] Stopped swallowing upload errors - the banner now shows the real thrown error text on failure, so the next occurrence gives proof instead of another guess.
+- [x] Applied the safe preventive fix regardless of full confirmation: `ensureFreshSession()` in `uploadDashboardMedia.ts`, called once before any concurrent upload batch fires (nav upload + job/album upload), forcing the token refresh to happen once, sequentially, before requests can race on it.
+- [ ] Shawn QA: retest a multi-photo upload; if it still fails, read back the exact banner error text.
+
 ## 2026-08-10 - Shared Upload-Status Banner (App-Wide, All Business Types)
 
 - [x] Team round: big/unmissable but not a full-screen block, three real states (uploading/done/needs attention), never traps mid-task, one shared system not three separate ones.

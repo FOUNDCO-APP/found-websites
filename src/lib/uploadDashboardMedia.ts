@@ -1,6 +1,23 @@
 ﻿import { isVideoMedia } from "@/lib/mediaKind"
 import { createClient } from "@/lib/supabase/client"
 
+// Call once before firing a batch of concurrent uploads, never per-file.
+// Supabase's access-token cookie is shared across every request; if it's
+// expired when several uploads fire at once, each one independently tries
+// to refresh it with the same (single-use, rotating) refresh token - only
+// one wins, and the rest get silently logged out mid-batch. Priming the
+// session here forces that refresh to happen once, sequentially, before
+// any concurrent request can race on it.
+export async function ensureFreshSession() {
+  try {
+    const supabase = createClient()
+    await supabase.auth.getSession()
+  } catch {
+    // Best-effort - if this fails, individual uploads still surface their
+    // own real error instead of silently disappearing.
+  }
+}
+
 export type DashboardMediaUpload = {
   id: string
   url: string

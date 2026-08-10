@@ -8,7 +8,7 @@ import { getAvailableDashboardTools, getDashboardToolStorageKey, getDefaultDashb
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import FoundWordmark from "@/components/FoundWordmark"
 import { DashboardToolIcon } from "@/components/dashboard/DashboardToolIcon"
-import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { uploadDashboardMedia, ensureFreshSession } from "@/lib/uploadDashboardMedia"
 import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type Tab = DashboardTool
@@ -321,6 +321,7 @@ export default function DashboardNav({
 
     uploadStatus.start(files.length)
     const albumId = pendingAlbumRef.current
+    await ensureFreshSession()
     try {
       // Bounded concurrency, not one-at-a-time and not unlimited parallel -
       // full sequential meant N files was N full round trips end to end;

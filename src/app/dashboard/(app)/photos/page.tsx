@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, albumLabelFor } from "@/lib/dashboard/typography"
 import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSheet"
 import { isVideoMedia } from "@/lib/mediaKind"
-import { uploadDashboardMedia } from "@/lib/uploadDashboardMedia"
+import { uploadDashboardMedia, ensureFreshSession } from "@/lib/uploadDashboardMedia"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
@@ -246,6 +246,7 @@ function PhotosPageInner() {
     setUploading(true)
     uploadStatus.start(files.length)
     setPhotoError(null)
+    await ensureFreshSession()
     let uploadedCount = 0
     try {
       // Bounded concurrency - a few uploads at once, not one-at-a-time and
