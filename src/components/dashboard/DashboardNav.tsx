@@ -753,15 +753,23 @@ export default function DashboardNav({
             {/* Spacer pushes buttons to bottom */}
             <div style={{ flex: 1, minHeight: 24 }} />
 
-            {/* Shoot | Upload â€” two large primary buttons */}
-            <div style={{ padding: "0 24px", display: "flex", gap: 12 }}>
+            {/* Shoot is the primary action - it's the one path that never
+                hits iOS's native-picker prep delay (getUserMedia captures
+                straight to a file, no Photos-library/iCloud lookup at
+                all), and it matches what most job-site documentation
+                actually is: new photos, taken right now. Upload from
+                Library stays available but reads as the secondary,
+                occasional choice - and carries its own honest heads-up
+                about the one thing we can't speed up. Team-approved
+                2026-08-09. */}
+            <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: 10 }}>
               <button
                 onClick={() => shoot(selectedAlbumId ?? undefined)}
                 style={{
-                  flex: 1, padding: "18px 0", borderRadius: 18,
+                  width: "100%", padding: "20px 0", borderRadius: 18,
                   backgroundColor: SIGNAL_GREEN,
                   border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                   boxShadow: `0 0 28px ${SIGNAL_GREEN}33`,
                 }}
               >
@@ -769,25 +777,28 @@ export default function DashboardNav({
                   <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
                   <circle cx="12" cy="13" r="4"/>
                 </svg>
-                <span style={{ fontSize: "1rem", fontWeight: 700, color: FOUND_BLACK, letterSpacing: "-0.01em" }}>Shoot</span>
+                <span style={{ fontSize: "1.0625rem", fontWeight: 800, color: FOUND_BLACK, letterSpacing: "-0.01em" }}>Shoot</span>
               </button>
 
               <button
                 onClick={() => uploadFromLibrary(selectedAlbumId ?? undefined)}
                 style={{
-                  flex: 1, padding: "18px 0", borderRadius: 18,
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                  width: "100%", padding: "13px 0", borderRadius: 14,
+                  backgroundColor: "transparent",
+                  border: "none", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="16 16 12 12 8 16"/>
                   <line x1="12" y1="12" x2="12" y2="21"/>
                   <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
                 </svg>
-                <span style={{ fontSize: "1rem", fontWeight: 700, color: "white", letterSpacing: "-0.01em" }}>Upload</span>
+                <span style={{ fontSize: "0.9375rem", fontWeight: 650, color: "rgba(255,255,255,0.55)" }}>Upload from Library</span>
               </button>
+              <p style={{ margin: "-2px 0 0", textAlign: "center", fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", lineHeight: 1.4 }}>
+                Picking several photos or a video can take a few seconds to prepare after you tap Done - that's your phone, not Found.
+              </p>
             </div>
           </div>
         </>
