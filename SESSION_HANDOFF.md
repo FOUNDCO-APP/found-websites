@@ -1,5 +1,13 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Fix: Uneven Gallery Grid From Non-Square Video Tiles (`f991b7f`)
+
+Shawn reported the gallery grid looked "ugly"/unbalanced after the video fix - gaps under landscape video tiles. Root cause: `globals.css` already has a deliberate rule (with its own explanatory comment) forcing every gallery tile to a uniform 1:1 square crop, specifically because the team had already hit and fixed this exact uneven-grid problem once before for photos of different orientations. That CSS only ever targeted `<img>` - the `<video>` added for gallery videos never got the same treatment, so it rendered at its natural (usually landscape) shape and left a gap. Fixed `GridVideoTile` in `GalleryLightbox.tsx` to get the identical square/cover treatment (matches `AlbumPhotoGrid.tsx`'s video tile, which was already built correctly and never had this bug). Also extended the CSS selector itself (`.masonry-item img, .masonry-item video`) so this can't silently break again. `npx tsc --noEmit` and `npm run build` passed clean.
+
+**Test next:** confirm the HVAC gallery grid looks uniform now - no gaps under the video tile, all tiles the same square shape.
+
+---
+
 ## 2026-08-09 - Regression Fix: Gallery Showed Zero Photos (`8de2548`)
 
 Shawn caught this live within minutes of the blank-video fix shipping: the HVAC test account's `/gallery` page went from "video shows blank" to "nothing shows at all - Check back soon," despite having 11 real gallery photos. Root cause: `company_photos` has no `mime_type` column at all (confirmed directly against the live schema) - it's never been a real persisted field, only something the upload API echoes back in its own POST response right after a video upload. The blank-video fix below had added `mime_type` to four `.select()` calls assuming it was real; selecting a nonexistent column makes Postgres reject the whole query, so all four silently returned zero rows. Fixed by removing `mime_type` from every select - `isVideoMedia()` still works correctly from the URL's file extension alone, which is how video detection actually works everywhere else in this codebase already. Verified directly against the live DB (11 real rows for the Hvac company) before pushing the fix. `npx tsc --noEmit` and `npm run build` passed clean.
