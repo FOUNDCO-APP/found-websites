@@ -21,7 +21,13 @@ function normalize(items: (string | GalleryMedia)[]): GalleryMedia[] {
 function GridVideoTile({ src }: { src: string }) {
   const [loaded, setLoaded] = useState(false)
   return (
-    <div className="relative w-full" style={{ backgroundColor: "#111111" }}>
+    // Every other tile in this grid is forced to a 1:1 square crop
+    // (.masonry-item img) specifically so no tile's height can differ from
+    // its neighbors - that's what keeps the grid gapless. <video> doesn't
+    // match that img-only CSS selector, so it needs the same square/cover
+    // treatment applied directly, or it renders at its natural (usually
+    // landscape) shape and leaves a gap under itself.
+    <div className="relative w-full" style={{ aspectRatio: "1", backgroundColor: "#111111" }}>
       <video
         src={src}
         muted
@@ -30,8 +36,8 @@ function GridVideoTile({ src }: { src: string }) {
         playsInline
         preload="metadata"
         onLoadedData={() => setLoaded(true)}
-        className="w-full h-auto block hover:opacity-90 transition-opacity duration-200"
-        style={{ opacity: loaded ? 1 : 0.4 }}
+        className="hover:opacity-90 transition-opacity duration-200"
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", opacity: loaded ? 1 : 0.4 }}
       />
       <div
         className="absolute pointer-events-none flex items-center justify-center"
