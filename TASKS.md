@@ -1,5 +1,22 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Security Audit: Billing Auth Gap + Worker-Role Gaps
+
+- [x] Ran dedicated security audit of worker-role feature (not a self-check).
+- [x] Fixed more/actions.ts: zero-auth billing actions (pre-existing, not worker-specific) - new requireCompanyOwner() guards all 6.
+- [x] Fixed social-posts/route.ts: no requireOwnerAccess on any method.
+- [x] Fixed company-slug/route.ts: PATCH had no check; GET now strips billing fields for non-owners.
+- [x] Fixed photos/download/route.ts: bulk export had no check.
+- [x] Fixed layout.tsx: lead/order/reservation counts leaked to worker sessions.
+- [x] Confirmed solid: /api/photos, /api/albums, no owner-escalation path, revoked members blocked everywhere.
+- [x] Verify `npx tsc --noEmit` and `npm run build`.
+- [ ] Shawn QA: owner billing flows still work (buy add-on, upgrade, billing portal).
+- [ ] Shawn QA: worker still blocked from the 4 fixed routes.
+- [ ] Shawn QA: Photos page still works for a worker account.
+- [ ] Next: back to Jobs feature list - cover photo selector, photo notes (+ possible estimate linkage), job notes, worker permission toggles (owner grants specific access like estimates), job search/filter, address privacy toggle. Facebook link-preview also needs a real test (iMessage confirmed working, Facebook assumed but unverified).
+
+---
+
 ## 2026-08-09 - iOS Native-Picker Delay + App Store Timeline Question
 
 - [x] "Preparing..." focus-triggered signal for the native-picker handoff gap.

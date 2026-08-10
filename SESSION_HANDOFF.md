@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Security Audit: Billing-Action Authorization Gap + 3 Worker-Role Gaps (`00310a1`)
+
+### Where We Left Off
+Before building any more Jobs features, Shawn asked for a real security review of the worker-role feature - specifically "check securities for that extra person, everything is set up properly." Ran a dedicated audit agent (not a self-check) rather than just asserting it was fine.
+
+### What The Audit Found
+- **Most severe, not worker-specific - predates today's work entirely:** every billing action in `more/actions.ts` (buy an add-on, open the Stripe billing portal, change plans, `previewPlanUpgrade`/`confirmPlanUpgrade`) took a client-supplied `companyId` with **zero authorization check**. Any authenticated user could in principle act on a company that wasn't theirs just by knowing its id.
+- **Three real worker-specific gaps** - routes that resolve a company but were missing the `requireOwnerAccess()` check every other owner-only route already has: `social-posts/route.ts` (marketing drafts), `company-slug/route.ts` PATCH (business name/tax rate) plus a minor GET info leak (billing-adjacent fields), `photos/download/route.ts` (bulk photo zip-export).
+- **One minor leak:** `layout.tsx` sent lead/order/reservation counts and their latest-activity timestamps to every dashboard request regardless of role - a worker's browser received owner-only numbers even though they can never reach the Leads page.
+- **Confirmed solid:** the actual worker-allowed surfaces (`/api/photos`, `/api/albums`) are correctly tenant-scoped with no cross-company leak. No way for a worker to escalate to owner. Revoked members lose access everywhere immediately. Team invite/revoke correctly blocks non-owners.
+
+### What Changed
+- New `requireCompanyOwner(companyId)` helper in `more/actions.ts`, guards all 6 billing entry points.
+- `requireOwnerAccess()` added to `social-posts` (all 3 methods), `company-slug` PATCH, `photos/download` POST.
+- `company-slug` GET strips billing-adjacent fields for non-owners instead of blocking the whole route (Photos, a worker-accessible page, needs the plain slug/industry data from this same endpoint).
+- `layout.tsx` skips the lead-count query entirely for non-owners.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Not yet tested live by Shawn.
+
+### Test Next
+- Confirm owner billing flows (buy add-on, upgrade plan, open billing portal) still work normally.
+- Confirm a worker account still gets `[]`/blocked responses from the four fixed routes.
+- Confirm Photos page still works correctly for a worker (uses `company-slug` GET for slug/industry/isPro).
+
+---
+
 ## 2026-08-09 - iOS Native-Picker Delay: Preparing Signal + Shoot-First Redesign (3 commits)
 
 ### Where We Left Off

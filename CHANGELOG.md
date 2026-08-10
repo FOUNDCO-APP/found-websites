@@ -1,3 +1,19 @@
+## Session: August 9, 2026 - Security Audit: Billing-Action Authorization Gap + 3 Worker-Role Gaps
+**AI:** Claude
+
+### Built
+Ran a dedicated audit (agent, not self-check) of the worker-role feature per Shawn's request before building more Jobs features on top of it. Found and fixed:
+- `more/actions.ts` billing actions had **zero authorization check** at all (client-supplied companyId, no ownership verification) - pre-existing, not worker-specific, most severe finding. New `requireCompanyOwner()` now guards all 6 entry points.
+- Three real worker-specific gaps missing `requireOwnerAccess()`: `social-posts/route.ts`, `company-slug/route.ts` PATCH (+ GET info leak), `photos/download/route.ts`.
+- Minor: `layout.tsx` sent lead/order/reservation counts to worker sessions regardless of role - now skipped for non-owners.
+- Confirmed solid: `/api/photos`, `/api/albums`, no owner-escalation path, revoked members blocked everywhere, team invite/revoke correctly gated.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Not yet tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - iOS Native-Picker Delay: Preparing Signal + Shoot-First Redesign
 **AI:** Claude
 
