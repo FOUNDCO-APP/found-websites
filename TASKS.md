@@ -1,5 +1,20 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - Real Billing Bug: Webhook Silently Reset Plan to Starter
+
+- [x] Root-caused Taco Shop showing Starter despite active paid Business subscription.
+- [x] Fixed checkout.session.completed hardcoding plan:"found" and racing with the correct subscription-sync handler.
+- [x] Got scoped Stripe Restricted key (not the production Secret key) for live investigation - stored in .env.local, gitignored.
+- [x] Audited all 34 companies with a stripe_customer_id against real Stripe data.
+- [x] Corrected Taco Shop and Tacos in the database to found_business (matches real Stripe state).
+- [x] Verify `npx tsc --noEmit` and `npm run build`.
+- [ ] Shawn QA: Taco Shop dashboard now shows Found Business correctly.
+- [ ] Shawn QA: fresh real plan upgrade on a test account sticks correctly (no silent reset).
+- [ ] Follow-up, not yet investigated: 22 companies have a stripe_customer_id that doesn't exist in live Stripe - likely test-mode ids from before live billing was wired up mid-July. Needs its own look.
+- [ ] Still pending: F0UND1138 promo code ($38 off Pro = $1) - not yet created, needs the coupon-write permission on the new restricted key exercised.
+
+---
+
 ## 2026-08-09 - Security Audit: Billing Auth Gap + Worker-Role Gaps
 
 - [x] Ran dedicated security audit of worker-role feature (not a self-check).

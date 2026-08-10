@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - Real Billing Bug Found Live: Webhook Silently Reset Plan to Starter (`5fbc352`)
+
+### Where We Left Off
+Shawn was testing the billing-authorization fix (upgrade Starter -> Business on Taco Shop) and the app showed it still on Starter afterward, despite Stripe showing an active Found Business subscription since July 12. Got a new scoped Stripe **Restricted key** (separate from the production Secret key, permissions limited to Coupons/Promotion codes/Subscriptions/Customers/Invoices/Charges) to investigate with real data instead of guessing - stored locally as `STRIPE_RESTRICTED_KEY` in `.env.local` (gitignored), never wired into application code.
+
+### Root Cause Found
+`src/app/api/stripe/webhook/route.ts`'s `checkout.session.completed` handler hardcoded `plan: "found"` (Starter) on every new subscription, regardless of what was actually purchased. Stripe fires both `checkout.session.completed` and `customer.subscription.created` for a new subscription with no guaranteed order - the subscription-created handler correctly computes the real plan from the actual Stripe price, but if the checkout handler processed after it, it silently overwrote the correct plan back to Starter with zero error or log. Stripe kept billing the correct plan the whole time; only the app's own enforcement was wrong.
+
+### What Changed
+- `checkout.session.completed` no longer touches `plan` at all - only `stripe_customer_id`/`subscription_status`. `customer.subscription.created`/`updated` is now the sole source of truth for plan (which is what it was already doing correctly).
+- Ran a full live audit across all 34 companies with a real `stripe_customer_id`: **9 matched correctly**, **2 confirmed real mismatches** (Taco Shop, Tacos - both corrected directly in the database to `found_business`, matching their real active Stripe subscriptions), **22 have a `stripe_customer_id` that doesn't exist in live Stripe at all** - almost certainly test-mode ids saved before live billing was fully wired up mid-July. That last group is a separate, likely pre-existing situation, not caused by this bug - flagged for its own follow-up, not yet investigated further.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Live audit numbers above came from real Stripe API calls, not assumptions.
+- Not yet re-tested live by Shawn (the original failing scenario).
+
+### Test Next
+- Confirm Taco Shop's dashboard now correctly shows Found Business.
+- Do a fresh real plan upgrade end to end on a test account and confirm the plan sticks correctly this time (no silent reset).
+- Decide whether/when to investigate the 22 stripe_customer_id-not-found companies - do their subscriptions exist in Stripe test mode instead, and does that matter for any of them.
+
+---
+
 ## 2026-08-09 - Security Audit: Billing-Action Authorization Gap + 3 Worker-Role Gaps (`00310a1`)
 
 ### Where We Left Off

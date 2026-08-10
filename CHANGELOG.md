@@ -1,3 +1,17 @@
+## Session: August 9, 2026 - Real Billing Bug: Webhook Silently Reset Plan to Starter
+**AI:** Claude
+
+### Built
+- Root-caused a real, live bug: Taco Shop (a real actively-paying test account) showed Found Starter in the app despite an active Found Business Stripe subscription since July 12. `checkout.session.completed` in the Stripe webhook hardcoded `plan: "found"` on every new subscription and could silently race against/overwrite the correct plan set by `customer.subscription.created`, with zero error or log (`5fbc352`).
+- Fixed: `checkout.session.completed` no longer touches `plan` at all; the subscription-created/updated handler is the sole source of truth.
+- Got a new scoped Stripe Restricted key (separate from the production Secret key, limited permissions) to investigate with live data. Audited all 34 companies with a real Stripe customer id: 9 correct, 2 confirmed mismatches (corrected directly in the database), 22 with a stripe_customer_id that doesn't exist in live Stripe at all (likely pre-mid-July test-mode ids, separate follow-up).
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Not yet re-tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - Security Audit: Billing-Action Authorization Gap + 3 Worker-Role Gaps
 **AI:** Claude
 
