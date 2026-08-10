@@ -1,3 +1,19 @@
+## Session: August 9, 2026 - iOS Native-Picker Delay: Preparing Signal + Shoot-First Redesign
+**AI:** Claude
+
+### Built
+- New `triggerNativePicker()` in `DashboardNav.tsx` - shows a "Preparing..." pill using a `window.focus` heuristic (fires when iOS's native picker sheet dismisses, before the actual file data arrives) instead of true silence during the OS-side file-prep window (`12e77ad`).
+- Camera sheet redesign: Shoot (live capture, never touches Photos library/iCloud) is now the primary full-width action; Upload from Library is a smaller secondary action with a one-time expectation-setting line (`e2bb603`).
+
+### Also raised
+Shawn wants nationwide paid ads live this week and asked about iOS/Android app store timelines. Team's honest assessment: Google Play (PWA-as-TWA) is realistic this week; Apple isn't (D-U-N-S number for business enrollment + real native functionality needed to survive App Review's "Minimum Functionality" guideline). Recommended not blocking the ad launch on either - drive to the existing web/PWA experience, pursue Google Play in parallel, scope Apple separately. Awaiting Shawn's direction.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after both commits.
+- Not yet tested live by Shawn.
+
+---
+
 ## Session: August 9, 2026 - Upload Speed/Limits + Estimate<->Job Reverse Link
 **AI:** Claude
 

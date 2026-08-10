@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-09 - iOS Native-Picker Delay + App Store Timeline Question
+
+- [x] "Preparing..." focus-triggered signal for the native-picker handoff gap.
+- [x] Shoot made primary action in camera sheet, Upload from Library secondary with expectation-setting copy.
+- [x] Verify `npx tsc --noEmit` and `npm run build` after both commits.
+- [ ] Shawn QA: Preparing pill appears immediately on return from native picker.
+- [ ] Shawn QA: camera sheet reads Shoot-first now, Upload feels clearly secondary.
+- [ ] Decision needed: App Store strategy. Team recommendation given (Google Play this week via TWA, Apple needs D-U-N-S number + real native functionality, don't block ad launch on either) - awaiting Shawn's direction on what to build next.
+
+---
+
 ## 2026-08-09 - Upload Speed/Limits + Estimate<->Job Reverse Link
 
 - [x] 12-file soft cap on multi-file uploads (Photos + Jobs share this path).

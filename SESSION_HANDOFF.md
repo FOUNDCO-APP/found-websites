@@ -1,5 +1,28 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-09 - iOS Native-Picker Delay: Preparing Signal + Shoot-First Redesign (3 commits)
+
+### Where We Left Off
+Shawn live-tested the upload progress work and found it insufficient: a single 5-second video from Photos library still gave 4-6 seconds of total silence after tapping the native picker's checkmark, with the ability to still tap/deselect the thumbnail during that wait - "sitting on an iOS screen thinking it didn't work." Root-caused properly this time before building anything: this is iOS itself preparing the file (HEIC conversion, iCloud download if not on-device) entirely inside its own native picker UI, before the page's change event fires and before any Found code runs at all. Confirmed this also happens picking 3+ plain photos, not just video - same mechanism, just more visible at scale.
+
+### What Changed
+1. **"Preparing..." signal** (`12e77ad`) - new `triggerNativePicker()` wraps both native-picker entry points (library upload, camera-capture fallback) with a one-time `window.focus` listener. iOS fires focus on the page the moment its native sheet dismisses, landing before the file data itself arrives - used as an early, honest "something is happening" signal, replaced by the real upload-progress pill once file data actually arrives. Heuristic, not a fix for the underlying OS delay - a 15s safety-net timeout clears it if the user cancels instead of picking.
+2. **Shoot made primary, Upload secondary** (`e2bb603`) - the real lever, per a second team round: "Shoot" (live in-app capture via `getUserMedia`/`MediaRecorder`) never touches Apple's Photos library or iCloud at all - confirmed by reading `CameraSheet.tsx` - so it structurally cannot hit this delay, unlike Upload-from-Library which always will. Shoot is now full-width/primary in the camera sheet; Upload from Library is now a smaller secondary action with a one-time expectation-setting line ("...can take a few seconds to prepare... that's your phone, not Found").
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean after all 3 commits this thread.
+- Not yet tested live by Shawn.
+
+### Test Next
+- Confirm the "Preparing..." pill appears the instant you return to the app after tapping the native picker's checkmark (before the real upload-progress pill takes over).
+- Confirm the camera sheet now shows Shoot as the clear primary action with Upload from Library smaller/secondary underneath, plus the heads-up line.
+- Retest the original complaint: pick 3+ photos or a video via Upload from Library, see if the wait feels less like "broken" now that something is visible immediately.
+
+### Also raised, not yet actioned
+Shawn wants paid ads live nationwide this week and asked about iOS App Store + Google Play timelines. Team's honest read (not yet a decision, pending Shawn's direction): Google Play (PWA wrapped as a Trusted Web Activity) is realistically achievable this week; Apple App Store is not - needs a D-U-N-S number for business enrollment (can take weeks on its own, should start immediately regardless of anything else) plus real native functionality to survive Apple's "Minimum Functionality" review guideline, which a bare PWA wrapper commonly fails. Recommendation: don't block this week's ad launch on either app store - drive ads to the web/PWA experience (already live, already has Add to Home Screen), pursue Google Play in parallel, scope Apple as its own real project.
+
+---
+
 ## 2026-08-09 - Upload Speed/Limits + Estimate<->Job Reverse Link (2 commits)
 
 ### Where We Left Off
