@@ -83,6 +83,7 @@ export default function DashboardNav({
   const [creating, setCreating]             = useState(false)
   const [uploading, setUploading]           = useState(false)
   const [uploadProgress, setUploadProgress] = useState<{ done: number; total: number } | null>(null)
+  const [preparingUpload, setPreparingUpload] = useState(false)
   const [toast, setToast]                   = useState<string | null>(null)
   const [pendingSegment, setPendingSegment] = useState<string | null>(null)
 
@@ -255,14 +256,35 @@ export default function DashboardNav({
     if (typeof navigator !== "undefined" && "mediaDevices" in navigator) {
       setShowCamera(true)
     } else {
-      fileRef.current?.click()
+      triggerNativePicker(fileRef.current)
     }
+  }
+
+  // iOS prepares every picked photo/video (HEIC conversion, iCloud
+  // download if not on-device) entirely inside its own native picker UI -
+  // before our page's change event fires, before any of our code runs at
+  // all. Nothing can render during that window. What we *can* do: iOS
+  // fires a focus event on the page the moment that native sheet
+  // dismisses, which lands before the file data actually arrives - use it
+  // as an early, honest "something is happening" signal instead of true
+  // silence. Team-approved 2026-08-09, confirmed live by Shawn (also
+  // happens picking 3+ photos, not just video - same root cause, just
+  // more visible at scale).
+  function triggerNativePicker(input: HTMLInputElement | null) {
+    if (!input) return
+    window.addEventListener("focus", () => {
+      setPreparingUpload(true)
+      // Safety net - if the user canceled instead of picking, no change
+      // event ever fires, so this can't be left to clear itself.
+      setTimeout(() => setPreparingUpload(false), 15000)
+    }, { once: true })
+    input.click()
   }
 
   function uploadFromLibrary(albumId?: string) {
     closePicker()
     pendingAlbumRef.current = albumId ?? null
-    uploadRef.current?.click()
+    triggerNativePicker(uploadRef.current)
   }
 
   function handleCameraUploaded(photo: UploadedPhoto) {
@@ -295,6 +317,9 @@ export default function DashboardNav({
   }
 
   async function handleNavUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    // Real file data has arrived - the "preparing" window (iOS's own
+    // native handoff delay) is over regardless of what got picked.
+    setPreparingUpload(false)
     const picked = Array.from(e.target.files ?? [])
     if (picked.length === 0) { e.target.value = ""; return }
 
@@ -490,6 +515,37 @@ export default function DashboardNav({
       />
 
       {/* â”€â”€ Toast â”€â”€ */}
+      {/* Honest "something is happening" signal for the window between
+          tapping the native picker's checkmark and our own upload code
+          actually starting - iOS is doing its own HEIC/video prep during
+          that gap, entirely outside this page, so this can only ever be
+          a heuristic (window focus returning), not a guarantee. Replaced
+          by the real progress pill the instant actual file data arrives. */}
+      {preparingUpload && !uploadProgress && (
+        <div style={{
+          position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+          zIndex: 200,
+          backgroundColor: "rgba(8,10,9,0.92)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 100,
+          padding: "10px 20px",
+          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          display: "flex", alignItems: "center", gap: 8,
+          animation: "pickerFade 0.2s ease",
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}>
+          <div style={{
+            width: 14, height: 14, borderRadius: "50%",
+            border: `2px solid ${SIGNAL_GREEN}35`, borderTopColor: SIGNAL_GREEN,
+            animation: "nav-spin 0.7s linear infinite",
+          }} />
+          <span style={{ ...TYPE.footnote, fontWeight: 600, color: "white" }}>
+            Preparing...
+          </span>
+        </div>
+      )}
+
       {/* Real progress instead of a bare "uploading" spinner with no count.
           Shown for every upload, not just multi-file batches - a single
           video can take several real seconds (no compression on video
