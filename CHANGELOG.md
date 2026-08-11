@@ -1,3 +1,23 @@
+## Session: August 10, 2026 - Job Photo Grid, Gallery Tab Filter, "View Job Photos" Flicker
+**AI:** Claude
+
+### Team round: "This week" inside a Job
+Shawn noticed the date-group headers ("This week," "Last week") at the top of a Job's photo grid felt wrong. Team's read: a Job is a bounded project record, not a rolling chronological stream - the calendar framing borrows a personal-photo-library pattern that undercuts the "complete work record" feeling built earlier today (job notes, cover photo, linked estimates). Dropped date grouping specifically inside Jobs (flat, most-recent-first grid); kept it for the general Photos/Gallery views where it still serves real navigation.
+
+### Filter only worked on All Photos
+Shawn noticed the filter button was disabled on every tab except All Photos. Confirmed intentional-looking code, just scoped too narrowly. Clarified with Shawn: Favorites should also work on the Website/Gallery tab (useful - "show me my favorited photos that are live on the site"); "Not on site" correctly stays All-Photos-only since it's meaningless once you're already looking at what's already on the site.
+
+### "View Job Photos" flicker, root-caused
+Shawn reported that clicking into an estimate from a job briefly showed "View Job Photos" before switching to the real job name. Root cause: both `DetailSheet` and `BuilderSheet` on the Estimates page each ran their own independent `/api/albums` fetch on mount, starting from an empty array every time - the linked job's name could only resolve after that fresh network round-trip completed. Fixed by lifting `jobs` state up to the parent page (fetched once on initial load, already populated by the time either sheet opens) instead of two separate components independently re-fetching the same data from scratch.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+Open a Job and confirm the photo grid shows flat with no date headers. Switch to the Website/Gallery tab and confirm the Favorites filter now works there. Click into an estimate from a job and confirm the real job name shows immediately with no flicker.
+
+---
+
 ## Session: August 10, 2026 - Estimate List/Detail Never Actually Displayed the Job Title
 **AI:** Claude
 

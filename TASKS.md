@@ -1,5 +1,12 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Job Photo Grid, Gallery Tab Filter, "View Job Photos" Flicker
+
+- [x] Team round: "This week" date-group headers don't fit inside a Job (a bounded project record, not a rolling photo stream) - dropped for Jobs specifically, kept for the general Photos/Gallery views where they still do real navigational work.
+- [x] Fixed: filter button (Favorites/Not on site) only worked on the All Photos tab, disabled everywhere else. Enabled Favorites on the Website/Gallery tab too (Shawn confirmed) - "Not on site" correctly stays All-Photos-only since it's meaningless once you're already looking at what's on the site.
+- [x] Root-caused the "View Job Photos" flicker Shawn reported when opening an estimate from a job: `DetailSheet` and `BuilderSheet` each ran their own independent `/api/albums` fetch on mount, starting from empty every time - the linked-job name only resolved after that fresh fetch completed, showing the generic fallback text first. Lifted `jobs` state up to the parent `EstimatesPage` (fetched once, already-loaded by the time either sheet opens) and removed both duplicate fetches.
+- [ ] Shawn QA: job photo grid shows flat (no date headers); Favorites filter works on the Gallery tab; clicking into an estimate from a job shows the real job name immediately, no flicker.
+
 ## 2026-08-10 - Estimate List/Detail Never Actually Displayed the Job Title
 
 - [x] Shawn retested and reported "no job name listed" - checked the live database directly rather than guess: confirmed the title-sync fix from the prior entry genuinely worked (his second test estimate has `title: "Hvac Install"` saved correctly), but neither the Estimates list card nor the estimate detail header ever rendered `title` anywhere - it was a fully dead field visually even when populated.

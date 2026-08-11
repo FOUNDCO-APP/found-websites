@@ -685,10 +685,15 @@ function PhotosPageInner() {
   const gallery = photos.filter(p => p.in_gallery || (p.for_website && !p.website_section))
   const favorites  = photos.filter(p => p.for_social)
   const unused = photos.filter(p => !p.in_gallery && !p.website_section)
+  const galleryFavorites = gallery.filter(p => p.for_social)
   const filteredAllPhotos =
     photoFilter === "favorites" ? favorites :
     photoFilter === "unused" ? unused :
     allPhotos
+  // "Not on site" only makes sense against the full library - the Gallery
+  // tab is by definition already-on-site photos, so only Favorites applies
+  // there. Team-approved 2026-08-10.
+  const filteredGallery = photoFilter === "favorites" ? galleryFavorites : gallery
 
   const albumPhotos = activeAlbum
     ? photos.filter(p => p.album_id === activeAlbum.id)
@@ -696,16 +701,23 @@ function PhotosPageInner() {
 
   const currentPhotos =
     view === "all" ? filteredAllPhotos :
-    view === "website" ? gallery : []
+    view === "website" ? filteredGallery : []
 
   const lightroomPhotos = lightroomSource === "album" ? albumPhotos : currentPhotos
 
   const activeAllTabLabel = photoFilter === "favorites" ? "Favorites" : photoFilter === "unused" ? "Not on site" : "All Photos"
   const activeAllTabCount = photoFilter === "favorites" ? favorites.length : photoFilter === "unused" ? unused.length : allPhotos.length
-  const TAB_LABELS = { all: activeAllTabLabel, website: "Gallery", albums: albumLabel.plural }
-  const ACTIVE_TAB_COUNTS = { all: activeAllTabCount, website: gallery.length, albums: albums.length }
-  const FILTER_LABELS = { all: "All Photos", favorites: "Favorites", unused: "Not on site" }
-  const FILTER_COUNTS = { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
+  const activeWebsiteTabLabel = view === "website" && photoFilter === "favorites" ? "Favorites" : "Gallery"
+  const activeWebsiteTabCount = view === "website" && photoFilter === "favorites" ? galleryFavorites.length : gallery.length
+  const TAB_LABELS = { all: activeAllTabLabel, website: activeWebsiteTabLabel, albums: albumLabel.plural }
+  const ACTIVE_TAB_COUNTS = { all: activeAllTabCount, website: activeWebsiteTabCount, albums: albums.length }
+  const canFilter = view === "all" || view === "website"
+  const filterableBaseCount = view === "website" ? gallery.length : allPhotos.length
+  const FILTER_LABELS = { all: view === "website" ? "All Gallery Photos" : "All Photos", favorites: "Favorites", unused: "Not on site" }
+  const FILTER_COUNTS = view === "website"
+    ? { all: gallery.length, favorites: galleryFavorites.length, unused: 0 }
+    : { all: allPhotos.length, favorites: favorites.length, unused: unused.length }
+  const FILTER_OPTIONS: PhotoFilter[] = view === "website" ? ["all", "favorites"] : ["all", "favorites", "unused"]
 
   function openLightroom(photo: Photo, source: Photo[]) {
     const index = source.findIndex(p => p.id === photo.id)
@@ -858,7 +870,13 @@ function PhotosPageInner() {
               {(["all", "website", "albums"] as View[]).map(v => {
                 const active = view === v
                 return (
-                  <button key={v} onClick={() => { setView(v); if (v !== "all") setPhotoFilter("all") }} style={{
+                  <button key={v} onClick={() => {
+                    setView(v)
+                    // "Not on site" only applies to the full library - carry
+                    // Favorites across tabs, but clear an inapplicable filter
+                    // instead of leaving it silently selected and unapplied.
+                    if (v === "albums" || (v === "website" && photoFilter === "unused")) setPhotoFilter("all")
+                  }} style={{
                     flex: 1, padding: "10px 0", border: "none", cursor: "pointer",
                     backgroundColor: "transparent",
                     borderBottom: `2px solid ${active ? SIGNAL_GREEN : "rgba(255,255,255,0.08)"}`,
@@ -882,20 +900,20 @@ function PhotosPageInner() {
             </div>
             <button
               onClick={() => setShowPhotoFilters(true)}
-              disabled={view !== "all" || photos.length === 0}
+              disabled={!canFilter || filterableBaseCount === 0}
               aria-label="Filter photos"
               style={{
                 width: 42,
                 minHeight: 42,
                 borderRadius: 14,
-                border: `1px solid ${view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.1)"}`,
-                backgroundColor: view === "all" && photoFilter !== "all" ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.055)",
-                color: view === "all" && photoFilter !== "all" ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
+                border: `1px solid ${canFilter && photoFilter !== "all" ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.1)"}`,
+                backgroundColor: canFilter && photoFilter !== "all" ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.055)",
+                color: canFilter && photoFilter !== "all" ? SIGNAL_GREEN : "rgba(255,255,255,0.62)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: view === "all" && photos.length > 0 ? "pointer" : "default",
-                opacity: view === "all" && photos.length > 0 ? 1 : 0.34,
+                cursor: canFilter && filterableBaseCount > 0 ? "pointer" : "default",
+                opacity: canFilter && filterableBaseCount > 0 ? 1 : 0.34,
                 transition: "background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease",
               }}
             >
@@ -907,6 +925,7 @@ function PhotosPageInner() {
               active={photoFilter}
               labels={FILTER_LABELS}
               counts={FILTER_COUNTS}
+              options={FILTER_OPTIONS}
               onSelect={(filter) => { setPhotoFilter(filter); setShowPhotoFilters(false) }}
               onClose={() => setShowPhotoFilters(false)}
             />
@@ -979,6 +998,7 @@ function PhotosPageInner() {
             onToggleSelect={toggleSelect}
             gridColumns={usesJobs ? "repeat(2, minmax(0, 1fr))" : "repeat(3, 1fr)"}
             cardVariant={usesJobs ? "job" : "library"}
+            groupByDate={!usesJobs}
             emptyTitle={`No photos in this ${albumLabel.singular.toLowerCase()} yet.`}
             emptySub="Tap the camera button to add photos."
             onAdd={openCamera}
@@ -1032,18 +1052,21 @@ function PhotosPageInner() {
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             emptyTitle={
+              view === "website" && photoFilter === "favorites" ? "No favorites in your gallery yet." :
               view === "website" ? "No gallery photos yet." :
               photoFilter === "favorites" ? "No favorites yet." :
               photoFilter === "unused" ? "Every photo is being used." :
               "Take your first photo."
             }
             emptySub={
+              view === "website" && photoFilter === "favorites" ? "Heart a gallery photo to find it here quickly." :
               view === "website" ? "Tap Add to Gallery on any photo customers should see." :
               photoFilter === "favorites" ? "Heart the photos you want to find quickly later." :
               photoFilter === "unused" ? "New photos that are not in your gallery or on a page will show here." :
               "Tap the camera button to take photos or upload from your phone."
             }
             emptyIcon={
+              view === "website" && photoFilter === "favorites" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
               view === "website" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg> :
               photoFilter === "favorites" ? <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg> :
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -1581,7 +1604,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
 
 // â”€â”€ Date-grouped photo grid â”€â”€
 function DateGroupedGrid({
-  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta, gridColumns = "1fr 1fr", cardVariant = "library"
+  photos, onView, onFlag, onGallery, onPlace, destinations, onShare, onRequestDelete, selectMode, selectedIds, onToggleSelect, emptyTitle, emptySub, emptyIcon, onAdd, showAddCta, gridColumns = "1fr 1fr", cardVariant = "library", groupByDate = true
 }: {
   photos: Photo[]
   onView: (photo: Photo) => void
@@ -1601,6 +1624,11 @@ function DateGroupedGrid({
   showAddCta?: boolean
   gridColumns?: string
   cardVariant?: "library" | "job"
+  // A Job is a bounded project record, not a rolling chronological stream -
+  // "This week" headers borrow personal-photo-library framing that doesn't
+  // fit there. Team-approved 2026-08-10: flat grid inside a Job, date
+  // grouping stays for the general Photos/Gallery views.
+  groupByDate?: boolean
 }) {
   if (photos.length === 0) {
     return (
@@ -1622,6 +1650,30 @@ function DateGroupedGrid({
             boxShadow: `0 4px 20px ${SIGNAL_GREEN}44`,
           }}>Add a Photo</button>
         )}
+      </div>
+    )
+  }
+
+  if (!groupByDate) {
+    return (
+      <div style={{ display: "grid", gridTemplateColumns: gridColumns, gap: 3 }}>
+        {photos.map(photo => (
+          <PhotoCard
+            key={photo.id}
+            photo={photo}
+            onView={onView}
+            onFlag={onFlag}
+            onGallery={onGallery}
+            onPlace={onPlace}
+            destinations={destinations}
+            onShare={onShare}
+            onRequestDelete={onRequestDelete}
+            selectMode={selectMode}
+            selected={selectedIds?.has(photo.id)}
+            onToggleSelect={onToggleSelect}
+            variant={cardVariant}
+          />
+        ))}
       </div>
     )
   }
@@ -2405,10 +2457,11 @@ function FilterLinesIcon() {
   )
 }
 
-function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
+function PhotoFilterPopover({ active, labels, counts, options = ["all", "favorites", "unused"], onSelect, onClose }: {
   active: PhotoFilter
   labels: Record<PhotoFilter, string>
   counts: Record<PhotoFilter, number>
+  options?: PhotoFilter[]
   onSelect: (filter: PhotoFilter) => void
   onClose: () => void
 }) {
@@ -2452,7 +2505,7 @@ function PhotoFilterPopover({ active, labels, counts, onSelect, onClose }: {
         WebkitBackdropFilter: "blur(14px)",
       }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 4, position: "relative" }}>
-          {(["all", "favorites", "unused"] as PhotoFilter[]).map(filter => {
+          {options.map(filter => {
             const selected = active === filter
             return (
               <button

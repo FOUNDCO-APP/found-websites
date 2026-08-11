@@ -255,6 +255,7 @@ export default function EstimatesPage() {
   const [defaultTaxRate, setDefaultTaxRate] = useState(0)
   const [leads, setLeads] = useState<LeadSuggestion[]>([])
   const [locationBias, setLocationBias] = useState("")
+  const [jobs, setJobs] = useState<JobAlbum[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<EstimateFilter>("all")
   const [showBuilder, setShowBuilder] = useState(false)
@@ -274,8 +275,10 @@ export default function EstimatesPage() {
       fetch("/api/rate-sheet").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({})),
       fetch("/api/leads").then(r => r.json()).catch(() => ({ leads: [] })),
-    ]).then(([ed, rd, sd, ld]) => {
+      fetch("/api/albums").then(r => r.json()).catch(() => ({ albums: [] })),
+    ]).then(([ed, rd, sd, ld, jd]) => {
       setEstimates(ed.estimates ?? [])
+      setJobs(((jd.albums ?? []) as JobAlbum[]).filter(a => a.album_type === "job"))
       const deepLinkedEstimate = new URLSearchParams(window.location.search).get("estimate")
       if (deepLinkedEstimate && (ed.estimates ?? []).some((e: Estimate) => e.id === deepLinkedEstimate)) {
         setSelectedId(deepLinkedEstimate)
@@ -510,6 +513,8 @@ export default function EstimatesPage() {
           initialLead={builderLead}
           defaultTaxRate={defaultTaxRate}
           locationBias={locationBias}
+          jobs={jobs}
+          onJobCreated={(job) => setJobs(prev => [job, ...prev])}
           onSave={handleCreate}
           onSaveDefaultTax={(rate) => {
             setDefaultTaxRate(rate)
@@ -529,6 +534,8 @@ export default function EstimatesPage() {
           companyStripeReady={companyStripeReady}
           locationBias={locationBias}
           rateSheet={rateSheet}
+          jobs={jobs}
+          onJobCreated={(job) => setJobs(prev => [job, ...prev])}
           onClose={() => { setSelectedId(null); refreshEstimates() }}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
           onSend={(method) => handleSend(selected, method)}
@@ -629,12 +636,14 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
 
 type LeadSuggestion = { id: string; name: string; phone: string | null; email: string | null; message?: string | null; partial_answers?: Record<string, unknown> | null }
 
-function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationBias, onSave, onSaveDefaultTax, onClose }: {
+function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationBias, jobs, onJobCreated, onSave, onSaveDefaultTax, onClose }: {
   rateSheet: RateSheetItem[]
   leads: LeadSuggestion[]
   initialLead?: LeadSuggestion | null
   defaultTaxRate: number
   locationBias?: string
+  jobs: JobAlbum[]
+  onJobCreated: (job: JobAlbum) => void
   onSave: (data: Partial<Estimate> & { line_items: LineItem[]; tax_rate: number }) => Promise<void>
   onSaveDefaultTax: (rate: number) => void
   onClose: () => void
@@ -660,16 +669,9 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
   const [newCat, setNewCat] = useState("labor")
   const [pricingMode, setPricingMode] = useState<"flat" | "rate">("flat")
   const [addingItem, setAddingItem] = useState(true)
-  const [jobs, setJobs] = useState<JobAlbum[]>([])
   const [jobId, setJobId] = useState<string | null>(null)
   const [showJobPicker, setShowJobPicker] = useState(false)
   const [creatingJob, setCreatingJob] = useState(false)
-
-  useEffect(() => {
-    fetch("/api/albums").then(r => r.json()).then(d => {
-      setJobs(((d.albums ?? []) as JobAlbum[]).filter(a => a.album_type === "job"))
-    }).catch(() => {})
-  }, [])
 
   async function handleCreateJob() {
     if (creatingJob) return
@@ -690,7 +692,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
       })
       const data = await res.json()
       if (data.album) {
-        setJobs(prev => [data.album, ...prev])
+        onJobCreated(data.album)
         setJobId(data.album.id)
         setShowJobPicker(false)
       }
@@ -1195,7 +1197,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
 }
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, companyStripeReady, locationBias, rateSheet, onClose, onUpdate, onSend, onDelete, onSync }: {
+function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, companyStripeReady, locationBias, rateSheet, jobs, onJobCreated, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
   companyCustomDomain: string | null
@@ -1203,6 +1205,8 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   companyStripeReady: boolean
   locationBias?: string
   rateSheet: RateSheetItem[]
+  jobs: JobAlbum[]
+  onJobCreated: (job: JobAlbum) => void
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
   onSend: (method: "email" | "sms" | "link" | "payment_link") => Promise<{ ok: boolean; error?: string }>
@@ -1230,15 +1234,8 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [newCat, setNewCat] = useState("labor")
   const [fullEstimate, setFullEstimate] = useState<Estimate | null>(null)
   const hasFetched = useRef(false)
-  const [jobs, setJobs] = useState<JobAlbum[]>([])
   const [showJobPicker, setShowJobPicker] = useState(false)
   const [attachingJob, setAttachingJob] = useState(false)
-
-  useEffect(() => {
-    fetch("/api/albums").then(r => r.json()).then(d => {
-      setJobs(((d.albums ?? []) as JobAlbum[]).filter(a => a.album_type === "job"))
-    }).catch(() => {})
-  }, [])
 
   async function attachJob(jobIdToAttach: string | null) {
     setAttachingJob(true)
@@ -1270,7 +1267,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
       })
       const data = await res.json()
       if (data.album) {
-        setJobs(prev => [data.album, ...prev])
+        onJobCreated(data.album)
         await onUpdate({ job_id: data.album.id })
         setFullEstimate(prev => prev ? { ...prev, job_id: data.album.id } : null)
         setShowJobPicker(false)
