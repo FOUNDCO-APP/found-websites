@@ -119,8 +119,6 @@
 
 .hq-photo-page { color: var(--hq-text); }
 .hq-photo-page > div:first-child { max-width: 1120px; margin-inline: auto; padding-top: 30px; }
-.hq-photo-page button, .hq-photo-page input { border-radius: 7px !important; }
-.hq-photo-page .rounded-full { border-radius: 7px !important; }
 @media (max-width: 720px) { .hq-photo-page > div:first-child { padding-top: 24px; } }
 
 .hq-login { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: var(--hq-bg); }
@@ -128,5 +126,3 @@
 .hq-login-form { display: grid; gap: 10px; margin-top: 24px; }
 .hq-login-form .hq-button { width: 100%; }
 .hq-login-error { margin: 0; color: var(--hq-red); font-size: 12px; }
-.hq-copy-panel .rounded-xl, .hq-copy-panel .rounded-lg { border-radius: 8px !important; }
-.hq-copy-panel button { min-height: 40px; }

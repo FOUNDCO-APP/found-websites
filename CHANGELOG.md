@@ -1,3 +1,21 @@
+## Session: August 11, 2026 - Found HQ Rebuild Phase 2: Brand System Migration
+**AI:** Claude
+
+### Built
+Migrated the 3 legacy components the audit identified as the real source of the "two different designs" feeling - all pre-date the July 8 brand refinement and were never brought forward.
+
+- `EmailPreviewTabs.tsx` - tab bar rebuilt on the real `hq-filter-row` class instead of a filled rounded-pill box.
+- `CopyRegenPanel.tsx` - rebuilt on the same `hq-business-list`/`hq-badge` pattern Clients and Sales already use, replacing Tailwind cards with hardcoded hex.
+- `PhotoCurator.tsx` - the largest and most complex of the three (full state machine, industry tabs, team-approval flow, all preserved exactly). Every hardcoded color (off-brand amber `#f5c842`, non-token green `#4caf50`, arbitrary grays) replaced with real brand CSS variables. Removed a blanket `!important` radius override in `admin.css` that existed only to patch over this component's off-brand shapes - no longer needed once the actual colors/shapes were fixed at the source, and it was fighting intentionally-circular elements like count badges.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Next
+Phase 3: new-signup visibility + real-time alerts (in-admin and email) - this is genuinely new, not a migration. Need to find where a company signup actually happens in the stack first.
+
+---
+
 ## Session: August 11, 2026 - Found HQ Rebuild Phase 1: Data Integrity + Orphaned Pages
 **AI:** Claude
 

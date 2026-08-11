@@ -220,21 +220,21 @@ export default function PhotoCurator() {
 
       {/* Header + progress */}
       <div className="px-6 pt-8 pb-4">
-        <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#32D074" }}>
+        <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "var(--hq-green)" }}>
           Quality
         </p>
         <div className="flex items-end justify-between gap-4">
-          <h1 className="text-2xl font-black text-white">Photo library</h1>
-          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "#32D074" : "#555" }}>
+          <h1 className="text-2xl font-black" style={{ color: "var(--hq-text)" }}>Photo library</h1>
+          <p className="text-sm font-black pb-0.5" style={{ color: doneCount === INDUSTRIES.length ? "var(--hq-green)" : "var(--hq-muted)" }}>
             {doneCount === INDUSTRIES.length ? "All done" : `${doneCount} / ${INDUSTRIES.length} complete`}
           </p>
         </div>
 
         {/* Progress bar */}
-        <div className="mt-3 h-1 rounded-full w-full" style={{ backgroundColor: "#222" }}>
+        <div className="mt-3 h-1 rounded-full w-full" style={{ backgroundColor: "var(--hq-surface-raised)" }}>
           <div
             className="h-1 rounded-full transition-all duration-500"
-            style={{ backgroundColor: "#32D074", width: `${(doneCount / INDUSTRIES.length) * 100}%` }}
+            style={{ backgroundColor: "var(--hq-green)", width: `${(doneCount / INDUSTRIES.length) * 100}%` }}
           />
         </div>
       </div>
@@ -254,11 +254,11 @@ export default function PhotoCurator() {
               <button
                 key={ind.key}
                 onClick={() => setActiveIndustry(ind.key)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded text-xs font-black uppercase tracking-wide whitespace-nowrap transition-all"
                 style={{
-                  backgroundColor: isActive ? "#32D074" : isDone ? "#1a2e1a" : hasPending ? "#2a2500" : "#222222",
-                  color: isActive ? "#ffffff" : isDone ? "#4caf50" : hasPending ? "#f5c842" : isNew ? "#555" : liveCount > 0 ? "#bbb" : "#555",
-                  border: isActive ? "none" : isDone ? "1px solid #32D074" : hasPending ? "1px solid #f5c842" : "1px solid #333",
+                  backgroundColor: isActive ? "var(--hq-green)" : isDone ? "rgba(50,208,116,0.1)" : hasPending ? "rgba(217,189,104,0.12)" : "var(--hq-surface-raised)",
+                  color: isActive ? "var(--hq-bg)" : isDone ? "var(--hq-green)" : hasPending ? "var(--hq-amber)" : isNew ? "var(--hq-dim)" : liveCount > 0 ? "var(--hq-muted)" : "var(--hq-dim)",
+                  border: isActive ? "none" : isDone ? "1px solid var(--hq-green)" : hasPending ? "1px solid var(--hq-amber)" : "1px solid var(--hq-border-strong)",
                 }}
               >
                 {isDone && !isActive && (
@@ -270,14 +270,14 @@ export default function PhotoCurator() {
                 {/* Live count badge */}
                 {liveCount > 0 && (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
-                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "#32D074" : "#333", color: "#fff" }}>
+                    style={{ backgroundColor: isActive ? "rgba(255,255,255,0.25)" : isDone ? "var(--hq-green)" : "var(--hq-border-strong)", color: isActive || isDone ? "var(--hq-bg)" : "var(--hq-text)" }}>
                     {liveCount}
                   </span>
                 )}
                 {/* Pending badge — amber */}
                 {hasPending && !isActive && (
                   <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
-                    style={{ backgroundColor: "#f5c842", color: "#000" }}>
+                    style={{ backgroundColor: "var(--hq-amber)", color: "var(--hq-bg)" }}>
                     {pendingCount} pending
                   </span>
                 )}
@@ -290,23 +290,23 @@ export default function PhotoCurator() {
       {/* Current industry status strip */}
       <div className="px-6 pb-3 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#444" }}>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--hq-dim)" }}>
             {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
           </p>
           {activeOwner && (
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#333" }}>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--hq-dim)" }}>
               / {activeOwner}
             </p>
           )}
         </div>
         <div className="flex items-center gap-4">
           {currentPending > 0 && (
-            <p className="text-xs font-black" style={{ color: "#f5c842" }}>
+            <p className="text-xs font-black" style={{ color: "var(--hq-amber)" }}>
               {currentPending} pending
             </p>
           )}
           {currentApproved > 0 && (
-            <p className="text-xs font-black" style={{ color: "#32D074" }}>
+            <p className="text-xs font-black" style={{ color: "var(--hq-green)" }}>
               {currentApproved} live
             </p>
           )}
@@ -320,14 +320,14 @@ export default function PhotoCurator() {
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           placeholder={`Search Pexels... e.g. "spa facial treatment"`}
-          className="flex-1 px-4 py-2.5 text-sm bg-white/8 text-white placeholder-white/30 rounded-lg border border-white/10 focus:outline-none focus:border-white/30"
-          style={{ backgroundColor: "rgba(255,255,255,0.06)" }}
+          className="flex-1 px-4 py-2.5 text-sm rounded border focus:outline-none"
+          style={{ backgroundColor: "var(--hq-surface)", color: "var(--hq-text)", borderColor: "var(--hq-border-strong)" }}
         />
         <button
           type="submit"
           disabled={searching || !searchInput.trim()}
-          className="px-5 py-2.5 font-black text-xs uppercase tracking-widest rounded-lg disabled:opacity-40 transition-opacity shrink-0"
-          style={{ backgroundColor: "#32D074", color: "#071109" }}
+          className="px-5 py-2.5 font-black text-xs uppercase tracking-widest rounded disabled:opacity-40 transition-opacity shrink-0"
+          style={{ backgroundColor: "var(--hq-green)", color: "var(--hq-bg)" }}
         >
           {searching ? "..." : "Search"}
         </button>
@@ -335,8 +335,8 @@ export default function PhotoCurator() {
           <button
             type="button"
             onClick={clearSearch}
-            className="px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded-lg shrink-0"
-            style={{ backgroundColor: "#333", color: "#aaa" }}
+            className="px-4 py-2.5 text-xs font-black uppercase tracking-widest rounded shrink-0"
+            style={{ backgroundColor: "var(--hq-surface-raised)", color: "var(--hq-muted)" }}
           >
             Clear
           </button>
@@ -346,10 +346,10 @@ export default function PhotoCurator() {
       {/* Active search indicator */}
       {activeQuery && (
         <div className="px-6 pb-3">
-          <p className="text-xs" style={{ color: "#666" }}>
-            Showing results for <span className="font-black" style={{ color: "#aaa" }}>"{activeQuery}"</span>
+          <p className="text-xs" style={{ color: "var(--hq-dim)" }}>
+            Showing results for <span className="font-black" style={{ color: "var(--hq-muted)" }}>&quot;{activeQuery}&quot;</span>
             {" / "}
-            <button onClick={clearSearch} className="underline" style={{ color: "#666" }}>
+            <button onClick={clearSearch} className="underline" style={{ color: "var(--hq-dim)" }}>
               back to defaults
             </button>
           </p>
@@ -360,16 +360,16 @@ export default function PhotoCurator() {
       {isNewIndustry && pendingPhotos.length > 0 && (
         <div className="px-3 mb-6">
           <div className="flex items-center gap-3 mb-3 px-3">
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "#f5c842" }}>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--hq-amber)" }}>
               Pending review - team picks
             </p>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black" style={{ backgroundColor: "#f5c842", color: "#000" }}>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black" style={{ backgroundColor: "var(--hq-amber)", color: "var(--hq-bg)" }}>
               {pendingPhotos.length}
             </span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
             {pendingPhotos.map(photo => (
-              <div key={photo.url} className="relative rounded overflow-hidden" style={{ border: "2px solid #f5c842" }}>
+              <div key={photo.url} className="relative rounded overflow-hidden" style={{ border: "2px solid var(--hq-amber)" }}>
                 <div className="aspect-video relative">
                   <img
                     src={photo.url}
@@ -381,18 +381,18 @@ export default function PhotoCurator() {
                     onClick={() => handleRemovePending(photo.url)}
                     disabled={removingPending === photo.url}
                     className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center font-black text-sm disabled:opacity-40"
-                    style={{ backgroundColor: "rgba(0,0,0,0.75)", color: "#fff" }}
+                    style={{ backgroundColor: "rgba(0,0,0,0.75)", color: "var(--hq-text)" }}
                     title="Remove this photo"
                   >
                     {removingPending === photo.url ? "..." : "X"}
                   </button>
                 </div>
-                <div className="px-2 py-1.5" style={{ backgroundColor: "rgba(245,200,66,0.08)" }}>
-                  <p className="text-[10px] leading-tight" style={{ color: "#d4aa30" }}>
+                <div className="px-2 py-1.5" style={{ backgroundColor: "rgba(217,189,104,0.08)" }}>
+                  <p className="text-[10px] leading-tight" style={{ color: "var(--hq-amber)" }}>
                     {photo.desc || "No description"}
                   </p>
                   {photo.tag && (
-                    <p className="text-[9px] mt-0.5 font-black uppercase tracking-widest" style={{ color: "#555" }}>
+                    <p className="text-[9px] mt-0.5 font-black uppercase tracking-widest" style={{ color: "var(--hq-dim)" }}>
                       {photo.tag}
                     </p>
                   )}
@@ -400,7 +400,7 @@ export default function PhotoCurator() {
               </div>
             ))}
           </div>
-          <p className="text-xs mt-3 px-3" style={{ color: "#555" }}>
+          <p className="text-xs mt-3 px-3" style={{ color: "var(--hq-dim)" }}>
             Remove unwanted picks, then approve when ready.
           </p>
         </div>
@@ -415,7 +415,7 @@ export default function PhotoCurator() {
             ))}
           </div>
         ) : currentPhotos.length === 0 ? (
-          <p className="text-center py-20" style={{ color: "#444" }}>No photos found.</p>
+          <p className="text-center py-20" style={{ color: "var(--hq-dim)" }}>No photos found.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5">
             {currentPhotos.map(photo => {
@@ -425,7 +425,7 @@ export default function PhotoCurator() {
                   key={photo.id}
                   onClick={() => togglePhoto(activeIndustry, photo.id)}
                   className="relative aspect-video overflow-hidden rounded focus:outline-none"
-                  style={{ border: isSelected ? "3px solid #32D074" : "3px solid transparent" }}
+                  style={{ border: isSelected ? "3px solid var(--hq-green)" : "3px solid transparent" }}
                 >
                   <img
                     src={photo.thumb}
@@ -438,9 +438,9 @@ export default function PhotoCurator() {
                   )}
                   {isSelected && (
                     <div className="absolute inset-0 flex items-center justify-center"
-                      style={{ backgroundColor: "rgba(46,125,50,0.4)" }}>
-                      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shadow-lg">
-                        <svg width="18" height="18" fill="none" stroke="#32D074" viewBox="0 0 24 24" strokeWidth={3}>
+                      style={{ backgroundColor: "rgba(50,208,116,0.35)" }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: "var(--hq-text)" }}>
+                        <svg width="18" height="18" fill="none" stroke="var(--hq-green)" viewBox="0 0 24 24" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
@@ -448,7 +448,7 @@ export default function PhotoCurator() {
                   )}
                   <div className="absolute bottom-0 left-0 right-0 p-2 opacity-0 hover:opacity-100 transition-opacity"
                     style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)" }}>
-                    <p className="text-[10px] text-white leading-tight line-clamp-2">{photo.desc}</p>
+                    <p className="text-[10px] leading-tight line-clamp-2" style={{ color: "var(--hq-text)" }}>{photo.desc}</p>
                   </div>
                 </button>
               )
@@ -461,8 +461,8 @@ export default function PhotoCurator() {
       <div
         className="fixed bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between found-hq-bottom-bar"
         style={{
-          backgroundColor: justSaved && saveMode === "live" ? "#1a2e1a" : justSaved && saveMode === "team" ? "#252000" : "#1a1a1a",
-          borderTop: justSaved && saveMode === "live" ? "1px solid #32D074" : justSaved && saveMode === "team" ? "1px solid #f5c842" : "1px solid #333",
+          backgroundColor: justSaved && saveMode === "live" ? "rgba(50,208,116,0.12)" : justSaved && saveMode === "team" ? "rgba(217,189,104,0.12)" : "var(--hq-surface-raised)",
+          borderTop: justSaved && saveMode === "live" ? "1px solid var(--hq-green)" : justSaved && saveMode === "team" ? "1px solid var(--hq-amber)" : "1px solid var(--hq-border-strong)",
           transform: showBottomBar ? "translateY(0)" : "translateY(100%)",
           transition: "transform 300ms ease, background-color 300ms ease, border-color 300ms ease",
         }}
@@ -472,19 +472,19 @@ export default function PhotoCurator() {
             <div>
               {saveMode === "live" ? (
                 <>
-                  <p className="font-black text-sm" style={{ color: "#4caf50" }}>
+                  <p className="font-black text-sm" style={{ color: "var(--hq-green)" }}>
                     Live - {currentApproved} photos in {INDUSTRIES.find(i => i.key === activeIndustry)?.label}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: "#4caf50", opacity: 0.7 }}>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--hq-green)", opacity: 0.7 }}>
                     {activeQuery ? `Tagged as "${activeQuery}" - search another term or tap Next.` : "Tagged as general - works for any business in this category."}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="font-black text-sm" style={{ color: "#f5c842" }}>
+                  <p className="font-black text-sm" style={{ color: "var(--hq-amber)" }}>
                     Submitted for review - {currentPending} photos pending
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: "#f5c842", opacity: 0.7 }}>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--hq-amber)", opacity: 0.7 }}>
                     Not live yet. Shawn approves the final picks.
                   </p>
                 </>
@@ -498,7 +498,7 @@ export default function PhotoCurator() {
                 else       { setSavedIndustry(null); setSaveMode(null) }
               }}
               className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full"
-              style={{ backgroundColor: saveMode === "live" ? "#32D074" : "#f5c842", color: "#071109" }}
+              style={{ backgroundColor: saveMode === "live" ? "var(--hq-green)" : "var(--hq-amber)", color: "var(--hq-bg)" }}
             >
               {INDUSTRIES.findIndex(i => i.key === activeIndustry) < INDUSTRIES.length - 1 ? "Next" : "Done"}
             </button>
@@ -506,10 +506,10 @@ export default function PhotoCurator() {
         ) : (
           <>
             <div>
-              <p className="font-black text-sm text-white">
+              <p className="font-black text-sm" style={{ color: "var(--hq-text)" }}>
                 {selectedCount} photo{selectedCount !== 1 ? "s" : ""} selected
               </p>
-              {saveError && <p className="text-xs mt-0.5 text-red-400">{saveError}</p>}
+              {saveError && <p className="text-xs mt-0.5" style={{ color: "var(--hq-red)" }}>{saveError}</p>}
             </div>
             <div className="flex items-center gap-3">
               {/* New industries: team submits for review, Shawn promotes to live */}
@@ -519,7 +519,7 @@ export default function PhotoCurator() {
                     onClick={handleTeamSubmit}
                     disabled={saving || selectedCount === 0}
                     className="px-5 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-                    style={{ backgroundColor: "#333", color: "#f5c842", border: "1px solid #f5c842" }}
+                    style={{ backgroundColor: "var(--hq-surface-raised)", color: "var(--hq-amber)", border: "1px solid var(--hq-amber)" }}
                   >
                     {saving ? "Submitting..." : "Submit for review"}
                   </button>
@@ -528,7 +528,7 @@ export default function PhotoCurator() {
                       onClick={handlePromoteToLive}
                       disabled={saving}
                       className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-                      style={{ backgroundColor: "#32D074", color: "#071109" }}
+                      style={{ backgroundColor: "var(--hq-green)", color: "var(--hq-bg)" }}
                     >
                       {saving ? "Approving..." : `Approve and go live (${currentPending + selectedCount})`}
                     </button>
@@ -540,7 +540,7 @@ export default function PhotoCurator() {
                   onClick={handleApprove}
                   disabled={saving || selectedCount === 0}
                   className="px-6 py-3 font-black text-xs uppercase tracking-widest rounded-full disabled:opacity-40 transition-opacity"
-                  style={{ backgroundColor: "#32D074", color: "#071109" }}
+                  style={{ backgroundColor: "var(--hq-green)", color: "var(--hq-bg)" }}
                 >
                   {saving ? "Saving..." : "Approve"}
                 </button>

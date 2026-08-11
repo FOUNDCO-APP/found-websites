@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ Rebuild: Phase 2, Brand System Migration
+
+- [x] Migrated the 3 legacy components identified in the audit as the actual source of the "two designs" feeling - all were pre-dating the brand system and never migrated.
+- [x] `EmailPreviewTabs.tsx` - rebuilt the tab bar on the real `hq-filter-row` class instead of a filled rounded-pill box.
+- [x] `CopyRegenPanel.tsx` - rebuilt on `hq-business-list`/`hq-business-row`/`hq-badge` (same pattern as Clients/Sales) instead of Tailwind cards with hardcoded hex colors.
+- [x] `PhotoCurator.tsx` (largest, most complex - full state machine preserved untouched) - replaced every hardcoded hex color (off-brand amber `#f5c842`, non-token green `#4caf50`, arbitrary grays) with real brand CSS variables. Removed the blanket `!important` radius override that was fighting intentional circular elements (count badges, remove buttons) once the actual colors/shapes were fixed at the source.
+- [x] Removed now-dead CSS override rules from `admin.css` that only existed to patch over the unmigrated components.
+- [ ] Shawn QA: Photos, Copy, and Email preview pages now read as part of the same system as Today/Sales/Clients, not a different app.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 1, Data Integrity + Kill Orphaned Pages
 
 Team-ordered rebuild of Found HQ (admin panel) per full audit - see FOUND_HQ_V2_AUDIT.md. Audit found V2 (July 8) was ~80% built then abandoned mid-migration: real architecture, real schema, but two orphaned pages still live and writing to legacy fields.
