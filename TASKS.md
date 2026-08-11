@@ -1,5 +1,13 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Estimate List/Detail Never Actually Displayed the Job Title
+
+- [x] Shawn retested and reported "no job name listed" - checked the live database directly rather than guess: confirmed the title-sync fix from the prior entry genuinely worked (his second test estimate has `title: "Hvac Install"` saved correctly), but neither the Estimates list card nor the estimate detail header ever rendered `title` anywhere - it was a fully dead field visually even when populated.
+- [x] Estimate list card (`EstimateCard`) now leads with the job title when present (matching how the Jobs list itself reads), with client name + address moved into the subline underneath - exactly the "Job Name at top, client + address on second line" pattern Shawn asked for.
+- [x] Estimate detail header now shows the same pattern - job title as the heading, client name as a secondary line beneath it.
+- [x] Falls back to client_name as the heading for estimates with no linked job (unchanged behavior for non-job estimates).
+- [ ] Shawn QA: Estimates list and detail both show the job title as the primary line for job-linked estimates.
+
 ## 2026-08-10 - Job <-> Estimate: Real Deep Links + Title Sync
 
 - [x] Shawn tested the new Create Estimate flow: the "Linked to Job" card on the estimate showed the job name but the link went to the general Jobs list (`/photos?tab=jobs`), not the specific job - had to search for it manually. Fixed: `/photos?album=<id>` now actually opens that job's detail directly. Added real deep-link handling to the Photos page (didn't exist before - `?album=` was previously only consumed for camera/upload flows, never to open a job's detail on load).

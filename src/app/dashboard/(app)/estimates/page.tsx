@@ -559,6 +559,12 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
   const sublineText = hasAddress ? estimate.property_address! : estimate.status === "draft" ? "Job address missing" : "Address not added"
   const paid = paidAmount(estimate)
   const balance = balanceDue(estimate)
+  // Job-linked estimates lead with the job's own title (matching how the
+  // Jobs list itself reads) - client name moves into the subline alongside
+  // the address instead of doubling up as the headline.
+  const hasTitle = Boolean(estimate.title?.trim())
+  const primaryText = hasTitle ? estimate.title! : estimate.client_name
+  const contextLine = hasTitle ? [estimate.client_name, hasAddress ? estimate.property_address : null].filter(Boolean).join(" - ") : sublineText
 
   return (
     <button
@@ -577,14 +583,14 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, marginBottom: 5 }}>
           <span style={{ color: "white", ...TYPE.headline, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {estimate.client_name}
+            {primaryText}
           </span>
         </div>
         <div style={{ display: "flex", gap: 7, alignItems: "center", minWidth: 0 }}>
-          {(hasAddress || showMissingAddress) && (
+          {(hasTitle || hasAddress || showMissingAddress) && (
             <>
-              <span style={{ color: hasAddress ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
-                {sublineText}
+              <span style={{ color: hasAddress || hasTitle ? "rgba(255,255,255,0.42)" : "rgba(255,255,255,0.28)", ...TYPE.footnote, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 210, textTransform: "none" }}>
+                {contextLine}
               </span>
               <span style={{ color: "rgba(255,255,255,0.14)", fontSize: 10 }}>-</span>
             </>
@@ -1545,7 +1551,10 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
           <>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 20 }}>
               <div style={{ minWidth: 0 }}>
-                <h2 style={{ margin: "0 0 6px", color: "white", ...TYPE.title }}>{est.client_name}</h2>
+                <h2 style={{ margin: "0 0 4px", color: "white", ...TYPE.title }}>{est.title?.trim() || est.client_name}</h2>
+                {est.title?.trim() && (
+                  <div style={{ margin: "0 0 8px", color: "rgba(255,255,255,0.5)", ...TYPE.subhead }}>{est.client_name}</div>
+                )}
                 <StatusBadge status={est.status} label={displayStatus.label} color={displayStatus.color} />
               </div>
               <CloseIconButton onClick={onClose} label="Close estimate" />

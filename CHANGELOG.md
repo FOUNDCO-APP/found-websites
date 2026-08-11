@@ -1,3 +1,23 @@
+## Session: August 10, 2026 - Estimate List/Detail Never Actually Displayed the Job Title
+**AI:** Claude
+
+### Found via Shawn's live testing
+Shawn retested and reported the estimate still just showed client name and address, no job name, even after refreshing several times. Checked the live database directly instead of assuming the prior fix failed: his second test estimate (created after that fix deployed) genuinely had `title: "Hvac Install"` saved correctly. The real problem was different - neither the Estimates list card nor the estimate detail header ever rendered the `title` field anywhere in the UI, so a correctly-saved title was completely invisible regardless.
+
+### Built
+- Estimate list card now leads with the job title when one exists (client name + address move to the subline underneath), matching the Jobs list's own layout - exactly what Shawn asked for ("Job Name at top, then client name and address on second line").
+- Estimate detail header follows the same pattern.
+- Estimates with no linked job still show client name as the heading, unchanged.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Confirmed against live data before and after, not assumed.
+
+### Test next
+Open the Estimates list and an individual job-linked estimate, confirm the job title now shows as the primary line in both places.
+
+---
+
 ## Session: August 10, 2026 - Job <-> Estimate: Real Deep Links + Title Sync
 **AI:** Claude
 
