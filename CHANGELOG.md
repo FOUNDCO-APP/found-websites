@@ -1,3 +1,25 @@
+## Session: August 11, 2026 - Found HQ Rebuild Phase 5 (Final): Marketing Health
+**AI:** Claude
+
+### Built
+Added a Marketing section to the Health page: real lead volume (7d/30d) across actual clients (test accounts excluded, same filtering the dashboard's own lead counts use), plus top clients by lead volume. This is real data from the `leads` table, not a placeholder.
+
+Traffic and conversion (PostHog) is explicitly flagged as blocked rather than faked - checked the actual env vars and found only `NEXT_PUBLIC_POSTHOG_KEY` (a public write-key used for client-side tracking) exists. Querying real analytics back out requires a Personal API Key with read scope, generated from PostHog's own settings, which doesn't exist in this environment. Said so plainly on the page instead of building something that looks like it works but doesn't.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Found HQ rebuild complete - all 5 phases from the team audit
+1. Data integrity fix + removed 2 orphaned pages (Businesses, Quality)
+2. Migrated 3 legacy-styled components to the real brand system
+3. New-signup visibility (Today list) + real-time email alerts
+4. Won -> Client conversion (the one V2 action never built)
+5. Marketing health (leads) added to the Health page
+
+Full detail across all 5 phases in this file's Aug 11 entries above; original audit in `FOUND_HQ_V2_AUDIT.md`.
+
+---
+
 ## Session: August 11, 2026 - Found HQ Rebuild Phase 4: Won -> Client Conversion
 **AI:** Claude
 

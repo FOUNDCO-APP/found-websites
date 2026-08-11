@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ Rebuild: Phase 5 (Final), Marketing Health
+
+- [x] Added a Marketing section to the Health page - leads last 7d/30d across real clients (test accounts excluded), top clients by lead volume. Real data, not a placeholder.
+- [x] Traffic/conversion (PostHog) explicitly flagged as blocked, not silently faked: only a public write-key exists locally, querying real analytics data back out needs a Personal API Key with read scopes from PostHog's own settings, which doesn't exist yet.
+- [ ] Shawn QA: Health page's new Marketing section shows real lead counts.
+- [ ] Shawn: generate a PostHog Personal API Key (read scope) and add as an env var when ready to close the traffic/conversion gap.
+
+### Found HQ rebuild: all 5 phases from the team audit complete
+Data integrity fixed, orphaned pages removed, brand system fully migrated (3 legacy components), new-signup visibility + real email alerts built, Won->Client conversion built, marketing health added. See FOUND_HQ_V2_AUDIT.md for the original audit and CHANGELOG.md (Aug 11 entries) for the full build record.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 4, Won -> Client Conversion
 
 - [x] Built the one required V2 action that was never implemented: marking a sales prospect "Won" previously did nothing beyond the stage change - no client record got created, `linked_company_id` existed in the schema since July 8 but was never read or written anywhere.

@@ -1,5 +1,6 @@
 import { getUptimeMonitors } from "./uptimerobot"
 import { getSentryIssues } from "./sentry"
+import { getAdminClient } from "../lib"
 
 export const metadata = { title: "Health - Found HQ" }
 
@@ -24,8 +25,31 @@ function timeAgo(iso: string): string {
 }
 
 export default async function AdminHealthPage() {
-  const [monitors, issues] = await Promise.all([getUptimeMonitors(), getSentryIssues()])
+  const admin = getAdminClient()
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
+  const [monitors, issues, { data: clients }, { data: recentLeads }] = await Promise.all([
+    getUptimeMonitors(),
+    getSentryIssues(),
+    admin.from("companies").select("id, name").eq("account_kind", "client"),
+    admin.from("leads").select("company_id, created_at, type, status").gte("created_at", thirtyDaysAgo),
+  ])
   const anyDown = (monitors ?? []).some((m) => m.status === "down")
+
+  // Real leads only - matches the same exclusion the dashboard's own lead
+  // counts use (onboarding retries and spam aren't a marketing signal).
+  const realLeads = (recentLeads ?? []).filter((lead) => lead.type !== "onboarding_abandoned" && lead.status !== "spam")
+  const clientIds = new Set((clients ?? []).map((c) => c.id))
+  const clientLeads = realLeads.filter((lead) => clientIds.has(lead.company_id))
+  const leads7d = clientLeads.filter((lead) => lead.created_at >= sevenDaysAgo).length
+  const leads30d = clientLeads.length
+  const leadsByCompany = new Map<string, number>()
+  for (const lead of clientLeads) leadsByCompany.set(lead.company_id, (leadsByCompany.get(lead.company_id) ?? 0) + 1)
+  const topByLeads = (clients ?? [])
+    .map((c) => ({ name: c.name, count: leadsByCompany.get(c.id) ?? 0 }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 
   return (
     <div className="hq-page hq-page-narrow">
@@ -33,11 +57,31 @@ export default async function AdminHealthPage() {
         <div>
           <p className="hq-eyebrow">Monitoring</p>
           <h1 className="hq-title">Health</h1>
-          <p className="hq-subtitle">Is Found up, and is anything throwing errors right now.</p>
+          <p className="hq-subtitle">Is Found up, is anything throwing errors, and is marketing actually working for clients.</p>
         </div>
       </header>
 
       <section>
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Marketing</h2>
+          <span className="hq-badge hq-badge-info">{leads7d} leads this week</span>
+        </div>
+        <div className="hq-stat-strip" style={{ marginBottom: 14 }}>
+          <div className="hq-stat"><div className="hq-stat-value">{leads7d}</div><div className="hq-stat-label">Leads, last 7 days</div></div>
+          <div className="hq-stat"><div className="hq-stat-value">{leads30d}</div><div className="hq-stat-label">Leads, last 30 days</div></div>
+        </div>
+        <div className="hq-panel">
+          {topByLeads.length === 0 && (
+            <div className="hq-row"><p className="hq-row-meta">No client leads in the last 30 days.</p></div>
+          )}
+          {topByLeads.map((c) => (
+            <div key={c.name} className="hq-row"><p className="hq-row-title">{c.name}</p><span className="hq-badge hq-badge-success">{c.count} lead{c.count !== 1 ? "s" : ""}</span></div>
+          ))}
+          <div className="hq-row"><p className="hq-row-meta">Traffic and conversion (PostHog) aren&apos;t wired in yet - needs a Personal API Key with read access from PostHog&apos;s settings, not just the public project key already in use for tracking.</p></div>
+        </div>
+      </section>
+
+      <section className="hq-section">
         <div className="hq-section-head">
           <h2 className="hq-section-title">Uptime</h2>
           {monitors && <span className={`hq-badge hq-badge-${anyDown ? "danger" : "success"}`}>{anyDown ? "Issue detected" : "All up"}</span>}
