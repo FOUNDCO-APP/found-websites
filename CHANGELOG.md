@@ -1,3 +1,27 @@
+## Session: August 11, 2026 - FOUND Systems: Site Built Funnel Reliability Fix
+**AI:** Codex
+
+### Context
+Shawn tested the funnel live on iPhone. Found HQ Health showed traffic updating, `Started = 1`, and `1 Business plan pick`, but `Site built = 0` even though Shawn reached the generated-site preview/reveal screen. That proved PostHog and the Health query were connected, but the `onboarding_completed` event was not reliable enough.
+
+### Team direction
+Priya/Craig: count the event at the source of truth, not from mobile Safari after a heavy transition. Angela/Steve: if the owner sees the generated preview, Found must count that as Site built.
+
+### Changed
+- Moved `onboarding_completed` capture from the client flow into `createOnboardingSite()` on the server, immediately after the company/site is successfully created.
+- Kept the client-side helper for `onboarding_started`, `plan_selected`, and `checkout_started`.
+- Reused the server-side PostHog capture helper pattern already used for `activation_completed`.
+- Reduced Found HQ Health's PostHog query cache from 300 seconds to 60 seconds so funnel QA is less confusing.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+Deploy, then run one fresh practice signup. `Site built` should increment after the generated-site preview/reveal screen appears. The previous missing test will not backfill automatically unless a manual correction event is sent.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Revenue Funnel Instrumentation
 **AI:** Codex
 

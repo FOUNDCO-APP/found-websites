@@ -5,6 +5,7 @@ import { Resend } from "resend"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { getIndustryManifest } from "@/lib/industryManifests"
 import { sendNewSignupAlert } from "@/lib/adminAlerts"
+import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
 
 type OnboardingInput = {
   name: string
@@ -382,6 +383,13 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   }
 
   const siteUrl = `https://${slug}.${ROOT_DOMAIN}`
+
+  await captureFoundOnboardingCompleted({
+    company_id: companyId,
+    slug,
+    plan_name: input.plan ?? "found",
+    industry,
+  })
 
   // Create or find the auth user and link them to this company.
   // generateLink handles both cases: creates the user if they don't exist,

@@ -59,7 +59,7 @@ export async function getPostHogMarketingSummary(): Promise<PostHogMarketingSumm
           `,
         },
       }),
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
     })
 
     if (!response.ok) {

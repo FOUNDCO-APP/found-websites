@@ -1317,12 +1317,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       return
     }
     if (res.success && res.url && res.slug && res.companyId) {
-      captureFoundFunnelEvent("onboarding_completed", {
-        plan_name: currentPlan,
-        company_id: res.companyId,
-        slug: res.slug,
-        industry: answers.industry,
-      }, `onboarding_completed:${res.companyId}`)
       setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan, comp: res.comp })
       // Comped companies are already active - no Stripe setup needed at all.
       if (!res.comp) {

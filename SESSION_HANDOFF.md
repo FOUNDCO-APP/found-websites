@@ -1,5 +1,41 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Site Built Funnel Reliability Fix
+
+### Where We Left Off
+Shawn ran a live iPhone funnel QA. Health showed PostHog traffic updating, `Started = 1`, and `1 Business plan pick`, but `Site built = 0` even though Shawn reached the generated-site preview/reveal screen.
+
+### What Changed
+- Treated this as a real tracking bug, not normal lag.
+- Moved `onboarding_completed` / **Site built** capture from the browser into `createOnboardingSite()` on the server.
+- Removed the duplicate client-side `onboarding_completed` capture so future counts do not double-count.
+- Reused `src/lib/foundFunnelServer.ts` as the reliable server-side event sender for both:
+  - `onboarding_completed`
+  - `activation_completed`
+- Reduced Found HQ Health's PostHog cache from 5 minutes to 60 seconds.
+
+### Plain-English Definition
+- Started = visitor begins the signup questions.
+- Business plan pick = visitor chooses Found Business.
+- Site built = Found successfully creates the company/site and the preview/reveal screen is valid.
+- Checkout = Stripe activation/payment setup starts.
+- Activated = Stripe succeeds and the account becomes paid/active.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- Deploy this fix.
+- Run one fresh practice signup through onboarding.
+- Stop when the preview/reveal screen appears.
+- Open Found HQ > More > Health and refresh after about 1 minute.
+- Expected: Started increments, Business plan pick increments if Business was chosen, and Site built increments.
+- Activated only increments after real Stripe activation succeeds.
+- Shawn's previous missing `Site built` event will not backfill automatically unless a manual correction event is sent.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Revenue Funnel Instrumentation
 
 ### Where We Left Off

@@ -20,7 +20,9 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] PostHog Health QA - Shawn confirmed live on iPhone: Found HQ > More > Health shows 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d instead of the old blocked message.
 - [x] Health founder-clarity pass - kept "funnel" language but explained it in-place as the path from stranger to paying customer; changed Marketing to Marketing funnel; added "Next money step"; softened Sentry from raw scary error wall to System issues with context and badges.
 - [x] Full funnel instrumentation - added clean PostHog events for `onboarding_started`, `plan_selected`, `onboarding_completed`, `checkout_started`, and server-side `activation_completed`; Found HQ Health now shows Started / Site built / Checkout / Activated plus Business plan picks.
-- [ ] Funnel QA - after deploy, run one practice signup through onboarding and confirm Health/PostHog starts showing funnel counts. Activation completion only increments after real Stripe activation succeeds.
+- [x] Funnel QA issue found - Shawn's live iPhone test showed Started and Business plan pick, but Site built stayed 0 after the preview/reveal screen. Root cause: `onboarding_completed` was still client-side and could be dropped during the heavy mobile completion transition.
+- [x] Funnel reliability fix - moved `onboarding_completed` to server-side capture inside `createOnboardingSite()` and reduced Health's PostHog cache from 5 minutes to 60 seconds.
+- [ ] Funnel re-QA - after deploy, run one new practice signup through onboarding and confirm Site built increments after the preview/reveal screen. Activation completion only increments after real Stripe activation succeeds.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth

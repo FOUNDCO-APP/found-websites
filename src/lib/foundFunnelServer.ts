@@ -2,12 +2,13 @@ type ServerFunnelProperties = {
   company_id?: string | null
   slug?: string | null
   plan_name?: string | null
+  industry?: string | null
   method?: string
   value?: number
   currency?: string
 }
 
-export async function captureFoundActivationCompleted(properties: ServerFunnelProperties) {
+async function captureFoundFunnelServerEvent(event: string, properties: ServerFunnelProperties) {
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY
   const host = (process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com").replace(/\/$/, "")
   if (!key) return
@@ -18,7 +19,7 @@ export async function captureFoundActivationCompleted(properties: ServerFunnelPr
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: key,
-        event: "activation_completed",
+        event,
         distinct_id: properties.company_id || properties.slug || "unknown",
         properties: {
           ...properties,
@@ -28,6 +29,14 @@ export async function captureFoundActivationCompleted(properties: ServerFunnelPr
       cache: "no-store",
     })
   } catch (error) {
-    console.error("[PostHog] activation_completed capture failed", error)
+    console.error(`[PostHog] ${event} capture failed`, error)
   }
+}
+
+export async function captureFoundOnboardingCompleted(properties: ServerFunnelProperties) {
+  await captureFoundFunnelServerEvent("onboarding_completed", properties)
+}
+
+export async function captureFoundActivationCompleted(properties: ServerFunnelProperties) {
+  await captureFoundFunnelServerEvent("activation_completed", properties)
 }
