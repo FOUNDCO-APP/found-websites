@@ -1,5 +1,39 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Revenue Funnel Instrumentation
+
+### Where We Left Off
+Shawn approved moving forward with FOUND Systems as a money-making marketing machine. Team direction: track the minimum funnel that shows where Found loses money, keep the Health view useful on mobile, and show whether visitors are choosing Found Business.
+
+### What Changed
+- Added centralized client funnel helper: `src/lib/foundFunnelTracking.ts`.
+- Added server-side activation capture helper: `src/lib/foundFunnelServer.ts`.
+- Instrumented:
+  - `onboarding_started`
+  - `plan_selected`
+  - `onboarding_completed`
+  - `checkout_started`
+  - `activation_completed`
+- `activation_completed` is captured server-side after Stripe subscription creation in `confirmActivation()` so the paid-customer event survives redirects.
+- Found HQ Health now queries and displays 30-day funnel counts:
+  - Started
+  - Site built
+  - Checkout
+  - Activated
+- Health also shows Business plan picks, because Found Business is the higher-value path Shawn cares about.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- After deploy, run one practice signup through onboarding.
+- Confirm Started / Site built / Checkout counts appear in Found HQ > More > Health.
+- A real Stripe activation is required for Activated to increment.
+- If the Health query falls back to traffic-only, check the PostHog HogQL query syntax around `properties.plan_name`.
+
+---
+
 ## 2026-08-11 - Found HQ Health: Founder Funnel Clarity Pass
 
 ### Where We Left Off

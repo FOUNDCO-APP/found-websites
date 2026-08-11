@@ -93,7 +93,7 @@ export default async function AdminHealthPage() {
             <div className="hq-row" style={{ minHeight: 82 }}>
               <div>
                 <p className="hq-row-title">Found traffic: {posthog.visitors30d} visitors · {posthog.pageviews30d} pageviews</p>
-                <p className="hq-row-meta">This is attention on foundco.app. The next question is whether that attention turns into signups, plan picks, and paid activations.</p>
+                <p className="hq-row-meta">This is attention on foundco.app. The funnel below shows whether that attention turns into signups, plan picks, checkout, and paid activations.</p>
               </div>
               <span className="hq-badge hq-badge-success">Live</span>
             </div>
@@ -106,13 +106,30 @@ export default async function AdminHealthPage() {
           {topByLeads.map((c) => (
             <div key={c.name} className="hq-row"><p className="hq-row-title">{c.name}</p><span className="hq-badge hq-badge-success">{c.count} lead{c.count !== 1 ? "s" : ""}</span></div>
           ))}
-          <div className="hq-row" style={{ minHeight: 104 }}>
-            <div>
-              <p className="hq-row-title">Next money step: instrument the signup funnel</p>
-              <p className="hq-row-meta">Funnel means the path from stranger to paying customer. We can see visits now; next we track who starts onboarding, finishes onboarding, picks Starter/Business/Pro, starts checkout, and activates. That tells us where Found is losing money.</p>
-            </div>
-            <span className="hq-badge hq-badge-warning">Next</span>
-          </div>
+          {posthog && (
+            <>
+              <div className="hq-row" style={{ minHeight: 104 }}>
+                <div>
+                  <p className="hq-row-title">Signup funnel, last 30 days</p>
+                  <p className="hq-row-meta">Funnel means the path from stranger to paying customer. Watch the drop from Started → Site built → Checkout → Activated. The biggest drop is where Found is losing money.</p>
+                </div>
+                <span className="hq-badge hq-badge-success">Tracking</span>
+              </div>
+              <div className="hq-stat-strip" style={{ border: 0, borderRadius: 0 }}>
+                <div className="hq-stat"><div className="hq-stat-value">{posthog.onboardingStarted30d}</div><div className="hq-stat-label">Started</div></div>
+                <div className="hq-stat"><div className="hq-stat-value">{posthog.onboardingCompleted30d}</div><div className="hq-stat-label">Site built</div></div>
+                <div className="hq-stat"><div className="hq-stat-value">{posthog.checkoutStarted30d}</div><div className="hq-stat-label">Checkout</div></div>
+                <div className="hq-stat"><div className="hq-stat-value">{posthog.activationCompleted30d}</div><div className="hq-stat-label">Activated</div></div>
+              </div>
+              <div className="hq-row" style={{ minHeight: 82 }}>
+                <div>
+                  <p className="hq-row-title">{posthog.businessPlanSelected30d} Business plan pick{posthog.businessPlanSelected30d === 1 ? "" : "s"}</p>
+                  <p className="hq-row-meta">Business is the plan that matters most for revenue. This count shows how often people choose the higher-value path before checkout.</p>
+                </div>
+                <span className="hq-badge hq-badge-info">{posthog.planSelected30d} total picks</span>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

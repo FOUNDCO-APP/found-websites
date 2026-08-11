@@ -19,7 +19,8 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Found HQ Health now reads PostHog pageviews/unique visitors for 7d/30d when env vars are present.
 - [x] PostHog Health QA - Shawn confirmed live on iPhone: Found HQ > More > Health shows 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d instead of the old blocked message.
 - [x] Health founder-clarity pass - kept "funnel" language but explained it in-place as the path from stranger to paying customer; changed Marketing to Marketing funnel; added "Next money step"; softened Sentry from raw scary error wall to System issues with context and badges.
-- [ ] Full funnel instrumentation - add clean events for onboarding start, onboarding completion, plan selection, checkout start, and activation so Found HQ can show real conversion rate and tell Shawn where Found is losing money.
+- [x] Full funnel instrumentation - added clean PostHog events for `onboarding_started`, `plan_selected`, `onboarding_completed`, `checkout_started`, and server-side `activation_completed`; Found HQ Health now shows Started / Site built / Checkout / Activated plus Business plan picks.
+- [ ] Funnel QA - after deploy, run one practice signup through onboarding and confirm Health/PostHog starts showing funnel counts. Activation completion only increments after real Stripe activation succeeds.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth

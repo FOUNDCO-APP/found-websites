@@ -4,6 +4,7 @@ import Stripe from "stripe"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { sendSiteLiveEmailOnce } from "@/lib/activationEmails"
+import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
 
 function getAdminClient() {
   return createAdminClient(
@@ -412,6 +413,15 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     await sendSiteLiveEmailOnce(admin as any, companyId).catch((err) => {
       console.error("[Activate] site-live email failed:", err)
+    })
+
+    await captureFoundActivationCompleted({
+      company_id: companyId,
+      slug,
+      plan_name: plan,
+      method: setupIntent.metadata?.promotion_code_id ? "stripe_with_promo" : "stripe",
+      value: plan === "found_business" ? 69 : plan === "found_pro" ? 39 : 29,
+      currency: "USD",
     })
 
     // A brand-new owner who just paid should land straight in their dashboard,

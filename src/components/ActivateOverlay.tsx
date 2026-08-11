@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js"
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup, activateAsComp } from "@/app/activate/activateActions"
 import FoundPlanSelector from "@/components/FoundPlanSelector"
+import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
 import {
   defaultActivationPlan,
   foundPlanDetails,
@@ -59,6 +60,12 @@ function formatCurrency(amount: number, currency: string) {
     currency: currency.toUpperCase(),
     maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
   }).format(amount / 100)
+}
+
+function planMonthlyValue(plan: string | null | undefined) {
+  if (plan === "found_business") return 69
+  if (plan === "found_pro") return 39
+  return 29
 }
 
 function promoDurationLabel(duration?: string) {
@@ -411,6 +418,13 @@ export default function ActivateOverlay({
     }
 
     applySetupResult(result, nextPlan)
+    captureFoundFunnelEvent("checkout_started", {
+      plan_name: result.plan ?? nextPlan,
+      slug,
+      method: targetAddonSlug ? "addon_setup" : "stripe_setup",
+      value: planMonthlyValue(result.plan ?? nextPlan),
+      currency: "USD",
+    }, `checkout_started:${slug}:${result.plan ?? nextPlan}:${targetAddonSlug ?? "base"}`)
     setPaymentStep("payment")
   }
   useEffect(() => {

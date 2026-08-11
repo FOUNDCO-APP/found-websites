@@ -7,6 +7,12 @@ export type PostHogMarketingSummary = {
   visitors7d: number
   pageviews30d: number
   visitors30d: number
+  onboardingStarted30d: number
+  planSelected30d: number
+  businessPlanSelected30d: number
+  onboardingCompleted30d: number
+  checkoutStarted30d: number
+  activationCompleted30d: number
 }
 
 function toInt(value: number | string | null | undefined): number {
@@ -37,13 +43,19 @@ export async function getPostHogMarketingSummary(): Promise<PostHogMarketingSumm
           kind: "HogQLQuery",
           query: `
             SELECT
-              countIf(timestamp >= now() - INTERVAL 7 DAY) AS pageviews_7d,
-              uniqIf(distinct_id, timestamp >= now() - INTERVAL 7 DAY) AS visitors_7d,
-              count() AS pageviews_30d,
-              uniq(distinct_id) AS visitors_30d
+              countIf(event = '$pageview' AND timestamp >= now() - INTERVAL 7 DAY) AS pageviews_7d,
+              uniqIf(distinct_id, event = '$pageview' AND timestamp >= now() - INTERVAL 7 DAY) AS visitors_7d,
+              countIf(event = '$pageview') AS pageviews_30d,
+              uniqIf(distinct_id, event = '$pageview') AS visitors_30d,
+              countIf(event = 'onboarding_started') AS onboarding_started_30d,
+              countIf(event = 'plan_selected') AS plan_selected_30d,
+              countIf(event = 'plan_selected' AND properties.plan_name = 'found_business') AS business_plan_selected_30d,
+              countIf(event = 'onboarding_completed') AS onboarding_completed_30d,
+              countIf(event = 'checkout_started') AS checkout_started_30d,
+              countIf(event = 'activation_completed') AS activation_completed_30d
             FROM events
-            WHERE event = '$pageview'
-              AND timestamp >= now() - INTERVAL 30 DAY
+            WHERE timestamp >= now() - INTERVAL 30 DAY
+              AND event IN ('$pageview', 'onboarding_started', 'plan_selected', 'onboarding_completed', 'checkout_started', 'activation_completed')
           `,
         },
       }),
@@ -64,6 +76,12 @@ export async function getPostHogMarketingSummary(): Promise<PostHogMarketingSumm
       visitors7d: toInt(row[1]),
       pageviews30d: toInt(row[2]),
       visitors30d: toInt(row[3]),
+      onboardingStarted30d: toInt(row[4]),
+      planSelected30d: toInt(row[5]),
+      businessPlanSelected30d: toInt(row[6]),
+      onboardingCompleted30d: toInt(row[7]),
+      checkoutStarted30d: toInt(row[8]),
+      activationCompleted30d: toInt(row[9]),
     }
   } catch (error) {
     console.error("PostHog marketing summary error", error)

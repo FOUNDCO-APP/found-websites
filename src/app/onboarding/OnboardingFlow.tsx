@@ -12,6 +12,7 @@ import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
 import { slugify as clientSlugify } from "@/lib/slugify"
 import { resizeImageToJpeg } from "@/lib/resizeImage"
+import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
 import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
@@ -126,6 +127,12 @@ const PLAN_CHOICES = [
     cta: "Continue with Found Business",
   },
 ]
+
+function planMonthlyValue(plan: string) {
+  if (plan === "found_business") return 69
+  if (plan === "found_pro") return 39
+  return 29
+}
 
 function canAdvance(step: Step, a: Answers): boolean {
   switch (step) {
@@ -1249,6 +1256,16 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
         setPhase("plan")
         return
       }
+      captureFoundFunnelEvent("plan_selected", {
+        plan_name: currentPlan,
+        source: "onboarding_default",
+        value: planMonthlyValue(currentPlan),
+        currency: "USD",
+      }, `plan_selected:${sessionId}:${currentPlan}`)
+      captureFoundFunnelEvent("onboarding_started", {
+        plan_name: currentPlan,
+        source: drawerMode ? "drawer" : "page",
+      }, `onboarding_started:${sessionId}`)
       setPhase("questions")
       setStepIndex(1)
       return
@@ -1300,6 +1317,12 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       return
     }
     if (res.success && res.url && res.slug && res.companyId) {
+      captureFoundFunnelEvent("onboarding_completed", {
+        plan_name: currentPlan,
+        company_id: res.companyId,
+        slug: res.slug,
+        industry: answers.industry,
+      }, `onboarding_completed:${res.companyId}`)
       setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan, comp: res.comp })
       // Comped companies are already active - no Stripe setup needed at all.
       if (!res.comp) {
@@ -1701,7 +1724,20 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                 <PlanChoiceScreen
                   selectedPlan={currentPlan}
                   onSelect={setCurrentPlan}
-                  onContinue={() => { setPhase("questions"); setStepIndex(1) }}
+                  onContinue={() => {
+                    captureFoundFunnelEvent("plan_selected", {
+                      plan_name: currentPlan,
+                      source: "onboarding_plan_screen",
+                      value: planMonthlyValue(currentPlan),
+                      currency: "USD",
+                    }, `plan_selected:${sessionId}:${currentPlan}`)
+                    captureFoundFunnelEvent("onboarding_started", {
+                      plan_name: currentPlan,
+                      source: drawerMode ? "drawer" : "page",
+                    }, `onboarding_started:${sessionId}`)
+                    setPhase("questions")
+                    setStepIndex(1)
+                  }}
                 />
               )}
 

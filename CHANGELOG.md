@@ -1,3 +1,31 @@
+## Session: August 11, 2026 - FOUND Systems: Revenue Funnel Instrumentation
+**AI:** Codex
+
+### Context
+Shawn approved moving Found HQ from passive traffic reporting into a money-making marketing machine. Team direction: track the minimum revenue funnel that reveals where Found loses money, keep the Health view concise, and specifically show the path to Found Business.
+
+### Built
+- Added `src/lib/foundFunnelTracking.ts`, a centralized client-side funnel helper with session deduping.
+- Added `src/lib/foundFunnelServer.ts`, a server-side capture helper for the paid activation event.
+- Instrumented the first revenue funnel:
+  - `onboarding_started` - visitor starts answering questions.
+  - `plan_selected` - visitor commits to Starter/Pro/Business before questions.
+  - `onboarding_completed` - Found creates the company/site.
+  - `checkout_started` - Stripe activation setup is displayed.
+  - `activation_completed` - Stripe activation succeeds and the subscription is created.
+- Captured `activation_completed` server-side inside `confirmActivation()` after Stripe subscription creation so the paid-customer event is not lost during redirect.
+- Extended Found HQ Health's PostHog query to include 30-day funnel counts and Business plan picks.
+- Health now shows a concise funnel snapshot: Started / Site built / Checkout / Activated, plus Business plan picks.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+After deploy, run one practice signup through onboarding and confirm funnel counts start appearing in Found HQ > More > Health and/or PostHog. Paid activation only increments after real Stripe activation succeeds.
+
+---
+
 ## Session: August 11, 2026 - Found HQ Health: Founder Funnel Clarity Pass
 **AI:** Codex
 

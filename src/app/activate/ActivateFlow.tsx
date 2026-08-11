@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { createActivationSetup } from "./activateActions"
+import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
 import FoundWordmark from "@/components/FoundWordmark"
 
 const SIGNAL_GREEN = "#32D074"
@@ -54,6 +55,12 @@ function normalPriceForPlan(plan?: string | null) {
   if (plan === "found_business") return 9900
   if (plan === "found_pro") return 6900
   return 3900
+}
+
+function planMonthlyValue(plan: string | null | undefined) {
+  if (plan === "found_business") return 69
+  if (plan === "found_pro") return 39
+  return 29
 }
 
 function formatCurrency(amount: number, currency: string) {
@@ -348,6 +355,13 @@ export default function ActivateFlow({
         setMinTimeReady(true)
       } else {
         applySetupResult(result)
+        captureFoundFunnelEvent("checkout_started", {
+          plan_name: result.plan,
+          slug,
+          method: "stripe_setup_direct",
+          value: planMonthlyValue(result.plan),
+          currency: "USD",
+        }, `checkout_started:${slug}:${result.plan ?? "found"}:direct`)
       }
       setStripeReady(true)
     })
