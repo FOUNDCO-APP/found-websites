@@ -51,6 +51,7 @@ function stateTone(state: string) {
 
 function ClientItem({ row }: { row: ClientRow }) {
   const [state, setState] = useState(row.client_state)
+  const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const [isTest, setIsTest] = useState(Boolean(row.is_test))
   const [testPending, startTestTransition] = useTransition()
   const [includedAddon, setIncludedAddonState] = useState(row.included_addon_slug)
@@ -76,6 +77,7 @@ function ClientItem({ row }: { row: ClientRow }) {
           <div className="hq-business-name-line">
             <h2>{row.name}</h2>
             <span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span>
+            {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {isTest && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
           <p>{planLabel(row.plan)} / Billing: {row.subscription_status ?? "not active"}</p>

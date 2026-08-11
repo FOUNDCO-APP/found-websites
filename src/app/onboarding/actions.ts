@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { getIndustryManifest } from "@/lib/industryManifests"
+import { sendNewSignupAlert } from "@/lib/adminAlerts"
 
 type OnboardingInput = {
   name: string
@@ -334,6 +335,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     console.error("[onboarding] company insert error:", companyError.message)
     return { success: false, error: "We could not create the company record." }
   }
+
+  // Best-effort, fire-and-forget - never block onboarding on this.
+  void sendNewSignupAlert({ id: companyId, name, slug, plan: input.plan ?? "found", city, state })
 
   const { error: configError } = await supabase
     .from("website_config")

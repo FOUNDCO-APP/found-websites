@@ -1,3 +1,20 @@
+## Session: August 11, 2026 - Found HQ Rebuild Phase 3: New-Signup Visibility + Alerts
+**AI:** Claude
+
+### Built
+- Found the real signup moment: `createOnboardingSite()` (`src/app/onboarding/actions.ts:246`) is where a `companies` row is actually born - this is where the old Overview page's dropped "6 most recent signups" list should have been restored to.
+- "Recent signups" section on Today - real list (not just a count), last 7 days, each linking straight into that company's Clients record.
+- "New" badge on Clients rows for anything created in the last 48 hours.
+- Real email alert (`src/lib/adminAlerts.ts`) fires the moment a signup happens, to `ADMIN_ALERT_EMAIL` (falls back to Shawn's known address if unset). Confirmed `RESEND_API_KEY` is genuinely live in Vercel production before building on it, rather than assuming. Fire-and-forget - a failed alert can never block someone's actual onboarding.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Next
+Phase 4: Won -> Client conversion (marking a sales prospect "Won" currently does nothing - no company record gets created or linked). Phase 5: marketing health section on the Health page, sourced from PostHog/Vercel Analytics/lead volume (already in the stack, never wired in there).
+
+---
+
 ## Session: August 11, 2026 - Found HQ Rebuild Phase 2: Brand System Migration
 **AI:** Claude
 

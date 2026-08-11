@@ -1,5 +1,13 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ Rebuild: Phase 3, New-Signup Visibility + Alerts
+
+- [x] Found where a company signup actually happens: `createOnboardingSite()` in `src/app/onboarding/actions.ts:246` - this is where the old Overview page's "6 most recent signups" list (dropped when V2 replaced it, never restored) should hook in.
+- [x] Added a "Recent signups" section to Today (last 7 days, links straight to that company in Clients) - real in-admin visibility, not just a count.
+- [x] Added a "New" badge on Clients rows for companies created in the last 48 hours.
+- [x] Built the real-time email alert: new `src/lib/adminAlerts.ts`, fires to Shawn (`ADMIN_ALERT_EMAIL` env var, falls back to his known address) the moment a company record is created. Confirmed `RESEND_API_KEY` is live in Vercel production before building this. Best-effort/non-blocking - a failed alert can never break someone's actual signup.
+- [ ] Shawn QA: test a real signup end to end, confirm the email alert arrives and the company shows up in Today's Recent signups.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 2, Brand System Migration
 
 - [x] Migrated the 3 legacy components identified in the audit as the actual source of the "two designs" feeling - all were pre-dating the brand system and never migrated.

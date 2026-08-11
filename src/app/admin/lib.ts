@@ -21,6 +21,17 @@ export function planLabel(plan: string | null) {
   return "No plan"
 }
 
+export function timeAgo(value: string | null) {
+  if (!value) return ""
+  const delta = Date.now() - new Date(value).getTime()
+  const hours = Math.floor(delta / 3600000)
+  if (hours < 1) return "Just now"
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
 export function formatDue(value: string | null) {
   if (!value) return "No follow-up"
   const due = new Date(value)

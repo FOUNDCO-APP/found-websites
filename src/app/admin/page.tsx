@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { getAdminClient, formatDue } from "./lib"
+import { getAdminClient, formatDue, timeAgo } from "./lib"
 
 export const metadata = { title: "Today - Found HQ" }
 
@@ -55,6 +55,8 @@ export default async function AdminTodayPage() {
   items.sort((a, b) => a.priority - b.priority)
   const activeClients = (companies ?? []).filter((company) => ["active", "comp"].includes(company.client_state ?? "")).length
   const atRisk = (companies ?? []).filter((company) => company.client_state === "past_due").length
+  const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+  const recentSignups = (companies ?? []).filter((company) => company.created_at >= sevenDaysAgo).slice(0, 8)
   return (
     <div className="hq-page hq-page-narrow">
       <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Today</h1><p className="hq-subtitle">The work that grows or protects Found Co.</p></div></header>
@@ -74,6 +76,18 @@ export default async function AdminTodayPage() {
             </Link>
           ))}
           {!items.length && <div className="hq-empty-state"><strong>You are caught up.</strong><span>New prospects and client risks will appear here.</span></div>}
+        </div>
+      </section>
+      <section className="hq-section">
+        <div className="hq-section-head"><h2 className="hq-section-title">Recent signups</h2><span className="hq-section-meta">Last 7 days</span></div>
+        <div className="hq-panel">
+          {recentSignups.map((company) => (
+            <Link key={company.id} href={`/admin/clients?q=${encodeURIComponent(company.name)}`} className="hq-row hq-link-row">
+              <div><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{timeAgo(company.created_at)}</p></div>
+              <span className="hq-chevron" />
+            </Link>
+          ))}
+          {!recentSignups.length && <div className="hq-empty-state"><strong>No new signups this week.</strong><span>New accounts will show up here as they sign up.</span></div>}
         </div>
       </section>
     </div>
