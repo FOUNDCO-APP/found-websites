@@ -239,7 +239,7 @@
       "expected": [
         {
           "name": "Service",
-          "description": "Practical help shaped around the details customers care about most."
+          "description": "Clear help built around what customers need to choose, book, or visit."
         },
         {
           "name": "Restaurant",
@@ -636,6 +636,40 @@
       "city": "Tucson",
       "state": "AZ",
       "expectedAbout": "RC Bicycles is a locally owned bike shop in Tucson, AZ. We're proud of what we do and even prouder of the people we do it for."
+    },
+    {
+      "id": "hvac-fallback-specialty-copy",
+      "name": "Slug HVAC",
+      "industry": "home_services",
+      "subIndustry": "hvac",
+      "city": "Tucson",
+      "state": "AZ",
+      "expectedHeroSubtitle": "Heating and cooling help for Tucson homes - repairs, installs, and service calls made clear.",
+      "expectedAbout": "Slug HVAC is an HVAC company in Tucson, AZ. Customers get help with repairs, replacements, and routine service without guessing what comes next.",
+      "expectedCtaHeadline": "Schedule HVAC service",
+      "forbidden": [
+        "Fast, honest estimates",
+        "go-to hvac",
+        "fair prices",
+        "no guesswork, no surprises"
+      ]
+    },
+    {
+      "id": "remodeling-fallback-specialty-copy",
+      "name": "Barrio Builders",
+      "industry": "home_services",
+      "subIndustry": "remodeling",
+      "city": "Tucson",
+      "state": "AZ",
+      "expectedHeroSubtitle": "Remodeling in Tucson built around clear scopes, clean job sites, and rooms people actually use.",
+      "expectedAbout": "Barrio Builders is a remodeling company in Tucson, AZ. From the first walkthrough to the final detail, the goal is a project that feels organized.",
+      "expectedCtaHeadline": "Plan your remodel",
+      "forbidden": [
+        "Fast, honest estimates",
+        "go-to remodeling",
+        "fair prices",
+        "no guesswork, no surprises"
+      ]
     }
   ]
 }

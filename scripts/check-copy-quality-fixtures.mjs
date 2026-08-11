@@ -194,6 +194,16 @@ for (const fixture of fixtures.fallbackFixtures ?? []) {
     manifest: { primaryJob: "", jonyNote: "", primaryIntent: "contact" },
   })
   assert(result.aboutText === fixture.expectedAbout, `${fixture.id}: fallback about copy mismatch. Expected ${fixture.expectedAbout}, got ${result.aboutText}`)
+  if (fixture.expectedHeroSubtitle) {
+    assert(result.heroSubtitle === fixture.expectedHeroSubtitle, `${fixture.id}: fallback hero subtitle mismatch. Expected ${fixture.expectedHeroSubtitle}, got ${result.heroSubtitle}`)
+  }
+  if (fixture.expectedCtaHeadline) {
+    assert(result.ctaHeadline === fixture.expectedCtaHeadline, `${fixture.id}: fallback CTA mismatch. Expected ${fixture.expectedCtaHeadline}, got ${result.ctaHeadline}`)
+  }
+  const combined = `${result.heroTitle} ${result.heroSubtitle} ${result.aboutText} ${result.ctaHeadline}`.toLowerCase()
+  for (const phrase of fixture.forbidden ?? []) {
+    assert(!combined.includes(String(phrase).toLowerCase()), `${fixture.id}: forbidden fallback phrase leaked: ${phrase}`)
+  }
   assertCleanPublicCopy(result.aboutText, `${fixture.id}: fallback about`)
   assert(sentenceCount(result.aboutText) <= 3, `${fixture.id}: fallback about copy should stay short on mobile: ${result.aboutText}`)
   checks++

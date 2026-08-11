@@ -1,3 +1,26 @@
+## Session: August 11, 2026 - FOUND Systems: First Non-AI Content Uniqueness Pass
+**AI:** Codex
+
+### Context
+Shawn approved the team direction to fix content uniqueness before schema/AEO/GEO markup. The immediate product concern was that generated sites like HVAC and remodeling could end up with different labels but the same generic wording pattern.
+
+### Changed
+- Added a home-service specialty fallback layer in `src/lib/contentGeneration.ts` before the broad `quote_me` fallback.
+- New deterministic fallback copy now covers HVAC, remodeling/construction, plumbing, electrical, roofing, painting, flooring, and handyman/home repair.
+- Extended `scripts/check-copy-quality-fixtures.mjs` so fallback fixtures can assert hero subtitle, CTA, and forbidden phrases.
+- Added HVAC and remodeling copy-quality fixtures to prevent generic quote language from returning to those sample industries.
+- Updated one stale generic service fixture to match the current production copy-polish output.
+
+### Verification
+- `cmd /c npm run test:copy-quality` passed: 52 fixture groups.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Next
+Schema remains paused. Continue with a similarity guard across generated tenant copy and then typography safeguards for hero/display text.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Content Uniqueness Plan Before Schema
 **AI:** Codex
 

@@ -241,6 +241,105 @@ function buildJobFamilyCopy(
   }
 }
 
+function buildHomeServiceSpecialtyCopy(
+  input: ContentGenerationInput,
+  industryLabel: string,
+  cityLabel: string,
+  locationPhrase: string,
+  differentiator: string | null,
+): { heroSubtitle: string; aboutPreview: string; aboutStory: string; aboutHighlights: AboutHighlight[] | null; ctaHeadline: string } | null {
+  const specialty = `${input.subIndustry || input.industry}`.toLowerCase()
+  const name = input.name
+  const diff = differentiator
+    ? differentiator.charAt(0).toUpperCase() + differentiator.slice(1).replace(/\.?\s*$/, ".") + " "
+    : ""
+
+  const quoteHighlights = highlightsForJob("quote_me")
+  const hireHighlights = highlightsForJob("hire_me")
+
+  if (specialty.includes("hvac") || specialty.includes("heating") || specialty.includes("cooling")) {
+    return {
+      heroSubtitle: `Heating and cooling help for ${cityLabel} homes - repairs, installs, and service calls made clear.`,
+      aboutPreview: `${name} is an HVAC company in ${locationPhrase}. ${diff}Customers get help with repairs, replacements, and routine service without guessing what comes next.`,
+      aboutStory: `${name} is an HVAC company in ${locationPhrase}. ${diff}The work is built around clear diagnosis, practical options, and heating and cooling service that fits the home.`,
+      aboutHighlights: quoteHighlights,
+      ctaHeadline: "Schedule HVAC service",
+    }
+  }
+
+  if (specialty.includes("remodel") || specialty.includes("renovation") || specialty.includes("construction")) {
+    return {
+      heroSubtitle: `Remodeling in ${cityLabel} built around clear scopes, clean job sites, and rooms people actually use.`,
+      aboutPreview: `${name} is a remodeling company in ${locationPhrase}. ${diff}From the first walkthrough to the final detail, the goal is a project that feels organized.`,
+      aboutStory: `${name} is a remodeling company in ${locationPhrase}. ${diff}Projects are shaped around clear scopes, clean job sites, and details that make the finished space easier to live in.`,
+      aboutHighlights: hireHighlights,
+      ctaHeadline: "Plan your remodel",
+    }
+  }
+
+  if (specialty.includes("plumb")) {
+    return {
+      heroSubtitle: `Plumbing help in ${cityLabel} for leaks, fixtures, drains, and the problems that cannot wait.`,
+      aboutPreview: `${name} is a plumbing company in ${locationPhrase}. ${diff}Customers get help with leaks, drains, fixtures, and service calls that need a steady hand.`,
+      aboutStory: `${name} is a plumbing company in ${locationPhrase}. ${diff}The work is built around finding the issue, explaining the options, and fixing plumbing problems with as little disruption as possible.`,
+      aboutHighlights: quoteHighlights,
+      ctaHeadline: "Request plumbing help",
+    }
+  }
+
+  if (specialty.includes("electric")) {
+    return {
+      heroSubtitle: `Electrical work in ${cityLabel} for safer repairs, cleaner installs, and clear next steps.`,
+      aboutPreview: `${name} is an electrical company in ${locationPhrase}. ${diff}Customers get help with repairs, upgrades, fixtures, and the details that need to be done safely.`,
+      aboutStory: `${name} is an electrical company in ${locationPhrase}. ${diff}Each job is handled around clear diagnosis, safer decisions, and work that is easy to understand before it begins.`,
+      aboutHighlights: quoteHighlights,
+      ctaHeadline: "Talk to an electrician",
+    }
+  }
+
+  if (specialty.includes("roof")) {
+    return {
+      heroSubtitle: `Roofing in ${cityLabel} for repairs, replacements, and weather-ready protection.`,
+      aboutPreview: `${name} is a roofing company in ${locationPhrase}. ${diff}Customers get help understanding what needs attention now and what can be planned next.`,
+      aboutStory: `${name} is a roofing company in ${locationPhrase}. ${diff}The process is built around clear inspections, practical recommendations, and work that prepares the property for weather.`,
+      aboutHighlights: quoteHighlights,
+      ctaHeadline: "Request a roof inspection",
+    }
+  }
+
+  if (specialty.includes("paint")) {
+    return {
+      heroSubtitle: `Interior and exterior painting in ${cityLabel} with clean prep, sharp lines, and finishes built to last.`,
+      aboutPreview: `${name} is a painting company in ${locationPhrase}. ${diff}Customers get help choosing a practical plan before the first coat goes on.`,
+      aboutStory: `${name} is a painting company in ${locationPhrase}. ${diff}Projects are shaped around clean prep, steady communication, and paint work that makes the space feel complete.`,
+      aboutHighlights: hireHighlights,
+      ctaHeadline: "Plan your paint project",
+    }
+  }
+
+  if (specialty.includes("floor")) {
+    return {
+      heroSubtitle: `Flooring installs in ${cityLabel} with clean transitions, practical guidance, and surfaces ready for daily use.`,
+      aboutPreview: `${name} is a flooring company in ${locationPhrase}. ${diff}Customers get a clear path for replacing worn floors or finishing a space the right way.`,
+      aboutStory: `${name} is a flooring company in ${locationPhrase}. ${diff}The work is planned around clean transitions, sensible options, and a finished surface that feels right in the room.`,
+      aboutHighlights: hireHighlights,
+      ctaHeadline: "Start your flooring project",
+    }
+  }
+
+  if (specialty.includes("handyman") || specialty.includes("home repair")) {
+    return {
+      heroSubtitle: `Practical home repairs in ${cityLabel}, from small fixes to the punch-list jobs that keep stacking up.`,
+      aboutPreview: `${name} is a home repair company in ${locationPhrase}. ${diff}Customers get clear expectations, practical fixes, and help moving the punch list forward.`,
+      aboutStory: `${name} is a home repair company in ${locationPhrase}. ${diff}The work is built around clear expectations, practical fixes, and respect for the home.`,
+      aboutHighlights: hireHighlights,
+      ctaHeadline: "Get help with repairs",
+    }
+  }
+
+  return null
+}
+
 export function buildFallbackWebsiteContent(input: ContentGenerationInput): GeneratedWebsiteContent {
   const cityLabel = input.city || "Your Area"
   const industryLabel = polishTitle((input.subIndustry || input.industry).replace(/_/g, " "))
@@ -250,7 +349,8 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   const differentiator = input.different?.trim() || null
 
   const job = getWebsiteJob(input.subIndustry || null, input.industry)
-  const copy = buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
+  const copy = buildHomeServiceSpecialtyCopy(input, industryLabel, cityLabel, locationPhrase, differentiator)
+    ?? buildJobFamilyCopy(input.name, industryLabel, cityLabel, locationPhrase, differentiator, job)
   const aboutPreview = polishAboutForInput(copy.aboutPreview, input)
   const aboutStory = polishAboutForInput(copy.aboutStory, input)
 

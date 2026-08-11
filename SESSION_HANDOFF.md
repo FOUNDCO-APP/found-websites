@@ -2,6 +2,31 @@
 
 ## 2026-08-11 - FOUND Systems: Content Uniqueness Before Schema
 
+### Progress This Pass
+- Used the copywriting and senior-fullstack guidance for the first deterministic copy-quality pass.
+- Audited the non-AI fallback path in `src/lib/contentGeneration.ts`.
+- Found the main duplication source: most trades mapped into the broad `quote_me` job family, which reused generic phrases such as fast/honest estimates, go-to team, and no-guesswork wording.
+- Added a home-service specialty layer before the generic job-family fallback for:
+  - HVAC;
+  - remodeling/construction;
+  - plumbing;
+  - electrical;
+  - roofing;
+  - painting;
+  - flooring;
+  - handyman/home repair.
+- Extended `scripts/check-copy-quality-fixtures.mjs` so fallback fixtures can now assert hero subtitle, CTA, and forbidden phrases, not just about text.
+- Added HVAC and remodeling fixtures in `quality/copy-quality-fixtures.json` to prevent those two sample sites from collapsing back into the same generic fallback language.
+- Updated one stale generic service fixture to match current production copy-polish output.
+
+### Verification This Pass
+- `cmd /c npm run test:copy-quality` passed: 52 fixture groups.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Current Decision
+Schema remains paused. The first non-AI fallback variety slice is done, but the broader content uniqueness + typography baseline is not complete yet.
+
 ### Where We Left Off
 Shawn paused the schema/AEO/GEO work after noticing a more important scaling problem: some generated tenant sites can share the same or overly similar wording. The concern is not that all sites share a design system. The concern is that thousands of sites with repeated hero/about/service copy would weaken SEO/AEO/GEO and make Found feel generic.
 
@@ -32,21 +57,17 @@ That file records:
 - what not to do.
 
 ### Explicit Next Step
-Start with the audit/refactor of the non-AI fallback copy system:
+Continue the content-uniqueness baseline:
 
-1. Inspect `src/lib/contentGeneration.ts`.
-2. Inspect `src/lib/industryDefaults.ts`.
-3. Inspect `src/lib/subIndustryVocabulary.ts`.
-4. Inspect `src/lib/copyPolish.ts`.
-5. Generate/read output for sample inputs:
+1. Generate/read output for sample inputs:
    - HVAC in Tucson;
    - remodeling in Tucson;
    - RC Bicycles/bike shop;
    - food/restaurant;
    - beauty/wellness;
    - professional services.
-6. Identify repeated phrases and broad template families.
-7. Add sub-industry-specific copy families and a first-pass similarity guard before schema work resumes.
+2. Add a first-pass similarity guard that compares generated hero/about/service copy against existing tenant copy and flags or rewrites near-duplicates.
+3. Add typography safeguards for hero/display text before schema work resumes.
 
 ---
 
