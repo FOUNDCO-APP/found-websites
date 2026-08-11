@@ -1,3 +1,29 @@
+## Session: August 11, 2026 - Found HQ Health: Founder Funnel Clarity Pass
+**AI:** Codex
+
+### Context
+Shawn QA'd the PostHog Health page live on iPhone. Confirmed traffic works: 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d. He clarified this admin is for him as Founder/operator, not client-facing, and he is fine with terms like "funnel" if the system teaches him what they mean and how they help make money.
+
+### Team direction
+Keep the operational language, but add context in the product. Health should train Shawn to see the path from traffic to revenue, not hide the business concepts. Team recommendation: do not block FOUND Systems; first make Health clearer, then continue to funnel instrumentation.
+
+### Changed
+- Header now frames Health as a founder dashboard for traffic, leads, uptime, errors, and the next funnel step that turns attention into revenue.
+- Marketing section renamed to **Marketing funnel**.
+- PostHog row now explains that traffic is attention on `foundco.app`, and the next question is whether attention turns into signups, plan picks, and paid activations.
+- Added **Next money step: instrument the signup funnel**, with a plain-English definition: funnel = path from stranger to paying customer.
+- Sentry section renamed from raw "Errors" to **System issues**, with context explaining some alerts are testing/deploy noise while repeated, recent, payment, image, and AI-credit issues get reviewed first.
+- Sentry list now shows the top five issues with simple badges (`Review`, `Watch`, `Likely noise`) instead of a full scary raw error wall on mobile.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+Continue FOUND Systems with full funnel instrumentation: onboarding start, onboarding completion, plan selection, checkout start, and activation.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: PostHog Read Key + Health Traffic
 **AI:** Codex
 

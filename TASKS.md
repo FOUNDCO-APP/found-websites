@@ -17,8 +17,9 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [ ] Microsoft Clarity QA - deploy, visit `https://foundco.app`, then confirm Clarity receives data.
 - [x] PostHog Personal API Key (read scope) - generated and added in Vercel with `POSTHOG_PROJECT_ID=535458` and `POSTHOG_HOST=https://us.posthog.com`.
 - [x] Found HQ Health now reads PostHog pageviews/unique visitors for 7d/30d when env vars are present.
-- [ ] PostHog Health QA - after deploy, open Found HQ > More > Health and confirm Visitors/Pageviews show instead of the old blocked message.
-- [ ] Full funnel instrumentation - add clean events for onboarding start, onboarding completion, plan selection, checkout start, and activation so Found HQ can show real conversion rate.
+- [x] PostHog Health QA - Shawn confirmed live on iPhone: Found HQ > More > Health shows 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d instead of the old blocked message.
+- [x] Health founder-clarity pass - kept "funnel" language but explained it in-place as the path from stranger to paying customer; changed Marketing to Marketing funnel; added "Next money step"; softened Sentry from raw scary error wall to System issues with context and badges.
+- [ ] Full funnel instrumentation - add clean events for onboarding start, onboarding completion, plan selection, checkout start, and activation so Found HQ can show real conversion rate and tell Shawn where Found is losing money.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth

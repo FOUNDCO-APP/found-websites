@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Found HQ Health: Founder Funnel Clarity Pass
+
+### Where We Left Off
+Shawn QA'd Found HQ > More > Health live on iPhone. PostHog traffic was working: 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d. He clarified the admin is for him as Founder/operator, not clients, and he is fine with "funnel" language if the system teaches him what it means and how it helps revenue.
+
+### What Changed
+- Health header now describes the page as a founder dashboard for traffic, leads, uptime, errors, and the next funnel step that turns attention into revenue.
+- Marketing renamed to **Marketing funnel**.
+- Traffic row now explains that Found traffic is attention on `foundco.app`, and the next question is whether it turns into signups, plan picks, and paid activations.
+- Added **Next money step: instrument the signup funnel**, defining funnel as the path from stranger to paying customer.
+- Errors renamed to **System issues**.
+- Added context that Sentry alerts include testing/deploy noise, but repeated/recent/payment/image/AI-credit issues get reviewed first.
+- Sentry list now shows top five issues with simple badges (`Review`, `Watch`, `Likely noise`) instead of a full raw error wall on mobile.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- After deploy, Shawn should re-open Found HQ > More > Health on iPhone and confirm the wording teaches what the funnel means without feeling dumbed down.
+- Continue FOUND Systems with full funnel instrumentation: onboarding start, onboarding completion, plan selection, checkout start, and activation.
+
+---
+
 ## 2026-08-11 - FOUND Systems: PostHog Read Key + Health Traffic
 
 ### Where We Left Off
