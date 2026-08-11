@@ -360,7 +360,7 @@ export default function ActivateOverlay({
   const [companyName, setCompanyName] = useState(initialName)
   const [plan, setPlan] = useState<string | null>(targetPlan ?? null)
   const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>(defaultActivationPlan(targetPlan))
-  const [paymentStep, setPaymentStep] = useState<PaymentStep>(isAddonFlow ? "loading" : "plans")
+  const [paymentStep, setPaymentStep] = useState<PaymentStep>((isAddonFlow || targetPlan) ? "loading" : "plans")
   const [preparingPlan, setPreparingPlan] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const stripePromise = useMemo(() => {
@@ -414,6 +414,12 @@ export default function ActivateOverlay({
     void preparePayment(selectedPlan)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAddonFlow, slug, targetAddonSlug])
+
+  useEffect(() => {
+    if (isAddonFlow || !targetPlan) return
+    void preparePayment(selectedPlan)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAddonFlow, slug, targetPlan])
 
   useEffect(() => {
     if (skipIntro) return

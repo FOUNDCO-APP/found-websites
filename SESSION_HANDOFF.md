@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Activation Flow: Do Not Ask Plan Twice
+
+### Where We Left Off
+Shawn clarified the real issue: pricing can appear before onboarding when the customer enters through a general "Get my site" path, but once a plan is chosen, Found should not ask for the same pricing decision again after the site preview.
+
+### Team Direction
+- Steve: one decision, carried through. Repeating the same plan choice makes the product feel like it forgot.
+- Angela: two paths are valid: unsure customers choose a plan before questions; plan-aware customers from pricing pages go straight to questions. Both should activate without a second plan selector.
+- Phil: keep the revenue path clean; do not create a second chance for downgrade/confusion at the final moment.
+- Craig: preserve tracking by carrying the selected plan into the existing activation setup instead of inventing a new event path.
+
+### What Changed
+- Updated `ActivateOverlay` so normal activation skips the plan selector when `targetPlan` is already present.
+- The overlay now goes straight to Stripe/payment setup for already-selected plans.
+- If no plan is known, the overlay still shows Starter / Pro / Business before payment.
+- Existing `checkout_started` tracking remains tied to `preparePayment()`, meaning it fires when Stripe/payment setup starts, not after payment.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- General path: `foundco.app` -> `Get my site` -> choose plan -> questions -> preview -> Activate. Expected: no second plan selector; Stripe/payment setup opens for the chosen plan.
+- Pricing path: `/plans` or plan-specific page -> pick plan -> questions -> preview -> Activate. Expected: no second plan selector; Stripe/payment setup opens for that chosen plan.
+- Found HQ Health: `Checkout` should increment after payment setup opens. `Activated` should only increment after Stripe activation succeeds.
+
+---
+
 ## 2026-08-11 - Onboarding Recovery: Resume Already-Built Site
 
 ### Where We Left Off

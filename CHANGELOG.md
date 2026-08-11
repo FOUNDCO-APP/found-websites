@@ -1,3 +1,26 @@
+## Session: August 11, 2026 - Activation Flow: Do Not Ask Plan Twice
+**AI:** Codex
+
+### Context
+Shawn clarified the intended customer journey: pricing may be shown at the start when the customer enters through a general CTA, or preselected from a pricing page, but the final activation step should not ask the same plan question again.
+
+### Team direction
+Steve/Angela: one plan choice should carry through the whole journey. Phil: repeating pricing at activation risks downgrade/confusion at the revenue moment. Craig: preserve funnel tracking by reusing the existing activation setup path instead of changing event semantics.
+
+### Changed
+- `ActivateOverlay` now skips the plan selector when a `targetPlan` is already known from onboarding or a pricing-page entry.
+- Unknown-plan activation still shows the plan selector as a safe fallback.
+- `checkout_started` remains attached to payment setup creation, so Checkout means "Stripe/card setup opened" and does not require payment.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+After deploy, QA both entry paths: general CTA and pricing-page plan CTA. In both cases, once a plan is selected before questions, tapping Activate after preview should go straight to Stripe/payment setup and Health should show Checkout after PostHog/Health refresh lag.
+
+---
+
 ## Session: August 11, 2026 - Onboarding Recovery: Resume Already-Built Site
 **AI:** Codex
 
