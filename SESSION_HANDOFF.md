@@ -1,5 +1,55 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Content Uniqueness Before Schema
+
+### Where We Left Off
+Shawn paused the schema/AEO/GEO work after noticing a more important scaling problem: some generated tenant sites can share the same or overly similar wording. The concern is not that all sites share a design system. The concern is that thousands of sites with repeated hero/about/service copy would weaken SEO/AEO/GEO and make Found feel generic.
+
+Shawn also flagged visual/system quality issues that should be solved before scale:
+- one-word or two-word hero line orphans;
+- Impact-style display font line overlap;
+- desktop/mobile hero wrapping that can look careless.
+
+### Team Decision
+- Do **not** build tenant schema yet.
+- First build a content uniqueness and typography safety baseline.
+- Do not rush into AI setup. Build the deterministic non-AI baseline first, then use AI as a polish/rewrite layer.
+- The product must work even if AI credits run out or an AI API fails.
+
+### Full Plan
+Created the durable handoff document:
+
+- `FOUND_SYSTEMS_CONTENT_UNIQUENESS_PLAN.md`
+
+That file records:
+- why schema is paused;
+- the team meeting summary;
+- the explicit implementation order;
+- non-AI baseline decision;
+- future AI layer decision;
+- typography safeguards;
+- QA sample-site set;
+- what not to do.
+
+### Explicit Next Step
+Start with the audit/refactor of the non-AI fallback copy system:
+
+1. Inspect `src/lib/contentGeneration.ts`.
+2. Inspect `src/lib/industryDefaults.ts`.
+3. Inspect `src/lib/subIndustryVocabulary.ts`.
+4. Inspect `src/lib/copyPolish.ts`.
+5. Generate/read output for sample inputs:
+   - HVAC in Tucson;
+   - remodeling in Tucson;
+   - RC Bicycles/bike shop;
+   - food/restaurant;
+   - beauty/wellness;
+   - professional services.
+6. Identify repeated phrases and broad template families.
+7. Add sub-industry-specific copy families and a first-pass similarity guard before schema work resumes.
+
+---
+
 ## 2026-08-11 - Activation Funnel: Stripe Webhook Fallback
 
 ### Where We Left Off

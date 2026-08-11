@@ -1,3 +1,26 @@
+## Session: August 11, 2026 - FOUND Systems: Content Uniqueness Plan Before Schema
+**AI:** Codex
+
+### Context
+Shawn paused the schema/AEO/GEO work after noticing that generated tenant sites could share too much wording. He clarified the issue was not simply that HVAC and remodeling were related industries, but that exact or near-exact verbiage could repeat across sites. He also flagged system-level typography issues: one-word line orphans and display-font line overlap in hero text.
+
+### Team decision
+- Do not start tenant schema markup yet.
+- Build a content uniqueness baseline first.
+- Test/improve the non-AI generator before setting up more AI.
+- Use AI later as a rewrite/polish layer, not as the only thing preventing duplicate-feeling sites.
+- Add typography safeguards at the component/system level rather than manually editing sites one by one.
+
+### Documentation added
+- Created `FOUND_SYSTEMS_CONTENT_UNIQUENESS_PLAN.md`.
+- Linked it from `TASKS.md`.
+- Added the current handoff summary to `SESSION_HANDOFF.md`.
+
+### Next
+Begin with the audit/refactor of the deterministic fallback copy system: `contentGeneration.ts`, `industryDefaults.ts`, `subIndustryVocabulary.ts`, and `copyPolish.ts`. Schema remains blocked until generated content is meaningfully unique and visually safe at scale.
+
+---
+
 ## Session: August 11, 2026 - Activation Funnel: Stripe Webhook Fallback
 **AI:** Codex
 
