@@ -88,9 +88,9 @@
   font-size: 11px;
 }
 
-.hq-section { margin-top: 44px; }
-.hq-section-head { margin-bottom: 16px; }
-.hq-section-title { font-size: 13px; font-weight: 680; }
+.hq-section { margin-top: 52px; }
+.hq-section-head { margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--hq-border); }
+.hq-section-title { font-size: 12px; font-weight: 760; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hq-muted); }
 .hq-section-meta { color: var(--hq-dim); font-size: 11px; }
 .hq-panel,
 .hq-business-list {
@@ -98,7 +98,11 @@
   border-top: 1px solid var(--hq-border);
   border-bottom: 1px solid var(--hq-border);
   border-radius: 0;
-  background: transparent;
+  /* Whisper of lift, not a card - Shawn already rejected the heavy
+     dashboard-card look once (July 8, "V2 looked cheap"). This is meant
+     to read as "a distinct grouped region" without reintroducing borders
+     and background fills everywhere. */
+  background: rgba(255,255,255,0.018);
 }
 .hq-row {
   min-height: 76px;
@@ -113,7 +117,7 @@
   padding: 22px 0 25px;
   border-color: var(--hq-border);
 }
-.hq-today-summary div { padding: 0 22px; border-left-color: var(--hq-border); }
+.hq-today-summary div, .hq-today-summary a { padding: 0 22px; border-left-color: var(--hq-border); }
 .hq-today-summary strong { font-size: 30px; font-weight: 630; }
 .hq-today-summary span { margin-top: 9px; font-size: 10px; color: var(--hq-muted); }
 .hq-action-end > strong { color: var(--hq-green); font-size: 10px; font-weight: 720; }
@@ -259,7 +263,7 @@
   .hq-title { font-size: 32px; }
   .hq-subtitle { max-width: 300px; font-size: 13px; }
   .hq-today-summary { row-gap: 26px; }
-  .hq-today-summary div { padding: 0 18px; }
+  .hq-today-summary div, .hq-today-summary a { padding: 0 18px; }
   .hq-today-summary strong { font-size: 28px; }
   .hq-section { margin-top: 40px; }
   .hq-row { min-height: 80px; }

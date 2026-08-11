@@ -1,3 +1,24 @@
+## Session: August 11, 2026 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
+**AI:** Claude
+
+### Context
+Shawn's Today/Clients feedback led to a direct question: "let the team decide what's next," not another question back to him. Team round (Jony leading design per Shawn's instruction, Steve on the Sales direction) landed on a full reframe, confirmed with Shawn before building: Sales becomes Growth, kept as its own nav destination but rebuilt around automation instead of manual pipeline stages.
+
+### Built
+- **Today's summary stats are real links now** - Active clients, Open sales, At risk all navigate to the right filtered view instead of being static numbers. Clients gained `?state=` support to make this work.
+- **Sales -> Growth, full rebuild.** Dropped the CRM pipeline (New/Contacted/Demo/Proposal/Won/Lost) entirely per Shawn's explicit "I don't want this to be a CRM." Replaced with: automatic upgrade cohorts (2+ real clients sharing a plan + industry - "3 Starter clients, HVAC" - computed live from Clients data, each with a one-click "email all"), and a simple manual "Add a lead" for one-off referrals with no stage machinery. Checked live data first: abandoned-onboarding signups are still all noise (1 distinct email, 0 in 30 days, same finding as the original July audit) - didn't build anything around it yet, correctly.
+- "Mark converted" now creates/links the real client record in the same action as marking the lead won, instead of two manual steps.
+- **Fixed the actual structural cause of RC Bicycles getting stuck at "onboarding"**: `client_state` now auto-promotes to "active" the moment a real client's Stripe subscription genuinely goes active/trialing (wired into the webhook sync), instead of requiring Shawn to remember to flip it by hand. Scoped to real clients only, only ever moves *out* of onboarding - never touches comp/past_due/cancelled/test.
+- **Visual depth pass.** Shawn's critique: "black screens, no depth, no separation." Added a deliberately restrained lift to panels/lists (not a return to the heavy card look Shawn already rejected once, July 8) and gave section headers a hairline + uppercase treatment so grouped content (More's Quality vs. Monitoring split, specifically called out) actually reads as separated groups.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+Today's stat links go to the right filtered views; Growth shows cohorts and leads correctly with no stage UI; converting a lead does both steps at once; a real Stripe activation auto-promotes onboarding -> active; More and other pages read with visibly more separation between sections.
+
+---
+
 ## Session: August 11, 2026 - Found HQ: Real Trust-Breaking Data Bugs, Caught by Shawn Live
 **AI:** Claude
 

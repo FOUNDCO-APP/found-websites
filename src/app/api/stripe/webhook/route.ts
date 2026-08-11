@@ -64,6 +64,19 @@ async function syncSubscriptionToSupabase(
   const update: Record<string, string> = { subscription_status: sub.status }
   if (plan) update.plan = plan
 
+  // Auto-promote onboarding -> active the moment billing genuinely goes
+  // live, instead of requiring Shawn to remember to flip this by hand -
+  // the same manual-classification trap that left a real paying client
+  // silently stuck reading "onboarding" indefinitely. Test accounts are
+  // untouched; comp/past_due/cancelled states aren't overwritten - this
+  // only ever moves a real client out of "onboarding," nothing else.
+  if ((sub.status === "active" || sub.status === "trialing") && companyId) {
+    const { data: current } = await supabase.from("companies").select("client_state, account_kind").eq("id", companyId).maybeSingle()
+    if (current?.account_kind === "client" && current?.client_state === "onboarding") {
+      update.client_state = "active"
+    }
+  }
+
   let companyQuery = supabase.from("companies").update(update)
   if (companyId) {
     companyQuery = companyQuery.eq("id", companyId)

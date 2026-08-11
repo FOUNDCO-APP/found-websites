@@ -127,9 +127,9 @@ function ClientItem({ row }: { row: ClientRow }) {
   )
 }
 
-export default function ClientsWorkspace({ rows, initialSearch }: { rows: ClientRow[]; initialSearch: string }) {
+export default function ClientsWorkspace({ rows, initialSearch, initialFilter }: { rows: ClientRow[]; initialSearch: string; initialFilter?: string }) {
   const [query, setQuery] = useState(initialSearch)
-  const [filter, setFilter] = useState("clients")
+  const [filter, setFilter] = useState(initialFilter || "clients")
   const filtered = useMemo(() => rows.filter((row) => {
     if (!`${row.name} ${row.slug} ${row.email ?? ""}`.toLowerCase().includes(query.toLowerCase())) return false
     if (filter === "test") return row.account_kind === "test"

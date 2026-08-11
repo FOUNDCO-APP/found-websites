@@ -8,6 +8,7 @@ const PAYMENT_RELEVANT_INTENTS = new Set(["estimates", "bookings", "appointments
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const initialSearch = typeof params.q === "string" ? params.q : ""
+  const initialFilter = typeof params.state === "string" ? params.state : undefined
   const admin = getAdminClient()
   const [{ data: companies }, { data: configs }, { data: activities }] = await Promise.all([
     admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug").order("created_at", { ascending: false }),
@@ -46,7 +47,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="hq-page">
       <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Protect each relationship, launch, and payment.</p></div><span className="hq-count">{realClients}</span></header>
-      <ClientsWorkspace rows={rows} initialSearch={initialSearch} />
+      <ClientsWorkspace rows={rows} initialSearch={initialSearch} initialFilter={initialFilter} />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { adminLogout } from "./adminAuth"
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Today", icon: "today", match: ["/admin"] },
-  { href: "/admin/sales", label: "Sales", icon: "sales", match: ["/admin/sales"] },
+  { href: "/admin/growth", label: "Growth", icon: "sales", match: ["/admin/growth"] },
   { href: "/admin/clients", label: "Clients", icon: "clients", match: ["/admin/clients"] },
   { href: "/admin/more", label: "More", icon: "more", match: ["/admin/more", "/admin/photos", "/admin/emails", "/admin/copy", "/admin/health", "/admin/billing"] },
 ] as const

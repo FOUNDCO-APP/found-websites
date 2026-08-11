@@ -33,7 +33,7 @@ export default async function AdminTodayPage() {
       title: prospect.business_name,
       detail: overdue ? `Follow up with ${prospect.person_name}` : isNew ? `New prospect: contact ${prospect.person_name}` : "Proposal is waiting for a response",
       timing: overdue ? formatDue(prospect.next_follow_up_at) : isNew ? "Not contacted" : formatDue(prospect.next_follow_up_at),
-      href: "/admin/sales",
+      href: "/admin/growth",
       action: overdue || isNew ? "Contact" : "Review",
       tone: overdue ? "warning" : "info",
     })
@@ -62,9 +62,9 @@ export default async function AdminTodayPage() {
       <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Today</h1><p className="hq-subtitle">The work that grows or protects Found Co.</p></div></header>
       <div className="hq-today-summary">
         <div><strong>{items.length}</strong><span>Due now</span></div>
-        <div><strong>{(prospects ?? []).length}</strong><span>Open sales</span></div>
-        <div><strong>{activeClients}</strong><span>Active clients</span></div>
-        <div><strong>{atRisk}</strong><span>At risk</span></div>
+        <Link href="/admin/growth"><strong>{(prospects ?? []).length}</strong><span>Open sales</span></Link>
+        <Link href="/admin/clients?state=active"><strong>{activeClients}</strong><span>Active clients</span></Link>
+        <Link href="/admin/clients?state=past_due"><strong>{atRisk}</strong><span>At risk</span></Link>
       </div>
       <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Highest priority first</span></div>

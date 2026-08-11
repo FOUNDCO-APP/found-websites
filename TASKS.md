@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
+
+Shawn's call, not mine: "let the team decide what's next." Team round (Jony leading design, Steve on Sales direction) - approved and built.
+
+- [x] Today's "Active clients"/"Open sales"/"At risk" stats are now real links (Active clients -> Clients filtered to active, At risk -> Clients filtered to past_due, Open sales -> Growth). Added `?state=` support to Clients' initial filter to make this work.
+- [x] **Sales renamed to Growth, rebuilt from a CRM pipeline into what Shawn actually asked for**: no more stages (New/Contacted/Demo/Proposal/Won/Lost) - replaced with automatic "upgrade cohorts" (2+ real clients sharing a plan + industry, e.g. "3 Starter clients - HVAC", pulled live from Clients data, with an "email all" action) plus a simple manual "Add a lead" (name/business/contact/note only) for one-off referrals. Confirmed abandoned-onboarding data is still all noise (1 distinct email, 0 in 30 days) before deciding not to build anything around it yet.
+- [x] "Mark converted" now does both things at once (set stage + create/link the real client record) instead of two separate manual steps.
+- [x] Fixed the real structural gap behind RC Bicycles getting stuck at "onboarding": `client_state` now auto-promotes to "active" the moment a real client's Stripe subscription actually goes active/trialing, via the webhook sync - no longer a manual switch Shawn has to remember to flip. Test accounts and non-onboarding states are untouched.
+- [x] Visual depth pass (Jony-led): panels/lists get a whisper of surface lift instead of pure flat-on-black (deliberately restrained - Shawn already rejected the heavy card look once, July 8), section headers get a hairline + uppercase treatment so grouped content (like More's Quality/Monitoring split) actually reads as separated groups.
+- [ ] Shawn QA: Today's stats link correctly; Growth shows cohorts/leads with no stage-picking; converting a lead creates/links a real client in one step; a real Stripe activation auto-promotes a client out of onboarding; More/other pages read with more visual separation.
+
 ## 2026-08-11 - Found HQ: Real Trust-Breaking Data Bugs, Caught by Shawn Live
 
 Shawn tested the rebuilt admin live via screenshots and found it actively lying about his business state - "0 active clients" while looking at his one real paying client, 8 fake "due now" items that were all his own throwaway test signups, test accounts leaking into every state tab. Team decision (his call: "let the team decide"): fix the trust-breaking data bugs as the sole priority; leave Sales exactly as-is (no real sales-touch acquisition channel exists yet, so an empty manual pipeline is accurate, not broken - don't invest further, don't remove it either).
