@@ -1,3 +1,29 @@
+## Session: August 11, 2026 - FOUND Systems: PostHog Read Key + Health Traffic
+**AI:** Codex
+
+### Built / configured
+Shawn created a scoped PostHog Personal API Key using the read-only preset and added the required Vercel environment variables:
+- `POSTHOG_PERSONAL_API_KEY`
+- `POSTHOG_PROJECT_ID=535458`
+- `POSTHOG_HOST=https://us.posthog.com`
+
+Added `src/app/admin/health/posthog.ts`, a server-only PostHog query helper that uses the Personal API Key from environment variables and never exposes it to the browser. Found HQ Health now shows PostHog root-site traffic when configured:
+- Visitors, last 7 days
+- Pageviews, last 7 days
+- Visitors and pageviews, last 30 days
+
+Kept conversion rate explicitly marked as not instrumented yet. Current PostHog code only sends root-site `$pageview` events; full conversion requires a separate funnel-event pass for onboarding start, onboarding completion, plan selection, checkout start, and activation.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- First `cmd /c npm run build` failed on external Google Fonts fetch for Playfair, not code.
+- Reran build with network access; `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+Deploy, then open Found HQ > More > Health and confirm the Marketing section shows PostHog visitor/pageview numbers instead of the old blocked message.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Search Console, Bing, Clarity Setup
 **AI:** Codex
 

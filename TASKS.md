@@ -15,7 +15,10 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Bing Webmaster Tools - imported/verified `foundco.app` from Google Search Console and submitted `https://foundco.app/sitemap.xml` (processing, normal up-to-48h delay).
 - [x] Microsoft Clarity - created Found Co project (`y0u9dw7ln4`) and wired tracking into the root Found marketing site only, behind the same root-site gate as Vercel Analytics/PostHog.
 - [ ] Microsoft Clarity QA - deploy, visit `https://foundco.app`, then confirm Clarity receives data.
-- [ ] PostHog Personal API Key (read scope) - generate and add as env var, closes the gap flagged in Found HQ's Health page (Marketing section currently shows lead volume only, traffic/conversion blocked on this)
+- [x] PostHog Personal API Key (read scope) - generated and added in Vercel with `POSTHOG_PROJECT_ID=535458` and `POSTHOG_HOST=https://us.posthog.com`.
+- [x] Found HQ Health now reads PostHog pageviews/unique visitors for 7d/30d when env vars are present.
+- [ ] PostHog Health QA - after deploy, open Found HQ > More > Health and confirm Visitors/Pageviews show instead of the old blocked message.
+- [ ] Full funnel instrumentation - add clean events for onboarding start, onboarding completion, plan selection, checkout start, and activation so Found HQ can show real conversion rate.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth

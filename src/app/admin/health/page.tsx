@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { getUptimeMonitors } from "./uptimerobot"
 import { getSentryIssues } from "./sentry"
+import { getPostHogMarketingSummary } from "./posthog"
 import { getAdminClient } from "../lib"
 
 export const metadata = { title: "Health - Found HQ" }
@@ -29,9 +30,10 @@ export default async function AdminHealthPage() {
   const admin = getAdminClient()
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
-  const [monitors, issues, { data: clients }, { data: recentLeads }] = await Promise.all([
+  const [monitors, issues, posthog, { data: clients }, { data: recentLeads }] = await Promise.all([
     getUptimeMonitors(),
     getSentryIssues(),
+    getPostHogMarketingSummary(),
     admin.from("companies").select("id, name").eq("account_kind", "client"),
     admin.from("leads").select("company_id, created_at, type, status").gte("created_at", thirtyDaysAgo),
   ])
@@ -71,15 +73,28 @@ export default async function AdminHealthPage() {
         <div className="hq-stat-strip" style={{ marginBottom: 14 }}>
           <div className="hq-stat"><div className="hq-stat-value">{leads7d}</div><div className="hq-stat-label">Leads, last 7 days</div></div>
           <div className="hq-stat"><div className="hq-stat-value">{leads30d}</div><div className="hq-stat-label">Leads, last 30 days</div></div>
+          <div className="hq-stat"><div className="hq-stat-value">{posthog ? posthog.visitors7d : "—"}</div><div className="hq-stat-label">Visitors, last 7 days</div></div>
+          <div className="hq-stat"><div className="hq-stat-value">{posthog ? posthog.pageviews7d : "—"}</div><div className="hq-stat-label">Pageviews, last 7 days</div></div>
         </div>
         <div className="hq-panel">
+          {posthog ? (
+            <div className="hq-row" style={{ minHeight: 82 }}>
+              <div>
+                <p className="hq-row-title">{posthog.visitors30d} visitors · {posthog.pageviews30d} pageviews</p>
+                <p className="hq-row-meta">Root Found site traffic from PostHog, last 30 days. Conversion rate still needs a dedicated funnel-event pass.</p>
+              </div>
+              <span className="hq-badge hq-badge-success">Live</span>
+            </div>
+          ) : (
+            <div className="hq-row"><p className="hq-row-meta">Traffic (PostHog) is not available yet. Check `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`, and `POSTHOG_HOST` in Vercel.</p></div>
+          )}
           {topByLeads.length === 0 && (
             <div className="hq-row"><p className="hq-row-meta">No client leads in the last 30 days.</p></div>
           )}
           {topByLeads.map((c) => (
             <div key={c.name} className="hq-row"><p className="hq-row-title">{c.name}</p><span className="hq-badge hq-badge-success">{c.count} lead{c.count !== 1 ? "s" : ""}</span></div>
           ))}
-          <div className="hq-row"><p className="hq-row-meta">Traffic and conversion (PostHog) aren&apos;t wired in yet - needs a Personal API Key with read access from PostHog&apos;s settings, not just the public project key already in use for tracking.</p></div>
+          <div className="hq-row"><p className="hq-row-meta">Conversion tracking is not instrumented yet. PostHog pageviews are live; next pass should add clean funnel events for onboarding start, onboarding completion, plan selection, checkout start, and activation.</p></div>
         </div>
       </section>
 

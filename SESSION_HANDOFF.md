@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: PostHog Read Key + Health Traffic
+
+### Where We Left Off
+After Google/Bing/Clarity, Shawn moved to the PostHog Personal API Key step. He created a read-only key and added the required Vercel environment variables for Found HQ to read PostHog analytics server-side.
+
+### What Changed
+- Vercel env vars added by Shawn:
+  - `POSTHOG_PERSONAL_API_KEY`
+  - `POSTHOG_PROJECT_ID=535458`
+  - `POSTHOG_HOST=https://us.posthog.com`
+- Added `src/app/admin/health/posthog.ts`, a server-only PostHog query helper.
+- Found HQ Health now shows PostHog pageviews and unique visitors for 7d/30d when env vars are present.
+- The Marketing section no longer says traffic is unwired when PostHog responds.
+- Conversion rate remains explicitly not instrumented yet because the app currently only sends `$pageview`; a future pass needs onboarding/plan/checkout/activation events.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- First `cmd /c npm run build` failed on external Google Fonts fetch for Playfair, not code.
+- Reran build with network access; `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- Deploy the PostHog Health code.
+- Open Found HQ > More > Health.
+- Confirm Marketing shows visitor/pageview numbers instead of the old blocked PostHog message.
+- Continue FOUND Systems with full funnel instrumentation or tenant schema-markup scoping.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Google/Bing Done, Clarity Wired
 
 ### Where We Left Off
