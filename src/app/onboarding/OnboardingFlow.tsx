@@ -507,8 +507,8 @@ function GenerationErrorScreen({ message, onRetry, onBack }: {
     </main>
   )
 }
-function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan, comp, isAdminSession }: {
-  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string; comp?: boolean; isAdminSession?: boolean
+function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan, comp }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string; comp?: boolean
 }) {
   const [iframeReady, setIframeReady] = useState(false)
   const [activating, setActivating] = useState(false)
@@ -643,7 +643,6 @@ Activate my site
           targetPlan={plan}
           returnTo="dashboard"
           skipIntro
-          isAdminSession={isAdminSession}
           onClose={() => setActivating(false)}
         />
       )}
@@ -1180,7 +1179,7 @@ function PlanChoiceScreen({
   )
 }
 // ── Main ──────────────────────────────────────────────────────────────────────
-export default function OnboardingFlow({ onClose, drawerMode, plan = "found", showPlanChoice = false, isAdminSession = false }: { onClose?: () => void; drawerMode?: boolean; plan?: string; showPlanChoice?: boolean; isAdminSession?: boolean }) {
+export default function OnboardingFlow({ onClose, drawerMode, plan = "found", showPlanChoice = false }: { onClose?: () => void; drawerMode?: boolean; plan?: string; showPlanChoice?: boolean }) {
   const [phase, setPhase]           = useState<Phase>("welcome")
   const [currentPlan, setCurrentPlan] = useState(plan)
   useEffect(() => setCurrentPlan(plan), [plan])
@@ -1567,7 +1566,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       slug={result.slug}
       plan={result.plan}
       comp={result.comp}
-      isAdminSession={isAdminSession}
     />
   )
 

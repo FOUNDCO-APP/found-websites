@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Activation QA: Remove Public Comp Control
+
+### Where We Left Off
+During FOUND Systems checkout QA, Shawn continued from the `dj.foundco.app` practice signup. He tapped **Activate my site**, reached the plan-selection sheet, changed from Found Pro to Found Business, and noticed an internal button: `Activate as comp (Found team)`.
+
+### What Changed
+- Treated this as a real trust/UX/security-surface issue.
+- Root cause: onboarding was reading Shawn's admin cookie and passing an `isAdminSession` flag into the shared public activation overlay.
+- Removed the visible comp button from `ActivateOverlay`.
+- Removed onboarding's admin-cookie read and admin-session prop plumbing.
+- Removed the now-unused `activateAsComp` server action.
+- Existing comp onboarding still uses the separate server-validated comp-token path; it is not shown as a button on the customer activation screen.
+
+### Verification
+- `rg` no longer finds the public comp button or `activateAsComp` action in the active activation/onboarding code.
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- After deploy, repeat from a practice generated site.
+- Tap **Activate my site**.
+- Expected: plan selector shows Starter / Pro / Business only; no `Activate as comp (Found team)` button.
+- Select Found Business and tap Continue.
+- Expected: Stripe/card setup appears and Found HQ Health `Checkout` increments after about 1 minute.
+
+---
+
 ## 2026-08-11 - Supabase Security Email: RLS Critical Fix
 
 ### Where We Left Off

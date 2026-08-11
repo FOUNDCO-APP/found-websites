@@ -1,3 +1,28 @@
+## Session: August 11, 2026 - Activation QA: Remove Public Comp Control
+**AI:** Codex
+
+### Context
+During checkout funnel QA, Shawn reached the activation plan sheet from a freshly generated practice site and saw `Activate as comp (Found team)`. That was internal tooling appearing in a public/customer moment.
+
+### Team direction
+Steve/Angela: internal controls do not belong in the customer's activation path. Craig/Priya: the server-side check was protective, but the visible button was still unnecessary attack surface and bad trust UX.
+
+### Changed
+- Removed the comp activation button from `ActivateOverlay`.
+- Removed onboarding's admin-cookie read and `isAdminSession` plumbing.
+- Removed the unused `activateAsComp` server action.
+- Kept the separate server-validated comp-token onboarding path.
+
+### Verification
+- `rg` no longer finds the public comp button or `activateAsComp` action in active activation/onboarding code.
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+After deploy, repeat the activation-plan step and confirm only Starter / Pro / Business appear. Then tap Continue with Found Business to test the `Checkout` funnel count.
+
+---
+
 ## Session: August 11, 2026 - Supabase Security Email: RLS Critical Fix
 **AI:** Codex
 
