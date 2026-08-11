@@ -1582,7 +1582,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
             {/* Job link */}
             <div style={{ marginBottom: 20 }}>
               {est.job_id ? (
-                <a href="/photos?tab=jobs" style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: `${SIGNAL_GREEN}14`, border: `1px solid ${SIGNAL_GREEN}40` }}>
+                <a href={`/photos?album=${est.job_id}`} style={{ textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "12px 14px", borderRadius: 14, backgroundColor: `${SIGNAL_GREEN}14`, border: `1px solid ${SIGNAL_GREEN}40` }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 11, fontWeight: 800, color: SIGNAL_GREEN, textTransform: "uppercase", letterSpacing: "0.06em" }}>Linked to Job</div>
                     <div style={{ fontSize: 14, fontWeight: 700, color: "white", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

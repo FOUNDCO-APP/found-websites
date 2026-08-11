@@ -252,6 +252,23 @@ function PhotosPageInner() {
       // than show a Create Estimate button that would just fail.
       setEstimatesAccess(ed.estimates !== null)
       setEstimates(ed.estimates ?? [])
+
+      // Deep link straight into a specific Job's detail view (e.g. from the
+      // "Linked to Job" card on an Estimate) - a plain ?album=<id> with no
+      // camera/upload/tab intent, handled separately above. Checked here,
+      // after albums have actually loaded, so the target can be found.
+      const params = new URLSearchParams(window.location.search)
+      const deepAlbumId = params.get("album")
+      const hasOtherIntent = params.get("camera") || params.get("upload") || params.get("tab") || params.get("view")
+      if (deepAlbumId && !hasOtherIntent) {
+        const target = (ad.albums ?? []).find((a: Album) => a.id === deepAlbumId)
+        if (target) {
+          setActiveAlbum(target)
+          setView("albums")
+        }
+        router.replace("/photos")
+      }
+
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -369,6 +386,7 @@ function PhotosPageInner() {
           client_phone: activeAlbum.customer_phone || undefined,
           client_email: activeAlbum.customer_email || undefined,
           property_address: activeAlbum.service_address || undefined,
+          title: activeAlbum.name || undefined,
           job_id: activeAlbum.id,
         }),
       })

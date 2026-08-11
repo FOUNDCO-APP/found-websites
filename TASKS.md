@@ -1,5 +1,11 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Job <-> Estimate: Real Deep Links + Title Sync
+
+- [x] Shawn tested the new Create Estimate flow: the "Linked to Job" card on the estimate showed the job name but the link went to the general Jobs list (`/photos?tab=jobs`), not the specific job - had to search for it manually. Fixed: `/photos?album=<id>` now actually opens that job's detail directly. Added real deep-link handling to the Photos page (didn't exist before - `?album=` was previously only consumed for camera/upload flows, never to open a job's detail on load).
+- [x] Estimate's title now seeded from the job's own name/title at creation (e.g. "Flooring for kitchen") instead of being blank/generic - `createEstimateForJob()` now passes `title`.
+- [ ] Shawn QA: tap "Linked to Job" on an estimate, confirm it opens that exact job (not the general list); confirm a new estimate's title matches the job it was created from.
+
 ## 2026-08-10 - Job -> Estimate: the Missing Forward Direction
 
 - [x] Shawn's question surfaced a real gap: estimate->job worked (attach/create a job from the estimate builder), but job->estimate did not exist at all - zero mention of "estimate" anywhere on the Jobs detail screen.

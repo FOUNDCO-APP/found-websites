@@ -1,3 +1,22 @@
+## Session: August 10, 2026 - Job <-> Estimate: Real Deep Links + Title Sync
+**AI:** Claude
+
+### Found via Shawn's live testing
+Created an estimate from a job successfully, but the "Linked to Job" card on the estimate showed the job's name without it actually being useful to tap - it linked to the general Jobs list, not that specific job, so Shawn still had to search for it. Also asked for the job's own title (e.g. "Flooring for kitchen") to carry over as the estimate's title, which it wasn't doing.
+
+### Built
+- Real deep-link support on the Photos page - `/photos?album=<id>` now opens that exact job's detail view directly. This didn't exist before; the `?album=` param was only ever used to pre-fill camera/upload flows, never to open a job on load.
+- Estimate detail's "Linked to Job" link now points at the specific job (`/photos?album=<job_id>`) instead of the general Jobs tab.
+- `createEstimateForJob()` now seeds the new estimate's title from the job's own name, so they stay in sync at creation.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+Tap "Linked to Job" on an estimate and confirm it opens that exact job, not the general list. Create a new estimate from a job and confirm its title matches the job's name.
+
+---
+
 ## Session: August 10, 2026 - Job -> Estimate: the Missing Forward Direction
 **AI:** Claude
 
