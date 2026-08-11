@@ -1,5 +1,12 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ Rebuild: Phase 4, Won -> Client Conversion
+
+- [x] Built the one required V2 action that was never implemented: marking a sales prospect "Won" previously did nothing beyond the stage change - no client record got created, `linked_company_id` existed in the schema since July 8 but was never read or written anywhere.
+- [x] `convertProspectToClient()` in `sales/actions.ts` - auto-links to an existing company if one already matches by email (zero retyping); otherwise creates a minimal client stub carrying the prospect's identity data over (name, email, phone), landed in `onboarding` state for Shawn to finish setting up.
+- [x] "Convert to client" button appears on any Won prospect without a linked company; becomes "View client record" once linked.
+- [ ] Shawn QA: mark a test prospect Won, convert it, confirm it shows up correctly in Clients with the right info carried over.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 3, New-Signup Visibility + Alerts
 
 - [x] Found where a company signup actually happens: `createOnboardingSite()` in `src/app/onboarding/actions.ts:246` - this is where the old Overview page's "6 most recent signups" list (dropped when V2 replaced it, never restored) should hook in.

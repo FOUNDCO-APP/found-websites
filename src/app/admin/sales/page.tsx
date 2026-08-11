@@ -5,7 +5,7 @@ export const metadata = { title: "Sales - Found HQ" }
 
 export default async function SalesPage() {
   const { data } = await getAdminClient().from("sales_prospects")
-    .select("id, person_name, business_name, email, phone, source, stage, next_follow_up_at, estimated_plan, notes, created_at")
+    .select("id, person_name, business_name, email, phone, source, stage, next_follow_up_at, estimated_plan, notes, created_at, linked_company_id")
     .order("next_follow_up_at", { ascending: true, nullsFirst: false })
   const prospects = (data ?? []) as Prospect[]
   const open = prospects.filter((prospect) => !["won", "lost"].includes(prospect.stage)).length

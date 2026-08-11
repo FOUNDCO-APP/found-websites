@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../lib"
+import { slugify } from "@/lib/slugify"
 
 const STAGES = new Set(["new", "contacted", "demo_scheduled", "proposal_sent", "won", "lost"])
 const PLANS = new Set(["found", "found_pro", "found_business"])
@@ -89,6 +90,59 @@ export async function updateProspect(formData: FormData) {
   })
   if (activities.length) await admin.from("sales_activities").insert(activities)
   refresh()
+}
+
+// "Convert Won to a client/company without retyping identity data" - the one
+// required action from the V2 spec that was never built. Marking a prospect
+// Won previously did nothing beyond the stage change; the business had to be
+// manually re-entered from scratch in Clients. This closes that gap: if a
+// matching company already exists (by email), link it - zero retyping. If
+// not, create a minimal client stub carrying over the identity data already
+// on the prospect, so Shawn finishes setup instead of starting from zero.
+export async function convertProspectToClient(prospectId: string) {
+  await requireAdmin()
+  const admin = getAdminClient()
+
+  const { data: prospect, error: readError } = await admin.from("sales_prospects")
+    .select("id, person_name, business_name, email, phone, linked_company_id, stage")
+    .eq("id", prospectId)
+    .single()
+  if (readError) throw new Error(readError.message)
+  if (prospect.linked_company_id) return { companyId: prospect.linked_company_id, created: false }
+
+  if (prospect.email) {
+    const { data: existing } = await admin.from("companies")
+      .select("id")
+      .ilike("email", prospect.email)
+      .limit(1)
+      .maybeSingle()
+    if (existing) {
+      await admin.from("sales_prospects").update({ linked_company_id: existing.id }).eq("id", prospectId)
+      await admin.from("client_activities").insert({ company_id: existing.id, activity_type: "note", summary: `Linked to Won prospect ${prospect.business_name}` })
+      refresh()
+      return { companyId: existing.id, created: false }
+    }
+  }
+
+  const base = slugify(prospect.business_name) || "client"
+  let slug = base
+  const { data: taken } = await admin.from("companies").select("slug").ilike("slug", `${base}%`)
+  if ((taken ?? []).some((row) => row.slug === slug)) slug = `${base}-${Math.random().toString(36).slice(2, 6)}`
+
+  const { data: created, error: createError } = await admin.from("companies").insert({
+    name: prospect.business_name,
+    slug,
+    email: prospect.email || null,
+    phone: prospect.phone || null,
+    account_kind: "client",
+    client_state: "onboarding",
+  }).select("id").single()
+  if (createError) throw new Error(createError.message)
+
+  await admin.from("sales_prospects").update({ linked_company_id: created.id }).eq("id", prospectId)
+  await admin.from("client_activities").insert({ company_id: created.id, activity_type: "note", summary: `Created from Won prospect (${prospect.person_name})` })
+  refresh()
+  return { companyId: created.id, created: true }
 }
 
 export async function logProspectActivity(formData: FormData) {

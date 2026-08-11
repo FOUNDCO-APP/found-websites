@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { createProspect, logProspectActivity, updateProspect } from "./actions"
+import Link from "next/link"
+import { useMemo, useState, useTransition } from "react"
+import { convertProspectToClient, createProspect, logProspectActivity, updateProspect } from "./actions"
 import { formatDue, planLabel } from "../client-utils"
 
 export type Prospect = {
@@ -16,6 +17,7 @@ export type Prospect = {
   estimated_plan: string | null
   notes: string | null
   created_at: string
+  linked_company_id: string | null
 }
 
 const STAGES = [
@@ -29,7 +31,17 @@ const STAGES = [
 
 function ProspectRow({ prospect }: { prospect: Prospect }) {
   const [stage, setStage] = useState(prospect.stage)
+  const [linkedCompanyId, setLinkedCompanyId] = useState(prospect.linked_company_id)
+  const [converting, startConverting] = useTransition()
   const dueClass = prospect.next_follow_up_at && new Date(prospect.next_follow_up_at).getTime() < Date.now() ? "hq-badge-warning" : "hq-badge-info"
+
+  function handleConvert() {
+    startConverting(async () => {
+      const result = await convertProspectToClient(prospect.id)
+      setLinkedCompanyId(result.companyId)
+    })
+  }
+
   return (
     <article className="hq-prospect">
       <div className="hq-prospect-head">
@@ -44,6 +56,17 @@ function ProspectRow({ prospect }: { prospect: Prospect }) {
             {prospect.phone && <a href={`sms:${prospect.phone}`}>Text</a>}
             {prospect.email && <a href={`mailto:${prospect.email}`}>Email</a>}
           </div>
+          {prospect.stage === "won" && (
+            linkedCompanyId ? (
+              <Link href={`/admin/clients?q=${encodeURIComponent(prospect.business_name)}`} className="hq-contact-actions" style={{ marginTop: 8 }}>
+                <span>View client record</span>
+              </Link>
+            ) : (
+              <button type="button" onClick={handleConvert} disabled={converting} className="hq-button hq-button-primary" style={{ marginTop: 10 }}>
+                {converting ? "Converting..." : "Convert to client"}
+              </button>
+            )
+          )}
         </div>
         <span className={`hq-badge ${dueClass}`}>{formatDue(prospect.next_follow_up_at)}</span>
       </div>

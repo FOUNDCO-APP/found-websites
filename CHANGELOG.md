@@ -1,3 +1,20 @@
+## Session: August 11, 2026 - Found HQ Rebuild Phase 4: Won -> Client Conversion
+**AI:** Claude
+
+### Built
+The one action the V2 audit called out as required but never built: marking a sales prospect "Won" did nothing beyond the stage change - `linked_company_id` has existed on `sales_prospects` since the July 8 migration but was never read or written by any code path, meaning every closed deal had to be manually re-entered from scratch in Clients.
+
+- `convertProspectToClient()` (`sales/actions.ts`) - checks for an existing company matching the prospect's email first (auto-link, zero retyping); otherwise creates a minimal client stub carrying over the prospect's name/email/phone, landed in `onboarding` state.
+- "Convert to client" button on any Won prospect without a link; becomes "View client record" once converted.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Next
+Phase 5 (final): marketing health section on the Health page - traffic/lead volume, sourced from PostHog/Vercel Analytics/leads (already in the stack, never wired into Found HQ).
+
+---
+
 ## Session: August 11, 2026 - Found HQ Rebuild Phase 3: New-Signup Visibility + Alerts
 **AI:** Claude
 
