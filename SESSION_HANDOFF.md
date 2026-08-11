@@ -25,15 +25,23 @@
   - admin Copy regeneration now checks generated copy before publishing the safety-snapshotted version;
   - if copy is too similar, Found rewrites it deterministically using truthful details already provided: business name, city/state, sub-industry, differentiator, and service names.
 - Onboarding now also saves `about_preview`, `about_story`, and `about_highlights` from generated/guarded copy instead of only `about_text`.
+- Added system-level public typography safeguards:
+  - new `.public-hero-title`, `.public-display-title`, and `.public-hero-subtitle` classes in `src/app/globals.css`;
+  - applied to tenant homepage hero titles/subtitles across Impact, Cinematic, Portrait, Editorial, Wellness Luxe, and Wellness Cinematic layouts;
+  - applied to major public subpage hero/display headings: About, Services, Menu, Online Order, Shop, product modal heading, and Catalog Showcase;
+  - replaced unsafe `leading-none` / `leading-[0.96]` hero headings with safer line-height, balanced wrapping, overflow wrapping, and mobile-specific line-height/letter-spacing.
+- Added `scripts/check-public-hero-typography.mjs` and package script `test:public-hero-typography` so large public headings cannot reintroduce unsafe line-height without the shared safety class.
+- Existing-site QA note: typography applies to all existing sites automatically after deploy. Copy similarity guard only affects new/regenerated copy. For all current test sites plus Ryan/RC Bicycles, use targeted copy regeneration/dry-run before overwriting saved copy.
 
 ### Verification This Pass
 - `cmd /c npm run test:copy-quality` passed: 52 fixture groups.
 - After the similarity guard was added, `cmd /c npm run test:copy-quality` passed: 54 fixture groups.
+- `cmd /c npm run test:public-hero-typography` passed: 12 files checked.
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run build` initially failed on transient Google font fetches for Playfair Display; immediate retry passed. Existing Next middleware deprecation warning remains.
 
 ### Current Decision
-Schema remains paused. The first non-AI fallback variety slice and first-pass similarity guard are done. Typography safeguards are still open before schema resumes.
+Schema remains paused until sample-site QA confirms the copy and typography safeguards on real examples. The first non-AI fallback variety slice, first-pass similarity guard, and public typography safeguard are done.
 
 ### Where We Left Off
 Shawn paused the schema/AEO/GEO work after noticing a more important scaling problem: some generated tenant sites can share the same or overly similar wording. The concern is not that all sites share a design system. The concern is that thousands of sites with repeated hero/about/service copy would weaken SEO/AEO/GEO and make Found feel generic.
@@ -74,8 +82,9 @@ Continue the content-uniqueness baseline:
    - food/restaurant;
    - beauty/wellness;
    - professional services.
-2. Add typography safeguards for hero/display text before schema work resumes.
-3. Later: strengthen onboarding inputs with a few owner-specific details so the similarity guard has richer truthful material to work with.
+2. QA all current test sites plus Ryan/RC Bicycles after deploy.
+3. For existing saved copy, run targeted admin copy regeneration/dry-run before changing live copy.
+4. Later: strengthen onboarding inputs with a few owner-specific details so the similarity guard has richer truthful material to work with.
 
 ---
 

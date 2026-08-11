@@ -51,7 +51,7 @@ export default function CatalogShowcase({ company, activeAddons = [] }: { compan
         <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="mb-3 text-xs font-black uppercase tracking-[0.2em]" style={{ color: primary }}>{eyebrow}</p>
-            <h2 className="max-w-2xl text-4xl font-black leading-none text-neutral-950 md:text-5xl" style={{ fontFamily: "var(--font-heading, inherit)" }}>{title}</h2>
+            <h2 className="public-display-title max-w-2xl text-4xl font-black text-neutral-950 md:text-5xl" style={{ fontFamily: "var(--font-heading, inherit)" }}>{title}</h2>
           </div>
           <Link href={href} className="text-sm font-black uppercase tracking-[0.16em] transition-opacity hover:opacity-70" style={{ color: primary }}>
             {linkLabel} →

@@ -33,8 +33,8 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
   - [x] Add first-pass content uniqueness guardrails: compare generated hero/about/service copy against existing tenant copy and deterministically rewrite when similarity is too high. Wired into onboarding site creation and admin copy regeneration; no schema changes required.
   - [ ] Strengthen onboarding inputs: collect a few owner-specific details that force unique copy without turning onboarding into a long form.
   - [x] Add first-pass industry/sub-industry fallback variety so non-AI or failed-AI home-service sites do not reuse the same phrases across nearby trades. Built specialty fallback copy for HVAC, remodeling, plumbing, electrical, roofing, painting, flooring, and handyman/home repair; added copy-quality fixtures for HVAC/remodeling so the generic `quote_me` wording cannot silently return there.
-  - [ ] Add automated typography safeguards for hero/display text: prevent line overlap, avoid one/two-word orphan lines where possible, and tune line-height/letter-spacing by selected font.
-  - [ ] Add sample-site QA set before release: Barrio Builders, HVAC test site, RC Bicycles, plus at least one food/beauty/professional-services site.
+  - [x] Add automated typography safeguards for hero/display text: shared public hero/display classes now prevent line overlap, improve mobile wrapping, and tune line-height/letter-spacing across tenant homepage layouts and major public subpage hero headings. Added `test:public-hero-typography` regression check.
+  - [ ] Add sample-site QA set before release: Barrio Builders, HVAC test site, RC Bicycles/Ryan, all current test sites, plus at least one food/beauty/professional-services site. Typography updates apply automatically after deploy; copy guard requires targeted copy regeneration/dry-run for existing saved sites before overwriting live copy.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Supabase Security

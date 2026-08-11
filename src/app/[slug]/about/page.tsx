@@ -90,12 +90,12 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#ffffff" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
-          <h1 className="text-5xl md:text-7xl font-black leading-none mb-8 text-balance text-white"
+          <h1 className="public-hero-title text-5xl md:text-7xl font-black mb-8 text-white"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             About {displayName}
           </h1>
           {aboutHeroSubtitle && (
-            <p className="text-lg" style={{ color: "#cccccc" }}>
+            <p className="public-hero-subtitle text-lg" style={{ color: "#cccccc" }}>
               {aboutHeroSubtitle}
             </p>
           )}

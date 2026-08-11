@@ -244,10 +244,10 @@ export default function OnlineOrderClient({
             <p className="text-xs font-black tracking-[0.22em] uppercase mb-4" style={{ color: primary }}>
               Order Online
             </p>
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-none mb-4">
+            <h1 className="public-hero-title text-4xl md:text-6xl font-black text-white mb-4">
               Order from {companyName}
             </h1>
-            <p className="text-base md:text-lg max-w-xl" style={{ color: "rgba(255,255,255,0.68)" }}>
+            <p className="public-hero-subtitle text-base md:text-lg max-w-xl" style={{ color: "rgba(255,255,255,0.68)" }}>
               Pick what you want, pay securely, and the order goes straight to the business.
             </p>
           </div>

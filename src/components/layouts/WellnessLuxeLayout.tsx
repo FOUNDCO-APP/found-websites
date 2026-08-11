@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -49,10 +50,19 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
             <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: primary }}>
               {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
             </p>
-            <h1 className="text-5xl font-normal leading-[0.96] tracking-normal md:text-7xl" style={{ color: INK, fontFamily: "var(--font-heading, inherit)" }}>
+            <h1
+              className="public-hero-title text-5xl font-normal tracking-normal md:text-7xl"
+              style={{
+                color: INK,
+                fontFamily: "var(--font-heading, inherit)",
+                "--public-hero-line-height": "1.08",
+                "--public-hero-mobile-line-height": "1.14",
+                "--public-hero-letter-spacing": "-0.012em",
+              } as CSSProperties}
+            >
               {config?.hero_title || displayName}
             </h1>
-            <p className="mt-7 max-w-md text-base font-medium leading-8 md:text-lg" style={{ color: "rgba(17,23,21,0.62)" }}>
+            <p className="public-hero-subtitle mt-7 max-w-md text-base font-medium md:text-lg" style={{ color: "rgba(17,23,21,0.62)" }}>
               {config?.hero_subtitle || `A calmer way to discover ${displayName}.`}
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">

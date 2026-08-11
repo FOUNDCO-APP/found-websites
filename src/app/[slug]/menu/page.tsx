@@ -77,12 +77,12 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
           <p className="text-xs font-black tracking-[0.25em] uppercase mb-5" style={{ color: primary }}>
             {vocab.servicesOverline}
           </p>
-          <h1 className="text-6xl md:text-8xl font-black text-white leading-none mb-4 text-balance"
+          <h1 className="public-hero-title text-6xl md:text-8xl font-black text-white mb-4"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             {vocab.servicesLabel}
           </h1>
           {config?.tagline && (
-            <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>{config.tagline}</p>
+            <p className="public-hero-subtitle text-lg max-w-xl" style={{ color: "#cccccc" }}>{config.tagline}</p>
           )}
           {((onlineOrderingActive && menuCategories) || company.phone) && (
             <div className="flex flex-col sm:flex-row gap-4 mt-8">

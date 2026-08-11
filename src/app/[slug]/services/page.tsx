@@ -69,11 +69,11 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
           <p className="text-xs font-black tracking-widest uppercase mb-5" style={{ color: "#ffffff" }}>
             {vocab.servicesOverline}
           </p>
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-none mb-6 text-balance"
+          <h1 className="public-hero-title text-5xl md:text-7xl font-black text-white mb-6"
             style={{ fontFamily: "var(--font-heading, inherit)" }}>
             {vocab.servicesLabel}
           </h1>
-          <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
+          <p className="public-hero-subtitle text-lg max-w-xl" style={{ color: "#cccccc" }}>
             {config?.hero_subtitle || industryDefs.servicesIntro}
           </p>
         </div>

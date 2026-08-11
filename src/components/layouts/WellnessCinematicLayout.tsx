@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -59,10 +60,18 @@ export default function WellnessCinematicLayout({ company, activeAddons, primary
           <p className="mb-5 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: "rgba(255,255,255,0.68)" }}>
             {company.city ? `${company.city} wellness` : "Care, beautifully presented"}
           </p>
-          <h1 className="mx-auto max-w-4xl text-5xl font-normal leading-[0.96] tracking-normal md:text-7xl" style={{ fontFamily: "var(--font-heading, inherit)" }}>
+          <h1
+            className="public-hero-title mx-auto max-w-4xl text-5xl font-normal tracking-normal md:text-7xl"
+            style={{
+              fontFamily: "var(--font-heading, inherit)",
+              "--public-hero-line-height": "1.08",
+              "--public-hero-mobile-line-height": "1.14",
+              "--public-hero-letter-spacing": "-0.012em",
+            } as CSSProperties}
+          >
             {config?.hero_title || displayName}
           </h1>
-          <p className="mx-auto mt-6 max-w-lg text-base font-medium leading-8 text-white/72 md:text-lg">
+          <p className="public-hero-subtitle mx-auto mt-6 max-w-lg text-base font-medium text-white/72 md:text-lg">
             {config?.hero_subtitle || `A calmer way to discover ${displayName}.`}
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

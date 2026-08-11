@@ -1,3 +1,50 @@
+## Session: August 11, 2026 - FOUND Systems: Public Typography Safeguards
+**AI:** Codex
+
+### Context
+Shawn asked the team to give explicit direction on typography safeguards before schema. The concrete issues were one-word/two-word line orphans and large display-font overlap, especially on generated hero headings like HVAC.
+
+### Team direction
+Steve/Jony/Craig: fix this as a system rule, not by hand-editing individual tenant sites. Protect the hero first because that is the first trust signal. Add a regression check so future layout work cannot silently bring back unsafe large heading line-height.
+
+### Changed
+- Added shared public typography safety classes in `src/app/globals.css`:
+  - `.public-hero-title`
+  - `.public-display-title`
+  - `.public-hero-subtitle`
+- Applied the classes across tenant homepage layouts:
+  - Impact
+  - Cinematic
+  - Portrait
+  - Editorial
+  - Wellness Luxe
+  - Wellness Cinematic
+- Applied the same safeguards to major public subpage hero/display headings:
+  - About
+  - Services
+  - Menu
+  - Online Order
+  - Shop
+  - Shop product modal
+  - Catalog Showcase
+- Replaced unsafe large heading `leading-none` / `leading-[0.96]` patterns with balanced wrapping, safer line-height, overflow wrapping, and mobile-specific line-height/letter-spacing.
+- Added `scripts/check-public-hero-typography.mjs` plus `npm run test:public-hero-typography`.
+
+### Existing-site behavior
+- Typography applies to existing sites automatically after deployment because it is shared styling.
+- Copy similarity guard does not rewrite already-saved copy automatically. Existing test sites and Ryan/RC Bicycles need targeted admin copy regeneration/dry-run before changing live saved copy.
+
+### Verification
+- `cmd /c npm run test:public-hero-typography` passed: 12 files checked.
+- `cmd /c npm run test:copy-quality` passed: 54 fixture groups.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Next
+QA all current test sites plus Ryan/RC Bicycles after deployment. Then decide whether schema can resume or whether targeted copy regeneration is needed first on existing saved sites.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Generated Copy Similarity Guard
 **AI:** Codex
 

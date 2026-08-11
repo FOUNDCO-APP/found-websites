@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -60,11 +61,13 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
 
           {/* Headline â€” the main event */}
           <h1
-            className="text-6xl md:text-8xl lg:text-9xl font-black text-white leading-none mb-8 text-balance"
+            className="public-hero-title text-6xl md:text-8xl lg:text-9xl font-black text-white mb-8"
             style={{
               fontFamily: "var(--font-heading, inherit)",
+              "--public-hero-line-height": "1.07",
+              "--public-hero-mobile-line-height": "1.13",
               animation: "fade-up 900ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both",
-            }}
+            } as CSSProperties}
           >
             {config?.hero_title || displayName}
           </h1>
@@ -81,7 +84,7 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
 
           {/* Subtitle */}
           <p
-            className="text-xl md:text-2xl max-w-2xl mx-auto mb-12 leading-relaxed"
+            className="public-hero-subtitle text-xl md:text-2xl max-w-2xl mx-auto mb-12"
             style={{
               color: "#dddddd",
               animation: "fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 750ms both",
@@ -198,7 +201,7 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
                 <div>
                   <div className="w-16 h-1 mb-8" style={{ backgroundColor: primary }} />
                   <h2
-                    className="text-5xl md:text-7xl font-black text-white leading-none"
+                    className="public-display-title text-5xl md:text-7xl font-black text-white"
                     style={{ fontFamily: "var(--font-heading, inherit)" }}
                   >
                     {displayName}

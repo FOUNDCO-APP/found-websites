@@ -44,6 +44,7 @@ supabase/.temp/
 next-env.d.ts
 scripts/*
 !scripts/check-copy-quality-fixtures.mjs
+!scripts/check-public-hero-typography.mjs
 !scripts/audit-copy-quality.mjs
 !scripts/repair-copy-quality.mjs
 !scripts/migration-045-about-content-model.sql

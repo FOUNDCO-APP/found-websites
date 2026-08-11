@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -54,14 +55,16 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
             style={{ color: "#ffffff", animation: "fade-up 400ms ease-out 0ms both" }}>
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-none mb-8 max-w-4xl text-balance"
+          <h1 className="public-hero-title text-5xl md:text-7xl lg:text-8xl font-black text-white mb-8 max-w-4xl"
             style={{
               fontFamily: "var(--font-heading, inherit)",
+              "--public-hero-line-height": "1.06",
+              "--public-hero-mobile-line-height": "1.12",
               animation: "fade-up 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both",
-            }}>
+            } as CSSProperties}>
             {config?.hero_title || displayName}
           </h1>
-          <p className="text-lg md:text-xl max-w-xl mb-12 leading-relaxed"
+          <p className="public-hero-subtitle text-lg md:text-xl max-w-xl mb-12"
             style={{ color: "#cccccc", animation: "fade-up 400ms ease-out 280ms both" }}>
             {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>

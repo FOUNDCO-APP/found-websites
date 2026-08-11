@@ -345,8 +345,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
           )}
           <div className="relative mx-auto max-w-5xl">
             <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop</p>
-            <h1 className="mb-4 text-4xl font-black leading-none text-white md:text-6xl">Shop {companyName}</h1>
-            <p className="max-w-xl text-base leading-relaxed text-white/70 md:text-lg">Online shopping is coming soon. Reach out directly and the team will help with availability, sizing, and orders.</p>
+            <h1 className="public-hero-title mb-4 text-4xl font-black text-white md:text-6xl">Shop {companyName}</h1>
+            <p className="public-hero-subtitle max-w-xl text-base text-white/70 md:text-lg">Online shopping is coming soon. Reach out directly and the team will help with availability, sizing, and orders.</p>
           </div>
         </section>
 
@@ -377,8 +377,8 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
         )}
         <div className="relative mx-auto max-w-5xl">
           <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: primary }}>Shop Online</p>
-          <h1 className="mb-4 text-5xl font-black leading-none text-white md:text-7xl">Shop {companyName}</h1>
-          <p className="max-w-xl text-lg leading-relaxed text-white/72">Choose what you want. {companyName} will receive the order and help with the next step.</p>
+          <h1 className="public-hero-title mb-4 text-5xl font-black text-white md:text-7xl">Shop {companyName}</h1>
+          <p className="public-hero-subtitle max-w-xl text-lg text-white/72">Choose what you want. {companyName} will receive the order and help with the next step.</p>
         </div>
       </section>
 
@@ -573,7 +573,7 @@ export default function ShopClient({ companyId, companyName, slug, primary, cate
               <div className="p-6 md:p-7">
                 <button onClick={() => setSelectedProduct(null)} className="mb-6 rounded-full border border-neutral-200 px-4 py-2 text-sm font-black text-neutral-700">Close</button>
                 <p className="mb-3 text-xs font-black uppercase tracking-[0.2em]" style={{ color: primary }}>Product</p>
-                <h2 className="text-4xl font-black leading-none text-neutral-950">{selectedProduct.name}</h2>
+                <h2 className="public-display-title text-4xl font-black text-neutral-950">{selectedProduct.name}</h2>
                 <p className="mt-4 text-2xl font-black" style={{ color: primary }}>{formatMoney(selectedProduct.unitAmount)}</p>
                 {selectedProduct.description && <p className="mt-5 text-lg leading-relaxed text-neutral-600">{selectedProduct.description}</p>}
                 {selectedProductOptions.length > 0 && (

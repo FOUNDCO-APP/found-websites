@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -58,11 +59,13 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1
-            className="text-5xl md:text-6xl lg:text-7xl font-black text-white leading-none mb-6 max-w-3xl text-balance"
+            className="public-hero-title text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 max-w-3xl"
             style={{
               fontFamily: "var(--font-heading, inherit)",
+              "--public-hero-line-height": "1.07",
+              "--public-hero-mobile-line-height": "1.13",
               animation: "fade-up 700ms cubic-bezier(0.16, 1, 0.3, 1) 250ms both",
-            }}
+            } as CSSProperties}
           >
             {config?.hero_title || displayName}
           </h1>
@@ -72,7 +75,7 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
               animation: "scale-x-reveal 500ms ease-out 450ms both",
               transformOrigin: "left",
             }} />
-          <p className="text-lg max-w-lg mb-10 leading-relaxed"
+          <p className="public-hero-subtitle text-lg max-w-lg mb-10"
             style={{ color: "#dddddd", animation: "fade-up 600ms ease-out 550ms both" }}>
             {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>

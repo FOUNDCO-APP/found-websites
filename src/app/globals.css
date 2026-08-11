@@ -32,6 +32,39 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading, inherit);
 }
 
+/* ── Public site typography safety ──
+   Generated tenant copy can vary widely. These classes keep large hero
+   headings from visually breaking at scale: no overlapping display lines,
+   safer mobile wrapping, and fewer one-word orphan lines where browsers
+   support text balancing. */
+.public-hero-title,
+.public-display-title {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  line-height: var(--public-hero-line-height, 1.08);
+  letter-spacing: var(--public-hero-letter-spacing, -0.018em);
+}
+
+.public-hero-title {
+  max-width: min(var(--public-hero-max-width, 64rem), 100%);
+}
+
+.public-hero-subtitle {
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  line-height: var(--public-subtitle-line-height, 1.55);
+}
+
+@media (max-width: 640px) {
+  .public-hero-title,
+  .public-display-title {
+    line-height: var(--public-hero-mobile-line-height, 1.12);
+    letter-spacing: var(--public-hero-mobile-letter-spacing, -0.012em);
+  }
+}
+
 /* ── Global button system ── */
 .btn {
   display: inline-flex;

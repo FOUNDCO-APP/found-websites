@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
@@ -59,14 +60,17 @@ export default function EditorialLayout({ company, activeAddons, primaryCTA, sec
             {company.city ? `${company.city}'s Own` : "Local & Independent"}
           </p>
           <h1
-            className="text-4xl md:text-5xl lg:text-6xl leading-tight mb-6 md:mb-8 text-balance"
+            className="public-hero-title text-4xl md:text-5xl lg:text-6xl mb-6 md:mb-8"
             style={{
               color: "#111111",
               fontFamily: "var(--font-heading, inherit)",
               fontStyle: "italic",
               fontWeight: 700,
+              "--public-hero-line-height": "1.13",
+              "--public-hero-mobile-line-height": "1.17",
+              "--public-hero-letter-spacing": "-0.01em",
               animation: "fade-up 900ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both",
-            }}
+            } as CSSProperties}
           >
             {config?.hero_title || displayName}
           </h1>
@@ -76,7 +80,7 @@ export default function EditorialLayout({ company, activeAddons, primaryCTA, sec
               animation: "scale-x-reveal 600ms ease-out 680ms both",
               transformOrigin: "left",
             }} />
-          <p className="text-lg leading-relaxed mb-10 md:mb-12"
+          <p className="public-hero-subtitle text-lg mb-10 md:mb-12"
             style={{ color: "#666666", animation: "fade-up 700ms ease-out 830ms both" }}>
             {config?.hero_subtitle || `Welcome to ${displayName}.`}
           </p>
