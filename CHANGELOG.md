@@ -1,3 +1,23 @@
+## Session: August 11, 2026 - FOUND Systems: Search Console, Bing, Clarity Setup
+**AI:** Codex
+
+### Built / configured
+Shawn completed the first FOUND Systems setup steps live:
+- Google Search Console verified `foundco.app`; sitemap submitted successfully and Google discovered 30 pages.
+- Bing Webmaster Tools imported/verified `foundco.app` from Google Search Console; sitemap submitted and processing.
+- Microsoft Clarity project created for Found Co. Project ID: `y0u9dw7ln4`.
+
+Wired Microsoft Clarity into `src/app/layout.tsx`, gated by `x-found-root-site` exactly like Vercel Analytics and PostHog. This means Clarity loads on Found's root marketing site only, not tenant sites, not `my.foundco.app`, and not `admin.foundco.app`.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Next
+Deploy the Clarity code, visit `https://foundco.app`, then confirm Clarity starts receiving data. After that, continue to the PostHog Personal API Key step.
+
+---
+
 ## Session: August 11, 2026 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
 **AI:** Claude
 

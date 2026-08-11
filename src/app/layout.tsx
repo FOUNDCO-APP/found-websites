@@ -10,6 +10,7 @@ import {
   Source_Sans_3,
 } from "next/font/google"
 import { headers } from "next/headers"
+import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import FoundPostHogProvider from "@/components/FoundPostHogProvider"
 import "./globals.css"
@@ -29,6 +30,7 @@ export const viewport: Viewport = {
 }
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || "y0u9dw7ln4"
 
 // Fallback for any root-domain page that doesn't set its own metadata (e.g.
 // src/app/page.tsx sets richer page-specific metadata that overrides this).
@@ -108,6 +110,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {isRootSite && <Analytics />}
         {isRootSite && <FoundPostHogProvider />}
+        {isRootSite && CLARITY_PROJECT_ID && (
+          <Script id="found-clarity" strategy="afterInteractive">
+            {`
+              (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
+            `}
+          </Script>
+        )}
       </body>
     </html>
   )

@@ -1,5 +1,30 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Google/Bing Done, Clarity Wired
+
+### Where We Left Off
+Shawn picked up the FOUND Systems checklist after Claude ran out of credit. Google Search Console and Bing Webmaster Tools were set up live with step-by-step guidance, then Microsoft Clarity was created.
+
+### What Changed
+- Google Search Console verified `foundco.app`.
+- Google sitemap submitted successfully: `https://foundco.app/sitemap.xml`; Google discovered 30 pages.
+- Bing Webmaster Tools imported/verified `foundco.app` from Google Search Console.
+- Bing sitemap submitted: `https://foundco.app/sitemap.xml`; status is processing, which is normal for up to 48 hours.
+- Microsoft Clarity project created for Found Co. Project ID: `y0u9dw7ln4`.
+- Clarity tracking added to `src/app/layout.tsx`, gated to the root Found marketing site only via the same `x-found-root-site` logic used by Vercel Analytics and PostHog. It will not load on tenant sites, dashboard, or admin.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+
+### Test Next
+- Deploy the Clarity code.
+- Visit `https://foundco.app` after deploy.
+- In Microsoft Clarity, confirm the project starts receiving data. It may take a little time.
+- Continue FOUND Systems with the PostHog Personal API Key read-scope step.
+
+---
+
 ## 2026-08-10 - Real Bug: Silent Photo Loss From Concurrent Upload Path Collisions
 
 ### Where We Left Off

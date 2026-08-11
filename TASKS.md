@@ -11,9 +11,10 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - Steve: the actual AEO/GEO lever isn't a tracking tool, it's structured data/schema markup - and for Found specifically this is a product opportunity, not just a marketing chore: auto-generating clean schema (LocalBusiness/Service/FAQ) for every tenant site Found hosts is real AEO advantage for every client, not just Found Co.'s own site.
 
 ### Step-by-step setup checklist
-- [ ] Google Search Console - verify foundco.app (and consider tenant sites later)
-- [ ] Bing Webmaster Tools - verify foundco.app
-- [ ] Microsoft Clarity - create project, add tracking snippet to foundco.app
+- [x] Google Search Console - verified `foundco.app`, submitted `https://foundco.app/sitemap.xml`, Google discovered 30 pages on first read.
+- [x] Bing Webmaster Tools - imported/verified `foundco.app` from Google Search Console and submitted `https://foundco.app/sitemap.xml` (processing, normal up-to-48h delay).
+- [x] Microsoft Clarity - created Found Co project (`y0u9dw7ln4`) and wired tracking into the root Found marketing site only, behind the same root-site gate as Vercel Analytics/PostHog.
+- [ ] Microsoft Clarity QA - deploy, visit `https://foundco.app`, then confirm Clarity receives data.
 - [ ] PostHog Personal API Key (read scope) - generate and add as env var, closes the gap flagged in Found HQ's Health page (Marketing section currently shows lead volume only, traffic/conversion blocked on this)
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
