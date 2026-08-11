@@ -1,3 +1,30 @@
+## Session: August 11, 2026 - Activation Funnel: Stripe Webhook Fallback
+**AI:** Codex
+
+### Context
+Shawn completed a real discounted activation for `dj.foundco.app`. Found HQ moved from `7 / 2 / 1 / 0` to `8 / 2 / 2 / 0`, but Activated stayed 0 even though payment completed.
+
+### Found
+- Live Supabase showed `dj` as `subscription_status = active`, `plan = found_business`, with a Stripe customer and no pending setup intent.
+- The Health page was reading the correct `activation_completed` PostHog event.
+- The weak point was event ownership: `activation_completed` was only emitted from the browser-return confirm route, while the Stripe webhook could independently mark the subscription active without recording the funnel event.
+
+### Changed
+- Added Stripe-webhook-side `activation_completed` capture for `customer.subscription.created/updated`.
+- Guarded webhook capture so it only fires when a company transitions from not-active to active/trialing.
+- Guarded the browser-return confirm path the same way, preventing double-counts when both paths run.
+- Backfilled one verified `activation_completed` event for `dj` with `method = manual_backfill`.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- Manual PostHog correction returned HTTP 200.
+
+### Next
+After deploy, future paid activations should increment Activated from Stripe/server truth even if the browser return is interrupted. Refresh Found HQ Health after PostHog ingestion plus the 60-second cache window.
+
+---
+
 ## Session: August 11, 2026 - Activation Flow: Do Not Ask Plan Twice
 **AI:** Codex
 

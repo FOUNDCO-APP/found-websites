@@ -297,7 +297,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const { data: company } = await admin
       .from("companies")
-      .select("id, slug, user_id")
+      .select("id, slug, user_id, subscription_status")
       .eq("id", companyId)
       .eq("slug", slug)
       .maybeSingle()
@@ -381,20 +381,24 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       companyUpdate.applied_discount_label = setupIntent.metadata.discount_label ?? null
     }
 
+    const wasAlreadyActive = ["active", "trialing"].includes(String(company.subscription_status ?? ""))
+
     await updateCompanyAfterActivation(admin, slug, companyUpdate)
 
     await sendSiteLiveEmailOnce(admin as any, companyId).catch((err) => {
       console.error("[Activate] site-live email failed:", err)
     })
 
-    await captureFoundActivationCompleted({
-      company_id: companyId,
-      slug,
-      plan_name: plan,
-      method: setupIntent.metadata?.promotion_code_id ? "stripe_with_promo" : "stripe",
-      value: plan === "found_business" ? 69 : plan === "found_pro" ? 39 : 29,
-      currency: "USD",
-    })
+    if (!wasAlreadyActive) {
+      await captureFoundActivationCompleted({
+        company_id: companyId,
+        slug,
+        plan_name: plan,
+        method: setupIntent.metadata?.promotion_code_id ? "stripe_with_promo" : "stripe",
+        value: plan === "found_business" ? 69 : plan === "found_pro" ? 39 : 29,
+        currency: "USD",
+      })
+    }
 
     // A brand-new owner who just paid should land straight in their dashboard,
     // not a bare /login screen. Generate a one-time sign-in link the same way

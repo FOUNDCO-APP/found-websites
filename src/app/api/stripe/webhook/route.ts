@@ -3,6 +3,7 @@ import Stripe from "stripe"
 import { Resend } from "resend"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
+import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -30,6 +31,12 @@ function planFromPriceId(priceId: string): string | null {
     [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING || ""]: "found_business",
   }
   return map[priceId] ?? null
+}
+
+function planMonthlyValue(plan: string | null | undefined) {
+  if (plan === "found_business") return 69
+  if (plan === "found_pro") return 39
+  return 29
 }
 
 function addonSlugForItem(item: Stripe.SubscriptionItem): string | null {
@@ -60,6 +67,7 @@ async function syncSubscriptionToSupabase(
   const companyId = await companyIdForSubscription(supabase, sub, customerId)
   const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
   const plan = baseItem ? planFromPriceId(baseItem.price.id) : null
+  const isActivatedStatus = sub.status === "active" || sub.status === "trialing"
 
   const update: Record<string, string> = { subscription_status: sub.status }
   if (plan) update.plan = plan
@@ -70,8 +78,12 @@ async function syncSubscriptionToSupabase(
   // silently stuck reading "onboarding" indefinitely. Test accounts are
   // untouched; comp/past_due/cancelled states aren't overwritten - this
   // only ever moves a real client out of "onboarding," nothing else.
-  if ((sub.status === "active" || sub.status === "trialing") && companyId) {
-    const { data: current } = await supabase.from("companies").select("client_state, account_kind").eq("id", companyId).maybeSingle()
+  let shouldCaptureActivation = false
+  let activationSlug = sub.metadata?.slug ?? null
+  if (isActivatedStatus && companyId) {
+    const { data: current } = await supabase.from("companies").select("slug, subscription_status, client_state, account_kind").eq("id", companyId).maybeSingle()
+    shouldCaptureActivation = !["active", "trialing"].includes(String(current?.subscription_status ?? ""))
+    activationSlug = activationSlug ?? current?.slug ?? null
     if (current?.account_kind === "client" && current?.client_state === "onboarding") {
       update.client_state = "active"
     }
@@ -86,6 +98,17 @@ async function syncSubscriptionToSupabase(
   await companyQuery
 
   if (!companyId) return
+
+  if (shouldCaptureActivation) {
+    await captureFoundActivationCompleted({
+      company_id: companyId,
+      slug: activationSlug,
+      plan_name: plan ?? sub.metadata?.plan ?? null,
+      method: "stripe_webhook",
+      value: planMonthlyValue(plan ?? sub.metadata?.plan),
+      currency: "USD",
+    })
+  }
 
   const activeAddonRows = sub.items.data
     .map((item) => ({ item, addonSlug: addonSlugForItem(item) }))

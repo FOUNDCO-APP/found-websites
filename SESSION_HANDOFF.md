@@ -1,5 +1,38 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Activation Funnel: Stripe Webhook Fallback
+
+### Where We Left Off
+Shawn completed a real activation test for `dj.foundco.app` using a coupon and credit card. Found HQ moved from `7 / 2 / 1 / 0` to `8 / 2 / 2 / 0`, meaning Started and Checkout tracked, but Activated stayed 0.
+
+### Found
+- Live Supabase confirmed `dj` is active:
+  - `subscription_status = active`
+  - `plan = found_business`
+  - Stripe customer exists
+  - no pending setup intent remains
+- Therefore payment and activation succeeded. The issue was analytics reliability, not billing.
+- Health reads the correct field: `activation_completed`.
+- Root cause: `activation_completed` was only captured from the `/activate/confirm` browser-return route. The Stripe webhook updated the database but did not also capture the activation funnel event.
+
+### What Changed
+- Added `activation_completed` capture to the Stripe `customer.subscription.created/updated` webhook path.
+- Added transition guarding: only capture when the company was not already active/trialing before the update.
+- Added the same guard to the browser-return confirm path to avoid double-counting when both paths run.
+- Manually backfilled one `activation_completed` event for the verified `dj` activation using `method = manual_backfill`.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- PostHog accepted the manual correction event with HTTP 200.
+
+### Test Next
+- After deploy, activate another practice site or cancel/retry a test subscription flow.
+- Expected: when Stripe subscription becomes active/trialing, `Activated` increments even if the browser-return path is interrupted.
+- Health may still lag by PostHog ingestion plus the 60-second Found HQ cache.
+
+---
+
 ## 2026-08-11 - Activation Flow: Do Not Ask Plan Twice
 
 ### Where We Left Off
