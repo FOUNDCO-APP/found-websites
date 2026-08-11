@@ -14,7 +14,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Google Search Console - verified `foundco.app`, submitted `https://foundco.app/sitemap.xml`, Google discovered 30 pages on first read.
 - [x] Bing Webmaster Tools - imported/verified `foundco.app` from Google Search Console and submitted `https://foundco.app/sitemap.xml` (processing, normal up-to-48h delay).
 - [x] Microsoft Clarity - created Found Co project (`y0u9dw7ln4`) and wired tracking into the root Found marketing site only, behind the same root-site gate as Vercel Analytics/PostHog.
-- [ ] Microsoft Clarity QA - deploy, visit `https://foundco.app`, then confirm Clarity receives data.
+- [x] Microsoft Clarity QA - Shawn confirmed live sessions from iPad Pro and phone: Clarity showed 2 live users, Mobile Safari sessions, tablet/mobile device details, and live recording movement.
 - [x] PostHog Personal API Key (read scope) - generated and added in Vercel with `POSTHOG_PROJECT_ID=535458` and `POSTHOG_HOST=https://us.posthog.com`.
 - [x] Found HQ Health now reads PostHog pageviews/unique visitors for 7d/30d when env vars are present.
 - [x] PostHog Health QA - Shawn confirmed live on iPhone: Found HQ > More > Health shows 13 visitors / 245 pageviews for 7d and 24 visitors / 292 pageviews for 30d instead of the old blocked message.
