@@ -1,5 +1,48 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Supabase Security Email: RLS Critical Fix
+
+### Where We Left Off
+Shawn received a Supabase security email warning: `Action required: security vulnerabilities detected`, rule `rls_disabled_in_public`, project `FOUNDCO APP` (`mmctzloztgkbqvofmkou`). Treat this as real unless proven otherwise.
+
+### What Changed
+- Used the Supabase CLI linked to FOUNDCO APP to run the live security advisors.
+- Confirmed the critical warning was real: seven public tables had RLS disabled:
+  - `estimate_rate_sheets`
+  - `email_campaigns`
+  - `estimates`
+  - `estimate_line_items`
+  - `contact_suppressions`
+  - `addon_subscriptions`
+  - `addon_stripe_prices`
+- Confirmed app usage for those tables goes through server routes/admin/service-role clients, not direct browser Supabase calls.
+- Applied live SQL to enable RLS on those seven tables and revoke direct access from `anon` and `authenticated`.
+- Added migration record: `database/migrations/061-enable-rls-for-business-tables.sql`.
+- Added `.gitignore` rule for Supabase CLI local link/cache metadata: `supabase/.temp/`.
+
+### Verification
+- Re-ran Supabase security advisors: the critical `rls_disabled_in_public` errors are gone.
+- Live catalog query confirms all seven tables now have `rls_enabled = true`.
+- Anonymous REST smoke test against representative sensitive tables returns `401`:
+  - `estimates`
+  - `estimate_line_items`
+  - `email_campaigns`
+  - `addon_subscriptions`
+
+### Still Open
+- Supabase still reports INFO-level `rls_enabled_no_policy` for server-only tables. This is expected for locked-down tables with no direct client policies.
+- Supabase still reports WARN-level:
+  - `function_search_path_mutable` for `public.update_updated_at`
+  - `auth_leaked_password_protection` disabled
+- Next security pass should fix the function search path warning and have Shawn enable leaked-password protection in Supabase Auth settings.
+
+### Test Next
+- In Supabase dashboard, open the security warning email's **Resolve issue** link again.
+- Confirm the critical public-table/RLS warning is resolved or no longer listed.
+- In Found, smoke-test estimates, marketing/email send history, checkout/activation add-ons, and public quote pages.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Site Built Funnel Reliability Fix
 
 ### Where We Left Off

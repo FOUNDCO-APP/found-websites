@@ -1,3 +1,39 @@
+## Session: August 11, 2026 - Supabase Security Email: RLS Critical Fix
+**AI:** Codex
+
+### Context
+Shawn received a Supabase security email warning that public tables were accessible because Row Level Security was not enabled. The screenshot showed `rls_disabled_in_public` for FOUNDCO APP.
+
+### Found
+- The warning was real.
+- Supabase security advisors showed seven ERROR-level `rls_disabled_in_public` tables:
+  - `estimate_rate_sheets`
+  - `email_campaigns`
+  - `estimates`
+  - `estimate_line_items`
+  - `contact_suppressions`
+  - `addon_subscriptions`
+  - `addon_stripe_prices`
+- The app accesses these tables through server-side routes/admin clients, not direct browser Supabase calls.
+
+### Fixed
+- Added and applied `database/migrations/061-enable-rls-for-business-tables.sql`.
+- Enabled RLS on all seven flagged public tables.
+- Revoked direct table access from `anon` and `authenticated`.
+- Added `.gitignore` coverage for Supabase CLI local link/cache metadata under `supabase/.temp/`.
+
+### Verification
+- Re-ran Supabase security advisors: the ERROR-level `rls_disabled_in_public` findings are gone.
+- Live catalog query confirmed all seven tables now have `rls_enabled = true`.
+- Anonymous REST smoke test returned `401` for representative sensitive tables: `estimates`, `estimate_line_items`, `email_campaigns`, and `addon_subscriptions`.
+
+### Still Open
+- INFO-level `rls_enabled_no_policy` remains for server-only tables; acceptable for now because direct access is blocked and server code uses service role.
+- WARN-level `function_search_path_mutable` remains for `public.update_updated_at`.
+- WARN-level `auth_leaked_password_protection` remains; Shawn should enable it in Supabase Auth settings.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Site Built Funnel Reliability Fix
 **AI:** Codex
 

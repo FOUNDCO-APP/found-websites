@@ -25,6 +25,17 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [ ] Funnel re-QA - after deploy, run one new practice signup through onboarding and confirm Site built increments after the preview/reveal screen. Activation completion only increments after real Stripe activation succeeds.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
+## 2026-08-11 - Supabase Security
+
+- [x] Investigate Supabase email warning `rls_disabled_in_public` for FOUNDCO APP.
+- [x] Run live Supabase security advisors via CLI.
+- [x] Enable RLS and revoke direct `anon`/`authenticated` access on the seven flagged public tables: `estimate_rate_sheets`, `email_campaigns`, `estimates`, `estimate_line_items`, `contact_suppressions`, `addon_subscriptions`, `addon_stripe_prices`.
+- [x] Verify critical `rls_disabled_in_public` errors are gone.
+- [x] Verify representative anonymous REST reads now return `401`.
+- [ ] Smoke-test app flows that use those tables: estimates, public quote pages, email/marketing send history, add-ons/activation.
+- [ ] Fix remaining WARN advisor: `public.update_updated_at` has mutable `search_path`.
+- [ ] Shawn/Supabase dashboard: enable leaked password protection in Auth settings.
+
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
 
 Shawn's call, not mine: "let the team decide what's next." Team round (Jony leading design, Steve on Sales direction) - approved and built.
