@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState } from "react"
-import { setViewAsCookie } from "../businesses/actions"
+import { useMemo, useState, useTransition } from "react"
+import { setViewAsCookie, toggleTest, setIncludedAddon } from "../businesses/actions"
+import { getAllAddonsRanked } from "@/lib/featureAccess"
 import { addClientNote, updateClientRecord } from "./actions"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -20,6 +21,9 @@ export type ClientRow = {
   comp_reason: string | null
   created_at: string
   last_activity: string | null
+  industry_category: string | null
+  is_test: boolean | null
+  included_addon_slug: string | null
   issues: string[]
 }
 
@@ -47,11 +51,33 @@ function stateTone(state: string) {
 
 function ClientItem({ row }: { row: ClientRow }) {
   const [state, setState] = useState(row.client_state)
+  const [isTest, setIsTest] = useState(Boolean(row.is_test))
+  const [testPending, startTestTransition] = useTransition()
+  const [includedAddon, setIncludedAddonState] = useState(row.included_addon_slug)
+  const [addonPending, startAddonTransition] = useTransition()
+  const relevantAddons = row.plan === "found_pro" ? getAllAddonsRanked(row.industry_category ?? "") : []
+
+  function handleTestToggle() {
+    const next = !isTest
+    setIsTest(next)
+    startTestTransition(() => { toggleTest(row.id, next) })
+  }
+
+  function handleAddonChange(slug: string | null) {
+    if (slug === includedAddon) return
+    setIncludedAddonState(slug)
+    startAddonTransition(() => { setIncludedAddon(row.id, slug) })
+  }
+
   return (
     <article className="hq-business-row">
       <div className="hq-business-main">
         <div className="hq-business-copy">
-          <div className="hq-business-name-line"><h2>{row.name}</h2><span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span></div>
+          <div className="hq-business-name-line">
+            <h2>{row.name}</h2>
+            <span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span>
+            {isTest && <span className="hq-badge hq-badge-info">Hidden from search</span>}
+          </div>
           <p>{planLabel(row.plan)} / Billing: {row.subscription_status ?? "not active"}</p>
           <p>{row.email ?? "No email"}{row.phone ? ` / ${row.phone}` : ""}</p>
           {row.issues.length > 0 && <div className="hq-business-issues">{row.issues.map((issue) => <span key={issue} className="hq-badge hq-badge-warning">{issue}</span>)}</div>}
@@ -72,6 +98,21 @@ function ClientItem({ row }: { row: ClientRow }) {
             <label className="hq-form-grow">Optional note<input name="activity_note" placeholder="Why this changed" /></label>
             <button className="hq-button hq-button-primary" type="submit">Save</button>
           </form>
+          {row.plan === "found_pro" && relevantAddons.length > 0 && (
+            <div className="hq-inline-form">
+              <label className="hq-form-grow">Included add-on (Pro plan, one pick, free)
+                <div className="hq-filter-row">
+                  <button type="button" data-active={!includedAddon} disabled={addonPending} onClick={() => handleAddonChange(null)}>None</button>
+                  {relevantAddons.map((addon) => (
+                    <button key={addon.slug} type="button" data-active={includedAddon === addon.slug} disabled={addonPending} onClick={() => handleAddonChange(addon.slug)}>{addon.label}</button>
+                  ))}
+                </div>
+              </label>
+            </div>
+          )}
+          <div className="hq-inline-form">
+            <button type="button" onClick={handleTestToggle} disabled={testPending} className="hq-button hq-button-secondary">{isTest ? "Show in search" : "Hide from search"}</button>
+          </div>
           <form action={addClientNote} className="hq-inline-form">
             <input type="hidden" name="id" value={row.id} />
             <label className="hq-form-grow">Dated note<input name="note" required placeholder="Conversation, promise, or context" /></label>

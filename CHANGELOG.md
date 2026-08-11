@@ -1,3 +1,26 @@
+## Session: August 11, 2026 - Found HQ Rebuild Phase 1: Data Integrity + Orphaned Pages
+**AI:** Claude
+
+### Context
+Shawn asked for a full team audit of the admin panel ("Found HQ") - felt disorganized, redundant menus, two visual designs. Investigation found a real prior effort: `FOUND_HQ_V2_AUDIT.md` (July 8) already did a full team-style audit and specified a clean Today/Sales/Clients/More architecture with real schema (`sales_prospects`/`sales_activities`/`client_activities`, `account_kind`/`client_state`). That plan was built rapidly the same day, then abandoned about 80% done - not reverted, just never finished. Team's verdict: finish it, don't restart it.
+
+### Found live in production while fixing this
+Checked the actual database before writing code and found a real, current instance of the exact bug being fixed: the 32 accounts comped earlier this session (raw SQL update, bypassing the Clients page's own sync logic) had inconsistent `account_kind`/`client_state` values instead of being uniformly classified as test accounts. Corrected directly.
+
+### Built (Phase 1 of 5)
+- Fixed `/admin/billing` querying the wrong field (`is_test`, meant for sitemap indexing) instead of `account_kind` (meant for business/billing classification) - these look similar but answer different questions, and only one was ever meant to gate Test Billing.
+- Migrated the old Businesses page's unique capabilities into Clients (payment-setup issue detection, Pro-plan addon picker, search-visibility toggle) before deleting it.
+- Deleted `/admin/businesses` and `/admin/quality` - both fully built, fully functional, and completely unlinked from any nav since July 8, only reachable by bookmark. Kept `businesses/actions.ts` since several of its functions are still used elsewhere.
+- Cleaned stale route references out of the nav shell.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean (after clearing a stale `.next/dev` cache that referenced the deleted routes).
+
+### Next
+Phase 2: migrate the 3 legacy-styled components (Photos curator, Copy panel, Email preview tabs) to the existing brand system - this is what's actually causing the "two designs" feeling.
+
+---
+
 ## Session: August 10, 2026 - Job Photo Grid, Gallery Tab Filter, "View Job Photos" Flicker
 **AI:** Claude
 

@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ Rebuild: Phase 1, Data Integrity + Kill Orphaned Pages
+
+Team-ordered rebuild of Found HQ (admin panel) per full audit - see FOUND_HQ_V2_AUDIT.md. Audit found V2 (July 8) was ~80% built then abandoned mid-migration: real architecture, real schema, but two orphaned pages still live and writing to legacy fields.
+
+- [x] Found and fixed a real production data-integrity bug live in the database: the 32 accounts comped earlier this session (raw SQL, bypassing the Clients page's own sync logic) had a messy mix of stale `account_kind`/`client_state` values - all corrected to `account_kind: test`, `client_state: active`.
+- [x] Fixed `/admin/billing`'s query - was filtering by the old `is_test` (sitemap-indexing) flag instead of `account_kind` (business-classification), so a company reclassified as test via Clients wouldn't show up in Test Billing.
+- [x] Folded the unique capabilities of the old Businesses page into Clients before removing it: "No payment setup" issue detection, the Pro-plan included-addon picker, and the is_test (search-indexing) toggle.
+- [x] Deleted `/admin/businesses` (page.tsx + BusinessesTable.tsx) and `/admin/quality` (dead duplicate of More's own Quality section) - both were fully unlinked from any nav, only reachable by bookmark/URL guess. Kept `businesses/actions.ts` (setViewAsCookie/exitAdminView/toggleTest/setIncludedAddon still used elsewhere).
+- [x] Cleaned stale route references out of `AdminShell.tsx`'s nav match arrays.
+- [ ] Shawn QA: Clients page shows the payment-setup issue, addon picker, and search-visibility toggle correctly; Test Billing shows the right accounts.
+
 ## 2026-08-10 - Job Photo Grid, Gallery Tab Filter, "View Job Photos" Flicker
 
 - [x] Team round: "This week" date-group headers don't fit inside a Job (a bounded project record, not a rolling photo stream) - dropped for Jobs specifically, kept for the general Photos/Gallery views where they still do real navigational work.

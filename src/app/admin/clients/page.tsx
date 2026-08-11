@@ -3,12 +3,14 @@ import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
 
 export const metadata = { title: "Clients - Found HQ" }
 
+const PAYMENT_RELEVANT_INTENTS = new Set(["estimates", "bookings", "appointments", "reservations", "orders"])
+
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const initialSearch = typeof params.q === "string" ? params.q : ""
   const admin = getAdminClient()
   const [{ data: companies }, { data: configs }, { data: activities }] = await Promise.all([
-    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url").order("created_at", { ascending: false }),
+    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
     admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
   ])
@@ -20,6 +22,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     if (company.client_state === "past_due") issues.push("Payment")
     if (company.client_state === "onboarding" && !company.logo_url && !company.logo_white_url) issues.push("No logo")
     if (company.client_state === "onboarding" && copyByCompany.get(company.id) !== true) issues.push("Fallback copy")
+    if (PAYMENT_RELEVANT_INTENTS.has(company.primary_intent ?? "") && !company.stripe_connect_account_id) issues.push("No payment setup")
     return {
       id: company.id,
       name: company.name,
@@ -33,6 +36,9 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       comp_reason: company.comp_reason,
       created_at: company.created_at,
       last_activity: lastActivity.get(company.id) ?? null,
+      industry_category: company.industry_category,
+      is_test: company.is_test,
+      included_addon_slug: company.included_addon_slug ?? null,
       issues,
     }
   })

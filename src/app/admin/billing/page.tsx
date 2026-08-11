@@ -17,7 +17,7 @@ export default async function AdminBillingPage() {
   const { data: companies } = await admin
     .from("companies")
     .select("id, name, slug, email, plan, stripe_customer_id")
-    .eq("is_test", true)
+    .eq("account_kind", "test")
     .eq("subscription_status", "active")
     .not("stripe_customer_id", "is", null)
     .order("name")
@@ -55,7 +55,7 @@ export default async function AdminBillingPage() {
         <div>
           <p className="hq-eyebrow">Operate</p>
           <h1 className="hq-title">Test Billing</h1>
-          <p className="hq-subtitle">Test accounts (is_test) with a live Stripe subscription still billing. Cancel the ones you're done with.</p>
+          <p className="hq-subtitle">Test accounts (account type: Test) with a live Stripe subscription still billing. Cancel the ones you're done with.</p>
         </div>
         <span className="hq-count">${totalMonthly.toFixed(2)}/mo</span>
       </header>
