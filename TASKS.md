@@ -28,7 +28,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Verified `2 Site built` was not a duplicate DJ event - live DB shows two recent built test sites today: `dj` and `flooring`.
 - [x] Activation plan-repeat issue found/fixed - if a plan is already known from onboarding/pricing entry, the final activation overlay now skips the second plan selector and goes straight to Stripe/payment setup. General entry paths with no known plan still show plan choice before questions.
 - [x] Activation funnel reliability issue found/fixed - Shawn paid/activated `dj.foundco.app`; Supabase showed `subscription_status = active`, plan `found_business`, and Stripe customer present, but PostHog `Activated` stayed 0. Added Stripe-webhook-side `activation_completed` capture with transition guarding so future activations are recorded from Stripe/server truth without double-counting the browser return route. Manually backfilled the missed DJ activation event once.
-- [ ] Funnel checkout QA - continue from a practice built site to the activation/payment setup step and confirm `Checkout` increments. Do not expect `Activated` unless Stripe activation succeeds.
+- [x] Funnel checkout/activation QA - Shawn confirmed Health now shows `8 Started / 2 Site built / 2 Checkout / 1 Activated` after the DJ paid activation and manual verified backfill. Checkout and Activated are now reading correctly.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Supabase Security
