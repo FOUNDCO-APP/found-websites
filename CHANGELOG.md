@@ -52,9 +52,11 @@ Priya/Craig: count the event at the source of truth, not from mobile Safari afte
 ### Verification
 - `cmd /c npx tsc --noEmit` passed clean.
 - `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- Shawn re-tested after deploy by creating a fresh practice site and reaching `dj.foundco.app`.
+- Found HQ Health now shows `2 Started` and `1 Site built`, confirming the server-side `onboarding_completed` event is working.
 
 ### Next
-Deploy, then run one fresh practice signup. `Site built` should increment after the generated-site preview/reveal screen appears. The previous missing test will not backfill automatically unless a manual correction event is sent.
+Continue funnel QA by reaching the activation/payment setup step and confirming `Checkout` increments. `Activated` only increments after real Stripe activation succeeds.
 
 ---
 

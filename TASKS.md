@@ -22,7 +22,8 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Full funnel instrumentation - added clean PostHog events for `onboarding_started`, `plan_selected`, `onboarding_completed`, `checkout_started`, and server-side `activation_completed`; Found HQ Health now shows Started / Site built / Checkout / Activated plus Business plan picks.
 - [x] Funnel QA issue found - Shawn's live iPhone test showed Started and Business plan pick, but Site built stayed 0 after the preview/reveal screen. Root cause: `onboarding_completed` was still client-side and could be dropped during the heavy mobile completion transition.
 - [x] Funnel reliability fix - moved `onboarding_completed` to server-side capture inside `createOnboardingSite()` and reduced Health's PostHog cache from 5 minutes to 60 seconds.
-- [ ] Funnel re-QA - after deploy, run one new practice signup through onboarding and confirm Site built increments after the preview/reveal screen. Activation completion only increments after real Stripe activation succeeds.
+- [x] Funnel re-QA - Shawn ran a fresh practice signup and reached `dj.foundco.app`; Health now shows `2 Started` and `1 Site built`, proving the server-side Site built event is working.
+- [ ] Funnel checkout QA - continue from a practice built site to the activation/payment setup step and confirm `Checkout` increments. Do not expect `Activated` unless Stripe activation succeeds.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Supabase Security

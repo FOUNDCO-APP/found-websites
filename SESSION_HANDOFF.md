@@ -67,13 +67,12 @@ Shawn ran a live iPhone funnel QA. Health showed PostHog traffic updating, `Star
 ### Verification
 - `cmd /c npx tsc --noEmit` passed clean.
 - `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- Shawn re-tested after deploy: created a fresh site and reached `dj.foundco.app`.
+- Found HQ Health now shows `2 Started` and `1 Site built`, confirming the server-side `onboarding_completed` capture works.
 
 ### Test Next
-- Deploy this fix.
-- Run one fresh practice signup through onboarding.
-- Stop when the preview/reveal screen appears.
-- Open Found HQ > More > Health and refresh after about 1 minute.
-- Expected: Started increments, Business plan pick increments if Business was chosen, and Site built increments.
+- Continue from a practice built site to the activation/payment setup step.
+- Expected: Checkout increments after Stripe activation setup starts.
 - Activated only increments after real Stripe activation succeeds.
 - Shawn's previous missing `Site built` event will not backfill automatically unless a manual correction event is sent.
 
