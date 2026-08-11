@@ -32,6 +32,12 @@
   - replaced unsafe `leading-none` / `leading-[0.96]` hero headings with safer line-height, balanced wrapping, overflow wrapping, and mobile-specific line-height/letter-spacing.
 - Added `scripts/check-public-hero-typography.mjs` and package script `test:public-hero-typography` so large public headings cannot reintroduce unsafe line-height without the shared safety class.
 - Existing-site QA note: typography applies to all existing sites automatically after deploy. Copy similarity guard only affects new/regenerated copy. For all current test sites plus Ryan/RC Bicycles, use targeted copy regeneration/dry-run before overwriting saved copy.
+- Parked existing-site copy refresh per Shawn: do not bulk-regenerate current test sites or Ryan/RC Bicycles now. Keep it as a later dry-run/review/apply task.
+- Strengthened onboarding inputs without turning onboarding into a long form:
+  - added one new `focus` screen after "What makes you different?";
+  - captures the jobs/customers the owner wants more of, a service-area nuance, and one safe proof point;
+  - feeds those details into AI content generation, non-AI fallback copy, the copy similarity guard context, and abandoned-lead partial answers;
+  - no database migration required.
 
 ### Verification This Pass
 - `cmd /c npm run test:copy-quality` passed: 52 fixture groups.
@@ -41,7 +47,7 @@
 - `cmd /c npm run build` initially failed on transient Google font fetches for Playfair Display; immediate retry passed. Existing Next middleware deprecation warning remains.
 
 ### Current Decision
-Schema remains paused until sample-site QA confirms the copy and typography safeguards on real examples. The first non-AI fallback variety slice, first-pass similarity guard, and public typography safeguard are done.
+Schema remains paused until sample-site QA confirms the copy, owner-specific onboarding details, and typography safeguards on real examples. The first non-AI fallback variety slice, first-pass similarity guard, public typography safeguard, and lightweight onboarding input strengthening are done.
 
 ### Where We Left Off
 Shawn paused the schema/AEO/GEO work after noticing a more important scaling problem: some generated tenant sites can share the same or overly similar wording. The concern is not that all sites share a design system. The concern is that thousands of sites with repeated hero/about/service copy would weaken SEO/AEO/GEO and make Found feel generic.

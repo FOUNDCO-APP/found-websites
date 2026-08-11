@@ -2,7 +2,7 @@
 
 Last updated: August 11, 2026  
 Owner: Shawn + Found Co team  
-Status: Planned, not yet coded
+Status: In progress; first fallback variety pass, similarity guard, typography safeguards, and lightweight onboarding uniqueness inputs are implemented
 
 ## Why this document exists
 
@@ -36,6 +36,13 @@ Completed:
 - `onboarding_completed` moved server-side.
 - `activation_completed` hardened through Stripe webhook fallback.
 - Paid test activation for `dj.foundco.app` confirmed: Health reached `8 Started / 2 Site built / 2 Checkout / 1 Activated`.
+- First non-AI home-service fallback variety pass implemented.
+- Generated-copy similarity guard implemented for onboarding and admin copy regeneration.
+- Public typography safeguards implemented for large tenant hero/display headings.
+- Lightweight onboarding uniqueness input screen implemented:
+  - best jobs/customers to attract;
+  - service-area detail;
+  - safe proof point.
 
 Still open and intentionally delayed:
 
@@ -455,4 +462,3 @@ Concrete first actions:
 3. Identify repeated phrases.
 4. Add sub-industry-specific copy families.
 5. Add a first-pass similarity checker before save.
-

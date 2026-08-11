@@ -1,3 +1,37 @@
+## Session: August 11, 2026 - FOUND Systems: Onboarding Uniqueness Inputs
+**AI:** Codex
+
+### Context
+After copy similarity and typography safeguards, Shawn chose not to bulk-refresh existing test sites or Ryan/RC Bicycles yet. Team direction moved to the next FOUND Systems item: strengthen onboarding inputs so future generated sites have more owner-specific material before schema/AEO/GEO work resumes.
+
+### Team direction
+Angela/Phil/Steve: do not make onboarding feel like a long form. Add one focused screen that gives Found stronger business-specific context: what work the owner wants more of, where they really serve, and what proof point is safe to say.
+
+### Changed
+- Added a new onboarding `focus` step after "What makes you different?"
+- Captures:
+  - best jobs/customers to attract;
+  - service-area detail;
+  - safe proof point.
+- Sends those fields into `createOnboardingSite()`.
+- Feeds them into `generateWebsiteContent()` for both:
+  - AI prompt context;
+  - non-AI fallback copy.
+- Includes the same fields in copy similarity guard context.
+- Saves the fields in abandoned-lead partial answers so the context is not lost if the owner pauses.
+- No database migration was added; this is generation context, not a new persisted schema requirement.
+
+### Decision
+Do not bulk-regenerate existing test-site or Ryan/RC Bicycles copy yet. Keep that as a later controlled dry-run/review/apply task.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+
+### Next
+Run copy-quality, typography, and production build checks. Then continue to sample-site QA before tenant schema markup.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Public Typography Safeguards
 **AI:** Codex
 

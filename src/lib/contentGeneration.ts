@@ -20,6 +20,9 @@ export type ContentGenerationInput = {
   city: string | null
   state: string | null
   different: string
+  idealCustomer?: string
+  serviceAreaNote?: string
+  proofPoint?: string
   services: ServiceItem[]
   vibe: string
   manifest: IndustryManifest
@@ -49,6 +52,32 @@ const DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 
 function compact(value: string) {
   return value.replace(/\s+/g, " ").trim()
+}
+
+function ownerSpecificCopySeed(input: ContentGenerationInput) {
+  const parts = [
+    input.different,
+    input.idealCustomer ? `The work to emphasize most: ${input.idealCustomer}` : "",
+    input.serviceAreaNote ? `Local detail to reflect: ${input.serviceAreaNote}` : "",
+    input.proofPoint ? `Proof point to use only if safe: ${input.proofPoint}` : "",
+  ]
+    .map((part) => compact(part || ""))
+    .filter(Boolean)
+
+  return parts.join(". ").replace(/\.?\s*$/, ".")
+}
+
+function ownerSpecificPublicLine(input: ContentGenerationInput) {
+  const parts = [
+    input.different,
+    input.idealCustomer ? `The work is shaped around ${input.idealCustomer}` : "",
+    input.serviceAreaNote ? `Local service is planned around ${input.serviceAreaNote}` : "",
+    input.proofPoint,
+  ]
+    .map((part) => compact(part || "").replace(/\.?\s*$/, ""))
+    .filter(Boolean)
+
+  return parts.join(". ")
 }
 
 function limit(value: unknown, fallback: string, maxLength: number) {
@@ -346,7 +375,7 @@ export function buildFallbackWebsiteContent(input: ContentGenerationInput): Gene
   const locationPhrase = input.city
     ? `${input.city}${input.state ? `, ${input.state}` : ""}`
     : "Your Area"
-  const differentiator = input.different?.trim() || null
+  const differentiator = ownerSpecificPublicLine(input) || null
 
   const job = getWebsiteJob(input.subIndustry || null, input.industry)
   const copy = buildHomeServiceSpecialtyCopy(input, industryLabel, cityLabel, locationPhrase, differentiator)
@@ -400,7 +429,11 @@ function buildPrompt(input: ContentGenerationInput) {
     `Industry: ${input.industry}`,
     `Sub-industry: ${input.subIndustry}`,
     `Location: ${[input.city, input.state].filter(Boolean).join(", ") || "Not provided"}`,
+    `Owner-specific copy seed: ${ownerSpecificCopySeed(input) || "Not provided"}`,
     `What makes them different: ${input.different || "Not provided"}`,
+    `Best jobs/customers to attract: ${input.idealCustomer || "Not provided"}`,
+    `Service area detail: ${input.serviceAreaNote || "Not provided"}`,
+    `Safe proof point: ${input.proofPoint || "Not provided"}`,
     `Selected vibe: ${input.vibe}`,
     `Design direction (internal brief - never copy this text into output): ${input.manifest.primaryJob}`,
     `Voice and feel (internal - never copy this text into output): ${input.manifest.jonyNote}`,
@@ -419,6 +452,7 @@ function buildPrompt(input: ContentGenerationInput) {
     "- Do not start every service description with the service name.",
     "- Preserve the provided service names unless they are unclear; lightly clean them only.",
     "- Do not invent license numbers, awards, prices, guarantees, credentials, or years in business.",
+    "- Use the best jobs/customers, service area detail, and safe proof point when provided, but do not label them as form answers.",
     "- Generate exactly 3 FAQ entries in faqItems. Questions and answers should sound like a real owner wrote them, specific to this business type and location.",
     "- FAQ answers must include the business name and city naturally, and should be 1-2 sentences max.",
     "- Questions should be what real customers actually search: service-specific, location-aware, and conversational.",

@@ -24,7 +24,7 @@ type Phase = "welcome" | "plan" | "questions"
 
 type Step =
   | "welcome" | "name" | "description" | "subIndustry" | "location"
-  | "phone" | "email" | "different" | "services" | "photos" | "logo"
+  | "phone" | "email" | "different" | "focus" | "services" | "photos" | "logo"
   | "color" | "vibe" | "testimonials"
 
 type Answers = {
@@ -42,6 +42,9 @@ type Answers = {
   leadPhone: string
   leadEmail: string
   different: string
+  idealCustomer: string
+  serviceAreaNote: string
+  proofPoint: string
   services: string[]
   photoChoice: string
   logoChoice: string
@@ -56,7 +59,7 @@ type Answers = {
 
 const STEPS: Step[] = [
   "welcome", "name", "description", "subIndustry", "location",
-  "phone", "email", "different", "services", "photos", "logo",
+  "phone", "email", "different", "focus", "services", "photos", "logo",
   "color", "vibe", "testimonials",
 ]
 
@@ -64,7 +67,8 @@ const INITIAL: Answers = {
   name: "", description: "", industry: null, subIndustry: "",
   location: "", serviceAreas: [], phone: "", email: "",
   phoneVisible: true, emailVisible: true, separateLeads: false, leadPhone: "", leadEmail: "",
-  different: "", services: [], photoChoice: "", logoChoice: "",
+  different: "", idealCustomer: "", serviceAreaNote: "", proofPoint: "",
+  services: [], photoChoice: "", logoChoice: "",
   logoUrl: "", logoWhiteUrl: "", navbarDark: false, heroImageUrls: [],
   primaryColor: "#2E7D32", vibe: "", testimonials: "",
 }
@@ -144,6 +148,7 @@ function canAdvance(step: Step, a: Answers): boolean {
     case "phone":        return a.phone.replace(/\D/g, "").length >= 10
     case "email":        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)
     case "different":    return a.different.trim().length > 8
+    case "focus":        return [a.idealCustomer, a.serviceAreaNote, a.proofPoint].some((value) => value.trim().length > 4)
     case "services":     return a.services.length > 0
     case "photos":       return !!a.photoChoice || a.heroImageUrls.length > 0
     case "logo":         return !!a.logoChoice
@@ -163,6 +168,7 @@ function questionTitle(step: Step, a: Answers): string {
     case "phone":        return "What's your business phone number?"
     case "email":        return "What's your business email?"
     case "different":    return "What makes you different?"
+    case "focus":        return "What should this site help you win?"
     case "services":     return "What services do you offer?"
     case "photos":       return "Got photos of your work?"
     case "logo":         return "Do you have a logo?"
@@ -277,6 +283,10 @@ function getAffirmation(step: Step, a: Answers): string {
       return a.email.includes("@") ? "Every button on your site goes here." : ""
     case "different":
       return a.different.trim().length > 8 ? "That's your edge. It'll be front and center." : ""
+    case "focus":
+      return [a.idealCustomer, a.serviceAreaNote, a.proofPoint].some((value) => value.trim().length > 4)
+        ? "Good. That helps Found make the site sound like yours, not a template."
+        : ""
     case "services":
       return a.services.length > 0
         ? `${a.services.length} ${a.services.length === 1 ? "service" : "services"} — that's your homepage lineup.`
@@ -1582,7 +1592,17 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
         email: answers.email,
         businessName: answers.name || undefined,
         stepAbandoned: step,
-        partialAnswers: { name: answers.name, description: answers.description, industry: answers.industry, location: answers.location, stepIndex },
+        partialAnswers: {
+          name: answers.name,
+          description: answers.description,
+          industry: answers.industry,
+          location: answers.location,
+          different: answers.different,
+          idealCustomer: answers.idealCustomer,
+          serviceAreaNote: answers.serviceAreaNote,
+          proofPoint: answers.proofPoint,
+          stepIndex,
+        },
       }).then(() => onClose?.())
       return
     }
@@ -1597,7 +1617,18 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       email: saveLeadForm.email,
       businessName: answers.name || undefined,
       stepAbandoned: step,
-      partialAnswers: { name: answers.name, description: answers.description, industry: answers.industry, location: answers.location, phone: answers.phone, stepIndex },
+      partialAnswers: {
+        name: answers.name,
+        description: answers.description,
+        industry: answers.industry,
+        location: answers.location,
+        phone: answers.phone,
+        different: answers.different,
+        idealCustomer: answers.idealCustomer,
+        serviceAreaNote: answers.serviceAreaNote,
+        proofPoint: answers.proofPoint,
+        stepIndex,
+      },
     })
     setSavingLead(false)
     setShowSaveDialog(false)
@@ -2073,6 +2104,44 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+
+                    {step === "focus" && (
+                      <div className="space-y-5">
+                        <p className="text-sm leading-relaxed" style={{ color: tk.muted }}>
+                          One useful detail is enough. Found uses this to make the site more specific, less generic, and better for search later.
+                        </p>
+                        <div className="space-y-4">
+                          <input
+                            autoFocus
+                            type="text"
+                            value={answers.idealCustomer}
+                            onChange={(e) => set("idealCustomer", e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && advance()}
+                            placeholder="Best jobs or customers: remodels, emergency calls, families, commercial work..."
+                            className={`w-full text-[1.05rem] ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.idealCustomer.length > 4 ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                          <input
+                            type="text"
+                            value={answers.serviceAreaNote}
+                            onChange={(e) => set("serviceAreaNote", e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && advance()}
+                            placeholder="Where you really serve: east side, foothills, job sites, events..."
+                            className={`w-full text-[1.05rem] ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.serviceAreaNote.length > 4 ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                          <input
+                            type="text"
+                            value={answers.proofPoint}
+                            onChange={(e) => set("proofPoint", e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && advance()}
+                            placeholder="Proof we can safely say: licensed, family owned, 20 years, bilingual..."
+                            className={`w-full text-[1.05rem] ${tk.inputCls} ${tk.placeholder}`}
+                            style={{ color: tk.text, borderBottomColor: answers.proofPoint.length > 4 ? SIGNAL_GREEN : tk.border(false) }}
+                          />
+                        </div>
                       </div>
                     )}
 

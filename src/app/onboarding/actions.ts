@@ -23,6 +23,9 @@ type OnboardingInput = {
   leadPhone?: string
   leadEmail?: string
   different: string
+  idealCustomer?: string
+  serviceAreaNote?: string
+  proofPoint?: string
   services: string
   photoChoice: string
   slugPreference?: string
@@ -334,6 +337,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     city,
     state,
     different: input.different.trim(),
+    idealCustomer: input.idealCustomer?.trim() || "",
+    serviceAreaNote: input.serviceAreaNote?.trim() || "",
+    proofPoint: input.proofPoint?.trim() || "",
     services,
     vibe,
     manifest,
@@ -347,6 +353,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     city,
     state,
     different: input.different.trim(),
+    idealCustomer: input.idealCustomer?.trim() || "",
+    serviceAreaNote: input.serviceAreaNote?.trim() || "",
+    proofPoint: input.proofPoint?.trim() || "",
     services,
     vibe,
     manifest,
