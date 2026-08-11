@@ -1,5 +1,22 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - FOUND Systems: Analytics/SEO/AEO/GEO Tracking Stack (Started)
+
+Shawn's question: besides PostHog, what's free or near-free to track everything going in/out of Found and help the team grow (SEO, AEO, GEO)? Named this initiative "FOUND Systems" per Shawn - a durable, ongoing checklist (also saved to memory so "remind me of FOUND Systems" works in any future conversation, not just this one).
+
+### Team round + decision
+- Priya: keep PostHog (event-level behavior), add **Microsoft Clarity** alongside it - 100% free, no traffic cap, session recordings + heatmaps show *why* not just *what*.
+- Phil: **Google Search Console** and **Bing Webmaster Tools** are non-negotiable and free - the only places that show real indexing/ranking data; Bing matters because its index feeds Copilot and part of what ChatGPT browses.
+- Craig: no mature *free* AEO/GEO tracking tool exists yet (Profound/Otterly/Peec are paid and still new) - don't spend money there yet.
+- Steve: the actual AEO/GEO lever isn't a tracking tool, it's structured data/schema markup - and for Found specifically this is a product opportunity, not just a marketing chore: auto-generating clean schema (LocalBusiness/Service/FAQ) for every tenant site Found hosts is real AEO advantage for every client, not just Found Co.'s own site.
+
+### Step-by-step setup checklist
+- [ ] Google Search Console - verify foundco.app (and consider tenant sites later)
+- [ ] Bing Webmaster Tools - verify foundco.app
+- [ ] Microsoft Clarity - create project, add tracking snippet to foundco.app
+- [ ] PostHog Personal API Key (read scope) - generate and add as env var, closes the gap flagged in Found HQ's Health page (Marketing section currently shows lead volume only, traffic/conversion blocked on this)
+- [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
+
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
 
 Shawn's call, not mine: "let the team decide what's next." Team round (Jony leading design, Steve on Sales direction) - approved and built.
