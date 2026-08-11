@@ -5,7 +5,7 @@
 - [x] Team round: "This week" date-group headers don't fit inside a Job (a bounded project record, not a rolling photo stream) - dropped for Jobs specifically, kept for the general Photos/Gallery views where they still do real navigational work.
 - [x] Fixed: filter button (Favorites/Not on site) only worked on the All Photos tab, disabled everywhere else. Enabled Favorites on the Website/Gallery tab too (Shawn confirmed) - "Not on site" correctly stays All-Photos-only since it's meaningless once you're already looking at what's on the site.
 - [x] Root-caused the "View Job Photos" flicker Shawn reported when opening an estimate from a job: `DetailSheet` and `BuilderSheet` each ran their own independent `/api/albums` fetch on mount, starting from empty every time - the linked-job name only resolved after that fresh fetch completed, showing the generic fallback text first. Lifted `jobs` state up to the parent `EstimatesPage` (fetched once, already-loaded by the time either sheet opens) and removed both duplicate fetches.
-- [ ] Shawn QA: job photo grid shows flat (no date headers); Favorites filter works on the Gallery tab; clicking into an estimate from a job shows the real job name immediately, no flicker.
+- [x] Shawn QA confirmed 2026-08-10: job photo grid shows flat (no date headers); Favorites filter works on the Gallery tab; clicking into an estimate from a job shows the real job name immediately, no flicker.
 
 ## 2026-08-10 - Estimate List/Detail Never Actually Displayed the Job Title
 
@@ -13,13 +13,13 @@
 - [x] Estimate list card (`EstimateCard`) now leads with the job title when present (matching how the Jobs list itself reads), with client name + address moved into the subline underneath - exactly the "Job Name at top, client + address on second line" pattern Shawn asked for.
 - [x] Estimate detail header now shows the same pattern - job title as the heading, client name as a secondary line beneath it.
 - [x] Falls back to client_name as the heading for estimates with no linked job (unchanged behavior for non-job estimates).
-- [ ] Shawn QA: Estimates list and detail both show the job title as the primary line for job-linked estimates.
+- [x] Shawn QA confirmed 2026-08-10: Estimates list and detail both show the job title as the primary line for job-linked estimates.
 
 ## 2026-08-10 - Job <-> Estimate: Real Deep Links + Title Sync
 
 - [x] Shawn tested the new Create Estimate flow: the "Linked to Job" card on the estimate showed the job name but the link went to the general Jobs list (`/photos?tab=jobs`), not the specific job - had to search for it manually. Fixed: `/photos?album=<id>` now actually opens that job's detail directly. Added real deep-link handling to the Photos page (didn't exist before - `?album=` was previously only consumed for camera/upload flows, never to open a job's detail on load).
 - [x] Estimate's title now seeded from the job's own name/title at creation (e.g. "Flooring for kitchen") instead of being blank/generic - `createEstimateForJob()` now passes `title`.
-- [ ] Shawn QA: tap "Linked to Job" on an estimate, confirm it opens that exact job (not the general list); confirm a new estimate's title matches the job it was created from.
+- [x] Shawn QA confirmed 2026-08-10: tapping "Linked to Job" on an estimate opens that exact job (not the general list); a new estimate's title matches the job it was created from.
 
 ## 2026-08-10 - Job -> Estimate: the Missing Forward Direction
 
@@ -28,7 +28,7 @@
 - [x] Added a "Linked Estimates" card to the Job detail screen - shows every estimate tied to that job (a job can have several over time) with status and total, tap to open.
 - [x] Added a real "Create Estimate" button directly on the Job screen - creates a new estimate pre-linked to the job (`job_id` set immediately) with customer name/phone/email/address carried over automatically from the job's own fields, then opens it via the estimates page's existing `?estimate=<id>` deep link.
 - [x] Gated on actually having estimate access (`quote_payments` addon) - hidden entirely rather than showing a button that would just fail for companies without it.
-- [ ] Shawn QA: create an estimate from a job, confirm it opens pre-filled and correctly linked; confirm a job with multiple estimates lists all of them.
+- [x] Shawn QA confirmed 2026-08-10: creating an estimate from a job opens it pre-filled and correctly linked; a job with multiple estimates lists all of them.
 
 ## 2026-08-10 - Delete Confirmation/Feedback, Bulk Delete, Select-Mode Redesign
 
@@ -55,7 +55,7 @@
 - [x] `UploadStatusProvider.tsx` - context + hook, mounted once at the dashboard layout level so every business type/folder system (Jobs, Albums, whatever a given industry calls it) gets the same banner automatically.
 - [x] Wired into nav FAB upload, job/album library upload, and live camera capture (photo/video/annotated) - the 3 real upload entry points.
 - [x] Replaces the old small per-screen progress pills (2026-08-09 entry below) and DashboardNav's upload toasts.
-- [ ] Shawn QA: banner shows for library uploads, camera shots, and clearly communicates partial/full failure without disappearing.
+- [x] Shawn QA confirmed 2026-08-10: 3-photo library upload shows live progress and lands on a clean success state; camera capture shows the same banner ("business owners are gonna like that feature"); forced failure keeps the banner up with a clear message instead of disappearing.
 
 ## 2026-08-09 - Real Billing Bug: Webhook Silently Reset Plan to Starter
 

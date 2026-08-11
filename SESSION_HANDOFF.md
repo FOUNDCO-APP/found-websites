@@ -21,12 +21,7 @@ Shawn's ask: something big, obvious, "right in my face," as the default for ever
 
 ### Verification
 - `npx tsc --noEmit` and `npm run build` passed clean.
-- Not yet re-tested live by Shawn.
-
-### Test Next
-- Upload 3+ photos to a Job, confirm the big banner shows live progress and lands on a clean success state.
-- Take a live camera photo, confirm the same banner appears (not the old small pill).
-- Force a failure (e.g. airplane mode mid-upload) and confirm the banner stays up with a clear message instead of disappearing.
+- **Shawn tested live 2026-08-10, all 3 confirmed:** uploading 3 photos to a Job shows the big banner with live progress and lands on a clean success state; taking a live camera photo shows the same banner ("business owners are gonna like that feature"); forcing a failure keeps the banner up with a clear message instead of disappearing. This closes out the shared upload-status banner work.
 
 ---
 
