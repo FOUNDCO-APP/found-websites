@@ -10,6 +10,12 @@
 ### Found HQ rebuild: all 5 phases from the team audit complete
 Data integrity fixed, orphaned pages removed, brand system fully migrated (3 legacy components), new-signup visibility + real email alerts built, Won->Client conversion built, marketing health added. See FOUND_HQ_V2_AUDIT.md for the original audit and CHANGELOG.md (Aug 11 entries) for the full build record.
 
+### CI build check: one real failure, caught by Shawn via GitHub email
+- [x] Shawn caught a GitHub Actions "Build failed" email for commit `b32c5cd` (Phase 5) via his PhotoDrop screenshot folder. Investigated via the GitHub Actions API (no local token, used unauthenticated endpoints - run/job status is public, raw logs are not).
+- [x] Confirmed this is NOT the old missing-secrets issue (that was fixed and confirmed green in July) - the "Pull Vercel environment variables" step succeeded; only the actual `vercel build` step failed.
+- [x] Checked every commit from today's 5-phase run: Phase 1 and 2 succeeded clean; Phase 5 failed; Phase 3 and 4 sat "in_progress" for 10+ minutes (a normal build takes ~35s) - a pattern pointing at resource contention from 5 rapid pushes each triggering a full `vercel pull` + `vercel build`, not a code defect. Every one of these 5 commits also passed a real local `npm run build` before being pushed.
+- [ ] Confirm via a fresh, isolated push (well clear of the original burst) that CI goes green again with no code changes - if it does, this was transient, not a real regression.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 4, Won -> Client Conversion
 
 - [x] Built the one required V2 action that was never implemented: marking a sales prospect "Won" previously did nothing beyond the stage change - no client record got created, `linked_company_id` existed in the schema since July 8 but was never read or written anywhere.
