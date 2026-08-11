@@ -6,7 +6,7 @@ import dynamic from "next/dynamic"
 import { detectIndustry, industryLabels } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
-import { createOnboardingSite, saveAbandonedLead } from "./actions"
+import { createOnboardingSite, findBuiltSiteForResume, saveAbandonedLead } from "./actions"
 import { createSetupIntentForCompany } from "./stripeActions"
 import { checkSlugAvailable } from "./slugActions"
 import { uploadLogoFile, uploadHeroFile } from "./uploadActions"
@@ -956,11 +956,14 @@ function OptionCard({ active, isLight, primaryColor, onClick, title, body }: {
 
 // ── Slug taken bottom sheet ───────────────────────────────────────────────────
 function SlugSheet({
-  effective, ROOT, suggestions, custom, onCustomChange, onPick, onConfirm, onDismiss,
+  effective, ROOT, suggestions, custom, resumeEmail, resumeError, resumeChecking,
+  onCustomChange, onPick, onConfirm, onDismiss, onResumeEmailChange, onResume,
 }: {
   effective: string; ROOT: string; suggestions: string[]; custom: string
+  resumeEmail: string; resumeError: string | null; resumeChecking: boolean
   onCustomChange: (v: string) => void; onPick: (s: string) => void
   onConfirm: () => void; onDismiss: () => void
+  onResumeEmailChange: (v: string) => void; onResume: () => void
 }) {
   const chosen = custom || effective
   return (
@@ -978,8 +981,42 @@ function SlugSheet({
         </p>
         <p className="mt-1 text-sm leading-6" style={{ color: "rgba(8,10,9,0.50)" }}>
           <span className="font-black" style={{ color: "#f87171" }}>{effective}</span>.{ROOT} is already taken.
-          Pick a different web address or type your own.
+          If this is your site, enter the same email you used. If not, pick a different web address.
         </p>
+
+        <div className="mt-5 rounded-2xl border p-4" style={{ borderColor: "rgba(8,10,9,0.1)", backgroundColor: "rgba(8,10,9,0.025)" }}>
+          <p className="text-sm font-black" style={{ color: FOUND_BLACK }}>
+            Already built this site?
+          </p>
+          <p className="mt-1 text-xs leading-5" style={{ color: "rgba(8,10,9,0.48)" }}>
+            Enter the email you used and Found will take you back to the activation step.
+          </p>
+          <div className="mt-3 flex items-center gap-2 rounded-xl border px-4 py-3" style={{ borderColor: "rgba(8,10,9,0.12)", backgroundColor: "#fff" }}>
+            <input
+              type="email"
+              value={resumeEmail}
+              onChange={(e) => onResumeEmailChange(e.target.value)}
+              placeholder="your@email.com"
+              autoCapitalize="none"
+              autoCorrect="off"
+              className="flex-1 bg-transparent text-sm font-black outline-none placeholder:text-black/30"
+              style={{ color: FOUND_BLACK }}
+            />
+          </div>
+          {resumeError && (
+            <p className="mt-2 text-xs font-bold leading-5" style={{ color: "#dc2626" }}>
+              {resumeError}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={onResume}
+            disabled={resumeChecking}
+            className="mt-3 w-full rounded-full py-3 text-xs font-black uppercase tracking-widest disabled:opacity-45"
+            style={{ backgroundColor: FOUND_BLACK, color: "#fff" }}>
+            {resumeChecking ? "Checking…" : "Continue my site →"}
+          </button>
+        </div>
 
         {suggestions.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
@@ -1223,6 +1260,9 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const [slugStatus, setSlugStatus]         = useState<"idle" | "ok" | "taken">("idle")
   const [slugSuggestions, setSlugSuggestions] = useState<string[]>([])
   const [showSlugSheet, setShowSlugSheet]   = useState(false)
+  const [resumeEmail, setResumeEmail]       = useState("")
+  const [resumeError, setResumeError]       = useState<string | null>(null)
+  const [resumeChecking, setResumeChecking] = useState(false)
 
   const step    = STEPS[stepIndex]
   const ready   = canAdvance(step, answers)
@@ -1332,6 +1372,30 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       setResult({ error: res.error ?? "Something went wrong." })
       setSaving(false)
     }
+  }
+
+  async function handleResumeBuiltSite(effectiveSlug: string) {
+    if (resumeChecking) return
+    setResumeChecking(true)
+    setResumeError(null)
+    const res = await findBuiltSiteForResume(effectiveSlug, resumeEmail || answers.email)
+    setResumeChecking(false)
+
+    if (!res.success) {
+      setResumeError(res.error)
+      return
+    }
+
+    setAnswers((prev) => ({ ...prev, name: res.name, email: resumeEmail || prev.email }))
+    setCurrentPlan(res.plan ?? currentPlan)
+    setShowSlugSheet(false)
+    setResult({
+      url: res.url,
+      companyId: res.companyId,
+      slug: res.slug,
+      plan: res.plan ?? currentPlan,
+      comp: res.comp,
+    })
   }
 
   function handleDescription(value: string) {
@@ -1601,6 +1665,9 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
             ROOT={ROOT}
             suggestions={slugSuggestions}
             custom={slugCustom}
+            resumeEmail={resumeEmail || answers.email}
+            resumeError={resumeError}
+            resumeChecking={resumeChecking}
             onCustomChange={(v) => setSlugCustom(v)}
             onPick={(s) => setSlugCustom(s)}
             onConfirm={() => {
@@ -1611,6 +1678,8 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
               }
               // else: let debounce re-check the custom slug; user taps Next after ✓ appears
             }}
+            onResumeEmailChange={(v) => { setResumeEmail(v); setResumeError(null) }}
+            onResume={() => void handleResumeBuiltSite(effective)}
             onDismiss={() => setShowSlugSheet(false)}
           />
         )
@@ -1776,7 +1845,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                         <input
                           autoFocus
                           value={answers.name}
-                          onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false) }}
+                          onChange={(e) => { set("name", e.target.value); setSlugCustom(""); setSlugStatus("idle"); setShowSlugSheet(false); setResumeError(null) }}
                           onKeyDown={(e) => e.key === "Enter" && advance()}
                           placeholder="e.g. Barrio Builders"
                           className={`w-full text-[1.8rem] ${tk.inputCls} ${tk.placeholder}`}

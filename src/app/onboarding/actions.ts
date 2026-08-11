@@ -46,6 +46,10 @@ type OnboardingResult = {
   comp?: boolean
 }
 
+type ResumeBuiltSiteResult =
+  | { success: true; slug: string; url: string; companyId: string; name: string; plan?: string; comp?: boolean }
+  | { success: false; error: string }
+
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 function getAdminClient() {
@@ -199,6 +203,49 @@ export async function saveAbandonedLead({
   }).catch((err: unknown) => console.error("[Resend] save-spot email error:", err))
 
   return { success: true }
+}
+
+export async function findBuiltSiteForResume(slugInput: string, emailInput: string): Promise<ResumeBuiltSiteResult> {
+  const slug = slugInput.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48)
+  const email = emailInput.trim().toLowerCase()
+
+  if (!slug || !email.includes("@")) {
+    return { success: false, error: "Enter the email you used to build this site." }
+  }
+
+  const supabase = getAdminClient()
+  const { data: company, error } = await supabase
+    .from("companies")
+    .select("id, name, slug, email, plan, is_comp, subscription_status, preview_completed_at")
+    .eq("slug", slug)
+    .maybeSingle()
+
+  if (error) {
+    console.error("[onboarding] resume lookup error:", error.message)
+    return { success: false, error: "We could not check that site yet. Try again." }
+  }
+
+  if (!company || String(company.email ?? "").trim().toLowerCase() !== email) {
+    return { success: false, error: "That email does not match this site. Pick a different web address or use the original email." }
+  }
+
+  if (!company.preview_completed_at) {
+    return { success: false, error: "That site was started, but it has not been built yet." }
+  }
+
+  if (["active", "trialing"].includes(String(company.subscription_status ?? ""))) {
+    return { success: false, error: "That site is already active. Open your dashboard to manage it." }
+  }
+
+  return {
+    success: true,
+    companyId: company.id,
+    name: company.name,
+    slug: company.slug,
+    url: `https://${company.slug}.${ROOT_DOMAIN}`,
+    plan: company.plan ?? "found",
+    comp: Boolean(company.is_comp),
+  }
 }
 
 function buildSaveSpotEmail({

@@ -1,3 +1,28 @@
+## Session: August 11, 2026 - Onboarding Recovery: Resume Already-Built Site
+**AI:** Codex
+
+### Context
+During FOUND Systems QA, Shawn saw `2 Started / 2 Site built` and then restarted onboarding for `DJ`. Found correctly knew `dj.foundco.app` was taken, but the UX only offered alternate web addresses instead of saying "if this is yours, continue."
+
+### Team direction
+Angela: this is a recovery-flow bug. Craig/Priya: recovery must verify slug + email before revealing or resuming an existing company. Steve: the owner-facing behavior should be "If you already built it, enter your email and continue activating it."
+
+### Changed
+- Added `findBuiltSiteForResume(slug, email)` server action.
+- Added an "Already built this site?" section to the taken-address sheet.
+- The recovery path verifies the email matches the existing company before returning the user to the reveal/activation path.
+- If the email does not match, Found keeps the site private and asks the user to choose another address or use the original email.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- Read-only live DB check showed the `2 Site built` count came from two real recent test sites (`dj` and `flooring`), not duplicate tracking for DJ.
+
+### Next
+After deploy, restart onboarding with `DJ`, use the matching email in the taken-address recovery prompt, and confirm Found returns to the generated-site activation path. Then continue to payment setup to test the `Checkout` funnel count.
+
+---
+
 ## Session: August 11, 2026 - Activation QA: Remove Public Comp Control
 **AI:** Codex
 

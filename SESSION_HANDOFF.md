@@ -1,5 +1,38 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - Onboarding Recovery: Resume Already-Built Site
+
+### Where We Left Off
+Shawn continued FOUND Systems QA and noticed two related onboarding problems:
+- Health showed `2 Started / 2 Site built`.
+- Returning to `foundco.app`, starting again, and entering `DJ` did not offer a clear recovery path. It only said the web address was already taken, then later showed the generic "Save your spot" prompt on exit.
+
+### What Changed
+- Added server action `findBuiltSiteForResume(slug, email)`.
+- The check verifies both:
+  - the requested slug exists, and
+  - the entered email matches the email on that company.
+- If matched and the site has already reached preview, Found returns the user to the generated-site reveal/activation path.
+- If not matched, Found does not expose the site and tells the user to pick another web address or use the original email.
+- Added "Already built this site?" recovery UI inside the taken-address sheet.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed clean.
+- `cmd /c npm run build` passed clean. Existing Next middleware deprecation warning remains.
+- Read-only live DB check showed `2 Site built` was not duplicate tracking for DJ. It reflected two real recent test site records:
+  - `dj`
+  - `flooring`
+
+### Test Next
+- After deploy, go to `foundco.app`.
+- Start onboarding again.
+- Enter the same business name `DJ`.
+- When the address-taken sheet appears, enter the matching email used for DJ.
+- Expected: Found returns to the generated-site reveal/activation path for `dj.foundco.app`.
+- Then continue to Found Business payment setup and confirm `Checkout` increments.
+
+---
+
 ## 2026-08-11 - Activation QA: Remove Public Comp Control
 
 ### Where We Left Off

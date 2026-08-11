@@ -24,6 +24,8 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Funnel reliability fix - moved `onboarding_completed` to server-side capture inside `createOnboardingSite()` and reduced Health's PostHog cache from 5 minutes to 60 seconds.
 - [x] Funnel re-QA - Shawn ran a fresh practice signup and reached `dj.foundco.app`; Health now shows `2 Started` and `1 Site built`, proving the server-side Site built event is working.
 - [x] Activation QA issue found/fixed - Shawn saw `Activate as comp (Found team)` on the public activation plan screen because his admin browser session leaked an internal control into the customer path. Removed the comp button, removed onboarding admin-session plumbing, and removed the unused comp server action.
+- [x] Onboarding recovery issue found/fixed - returning to Found and entering an already-built business name only showed "web address taken" instead of offering a safe resume path. Added a slug + email verified "Already built this site? Continue my site" recovery path from the taken-address sheet.
+- [x] Verified `2 Site built` was not a duplicate DJ event - live DB shows two recent built test sites today: `dj` and `flooring`.
 - [ ] Funnel checkout QA - continue from a practice built site to the activation/payment setup step and confirm `Checkout` increments. Do not expect `Activated` unless Stripe activation succeeds.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
