@@ -29,6 +29,12 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Activation plan-repeat issue found/fixed - if a plan is already known from onboarding/pricing entry, the final activation overlay now skips the second plan selector and goes straight to Stripe/payment setup. General entry paths with no known plan still show plan choice before questions.
 - [x] Activation funnel reliability issue found/fixed - Shawn paid/activated `dj.foundco.app`; Supabase showed `subscription_status = active`, plan `found_business`, and Stripe customer present, but PostHog `Activated` stayed 0. Added Stripe-webhook-side `activation_completed` capture with transition guarding so future activations are recorded from Stripe/server truth without double-counting the browser return route. Manually backfilled the missed DJ activation event once.
 - [x] Funnel checkout/activation QA - Shawn confirmed Health now shows `8 Started / 2 Site built / 2 Checkout / 1 Activated` after the DJ paid activation and manual verified backfill. Checkout and Activated are now reading correctly.
+- [ ] Content uniqueness + typography QA pass before schema - Shawn flagged same/similar generated wording across tenant sites and typography issues such as one-word line orphans and tight/overlapping display-font line-height (example: HVAC Impact-style hero text). Team decision: pause schema until Found can generate/index sites that are meaningfully unique and visually balanced at scale.
+  - [ ] Add content uniqueness guardrails: compare generated hero/about/service copy against existing tenant copy and regenerate/rewrite when similarity is too high.
+  - [ ] Strengthen onboarding inputs: collect a few owner-specific details that force unique copy without turning onboarding into a long form.
+  - [ ] Add industry/sub-industry fallback variety so non-AI or failed-AI sites do not reuse the same phrases across nearby trades.
+  - [ ] Add automated typography safeguards for hero/display text: prevent line overlap, avoid one/two-word orphan lines where possible, and tune line-height/letter-spacing by selected font.
+  - [ ] Add sample-site QA set before release: Barrio Builders, HVAC test site, RC Bicycles, plus at least one food/beauty/professional-services site.
 - [ ] Scope schema-markup feature for tenant sites (future build, not today's setup work)
 
 ## 2026-08-11 - Supabase Security
