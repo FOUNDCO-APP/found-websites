@@ -45,6 +45,29 @@ type Album = {
 const MAX_UPLOAD_BATCH = 12
 const UPLOAD_CONCURRENCY = 3
 
+type JobEstimate = {
+  id: string
+  estimate_number?: number | null
+  title: string | null
+  status: "draft" | "sent" | "viewed" | "accepted" | "declined" | "expired"
+  total: number
+  job_id?: string | null
+}
+
+const ESTIMATE_STATUS_COLORS: Record<string, string> = {
+  draft: "rgba(255,255,255,0.48)",
+  sent: "#0A84FF",
+  viewed: "#FFD60A",
+  accepted: "#30D158",
+  declined: "#FF453A",
+  expired: "rgba(255,255,255,0.2)",
+}
+
+const ESTIMATE_STATUS_LABELS: Record<string, string> = {
+  draft: "Draft", sent: "Sent", viewed: "Viewed",
+  accepted: "Accepted", declined: "Declined", expired: "Expired",
+}
+
 type View = "all" | "website" | "albums"
 type PhotoFilter = "all" | "favorites" | "unused"
 type PhotoNotice = { text: string; tone: "gallery" | "favorite" | "page" | "delete" }
@@ -165,6 +188,9 @@ function PhotosPageInner() {
   const [newJobAddress, setNewJobAddress] = useState("")
   const [newJobPhone, setNewJobPhone] = useState("")
   const [newJobEmail, setNewJobEmail] = useState("")
+  const [estimates, setEstimates] = useState<JobEstimate[]>([])
+  const [estimatesAccess, setEstimatesAccess] = useState(false)
+  const [creatingEstimate, setCreatingEstimate] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
   const photoNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -213,13 +239,19 @@ function PhotosPageInner() {
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
-    ]).then(([pd, ad, sd]) => {
+      fetch("/api/estimates").then(r => r.ok ? r.json() : { estimates: null }).catch(() => ({ estimates: null })),
+    ]).then(([pd, ad, sd, ed]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
       setCustomDomain(sd.customDomain ?? null)
       setIsPro(sd.isPro ?? false)
+      // null (not just []) means the fetch failed or the company doesn't have
+      // the quote_payments addon - keep the Job -> Estimate UI hidden rather
+      // than show a Create Estimate button that would just fail.
+      setEstimatesAccess(ed.estimates !== null)
+      setEstimates(ed.estimates ?? [])
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -323,6 +355,34 @@ function PhotosPageInner() {
     if (!activeAlbum) return
     await updateAlbumDetails(activeAlbum, { cover_photo_id: photo.id })
     setAlbums(prev => prev.map(a => a.id === activeAlbum.id ? { ...a, cover_photo_id: photo.id, cover_url: photo.url } : a))
+  }
+
+  async function createEstimateForJob() {
+    if (!activeAlbum || creatingEstimate) return
+    setCreatingEstimate(true)
+    try {
+      const res = await fetch("/api/estimates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_name: activeAlbum.customer_name || "New customer",
+          client_phone: activeAlbum.customer_phone || undefined,
+          client_email: activeAlbum.customer_email || undefined,
+          property_address: activeAlbum.service_address || undefined,
+          job_id: activeAlbum.id,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.estimate) {
+        router.push(`/estimates?estimate=${data.estimate.id}`)
+      } else {
+        setPhotoError(data.error || "Couldn't create the estimate. Try again.")
+      }
+    } catch {
+      setPhotoError("Couldn't create the estimate. Try again.")
+    } finally {
+      setCreatingEstimate(false)
+    }
   }
 
   async function savePhotoNote(photo: Photo, note: string) {
@@ -658,6 +718,14 @@ function PhotosPageInner() {
                 <>
                   <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
                   <JobNotesEditor album={activeAlbum} onSave={updateAlbumDetails} />
+                  {estimatesAccess && (
+                    <JobEstimatesCard
+                      estimates={estimates.filter(e => e.job_id === activeAlbum.id)}
+                      onOpen={id => router.push(`/estimates?estimate=${id}`)}
+                      onCreate={createEstimateForJob}
+                      creating={creatingEstimate}
+                    />
+                  )}
                 </>
               )}
               <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
@@ -1824,6 +1892,80 @@ function JobNotesEditor({
           {saving ? "Saving..." : "Save"}
         </button>
       </div>
+    </div>
+  )
+}
+
+function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
+  estimates: JobEstimate[]
+  onOpen: (id: string) => void
+  onCreate: () => void
+  creating: boolean
+}) {
+  const formatMoney = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
+  if (estimates.length === 0) {
+    return (
+      <button
+        onClick={onCreate}
+        disabled={creating}
+        style={{
+          marginTop: 10,
+          padding: "10px 12px",
+          borderRadius: 13,
+          border: `1px solid ${SIGNAL_GREEN}33`,
+          backgroundColor: `${SIGNAL_GREEN}10`,
+          color: SIGNAL_GREEN,
+          ...TYPE.footnote,
+          fontWeight: 700,
+          cursor: creating ? "default" : "pointer",
+        }}
+      >
+        {creating ? "Creating..." : "Create Estimate"}
+      </button>
+    )
+  }
+
+  return (
+    <div style={{ marginTop: 10, padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
+        ESTIMATE{estimates.length !== 1 ? "S" : ""}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {estimates.map(est => (
+          <button
+            key={est.id}
+            onClick={() => onOpen(est.id)}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
+              padding: "10px 12px", borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)",
+              cursor: "pointer", textAlign: "left",
+            }}
+          >
+            <span style={{ ...TYPE.subhead, color: "white", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {est.title || (est.estimate_number ? `Estimate #${est.estimate_number}` : "Estimate")}
+            </span>
+            <span style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              <span style={{ ...TYPE.footnote, fontWeight: 700, color: "rgba(255,255,255,0.6)" }}>{formatMoney(est.total)}</span>
+              <span style={{
+                fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 100,
+                color: ESTIMATE_STATUS_COLORS[est.status] ?? "rgba(255,255,255,0.5)",
+                backgroundColor: `${ESTIMATE_STATUS_COLORS[est.status] ?? "rgba(255,255,255,0.5)"}18`,
+              }}>
+                {ESTIMATE_STATUS_LABELS[est.status] ?? est.status}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={onCreate}
+        disabled={creating}
+        style={{ alignSelf: "flex-start", border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.footnote, fontWeight: 700, cursor: creating ? "default" : "pointer", padding: 0 }}
+      >
+        {creating ? "Creating..." : "+ New Estimate"}
+      </button>
     </div>
   )
 }

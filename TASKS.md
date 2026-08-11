@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-10 - Job -> Estimate: the Missing Forward Direction
+
+- [x] Shawn's question surfaced a real gap: estimate->job worked (attach/create a job from the estimate builder), but job->estimate did not exist at all - zero mention of "estimate" anywhere on the Jobs detail screen.
+- [x] Clarified scope with Shawn: photos are reference-only for now (not attached to the customer-facing quote) - smaller, faster build, matches what he actually described (take photos on-site, then write the estimate using them as your own reference).
+- [x] Added a "Linked Estimates" card to the Job detail screen - shows every estimate tied to that job (a job can have several over time) with status and total, tap to open.
+- [x] Added a real "Create Estimate" button directly on the Job screen - creates a new estimate pre-linked to the job (`job_id` set immediately) with customer name/phone/email/address carried over automatically from the job's own fields, then opens it via the estimates page's existing `?estimate=<id>` deep link.
+- [x] Gated on actually having estimate access (`quote_payments` addon) - hidden entirely rather than showing a button that would just fail for companies without it.
+- [ ] Shawn QA: create an estimate from a job, confirm it opens pre-filled and correctly linked; confirm a job with multiple estimates lists all of them.
+
 ## 2026-08-10 - Delete Confirmation/Feedback, Bulk Delete, Select-Mode Redesign
 
 - [x] Team round: Lightroom's Delete button was skipping the existing confirm dialog entirely (grid thumbnail already had one); no feedback after any delete; select mode could only download, not delete; select-mode bar visually inconsistent with the Lightroom's own icon-button design.
@@ -1021,7 +1030,7 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] Owner QA: iMessage/Facebook preview uses the job photo/logo OG image and does not show customer name/address inside the image.
 
 ### Active Pipeline - Service Industry Jobs
-- [x] Connect Jobs to Estimates: create estimate from a job and attach/create job from an estimate. Shipped - `estimates.job_id`, picker/create UI in both the estimate builder and detail sheet.
+- [x] Connect Jobs to Estimates: create estimate from a job and attach/create job from an estimate. Estimate->job direction shipped first (picker/create UI in the estimate builder and detail sheet); job->estimate direction was actually missing until 2026-08-10 (Shawn caught it by asking) - now a real "Create Estimate" button + linked-estimates list live on the Job screen itself.
 - [x] Worker role: camera/job capture only by default. Shipped - `company_members`/`getCompanyRole()`, DashboardNav restricts workers to Photos + More only.
 - [x] Make `Ask about this job` open a job-aware contact form instead of a generic contact page. Shipped - `JobLeadCapture` component on the public job/gallery album page.
 - [x] Cover photo selector for each Job. Shipped 2026-08-10 - "Set as Cover" button in the photo viewer (job photos only, replaces the Add-to-Site slot); `photo_albums.cover_photo_id` was already in the schema but unused, now actually read/written by the dashboard job list, job detail cover fallback, and the public Pro gallery list (all three previously computed "most recent photo" independently).

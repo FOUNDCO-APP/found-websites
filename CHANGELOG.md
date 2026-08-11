@@ -1,3 +1,28 @@
+## Session: August 10, 2026 - Job -> Estimate: the Missing Forward Direction
+**AI:** Claude
+
+### Found via Shawn's question
+Before picking the next priority, Shawn asked whether a job actually connects to its estimate(s) - specifically the workflow of starting a job, taking photos, then creating the estimate from there. Checked the code directly: the estimate->job direction was real (attach/create a job from the estimate builder), but job->estimate did not exist at all - the Jobs detail screen had zero awareness of estimates. The connection was one-way, not the bidirectional link it was meant to be.
+
+### Team round
+Steve: real functional gap, not cosmetic - an owner reviewing a job has no way to check if an estimate was ever sent for it without leaving and manually searching. Jony: a "Linked Estimates" card on the job screen, mirroring what the estimate side already has. Craig: small, low-risk addition - `job_id` already exists, no migration needed. Angela: this is unfinished business from the round-1 "make a job feel like a complete record" work, not a new feature.
+
+### Scope clarified with Shawn
+Photos are reference-only for now, not attached to the customer-facing quote - smaller, faster build that matches the actual workflow described (shoot photos on-site, then write the estimate using them as personal reference).
+
+### Built
+- "Linked Estimates" card on the Job detail screen - lists every estimate tied to that job (a job can have more than one over time) with status and total, tap to open.
+- Real "Create Estimate" button on the Job screen - creates a new estimate pre-linked to the job, with customer name/phone/email/address carried over automatically from the job's own fields, then opens it via the estimates page's existing deep-link support.
+- Gated on actually having estimate access (`quote_payments` addon) so it's hidden rather than shown-then-failing for companies without it.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+
+### Test next
+Create an estimate directly from a job, confirm it opens pre-filled with the job's customer info and is correctly linked; confirm a job with more than one estimate lists all of them.
+
+---
+
 ## Session: August 10, 2026 - Delete Confirmation/Feedback, Bulk Delete, Select-Mode Redesign
 **AI:** Claude
 
