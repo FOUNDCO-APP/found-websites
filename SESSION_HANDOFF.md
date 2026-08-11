@@ -18,14 +18,22 @@
 - Extended `scripts/check-copy-quality-fixtures.mjs` so fallback fixtures can now assert hero subtitle, CTA, and forbidden phrases, not just about text.
 - Added HVAC and remodeling fixtures in `quality/copy-quality-fixtures.json` to prevent those two sample sites from collapsing back into the same generic fallback language.
 - Updated one stale generic service fixture to match current production copy-polish output.
+- Added the first-pass similarity guard:
+  - `src/lib/copySimilarity.ts` scores hero/about/service/combined copy against existing tenant copy;
+  - `src/lib/copySimilaritySupabase.ts` loads recent website copy references from Supabase;
+  - onboarding now checks generated copy before inserting `website_config`;
+  - admin Copy regeneration now checks generated copy before publishing the safety-snapshotted version;
+  - if copy is too similar, Found rewrites it deterministically using truthful details already provided: business name, city/state, sub-industry, differentiator, and service names.
+- Onboarding now also saves `about_preview`, `about_story`, and `about_highlights` from generated/guarded copy instead of only `about_text`.
 
 ### Verification This Pass
 - `cmd /c npm run test:copy-quality` passed: 52 fixture groups.
+- After the similarity guard was added, `cmd /c npm run test:copy-quality` passed: 54 fixture groups.
 - `cmd /c npx tsc --noEmit` passed.
-- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+- `cmd /c npm run build` initially failed on transient Google font fetches for Playfair Display; immediate retry passed. Existing Next middleware deprecation warning remains.
 
 ### Current Decision
-Schema remains paused. The first non-AI fallback variety slice is done, but the broader content uniqueness + typography baseline is not complete yet.
+Schema remains paused. The first non-AI fallback variety slice and first-pass similarity guard are done. Typography safeguards are still open before schema resumes.
 
 ### Where We Left Off
 Shawn paused the schema/AEO/GEO work after noticing a more important scaling problem: some generated tenant sites can share the same or overly similar wording. The concern is not that all sites share a design system. The concern is that thousands of sites with repeated hero/about/service copy would weaken SEO/AEO/GEO and make Found feel generic.
@@ -66,8 +74,8 @@ Continue the content-uniqueness baseline:
    - food/restaurant;
    - beauty/wellness;
    - professional services.
-2. Add a first-pass similarity guard that compares generated hero/about/service copy against existing tenant copy and flags or rewrites near-duplicates.
-3. Add typography safeguards for hero/display text before schema work resumes.
+2. Add typography safeguards for hero/display text before schema work resumes.
+3. Later: strengthen onboarding inputs with a few owner-specific details so the similarity guard has richer truthful material to work with.
 
 ---
 

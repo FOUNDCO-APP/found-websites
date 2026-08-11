@@ -3,6 +3,8 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { Resend } from "resend"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
+import { guardGeneratedCopyUniqueness } from "@/lib/copySimilarity"
+import { loadCopySimilarityReferences } from "@/lib/copySimilaritySupabase"
 import { getIndustryManifest } from "@/lib/industryManifests"
 import { sendNewSignupAlert } from "@/lib/adminAlerts"
 import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
@@ -336,6 +338,28 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     vibe,
     manifest,
   })
+  const copyReferences = await loadCopySimilarityReferences(supabase)
+  const guardedCopy = guardGeneratedCopyUniqueness(generatedContent, {
+    name,
+    description: input.description.trim(),
+    industry,
+    subIndustry,
+    city,
+    state,
+    different: input.different.trim(),
+    services,
+    vibe,
+    manifest,
+  }, copyReferences)
+  const siteContent = guardedCopy.content
+  if (guardedCopy.changed) {
+    console.warn("[onboarding] copy similarity guard rewrote generated copy", {
+      slug,
+      matchedSlug: guardedCopy.match?.slug,
+      field: guardedCopy.match?.field,
+      score: guardedCopy.match?.score,
+    })
+  }
 
   // Comp link (?comp=<comp secret> on the onboarding URL): validated here,
   // server-side, against a dedicated secret - the client only ever carries
@@ -406,22 +430,25 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     .from("website_config")
     .insert({
       company_id: companyId,
-      hero_title: generatedContent.heroTitle,
-      hero_subtitle: generatedContent.heroSubtitle,
+      hero_title: siteContent.heroTitle,
+      hero_subtitle: siteContent.heroSubtitle,
       hero_image_url: input.heroImageUrls?.[0] ?? null,
       hero_images: input.heroImageUrls ?? [],
       hero_video_url: null,
-      about_text: generatedContent.aboutText,
-      tagline: generatedContent.tagline,
-      cta_headline: generatedContent.ctaHeadline,
-      services: generatedContent.services,
+      about_text: siteContent.aboutText,
+      about_preview: siteContent.aboutPreview,
+      about_story: siteContent.aboutStory,
+      about_highlights: siteContent.aboutHighlights,
+      tagline: siteContent.tagline,
+      cta_headline: siteContent.ctaHeadline,
+      services: siteContent.services,
       testimonials,
       service_areas: serviceAreas,
       social_links: {},
       custom_domain: null,
       published: true,
-      copy_generated: generatedContent.copy_generated,
-      faq_items: generatedContent.faq_items,
+      copy_generated: siteContent.copy_generated,
+      faq_items: siteContent.faq_items,
     })
 
   if (configError) {

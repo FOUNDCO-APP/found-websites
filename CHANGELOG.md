@@ -1,3 +1,32 @@
+## Session: August 11, 2026 - FOUND Systems: Generated Copy Similarity Guard
+**AI:** Codex
+
+### Context
+Shawn asked whether to keep manually adding industry-specific fallbacks or move to the team-recommended similarity guard. Team decision: do not hand-write every industry now; add the guard because it protects every future industry and keeps schema/AEO/GEO work from amplifying templated copy.
+
+### Changed
+- Added `src/lib/copySimilarity.ts`.
+  - Scores generated hero, about, services, and combined copy against existing tenant copy.
+  - Detects near-duplicate wording with token/ngram overlap.
+  - Deterministically rewrites too-similar copy using truthful details already captured in onboarding: business name, location, sub-industry, differentiator, and service names.
+- Added `src/lib/copySimilaritySupabase.ts`.
+  - Loads recent existing tenant copy from `website_config` + `companies`.
+  - Supports excluding the current company during admin copy regeneration.
+- Wired the guard into new site creation in `src/app/onboarding/actions.ts`.
+- Wired the guard into admin copy regeneration in `src/app/admin/copy/actions.ts`.
+- Onboarding now saves generated `about_preview`, `about_story`, and `about_highlights` instead of only `about_text`.
+- Extended copy-quality fixtures with similarity cases: near-duplicate quote copy rewrites; distinct retail copy does not rewrite.
+
+### Verification
+- `cmd /c npm run test:copy-quality` passed: 54 fixture groups.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` initially failed on transient Google font fetches for Playfair Display; immediate retry passed. Existing Next middleware deprecation warning remains.
+
+### Next
+Schema remains paused until typography safeguards are added for hero/display text. After that, Found can resume tenant schema/AEO/GEO work with a stronger content baseline.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: First Non-AI Content Uniqueness Pass
 **AI:** Codex
 

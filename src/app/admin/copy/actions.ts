@@ -3,6 +3,8 @@
 import { cookies } from "next/headers"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
+import { guardGeneratedCopyUniqueness } from "@/lib/copySimilarity"
+import { loadCopySimilarityReferences } from "@/lib/copySimilaritySupabase"
 import { getIndustryManifest } from "@/lib/industryManifests"
 import { polishWebsiteUpdates } from "@/lib/copyPolish"
 
@@ -124,23 +126,45 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
     vibe: company.vibe || "bold",
     manifest,
   })
+  const references = await loadCopySimilarityReferences(supabase, { excludeCompanyId: companyId })
+  const guarded = guardGeneratedCopyUniqueness(result, {
+    name: company.name,
+    description: config.about_text || "",
+    industry: company.industry_category,
+    subIndustry: company.sub_industry || "",
+    city: company.city,
+    state: company.state,
+    different: "",
+    services,
+    vibe: company.vibe || "bold",
+    manifest,
+  }, references)
+  if (guarded.changed) {
+    console.warn("[admin/copy] copy similarity guard rewrote generated copy", {
+      companyId,
+      matchedSlug: guarded.match?.slug,
+      field: guarded.match?.field,
+      score: guarded.match?.score,
+    })
+  }
+  const safeResult = guarded.content
 
   const { data: versionId, error: publishError } = await supabase.rpc(
     "publish_website_copy_with_snapshot",
     {
       p_company_id: companyId,
       p_new_copy: polishWebsiteUpdates({
-        hero_title: result.heroTitle,
-        hero_subtitle: result.heroSubtitle,
-        about_text: result.aboutText,
-        about_preview: result.aboutPreview,
-        about_story: result.aboutStory,
-        about_highlights: result.aboutHighlights,
-        tagline: result.tagline,
-        cta_headline: result.ctaHeadline,
-        services: result.services,
-        faq_items: result.faq_items ?? null,
-        copy_generated: result.copy_generated,
+        hero_title: safeResult.heroTitle,
+        hero_subtitle: safeResult.heroSubtitle,
+        about_text: safeResult.aboutText,
+        about_preview: safeResult.aboutPreview,
+        about_story: safeResult.aboutStory,
+        about_highlights: safeResult.aboutHighlights,
+        tagline: safeResult.tagline,
+        cta_headline: safeResult.ctaHeadline,
+        services: safeResult.services,
+        faq_items: safeResult.faq_items ?? null,
+        copy_generated: safeResult.copy_generated,
       }, {
         businessName: company.name,
         industry: company.industry_category,

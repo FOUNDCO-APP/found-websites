@@ -671,5 +671,118 @@
         "no guesswork, no surprises"
       ]
     }
+  ],
+  "similarityFixtures": [
+    {
+      "id": "near-duplicate-quote-copy-rewrites",
+      "name": "Desert Air",
+      "industry": "home_services",
+      "subIndustry": "hvac",
+      "city": "Tucson",
+      "state": "AZ",
+      "services": [
+        {
+          "name": "AC Repair",
+          "description": "Cooling repairs for homes that need help fast."
+        },
+        {
+          "name": "Heating Tuneups",
+          "description": "Seasonal service for heating systems."
+        }
+      ],
+      "candidate": {
+        "heroTitle": "HVAC in Tucson",
+        "heroSubtitle": "Fast, honest estimates from Tucson's trusted HVAC team.",
+        "aboutText": "Desert Air is Tucson, AZ's go-to HVAC. We give straight answers and fair prices - no guesswork, no surprises.",
+        "aboutPreview": "Desert Air is Tucson, AZ's go-to HVAC. We give straight answers and fair prices - no guesswork, no surprises.",
+        "aboutStory": "Desert Air is Tucson, AZ's go-to HVAC. The process is built around clear estimates, practical guidance, and work customers can understand before they say yes.",
+        "aboutHighlights": null,
+        "tagline": null,
+        "ctaHeadline": "Request a free quote",
+        "copy_generated": false,
+        "faq_items": null,
+        "services": [
+          {
+            "name": "HVAC",
+            "description": "Clear options, thoughtful guidance, and an easy next step."
+          }
+        ]
+      },
+      "references": [
+        {
+          "companyId": "existing-1",
+          "slug": "barrio-builders",
+          "name": "Barrio Builders",
+          "industry": "home_services",
+          "subIndustry": "remodeling",
+          "city": "Tucson",
+          "state": "AZ",
+          "heroTitle": "Remodeling in Tucson",
+          "heroSubtitle": "Fast, honest estimates from Tucson's trusted remodeling team.",
+          "aboutText": "Barrio Builders is Tucson, AZ's go-to remodeling. We give straight answers and fair prices - no guesswork, no surprises.",
+          "aboutPreview": "Barrio Builders is Tucson, AZ's go-to remodeling. We give straight answers and fair prices - no guesswork, no surprises.",
+          "aboutStory": "Barrio Builders is Tucson, AZ's go-to remodeling. The process is built around clear estimates, practical guidance, and work customers can understand before they say yes.",
+          "services": [
+            {
+              "name": "Remodeling",
+              "description": "Clear options, thoughtful guidance, and an easy next step."
+            }
+          ]
+        }
+      ],
+      "expectMatch": true,
+      "expectedField": "combined",
+      "expectRewrite": true
+    },
+    {
+      "id": "distinct-retail-copy-does-not-rewrite",
+      "name": "RC Bicycles",
+      "industry": "retail",
+      "subIndustry": "bike shop",
+      "city": "Tucson",
+      "state": "AZ",
+      "candidate": {
+        "heroTitle": "Bike Shop in Tucson",
+        "heroSubtitle": "A local bike shop for repairs, parts, and the rides people actually take.",
+        "aboutText": "RC Bicycles is a locally owned bike shop in Tucson, AZ. Riders get help with repairs, parts, and practical choices for everyday routes.",
+        "aboutPreview": "RC Bicycles is a locally owned bike shop in Tucson, AZ. Riders get help with repairs, parts, and practical choices for everyday routes.",
+        "aboutStory": "RC Bicycles is a locally owned bike shop in Tucson, AZ. The shop is built around useful choices, practical repairs, and helping riders keep moving.",
+        "aboutHighlights": null,
+        "tagline": null,
+        "ctaHeadline": "Come see us",
+        "copy_generated": false,
+        "faq_items": null,
+        "services": [
+          {
+            "name": "Bike Repair",
+            "description": "Repairs and adjustments for daily riders."
+          }
+        ]
+      },
+      "references": [
+        {
+          "companyId": "existing-2",
+          "slug": "molcas-mexican",
+          "name": "Molcas Mexican",
+          "industry": "food",
+          "subIndustry": "restaurant",
+          "city": "Tucson",
+          "state": "AZ",
+          "heroTitle": "Restaurant in Tucson",
+          "heroSubtitle": "Fresh restaurant from Tucson. Made with care in every order.",
+          "aboutText": "Molcas Mexican is a locally owned restaurant in Tucson, AZ. We're proud of what we do and even prouder of the people we do it for.",
+          "aboutPreview": "Molcas Mexican is a locally owned restaurant in Tucson, AZ. We're proud of what we do and even prouder of the people we do it for.",
+          "aboutStory": "Molcas Mexican is a locally owned restaurant in Tucson, AZ. Orders are handled with care, consistency, and a focus on keeping the customer experience simple.",
+          "services": [
+            {
+              "name": "Restaurant",
+              "description": "Food, service, and timing handled so guests know what to expect."
+            }
+          ]
+        }
+      ],
+      "expectMatch": false,
+      "expectRewrite": false
+    }
   ]
 }

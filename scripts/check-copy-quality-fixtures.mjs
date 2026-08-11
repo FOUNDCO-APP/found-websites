@@ -45,6 +45,7 @@ function loadTsModule(modulePath, cache = new Map()) {
 
 const { getAboutHeroSubtitle, polishAboutCopy, polishBusinessName, polishHeroCopy, polishHeroTitle, polishServices } = loadTsModule("src/lib/copyPolish.ts")
 const { buildFallbackWebsiteContent } = loadTsModule("src/lib/contentGeneration.ts")
+const { findClosestCopyMatch, guardGeneratedCopyUniqueness } = loadTsModule("src/lib/copySimilarity.ts")
 
 const rawLabelPatterns = [
   /\bhome_services\b/i,
@@ -206,6 +207,39 @@ for (const fixture of fixtures.fallbackFixtures ?? []) {
   }
   assertCleanPublicCopy(result.aboutText, `${fixture.id}: fallback about`)
   assert(sentenceCount(result.aboutText) <= 3, `${fixture.id}: fallback about copy should stay short on mobile: ${result.aboutText}`)
+  checks++
+}
+for (const fixture of fixtures.similarityFixtures ?? []) {
+  const candidate = fixture.candidate
+  const input = {
+    name: fixture.name,
+    description: fixture.description ?? "",
+    industry: fixture.industry,
+    subIndustry: fixture.subIndustry,
+    city: fixture.city,
+    state: fixture.state,
+    different: fixture.different ?? "",
+    services: fixture.services ?? [],
+    vibe: "bold",
+    manifest: { primaryJob: "", jonyNote: "", primaryIntent: "contact" },
+  }
+  const match = findClosestCopyMatch(candidate, fixture.references ?? [])
+  if (fixture.expectMatch) {
+    assert(match, `${fixture.id}: expected a similarity match`)
+    assert(match.field === fixture.expectedField, `${fixture.id}: expected match field ${fixture.expectedField}, got ${match.field}`)
+  } else {
+    assert(!match, `${fixture.id}: did not expect a similarity match`)
+  }
+  const guarded = guardGeneratedCopyUniqueness(candidate, input, fixture.references ?? [])
+  assert(guarded.changed === Boolean(fixture.expectRewrite), `${fixture.id}: rewrite expectation mismatch`)
+  if (fixture.expectRewrite) {
+    assert(guarded.content.heroSubtitle !== candidate.heroSubtitle, `${fixture.id}: hero subtitle should change when copy is rewritten`)
+    assert(guarded.content.aboutText !== candidate.aboutText, `${fixture.id}: about copy should change when copy is rewritten`)
+    assertCleanPublicCopy(guarded.content.heroSubtitle, `${fixture.id}: rewritten hero`)
+    assertCleanPublicCopy(guarded.content.aboutText, `${fixture.id}: rewritten about`)
+    const afterMatch = findClosestCopyMatch(guarded.content, fixture.references ?? [])
+    assert(!afterMatch || afterMatch.score < match.score, `${fixture.id}: rewrite should reduce similarity score`)
+  }
   checks++
 }
 for (const fixture of fixtures.faithFixtures ?? []) {
