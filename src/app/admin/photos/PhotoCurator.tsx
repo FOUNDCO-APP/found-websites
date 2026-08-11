@@ -1,4 +1,5 @@
 "use client"
+import Link from "next/link"
 import { useState, useEffect, useCallback } from "react"
 import {
   fetchIndustryPhotos, saveApprovedPhotos, saveTeamPicks, promoteToLive,
@@ -220,6 +221,7 @@ export default function PhotoCurator() {
 
       {/* Header + progress */}
       <div className="px-6 pt-8 pb-4">
+        <Link href="/admin/more" className="hq-back-link"><span className="hq-back-chevron" />More</Link>
         <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "var(--hq-green)" }}>
           Quality
         </p>

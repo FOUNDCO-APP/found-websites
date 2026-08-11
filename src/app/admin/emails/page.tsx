@@ -14,6 +14,7 @@ export default async function AdminEmailsPage() {
   const rows = companies ?? []
   return (
     <div className="hq-page hq-page-narrow">
+      <Link href="/admin/more" className="hq-back-link"><span className="hq-back-chevron" />More</Link>
       <header className="hq-header"><div><p className="hq-eyebrow">Quality</p><h1 className="hq-title">Email previews</h1><p className="hq-subtitle">Inspect the transactional messages owners and customers receive.</p></div><span className="hq-count">{rows.length}</span></header>
       <div className="hq-panel">
         {rows.map((company) => (

@@ -298,12 +298,25 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   // can only ever comp a new company.
   const isComp = Boolean(input.compToken && process.env.COMP_LINK_SECRET && input.compToken === process.env.COMP_LINK_SECRET)
 
+  // The account_kind column now defaults to 'test' at the database level
+  // (safer than the old default of 'client', which silently mislabeled
+  // every practice signup as a real customer with zero prompting to fix
+  // it - the exact bug Shawn caught). That default is a safety net, not
+  // the primary signal: every real customer signup needs to be explicitly
+  // marked 'client' here, or they'd wrongly default to hidden-as-test too.
+  // Shawn's own known emails are the one reliable signal that separates
+  // "he's testing something" from "a real customer signed up."
+  const ownerEmails = (process.env.OWNER_EMAILS || "shawnlopez@me.com").split(",").map(e => e.trim().toLowerCase()).filter(Boolean)
+  const accountKind = ownerEmails.includes(email.trim().toLowerCase()) ? "test" : "client"
+
   const { error: companyError } = await supabase
     .from("companies")
     .insert({
       id: companyId,
       name,
       slug,
+      account_kind: accountKind,
+      client_state: accountKind === "client" ? "onboarding" : "active",
       industry_category: industry,
       sub_industry: subIndustry,
       vibe,
@@ -337,7 +350,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   }
 
   // Best-effort, fire-and-forget - never block onboarding on this.
-  void sendNewSignupAlert({ id: companyId, name, slug, plan: input.plan ?? "found", city, state })
+  if (accountKind === "client") {
+    void sendNewSignupAlert({ id: companyId, name, slug, plan: input.plan ?? "found", city, state })
+  }
 
   const { error: configError } = await supabase
     .from("website_config")

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { getUptimeMonitors } from "./uptimerobot"
 import { getSentryIssues } from "./sentry"
 import { getAdminClient } from "../lib"
@@ -53,6 +54,7 @@ export default async function AdminHealthPage() {
 
   return (
     <div className="hq-page hq-page-narrow">
+      <Link href="/admin/more" className="hq-back-link"><span className="hq-back-chevron" />More</Link>
       <header className="hq-header">
         <div>
           <p className="hq-eyebrow">Monitoring</p>

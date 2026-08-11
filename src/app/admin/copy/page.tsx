@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import { getSitesNeedingCopy } from "./actions"
 import CopyRegenPanel from "./CopyRegenPanel"
 
@@ -16,6 +17,7 @@ export default async function AdminCopyPage() {
 
   return (
     <div className="hq-page hq-page-narrow">
+      <Link href="/admin/more" className="hq-back-link"><span className="hq-back-chevron" />More</Link>
       <header className="hq-header">
         <div><p className="hq-eyebrow">Quality</p><h1 className="hq-title">Website copy</h1><p className="hq-subtitle">Review fallback content and safely regenerate one live site at a time.</p></div>
         <span className="hq-count">{sites.length}</span>

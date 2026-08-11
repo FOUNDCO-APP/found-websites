@@ -132,10 +132,16 @@ export default function ClientsWorkspace({ rows, initialSearch }: { rows: Client
   const [filter, setFilter] = useState("clients")
   const filtered = useMemo(() => rows.filter((row) => {
     if (!`${row.name} ${row.slug} ${row.email ?? ""}`.toLowerCase().includes(query.toLowerCase())) return false
-    if (filter === "clients") return row.account_kind === "client"
     if (filter === "test") return row.account_kind === "test"
+    if (filter === "all") return true
+    // Every other tab (Clients, Attention, Onboarding, Active, Past due) is
+    // scoped to real clients only - test accounts have their own dedicated
+    // tab and shouldn't leak into state-based views (the exact bug Shawn
+    // caught: throwaway accounts reading as if they were real business risk).
+    if (row.account_kind !== "client") return false
+    if (filter === "clients") return true
     if (filter === "attention") return row.issues.length > 0 || row.client_state === "past_due"
-    return filter === "all" || row.client_state === filter
+    return row.client_state === filter
   }), [rows, query, filter])
   return (
     <>

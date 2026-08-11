@@ -1,3 +1,34 @@
+## Session: August 11, 2026 - Found HQ: Real Trust-Breaking Data Bugs, Caught by Shawn Live
+**AI:** Claude
+
+### Found via Shawn's live testing
+Shawn tested the just-rebuilt admin on his phone and sent screenshots: Today claimed "0 active clients" and "8 due now," Clients showed his own test accounts ("nanas," "Catalina," "test," "finally" - email `shawnlopez@me.com`) mixed in as if real, and RC Bicycles (his actual paying client) showed "onboarding" instead of "active." His words: "I don't know if any of this data is real." Justified - this wasn't cosmetic, the numbers were actively wrong.
+
+### Team decision
+Shawn explicitly asked the team to decide what's next rather than asking him. Verdict: the trust-breaking data bugs are the sole priority - a dashboard that says "0 active clients" while looking at a paying customer is worse than no dashboard. Sales stays exactly as-is (empty is accurate, not broken - Found's actual growth is 100% self-serve signup, there's no sales-touch channel generating prospects for a manual pipeline to track yet); no further investment, not removed either.
+
+### Root cause, verified against live data before touching anything
+- RC Bicycles had `client_state: null` - never set, so it read as "onboarding."
+- Exactly 8 companies matched Today's "8 due now": all `account_kind: client`, no subscription, no comp, throwaway names - all Shawn's own untracked test signups.
+- The deeper issue: `account_kind` defaulted to `'client'` at the schema level. Every practice account Shawn creates going forward would keep silently polluting the real views unless manually reclassified every time - the exact failure mode already caught once this session with the comped accounts.
+
+### Fixed
+- RC Bicycles corrected to `client_state: active`.
+- The 8 stray test signups reclassified to `account_kind: test`.
+- Structural fix, not just today's bad rows: `account_kind` now defaults to `'test'` at the database level. `createOnboardingSite()` explicitly computes the real value instead of relying on that default - Shawn's own known email(s) default to `test`, everyone else defaults to `client`, so real future customers are never wrongly hidden and his own testing can't quietly recur as fake "real" data.
+- New-signup email alert now skips Shawn's own test signups.
+- Clients' state tabs (Attention/Onboarding/Active/Past due) were leaking test accounts - only the dedicated Clients/Test tabs excluded them correctly before. Every state tab is real-clients-only now.
+- Back-navigation added to all 5 of More's sub-pages - confirmed genuinely missing.
+
+### Verification
+- `npx tsc --noEmit` and `npm run build` passed clean.
+- Reclassification confirmed against live data after the fix: exactly one company (RC Bicycles) now has `account_kind: client`.
+
+### Test next
+Confirm Today shows 1 active client / 0 due now; confirm Clients' tabs show only RC Bicycles outside the Test tab; confirm back-navigation works from every More sub-page.
+
+---
+
 ## Session: August 11, 2026 - Found HQ Rebuild Phase 5 (Final): Marketing Health
 **AI:** Claude
 

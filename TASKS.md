@@ -1,5 +1,17 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-11 - Found HQ: Real Trust-Breaking Data Bugs, Caught by Shawn Live
+
+Shawn tested the rebuilt admin live via screenshots and found it actively lying about his business state - "0 active clients" while looking at his one real paying client, 8 fake "due now" items that were all his own throwaway test signups, test accounts leaking into every state tab. Team decision (his call: "let the team decide"): fix the trust-breaking data bugs as the sole priority; leave Sales exactly as-is (no real sales-touch acquisition channel exists yet, so an empty manual pipeline is accurate, not broken - don't invest further, don't remove it either).
+
+- [x] Root-caused with live data: RC Bicycles (Shawn's one real client) had `client_state: null`, never set - reading as "onboarding" instead of "active". Fixed directly.
+- [x] Found exactly 8 companies matching Today's "8 due now" - all `account_kind: client` with no subscription, no comp, throwaway names (nanas, Catalina, test, finally, etc.), all Shawn's own untracked test signups. Reclassified to `account_kind: test`.
+- [x] Fixed the structural cause, not just today's bad rows: `account_kind` column now defaults to `'test'` at the database level (previously defaulted to `'client'`, silently mislabeling every future practice signup as real with zero prompting to fix it). `createOnboardingSite()` now explicitly computes the real value - Shawn's own known email(s) (`OWNER_EMAILS` env var, defaults to his address) default to `test`, everyone else defaults to `client` - so this can't quietly recur, and real future customers aren't wrongly hidden either.
+- [x] New-signup email alert now skips Shawn's own test signups - no point alerting him about his own action.
+- [x] Fixed Clients' state tabs (Attention/Onboarding/Active/Past due) - they were showing test accounts mixed in with real ones; only the dedicated Clients/Test tabs excluded them correctly before. Now every state tab is real-clients-only by default.
+- [x] Added back-navigation to all 5 of More's sub-pages (Copy, Photos, Emails, Health, Test Billing) - confirmed missing, a real gap.
+- [ ] Shawn QA: Today shows 1 active client / 0 due now; Clients' default and state tabs show only RC Bicycles; test accounts only appear under the Test tab; back-navigation works from every More sub-page.
+
 ## 2026-08-11 - Found HQ Rebuild: Phase 5 (Final), Marketing Health
 
 - [x] Added a Marketing section to the Health page - leads last 7d/30d across real clients (test accounts excluded), top clients by lead volume. Real data, not a placeholder.

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
+import Link from "next/link"
 import { getAdminClient, planLabel } from "../lib"
 import { getStripe } from "@/lib/stripe/connect"
 import BillingTable, { type BillingRow } from "./BillingTable"
@@ -51,6 +52,7 @@ export default async function AdminBillingPage() {
 
   return (
     <div className="hq-page">
+      <Link href="/admin/more" className="hq-back-link"><span className="hq-back-chevron" />More</Link>
       <header className="hq-header">
         <div>
           <p className="hq-eyebrow">Operate</p>
