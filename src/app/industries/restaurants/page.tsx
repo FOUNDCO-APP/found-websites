@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Restaurant Website | Found — Get Your Restaurant Online Today",
-  description: "A professional restaurant website in minutes. Your menu, your photos, your story — with a contact form that turns visitors into reservations. Starting at $29/month.",
+  description: "A professional restaurant website in minutes. Your menu, your photos, your story, and a Pro-first path for turning visitors into reservations.",
   openGraph: {
     title: "Restaurant Website | Found",
     description: "Get your restaurant, café, or food business online today. Professional photos, your menu, and a site that brings people through the door.",

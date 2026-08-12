@@ -40,6 +40,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
   - [ ] Later controlled existing-site copy refresh: do not bulk-regenerate current test sites or Ryan/RC Bicycles now. When ready, run a dry-run comparison first, review the proposed copy changes, then selectively apply only approved updates so hand-edited/live client content is not overwritten blindly.
 - [x] Tenant schema markup baseline: centralized public-site JSON-LD generation with LocalBusiness, WebSite, Service, and FAQPage graph nodes; respects phone/email/address visibility flags; added `test:public-site-schema`.
 - [ ] Later schema enhancement pass: check whether more schema will help Found and business owners before adding it. Only add richer industry-specific schema when the data is real and visible on the page (examples: Restaurant menu, product catalog, booking/service-specific markup, opening hours, real reviews/ratings).
+- [x] Industry-page pricing/proof pass: Shawn caught that industry pages anchored prospects on Starter/$29 twice and lacked enough proof visuals. Shared industry page now leads with Pro/Business, defaults onboarding to Found Pro, adds a proof-of-concept visual/customer-path section, and keeps Starter secondary as the website-only fallback.
 
 ## 2026-08-11 - Supabase Security
 

@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Cleaning Business Website | Found — Get Online Today",
-  description: "A professional website for your cleaning business or maid service. Capture leads, look established, build trust before the first call. Starting at $29/month.",
+  description: "A professional website for your cleaning business or maid service. Capture leads, look established, and grow with Found Pro or Business.",
   openGraph: {
     title: "Cleaning Business Website | Found",
     description: "Get your cleaning business online today. A professional site that captures leads and helps you show up when people search for cleaners near them.",

@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Salon Website | Found — Get Your Salon Online Today",
-  description: "A professional website for your hair salon, barber shop, or beauty studio. Show your work, book clients, get found on Google. Starting at $29/month.",
+  description: "A professional website for your hair salon, barber shop, or beauty studio. Show your work, book clients, and grow with Found Pro or Business.",
   openGraph: {
     title: "Salon Website | Found",
     description: "Get your salon or barber shop online today. Show your best work, capture leads, and get found by clients searching near you.",

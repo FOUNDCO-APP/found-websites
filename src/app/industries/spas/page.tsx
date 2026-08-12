@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Spa Website | Found — Get Your Spa Online Today",
-  description: "A professional website for your spa, massage studio, or wellness center. Show your treatments, capture booking requests, and build trust before clients walk in the door. Starting at $29/month.",
+  description: "A professional website for your spa, massage studio, or wellness center. Show treatments, capture booking requests, and grow with Found Pro or Business.",
   openGraph: {
     title: "Spa Website | Found",
     description: "Get your spa or wellness center online today. A professional site that captures booking requests and shows your treatments beautifully.",

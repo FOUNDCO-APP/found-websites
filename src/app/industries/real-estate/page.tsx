@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Real Estate Agent Website | Found — Get Online in 10 Minutes",
-  description: "A professional website for real estate agents and property managers. Your listings, your story, leads straight to your phone. Starting at $29/month.",
+  description: "A professional website for real estate agents and property managers. Your listings, your story, and a Pro-first path for capturing leads.",
   openGraph: {
     title: "Real Estate Agent Website | Found",
     description: "Get your real estate business online today. A professional site that captures buyer and seller leads and shows your listings beautifully.",

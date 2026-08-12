@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Retail Store Website | Found — Get Your Shop Online Today",
-  description: "A professional website for your retail shop or boutique. Show your products, your story, and your hours. Get found on Google. Starting at $29/month.",
+  description: "A professional website for your retail shop or boutique. Show your products, your story, and your hours with a Pro-first growth path.",
   openGraph: {
     title: "Retail Store Website | Found",
     description: "Get your retail shop or boutique online today. Show your products beautifully and get found by local shoppers.",

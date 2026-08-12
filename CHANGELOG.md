@@ -1,3 +1,24 @@
+## Session: August 11, 2026 - FOUND Systems: Industry Page Pro Anchor + Proof
+**AI:** Codex
+
+### Context
+Shawn QA'd the live industry pages and caught two business-owner problems: the industry CTAs anchored visitors on Starter/$29 twice, and the pages had too much copy without enough proof of what Found actually builds.
+
+### Team direction
+Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. Jony: show a proof-of-concept visual so the page feels less like a wall of copy. Angela: keep Starter available, but make Pro/Business the natural growth path. Craig: fix the shared industry-page component so all industry pages inherit the correction.
+
+### Changed
+- Repositioned industry pages around Found Pro and Found Business instead of Starter.
+- Changed industry CTAs to open onboarding with `found_pro` selected.
+- Added a proof-of-concept visual section showing the generated site, customer path, and plan guidance.
+- Kept Starter mentioned only as the website-only fallback.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Schema Validator Warning Cleanup
 **AI:** Codex
 

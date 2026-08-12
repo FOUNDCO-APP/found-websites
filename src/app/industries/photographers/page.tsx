@@ -3,7 +3,7 @@ import IndustryPage from "@/components/IndustryPage"
 
 export const metadata: Metadata = {
   title: "Photography Website | Found — Get Your Portfolio Online Today",
-  description: "A professional portfolio website for photographers. Show your work, capture booking inquiries, get found on Google. Starting at $29/month.",
+  description: "A professional portfolio website for photographers. Show your work, capture booking inquiries, and grow with Found Pro or Business.",
   openGraph: {
     title: "Photography Website | Found",
     description: "Get your photography business online today. A beautiful portfolio site that captures booking requests and shows your best work.",

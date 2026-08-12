@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Industry Page Pro Anchor + Proof
+
+### Progress This Pass
+- Shawn QA'd the live industry pages after GitHub/Vercel were green.
+- Issue found: industry pages pushed Starter/$29 twice, which made the cheapest plan feel like the main offer.
+- Issue found: the pages were mostly copy and needed a stronger proof-of-concept visual.
+- Team decision:
+  - Phil/Steve: Pro/Business should be the mental anchor; Starter stays available but secondary.
+  - Jony: add proof of what Found builds, not only claims.
+  - Angela: keep the CTA simple and send prospects into onboarding with Pro selected.
+  - Craig: fix the shared `IndustryPage` component so every industry page inherits the same correction.
+- Updated `src/components/IndustryPage.tsx`:
+  - hero CTA now says `Build my business site`;
+  - pricing box says most owners start with Pro and shows Pro/Business;
+  - added proof-of-concept visual, customer path, and plan guidance;
+  - mid-page CTA now says `Start with Found Pro`;
+  - onboarding drawer now opens with `found_pro`;
+  - Starter is only mentioned as the website-only fallback.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Explicit Next Step
+Run production build, deploy, then QA one industry page on mobile: confirm no visible `$29` Starter-first CTA remains, proof section renders cleanly, and the CTA opens onboarding with Pro selected.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Tenant Schema Baseline
 
 ### Progress This Pass
