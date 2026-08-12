@@ -35,6 +35,7 @@
 - Parked existing-site copy refresh per Shawn: do not bulk-regenerate current test sites or Ryan/RC Bicycles now. Keep it as a later dry-run/review/apply task.
 - Strengthened onboarding inputs without turning onboarding into a long form:
   - added one new `focus` screen after "What makes you different?";
+  - added quick-select goal chips for More phone calls, More quote requests, Better jobs, Higher-paying customers, More bookings, More local trust, More online orders, and More repeat customers;
   - captures the jobs/customers the owner wants more of, a service-area nuance, and one safe proof point;
   - feeds those details into AI content generation, non-AI fallback copy, the copy similarity guard context, and abandoned-lead partial answers;
   - no database migration required.

@@ -132,6 +132,17 @@ const PLAN_CHOICES = [
   },
 ]
 
+const FOCUS_GOAL_CHIPS = [
+  "More phone calls",
+  "More quote requests",
+  "Better jobs",
+  "Higher-paying customers",
+  "More bookings",
+  "More local trust",
+  "More online orders",
+  "More repeat customers",
+]
+
 function planMonthlyValue(plan: string) {
   if (plan === "found_business") return 69
   if (plan === "found_pro") return 39
@@ -1290,6 +1301,20 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
     setAnswers((prev) => ({ ...prev, [key]: value }))
   }
 
+  function toggleIdealCustomerChip(chip: string) {
+    setAnswers((prev) => {
+      const parts = prev.idealCustomer
+        .split(/[,;\n]+/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+      const selected = parts.some((part) => part.toLowerCase() === chip.toLowerCase())
+      const nextParts = selected
+        ? parts.filter((part) => part.toLowerCase() !== chip.toLowerCase())
+        : [...parts, chip]
+      return { ...prev, idealCustomer: nextParts.join(", ") }
+    })
+  }
+
   function back() {
     if (stepIndex <= 1) {
       setPhase(showPlanChoice ? "plan" : "welcome")
@@ -2112,6 +2137,34 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                         <p className="text-sm leading-relaxed" style={{ color: tk.muted }}>
                           One useful detail is enough. Found uses this to make the site more specific, less generic, and better for search later.
                         </p>
+                        <div className="space-y-2">
+                          <p className="text-xs font-black uppercase tracking-[0.16em]" style={{ color: tk.hint }}>
+                            Pick what matters most
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            {FOCUS_GOAL_CHIPS.map((chip) => {
+                              const selected = answers.idealCustomer
+                                .split(/[,;\n]+/)
+                                .map((part) => part.trim().toLowerCase())
+                                .includes(chip.toLowerCase())
+                              return (
+                                <button
+                                  key={chip}
+                                  type="button"
+                                  onClick={() => toggleIdealCustomerChip(chip)}
+                                  className="rounded-2xl border px-3 py-3 text-left text-xs font-black uppercase tracking-[0.08em] transition active:scale-[0.98]"
+                                  style={{
+                                    borderColor: selected ? SIGNAL_GREEN : tk.cardBorder(false),
+                                    backgroundColor: selected ? tk.cardBg(true) : tk.cardBg(false),
+                                    color: selected ? tk.text : tk.muted,
+                                  }}
+                                >
+                                  {chip}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
                         <div className="space-y-4">
                           <input
                             autoFocus
@@ -2119,7 +2172,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                             value={answers.idealCustomer}
                             onChange={(e) => set("idealCustomer", e.target.value)}
                             onKeyDown={(e) => e.key === "Enter" && advance()}
-                            placeholder="Best jobs or customers: remodels, emergency calls, families, commercial work..."
+                            placeholder="Anything specific? Kitchen remodels, emergency AC calls, families near the foothills..."
                             className={`w-full text-[1.05rem] ${tk.inputCls} ${tk.placeholder}`}
                             style={{ color: tk.text, borderBottomColor: answers.idealCustomer.length > 4 ? SIGNAL_GREEN : tk.border(false) }}
                           />
