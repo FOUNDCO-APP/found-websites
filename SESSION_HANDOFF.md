@@ -40,6 +40,38 @@ After deploy, QA one live tenant page source or validator result to confirm the 
 
 ---
 
+## 2026-08-11 - Supabase Security Smoke Test + Remaining Advisor Cleanup
+
+### Progress This Pass
+- Followed the team direction after schema: security/data trust before more growth work.
+- Supabase security advisors showed the critical RLS warning is gone.
+- Confirmed the seven previously flagged tables are still locked down:
+  - `estimate_rate_sheets`;
+  - `email_campaigns`;
+  - `estimates`;
+  - `estimate_line_items`;
+  - `contact_suppressions`;
+  - `addon_subscriptions`;
+  - `addon_stripe_prices`.
+- Verified each table has RLS enabled and no direct `anon`/`authenticated` SELECT/INSERT privileges.
+- Verified direct anonymous REST access returns `401` for all seven flagged tables.
+- Verified server/admin access still works by checking safe row counts.
+- Verified a live public quote print page still renders `200`.
+- Verified live tenant pages that read add-on state still render `200` for HVAC and RC Bicycles.
+- Fixed the remaining database-function advisor:
+  - `public.update_updated_at` now sets `search_path = public, pg_temp`;
+  - live linked project was updated;
+  - migration added at `supabase/migrations/20260812053814_fix_update_updated_at_search_path.sql`.
+
+### Verification This Pass
+- `supabase.cmd db advisors --linked --type security --level warn --fail-on none` now shows only `auth_leaked_password_protection`.
+- `supabase.cmd migration list --local` could not run because the local Supabase database is not running on this machine; live linked-project verification succeeded.
+
+### Current Decision
+The Supabase critical security issue is closed from the code/database side. The only remaining Supabase security item requires Shawn in the Supabase dashboard: enable leaked-password protection under Auth settings.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Content Uniqueness Before Schema
 
 ### Progress This Pass

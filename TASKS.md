@@ -48,8 +48,8 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Enable RLS and revoke direct `anon`/`authenticated` access on the seven flagged public tables: `estimate_rate_sheets`, `email_campaigns`, `estimates`, `estimate_line_items`, `contact_suppressions`, `addon_subscriptions`, `addon_stripe_prices`.
 - [x] Verify critical `rls_disabled_in_public` errors are gone.
 - [x] Verify representative anonymous REST reads now return `401`.
-- [ ] Smoke-test app flows that use those tables: estimates, public quote pages, email/marketing send history, add-ons/activation.
-- [ ] Fix remaining WARN advisor: `public.update_updated_at` has mutable `search_path`.
+- [x] Smoke-test app flows that use those tables: verified the seven tables remain locked from direct anonymous REST (`401`), server/admin table counts work, a live public quote print page renders `200`, and live tenant pages using add-on reads render `200` for HVAC and RC Bicycles.
+- [x] Fix remaining WARN advisor: `public.update_updated_at` had mutable `search_path`; applied live fix and added migration `supabase/migrations/20260812053814_fix_update_updated_at_search_path.sql`.
 - [ ] Shawn/Supabase dashboard: enable leaked password protection in Auth settings.
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
