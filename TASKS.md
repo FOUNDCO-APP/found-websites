@@ -39,7 +39,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
   - [x] Add sample-site QA set before release: Shawn checked the current test sites plus Ryan/RC Bicycles and confirmed the generated copy/typography looked good enough to continue. Typography updates apply automatically after deploy; copy guard requires targeted copy regeneration/dry-run for existing saved sites before overwriting live copy.
   - [ ] Later controlled existing-site copy refresh: do not bulk-regenerate current test sites or Ryan/RC Bicycles now. When ready, run a dry-run comparison first, review the proposed copy changes, then selectively apply only approved updates so hand-edited/live client content is not overwritten blindly.
 - [x] Tenant schema markup baseline: centralized public-site JSON-LD generation with LocalBusiness, WebSite, Service, and FAQPage graph nodes; respects phone/email/address visibility flags; added `test:public-site-schema`.
-- [ ] Later schema enhancement pass: consider richer industry-specific schema only after baseline live QA (examples: Restaurant menu, product catalog, booking/service-specific markup where truthful data exists).
+- [ ] Later schema enhancement pass: check whether more schema will help Found and business owners before adding it. Only add richer industry-specific schema when the data is real and visible on the page (examples: Restaurant menu, product catalog, booking/service-specific markup, opening hours, real reviews/ratings).
 
 ## 2026-08-11 - Supabase Security
 

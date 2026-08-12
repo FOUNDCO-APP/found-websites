@@ -33,6 +33,7 @@
 
 ### Current Decision
 Baseline tenant schema is no longer blocked. Deeper industry-specific schema is intentionally deferred until after live baseline QA.
+Future reminder from Shawn: revisit whether more schema would actually help Found and the business owners. Do not add schema just because it exists; only add truthful, visible, industry-specific schema when it improves clarity or conversion/search value.
 
 ### Explicit Next Step
 After deploy, QA one live tenant page source or validator result to confirm the JSON-LD is visible in production. Then continue FOUND Systems with the next growth/SEO item.
