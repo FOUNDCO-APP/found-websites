@@ -10,6 +10,7 @@ Angela/Phil/Steve: do not make onboarding feel like a long form. Add one focused
 ### Changed
 - Added a new onboarding `focus` step after "What makes you different?"
 - Added quick-select goal chips before the custom field so owners are not staring at a blank input.
+- Removed autofocus from the focus-step custom field so mobile Safari does not jump past the chips.
 - Added owner/test-only `Open full preview` access on the reveal screen so QA can inspect the real generated site before payment without exposing that option to normal clients.
 - Captures:
   - best jobs/customers to attract;

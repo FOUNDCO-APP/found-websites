@@ -36,6 +36,7 @@
 - Strengthened onboarding inputs without turning onboarding into a long form:
   - added one new `focus` screen after "What makes you different?";
   - added quick-select goal chips for More phone calls, More quote requests, Better jobs, Higher-paying customers, More bookings, More local trust, More online orders, and More repeat customers;
+  - Shawn QA found mobile Safari jumped straight to the custom field and hid the chips; removed autofocus from that field so chips appear first;
   - captures the jobs/customers the owner wants more of, a service-area nuance, and one safe proof point;
   - feeds those details into AI content generation, non-AI fallback copy, the copy similarity guard context, and abandoned-lead partial answers;
   - no database migration required.

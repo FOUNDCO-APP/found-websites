@@ -2179,7 +2179,6 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                         </div>
                         <div className="space-y-4">
                           <input
-                            autoFocus
                             type="text"
                             value={answers.idealCustomer}
                             onChange={(e) => set("idealCustomer", e.target.value)}
