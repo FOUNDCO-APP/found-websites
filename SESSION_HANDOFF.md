@@ -20,6 +20,8 @@
   - invalid social links are ignored.
 - Added `scripts/check-public-site-schema.mjs` and `npm run test:public-site-schema`.
 - Updated `TASKS.md` and `CHANGELOG.md`.
+- Shawn's live Schema Markup Validator screenshots found a non-critical warning: `position` was attached directly to `Offer`.
+- Fixed that warning by changing service catalog entries to `ListItem.position` with a nested `Offer.itemOffered`.
 
 ### Verification This Pass
 - `cmd /c npm run test:public-site-schema` passed.
@@ -27,6 +29,7 @@
 - `cmd /c npm run test:copy-quality` passed.
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+- After the validator-warning cleanup, `cmd /c npm run test:public-site-schema`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed again.
 
 ### Current Decision
 Baseline tenant schema is no longer blocked. Deeper industry-specific schema is intentionally deferred until after live baseline QA.

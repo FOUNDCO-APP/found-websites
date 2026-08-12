@@ -183,9 +183,12 @@ export function buildPublicSiteSchemas(company: Company) {
           "@type": "OfferCatalog",
           name: `${company.name} services`,
           itemListElement: serviceSchemas.map((service, index) => ({
-            "@type": "Offer",
+            "@type": "ListItem",
             position: index + 1,
-            itemOffered: { "@id": service["@id"] },
+            item: {
+              "@type": "Offer",
+              itemOffered: { "@id": service["@id"] },
+            },
           })),
         }
       : undefined,

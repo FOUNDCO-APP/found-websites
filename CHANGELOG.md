@@ -1,3 +1,23 @@
+## Session: August 11, 2026 - FOUND Systems: Schema Validator Warning Cleanup
+**AI:** Codex
+
+### Context
+Shawn tested live tenant schema in Schema Markup Validator. Google Rich Results passed, but schema.org showed warnings because `position` was attached directly to `Offer` objects inside the service offer catalog.
+
+### Changed
+- Updated service offer catalog schema so ordered services use:
+  - `ListItem.position`;
+  - `ListItem.item`;
+  - nested `Offer.itemOffered`.
+- Extended `test:public-site-schema` so this warning cannot return silently.
+
+### Verification
+- `cmd /c npm run test:public-site-schema` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Tenant Schema Baseline
 **AI:** Codex
 
