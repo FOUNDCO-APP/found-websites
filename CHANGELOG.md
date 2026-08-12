@@ -13,6 +13,7 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - Added a proof-of-concept visual section showing the generated site, customer path, and plan guidance.
 - Kept Starter mentioned only as the website-only fallback.
 - Correction after live QA: removed the literal `Proof of concept` wording and the generic placeholder mockup. Replaced it with an industry-specific device preview using the page's actual headline/features, and added a horizontal plan chooser that defaults to Pro while still letting visitors choose Starter or Business.
+- iPhone correction after Shawn's screenshot: the mobile preview no longer nests a tiny phone mockup inside the page. Mobile now gets one readable full-width preview card, with the extra device overlay reserved for desktop/tablet only.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification

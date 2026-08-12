@@ -96,72 +96,82 @@ function PlanSwiper({
 
 function IndustryDevicePreview({
   industryLabel,
-  headline,
   subheadline,
   features,
 }: {
   industryLabel: string
-  headline: string
   subheadline: string
   features: Feature[]
 }) {
   const previewFeatures = features.slice(0, 3)
+  const industryTitle = industryLabel
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+  const previewHeadline = `${industryTitle} site, ready to win local work.`
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-5 md:p-7">
-      <div className="mb-5 flex items-center justify-between gap-4">
+    <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
+      <div className="mb-4 flex items-center justify-between gap-3 md:mb-5">
         <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           Example site preview
         </p>
-        <span className="rounded-full bg-[#32D074] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#080A09]">
+        <span className="shrink-0 rounded-full bg-[#32D074] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-[#080A09] md:text-[10px]">
           Live-ready
         </span>
       </div>
 
-      <div className="relative min-h-[420px] md:min-h-[470px]">
-        <div className="absolute right-0 top-0 hidden w-[82%] rounded-[1.4rem] border border-white/12 bg-[#171B18] p-3 shadow-2xl shadow-black/45 md:block">
+      <div className="relative md:pb-12">
+        <div className="rounded-[1.4rem] border border-white/12 bg-[#171B18] p-2.5 shadow-2xl shadow-black/45 md:p-3">
           <div className="overflow-hidden rounded-[1rem] bg-[#F4F1EA] text-[#111312]">
-            <div className="relative min-h-[240px] bg-[#121613] p-7 text-white">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(50,208,116,0.28),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_46%)]" />
-              <div className="relative max-w-[75%]">
+            <div className="flex items-center gap-1.5 border-b border-black/10 bg-[#E8E4DA] px-4 py-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#D96A5F]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#D8B24C]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#32D074]" />
+              <span className="ml-auto text-[9px] font-black uppercase tracking-[0.18em] text-black/30">Found-built site</span>
+            </div>
+
+            <div className="relative bg-[#101411] px-4 py-6 text-white md:px-8 md:py-10">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_18%,rgba(50,208,116,0.26),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_48%)]" />
+              <div className="relative max-w-xl">
                 <p className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
                   {industryLabel}
                 </p>
-                <p className="text-4xl font-normal leading-[0.96] tracking-tight text-white">
-                  {headline}
+                <p className="max-w-[13ch] text-[2.25rem] font-normal leading-[0.96] tracking-tight text-white md:text-5xl">
+                  {previewHeadline}
                 </p>
-                <p className="mt-5 max-w-sm text-sm leading-6 text-white/58">
+                <p className="mt-4 max-w-md text-xs leading-5 text-white/58 md:mt-5 md:text-sm md:leading-6">
                   {subheadline}
                 </p>
-                <div className="mt-7 inline-flex rounded-full bg-[#32D074] px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+                <div className="mt-6 inline-flex rounded-full bg-[#32D074] px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09] md:mt-7">
                   Request help
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-px bg-black/10">
-              {previewFeatures.map((feature) => (
-                <div key={feature.label} className="bg-[#F4F1EA] p-4">
-                  <p className="text-[10px] font-black text-[#111312]">{feature.label}</p>
-                  <p className="mt-2 line-clamp-3 text-[10px] leading-4 text-black/45">{feature.desc}</p>
+
+            <div className="grid gap-px bg-black/10 md:grid-cols-3">
+              {previewFeatures.map((feature, index) => (
+                <div key={feature.label} className={`bg-[#F4F1EA] p-4 md:p-5 ${index === 2 ? "hidden md:block" : ""}`}>
+                  <p className="text-sm font-black text-[#111312]">{feature.label}</p>
+                  <p className="mt-2 line-clamp-3 text-xs leading-5 text-black/48">{feature.desc}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 mx-auto w-[245px] rounded-[42px] border border-white/12 bg-[#151916] p-[9px] shadow-2xl shadow-black/55 md:absolute md:bottom-0 md:left-0 md:mx-0">
-          <div className="absolute left-1/2 top-[17px] h-5 w-[76px] -translate-x-1/2 rounded-full bg-[#090B0A]" />
-          <div className="h-[500px] overflow-hidden rounded-[34px] bg-[#F5F3ED] text-[#111312]">
-            <div className="relative flex h-[235px] flex-col justify-end bg-[#101411] p-5 text-white">
+        <div className="hidden rounded-[42px] border border-white/12 bg-[#151916] p-[9px] shadow-2xl shadow-black/55 md:absolute md:-bottom-10 md:right-8 md:block md:w-[210px]">
+          <div className="absolute left-1/2 mt-2 h-5 w-[76px] -translate-x-1/2 rounded-full bg-[#090B0A]" />
+          <div className="h-[430px] overflow-hidden rounded-[34px] bg-[#F5F3ED] text-[#111312] md:h-[360px]">
+            <div className="relative flex h-[205px] flex-col justify-end bg-[#101411] p-5 text-white md:h-[176px]">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(50,208,116,0.3),transparent_34%)]" />
               <div className="relative">
                 <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/35">{industryLabel}</p>
-                <p className="text-[2.15rem] font-normal leading-[0.95] tracking-tight">{headline}</p>
-                <p className="mt-4 text-[11px] leading-5 text-white/52">{subheadline}</p>
+                <p className="text-[2rem] font-normal leading-[0.95] tracking-tight md:text-[1.45rem]">{previewHeadline}</p>
               </div>
             </div>
-            <div className="space-y-2 p-4">
-              {previewFeatures.map((feature) => (
+            <div className="space-y-2 p-4 md:p-3">
+              {previewFeatures.slice(0, 2).map((feature) => (
                 <div key={feature.label} className="rounded-2xl border border-black/10 bg-white p-4">
                   <p className="text-[11px] font-black">{feature.label}</p>
                   <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-black/45">{feature.desc}</p>
@@ -247,7 +257,6 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
             <IndustryDevicePreview
               industryLabel={industryLabel}
-              headline={headline}
               subheadline={subheadline}
               features={features}
             />

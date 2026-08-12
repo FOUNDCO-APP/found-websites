@@ -19,12 +19,14 @@
   - onboarding drawer now opens with the currently selected plan;
   - Starter is only mentioned as the website-only fallback.
 - Shawn rejected the first visual pass because it said `Proof of concept`, used generic placeholder boxes, and risked pushing Pro while not letting customers choose other plans. Correction applied: no homepage hero image reuse, no generic skeleton proof block, Pro-first but not Pro-only.
+- Shawn's iPhone screenshot showed the corrected preview was still not mobile-formatted: a tiny internal phone preview and cropped text made it feel broken. Fixed by giving iPhone one readable full-width preview card and hiding the extra device overlay until desktop/tablet.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
 - Correction pass TypeScript check passed again after replacing the proof block and adding plan selection.
+- iPhone layout correction TypeScript check passed after removing the mobile nested-device composition.
 
 ### Explicit Next Step
 Run production build, deploy, then QA one industry page on mobile: confirm no visible `$29` Starter-first CTA remains, proof section renders cleanly, and the CTA opens onboarding with Pro selected.
