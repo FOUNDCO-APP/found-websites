@@ -1,3 +1,39 @@
+## Session: August 11, 2026 - FOUND Systems: Tenant Schema Baseline
+**AI:** Codex
+
+### Context
+After Shawn QA-confirmed the onboarding chips, current test sites, and Ryan/RC Bicycles looked good enough to continue, the team moved to the next FOUND Systems item: baseline structured data for tenant sites.
+
+### Team direction
+Steve/Jony: this should be invisible and simple for the owner. Craig: centralize schema generation instead of burying it in the tenant layout. Priya: do not invent facts and do not expose hidden contact/address fields. Phil: give every hosted business a clean LocalBusiness/Service/FAQ foundation before deeper AEO/GEO work.
+
+### Changed
+- Replaced the inline tenant JSON-LD builder in `src/app/[slug]/layout.tsx` with `buildPublicSiteSchemas()` in `src/lib/publicSiteSchema.ts`.
+- Tenant sites now emit one clean `@graph` with:
+  - `LocalBusiness`;
+  - `WebSite`;
+  - one deduped `Service` node per configured service;
+  - `FAQPage`.
+- Added stable `@id` values so search engines and AI systems can connect the business, website, services, and FAQs.
+- Respects public visibility flags:
+  - hidden email is not emitted;
+  - hidden street address/postal code are not emitted;
+  - hidden phone is not emitted.
+- Filters bad social links and duplicate service/service-area entries.
+- Added `scripts/check-public-site-schema.mjs` plus `npm run test:public-site-schema`.
+
+### Verification
+- `cmd /c npm run test:public-site-schema` passed.
+- `cmd /c npm run test:public-hero-typography` passed.
+- `cmd /c npm run test:copy-quality` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Next
+QA a live tenant page by viewing page source or using Google's Rich Results/Schema validator. Then continue FOUND Systems with the next growth/SEO item; deeper industry-specific schema can be a later enhancement.
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Onboarding Uniqueness Inputs
 **AI:** Codex
 

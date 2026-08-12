@@ -9,13 +9,13 @@ import PreviewBanner from "@/components/PreviewBanner"
 import TrialActivatedSplash from "@/components/TrialActivatedSplash"
 import { getVibe } from "@/lib/vibe"
 import { getLayout } from "@/lib/layout"
-import { getSiteCopy } from "@/lib/siteCopy"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSiteCTAs } from "@/lib/industryCTAs"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import StickyCtaBar from "@/components/public/StickyCtaBar"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { buildPublicSiteSchemas } from "@/lib/publicSiteSchema"
 
 export const dynamic = 'force-dynamic'
 
@@ -73,103 +73,6 @@ export async function generateMetadata(
   }
 }
 
-function buildJsonLd(company: Company) {
-  const config = company.website_config
-  const websiteUrl = getPublicSiteOrigin(company.slug, config?.custom_domain)
-  const services = config?.services || []
-  const serviceAreas = config?.service_areas || []
-
-  const localBusiness = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "@id": websiteUrl,
-    name: company.name,
-    url: websiteUrl,
-    ...(company.phone && { telephone: company.phone }),
-    ...(company.email && { email: company.email }),
-    ...(company.logo_url && { image: company.logo_url }),
-    ...(company.city && company.state && {
-      address: {
-        "@type": "PostalAddress",
-        ...(company.address_visible && company.address && { streetAddress: company.address }),
-        addressLocality: company.city,
-        addressRegion: company.state,
-        ...(company.address_visible && company.zip && { postalCode: company.zip }),
-        addressCountry: "US",
-      },
-    }),
-    ...(company.phone && {
-      contactPoint: {
-        "@type": "ContactPoint",
-        telephone: company.phone,
-        contactType: "customer service",
-        availableLanguage: "English",
-      },
-    }),
-    ...(serviceAreas.length > 0 && {
-      areaServed: serviceAreas.map(area => ({
-        "@type": "City",
-        name: area,
-      })),
-    }),
-    ...(services.length > 0 && {
-      hasOfferCatalog: {
-        "@type": "OfferCatalog",
-        name: "Services",
-        itemListElement: services.map((s, i) => ({
-          "@type": "Offer",
-          itemOffered: {
-            "@type": "Service",
-            name: s.name,
-            description: s.description,
-          },
-          position: i + 1,
-        })),
-      },
-    }),
-  }
-
-  const copy = getSiteCopy(company.primary_intent, {
-    name: company.name,
-    city: company.city ?? undefined,
-    subIndustry: company.sub_industry,
-    industryCategory: company.industry_category,
-    services: config?.services,
-  })
-  const aiFaqs = config?.faq_items ?? []
-  const faqs = [
-    ...aiFaqs.map(item => ({ q: item.q, a: item.a })),
-    ...(aiFaqs.length === 0 ? [{ q: copy.faqQ, a: copy.faqA(company.name, company.city) }] : []),
-    {
-      q: `Where is ${company.name} located?`,
-      a: `${company.name} is based in ${company.city || "your area"}${company.state ? `, ${company.state}` : ""} and serves the surrounding region.`,
-    },
-    {
-      q: `How do I contact ${company.name}?`,
-      a: `You can reach ${company.name} by phone at ${company.phone || "the number on our website"} or by ${copy.faqContactA}.`,
-    },
-    ...(services.length > 0 ? [{
-      q: `What services does ${company.name} offer?`,
-      a: `${company.name} offers ${services.map(s => s.name).join(", ")}${company.city ? ` in ${company.city}` : ""}.`,
-    }] : []),
-  ]
-
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map(faq => ({
-      "@type": "Question",
-      name: faq.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.a,
-      },
-    })),
-  }
-
-  return [localBusiness, faqSchema]
-}
-
 export default async function CompanyLayout({
   children,
   params,
@@ -199,7 +102,7 @@ export default async function CompanyLayout({
   const { primary_color, accent_color_1 } = company
   const vibe = getVibe(company.vibe)
   const layout = getLayout(company.industry_category, company.vibe, company.layout_override)
-  const schemas = buildJsonLd(company)
+  const schemas = buildPublicSiteSchemas(company)
 
   const admin = createAdminClient()
   const { data: addonRows } = await admin

@@ -1,5 +1,41 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-11 - FOUND Systems: Tenant Schema Baseline
+
+### Progress This Pass
+- Shawn QA-confirmed the onboarding focus chips and current generated test sites looked good enough to proceed.
+- Team moved to the next FOUND Systems item: tenant structured data/schema.
+- Replaced inline schema construction in `src/app/[slug]/layout.tsx` with centralized `buildPublicSiteSchemas()` in `src/lib/publicSiteSchema.ts`.
+- Public tenant pages now emit one schema.org `@graph` containing:
+  - `LocalBusiness`;
+  - `WebSite`;
+  - deduped `Service` nodes from configured services;
+  - `FAQPage`.
+- Added stable IDs connecting the business, website, services, and FAQs.
+- Hardened privacy/accuracy:
+  - no hidden email in schema;
+  - no hidden phone in schema;
+  - no hidden street address/postal code in schema;
+  - no fake ratings, fake hours, fake pricing, or fake licenses;
+  - invalid social links are ignored.
+- Added `scripts/check-public-site-schema.mjs` and `npm run test:public-site-schema`.
+- Updated `TASKS.md` and `CHANGELOG.md`.
+
+### Verification This Pass
+- `cmd /c npm run test:public-site-schema` passed.
+- `cmd /c npm run test:public-hero-typography` passed.
+- `cmd /c npm run test:copy-quality` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+
+### Current Decision
+Baseline tenant schema is no longer blocked. Deeper industry-specific schema is intentionally deferred until after live baseline QA.
+
+### Explicit Next Step
+After deploy, QA one live tenant page source or validator result to confirm the JSON-LD is visible in production. Then continue FOUND Systems with the next growth/SEO item.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Content Uniqueness Before Schema
 
 ### Progress This Pass

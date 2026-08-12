@@ -8,6 +8,7 @@
     "start": "next start",
     "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs",
     "test:public-hero-typography": "node scripts/check-public-hero-typography.mjs",
+    "test:public-site-schema": "node scripts/check-public-site-schema.mjs",
     "audit:copy-quality": "node scripts/audit-copy-quality.mjs",
     "repair:copy-quality": "node scripts/repair-copy-quality.mjs",
     "test:location-section": "node scripts/check-location-section.mjs",
