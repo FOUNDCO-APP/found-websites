@@ -68,7 +68,7 @@ After deploy, QA one live tenant page source or validator result to confirm the 
 - `supabase.cmd migration list --local` could not run because the local Supabase database is not running on this machine; live linked-project verification succeeded.
 
 ### Current Decision
-The Supabase critical security issue is closed from the code/database side. The only remaining Supabase security item requires Shawn in the Supabase dashboard: enable leaked-password protection under Auth settings.
+The Supabase critical security issue is closed from the code/database side. Shawn found leaked-password protection in the Supabase Email provider settings, but Supabase marks it as Pro-plan-only. Keep it as a revenue-gated upgrade item: enable it once Found has enough customer revenue to justify the Supabase Pro upgrade. It is not a launch blocker because the critical public-table exposure is fixed.
 
 ---
 

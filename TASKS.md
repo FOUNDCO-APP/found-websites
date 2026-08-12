@@ -50,7 +50,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Verify representative anonymous REST reads now return `401`.
 - [x] Smoke-test app flows that use those tables: verified the seven tables remain locked from direct anonymous REST (`401`), server/admin table counts work, a live public quote print page renders `200`, and live tenant pages using add-on reads render `200` for HVAC and RC Bicycles.
 - [x] Fix remaining WARN advisor: `public.update_updated_at` had mutable `search_path`; applied live fix and added migration `supabase/migrations/20260812053814_fix_update_updated_at_search_path.sql`.
-- [ ] Shawn/Supabase dashboard: enable leaked password protection in Auth settings.
+- [ ] Revenue-gated Supabase Pro upgrade: enable leaked password protection once Found has enough customer revenue to justify upgrading Supabase. Current dashboard shows this setting is Pro-plan-only; not a launch blocker because the critical public-table exposure is already fixed.
 
 ## 2026-08-11 - Found HQ: Sales -> Growth Rebuild, Auto-Promotion, Visual Depth
 
