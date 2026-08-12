@@ -6,9 +6,42 @@ import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import type { FoundPlanKey } from "@/lib/foundPlans"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
+
+type IndustryPlanOption = {
+  key: FoundPlanKey
+  name: string
+  label: string
+  line: string
+  price: (intro: boolean) => number
+}
+
+const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = [
+  {
+    key: "found_pro",
+    name: "Found Pro",
+    label: "Recommended",
+    line: "Website plus follow-up so leads do not go cold.",
+    price: (intro) => (intro ? 39 : 69),
+  },
+  {
+    key: "found_business",
+    name: "Found Business",
+    label: "Most complete",
+    line: "Bookings, estimates, payments, campaigns, and team tools.",
+    price: (intro) => (intro ? 69 : 99),
+  },
+  {
+    key: "found",
+    name: "Found Starter",
+    label: "Website only",
+    line: "A clean site, lead capture, and instant replies.",
+    price: (intro) => (intro ? 29 : 39),
+  },
+]
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -24,13 +57,140 @@ interface Props {
   closingLine: string
 }
 
+function PlanSwiper({
+  selectedPlan,
+  onSelect,
+  intro,
+}: {
+  selectedPlan: FoundPlanKey
+  onSelect: (plan: FoundPlanKey) => void
+  intro: boolean
+}) {
+  return (
+    <div className="-mx-1 flex snap-x gap-3 overflow-x-auto pb-2">
+      {INDUSTRY_PLAN_OPTIONS.map((plan) => {
+        const selected = selectedPlan === plan.key
+        return (
+          <button
+            key={plan.key}
+            type="button"
+            onClick={() => onSelect(plan.key)}
+            className="min-w-[222px] snap-start rounded-2xl border p-4 text-left transition"
+            style={{
+              borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
+              background: selected ? "rgba(50,208,116,0.12)" : "rgba(255,255,255,0.035)",
+            }}
+          >
+            <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}>
+              {plan.label}
+            </span>
+            <span className="mt-2 block text-sm font-black text-white">{plan.name}</span>
+            <span className="mt-1 block text-2xl font-black text-white">${plan.price(intro)}/mo</span>
+            <span className="mt-2 block text-xs leading-5 text-white/48">{plan.line}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function IndustryDevicePreview({
+  industryLabel,
+  headline,
+  subheadline,
+  features,
+}: {
+  industryLabel: string
+  headline: string
+  subheadline: string
+  features: Feature[]
+}) {
+  const previewFeatures = features.slice(0, 3)
+
+  return (
+    <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-5 md:p-7">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+          Example site preview
+        </p>
+        <span className="rounded-full bg-[#32D074] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#080A09]">
+          Live-ready
+        </span>
+      </div>
+
+      <div className="relative min-h-[420px] md:min-h-[470px]">
+        <div className="absolute right-0 top-0 hidden w-[82%] rounded-[1.4rem] border border-white/12 bg-[#171B18] p-3 shadow-2xl shadow-black/45 md:block">
+          <div className="overflow-hidden rounded-[1rem] bg-[#F4F1EA] text-[#111312]">
+            <div className="relative min-h-[240px] bg-[#121613] p-7 text-white">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(50,208,116,0.28),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_46%)]" />
+              <div className="relative max-w-[75%]">
+                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
+                  {industryLabel}
+                </p>
+                <p className="text-4xl font-normal leading-[0.96] tracking-tight text-white">
+                  {headline}
+                </p>
+                <p className="mt-5 max-w-sm text-sm leading-6 text-white/58">
+                  {subheadline}
+                </p>
+                <div className="mt-7 inline-flex rounded-full bg-[#32D074] px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+                  Request help
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-px bg-black/10">
+              {previewFeatures.map((feature) => (
+                <div key={feature.label} className="bg-[#F4F1EA] p-4">
+                  <p className="text-[10px] font-black text-[#111312]">{feature.label}</p>
+                  <p className="mt-2 line-clamp-3 text-[10px] leading-4 text-black/45">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto w-[245px] rounded-[42px] border border-white/12 bg-[#151916] p-[9px] shadow-2xl shadow-black/55 md:absolute md:bottom-0 md:left-0 md:mx-0">
+          <div className="absolute left-1/2 top-[17px] h-5 w-[76px] -translate-x-1/2 rounded-full bg-[#090B0A]" />
+          <div className="h-[500px] overflow-hidden rounded-[34px] bg-[#F5F3ED] text-[#111312]">
+            <div className="relative flex h-[235px] flex-col justify-end bg-[#101411] p-5 text-white">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(50,208,116,0.3),transparent_34%)]" />
+              <div className="relative">
+                <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/35">{industryLabel}</p>
+                <p className="text-[2.15rem] font-normal leading-[0.95] tracking-tight">{headline}</p>
+                <p className="mt-4 text-[11px] leading-5 text-white/52">{subheadline}</p>
+              </div>
+            </div>
+            <div className="space-y-2 p-4">
+              {previewFeatures.map((feature) => (
+                <div key={feature.label} className="rounded-2xl border border-black/10 bg-white p-4">
+                  <p className="text-[11px] font-black">{feature.label}</p>
+                  <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-black/45">{feature.desc}</p>
+                </div>
+              ))}
+              <div className="mt-3 flex h-10 items-center justify-center rounded-full bg-[#32D074] text-[9px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+                Get a quote
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p className="mt-6 text-sm leading-7 text-white/50">
+        The page should feel like a real finished site, not a worksheet or placeholder template.
+      </p>
+    </div>
+  )
+}
+
 export default function IndustryPage({ industry, eyebrow, headline, subheadline, description, features, faqs, closingLine }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>("found_pro")
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
   const proPrice = isIntroRatePeriod ? 39 : 69
   const businessPrice = isIntroRatePeriod ? 69 : 99
   const industryLabel = industry.replace(/-/g, " ")
+  const selectedPlanOption = INDUSTRY_PLAN_OPTIONS.find((plan) => plan.key === selectedPlan) ?? INDUSTRY_PLAN_OPTIONS[0]
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -82,47 +242,15 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           </div>
         </section>
 
-        {/* Proof */}
+        {/* Visual preview and plan choice */}
         <section className="px-6 pb-20 md:px-10 max-w-5xl mx-auto">
           <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
-            <div
-              className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] p-6 md:p-8"
-              style={{ background: "linear-gradient(145deg, rgba(50,208,116,0.13), rgba(255,255,255,0.035) 42%, rgba(255,255,255,0.02))" }}
-            >
-              <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
-                Proof of concept
-              </p>
-              <div className="rounded-[1.55rem] border border-white/10 bg-[#F5F4EF] p-3 shadow-2xl shadow-black/30">
-                <div className="overflow-hidden rounded-[1.2rem] bg-white text-[#101312]">
-                  <div className="flex items-center justify-between border-b border-black/10 px-4 py-3">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-black/35">Generated site</p>
-                      <p className="text-sm font-black capitalize">{industryLabel} business</p>
-                    </div>
-                    <span className="rounded-full bg-[#32D074] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#080A09]">Live</span>
-                  </div>
-                  <div className="grid gap-3 p-4 sm:grid-cols-[1.1fr_0.9fr]">
-                    <div className="rounded-2xl bg-[#101312] p-5 text-white">
-                      <p className="mb-2 text-[10px] font-black uppercase tracking-[0.18em] text-[#32D074]">Homepage hero</p>
-                      <p className="text-2xl font-black leading-tight">Built around how this business wins customers.</p>
-                      <div className="mt-5 h-10 w-36 rounded-full bg-[#32D074]" />
-                    </div>
-                    <div className="space-y-2">
-                      {["Services", "Gallery", "Contact"].map((label) => (
-                        <div key={label} className="rounded-2xl border border-black/10 p-4">
-                          <p className="text-xs font-black">{label}</p>
-                          <div className="mt-2 h-2 w-4/5 rounded-full bg-black/10" />
-                          <div className="mt-2 h-2 w-2/3 rounded-full bg-black/10" />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-5 text-sm leading-7 text-white/50">
-                Found should show what it makes, not just describe it. This gives visitors a concrete picture before they start.
-              </p>
-            </div>
+            <IndustryDevicePreview
+              industryLabel={industryLabel}
+              headline={headline}
+              subheadline={subheadline}
+              features={features}
+            />
 
             <div className="grid gap-5">
               <div className="rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-6 md:p-7">
@@ -146,12 +274,19 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
 
               <div className="rounded-[2rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-7">
                 <p className="text-xs font-black uppercase tracking-[0.22em] mb-3" style={{ color: SIGNAL_GREEN }}>
-                  Plan guidance
+                  Choose your path
                 </p>
-                <h2 className="text-2xl font-normal leading-tight text-white">Starter is a website. Pro and Business are the growth path.</h2>
-                <p className="mt-4 text-sm leading-7 text-white/48">
-                  Industry visitors should leave thinking, “Found can help me get and handle customers,” not just “Found is a cheap website.”
-                </p>
+                <h2 className="text-2xl font-normal leading-tight text-white">Pro is recommended. You still choose the plan.</h2>
+                <div className="mt-5">
+                  <PlanSwiper selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
+                </div>
+                <button
+                  onClick={() => setDrawerOpen(true)}
+                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 text-xs font-black uppercase tracking-widest transition hover:opacity-90"
+                  style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+                >
+                  Continue with {selectedPlanOption.name}
+                </button>
               </div>
             </div>
           </div>
@@ -199,7 +334,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Start with Found Pro
+              Continue with {selectedPlanOption.name}
             </button>
           </div>
         </section>
@@ -247,14 +382,14 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Build my business site
+              Continue with {selectedPlanOption.name}
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isIntroRatePeriod
-                ? <>Starter is still available on the plans page for website-only launches.{" "}
+                ? <>Starter is still available for website-only launches. Use the plan cards above or{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      Compare all plans
-                    </Link></>
+                      compare all plans
+                    </Link>.</>
                 : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans →</Link>
               }
             </p>
@@ -264,7 +399,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
 
       <SiteFooter />
 
-      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan="found_pro" />
+      <OnboardingDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} plan={selectedPlan} />
     </>
   )
 }

@@ -14,14 +14,17 @@
 - Updated `src/components/IndustryPage.tsx`:
   - hero CTA now says `Build my business site`;
   - pricing box says most owners start with Pro and shows Pro/Business;
-  - added proof-of-concept visual, customer path, and plan guidance;
-  - mid-page CTA now says `Start with Found Pro`;
-  - onboarding drawer now opens with `found_pro`;
+  - added an industry-specific device preview, customer path, and plan chooser;
+  - plan chooser defaults to Pro but lets visitors choose Starter or Business;
+  - onboarding drawer now opens with the currently selected plan;
   - Starter is only mentioned as the website-only fallback.
+- Shawn rejected the first visual pass because it said `Proof of concept`, used generic placeholder boxes, and risked pushing Pro while not letting customers choose other plans. Correction applied: no homepage hero image reuse, no generic skeleton proof block, Pro-first but not Pro-only.
+- Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+- Correction pass TypeScript check passed again after replacing the proof block and adding plan selection.
 
 ### Explicit Next Step
 Run production build, deploy, then QA one industry page on mobile: confirm no visible `$29` Starter-first CTA remains, proof section renders cleanly, and the CTA opens onboarding with Pro selected.
