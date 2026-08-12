@@ -49,10 +49,11 @@ type OnboardingResult = {
   companyId?: string
   error?: string
   comp?: boolean
+  previewAllowed?: boolean
 }
 
 type ResumeBuiltSiteResult =
-  | { success: true; slug: string; url: string; companyId: string; name: string; plan?: string; comp?: boolean }
+  | { success: true; slug: string; url: string; companyId: string; name: string; plan?: string; comp?: boolean; previewAllowed?: boolean }
   | { success: false; error: string }
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -221,7 +222,7 @@ export async function findBuiltSiteForResume(slugInput: string, emailInput: stri
   const supabase = getAdminClient()
   const { data: company, error } = await supabase
     .from("companies")
-    .select("id, name, slug, email, plan, is_comp, subscription_status, preview_completed_at")
+    .select("id, name, slug, email, plan, is_comp, account_kind, subscription_status, preview_completed_at")
     .eq("slug", slug)
     .maybeSingle()
 
@@ -250,6 +251,7 @@ export async function findBuiltSiteForResume(slugInput: string, emailInput: stri
     url: `https://${company.slug}.${ROOT_DOMAIN}`,
     plan: company.plan ?? "found",
     comp: Boolean(company.is_comp),
+    previewAllowed: company.account_kind === "test" || Boolean(company.is_comp),
   }
 }
 
@@ -501,5 +503,6 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     url: siteUrl,
     companyId,
     comp: isComp,
+    previewAllowed: accountKind === "test" || isComp,
   }
 }

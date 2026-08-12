@@ -39,6 +39,10 @@
   - captures the jobs/customers the owner wants more of, a service-area nuance, and one safe proof point;
   - feeds those details into AI content generation, non-AI fallback copy, the copy similarity guard context, and abandoned-lead partial answers;
   - no database migration required.
+- Added owner/test-only full-page preview access on onboarding reveal:
+  - test/comp accounts see `Open full preview` under `Activate my site`;
+  - real client accounts do not see it;
+  - this lets Shawn inspect the actual generated site before payment without marking the site activated or polluting Stripe/funnel data.
 
 ### Verification This Pass
 - `cmd /c npm run test:copy-quality` passed: 52 fixture groups.

@@ -528,8 +528,8 @@ function GenerationErrorScreen({ message, onRetry, onBack }: {
     </main>
   )
 }
-function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan, comp }: {
-  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string; comp?: boolean
+function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, slug, plan, comp, previewAllowed }: {
+  name: string; url: string; primaryColor: string; email: string; drawerMode?: boolean; companyId?: string; slug?: string; plan?: string; comp?: boolean; previewAllowed?: boolean
 }) {
   const [iframeReady, setIframeReady] = useState(false)
   const [activating, setActivating] = useState(false)
@@ -641,6 +641,16 @@ function RevealScreen({ name, url, primaryColor, email, drawerMode, companyId, s
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
 Activate my site
             </button>
+            {previewAllowed && (
+              <a
+                href={`${url}?preview=true`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 flex w-full min-h-[48px] items-center justify-center rounded-full text-xs font-black uppercase tracking-widest border transition hover:opacity-90 active:scale-[0.98]"
+                style={{ borderColor: "rgba(255,255,255,0.14)", color: "rgba(255,255,255,0.72)", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                Open full preview
+              </a>
+            )}
           </div>
         ) : (
           <div className="mt-8 w-full max-w-[280px]" style={{ animation: "fade-up 0.6s 0.7s ease-out both" }}>
@@ -1244,7 +1254,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const [stepIndex, setStepIndex]   = useState(0)
   const [answers, setAnswers]       = useState<Answers>(INITIAL)
   const [saving, setSaving]         = useState(false)
-  const [result, setResult]         = useState<{ url?: string; companyId?: string; slug?: string; plan?: string; error?: string; comp?: boolean } | null>(null)
+  const [result, setResult]         = useState<{ url?: string; companyId?: string; slug?: string; plan?: string; error?: string; comp?: boolean; previewAllowed?: boolean } | null>(null)
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveLeadForm, setSaveLeadForm]     = useState({ firstName: "", email: "" })
   const [savingLead, setSavingLead]         = useState(false)
@@ -1391,7 +1401,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       return
     }
     if (res.success && res.url && res.slug && res.companyId) {
-      setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan, comp: res.comp })
+      setResult({ url: res.url, companyId: res.companyId, slug: res.slug, plan: currentPlan, comp: res.comp, previewAllowed: res.previewAllowed })
       // Comped companies are already active - no Stripe setup needed at all.
       if (!res.comp) {
         // Fire-and-forget - activate page has its own fallback if intent isn't ready yet
@@ -1430,6 +1440,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       slug: res.slug,
       plan: res.plan ?? currentPlan,
       comp: res.comp,
+      previewAllowed: res.previewAllowed,
     })
   }
 
@@ -1686,6 +1697,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
       slug={result.slug}
       plan={result.plan}
       comp={result.comp}
+      previewAllowed={result.previewAllowed}
     />
   )
 
