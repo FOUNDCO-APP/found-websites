@@ -1,5 +1,61 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - FOUND Systems: Jony-Led Round Built - Card Compression + Bullet Grouping
+
+### Progress This Pass
+- Shawn approved pushing the desktop-fix + peek-visibility commit, and separately approved the team's proposed direction from the prior entry "to the detail" - build both pending items now, not just plan them.
+- **Vertical compression** (`MarketingPlanCard.tsx`): "Intro rate" now sits inline next to the price as a small pill instead of its own line below it. Tightened margins through the whole top block: badge `mb-4`->`mb-3`, tagline `mb-1` (now `text-sm`/`leading-snug` instead of `text-base` - shrunk per Angela's "don't remove it outright" note, not deleted), plan name `mb-3`->`mb-2`, price block wrapper `mb-8`->`mb-6`. The CTA was already attached directly below the card from the prior pass, so a shorter card means it now appears higher on screen with less scrolling - that was the actual mechanism Shawn was pointing at.
+- **Bullet grouping**: added an `inherits` field to `FoundPlanOption` in `src/lib/foundPlans.ts` ("Everything in Starter" for Pro, "Everything in Pro" for Business, undefined for Starter itself). Removed that line from `homepageBullets` and `industryBullets`, and dropped the now-redundant "Plus " prefix from the first remaining bullet in each. Left the base `bullets` field completely untouched - confirmed via grep it's consumed separately by `FoundPlanSelector.tsx` and `OnboardingFlow.tsx` (in-app plan pickers, not marketing pages), which were out of scope for this request.
+- `MarketingPlanCard.tsx` renders `inherits` as its own distinct line - up-arrow icon, bold text, subtle background chip, not just another checkmark row - followed by a small "Plus" eyebrow label before the real addition bullets. Reads as two visually separate categories now instead of one flat list where only the second item looked like an addition.
+- Threaded `inherits` through `PlanPicker.tsx`'s `PlanPickerOption` type (both the mobile carousel and desktop grid render it) and `IndustryPage.tsx`'s `INDUSTRY_PLAN_OPTIONS` mapping. Updated `HomeClient.tsx`'s inline pricing data (a pre-existing hardcoded duplicate of `foundPlans.ts`, not something introduced this session) to match.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Grepped for other consumers of the bullet-related strings before changing them - confirmed `/plans` page's comparison table uses its own independent `ROWS` array (unaffected), and `FoundPlanSelector.tsx`/`OnboardingFlow.tsx` use the untouched base `bullets` field.
+
+### Explicit Next Step
+Get Shawn's approval to push this commit (on top of the still-unpushed desktop-fix + peek-visibility commit from the prior entry - both are queued together now). After deploy: Shawn QA on a real iPhone/desktop that the card top section feels less cramped with the CTA reachable sooner, and that Pro/Business cards clearly separate "Everything in X" from the "Plus" additions below it.
+
+---
+
+## 2026-08-13 - FOUND Systems: Desktop Squeeze Fix (For Real) + Peek Visibility + Team Round Pending
+
+### Progress This Pass
+- Shawn tested the shared-`PlanPicker` pass live via iPhone (worked well) and a fresh desktop screenshot of `/industries/contractors` (still broken, identical to before).
+- Root cause of the desktop miss: the previous pass rebuilt the carousel/grid component correctly but never actually removed the `lg:grid-cols-[0.82fr_1.18fr]` split around it - the fix was described as done in docs but was never executed. Owned this directly rather than treating it as a new bug.
+- Actually fixed this time: removed the two-column split from `IndustryPage.tsx`'s plan-choice section. "What happens after launch" and "Choose your path" now stack as two full-width blocks (the four-step list becomes a 2x2 grid at `md+`), so `PlanPicker`'s desktop 3-card row finally gets full page width, same as Home.
+- Second real defect from the same iPhone test: the mobile carousel's peeking neighbor cards were "almost invisible" - too thin a sliver, too low contrast. Fixed by widening cards from 82% to 72% (peek band ~9% -> ~14% per side, centering math recalculated) and adding a `peekEmphasis` prop to `MarketingPlanCard` that boosts non-selected cards' contrast specifically inside the carousel.
+- Corrected `TASKS.md`'s prior entry that falsely claimed the desktop fix was already done - left the correction visible rather than quietly overwriting it, since silently erasing a wrong "fixed" claim is how this exact kind of drift compounds.
+- Shawn raised two more issues but explicitly asked for a Jony-led team round before building either - not immediate implementation:
+  1. The card's top section (Recommended badge through Intro Rate) feels vertically cramped, and because the CTA sits directly below the full card (not just the badge area), a tall top section pushes the CTA further down the page than necessary.
+  2. Plan bullet lists read as if only the second bullet ("Plus automatic lead follow-up") is an addition beyond Starter, when several bullets below it are also additions - wants two visually distinct groups instead of one flat checklist.
+
+### Team round (not yet built - awaiting Shawn's approval)
+
+**Item 1 - vertical compression, Jony leading:**
+- Jony: put "Intro rate" inline next to the price instead of on its own line below it - saves a full line without losing the message. Tighten the vertical margins through the whole badge -> headline -> name -> price block. Shrink (not remove) the on-card tagline's size/line-height so it reads as a supporting line, not competing with the page's own headline above it.
+- Angela: don't remove the tagline outright - some visitors reach a card via a shared/deep link and it needs to stand alone; shrinking is fine, deleting is not.
+- Phil: keep the Recommended badge's own size/prominence - it does real conversion work. Compress the spacing around it, not the badge itself.
+- Craig/Steve: pure spacing/CSS change, low risk either way; approve testing a visibly tighter version.
+- **Recommended direction**: inline intro-rate-next-to-price, tightened margins throughout the top block, smaller/lighter tagline treatment. Net effect: shorter card, so the CTA (already attached directly below the card+dots) appears higher on screen with less scrolling.
+
+**Item 2 - bullet grouping, Jony/Phil:**
+- Split each plan's bullets into two groups in the data: one line for what's inherited ("Everything in Starter"), rendered distinctly (not just another checkmark row), followed by a small group label ("Plus:" or similar) above the real additions for that tier.
+- Drop the redundant "Plus " prefix from each individual addition bullet once the group label carries it once (e.g., "Plus automatic lead follow-up" -> "Automatic lead follow-up" under a "Plus:" header).
+- Applies to Pro and Business (Starter has no inherited-tier line, it's the base).
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Get Shawn's approval to push the desktop-fix + peek-visibility commit. Separately, get Shawn's sign-off on the team's recommended direction for the two pending items (vertical compression, bullet grouping) before building either - per his explicit request not to implement until Jony's round lands.
+
+---
+
 ## 2026-08-13 - FOUND Systems: Shared Plan Picker (Mobile Carousel + Desktop Fix)
 
 ### Progress This Pass

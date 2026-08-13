@@ -460,9 +460,9 @@ export default function HomeClient() {
                     price: isIntroRatePeriod ? "$39" : "$69",
                     normalPrice: "$69",
                     featured: true,
+                    inherits: "Everything in Starter",
                     bullets: [
-                      "Everything in Starter",
-                      "Plus automatic lead follow-up",
+                      "Automatic lead follow-up",
                       "Drip-style messages keep new leads from going cold",
                       "See who's interested and ready to hire",
                       "All your leads in one place",
@@ -479,9 +479,9 @@ export default function HomeClient() {
                     name: "Found Business",
                     price: isIntroRatePeriod ? "$69" : "$99",
                     normalPrice: "$99",
+                    inherits: "Everything in Pro",
                     bullets: [
-                      "Everything in Pro",
-                      "Plus bookings, estimates, payments, and email marketing",
+                      "Bookings, estimates, payments, and email marketing",
                       "Payment setup where it matters",
                       "More five-star reviews, without asking",
                       "Reach your full client list",

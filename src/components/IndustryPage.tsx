@@ -18,6 +18,7 @@ type IndustryPlanOption = {
   label: string
   line: string
   bullets: string[]
+  inherits?: string
   price: (intro: boolean) => number
 }
 
@@ -27,6 +28,7 @@ const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = FOUND_PLAN_OPTIONS.map((plan
   label: plan.eyebrow,
   line: plan.shortLine,
   bullets: plan.industryBullets,
+  inherits: plan.inherits,
   price: (intro) => (intro ? plan.price : plan.normalPrice),
 }))
 
@@ -145,58 +147,57 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               features={features}
             />
 
-            <div className="grid min-w-0 gap-12 lg:grid-cols-[0.82fr_1.18fr]">
-              <div className="rounded-[2.25rem] border border-white/[0.08] bg-white/[0.035] p-7 md:p-9">
-                <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
-                  What happens after launch
-                </p>
-                <h2 className="mb-7 text-3xl font-normal leading-tight text-white md:text-4xl">
-                  From invisible to ready for the next request.
-                </h2>
-                <div className="space-y-4">
-                  {[
-                    ["1", "Customers find the site", "Your business has a clean place to send searchers, referrals, and repeat customers."],
-                    ["2", "They ask for help", "Calls, estimate requests, and project details go into Found instead of getting lost."],
-                    ["3", "You see the request", "The owner view shows what happened so you know who needs a response."],
-                    ["4", "Pro/Business helps follow up", "Higher plans add the operating tools that keep new leads from going cold."],
-                  ].map(([step, label, detail]) => (
-                    <div key={step} className="flex gap-4 rounded-[1.35rem] border border-white/[0.08] bg-[#0B0E0C] p-5">
-                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-black" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>{step}</span>
-                      <span>
-                        <p className="text-base font-black text-white">{label}</p>
-                        <p className="mt-2 text-sm leading-6 text-white/45">{detail}</p>
-                      </span>
-                    </div>
-                  ))}
-                </div>
+            <div className="rounded-[2.25rem] border border-white/[0.08] bg-white/[0.035] p-7 md:p-9">
+              <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
+                What happens after launch
+              </p>
+              <h2 className="mb-7 text-3xl font-normal leading-tight text-white md:text-4xl">
+                From invisible to ready for the next request.
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  ["1", "Customers find the site", "Your business has a clean place to send searchers, referrals, and repeat customers."],
+                  ["2", "They ask for help", "Calls, estimate requests, and project details go into Found instead of getting lost."],
+                  ["3", "You see the request", "The owner view shows what happened so you know who needs a response."],
+                  ["4", "Pro/Business helps follow up", "Higher plans add the operating tools that keep new leads from going cold."],
+                ].map(([step, label, detail]) => (
+                  <div key={step} className="flex gap-4 rounded-[1.35rem] border border-white/[0.08] bg-[#0B0E0C] p-5">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-black" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>{step}</span>
+                    <span>
+                      <p className="text-base font-black text-white">{label}</p>
+                      <p className="mt-2 text-sm leading-6 text-white/45">{detail}</p>
+                    </span>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div className="min-w-0">
-                <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
-                  Choose your path
-                </p>
-                <h2 className="text-4xl font-normal leading-tight text-white md:text-5xl">Start with the level that fits the business.</h2>
-                <p className="mt-4 text-base leading-7 text-white/48">
-                  Pro opens first. Swipe the card to compare Starter and Business.
-                </p>
-                <div className="mt-8">
-                  <PlanPicker
-                    plans={INDUSTRY_PLAN_OPTIONS.map((plan) => ({
-                      key: plan.key,
-                      name: plan.name,
-                      shortName: plan.name.replace("Found ", ""),
-                      headline: plan.line,
-                      price: `$${plan.price(isIntroRatePeriod)}`,
-                      normalPrice: `$${plan.price(false)}`,
-                      featured: plan.key === "found_pro",
-                      bullets: plan.bullets,
-                    }))}
-                    selectedPlan={selectedPlan}
-                    onSelect={setSelectedPlan}
-                    onCta={() => setDrawerOpen(true)}
-                    intro={isIntroRatePeriod}
-                  />
-                </div>
+            <div className="min-w-0">
+              <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
+                Choose your path
+              </p>
+              <h2 className="text-4xl font-normal leading-tight text-white md:text-5xl">Start with the level that fits the business.</h2>
+              <p className="mt-4 text-base leading-7 text-white/48">
+                Pro opens first. Swipe the card to compare Starter and Business.
+              </p>
+              <div className="mt-8">
+                <PlanPicker
+                  plans={INDUSTRY_PLAN_OPTIONS.map((plan) => ({
+                    key: plan.key,
+                    name: plan.name,
+                    shortName: plan.name.replace("Found ", ""),
+                    headline: plan.line,
+                    price: `$${plan.price(isIntroRatePeriod)}`,
+                    normalPrice: `$${plan.price(false)}`,
+                    featured: plan.key === "found_pro",
+                    bullets: plan.bullets,
+                    inherits: plan.inherits,
+                  }))}
+                  selectedPlan={selectedPlan}
+                  onSelect={setSelectedPlan}
+                  onCta={() => setDrawerOpen(true)}
+                  intro={isIntroRatePeriod}
+                />
               </div>
             </div>
           </div>

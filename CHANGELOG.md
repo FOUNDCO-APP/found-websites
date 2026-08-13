@@ -1,3 +1,44 @@
+## Session: August 13, 2026 - FOUND Systems: Jony-Led Round - Card Compression + Bullet Grouping
+**AI:** Claude
+
+### Context
+Shawn approved pushing the desktop-fix + peek-visibility commit, and separately approved the team's proposed direction from the prior round for the two items he'd asked Jony to lead: the card's top section (Recommended badge through Intro Rate) felt vertically cramped and pushed the CTA further down than necessary, and plan bullet lists read as if only the second bullet was an addition beyond Starter when several more below it were too. Told to follow the team's direction to the detail.
+
+### Changed
+- **Vertical compression** (`MarketingPlanCard.tsx`): moved "Intro rate" inline next to the price (small pill) instead of its own line below it; tightened margins through badge (`mb-4`->`mb-3`) -> tagline (`mb-1`, now `text-sm`/`leading-snug` instead of `text-base` per Jony's "shrink, don't remove" direction) -> plan name (`mb-3`->`mb-2`) -> price block (`mb-8`->`mb-6`). Net effect: shorter card, so the CTA attached directly below it sits higher with less scrolling.
+- **Bullet grouping**: added an `inherits` field to `FoundPlanOption` (`src/lib/foundPlans.ts`) holding what a plan inherits from the tier below ("Everything in Starter" / "Everything in Pro"). Removed that line from `homepageBullets`/`industryBullets` (left the base `bullets` field, used by `FoundPlanSelector.tsx`/`OnboardingFlow.tsx`, untouched - out of scope) and dropped the now-redundant "Plus " prefix from the first remaining bullet in each list.
+- `MarketingPlanCard.tsx` now renders `inherits` as its own distinct line (up-arrow icon, bold text, subtle background chip - not just another checkmark row) followed by a "Plus" eyebrow label before the real addition bullets, so the two groups read as visually separate categories instead of one flat list.
+- `PlanPicker.tsx` and `IndustryPage.tsx`'s `INDUSTRY_PLAN_OPTIONS` mapping updated to pass `inherits` through to both the mobile carousel and desktop grid.
+- `HomeClient.tsx`'s inline pricing data (a pre-existing hardcoded duplicate of `foundPlans.ts`'s bullets, not something introduced this pass) updated to match the same `inherits` + stripped-prefix treatment.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Confirmed via grep that the base `.bullets` field (consumed by `FoundPlanSelector.tsx` and `OnboardingFlow.tsx`, unrelated onboarding UI) was not touched by this change.
+
+---
+
+## Session: August 13, 2026 - FOUND Systems: Desktop Squeeze Fix (For Real This Time) + Peek Visibility
+**AI:** Claude
+
+### Context
+Shawn tested the shared-`PlanPicker` pass live. iPhone worked well, but two problems: (1) `/compare` and `/industries/*` on desktop were still exactly as broken as before - the previous pass rebuilt the carousel component but never actually removed the `lg:grid-cols-[0.82fr_1.18fr]` split that was squeezing it, so the fix never took effect despite being described as done; (2) the peeking neighbor cards in the mobile carousel were "almost invisible" - too thin a sliver, too low contrast against the dark background to register as swipeable content.
+
+### Changed
+- **Actually fixed the desktop squeeze this time**: removed the `lg:grid-cols-[0.82fr_1.18fr]` two-column split from `IndustryPage.tsx`'s "Visual preview and plan choice" section. "What happens after launch" and "Choose your path" now stack as two full-width blocks (the four-step list becomes a 2x2 grid at `md+` instead of one long column), so `PlanPicker`'s desktop 3-card row finally gets the same full page width Home already had - this is what the previous pass's writeup claimed but never implemented.
+- **Peek visibility**: widened carousel cards from 82% to 72% (peek band per side goes from ~9% to ~14%, recalculated the centering offset math for all three card positions) and added a `peekEmphasis` prop to `MarketingPlanCard` that boosts the border/background contrast of non-selected cards specifically inside the carousel (`rgba(255,255,255,0.07)` background / `0.18` border vs. the normal `0.03`/`0.07`), so neighbor cards read as visibly "there" instead of a barely-perceptible edge.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Not yet built (pending Shawn's team-round approval)
+Shawn asked for a Jony-led team round (not immediate implementation) on two remaining items: (1) the card's top section (Recommended badge through Intro Rate) feels vertically cramped and pushes the CTA further down than necessary - wants creative compression; (2) plan bullet lists read as if only the second bullet is "added" beyond Starter when several bullets below it are also additions - wants two visually distinct bullet groups ("Everything in Starter" vs. everything added on top). See SESSION_HANDOFF.md for the team's proposed direction awaiting approval.
+
+---
+
 ## Session: August 13, 2026 - FOUND Systems: Shared Plan Picker (Mobile Carousel + Desktop Fix)
 **AI:** Claude
 

@@ -16,6 +16,7 @@ export type PlanPickerOption = {
   normalPrice: string
   featured?: boolean
   bullets: string[]
+  inherits?: string
 }
 
 interface PlanPickerProps {
@@ -40,12 +41,14 @@ export default function PlanPicker({
   const selectedOption = plans[selectedIndex] ?? plans[0]
   const previous = plans[Math.max(0, selectedIndex - 1)]
   const next = plans[Math.min(plans.length - 1, selectedIndex + 1)]
+  // Card width is 72% (peek width = (100-72)/2 = 14% per side, wider than the
+  // old 82%/9% so the neighbor cards actually read as visible, not a sliver).
   const trackOffset =
     selectedIndex === 0
-      ? "9%"
+      ? "14%"
       : selectedIndex === 1
-        ? "calc(-73% - 24px)"
-        : "calc(-155% - 48px)"
+        ? "calc(-58% - 24px)"
+        : "calc(-130% - 48px)"
 
   const selectPrevious = () => {
     if (selectedIndex > 0) onSelect(previous.key)
@@ -84,7 +87,7 @@ export default function PlanPicker({
               style={{ marginLeft: trackOffset }}
             >
               {plans.map((plan) => (
-                <div key={plan.key} className="min-h-[430px] flex-[0_0_82%]">
+                <div key={plan.key} className="min-h-[430px] flex-[0_0_72%]">
                   <MarketingPlanCard
                     planKey={plan.key}
                     name={plan.name}
@@ -93,8 +96,10 @@ export default function PlanPicker({
                     normalPrice={plan.normalPrice}
                     featured={plan.featured}
                     selected={selectedPlan === plan.key}
+                    peekEmphasis={selectedPlan !== plan.key}
                     intro={intro}
                     bullets={plan.bullets}
+                    inherits={plan.inherits}
                     showCta={false}
                     onSelect={onSelect}
                     className="h-full"
@@ -147,6 +152,7 @@ export default function PlanPicker({
             selected={selectedPlan === plan.key}
             intro={intro}
             bullets={plan.bullets}
+            inherits={plan.inherits}
             showCta={false}
             onSelect={onSelect}
           />

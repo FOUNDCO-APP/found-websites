@@ -17,6 +17,10 @@ export type FoundPlanOption = {
   featured?: boolean
   cta: string
   bullets: string[]
+  // What this plan inherits from the tier below, shown as its own line on
+  // marketing cards (Home/Plans/Industry) so it reads as a distinct group
+  // from the "Plus" additions in homepageBullets/industryBullets below it.
+  inherits?: string
   homepageBullets: string[]
   industryBullets: string[]
   toolGroup?: FoundPlanToolGroup
@@ -71,9 +75,9 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
       "Customer list organized",
       "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
     ],
+    inherits: "Everything in Starter",
     homepageBullets: [
-      "Everything in Starter",
-      "Plus automatic lead follow-up",
+      "Automatic lead follow-up",
       "Drip-style messages keep new leads from going cold",
       "See who's interested and ready to hire",
       "All your leads in one place",
@@ -82,9 +86,8 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
       "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
     ],
     industryBullets: [
-      "Everything in Starter",
-      "Plus automatic lead follow-up",
-      "Plus one included growth tool",
+      "Automatic lead follow-up",
+      "One included growth tool",
     ],
   },
   {
@@ -102,9 +105,9 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
       "Plus bookings, estimates, payments, and email marketing",
       "Plus team access for owners and workers",
     ],
+    inherits: "Everything in Pro",
     homepageBullets: [
-      "Everything in Pro",
-      "Plus bookings, estimates, payments, and email marketing",
+      "Bookings, estimates, payments, and email marketing",
       "Payment setup where it matters",
       "More five-star reviews, without asking",
       "Reach your full client list",
@@ -112,9 +115,8 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
       "Show clients their finished job",
     ],
     industryBullets: [
-      "Everything in Pro",
-      "Plus bookings, estimates, payments, and email marketing",
-      "Plus team/workers",
+      "Bookings, estimates, payments, and email marketing",
+      "Team/workers",
     ],
     toolGroup: {
       label: "All business tools included:",
