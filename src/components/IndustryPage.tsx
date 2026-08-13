@@ -102,7 +102,7 @@ function PlanCarousel({
   return (
     <div className="w-full max-w-full min-w-0 overflow-hidden">
       <div
-        className="relative h-[430px] w-full max-w-full min-w-0 overflow-hidden md:h-[470px]"
+        className="relative h-[460px] w-full max-w-full min-w-0 overflow-hidden md:h-[500px]"
         onTouchStart={(event) => {
           touchStartX.current = event.changedTouches[0]?.clientX ?? null
         }}
@@ -110,12 +110,31 @@ function PlanCarousel({
       >
         {visiblePlans.map(({ plan, position }) => {
           const isSelected = position === "selected"
-          const placement =
-            position === "previous"
-              ? { left: "-24%", transform: "scale(0.86)" }
-              : position === "next"
-                ? { left: "70%", transform: "scale(0.86)" }
-                : { left: "50%", transform: "translateX(-50%) scale(1)" }
+
+          if (!isSelected) {
+            return (
+              <button
+                key={plan.key}
+                type="button"
+                onClick={() => onSelect(plan.key)}
+                aria-label={`Choose ${plan.name}`}
+                className="absolute top-8 h-[380px] w-[42%] max-w-[190px] overflow-hidden rounded-[2rem] border transition-all duration-300 ease-out md:h-[420px]"
+                style={{
+                  left: position === "previous" ? "-30%" : undefined,
+                  right: position === "next" ? "-30%" : undefined,
+                  zIndex: 1,
+                  borderColor: "rgba(255,255,255,0.08)",
+                  background: "linear-gradient(180deg, #121614, #090C0A)",
+                  boxShadow: "0 24px 80px rgba(0,0,0,0.34)",
+                }}
+              >
+                <span className="absolute inset-0 bg-[radial-gradient(circle_at_55%_12%,rgba(50,208,116,0.16),transparent_42%)]" />
+                <span className="absolute left-8 top-12 h-3 w-20 rounded-full bg-white/[0.08]" />
+                <span className="absolute left-8 top-24 h-16 w-28 rounded-2xl bg-white/[0.04]" />
+                <span className="absolute bottom-10 left-8 h-2 w-16 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+              </button>
+            )
+          }
 
           return (
             <button
@@ -123,23 +142,20 @@ function PlanCarousel({
               type="button"
               onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
-              className="absolute top-0 min-h-[405px] w-[74%] max-w-[330px] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[440px] md:w-[68%] md:max-w-[370px] md:p-9"
+              className="absolute top-0 min-h-[430px] w-[78%] max-w-[350px] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[470px] md:w-[68%] md:max-w-[370px] md:p-9"
               style={{
-                left: placement.left,
-                transform: placement.transform,
-                zIndex: isSelected ? 2 : 1,
-                opacity: isSelected ? 1 : 0.36,
-                pointerEvents: isSelected ? "auto" : "auto",
-                borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-                background: isSelected
-                  ? "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 34%), linear-gradient(180deg, rgba(50,208,116,0.16), rgba(50,208,116,0.045))"
-                  : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))",
-                boxShadow: isSelected ? "0 30px 90px rgba(50,208,116,0.16)" : "none",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 3,
+                borderColor: SIGNAL_GREEN,
+                background:
+                  "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.26), transparent 36%), linear-gradient(180deg, #0E2117, #09100D)",
+                boxShadow: "0 30px 90px rgba(50,208,116,0.16), 0 18px 80px rgba(0,0,0,0.42)",
               }}
             >
               <span
                 className="text-[10px] font-black uppercase tracking-[0.24em] md:text-[11px]"
-                style={{ color: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}
+                style={{ color: SIGNAL_GREEN }}
               >
                 {plan.label}
               </span>

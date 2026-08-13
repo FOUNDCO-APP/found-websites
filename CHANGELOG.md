@@ -21,6 +21,7 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - Design correction after Shawn's real iPhone QA: removed the premature hero CTA, removed pricing side arrows and Starter/Pro/Business pill buttons, removed the card-inside-card pricing shell, and enlarged the "What happens after launch" section so the page feels more premium and less like software controls.
 - Apple-style pricing refinement: kept the no-overflow controlled selector but made the center plan card narrower and added clipped neighboring card peeks on the left/right, matching the direction Shawn referenced from Apple's mobile cards without reintroducing native horizontal page scroll.
 - Pricing peek positioning fix: corrected the card placement math so the selected card stays centered while neighbors only peek from the edges; avoids the previous double-translate issue that clipped the Pro card off-screen.
+- Pricing peek layering fix: side cards are now opaque, non-text visual peeks only; the selected card is a solid readable card above them, preventing transparent text overlap while preserving swipe/tap plan changes.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification

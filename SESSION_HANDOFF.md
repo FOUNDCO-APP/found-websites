@@ -30,6 +30,7 @@
 - Shawn's next real iPhone QA confirmed width was fixed but the pricing presentation still looked childish/overcontrolled. Team correction applied: remove the early hero CTA, remove pricing side arrows, remove Starter/Pro/Business pill buttons, remove the extra pricing card wrapper, keep one premium plan card with dots only, and make the post-launch path section larger.
 - Follow-up refinement: Shawn asked for Apple-style neighboring cards peeking left/right. Built it with absolute-positioned clipped cards inside the controlled selector, not native horizontal scroll. Center card is now narrower; previous/next plan cards peek at reduced scale/opacity.
 - Shawn QA caught the first peek implementation still clipped the centered Pro card. Root cause: compounded transform math. Fixed by switching to explicit card positions: previous from the left edge, selected at `left: 50%` with `translateX(-50%)`, next from the right edge.
+- Shawn QA then caught the next visual defect: transparent side cards still showed full readable text behind/over the selected card. Fixed the selector so side cards are opaque, non-text visual peeks only, while the selected plan card is solid and readable above them.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
@@ -41,6 +42,7 @@
 - Latest presentation cleanup: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed. One local build attempt failed on Google font fetch; rerunning with network access passed.
 - Peek refinement verification: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed.
 - Peek positioning fix verification: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed.
+- Peek layering fix verification: `npm.cmd run test:industry-mobile-layout`, `npx.cmd tsc --noEmit`, `git diff --check`, and `npm.cmd run build` passed.
 
 ### Explicit Next Step
 Deploy, then QA one industry page on a real iPhone: confirm there is no sideways page drift, no section is clipped off the left/right edge, the plan selector opens on Pro, tapping/swiping changes Starter/Pro/Business, and the CTA opens onboarding with the selected plan.

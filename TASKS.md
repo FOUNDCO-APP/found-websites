@@ -47,6 +47,7 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Industry pricing presentation cleanup: after Shawn's real iPhone QA, removed the early hero CTA, removed extra pricing controls/side arrows/pill buttons, removed the card-inside-card pricing wrapper, and made the launch path section larger and more adult.
 - [x] Industry pricing peek refinement: center plan card is narrower and adjacent cards peek left/right inside a clipped, controlled stage. This keeps the Apple-style visual hint without reintroducing the old native-scroll body overflow bug.
 - [x] Industry pricing peek positioning fix: changed the card placement from compounded translate math to explicit left/center/right positions so the Pro card stays centered and is not clipped.
+- [x] Industry pricing peek layering fix: side cards are opaque visual peeks with no readable text, and the selected card is solid/opaque so iPhone users do not see stacked transparent pricing copy.
 - [ ] Future marketing visual system: create purpose-made visuals for each industry and for the major Found marketing pages. Do not reuse the homepage hero device image everywhere. Use real-looking site previews, onboarding preview screenshots, device mockups, or generated industry-specific assets that show what Found actually builds.
 - [ ] Extend the safer controlled one-card plan selector beyond industry pages only after real iPhone QA passes. Do not use native horizontal-scroll pricing rows on Found marketing pages until the pattern is proven not to create body-level overflow.
 
