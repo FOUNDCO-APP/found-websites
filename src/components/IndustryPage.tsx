@@ -72,14 +72,14 @@ function PlanCarousel({
 }) {
   const touchStartX = useRef<number | null>(null)
   const selectedIndex = Math.max(0, INDUSTRY_PLAN_OPTIONS.findIndex((plan) => plan.key === selectedPlan))
-  const selected = INDUSTRY_PLAN_OPTIONS[selectedIndex] ?? INDUSTRY_PLAN_OPTIONS[1]
   const previous = INDUSTRY_PLAN_OPTIONS[Math.max(0, selectedIndex - 1)]
   const next = INDUSTRY_PLAN_OPTIONS[Math.min(INDUSTRY_PLAN_OPTIONS.length - 1, selectedIndex + 1)]
-  const visiblePlans = [
-    selectedIndex > 0 ? { plan: previous, position: "previous" as const } : null,
-    { plan: selected, position: "selected" as const },
-    selectedIndex < INDUSTRY_PLAN_OPTIONS.length - 1 ? { plan: next, position: "next" as const } : null,
-  ].filter(Boolean) as Array<{ plan: IndustryPlanOption; position: "previous" | "selected" | "next" }>
+  const trackOffset =
+    selectedIndex === 0
+      ? "9%"
+      : selectedIndex === 1
+        ? "calc(-73% - 24px)"
+        : "calc(-155% - 48px)"
 
   const selectPrevious = () => {
     if (selectedIndex > 0) onSelect(previous.key)
@@ -102,55 +102,32 @@ function PlanCarousel({
   return (
     <div className="w-full max-w-full min-w-0 overflow-hidden">
       <div
-        className="relative h-[460px] w-full max-w-full min-w-0 overflow-hidden md:h-[500px]"
+        className="w-full max-w-full min-w-0 overflow-hidden py-2"
         onTouchStart={(event) => {
           touchStartX.current = event.changedTouches[0]?.clientX ?? null
         }}
         onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
       >
-        {visiblePlans.map(({ plan, position }) => {
-          const isSelected = position === "selected"
-
-          if (!isSelected) {
+        <div
+          className="flex w-full max-w-full min-w-0 gap-6 transition-[margin] duration-500 ease-out"
+          style={{ marginLeft: trackOffset }}
+        >
+          {INDUSTRY_PLAN_OPTIONS.map((plan) => {
+            const isSelected = selectedPlan === plan.key
             return (
-              <button
-                key={plan.key}
-                type="button"
-                onClick={() => onSelect(plan.key)}
-                aria-label={`Choose ${plan.name}`}
-                className="absolute top-8 h-[380px] w-[42%] max-w-[190px] overflow-hidden rounded-[2rem] border transition-all duration-300 ease-out md:h-[420px]"
-                style={{
-                  left: position === "previous" ? "-30%" : undefined,
-                  right: position === "next" ? "-30%" : undefined,
-                  zIndex: 1,
-                  borderColor: "rgba(255,255,255,0.08)",
-                  background: "linear-gradient(180deg, #121614, #090C0A)",
-                  boxShadow: "0 24px 80px rgba(0,0,0,0.34)",
-                }}
-              >
-                <span className="absolute inset-0 bg-[radial-gradient(circle_at_55%_12%,rgba(50,208,116,0.16),transparent_42%)]" />
-                <span className="absolute left-8 top-12 h-3 w-20 rounded-full bg-white/[0.08]" />
-                <span className="absolute left-8 top-24 h-16 w-28 rounded-2xl bg-white/[0.04]" />
-                <span className="absolute bottom-10 left-8 h-2 w-16 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-              </button>
-            )
-          }
-
-          return (
             <button
               key={plan.key}
               type="button"
               onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
-              className="absolute top-0 min-h-[430px] w-[78%] max-w-[350px] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[470px] md:w-[68%] md:max-w-[370px] md:p-9"
+              className="min-h-[430px] flex-[0_0_82%] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px] md:p-9"
               style={{
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 3,
-                borderColor: SIGNAL_GREEN,
+                borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
                 background:
-                  "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.26), transparent 36%), linear-gradient(180deg, #0E2117, #09100D)",
-                boxShadow: "0 30px 90px rgba(50,208,116,0.16), 0 18px 80px rgba(0,0,0,0.42)",
+                  "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 36%), linear-gradient(180deg, #0E2117, #09100D)",
+                boxShadow: isSelected
+                  ? "0 30px 90px rgba(50,208,116,0.16), 0 18px 80px rgba(0,0,0,0.42)"
+                  : "0 20px 70px rgba(0,0,0,0.32)",
               }}
             >
               <span
@@ -174,11 +151,12 @@ function PlanCarousel({
                 ))}
               </span>
             </button>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
 
-      <div className="mx-auto -mt-1 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
+      <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
         {INDUSTRY_PLAN_OPTIONS.map((plan) => {
           const isSelected = selectedPlan === plan.key
           return (

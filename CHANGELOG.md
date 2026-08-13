@@ -22,6 +22,7 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - Apple-style pricing refinement: kept the no-overflow controlled selector but made the center plan card narrower and added clipped neighboring card peeks on the left/right, matching the direction Shawn referenced from Apple's mobile cards without reintroducing native horizontal page scroll.
 - Pricing peek positioning fix: corrected the card placement math so the selected card stays centered while neighbors only peek from the edges; avoids the previous double-translate issue that clipped the Pro card off-screen.
 - Pricing peek layering fix: side cards are now opaque, non-text visual peeks only; the selected card is a solid readable card above them, preventing transparent text overlap while preserving swipe/tap plan changes.
+- Apple-style carousel replacement: removed the fake side-peek approximation entirely. The industry pricing selector now renders one real three-card track ordered Starter -> Pro -> Business, opens with Pro centered, shows neighboring real cards at the edges, keeps cards solid/readable, and keeps the CTA tied to the centered card.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification
