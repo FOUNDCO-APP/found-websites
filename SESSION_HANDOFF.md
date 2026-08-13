@@ -20,6 +20,7 @@
   - Starter is only mentioned as the website-only fallback.
 - Shawn rejected the first visual pass because it said `Proof of concept`, used generic placeholder boxes, and risked pushing Pro while not letting customers choose other plans. Correction applied: no homepage hero image reuse, no generic skeleton proof block, Pro-first but not Pro-only.
 - Shawn's iPhone screenshot showed the corrected preview was still not mobile-formatted: a tiny internal phone preview and cropped text made it feel broken. Fixed by giving iPhone one readable full-width preview card and hiding the extra device overlay until desktop/tablet.
+- Shawn then clarified the team must plan before code. Team direction approved: industry pages first, no homepage/pricing-page expansion yet, remove desktop-browser-style preview framing, and replace squeezed three-plan pricing with a Pro-first Apple-style swipe carousel.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
@@ -29,7 +30,7 @@
 - iPhone layout correction TypeScript check passed after removing the mobile nested-device composition.
 
 ### Explicit Next Step
-Run production build, deploy, then QA one industry page on mobile: confirm no visible `$29` Starter-first CTA remains, proof section renders cleanly, and the CTA opens onboarding with Pro selected.
+Run production build, deploy, then QA one industry page on mobile: confirm no visible `$29` Starter-first CTA remains, proof section does not feel like a desktop page inside an iPhone, pricing shows one large swipeable plan card at a time with Pro first, and the CTA opens onboarding with the selected plan.
 
 ---
 

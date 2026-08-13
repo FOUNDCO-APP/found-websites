@@ -57,7 +57,7 @@ interface Props {
   closingLine: string
 }
 
-function PlanSwiper({
+function PlanCarousel({
   selectedPlan,
   onSelect,
   intro,
@@ -67,34 +67,64 @@ function PlanSwiper({
   intro: boolean
 }) {
   return (
-    <div className="-mx-1 flex snap-x gap-3 overflow-x-auto pb-2">
-      {INDUSTRY_PLAN_OPTIONS.map((plan) => {
-        const selected = selectedPlan === plan.key
-        return (
-          <button
-            key={plan.key}
-            type="button"
-            onClick={() => onSelect(plan.key)}
-            className="min-w-[222px] snap-start rounded-2xl border p-4 text-left transition"
-            style={{
-              borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
-              background: selected ? "rgba(50,208,116,0.12)" : "rgba(255,255,255,0.035)",
-            }}
-          >
-            <span className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}>
-              {plan.label}
-            </span>
-            <span className="mt-2 block text-sm font-black text-white">{plan.name}</span>
-            <span className="mt-1 block text-2xl font-black text-white">${plan.price(intro)}/mo</span>
-            <span className="mt-2 block text-xs leading-5 text-white/48">{plan.line}</span>
-          </button>
-        )
-      })}
+    <div>
+      <div className="-mx-6 overflow-x-auto px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex snap-x snap-mandatory gap-4">
+          {INDUSTRY_PLAN_OPTIONS.map((plan) => {
+            const selected = selectedPlan === plan.key
+            return (
+              <button
+                key={plan.key}
+                type="button"
+                onClick={() => onSelect(plan.key)}
+                className="min-h-[250px] w-[82vw] max-w-[350px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
+                style={{
+                  borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
+                  background: selected
+                    ? "linear-gradient(180deg, rgba(50,208,116,0.18), rgba(50,208,116,0.06))"
+                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
+                  boxShadow: selected ? "0 24px 70px rgba(50,208,116,0.12)" : "none",
+                }}
+              >
+                <span
+                  className="text-[10px] font-black uppercase tracking-[0.2em]"
+                  style={{ color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}
+                >
+                  {plan.label}
+                </span>
+                <span className="mt-5 block text-xl font-black text-white">{plan.name}</span>
+                <span className="mt-3 block text-5xl font-black tracking-tight text-white">${plan.price(intro)}</span>
+                <span className="mt-1 block text-sm font-bold text-white/45">per month</span>
+                <span className="mt-6 block text-sm leading-6 text-white/58">{plan.line}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="mx-auto flex w-fit items-center justify-center gap-2 rounded-full bg-white/[0.07] px-4 py-3">
+        {INDUSTRY_PLAN_OPTIONS.map((plan) => {
+          const selected = selectedPlan === plan.key
+          return (
+            <button
+              key={plan.key}
+              type="button"
+              onClick={() => onSelect(plan.key)}
+              aria-label={`Choose ${plan.name}`}
+              className="h-2.5 rounded-full transition-all"
+              style={{
+                width: selected ? 34 : 9,
+                backgroundColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
+              }}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-function IndustryDevicePreview({
+function IndustrySitePreview({
   industryLabel,
   subheadline,
   features,
@@ -112,81 +142,46 @@ function IndustryDevicePreview({
 
   return (
     <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
-      <div className="mb-4 flex items-center justify-between gap-3 md:mb-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-          Example site preview
+          What customers see
         </p>
         <span className="shrink-0 rounded-full bg-[#32D074] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-[#080A09] md:text-[10px]">
           Live-ready
         </span>
       </div>
 
-      <div className="relative md:pb-12">
-        <div className="rounded-[1.4rem] border border-white/12 bg-[#171B18] p-2.5 shadow-2xl shadow-black/45 md:p-3">
-          <div className="overflow-hidden rounded-[1rem] bg-[#F4F1EA] text-[#111312]">
-            <div className="flex items-center gap-1.5 border-b border-black/10 bg-[#E8E4DA] px-4 py-3">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D96A5F]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D8B24C]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#32D074]" />
-              <span className="ml-auto text-[9px] font-black uppercase tracking-[0.18em] text-black/30">Found-built site</span>
-            </div>
-
-            <div className="relative bg-[#101411] px-4 py-6 text-white md:px-8 md:py-10">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_18%,rgba(50,208,116,0.26),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_48%)]" />
-              <div className="relative max-w-xl">
-                <p className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
-                  {industryLabel}
-                </p>
-                <p className="max-w-[13ch] text-[2.25rem] font-normal leading-[0.96] tracking-tight text-white md:text-5xl">
-                  {previewHeadline}
-                </p>
-                <p className="mt-4 max-w-md text-xs leading-5 text-white/58 md:mt-5 md:text-sm md:leading-6">
-                  {subheadline}
-                </p>
-                <div className="mt-6 inline-flex rounded-full bg-[#32D074] px-5 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09] md:mt-7">
-                  Request help
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-px bg-black/10 md:grid-cols-3">
-              {previewFeatures.map((feature, index) => (
-                <div key={feature.label} className={`bg-[#F4F1EA] p-4 md:p-5 ${index === 2 ? "hidden md:block" : ""}`}>
-                  <p className="text-sm font-black text-[#111312]">{feature.label}</p>
-                  <p className="mt-2 line-clamp-3 text-xs leading-5 text-black/48">{feature.desc}</p>
-                </div>
-              ))}
+      <div className="overflow-hidden rounded-[1.55rem] bg-[#F4F1EA] text-[#111312] shadow-2xl shadow-black/45">
+        <div className="relative min-h-[330px] bg-[#101411] px-5 pb-7 pt-20 text-white md:px-8 md:pt-24">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(50,208,116,0.32),transparent_34%),linear-gradient(140deg,rgba(255,255,255,0.1),transparent_48%)]" />
+          <div className="relative">
+            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
+              {industryLabel}
+            </p>
+            <p className="max-w-[11ch] text-[3.1rem] font-normal leading-[0.92] tracking-tight text-white md:max-w-[13ch] md:text-6xl">
+              {previewHeadline}
+            </p>
+            <p className="mt-5 max-w-md text-sm leading-6 text-white/58 md:text-base md:leading-7">
+              {subheadline}
+            </p>
+            <div className="mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+              Request help
             </div>
           </div>
         </div>
 
-        <div className="hidden rounded-[42px] border border-white/12 bg-[#151916] p-[9px] shadow-2xl shadow-black/55 md:absolute md:-bottom-10 md:right-8 md:block md:w-[210px]">
-          <div className="absolute left-1/2 mt-2 h-5 w-[76px] -translate-x-1/2 rounded-full bg-[#090B0A]" />
-          <div className="h-[430px] overflow-hidden rounded-[34px] bg-[#F5F3ED] text-[#111312] md:h-[360px]">
-            <div className="relative flex h-[205px] flex-col justify-end bg-[#101411] p-5 text-white md:h-[176px]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_18%,rgba(50,208,116,0.3),transparent_34%)]" />
-              <div className="relative">
-                <p className="mb-3 text-[9px] font-black uppercase tracking-[0.2em] text-white/35">{industryLabel}</p>
-                <p className="text-[2rem] font-normal leading-[0.95] tracking-tight md:text-[1.45rem]">{previewHeadline}</p>
-              </div>
+        <div className="grid gap-px bg-black/10">
+          {previewFeatures.map((feature) => (
+            <div key={feature.label} className="bg-[#F4F1EA] p-5 md:p-6">
+              <p className="text-base font-black text-[#111312]">{feature.label}</p>
+              <p className="mt-2 text-sm leading-6 text-black/50">{feature.desc}</p>
             </div>
-            <div className="space-y-2 p-4 md:p-3">
-              {previewFeatures.slice(0, 2).map((feature) => (
-                <div key={feature.label} className="rounded-2xl border border-black/10 bg-white p-4">
-                  <p className="text-[11px] font-black">{feature.label}</p>
-                  <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-black/45">{feature.desc}</p>
-                </div>
-              ))}
-              <div className="mt-3 flex h-10 items-center justify-center rounded-full bg-[#32D074] text-[9px] font-black uppercase tracking-[0.16em] text-[#080A09]">
-                Get a quote
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      <p className="mt-6 text-sm leading-7 text-white/50">
-        The page should feel like a real finished site, not a worksheet or placeholder template.
+      <p className="mt-5 text-sm leading-7 text-white/50">
+        This needs to feel like a finished customer site, not a generic worksheet or placeholder.
       </p>
     </div>
   )
@@ -254,14 +249,14 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
 
         {/* Visual preview and plan choice */}
         <section className="px-6 pb-20 md:px-10 max-w-5xl mx-auto">
-          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr] lg:items-stretch">
-            <IndustryDevicePreview
+          <div className="grid gap-5">
+            <IndustrySitePreview
               industryLabel={industryLabel}
               subheadline={subheadline}
               features={features}
             />
 
-            <div className="grid gap-5">
+            <div className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr]">
               <div className="rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-6 md:p-7">
                 <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
                   What happens after launch
@@ -287,7 +282,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                 </p>
                 <h2 className="text-2xl font-normal leading-tight text-white">Pro is recommended. You still choose the plan.</h2>
                 <div className="mt-5">
-                  <PlanSwiper selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
+                  <PlanCarousel selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
                 </div>
                 <button
                   onClick={() => setDrawerOpen(true)}
