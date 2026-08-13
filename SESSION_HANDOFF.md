@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - FOUND Systems: Shared Plan Picker (Mobile Carousel + Desktop Fix)
+
+### Progress This Pass
+- Shawn tested the previous pass's fixes live and sent both real iPhone screenshots (via PhotoDrop) and Chrome desktop screenshots.
+- iPhone (PhotoDrop) confirmed success: Recommended badge no longer clipped, homepage cards have real spacing, and one "Start with X" button correctly appears below the three homepage cards, updating with the selected plan. `/plans` renders correctly with its own per-card buttons (unchanged, as intended).
+- Chrome desktop screenshots of `/compare` and `/industries/contractors` showed the industry "Choose your path" desktop 3-card grid (added last pass) badly broken: cards squeezed to roughly 185px wide, causing near-single-word-per-line text wrap for almost 1000px of scroll. Root cause: that grid was nested inside the page's `lg:grid-cols-[0.82fr_1.18fr]` sidebar split, so it only ever had ~59% of a 1024px container instead of full page width.
+- Team review (Craig on the desktop root cause, Jony/Steve on direction) recommended breaking "Choose your path" out to full page width at desktop, matching Home/Plans' already-working layout.
+- Shawn added a second real issue found on his own phone: tapping a homepage pricing card only recolors the card - the CTA that reacts sits far below (added last pass), so a business owner has no clear signal anything happened, and no motivation to scroll back up if they change their mind. Shawn confirmed he likes the industry page's swipe-carousel pattern specifically (CTA attached directly under the one visible card) and wants Home to use the same pattern on phones; card height staying taller than the industry cards is fine.
+- Team agreed both issues share one root fix: stop maintaining two separate hand-built plan-picker implementations (Home's stacked grid, Industry's bespoke carousel) and build one shared component both pages consume.
+- Built `src/components/PlanPicker.tsx`: phone widths get a one-card swipe carousel with peeking neighbor cards (ported from the old industry-only `PlanCarousel`, now rendering `MarketingPlanCard` instances instead of bespoke markup) with the CTA attached directly below; tablet/desktop widths get a full-page-width 3-card row (also `MarketingPlanCard`), CTA below that.
+- `IndustryPage.tsx`: deleted the old `PlanCarousel` function and last pass's desktop grid entirely, replaced with `PlanPicker`. This is what actually fixes the desktop squeeze - the plan section now renders at full page width instead of being nested inside the narrow sidebar column's own internal grid.
+- `HomeClient.tsx`: replaced the stacked-grid-plus-distant-CTA block with the same `PlanPicker`, so phones now get the swipe carousel with an immediately-adjacent CTA instead of a scroll-past-three-cards-to-find-the-button pattern.
+- Updated `scripts/check-industry-mobile-layout.mjs` to check the shared `PlanPicker.tsx` (where the carousel markup now lives) instead of `IndustryPage.tsx`'s old function - the old regex-based check would have silently stopped running otherwise.
+- Caught up `CHANGELOG.md` and `TASKS.md`.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed (now checks `PlanPicker.tsx`).
+- `cmd /c npm run build` passed.
+- `git diff --check` passed.
+- Not yet verified at real desktop/tablet widths or on a real iPhone - that verification is explicitly still owed, per Angela's QA note from last round that this exact gap (never checking a real desktop width) is what caused the bug being fixed in this pass.
+
+### Explicit Next Step
+Get Shawn's confirmation to commit, push, and deploy. After deploy: Shawn QA on a real iPhone (tap a homepage pricing card, confirm the CTA directly below it updates without needing to scroll) and on a real desktop/tablet width for `/compare` and `/industries/*` (confirm the 3-card row is full width with no squeezed or wrapped text, Recommended badge not clipped).
+
+---
+
 ## 2026-08-13 - FOUND Systems: Pricing Card Unification + Layout Polish
 
 ### Progress This Pass

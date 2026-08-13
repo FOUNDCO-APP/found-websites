@@ -1,11 +1,11 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
-import MarketingPlanCard from "./MarketingPlanCard"
+import PlanPicker from "./PlanPicker"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 import { FOUND_PLAN_OPTIONS, type FoundPlanKey } from "@/lib/foundPlans"
 
@@ -42,157 +42,6 @@ interface Props {
   features: Feature[]
   faqs: FAQ[]
   closingLine: string
-}
-
-function PlanCarousel({
-  selectedPlan,
-  onSelect,
-  intro,
-}: {
-  selectedPlan: FoundPlanKey
-  onSelect: (plan: FoundPlanKey) => void
-  intro: boolean
-}) {
-  const touchStartX = useRef<number | null>(null)
-  const selectedIndex = Math.max(0, INDUSTRY_PLAN_OPTIONS.findIndex((plan) => plan.key === selectedPlan))
-  const previous = INDUSTRY_PLAN_OPTIONS[Math.max(0, selectedIndex - 1)]
-  const next = INDUSTRY_PLAN_OPTIONS[Math.min(INDUSTRY_PLAN_OPTIONS.length - 1, selectedIndex + 1)]
-  const trackOffset =
-    selectedIndex === 0
-      ? "9%"
-      : selectedIndex === 1
-        ? "calc(-73% - 24px)"
-        : "calc(-155% - 48px)"
-
-  const selectPrevious = () => {
-    if (selectedIndex > 0) onSelect(previous.key)
-  }
-
-  const selectNext = () => {
-    if (selectedIndex < INDUSTRY_PLAN_OPTIONS.length - 1) onSelect(next.key)
-  }
-
-  const handleTouchEnd = (clientX: number) => {
-    if (touchStartX.current === null) return
-    const delta = touchStartX.current - clientX
-    touchStartX.current = null
-
-    if (Math.abs(delta) < 40) return
-    if (delta > 0) selectNext()
-    else selectPrevious()
-  }
-
-  return (
-    <>
-    <div className="w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6 md:hidden">
-      <div
-        className="w-full max-w-full min-w-0 overflow-hidden py-2"
-        onTouchStart={(event) => {
-          touchStartX.current = event.changedTouches[0]?.clientX ?? null
-        }}
-        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
-      >
-        <div
-          className="flex w-full max-w-full min-w-0 gap-6 transition-[margin] duration-500 ease-out"
-          style={{ marginLeft: trackOffset }}
-        >
-          {INDUSTRY_PLAN_OPTIONS.map((plan) => {
-            const isSelected = selectedPlan === plan.key
-            const isRecommended = plan.key === "found_pro"
-            return (
-            <button
-              key={plan.key}
-              type="button"
-              onClick={() => onSelect(plan.key)}
-              aria-label={`Choose ${plan.name}`}
-              className="relative min-h-[430px] flex-[0_0_82%] rounded-2xl border p-10 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px]"
-              style={{
-                borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-                backgroundColor: isRecommended ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
-                backgroundImage: isRecommended
-                  ? "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.16), transparent 36%)"
-                  : "none",
-                boxShadow: isSelected
-                  ? "inset 0 0 80px rgba(50,208,116,0.05), 0 20px 70px rgba(0,0,0,0.32)"
-                  : "none",
-                }}
-              >
-              {isRecommended ? (
-                <span className="mb-2 inline-block rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                  Recommended
-                </span>
-              ) : (
-                <span className="text-xs font-black uppercase tracking-widest text-white/40">
-                  {plan.label}
-                </span>
-              )}
-              <span className="mt-1 block break-words text-base font-black leading-tight text-white">{plan.name}</span>
-              <span className="mt-6 flex items-end gap-1">
-                <span className="text-4xl font-light tracking-tight text-white">${plan.price(intro)}</span>
-                <span className="pb-1 text-sm font-medium text-white/40">/month</span>
-              </span>
-              {intro && (
-                <span className="mt-0.5 block text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>
-                  Intro rate
-                </span>
-              )}
-              <span className="mt-8 block text-base font-black leading-6 text-white">{plan.line}</span>
-              <span className="mt-8 block space-y-3">
-                {plan.bullets.map((bullet) => (
-                  <span key={bullet} className="flex items-start gap-2.5 text-sm text-white/70">
-                    <svg className="mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {bullet}
-                  </span>
-                ))}
-              </span>
-            </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
-        {INDUSTRY_PLAN_OPTIONS.map((plan) => {
-          const isSelected = selectedPlan === plan.key
-          return (
-            <button
-              key={plan.key}
-              type="button"
-              onClick={() => onSelect(plan.key)}
-              aria-label={`Choose ${plan.name}`}
-              className="h-2.5 rounded-full transition-all"
-              style={{
-                width: isSelected ? 34 : 9,
-                backgroundColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
-              }}
-            />
-          )
-        })}
-      </div>
-    </div>
-
-    <div className="hidden md:grid md:grid-cols-3 md:gap-6">
-      {INDUSTRY_PLAN_OPTIONS.map((plan) => (
-        <MarketingPlanCard
-          key={plan.key}
-          planKey={plan.key}
-          name={plan.name}
-          headline={plan.line}
-          price={`$${plan.price(intro)}`}
-          normalPrice={`$${plan.price(false)}`}
-          featured={plan.key === "found_pro"}
-          selected={selectedPlan === plan.key}
-          intro={intro}
-          bullets={plan.bullets}
-          showCta={false}
-          onSelect={onSelect}
-        />
-      ))}
-    </div>
-    </>
-  )
 }
 
 function IndustryOutcomeProof({
@@ -331,15 +180,23 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                   Pro opens first. Swipe the card to compare Starter and Business.
                 </p>
                 <div className="mt-8">
-                  <PlanCarousel selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
+                  <PlanPicker
+                    plans={INDUSTRY_PLAN_OPTIONS.map((plan) => ({
+                      key: plan.key,
+                      name: plan.name,
+                      shortName: plan.name.replace("Found ", ""),
+                      headline: plan.line,
+                      price: `$${plan.price(isIntroRatePeriod)}`,
+                      normalPrice: `$${plan.price(false)}`,
+                      featured: plan.key === "found_pro",
+                      bullets: plan.bullets,
+                    }))}
+                    selectedPlan={selectedPlan}
+                    onSelect={setSelectedPlan}
+                    onCta={() => setDrawerOpen(true)}
+                    intro={isIntroRatePeriod}
+                  />
                 </div>
-                <button
-                  onClick={() => setDrawerOpen(true)}
-                  className="mt-6 inline-flex min-h-14 w-full items-center justify-center rounded-full px-6 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-                  style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                >
-                  Start with {selectedPlanOption.name.replace("Found ", "")}
-                </button>
               </div>
             </div>
           </div>

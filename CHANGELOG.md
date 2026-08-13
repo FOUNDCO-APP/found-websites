@@ -1,3 +1,24 @@
+## Session: August 13, 2026 - FOUND Systems: Shared Plan Picker (Mobile Carousel + Desktop Fix)
+**AI:** Claude
+
+### Context
+Shawn tested the previous pass live: real iPhone screenshots (PhotoDrop) confirmed the badge/spacing/CTA fixes worked correctly on Home and Plans, but Chrome desktop screenshots of `/compare` and `/industries/contractors` showed the new industry "Choose your path" desktop grid was badly broken - cards squeezed into ~185px inside the `lg:grid-cols-[0.82fr_1.18fr]` sidebar column, causing severe single-word-per-line wrapping. Root cause (Craig): the desktop 3-card grid added last pass was never checked at a real desktop width. Team review, confirmed by Shawn: unify the desktop fix with a second real issue Shawn found on his phone - tapping a homepage pricing card only recolors it while the CTA that reacts sits far down the page, easy to miss and annoying to scroll back to. Shawn also confirmed he likes the industry page's mobile swipe-carousel pattern (CTA attached right under the visible card) and wants Home to use the same pattern; card height staying tall is fine.
+
+### Changed
+- Built `src/components/PlanPicker.tsx`, a single shared plan-picker component with two responsive layouts: a one-card swipe carousel with peeking neighbor cards for phone widths (ported from the old industry-only `PlanCarousel`, now built on `MarketingPlanCard` instead of bespoke markup), and a full-page-width 3-card row for tablet/desktop. The CTA button is attached directly under the picker in both layouts and always reads "Start with {selected plan}".
+- `IndustryPage.tsx`: removed the old bespoke `PlanCarousel` function and the desktop grid added last pass entirely; both are now `PlanPicker`. This is what actually fixes the desktop squeeze bug - the industry page's plan section now renders at the same full page width as Home/Plans instead of being nested inside the narrower `0.82fr` sidebar column's own grid.
+- `HomeClient.tsx`: replaced the stacked-grid-plus-distant-CTA pricing block with the same `PlanPicker`, so mobile now gets the swipe carousel (CTA attached right under the visible card) instead of scrolling past three stacked cards to find a button that silently changed.
+- Updated `scripts/check-industry-mobile-layout.mjs` to check the shared `PlanPicker.tsx` (where the carousel markup now lives) instead of `IndustryPage.tsx`'s old `PlanCarousel` function.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed (guard now points at `PlanPicker.tsx`).
+- `cmd /c npm run build` passed.
+- `git diff --check` passed.
+- Not yet checked at real desktop widths (1024/1280/1920) or on a real iPhone - that's the explicit next step before calling this done, per the team's QA note from last round.
+
+---
+
 ## Session: August 13, 2026 - FOUND Systems: Pricing Card Unification + Layout Polish
 **AI:** Claude
 

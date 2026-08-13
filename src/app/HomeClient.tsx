@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
-import MarketingPlanCard from "@/components/MarketingPlanCard"
+import PlanPicker from "@/components/PlanPicker"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
@@ -432,98 +432,70 @@ export default function HomeClient() {
           </p>
             </div>
 
-            {(() => {
-              const homepagePlans = [
-                {
-                  key: "found",
-                  shortName: "Starter",
-                  tagline: "Get online today.",
-                  name: "Found Starter",
-                  price: isIntroRatePeriod ? "$29" : "$39",
-                  normalPrice: "$39",
-                  features: [
-                    "Complete website, five pages",
-                    "Your own web address",
-                    "Professional copy, written for you",
-                    "Beautiful industry photos, built in",
-                    "Leads come straight to you",
-                    "New leads get an automatic reply from your business",
-                    "Take a photo. It's on your site.",
-                  ],
-                },
-                {
-                  key: "found_pro",
-                  shortName: "Pro",
-                  tagline: "Follow up with every lead. Automatically.",
-                  name: "Found Pro",
-                  price: isIntroRatePeriod ? "$39" : "$69",
-                  normalPrice: "$69",
-                  featured: true,
-                  features: [
-                    "Everything in Starter",
-                    "Plus automatic lead follow-up",
-                    "Drip-style messages keep new leads from going cold",
-                    "See who's interested and ready to hire",
-                    "All your leads in one place",
-                    "Your entire contact list, organized",
-                    "Your crew contributes from the field",
-                    "Rewrite any page on your site, anytime",
-                    "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
-                  ],
-                },
-                {
-                  key: "found_business",
-                  shortName: "Business",
-                  tagline: "Run your whole business.",
-                  name: "Found Business",
-                  price: isIntroRatePeriod ? "$69" : "$99",
-                  normalPrice: "$99",
-                  features: [
-                    "Everything in Pro",
-                    "Plus bookings, estimates, payments, and email marketing",
-                    "Payment setup where it matters",
-                    "More five-star reviews, without asking",
-                    "Reach your full client list",
-                    "Your whole team, no extra charge",
-                    "Show clients their finished job",
-                  ],
-                },
-              ]
-              const selectedHomepagePlan = homepagePlans.find((plan) => plan.key === selectedPlan) ?? homepagePlans[1]
-
-              return (
-                <>
-                  <div className="grid gap-6 md:gap-8 md:grid-cols-3 max-w-5xl mx-auto">
-                    {homepagePlans.map((plan) => (
-                      <MarketingPlanCard
-                        key={plan.key}
-                        planKey={plan.key as FoundPlanKey}
-                        name={plan.name}
-                        headline={plan.tagline}
-                        price={plan.price}
-                        normalPrice={plan.normalPrice}
-                        featured={plan.featured}
-                        selected={selectedPlan === plan.key}
-                        intro={isIntroRatePeriod}
-                        bullets={plan.features}
-                        showCta={false}
-                        onSelect={(key) => setSelectedPlan(key)}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="max-w-5xl mx-auto mt-8 md:mt-10">
-                    <button
-                      onClick={() => openDrawer(selectedHomepagePlan.key, false)}
-                      className="mx-auto flex min-h-14 w-full max-w-sm items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-                      style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                    >
-                      Start with {selectedHomepagePlan.shortName}
-                    </button>
-                  </div>
-                </>
-              )
-            })()}
+            <div className="max-w-5xl mx-auto">
+              <PlanPicker
+                plans={[
+                  {
+                    key: "found",
+                    shortName: "Starter",
+                    headline: "Get online today.",
+                    name: "Found Starter",
+                    price: isIntroRatePeriod ? "$29" : "$39",
+                    normalPrice: "$39",
+                    bullets: [
+                      "Complete website, five pages",
+                      "Your own web address",
+                      "Professional copy, written for you",
+                      "Beautiful industry photos, built in",
+                      "Leads come straight to you",
+                      "New leads get an automatic reply from your business",
+                      "Take a photo. It's on your site.",
+                    ],
+                  },
+                  {
+                    key: "found_pro",
+                    shortName: "Pro",
+                    headline: "Follow up with every lead. Automatically.",
+                    name: "Found Pro",
+                    price: isIntroRatePeriod ? "$39" : "$69",
+                    normalPrice: "$69",
+                    featured: true,
+                    bullets: [
+                      "Everything in Starter",
+                      "Plus automatic lead follow-up",
+                      "Drip-style messages keep new leads from going cold",
+                      "See who's interested and ready to hire",
+                      "All your leads in one place",
+                      "Your entire contact list, organized",
+                      "Your crew contributes from the field",
+                      "Rewrite any page on your site, anytime",
+                      "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
+                    ],
+                  },
+                  {
+                    key: "found_business",
+                    shortName: "Business",
+                    headline: "Run your whole business.",
+                    name: "Found Business",
+                    price: isIntroRatePeriod ? "$69" : "$99",
+                    normalPrice: "$99",
+                    bullets: [
+                      "Everything in Pro",
+                      "Plus bookings, estimates, payments, and email marketing",
+                      "Payment setup where it matters",
+                      "More five-star reviews, without asking",
+                      "Reach your full client list",
+                      "Your whole team, no extra charge",
+                      "Show clients their finished job",
+                    ],
+                  },
+                ]}
+                selectedPlan={selectedPlan as FoundPlanKey}
+                onSelect={(key) => setSelectedPlan(key)}
+                onCta={(key) => openDrawer(key, false)}
+                intro={isIntroRatePeriod}
+              />
+            </div>
 
             <p className="text-center mt-10 text-xs text-white/30 font-medium">
               {isIntroRatePeriod
