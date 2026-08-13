@@ -75,6 +75,11 @@ function PlanCarousel({
   const selected = INDUSTRY_PLAN_OPTIONS[selectedIndex] ?? INDUSTRY_PLAN_OPTIONS[1]
   const previous = INDUSTRY_PLAN_OPTIONS[Math.max(0, selectedIndex - 1)]
   const next = INDUSTRY_PLAN_OPTIONS[Math.min(INDUSTRY_PLAN_OPTIONS.length - 1, selectedIndex + 1)]
+  const visiblePlans = [
+    selectedIndex > 0 ? { plan: previous, position: "previous" as const } : null,
+    { plan: selected, position: "selected" as const },
+    selectedIndex < INDUSTRY_PLAN_OPTIONS.length - 1 ? { plan: next, position: "next" as const } : null,
+  ].filter(Boolean) as Array<{ plan: IndustryPlanOption; position: "previous" | "selected" | "next" }>
 
   const selectPrevious = () => {
     if (selectedIndex > 0) onSelect(previous.key)
@@ -96,41 +101,67 @@ function PlanCarousel({
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-hidden">
-      <button
-        type="button"
-        onClick={() => onSelect(selected.key)}
+      <div
+        className="relative h-[430px] w-full max-w-full min-w-0 overflow-hidden md:h-[470px]"
         onTouchStart={(event) => {
           touchStartX.current = event.changedTouches[0]?.clientX ?? null
         }}
         onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
-        className="min-h-[390px] w-full min-w-0 max-w-full rounded-[2.25rem] border p-8 text-left transition md:min-h-[430px] md:p-10"
-        style={{
-          borderColor: SIGNAL_GREEN,
-          background:
-            "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 34%), linear-gradient(180deg, rgba(50,208,116,0.16), rgba(50,208,116,0.045))",
-          boxShadow: "0 30px 90px rgba(50,208,116,0.16)",
-        }}
       >
-        <span className="text-[11px] font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>
-          {selected.label}
-        </span>
-        <span className="mt-8 block break-words text-3xl font-black leading-tight text-white">{selected.name}</span>
-        <span className="mt-5 flex items-end gap-2">
-          <span className="text-7xl font-black tracking-tight text-white">${selected.price(intro)}</span>
-          <span className="pb-3 text-base font-bold text-white/45">/mo</span>
-        </span>
-        <span className="mt-8 block text-lg leading-8 text-white/62">{selected.line}</span>
-        <span className="mt-8 block space-y-3">
-          {selected.bullets.map((bullet) => (
-            <span key={bullet} className="flex items-center gap-3 text-sm font-bold text-white/62">
-              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-              {bullet}
-            </span>
-          ))}
-        </span>
-      </button>
+        {visiblePlans.map(({ plan, position }) => {
+          const isSelected = position === "selected"
+          const transform =
+            position === "previous"
+              ? "translateX(-62%) scale(0.88)"
+              : position === "next"
+                ? "translateX(62%) scale(0.88)"
+                : "translateX(0) scale(1)"
 
-      <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
+          return (
+            <button
+              key={plan.key}
+              type="button"
+              onClick={() => onSelect(plan.key)}
+              aria-label={`Choose ${plan.name}`}
+              className="absolute left-1/2 top-0 min-h-[405px] w-[78%] max-w-[350px] -translate-x-1/2 rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[440px] md:w-[72%] md:max-w-[390px] md:p-9"
+              style={{
+                transform: `translateX(-50%) ${transform}`,
+                zIndex: isSelected ? 2 : 1,
+                opacity: isSelected ? 1 : 0.48,
+                pointerEvents: isSelected ? "auto" : "auto",
+                borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
+                background: isSelected
+                  ? "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 34%), linear-gradient(180deg, rgba(50,208,116,0.16), rgba(50,208,116,0.045))"
+                  : "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025))",
+                boxShadow: isSelected ? "0 30px 90px rgba(50,208,116,0.16)" : "none",
+              }}
+            >
+              <span
+                className="text-[10px] font-black uppercase tracking-[0.24em] md:text-[11px]"
+                style={{ color: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}
+              >
+                {plan.label}
+              </span>
+              <span className="mt-7 block break-words text-2xl font-black leading-tight text-white md:text-3xl">{plan.name}</span>
+              <span className="mt-5 flex items-end gap-2">
+                <span className="text-6xl font-black tracking-tight text-white md:text-7xl">${plan.price(intro)}</span>
+                <span className="pb-3 text-sm font-bold text-white/45 md:text-base">/mo</span>
+              </span>
+              <span className="mt-7 block text-base leading-7 text-white/62 md:text-lg md:leading-8">{plan.line}</span>
+              <span className="mt-7 block space-y-3">
+                {plan.bullets.map((bullet) => (
+                  <span key={bullet} className="flex items-center gap-3 text-sm font-bold text-white/62">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                    {bullet}
+                  </span>
+                ))}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="mx-auto -mt-1 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
         {INDUSTRY_PLAN_OPTIONS.map((plan) => {
           const isSelected = selectedPlan === plan.key
           return (
