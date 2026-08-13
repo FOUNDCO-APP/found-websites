@@ -25,6 +25,8 @@
   - engineering: the root app viewport did not explicitly set `width=device-width` / `initialScale=1`, matching the symptom of iPhone Safari rendering a wider page and shrinking it down;
   - design: the coded fake site preview was the wrong proof asset, so it was replaced instead of polished.
 - Shawn clarified Starter is not "website only"; it includes the Found site, camera system, photo/video gallery, and easier updates. Team direction applied: remove the confusing mini pricing teaser, use Starter -> Pro -> Business order, center Pro by default, and make the CTA follow the selected/centered card.
+- Shawn's real iPhone QA then showed the implementation was still broken: the industry page could drift sideways, proof/pricing sections were partially off-screen, and the pricing cards did not behave reliably. Root cause was the native horizontal-scroll pricing pattern inside `IndustryPage`: `100vw` cards, `w-max`, `overflow-x-auto`, snap scrolling, and negative margins created body-level horizontal overflow in mobile Safari.
+- Team correction applied: replace the unsafe native scroll carousel with a controlled one-card selector. Starter -> Pro -> Business remains the order, Pro is still the default, arrows/dots/labels/touch-swipe change the selected plan, and the CTA follows the selected plan. Added `scripts/check-industry-mobile-layout.mjs` plus `npm run test:industry-mobile-layout` to block the exact overflow-causing classes from returning inside `PlanCarousel`.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
@@ -32,9 +34,10 @@
 - `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
 - Correction pass TypeScript check passed again after replacing the proof block and adding plan selection.
 - iPhone layout correction TypeScript check passed after removing the mobile nested-device composition.
+- `cmd /c npm run test:industry-mobile-layout` passed after the controlled selector replacement.
 
 ### Explicit Next Step
-Run production build, deploy, then QA one industry page on a real iPhone: confirm the page is not scaled down like desktop, no visible `$29` Starter-first CTA remains, the weak fake site preview is gone, pricing shows one large swipeable plan card at a time with Pro first, and the CTA opens onboarding with the selected plan.
+Deploy, then QA one industry page on a real iPhone: confirm there is no sideways page drift, no section is clipped off the left/right edge, the plan selector opens on Pro, tapping/swiping changes Starter/Pro/Business, and the CTA opens onboarding with the selected plan.
 
 ---
 

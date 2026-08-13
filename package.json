@@ -12,7 +12,8 @@
     "audit:copy-quality": "node scripts/audit-copy-quality.mjs",
     "repair:copy-quality": "node scripts/repair-copy-quality.mjs",
     "test:location-section": "node scripts/check-location-section.mjs",
-    "test:request-routing": "node scripts/check-request-routing.mjs"
+    "test:request-routing": "node scripts/check-request-routing.mjs",
+    "test:industry-mobile-layout": "node scripts/check-industry-mobile-layout.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.69.0",

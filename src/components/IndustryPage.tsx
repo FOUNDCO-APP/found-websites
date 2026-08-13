@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
@@ -25,7 +25,7 @@ const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = [
     key: "found",
     name: "Found Starter",
     label: "Get online",
-    line: "Your site, photos, gallery, and leads — easy to update from your phone.",
+    line: "Your site, photos, gallery, and leads - easy to update from your phone.",
     bullets: ["Camera system", "Photo/video gallery", "Lead form"],
     price: (intro) => (intro ? 29 : 39),
   },
@@ -70,120 +70,116 @@ function PlanCarousel({
   onSelect: (plan: FoundPlanKey) => void
   intro: boolean
 }) {
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const touchStartX = useRef<number | null>(null)
+  const selectedIndex = Math.max(0, INDUSTRY_PLAN_OPTIONS.findIndex((plan) => plan.key === selectedPlan))
+  const selected = INDUSTRY_PLAN_OPTIONS[selectedIndex] ?? INDUSTRY_PLAN_OPTIONS[1]
+  const previous = INDUSTRY_PLAN_OPTIONS[Math.max(0, selectedIndex - 1)]
+  const next = INDUSTRY_PLAN_OPTIONS[Math.min(INDUSTRY_PLAN_OPTIONS.length - 1, selectedIndex + 1)]
 
-  useEffect(() => {
-    cardRefs.current[selectedPlan]?.scrollIntoView({ behavior: "instant", block: "nearest", inline: "center" })
-  }, [])
+  const selectPrevious = () => {
+    if (selectedIndex > 0) onSelect(previous.key)
+  }
 
-  useEffect(() => {
-    const scroller = scrollRef.current
-    if (!scroller) return
+  const selectNext = () => {
+    if (selectedIndex < INDUSTRY_PLAN_OPTIONS.length - 1) onSelect(next.key)
+  }
 
-    let frame = 0
-    const updateSelectedFromCenter = () => {
-      window.cancelAnimationFrame(frame)
-      frame = window.requestAnimationFrame(() => {
-        const center = scroller.getBoundingClientRect().left + scroller.clientWidth / 2
-        let closestPlan = INDUSTRY_PLAN_OPTIONS[0]
-        let closestDistance = Number.POSITIVE_INFINITY
+  const handleTouchEnd = (clientX: number) => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - clientX
+    touchStartX.current = null
 
-        for (const plan of INDUSTRY_PLAN_OPTIONS) {
-          const card = cardRefs.current[plan.key]
-          if (!card) continue
-          const rect = card.getBoundingClientRect()
-          const distance = Math.abs(center - (rect.left + rect.width / 2))
-          if (distance < closestDistance) {
-            closestDistance = distance
-            closestPlan = plan
-          }
-        }
-
-        if (closestPlan.key !== selectedPlan) onSelect(closestPlan.key)
-      })
-    }
-
-    scroller.addEventListener("scroll", updateSelectedFromCenter, { passive: true })
-    return () => {
-      window.cancelAnimationFrame(frame)
-      scroller.removeEventListener("scroll", updateSelectedFromCenter)
-    }
-  }, [onSelect, selectedPlan])
+    if (Math.abs(delta) < 40) return
+    if (delta > 0) selectNext()
+    else selectPrevious()
+  }
 
   return (
-    <div className="max-w-full overflow-hidden">
-      <div
-        ref={scrollRef}
-        className="-mx-6 max-w-none overflow-x-auto overscroll-x-contain px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        <div className="flex w-max snap-x snap-mandatory gap-4">
-          {INDUSTRY_PLAN_OPTIONS.map((plan) => {
-            const selected = selectedPlan === plan.key
-            return (
-              <button
-                key={plan.key}
-                ref={(node) => {
-                  cardRefs.current[plan.key] = node
-                }}
-                type="button"
-                onClick={() => {
-                  onSelect(plan.key)
-                  cardRefs.current[plan.key]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
-                }}
-                className="min-h-[300px] w-[calc(100vw-5rem)] max-w-[340px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
-                style={{
-                  borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
-                  background: selected
-                    ? "linear-gradient(180deg, rgba(50,208,116,0.18), rgba(50,208,116,0.06))"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
-                  boxShadow: selected ? "0 24px 70px rgba(50,208,116,0.12)" : "none",
-                }}
-              >
-                <span
-                  className="text-[10px] font-black uppercase tracking-[0.2em]"
-                  style={{ color: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.35)" }}
-                >
-                  {plan.label}
-                </span>
-                <span className="mt-5 block text-xl font-black text-white">{plan.name}</span>
-                <span className="mt-3 block text-5xl font-black tracking-tight text-white">${plan.price(intro)}</span>
-                <span className="mt-1 block text-sm font-bold text-white/45">per month</span>
-                <span className="mt-6 block text-sm leading-6 text-white/58">{plan.line}</span>
-                <span className="mt-5 block space-y-2">
-                  {plan.bullets.map((bullet) => (
-                    <span key={bullet} className="flex items-center gap-2 text-xs font-bold text-white/54">
-                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-                      {bullet}
-                    </span>
-                  ))}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+    <div className="w-full max-w-full min-w-0 overflow-hidden">
+      <div className="grid w-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 sm:grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] sm:gap-3">
+        <button
+          type="button"
+          onClick={selectPrevious}
+          disabled={selectedIndex === 0}
+          aria-label="Previous plan"
+          className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.045] text-lg font-black text-white/70 transition disabled:opacity-25 sm:size-11"
+        >
+          &lsaquo;
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelect(selected.key)}
+          onTouchStart={(event) => {
+            touchStartX.current = event.changedTouches[0]?.clientX ?? null
+          }}
+          onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+          className="min-h-[300px] w-full min-w-0 max-w-full rounded-[2rem] border p-6 text-left transition"
+          style={{
+            borderColor: SIGNAL_GREEN,
+            background: "linear-gradient(180deg, rgba(50,208,116,0.18), rgba(50,208,116,0.06))",
+            boxShadow: "0 24px 70px rgba(50,208,116,0.12)",
+          }}
+        >
+          <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>
+            {selected.label}
+          </span>
+          <span className="mt-5 block break-words text-xl font-black text-white">{selected.name}</span>
+          <span className="mt-3 block text-5xl font-black tracking-tight text-white">${selected.price(intro)}</span>
+          <span className="mt-1 block text-sm font-bold text-white/45">per month</span>
+          <span className="mt-6 block text-sm leading-6 text-white/58">{selected.line}</span>
+          <span className="mt-5 block space-y-2">
+            {selected.bullets.map((bullet) => (
+              <span key={bullet} className="flex items-center gap-2 text-xs font-bold text-white/54">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                {bullet}
+              </span>
+            ))}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={selectNext}
+          disabled={selectedIndex === INDUSTRY_PLAN_OPTIONS.length - 1}
+          aria-label="Next plan"
+          className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.045] text-lg font-black text-white/70 transition disabled:opacity-25 sm:size-11"
+        >
+          &rsaquo;
+        </button>
       </div>
 
       <div className="mx-auto flex w-fit items-center justify-center gap-2 rounded-full bg-white/[0.07] px-4 py-3">
         {INDUSTRY_PLAN_OPTIONS.map((plan) => {
-          const selected = selectedPlan === plan.key
+          const isSelected = selectedPlan === plan.key
           return (
             <button
               key={plan.key}
               type="button"
-              onClick={() => {
-                onSelect(plan.key)
-                cardRefs.current[plan.key]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
-              }}
+              onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
               className="h-2.5 rounded-full transition-all"
               style={{
-                width: selected ? 34 : 9,
-                backgroundColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
+                width: isSelected ? 34 : 9,
+                backgroundColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.3)",
               }}
             />
           )
         })}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.12em] text-white/32">
+        {INDUSTRY_PLAN_OPTIONS.map((plan) => (
+          <button
+            key={plan.key}
+            type="button"
+            onClick={() => onSelect(plan.key)}
+            className="truncate rounded-full border border-white/[0.06] bg-white/[0.03] px-2 py-2 transition"
+            style={{ color: selectedPlan === plan.key ? SIGNAL_GREEN : undefined }}
+          >
+            {plan.name.replace("Found ", "")}
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -205,7 +201,7 @@ function IndustryOutcomeProof({
     .join(" ")
 
   return (
-    <div className="relative max-w-full overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
+    <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           What Found builds
@@ -215,16 +211,16 @@ function IndustryOutcomeProof({
         </span>
       </div>
 
-      <div className="grid min-w-0 gap-4 md:grid-cols-[1.08fr_0.92fr]">
-        <div className="relative overflow-hidden rounded-[1.55rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-8">
+      <div className="grid w-full min-w-0 max-w-full gap-4 md:grid-cols-[1.08fr_0.92fr]">
+        <div className="relative w-full min-w-0 overflow-hidden rounded-[1.55rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_12%,rgba(50,208,116,0.2),transparent_32%)]" />
           <p className="relative mb-5 text-[10px] font-black uppercase tracking-[0.22em] text-white/38">
             {industryLabel}
           </p>
-          <h2 className="relative max-w-[12ch] text-[2.2rem] font-normal leading-[1.02] tracking-tight text-white md:text-6xl">
+          <h2 className="relative max-w-[12ch] [overflow-wrap:anywhere] text-[2.2rem] font-normal leading-[1.02] tracking-tight text-white md:text-6xl">
             A better {industryTitle.toLowerCase()} site, built to get the request.
           </h2>
-          <p className="relative mt-5 max-w-xl text-sm leading-7 text-white/58 md:text-base">
+          <p className="relative mt-5 max-w-xl break-words text-sm leading-7 text-white/58 md:text-base">
             {subheadline}
           </p>
           <div className="relative mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
@@ -232,12 +228,12 @@ function IndustryOutcomeProof({
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3">
+        <div className="grid w-full min-w-0 max-w-full gap-3">
           {previewFeatures.map((feature) => (
-            <div key={feature.label} className="rounded-[1.35rem] border border-white/[0.08] bg-[#101411] p-5">
+            <div key={feature.label} className="w-full min-w-0 rounded-[1.35rem] border border-white/[0.08] bg-[#101411] p-5">
               <div className="mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-              <p className="text-base font-black text-white">{feature.label}</p>
-              <p className="mt-2 text-sm leading-6 text-white/48">{feature.desc}</p>
+              <p className="break-words text-base font-black text-white">{feature.label}</p>
+              <p className="mt-2 break-words text-sm leading-6 text-white/48">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -418,7 +414,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       compare all plans
                     </Link>.</>
-                : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans →</Link>
+                : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans</Link>
               )}
             </p>
           </div>
