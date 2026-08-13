@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Image from "next/image"
+import MarketingPlanCard from "@/components/MarketingPlanCard"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import type { FoundPlanKey } from "@/lib/foundPlans"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -444,7 +446,7 @@ export default function HomeClient() {
                     "Professional copy, written for you",
                     "Beautiful industry photos, built in",
                     "Leads come straight to you",
-                    "Inquiries get an automatic reply the moment they arrive",
+                    "New leads get an automatic reply from your business",
                     "Take a photo. It's on your site.",
                   ],
                 },
@@ -456,14 +458,15 @@ export default function HomeClient() {
                   normalPrice: "$69",
                   featured: true,
                   features: [
-                    "Everything in the Found plan",
-                    "Every lead followed up — automatically",
+                    "Everything in Starter",
+                    "Plus automatic lead follow-up",
+                    "Drip-style messages keep new leads from going cold",
                     "See who's interested and ready to hire",
                     "All your leads in one place",
                     "Your entire contact list, organized",
                     "Your crew contributes from the field",
                     "Rewrite any page on your site, anytime",
-                    "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing",
+                    "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
                   ],
                 },
                 {
@@ -473,8 +476,8 @@ export default function HomeClient() {
                   price: isIntroRatePeriod ? "$69" : "$99",
                   normalPrice: "$99",
                   features: [
-                    "Everything in Found Pro",
-                    "All business tools included: online ordering, bookings, estimates, payments, and email marketing",
+                    "Everything in Pro",
+                    "Plus bookings, estimates, payments, and email marketing",
                     "Payment setup where it matters",
                     "More five-star reviews, without asking",
                     "Reach your full client list",
@@ -483,65 +486,21 @@ export default function HomeClient() {
                   ],
                 },
               ].map((plan) => (
-                <div
+                <MarketingPlanCard
                   key={plan.key}
-                  onClick={() => setSelectedPlan(plan.key)}
-                  className="relative rounded-2xl p-10 cursor-pointer transition-all"
-                  style={{
-                    backgroundColor: plan.featured ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
-                    border: selectedPlan === plan.key
-                      ? `2px solid ${SIGNAL_GREEN}`
-                      : plan.featured
-                      ? "2px solid rgba(50,208,116,0.3)"
-                      : "2px solid rgba(255,255,255,0.07)",
-                    transform: plan.featured ? "scale(1.02)" : "scale(1)",
-                    boxShadow: plan.featured ? "inset 0 0 80px rgba(50,208,116,0.05)" : "none",
-                  }}
-                >
-                  {plan.featured && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                      <span
-                        className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
-                        style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                      >
-                        Recommended
-                      </span>
-                    </div>
-                  )}
-                  <p className="text-base font-black text-white mb-1">
-                    {plan.tagline}
-                  </p>
-                  <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
-                  <div className="mb-8">
-                    {isIntroRatePeriod && (
-                      <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>{plan.normalPrice}/month</p>
-                    )}
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl font-light text-white">{plan.price}</span>
-                      <span className="text-sm text-white/40 font-medium">/month</span>
-                    </div>
-                    {isIntroRatePeriod && (
-                      <p className="text-[10px] font-black uppercase tracking-[0.15em] mt-0.5" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
-                    )}
-                  </div>
-                  <ul className="space-y-3 mb-10">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-white/70">
-                        <svg className="shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openDrawer(plan.key, false) }}
-                    className="w-full py-4 rounded-full text-xs font-black uppercase tracking-widest transition hover:opacity-90"
-                    style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-                  >
-                    Get started
-                  </button>
-                </div>
+                  planKey={plan.key as FoundPlanKey}
+                  name={plan.name}
+                  headline={plan.tagline}
+                  price={plan.price}
+                  normalPrice={plan.normalPrice}
+                  featured={plan.featured}
+                  selected={selectedPlan === plan.key}
+                  intro={isIntroRatePeriod}
+                  bullets={plan.features}
+                  ctaLabel="Get started"
+                  onSelect={(key) => setSelectedPlan(key)}
+                  onCta={(key) => openDrawer(key, false)}
+                />
               ))}
             </div>
 

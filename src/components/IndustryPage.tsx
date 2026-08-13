@@ -6,7 +6,7 @@ import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
-import type { FoundPlanKey } from "@/lib/foundPlans"
+import { FOUND_PLAN_OPTIONS, type FoundPlanKey } from "@/lib/foundPlans"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -20,32 +20,14 @@ type IndustryPlanOption = {
   price: (intro: boolean) => number
 }
 
-const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = [
-  {
-    key: "found",
-    name: "Found Starter",
-    label: "Get online",
-    line: "Your site, photos, gallery, and leads - easy to update from your phone.",
-    bullets: ["Camera system", "Photo/video gallery", "Lead form"],
-    price: (intro) => (intro ? 29 : 39),
-  },
-  {
-    key: "found_pro",
-    name: "Found Pro",
-    label: "Recommended",
-    line: "Everything in Starter, plus one included growth tool for how your business works.",
-    bullets: ["Everything in Starter", "One included add-on", "Built for follow-up"],
-    price: (intro) => (intro ? 39 : 69),
-  },
-  {
-    key: "found_business",
-    name: "Found Business",
-    label: "Full system",
-    line: "The full Found system for customers, tools, team, and growth.",
-    bullets: ["Includes Pro", "More business tools", "Team/workers"],
-    price: (intro) => (intro ? 69 : 99),
-  },
-]
+const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = FOUND_PLAN_OPTIONS.map((plan) => ({
+  key: plan.key,
+  name: plan.name,
+  label: plan.eyebrow,
+  line: plan.shortLine,
+  bullets: plan.industryBullets,
+  price: (intro) => (intro ? plan.price : plan.normalPrice),
+}))
 
 interface Feature { label: string; desc: string }
 interface FAQ { q: string; a: string }
@@ -120,32 +102,41 @@ function PlanCarousel({
               type="button"
               onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
-              className="min-h-[430px] flex-[0_0_82%] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px] md:p-9"
+              className="min-h-[430px] flex-[0_0_82%] rounded-2xl border p-10 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px]"
               style={{
                 borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-                background:
-                  "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 36%), linear-gradient(180deg, #0E2117, #09100D)",
+                backgroundColor: plan.key === "found_pro" ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
+                backgroundImage: plan.key === "found_pro"
+                  ? "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.16), transparent 36%)"
+                  : "none",
                 boxShadow: isSelected
-                  ? "0 30px 90px rgba(50,208,116,0.16), 0 18px 80px rgba(0,0,0,0.42)"
-                  : "0 20px 70px rgba(0,0,0,0.32)",
+                  ? "inset 0 0 80px rgba(50,208,116,0.05), 0 20px 70px rgba(0,0,0,0.32)"
+                  : "none",
               }}
             >
               <span
-                className="text-[10px] font-black uppercase tracking-[0.24em] md:text-[11px]"
-                style={{ color: SIGNAL_GREEN }}
+                className="text-xs font-black uppercase tracking-widest"
+                style={{ color: plan.key === "found_pro" ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}
               >
                 {plan.label}
               </span>
-              <span className="mt-7 block break-words text-2xl font-black leading-tight text-white md:text-3xl">{plan.name}</span>
-              <span className="mt-5 flex items-end gap-2">
-                <span className="text-6xl font-black tracking-tight text-white md:text-7xl">${plan.price(intro)}</span>
-                <span className="pb-3 text-sm font-bold text-white/45 md:text-base">/mo</span>
+              <span className="mt-1 block break-words text-base font-black leading-tight text-white">{plan.name}</span>
+              <span className="mt-6 flex items-end gap-1">
+                <span className="text-4xl font-light tracking-tight text-white">${plan.price(intro)}</span>
+                <span className="pb-1 text-sm font-medium text-white/40">/month</span>
               </span>
-              <span className="mt-7 block text-base leading-7 text-white/62 md:text-lg md:leading-8">{plan.line}</span>
-              <span className="mt-7 block space-y-3">
+              {intro && (
+                <span className="mt-0.5 block text-[10px] font-black uppercase tracking-[0.15em]" style={{ color: SIGNAL_GREEN }}>
+                  Intro rate
+                </span>
+              )}
+              <span className="mt-8 block text-base font-black leading-6 text-white">{plan.line}</span>
+              <span className="mt-8 block space-y-3">
                 {plan.bullets.map((bullet) => (
-                  <span key={bullet} className="flex items-center gap-3 text-sm font-bold text-white/62">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                  <span key={bullet} className="flex items-start gap-2.5 text-sm text-white/70">
+                    <svg className="mt-0.5 shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={SIGNAL_GREEN} strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                     {bullet}
                   </span>
                 ))}
@@ -399,13 +390,6 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Compare all plans
               </Link>
-              {false && (isIntroRatePeriod
-                ? <>Starter is still available for website-only launches. Use the plan cards above or{" "}
-                    <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
-                      compare all plans
-                    </Link>.</>
-                : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans</Link>
-              )}
             </p>
           </div>
         </section>

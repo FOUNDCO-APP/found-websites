@@ -2,7 +2,9 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
+import MarketingPlanCard from "@/components/MarketingPlanCard"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import { FOUND_PLAN_OPTIONS } from "@/lib/foundPlans"
 
 export const metadata: Metadata = {
   title: "Compare Plans | Found — $29, $39, $69/month",
@@ -19,11 +21,17 @@ const SIGNAL_GREEN = "#32D074"
 
 const IS_INTRO_RATE_PERIOD = new Date() < INTRO_RATE_CUTOFF
 
-const PLANS = [
-  { key: "found",          name: "Found Starter",  href: "/plans/found",          price: IS_INTRO_RATE_PERIOD ? 29 : 39,  normalPrice: 39, tagline: "Start here." },
-  { key: "found_pro",      name: "Found Pro",       href: "/plans/found-pro",      price: IS_INTRO_RATE_PERIOD ? 39 : 69,  normalPrice: 69, tagline: "Follow up with every lead. Automatically.", featured: true },
-  { key: "found_business", name: "Found Business",  href: "/plans/found-business", price: IS_INTRO_RATE_PERIOD ? 69 : 99,  normalPrice: 99, tagline: "Run your whole business." },
-]
+const PLAN_HREFS = {
+  found: "/plans/found",
+  found_pro: "/plans/found-pro",
+  found_business: "/plans/found-business",
+}
+
+const PLANS = FOUND_PLAN_OPTIONS.map((plan) => ({
+  ...plan,
+  href: PLAN_HREFS[plan.key],
+  displayPrice: IS_INTRO_RATE_PERIOD ? plan.price : plan.normalPrice,
+}))
 
 const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Complete website, five pages",            values: [true, true, true] },
@@ -31,16 +39,17 @@ const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Professional copy, written for you",      values: [true, true, true] },
   { label: "Beautiful industry photos, built in",     values: [true, true, true] },
   { label: "Leads come straight to you",              values: [true, true, true] },
-  { label: "Inquiries get an automatic reply right away",  values: [true, true, true] },
+  { label: "New leads get an automatic reply from your business",  values: [true, true, true] },
   { label: "Take a photo. It's on your site.",        values: [true, true, true] },
-  { label: "Every lead followed up — automatically",  values: [false, true, true] },
+  { label: "Plus automatic lead follow-up",           values: [false, true, true] },
+  { label: "Drip-style messages keep new leads from going cold", values: [false, true, true] },
   { label: "See who's interested and ready to hire",  values: [false, true, true] },
   { label: "All your leads in one place",             values: [false, true, true] },
   { label: "Your entire contact list, organized",     values: [false, true, true] },
   { label: "Your crew contributes from the field",    values: [false, true, true] },
   { label: "Rewrite any page on your site, anytime",  values: [false, true, true] },
-  { label: "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing", values: [false, true, true] },
-  { label: "All business tools included: online ordering, bookings, estimates, payments, and email marketing", values: [false, false, true] },
+  { label: "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing", values: [false, true, true] },
+  { label: "Plus bookings, estimates, payments, and email marketing", values: [false, false, true] },
   { label: "Payment setup where it matters",          values: [false, true, true] },
   { label: "More five-star reviews, without asking",  values: [false, false, true] },
   { label: "Reach your full client list",             values: [false, false, true] },
@@ -82,46 +91,18 @@ export default function PlansPage() {
       {/* Plan cards */}
       <div className="px-6 pb-8 md:px-10 max-w-5xl mx-auto grid md:grid-cols-3 gap-4">
         {PLANS.map((plan) => (
-          <div
+          <MarketingPlanCard
             key={plan.key}
-            className="rounded-2xl p-10 relative"
-            style={{
-              backgroundColor: plan.featured ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
-              border: plan.featured ? "2px solid rgba(50,208,116,0.3)" : "2px solid rgba(255,255,255,0.07)",
-              transform: plan.featured ? "scale(1.02)" : "scale(1)",
-              boxShadow: plan.featured ? "inset 0 0 80px rgba(50,208,116,0.05)" : "none",
-            }}
-          >
-            {plan.featured && (
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                <span className="px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest"
-                  style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-                  Recommended
-                </span>
-              </div>
-            )}
-            <p className="text-base font-black text-white mb-1">{plan.tagline}</p>
-            <p className="text-xs font-black uppercase tracking-widest mb-4" style={{ color: plan.featured ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}>{plan.name}</p>
-            {IS_INTRO_RATE_PERIOD && (
-              <p className="text-sm font-medium line-through" style={{ color: "rgba(255,255,255,0.25)" }}>${plan.normalPrice}/month</p>
-            )}
-            <div className="flex items-baseline gap-1 mb-0.5">
-              <span className="text-4xl font-light text-white">${plan.price}</span>
-              <span className="text-sm font-medium text-white/40">/mo</span>
-            </div>
-            {IS_INTRO_RATE_PERIOD && (
-              <p className="text-[10px] font-black uppercase tracking-[0.15em] mb-6" style={{ color: SIGNAL_GREEN }}>Intro rate</p>
-            )}
-            <div className={IS_INTRO_RATE_PERIOD ? "" : "mt-6"}>
-              <Link
-                href={`/?start=1&plan=${plan.key}`}
-                className="block py-4 rounded-full text-xs font-black uppercase tracking-widest transition text-center"
-                style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-              >
-                Get my site
-              </Link>
-            </div>
-          </div>
+            planKey={plan.key}
+            name={plan.name}
+            headline={plan.headline}
+            price={`$${plan.displayPrice}`}
+            normalPrice={`$${plan.normalPrice}`}
+            featured={plan.featured}
+            intro={IS_INTRO_RATE_PERIOD}
+            href={`/?start=1&plan=${plan.key}`}
+            ctaLabel="Get my site"
+          />
         ))}
       </div>
 
@@ -156,7 +137,7 @@ export default function PlansPage() {
                     </td>
                   </tr>
                 )}
-                {i === 14 && (
+                {i === 15 && (
                   <tr key="divider-biz">
                     <td colSpan={4} className="pt-8 pb-2 pr-8">
                       <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>Added in Found Business</p>

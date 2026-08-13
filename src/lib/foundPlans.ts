@@ -11,11 +11,14 @@ export type FoundPlanOption = {
   eyebrow: string
   headline: string
   line: string
+  shortLine: string
   price: number
   normalPrice: number
   featured?: boolean
   cta: string
   bullets: string[]
+  homepageBullets: string[]
+  industryBullets: string[]
   toolGroup?: FoundPlanToolGroup
 }
 
@@ -24,48 +27,94 @@ export const FOUND_PLAN_OPTIONS: FoundPlanOption[] = [
     key: "found",
     name: "Found Starter",
     eyebrow: "Done for you",
-    headline: "Get online without building it yourself.",
-    line: "A polished website that gets your business live.",
+    headline: "Get online today.",
+    line: "A polished website you can update from your phone.",
+    shortLine: "Your site, photos, gallery, and leads - easy to update from your phone.",
     price: 29,
     normalPrice: 39,
     cta: "Continue with Found Starter",
     bullets: [
       "Website built for you",
       "Leads sent to you",
-      "Automatic instant reply to new leads",
+      "New leads get an automatic reply from your business",
       "Update your site, photos, and social posts",
+    ],
+    homepageBullets: [
+      "Complete website, five pages",
+      "Your own web address",
+      "Professional copy, written for you",
+      "Beautiful industry photos, built in",
+      "Leads come straight to you",
+      "New leads get an automatic reply from your business",
+      "Take a photo. It's on your site.",
+    ],
+    industryBullets: [
+      "Complete website",
+      "Camera system and gallery",
+      "Lead form plus automatic reply",
     ],
   },
   {
     key: "found_pro",
     name: "Found Pro",
     eyebrow: "Recommended",
-    headline: "Stop losing leads when you're busy.",
-    line: "Starter gets your site live. Pro keeps every inquiry warm.",
+    headline: "Follow up with every lead. Automatically.",
+    line: "Everything in Starter, plus automatic lead follow-up that keeps inquiries from going cold.",
+    shortLine: "Everything in Starter, plus automatic lead follow-up and one included growth tool.",
     price: 39,
     normalPrice: 69,
     cta: "Continue with Found Pro",
     featured: true,
     bullets: [
       "Everything in Starter",
-      "Automatic follow-up messages sent for you",
+      "Plus automatic lead follow-up",
       "Customer list organized",
-      "Choose one: online ordering, booking calendar, send estimates and collect deposits, or email marketing",
+      "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
+    ],
+    homepageBullets: [
+      "Everything in Starter",
+      "Plus automatic lead follow-up",
+      "Drip-style messages keep new leads from going cold",
+      "See who's interested and ready to hire",
+      "All your leads in one place",
+      "Your entire contact list, organized",
+      "Your crew contributes from the field",
+      "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing",
+    ],
+    industryBullets: [
+      "Everything in Starter",
+      "Plus automatic lead follow-up",
+      "Plus one included growth tool",
     ],
   },
   {
     key: "found_business",
     name: "Found Business",
     eyebrow: "All in",
-    headline: "Manage jobs from first call to final payment.",
-    line: "Business includes every operating tool in one plan.",
+    headline: "Run the whole business.",
+    line: "Everything in Pro, plus the full operating system for bookings, estimates, payments, email marketing, and team work.",
+    shortLine: "Everything in Pro, plus the full Found system for customers, tools, team, and growth.",
     price: 69,
     normalPrice: 99,
     cta: "Continue with Found Business",
     bullets: [
       "Everything in Pro",
-      "Team access for owners and workers",
-      "Manage work from first call to final payment",
+      "Plus bookings, estimates, payments, and email marketing",
+      "Plus team access for owners and workers",
+    ],
+    homepageBullets: [
+      "Everything in Pro",
+      "Plus bookings, estimates, payments, and email marketing",
+      "Payment setup where it matters",
+      "More five-star reviews, without asking",
+      "Reach your full client list",
+      "Your whole team, no extra charge",
+      "Show clients their finished job",
+    ],
+    industryBullets: [
+      "Everything in Pro",
+      "Plus bookings, estimates, payments, and email marketing",
+      "Plus team/workers",
     ],
     toolGroup: {
       label: "All business tools included:",
