@@ -25,6 +25,8 @@ const merriweather = Merriweather({ subsets: ["latin"], variable: "--font-merriw
 const sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-sans", weight: ["400", "600", "700"] })
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#080A09",
   viewportFit: "cover",
 }

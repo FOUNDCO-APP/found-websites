@@ -67,8 +67,8 @@ function PlanCarousel({
   intro: boolean
 }) {
   return (
-    <div>
-      <div className="-mx-6 overflow-x-auto px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="max-w-full overflow-hidden">
+      <div className="max-w-full overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex snap-x snap-mandatory gap-4">
           {INDUSTRY_PLAN_OPTIONS.map((plan) => {
             const selected = selectedPlan === plan.key
@@ -77,7 +77,7 @@ function PlanCarousel({
                 key={plan.key}
                 type="button"
                 onClick={() => onSelect(plan.key)}
-                className="min-h-[250px] w-[82vw] max-w-[350px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
+                className="min-h-[250px] w-[calc(100%-2rem)] max-w-[340px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
                 style={{
                   borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
                   background: selected
@@ -124,7 +124,7 @@ function PlanCarousel({
   )
 }
 
-function IndustrySitePreview({
+function IndustryOutcomeProof({
   industryLabel,
   subheadline,
   features,
@@ -138,51 +138,45 @@ function IndustrySitePreview({
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
-  const previewHeadline = `${industryTitle} site, ready to win local work.`
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
+    <div className="relative max-w-full overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-          What customers see
+          What Found builds
         </p>
         <span className="shrink-0 rounded-full bg-[#32D074] px-3 py-1 text-[9px] font-black uppercase tracking-wider text-[#080A09] md:text-[10px]">
-          Live-ready
+          Lead-ready
         </span>
       </div>
 
-      <div className="overflow-hidden rounded-[1.55rem] bg-[#F4F1EA] text-[#111312] shadow-2xl shadow-black/45">
-        <div className="relative min-h-[330px] bg-[#101411] px-5 pb-7 pt-20 text-white md:px-8 md:pt-24">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_12%,rgba(50,208,116,0.32),transparent_34%),linear-gradient(140deg,rgba(255,255,255,0.1),transparent_48%)]" />
-          <div className="relative">
-            <p className="mb-4 text-[10px] font-black uppercase tracking-[0.22em] text-white/40">
-              {industryLabel}
-            </p>
-            <p className="max-w-[11ch] text-[3.1rem] font-normal leading-[0.92] tracking-tight text-white md:max-w-[13ch] md:text-6xl">
-              {previewHeadline}
-            </p>
-            <p className="mt-5 max-w-md text-sm leading-6 text-white/58 md:text-base md:leading-7">
-              {subheadline}
-            </p>
-            <div className="mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
-              Request help
-            </div>
+      <div className="grid gap-4 md:grid-cols-[1.08fr_0.92fr]">
+        <div className="relative overflow-hidden rounded-[1.55rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_12%,rgba(50,208,116,0.2),transparent_32%)]" />
+          <p className="relative mb-5 text-[10px] font-black uppercase tracking-[0.22em] text-white/38">
+            {industryLabel}
+          </p>
+          <h2 className="relative max-w-[12ch] text-[2.45rem] font-normal leading-[0.98] tracking-tight text-white md:text-6xl">
+            A better {industryTitle.toLowerCase()} site, built to get the request.
+          </h2>
+          <p className="relative mt-5 max-w-xl text-sm leading-7 text-white/58 md:text-base">
+            {subheadline}
+          </p>
+          <div className="relative mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+            Request help
           </div>
         </div>
 
-        <div className="grid gap-px bg-black/10">
+        <div className="grid gap-3">
           {previewFeatures.map((feature) => (
-            <div key={feature.label} className="bg-[#F4F1EA] p-5 md:p-6">
-              <p className="text-base font-black text-[#111312]">{feature.label}</p>
-              <p className="mt-2 text-sm leading-6 text-black/50">{feature.desc}</p>
+            <div key={feature.label} className="rounded-[1.35rem] border border-white/[0.08] bg-[#101411] p-5">
+              <div className="mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+              <p className="text-base font-black text-white">{feature.label}</p>
+              <p className="mt-2 text-sm leading-6 text-white/48">{feature.desc}</p>
             </div>
           ))}
         </div>
       </div>
-
-      <p className="mt-5 text-sm leading-7 text-white/50">
-        This needs to feel like a finished customer site, not a generic worksheet or placeholder.
-      </p>
     </div>
   )
 }
@@ -211,7 +205,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
 
-      <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
+      <div className="min-h-screen overflow-x-hidden text-white" style={{ backgroundColor: FOUND_BLACK }}>
         <SiteNav onCta={() => setDrawerOpen(true)} />
 
         {/* Hero */}
@@ -250,7 +244,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
         {/* Visual preview and plan choice */}
         <section className="px-6 pb-20 md:px-10 max-w-5xl mx-auto">
           <div className="grid gap-5">
-            <IndustrySitePreview
+            <IndustryOutcomeProof
               industryLabel={industryLabel}
               subheadline={subheadline}
               features={features}
