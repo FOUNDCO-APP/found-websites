@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - Marketing Visual System: Team Direction Recorded, Not Started
+
+### Decision (no code changed this pass)
+Shawn raised that Found's marketing site is "all copy and no visuals" and wants real device-frame visuals (matching the homepage hero's quality bar) showing what Found actually generates, using real named test accounts (hvac, flooring, audio-pro, tacos, etc.), placed in different areas of the site. Verified first this wasn't redundant: it was already an open, undecided backlog item (`TASKS.md` line 52, `SESSION_HANDOFF.md` 2026-08-11 entry) - no locked decision existed in `DECISIONS.md`/`DESIGN_DECISIONS.md`, and no screenshot/mockup tooling exists in the codebase yet.
+
+Team round held (Jony leading design):
+- Craig: don't build a live/automated screenshot pipeline for v1 - real infra for an unproven need. Start with a small manually-curated set of real screenshots; automate capture later only if it proves valuable.
+- Jony: reuse the homepage hero's exact device-frame styling rather than inventing a second visual language. First real target: the "What Found builds" block on Industry/Compare pages (`IndustryOutcomeProof` in `IndustryPage.tsx`) - currently a stylized fake proof card, the clearest gap on the site. One real screenshot per industry, matched to that industry.
+- Steve: Industry pages first (highest-intent page, weakest proof moment today); Home's "What's actually different" section as the follow-up pass once Industry ships.
+- Phil: real screenshots close the "show, don't tell" gap; keep captions honest ("a real Found site," not vague template language).
+- Angela: test accounts are live and editable, not static assets - each candidate needs a content-quality check before going live as public proof, and the curated set should be revisited periodically.
+- Chris: mobile-first framing, since that's most of Found's traffic.
+- Marcus: technically trivial to screenshot (public pages, no auth wall) as long as the test account actually has real content at capture time.
+
+Shawn's explicit call: **"let's not start this yet"** - save the decision, don't build. Full plan recorded here and in `TASKS.md` for whenever this picks back up.
+
+---
+
 ## 2026-08-13 - FOUND Systems: Home Pro Tagline + Redundant Learn-More Link
 
 ### Progress This Pass
