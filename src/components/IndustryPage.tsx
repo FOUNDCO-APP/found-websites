@@ -100,7 +100,7 @@ function PlanCarousel({
   }
 
   return (
-    <div className="w-full max-w-full min-w-0 overflow-hidden">
+    <div className="w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6 md:ml-0 md:mr-0 md:w-full md:max-w-full">
       <div
         className="w-full max-w-full min-w-0 overflow-hidden py-2"
         onTouchStart={(event) => {

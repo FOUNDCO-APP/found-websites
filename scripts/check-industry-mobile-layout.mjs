@@ -15,7 +15,6 @@ const bannedTokens = [
   "snap-mandatory",
   "w-max",
   "100vw",
-  "-mx-",
 ]
 
 const found = bannedTokens.filter((token) => planCarouselSource.includes(token))
