@@ -18,12 +18,13 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - Jony-led audit correction: added an explicit root mobile viewport (`width=device-width`, `initialScale=1`) after iPhone screenshots showed Safari rendering the page like a wider desktop canvas. Replaced the weak fake site-preview mockup with a customer-facing outcome/proof section so industry pages no longer ship an internal-looking schematic as visual proof.
 - Team-directed pricing correction: removed the confusing hero mini pricing teaser, rewrote plan positioning around Found's actual value, reordered the industry plan chooser as Starter -> Pro -> Business, defaulted Pro to the centered card, and wired the selected/centered plan to the CTA.
 - iPhone overflow correction: replaced the native horizontal-scroll pricing carousel (`100vw` cards, `w-max`, negative margins, snap scrolling) with a controlled one-card plan selector. This keeps Starter -> Pro -> Business, opens on Pro, supports tap/touch-swipe state changes, and prevents industry pages from becoming wider than the phone. Added `test:industry-mobile-layout` so the unsafe carousel classes cannot quietly return.
+- Design correction after Shawn's real iPhone QA: removed the premature hero CTA, removed pricing side arrows and Starter/Pro/Business pill buttons, removed the card-inside-card pricing shell, and enlarged the "What happens after launch" section so the page feels more premium and less like software controls.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run test:industry-mobile-layout` passed.
-- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains.
+- `cmd /c npm run build` passed. Existing Next middleware deprecation warning remains. One local build attempt failed on Google font fetch; rerunning with network access passed.
 
 ---
 

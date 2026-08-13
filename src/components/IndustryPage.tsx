@@ -96,60 +96,41 @@ function PlanCarousel({
 
   return (
     <div className="w-full max-w-full min-w-0 overflow-hidden">
-      <div className="grid w-full min-w-0 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 sm:grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] sm:gap-3">
-        <button
-          type="button"
-          onClick={selectPrevious}
-          disabled={selectedIndex === 0}
-          aria-label="Previous plan"
-          className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.045] text-lg font-black text-white/70 transition disabled:opacity-25 sm:size-11"
-        >
-          &lsaquo;
-        </button>
+      <button
+        type="button"
+        onClick={() => onSelect(selected.key)}
+        onTouchStart={(event) => {
+          touchStartX.current = event.changedTouches[0]?.clientX ?? null
+        }}
+        onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+        className="min-h-[390px] w-full min-w-0 max-w-full rounded-[2.25rem] border p-8 text-left transition md:min-h-[430px] md:p-10"
+        style={{
+          borderColor: SIGNAL_GREEN,
+          background:
+            "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.24), transparent 34%), linear-gradient(180deg, rgba(50,208,116,0.16), rgba(50,208,116,0.045))",
+          boxShadow: "0 30px 90px rgba(50,208,116,0.16)",
+        }}
+      >
+        <span className="text-[11px] font-black uppercase tracking-[0.24em]" style={{ color: SIGNAL_GREEN }}>
+          {selected.label}
+        </span>
+        <span className="mt-8 block break-words text-3xl font-black leading-tight text-white">{selected.name}</span>
+        <span className="mt-5 flex items-end gap-2">
+          <span className="text-7xl font-black tracking-tight text-white">${selected.price(intro)}</span>
+          <span className="pb-3 text-base font-bold text-white/45">/mo</span>
+        </span>
+        <span className="mt-8 block text-lg leading-8 text-white/62">{selected.line}</span>
+        <span className="mt-8 block space-y-3">
+          {selected.bullets.map((bullet) => (
+            <span key={bullet} className="flex items-center gap-3 text-sm font-bold text-white/62">
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+              {bullet}
+            </span>
+          ))}
+        </span>
+      </button>
 
-        <button
-          type="button"
-          onClick={() => onSelect(selected.key)}
-          onTouchStart={(event) => {
-            touchStartX.current = event.changedTouches[0]?.clientX ?? null
-          }}
-          onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
-          className="min-h-[300px] w-full min-w-0 max-w-full rounded-[2rem] border p-6 text-left transition"
-          style={{
-            borderColor: SIGNAL_GREEN,
-            background: "linear-gradient(180deg, rgba(50,208,116,0.18), rgba(50,208,116,0.06))",
-            boxShadow: "0 24px 70px rgba(50,208,116,0.12)",
-          }}
-        >
-          <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: SIGNAL_GREEN }}>
-            {selected.label}
-          </span>
-          <span className="mt-5 block break-words text-xl font-black text-white">{selected.name}</span>
-          <span className="mt-3 block text-5xl font-black tracking-tight text-white">${selected.price(intro)}</span>
-          <span className="mt-1 block text-sm font-bold text-white/45">per month</span>
-          <span className="mt-6 block text-sm leading-6 text-white/58">{selected.line}</span>
-          <span className="mt-5 block space-y-2">
-            {selected.bullets.map((bullet) => (
-              <span key={bullet} className="flex items-center gap-2 text-xs font-bold text-white/54">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-                {bullet}
-              </span>
-            ))}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={selectNext}
-          disabled={selectedIndex === INDUSTRY_PLAN_OPTIONS.length - 1}
-          aria-label="Next plan"
-          className="flex size-9 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.045] text-lg font-black text-white/70 transition disabled:opacity-25 sm:size-11"
-        >
-          &rsaquo;
-        </button>
-      </div>
-
-      <div className="mx-auto flex w-fit items-center justify-center gap-2 rounded-full bg-white/[0.07] px-4 py-3">
+      <div className="mx-auto mt-5 flex w-fit items-center justify-center gap-3 rounded-full bg-white/[0.075] px-5 py-3">
         {INDUSTRY_PLAN_OPTIONS.map((plan) => {
           const isSelected = selectedPlan === plan.key
           return (
@@ -166,20 +147,6 @@ function PlanCarousel({
             />
           )
         })}
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-black uppercase tracking-[0.12em] text-white/32">
-        {INDUSTRY_PLAN_OPTIONS.map((plan) => (
-          <button
-            key={plan.key}
-            type="button"
-            onClick={() => onSelect(plan.key)}
-            className="truncate rounded-full border border-white/[0.06] bg-white/[0.03] px-2 py-2 transition"
-            style={{ color: selectedPlan === plan.key ? SIGNAL_GREEN : undefined }}
-          >
-            {plan.name.replace("Found ", "")}
-          </button>
-        ))}
       </div>
     </div>
   )
@@ -274,16 +241,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           </p>
           <h1 className="text-5xl font-normal leading-tight md:text-7xl text-white mb-6">{headline}</h1>
           <p className="text-lg font-medium text-white/60 leading-8 max-w-2xl mb-4">{subheadline}</p>
-          <p className="text-base text-white/45 leading-8 max-w-2xl mb-10">{description}</p>
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-            >
-              Build my business site
-            </button>
-          </div>
+          <p className="text-base text-white/45 leading-8 max-w-2xl">{description}</p>
         </section>
 
         {/* Visual preview and plan choice */}
@@ -295,40 +253,46 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
               features={features}
             />
 
-            <div className="grid min-w-0 gap-5 lg:grid-cols-[0.86fr_1.14fr]">
-              <div className="rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-6 md:p-7">
+            <div className="grid min-w-0 gap-12 lg:grid-cols-[0.82fr_1.18fr]">
+              <div className="rounded-[2.25rem] border border-white/[0.08] bg-white/[0.035] p-7 md:p-9">
                 <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
                   What happens after launch
                 </p>
-                <div className="space-y-3">
+                <h2 className="mb-7 text-3xl font-normal leading-tight text-white md:text-4xl">
+                  From invisible to ready for the next request.
+                </h2>
+                <div className="space-y-4">
                   {[
-                    ["1", "A visitor finds the site"],
-                    ["2", "They request help"],
-                    ["3", "Found puts the lead in your dashboard"],
-                    ["4", "Pro/Business helps you follow up"],
-                  ].map(([step, label]) => (
-                    <div key={step} className="flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#0B0E0C] p-4">
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-black" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>{step}</span>
-                      <p className="text-sm font-bold text-white/78">{label}</p>
+                    ["1", "Customers find the site", "Your business has a clean place to send searchers, referrals, and repeat customers."],
+                    ["2", "They ask for help", "Calls, estimate requests, and project details go into Found instead of getting lost."],
+                    ["3", "You see the request", "The owner view shows what happened so you know who needs a response."],
+                    ["4", "Pro/Business helps follow up", "Higher plans add the operating tools that keep new leads from going cold."],
+                  ].map(([step, label, detail]) => (
+                    <div key={step} className="flex gap-4 rounded-[1.35rem] border border-white/[0.08] bg-[#0B0E0C] p-5">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-black" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>{step}</span>
+                      <span>
+                        <p className="text-base font-black text-white">{label}</p>
+                        <p className="mt-2 text-sm leading-6 text-white/45">{detail}</p>
+                      </span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-7">
-                <p className="text-xs font-black uppercase tracking-[0.22em] mb-3" style={{ color: SIGNAL_GREEN }}>
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
                   Choose your path
                 </p>
-                <h2 className="text-2xl font-normal leading-tight text-white">Starter, Pro, or Business. Pro is centered first.</h2>
-                <p className="mt-3 text-sm leading-6 text-white/48">
-                  Most owners start with Pro. Swipe left for Starter or right for Business.
+                <h2 className="text-4xl font-normal leading-tight text-white md:text-5xl">Start with the level that fits the business.</h2>
+                <p className="mt-4 text-base leading-7 text-white/48">
+                  Pro opens first. Swipe the card to compare Starter and Business.
                 </p>
-                <div className="mt-5">
+                <div className="mt-8">
                   <PlanCarousel selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
                 </div>
                 <button
                   onClick={() => setDrawerOpen(true)}
-                  className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 text-xs font-black uppercase tracking-widest transition hover:opacity-90"
+                  className="mt-6 inline-flex min-h-14 w-full items-center justify-center rounded-full px-6 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
                   style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                 >
                   Start with {selectedPlanOption.name.replace("Found ", "")}
