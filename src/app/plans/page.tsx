@@ -8,10 +8,10 @@ import { FOUND_PLAN_OPTIONS } from "@/lib/foundPlans"
 
 export const metadata: Metadata = {
   title: "Compare Plans | Found — $29, $39, $69/month",
-  description: "Compare Found, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
+  description: "Compare Found Starter, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
   openGraph: {
     title: "Compare Found Plans — $29, $39, $69/month",
-    description: "Found, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire August 15.",
+    description: "Found Starter, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire August 15.",
     url: "https://foundco.app/plans",
   },
 }

@@ -437,7 +437,7 @@ export default function HomeClient() {
                 {
                   key: "found",
                   tagline: "Get online today.",
-                  name: "Found",
+                  name: "Found Starter",
                   price: isIntroRatePeriod ? "$29" : "$39",
                   normalPrice: "$39",
                   features: [

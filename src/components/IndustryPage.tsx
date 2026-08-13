@@ -96,30 +96,35 @@ function PlanCarousel({
         >
           {INDUSTRY_PLAN_OPTIONS.map((plan) => {
             const isSelected = selectedPlan === plan.key
+            const isRecommended = plan.key === "found_pro"
             return (
             <button
               key={plan.key}
               type="button"
               onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
-              className="min-h-[430px] flex-[0_0_82%] rounded-2xl border p-10 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px]"
+              className="relative min-h-[430px] flex-[0_0_82%] rounded-2xl border p-10 text-left transition-all duration-300 ease-out md:min-h-[470px] md:flex-[0_0_70%] md:max-w-[430px]"
               style={{
                 borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
-                backgroundColor: plan.key === "found_pro" ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
-                backgroundImage: plan.key === "found_pro"
+                backgroundColor: isRecommended ? "rgba(50,208,116,0.06)" : "rgba(255,255,255,0.03)",
+                backgroundImage: isRecommended
                   ? "radial-gradient(circle at 72% 10%, rgba(50,208,116,0.16), transparent 36%)"
                   : "none",
                 boxShadow: isSelected
                   ? "inset 0 0 80px rgba(50,208,116,0.05), 0 20px 70px rgba(0,0,0,0.32)"
                   : "none",
-              }}
-            >
-              <span
-                className="text-xs font-black uppercase tracking-widest"
-                style={{ color: plan.key === "found_pro" ? SIGNAL_GREEN : "rgba(255,255,255,0.4)" }}
+                }}
               >
-                {plan.label}
-              </span>
+              {isRecommended && (
+                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+                  Recommended
+                </span>
+              )}
+              {!isRecommended && (
+                <span className="text-xs font-black uppercase tracking-widest text-white/40">
+                  {plan.label}
+                </span>
+              )}
               <span className="mt-1 block break-words text-base font-black leading-tight text-white">{plan.name}</span>
               <span className="mt-6 flex items-end gap-1">
                 <span className="text-4xl font-light tracking-tight text-white">${plan.price(intro)}</span>
