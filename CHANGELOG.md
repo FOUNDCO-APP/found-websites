@@ -1,3 +1,26 @@
+## Session: August 13, 2026 - Admin New-Client Tool + Deferred Billing
+**AI:** Claude
+
+### Context
+Real scenario: Shawn is moving his friend Richard (mbjheatingandcooling.com) onto Found. Richard already paid this cycle via Zelle outside Stripe and is "old school" - not ready to enter a card today, but one is required by next cycle. Team round (multiple rounds, Shawn approving each): decided term menu (30/60/90 days fixed), pause behavior if no card arrives (public site goes offline, dashboard stays reachable), a required typed reason per deferral, and confirmed this is admin-only since Shawn is the only person running Found. A follow-up question (does this go through the public site or a back-end path) surfaced that neither existing tool covered it - the public `/onboarding` -> `/activate` flow generates a real site but demands a card immediately; the admin Growth "convert lead to client" tool skips the card but only creates a bare stub, no real generated site. Resolved by reusing `createOnboardingSite()` (the actual site-generation engine) from a new plain admin form. A final architecture check found `trial_ends_at` already exists as a live, unused column, and the existing `PreviewBanner` "Site paused" state was cosmetic only (the real site still rendered underneath) - confirmed via a live read-only query before building on it.
+
+### Changed
+- `src/app/admin/new-client/actions.ts` (new): `createManualClientSite()` maps a plain form to `createOnboardingSite()`'s input shape and creates a real site (same AI copy/photo generation as a public signup). `deferClientBilling()` sets `trial_ends_at` to now + 30/60/90 days and logs a `client_activities` note with the required reason.
+- `src/app/admin/new-client/page.tsx` (new): plain, unstyled-beyond-existing-admin-CSS intake form (same required fields as public onboarding: name, phone, email, industry, sub-industry, location, description, differentiator, services, plan, color, vibe). After creation, shows either an "activate now" link (`/activate?slug=...`, the existing card-collection flow, unchanged) or a term + reason form for deferral.
+- `src/app/[slug]/layout.tsx`: added real enforcement - once `trial_ends_at` has passed with no active/trialing subscription, the public site's `<main>` renders `SitePausedNotice` instead of real content. Dashboard and the reactivate-with-card flow are untouched; only the public site goes dark.
+- `src/components/SitePausedNotice.tsx` (new): minimal "temporarily unavailable" placeholder shown to public visitors of a paused site.
+- `src/app/admin/clients/page.tsx`: added a `trial_ends_at`-derived issue badge to the existing issues list - "Card due {date}" while pending, "Paused - no card" once overdue - so deferred clients are visible from the main Clients list, not just discoverable by memory.
+- `src/app/admin/more/page.tsx`, `src/app/admin/AdminShell.tsx`: added an "Operate" section link and nav match entry for the new tool.
+
+### Verification
+- Confirmed `trial_ends_at` is a real, live column via a direct read-only Supabase REST query before using it (not just trusting the TypeScript type file).
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, including the new `/admin/new-client` route.
+- Not yet tested live end-to-end (create a real site through the new form, defer billing, confirm the pause actually takes effect after the deadline).
+
+---
+
 ## Session: August 13, 2026 - FOUND Systems: Home Pro Tagline + Redundant Learn-More Link
 **AI:** Claude
 

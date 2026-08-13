@@ -1,5 +1,19 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-13 - Admin New-Client Tool + Deferred Billing
+
+Real scenario: migrating Shawn's friend Richard (mbjheatingandcooling.com) onto Found. Richard already paid this cycle via Zelle outside Stripe, isn't ready to enter a card today, needs one on file by next cycle. Multiple team rounds, each approved by Shawn before building:
+
+- [x] Policy decided: term menu fixed at 30/60/90 days; if no card by the deadline, the public site pauses (dashboard stays reachable); a typed reason is required per deferral; admin-only (Shawn is the only one running Found today).
+- [x] Architecture question resolved: neither existing tool covered this (public onboarding demands a card immediately; admin's lead-to-client tool only makes a bare stub, no real site) - the fix is a plain admin form that calls the same `createOnboardingSite()` engine the public flow uses.
+- [x] Verified (live read-only query, not just the TS type file) that `trial_ends_at` is a real, already-existing column on `companies`, unused until now. Also verified the existing `PreviewBanner` "Site paused" state was cosmetic only - the real site still rendered underneath it. Both confirmed before building on top of them.
+- [x] Built `/admin/new-client`: plain intake form (same required fields as public onboarding), creates a real site via `createOnboardingSite()`, then either links to the existing `/activate?slug=...` card-collection flow or sets deferred terms (30/60/90 days + reason) via a new `deferClientBilling()` action.
+- [x] Built real pause enforcement in `[slug]/layout.tsx`: once `trial_ends_at` passes with no active/trialing subscription, the public site shows a "temporarily unavailable" placeholder instead of real content. Dashboard and reactivation are untouched.
+- [x] Added a "Card due {date}" / "Paused - no card" badge to the existing Clients list issues, so deferred clients are visible without having to remember who's on the clock.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
+- [ ] Shawn QA: build Richard's real site through `/admin/new-client`, defer billing 30 days with a reason, confirm the Clients list shows "Card due" correctly, confirm `/activate?slug=...` still works for adding the card whenever Richard's ready.
+- [ ] Not yet tested: what the public site actually looks like once a deadline passes with no card (the pause path itself) - no live account has hit that date yet.
+
 ## 2026-08-11 - FOUND Systems: Analytics/SEO/AEO/GEO Tracking Stack (Started)
 
 Shawn's question: besides PostHog, what's free or near-free to track everything going in/out of Found and help the team grow (SEO, AEO, GEO)? Named this initiative "FOUND Systems" per Shawn - a durable, ongoing checklist (also saved to memory so "remind me of FOUND Systems" works in any future conversation, not just this one).

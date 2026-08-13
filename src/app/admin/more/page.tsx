@@ -15,6 +15,12 @@ export default async function AdminMorePage() {
     <div className="hq-page hq-page-narrow">
       <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">More</h1><p className="hq-subtitle">Quality tools and secondary destinations.</p></div></header>
       <section>
+        <div className="hq-section-head"><h2 className="hq-section-title">Operate</h2></div>
+        <div className="hq-panel">
+          <Link href="/admin/new-client" className="hq-row hq-link-row"><div><p className="hq-row-title">New client</p><p className="hq-row-meta">Build a real site yourself - phone calls, migrations, deferred billing</p></div><span className="hq-chevron" /></Link>
+        </div>
+      </section>
+      <section>
         <div className="hq-section-head"><h2 className="hq-section-title">Quality</h2></div>
         <div className="hq-panel">
           <Link href="/admin/copy" className="hq-row hq-link-row"><div><p className="hq-row-title">Website copy</p><p className="hq-row-meta">Review and safely regenerate live content</p></div><div className="hq-action-end"><span className={`hq-badge ${fallbackCount ? "hq-badge-warning" : "hq-badge-success"}`}>{fallbackCount ? `${fallbackCount} review` : "Clear"}</span><span className="hq-chevron" /></div></Link>

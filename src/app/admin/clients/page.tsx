@@ -11,7 +11,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const initialFilter = typeof params.state === "string" ? params.state : undefined
   const admin = getAdminClient()
   const [{ data: companies }, { data: configs }, { data: activities }] = await Promise.all([
-    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug").order("created_at", { ascending: false }),
+    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
     admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
   ])
@@ -24,6 +24,15 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     if (company.client_state === "onboarding" && !company.logo_url && !company.logo_white_url) issues.push("No logo")
     if (company.client_state === "onboarding" && copyByCompany.get(company.id) !== true) issues.push("Fallback copy")
     if (PAYMENT_RELEVANT_INTENTS.has(company.primary_intent ?? "") && !company.stripe_connect_account_id) issues.push("No payment setup")
+    const isActiveSubscription = company.subscription_status === "active" || company.subscription_status === "trialing"
+    if (company.trial_ends_at && !isActiveSubscription) {
+      const dueDate = new Date(company.trial_ends_at)
+      if (dueDate < new Date()) {
+        issues.push("Paused - no card")
+      } else {
+        issues.push(`Card due ${dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`)
+      }
+    }
     return {
       id: company.id,
       name: company.name,

@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - Admin New-Client Tool + Deferred Billing
+
+### Progress This Pass
+- Real trigger: Shawn is migrating his friend Richard (mbjheatingandcooling.com) onto Found. Richard already paid this cycle via Zelle outside Stripe and isn't ready to enter a card today, but needs one on file by next cycle. Shawn was explicit: "nothing quick, I'm on it built right" and wanted the team to think through scenarios beyond just Richard's, not just patch this one case.
+- Team rounds (each presented in full, each approved by Shawn before the next step): policy first (30/60/90-day fixed term menu, pause-not-cancel if no card by deadline, required typed reason, admin-only since Shawn is the only operator today), then an architecture question Shawn raised himself (does this go through the public site or a back-end path) that neither existing tool actually answered - the public onboarding flow generates a real site but demands a card immediately, the admin lead-to-client tool skips the card but only makes a bare stub with no real site.
+- Resolution: `createOnboardingSite()` (in `src/app/onboarding/actions.ts`) is the actual site-generation engine and isn't tied to the public UI - a plain admin form can call it directly and get an identical-quality real site.
+- Before building on it, verified two things live rather than trusting stale assumptions: (1) `trial_ends_at` is a real, already-existing column on `companies` via a direct read-only Supabase REST query - confirmed via `curl` against the live database, not just the TypeScript type file (which can go stale); (2) the existing `PreviewBanner` "Site paused" state was cosmetic only - `[slug]/layout.tsx` rendered the real site content unconditionally regardless of subscription status, so nothing was actually being paused today despite the banner copy already existing.
+- Mid-session correction, recorded to memory (`feedback_team_approval_process.md`): Claude answered one architecture question directly in its own voice ("that's the shape I'd build...") instead of routing it through the team format, despite the rest of the session doing team rounds correctly. Shawn: "I don't want you to be telling me any of your recommendations or your decisions. When I talk to you, that's for the team." Corrected immediately and the rest of the session ran every finding through labeled team voices.
+- Built:
+  - `src/app/admin/new-client/actions.ts` (new) - `createManualClientSite()` maps a plain form to `createOnboardingSite()`'s input and builds a real site; `deferClientBilling()` sets `trial_ends_at` to now+30/60/90 days and logs a `client_activities` note carrying the required reason.
+  - `src/app/admin/new-client/page.tsx` (new) - plain intake form (same required fields as public onboarding), then either an "activate now" link to the existing `/activate?slug=...` flow or a term+reason form for deferral.
+  - `src/app/[slug]/layout.tsx` - real pause enforcement: once `trial_ends_at` passes with no active/trialing subscription, the public site's `<main>` shows a new `SitePausedNotice` placeholder instead of real content. Dashboard and reactivation untouched - only the public site goes dark.
+  - `src/components/SitePausedNotice.tsx` (new) - the placeholder itself.
+  - `src/app/admin/clients/page.tsx` - added a "Card due {date}" / "Paused - no card" badge to the existing issues list so deferred clients are visible without relying on memory.
+  - `src/app/admin/more/page.tsx`, `AdminShell.tsx` - nav entry for the new tool.
+
+### Verification This Pass
+- Confirmed `trial_ends_at` exists live via a direct read-only Supabase query before using it.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, including the new `/admin/new-client` route.
+- Not yet tested live end-to-end - no real site has been built through the new form yet, and no account has actually crossed a deferred deadline to prove the pause path.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: build Richard's real site through `/admin/new-client`, defer billing with a reason, confirm the Clients list shows it, confirm the reactivate link still works. The pause-path itself (what a real expired deadline looks like publicly) won't be provable until a real deadline passes - worth a manual test with a short custom window before trusting it for a real client relationship.
+
+---
+
 ## 2026-08-13 - Marketing Visual System: Team Direction Recorded, Not Started
 
 ### Decision (no code changed this pass)

@@ -16,6 +16,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import StickyCtaBar from "@/components/public/StickyCtaBar"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { buildPublicSiteSchemas } from "@/lib/publicSiteSchema"
+import SitePausedNotice from "@/components/SitePausedNotice"
 
 export const dynamic = 'force-dynamic'
 
@@ -99,6 +100,14 @@ export default async function CompanyLayout({
 
   if (!company) notFound()
 
+  // Deferred-billing pause: the owner agreed to add a card by trial_ends_at
+  // (set via the admin new-client tool, not the normal Stripe trial path).
+  // Once that date passes with no active subscription, the public site goes
+  // dark - the owner's dashboard and the reactivate-with-card flow are
+  // untouched, only visitors to the public site see the paused notice.
+  const isActiveSubscription = company.subscription_status === "active" || company.subscription_status === "trialing"
+  const isPaused = !isActiveSubscription && !!company.trial_ends_at && new Date(company.trial_ends_at) < new Date()
+
   const { primary_color, accent_color_1 } = company
   const vibe = getVibe(company.vibe)
   const layout = getLayout(company.industry_category, company.vibe, company.layout_override)
@@ -140,7 +149,9 @@ export default async function CompanyLayout({
         />
       ))}
       <Navbar company={company} transparent={layout === "cinematic"} hasShop={activeAddons.includes("shopping_cart")} />
-      <main className="flex-1 pb-24 md:pb-0">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">
+        {isPaused ? <SitePausedNotice businessName={company.name} /> : children}
+      </main>
       <Footer company={company} activeAddons={activeAddons} />
       <StickyCtaBar
         label={barCTA.label}
