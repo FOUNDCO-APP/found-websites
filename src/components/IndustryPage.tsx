@@ -110,12 +110,12 @@ function PlanCarousel({
       >
         {visiblePlans.map(({ plan, position }) => {
           const isSelected = position === "selected"
-          const transform =
+          const placement =
             position === "previous"
-              ? "translateX(-62%) scale(0.88)"
+              ? { left: "-24%", transform: "scale(0.86)" }
               : position === "next"
-                ? "translateX(62%) scale(0.88)"
-                : "translateX(0) scale(1)"
+                ? { left: "70%", transform: "scale(0.86)" }
+                : { left: "50%", transform: "translateX(-50%) scale(1)" }
 
           return (
             <button
@@ -123,11 +123,12 @@ function PlanCarousel({
               type="button"
               onClick={() => onSelect(plan.key)}
               aria-label={`Choose ${plan.name}`}
-              className="absolute left-1/2 top-0 min-h-[405px] w-[78%] max-w-[350px] -translate-x-1/2 rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[440px] md:w-[72%] md:max-w-[390px] md:p-9"
+              className="absolute top-0 min-h-[405px] w-[74%] max-w-[330px] rounded-[2.25rem] border p-7 text-left transition-all duration-300 ease-out md:min-h-[440px] md:w-[68%] md:max-w-[370px] md:p-9"
               style={{
-                transform: `translateX(-50%) ${transform}`,
+                left: placement.left,
+                transform: placement.transform,
                 zIndex: isSelected ? 2 : 1,
-                opacity: isSelected ? 1 : 0.48,
+                opacity: isSelected ? 1 : 0.36,
                 pointerEvents: isSelected ? "auto" : "auto",
                 borderColor: isSelected ? SIGNAL_GREEN : "rgba(255,255,255,0.12)",
                 background: isSelected

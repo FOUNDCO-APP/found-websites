@@ -20,6 +20,7 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - iPhone overflow correction: replaced the native horizontal-scroll pricing carousel (`100vw` cards, `w-max`, negative margins, snap scrolling) with a controlled one-card plan selector. This keeps Starter -> Pro -> Business, opens on Pro, supports tap/touch-swipe state changes, and prevents industry pages from becoming wider than the phone. Added `test:industry-mobile-layout` so the unsafe carousel classes cannot quietly return.
 - Design correction after Shawn's real iPhone QA: removed the premature hero CTA, removed pricing side arrows and Starter/Pro/Business pill buttons, removed the card-inside-card pricing shell, and enlarged the "What happens after launch" section so the page feels more premium and less like software controls.
 - Apple-style pricing refinement: kept the no-overflow controlled selector but made the center plan card narrower and added clipped neighboring card peeks on the left/right, matching the direction Shawn referenced from Apple's mobile cards without reintroducing native horizontal page scroll.
+- Pricing peek positioning fix: corrected the card placement math so the selected card stays centered while neighbors only peek from the edges; avoids the previous double-translate issue that clipped the Pro card off-screen.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification

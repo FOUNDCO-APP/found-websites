@@ -29,6 +29,7 @@
 - Team correction applied: replace the unsafe native scroll carousel with a controlled one-card selector. Starter -> Pro -> Business remains the order, Pro is still the default, arrows/dots/labels/touch-swipe change the selected plan, and the CTA follows the selected plan. Added `scripts/check-industry-mobile-layout.mjs` plus `npm run test:industry-mobile-layout` to block the exact overflow-causing classes from returning inside `PlanCarousel`.
 - Shawn's next real iPhone QA confirmed width was fixed but the pricing presentation still looked childish/overcontrolled. Team correction applied: remove the early hero CTA, remove pricing side arrows, remove Starter/Pro/Business pill buttons, remove the extra pricing card wrapper, keep one premium plan card with dots only, and make the post-launch path section larger.
 - Follow-up refinement: Shawn asked for Apple-style neighboring cards peeking left/right. Built it with absolute-positioned clipped cards inside the controlled selector, not native horizontal scroll. Center card is now narrower; previous/next plan cards peek at reduced scale/opacity.
+- Shawn QA caught the first peek implementation still clipped the centered Pro card. Root cause: compounded transform math. Fixed by switching to explicit card positions: previous from the left edge, selected at `left: 50%` with `translateX(-50%)`, next from the right edge.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass
@@ -39,6 +40,7 @@
 - `cmd /c npm run test:industry-mobile-layout` passed after the controlled selector replacement.
 - Latest presentation cleanup: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed. One local build attempt failed on Google font fetch; rerunning with network access passed.
 - Peek refinement verification: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed.
+- Peek positioning fix verification: `cmd /c npm run test:industry-mobile-layout`, `cmd /c npx tsc --noEmit`, and `cmd /c npm run build` passed.
 
 ### Explicit Next Step
 Deploy, then QA one industry page on a real iPhone: confirm there is no sideways page drift, no section is clipped off the left/right edge, the plan selector opens on Pro, tapping/swiping changes Starter/Pro/Business, and the CTA opens onboarding with the selected plan.
