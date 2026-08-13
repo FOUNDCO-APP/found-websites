@@ -13,6 +13,9 @@ Real scenario: migrating Shawn's friend Richard (mbjheatingandcooling.com) onto 
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
 - [ ] Shawn QA: build Richard's real site through `/admin/new-client`, defer billing 30 days with a reason, confirm the Clients list shows "Card due" correctly, confirm `/activate?slug=...` still works for adding the card whenever Richard's ready.
 - [ ] Not yet tested: what the public site actually looks like once a deadline passes with no card (the pause path itself) - no live account has hit that date yet.
+- [x] Follow-up: Shawn asked for an automated email option alongside manual (both always available, not either/or) - client gets an email with a "View my site" link and an "Add my card" link, billing starts on the due date, nothing charged today (Shawn specified this content directly). Built: `deferClientBilling()` sends this via Resend to the company's own email when the new "also email them now" checkbox is checked; failure doesn't block the deferral, manual link stays available either way; confirmation screen shows whether the email actually sent.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after the email addition.
+- [ ] Shawn QA: defer a real test account with "email them now" checked, confirm the email actually arrives and both links in it work.
 
 ## 2026-08-11 - FOUND Systems: Analytics/SEO/AEO/GEO Tracking Stack (Started)
 

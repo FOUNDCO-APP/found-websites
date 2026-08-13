@@ -1,3 +1,21 @@
+## Session: August 13, 2026 - Automated Add-Card Email for Deferred Billing
+**AI:** Claude
+
+### Context
+Follow-up to the deferred-billing tool: Shawn asked whether the card link could go out either manually (as already built) or as an automated email to the client, with both always available rather than one replacing the other. Confirmed technically straightforward - Found already sends other transactional emails via Resend (site-live notices, abandoned-onboarding saves), same pattern applies here. Shawn specified the email content directly: state the site is live with a link to view it, then that they need to click a link to add their card so billing starts next cycle.
+
+### Changed
+- `src/app/admin/new-client/actions.ts`: `deferClientBilling()` now accepts an optional `sendEmail` checkbox. When checked, sends a Resend email to the company's own email (already on file, no new field) with a "View my site" link and an "Add my card" link (`/activate?slug=...`), stating billing starts on the due date and nothing is charged today. Failure doesn't block the deferral - it's logged to the same `client_activities` note so the manual link fallback is always available regardless of email outcome.
+- `src/app/admin/new-client/page.tsx`: added the "also email them now" checkbox to the deferral form (unchecked by default - manual stays the base case), and the confirmation screen now shows whether the automated email actually sent, reading the last `client_activities` entry.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet tested live - no real email has been sent through this path yet.
+
+---
+
 ## Session: August 13, 2026 - Admin New-Client Tool + Deferred Billing
 **AI:** Claude
 

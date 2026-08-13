@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - Automated Add-Card Email for Deferred Billing
+
+### Progress This Pass
+- Follow-up to the deferred-billing tool from the prior entry. Shawn asked whether the card link could be sent manually, automatically via email, or both - specifically both always available, not one replacing the other ("if he wants me to enter it, I can answer it manually, but I can also shoot him an email automated if I choose that option").
+- Confirmed this needed no new infrastructure - Found already sends other transactional emails through Resend (site-live notices, abandoned-onboarding saves), same pattern applies.
+- Shawn specified the email content directly: state the site is live with a link to view it, then that they need to click a link to add their card so billing starts next cycle.
+- Built: `deferClientBilling()` in `src/app/admin/new-client/actions.ts` now accepts an optional `sendEmail` checkbox on the deferral form. When checked, sends a Resend email to the company's own email (already on file, no new field needed) with a "View my site" link and an "Add my card" link (the same `/activate?slug=...` flow), stating nothing is charged today and billing starts on the due date. Email failure doesn't block the deferral - it's logged into the same `client_activities` note, and the manual link is always shown on the confirmation screen regardless of whether the email option was used or how it went.
+- `src/app/admin/new-client/page.tsx`: added the checkbox (unchecked by default, so manual stays the base case matching before) and made the confirmation screen read the last `client_activities` entry to show whether the automated email actually sent or failed.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet tested live - no real email has been sent through this path yet.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: defer a real test account with "email them now" checked and confirm the email actually arrives with both links working, before trusting this for Richard's real account.
+
+---
+
 ## 2026-08-13 - Admin New-Client Tool + Deferred Billing
 
 ### Progress This Pass

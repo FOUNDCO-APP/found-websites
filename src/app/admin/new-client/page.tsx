@@ -29,6 +29,18 @@ export default async function AdminNewClientPage({
       .eq("id", createdId)
       .maybeSingle()
 
+    let lastActivitySummary: string | null = null
+    if (deferred && company) {
+      const { data: activity } = await admin
+        .from("client_activities")
+        .select("summary")
+        .eq("company_id", company.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      lastActivitySummary = activity?.summary ?? null
+    }
+
     if (!company) {
       return (
         <div className="hq-page hq-page-narrow">
@@ -61,9 +73,15 @@ export default async function AdminNewClientPage({
                 If no card is added by then, the public site pauses automatically.
               </p>
               <p className="hq-row-meta" style={{ marginTop: 10 }}>
-                Send this link when they're ready to add a card:<br />
+                Send this link yourself anytime:<br />
                 <a href={activateUrl}>{activateUrl}</a>
               </p>
+              {lastActivitySummary?.includes("Card-link email sent") && (
+                <p className="hq-row-meta" style={{ marginTop: 10, color: "var(--hq-success, #32D074)" }}>Card-link email sent.</p>
+              )}
+              {lastActivitySummary?.includes("Card-link email FAILED") && (
+                <p className="hq-row-meta" style={{ marginTop: 10, color: "var(--hq-danger, #F43F5E)" }}>The automated email failed to send - use the link above manually.</p>
+              )}
             </div>
           </section>
         ) : (
@@ -88,6 +106,10 @@ export default async function AdminNewClientPage({
                 </label>
                 <label className="hq-form-wide">Reason (for your own records)
                   <textarea name="reason" rows={2} required placeholder="e.g. Richard Zelle'd this month directly, still old-school about entering a card - needs one on file by next cycle." />
+                </label>
+                <label className="hq-form-wide" style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "row" }}>
+                  <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />
+                  Also email {company.name} the card link now (you'll still get the link either way to send yourself)
                 </label>
                 <div className="hq-form-wide"><button className="hq-button hq-button-primary" type="submit">Defer billing</button></div>
               </form>
