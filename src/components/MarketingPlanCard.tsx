@@ -120,8 +120,9 @@ export default function MarketingPlanCard({
 
       {inherits && (
         <div className="mb-4 flex items-center gap-2 rounded-lg bg-white/[0.05] px-3 py-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={featured ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"} strokeWidth="2.5" className="shrink-0">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19V5M5 12l7-7 7 7" />
+          <svg width="16" height="16" viewBox="0 0 24 24" className="shrink-0">
+            <circle cx="12" cy="12" r="10" fill={featured ? SIGNAL_GREEN : "rgba(255,255,255,0.5)"} />
+            <path d="M7.5 12.5l3 3 6-6.5" stroke={FOUND_BLACK} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
           </svg>
           <span className="text-sm font-bold text-white/80">{inherits}</span>
         </div>

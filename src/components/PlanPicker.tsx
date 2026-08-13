@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import MarketingPlanCard from "./MarketingPlanCard"
 import type { FoundPlanKey } from "@/lib/foundPlans"
 
@@ -37,18 +37,24 @@ export default function PlanPicker({
   ctaPrefix = "Start with",
 }: PlanPickerProps) {
   const touchStartX = useRef<number | null>(null)
+  const [showNudgeHint, setShowNudgeHint] = useState(true)
   const selectedIndex = Math.max(0, plans.findIndex((plan) => plan.key === selectedPlan))
-  const selectedOption = plans[selectedIndex] ?? plans[0]
   const previous = plans[Math.max(0, selectedIndex - 1)]
   const next = plans[Math.min(plans.length - 1, selectedIndex + 1)]
-  // Card width is 72% (peek width = (100-72)/2 = 14% per side, wider than the
-  // old 82%/9% so the neighbor cards actually read as visible, not a sliver).
+  // Card width is 82% (peek width = (100-82)/2 = 9% per side) - visibility of
+  // the peek is handled by contrast (peekEmphasis) and an edge fade/nudge
+  // hint below, not by narrowing the visible card (that just makes it taller).
   const trackOffset =
     selectedIndex === 0
-      ? "14%"
+      ? "9%"
       : selectedIndex === 1
-        ? "calc(-58% - 24px)"
-        : "calc(-130% - 48px)"
+        ? "calc(-73% - 24px)"
+        : "calc(-155% - 48px)"
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowNudgeHint(false), 1100)
+    return () => clearTimeout(timer)
+  }, [])
 
   const selectPrevious = () => {
     if (selectedIndex > 0) onSelect(previous.key)
@@ -68,26 +74,35 @@ export default function PlanPicker({
     else selectPrevious()
   }
 
-  const ctaLabel = `${ctaPrefix} ${selectedOption.shortName}`
+  const ctaLabel = (plan: PlanPickerOption) => `${ctaPrefix} ${plan.shortName}`
 
   return (
     <div>
-      {/* Phone: one-card swipe carousel, CTA attached directly below the visible card */}
+      {/* Phone: one-card swipe carousel, CTA lives inside the visible card */}
       <div className="md:hidden">
-        <div className="w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6">
+        <div className="relative w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6">
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8"
+            style={{ background: `linear-gradient(to right, ${FOUND_BLACK}, transparent)` }}
+          />
+          <div
+            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8"
+            style={{ background: `linear-gradient(to left, ${FOUND_BLACK}, transparent)` }}
+          />
           <div
             className="w-full max-w-full min-w-0 overflow-hidden py-2"
             onTouchStart={(event) => {
               touchStartX.current = event.changedTouches[0]?.clientX ?? null
             }}
             onTouchEnd={(event) => handleTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+            style={showNudgeHint ? { animation: "carousel-nudge 1.1s ease-out 1" } : undefined}
           >
             <div
               className="flex w-full max-w-full min-w-0 gap-6 transition-[margin] duration-500 ease-out"
               style={{ marginLeft: trackOffset }}
             >
               {plans.map((plan) => (
-                <div key={plan.key} className="min-h-[430px] flex-[0_0_72%]">
+                <div key={plan.key} className="min-h-[430px] flex-[0_0_82%]">
                   <MarketingPlanCard
                     planKey={plan.key}
                     name={plan.name}
@@ -100,8 +115,10 @@ export default function PlanPicker({
                     intro={intro}
                     bullets={plan.bullets}
                     inherits={plan.inherits}
-                    showCta={false}
+                    showCta={selectedPlan === plan.key}
+                    ctaLabel={ctaLabel(plan)}
                     onSelect={onSelect}
+                    onCta={onCta}
                     className="h-full"
                   />
                 </div>
@@ -128,14 +145,6 @@ export default function PlanPicker({
             })}
           </div>
         </div>
-
-        <button
-          onClick={() => onCta(selectedPlan)}
-          className="mt-6 inline-flex min-h-14 w-full items-center justify-center rounded-full px-6 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-        >
-          {ctaLabel}
-        </button>
       </div>
 
       {/* Tablet/desktop: full-width 3-card row, one shared CTA below */}
@@ -165,7 +174,7 @@ export default function PlanPicker({
           className="inline-flex min-h-14 w-full max-w-sm items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
           style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
         >
-          {ctaLabel}
+          {ctaLabel(plans[selectedIndex] ?? plans[0])}
         </button>
       </div>
     </div>

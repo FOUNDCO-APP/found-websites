@@ -115,6 +115,14 @@ h1, h2, h3, h4, h5, h6 {
   to   { transform: scaleX(1); }
 }
 
+/* One-time hint that the plan carousel has more cards to swipe to */
+@keyframes carousel-nudge {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(-6%); }
+  62%  { transform: translateX(4%); }
+  100% { transform: translateX(0); }
+}
+
 @keyframes ken-burns {
   from { transform: scale(1); }
   to   { transform: scale(1.06); }

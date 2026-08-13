@@ -1,5 +1,23 @@
-## Session: August 13, 2026 - FOUND Systems: Jony-Led Round - Card Compression + Bullet Grouping
+## Session: August 13, 2026 - FOUND Systems: Width Revert + Inside-Card CTA + Icon Swap
 **AI:** Claude
+
+### Context
+Shawn caught a real regression from the desktop-fix pass: narrowing the carousel cards from 82% to 72% to widen the peek made the card *taller* (same bullet text now wraps across more lines in a narrower box), which is why it felt worse, not better - and it also meant more scrolling to reach the CTA. He asked for a Jony-led team round (not immediate coding) on: reverting the width while still making the peek cards read as swipeable, exploring the CTA living inside the card instead of below it, and swapping the "Everything in X" line's up-arrow icon (which he said doesn't make sense) for something like a star or heart. Team round presented, Shawn approved following it exactly.
+
+### Changed
+- **Width reverted**: carousel cards back to 82% (peek band back to ~9% per side), centering offset math restored to the original tuned values.
+- **Peek affordance without narrowing**: added a `pointer-events-none` edge-fade gradient (background-color to transparent) at both screen edges of the carousel viewport, plus a one-time "nudge" hint - the carousel viewport gently shifts left then right then settles on first load only (`carousel-nudge` keyframe in `globals.css`, gated by a `showNudgeHint` state that clears after 1.1s) - to teach the swipe gesture without adding arrow icons or other persistent UI.
+- **CTA moved inside the card, mobile carousel only**: `MarketingPlanCard`'s `showCta` is now `true` for whichever card is currently selected in the phone carousel (Home and Industry both, since only one card is ever visible there - no redundant-buttons risk). The standalone CTA button that used to sit below the dots was removed for mobile. The tablet/desktop 3-card row is unchanged - still one shared CTA below the row, since all three cards are visible at once there and per-card buttons would reintroduce the "three redundant CTAs" problem from two rounds ago.
+- **Icon swap**: replaced the "Everything in X" line's up-arrow with a solid checkmark-in-a-filled-circle (green when featured, muted white otherwise) - visually distinct from the plain outline checkmarks used in the "Plus" bullets below it, and reads as "included" rather than an unrelated direction/favorite symbol.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+---
+
+
 
 ### Context
 Shawn approved pushing the desktop-fix + peek-visibility commit, and separately approved the team's proposed direction from the prior round for the two items he'd asked Jony to lead: the card's top section (Recommended badge through Intro Rate) felt vertically cramped and pushed the CTA further down than necessary, and plan bullet lists read as if only the second bullet was an addition beyond Starter when several more below it were too. Told to follow the team's direction to the detail.

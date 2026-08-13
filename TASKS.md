@@ -69,6 +69,13 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
   - [x] Bullet grouping: added `inherits` field to `FoundPlanOption` ("Everything in Starter" / "Everything in Pro"), removed that line from `homepageBullets`/`industryBullets`, dropped the redundant "Plus " prefix from the first remaining bullet. `MarketingPlanCard` now renders the inherited line distinctly (icon + bold text + background chip) followed by a "Plus" label before the real addition bullets - two visually separate groups instead of one flat checklist. Left the base `bullets` field (used by `FoundPlanSelector.tsx`/`OnboardingFlow.tsx`) untouched, confirmed via grep - out of scope.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after the compression + grouping changes.
 - [ ] Shawn QA: card top section feels less cramped and the CTA is reachable with less scrolling; Pro/Business cards clearly show "Everything in X" as its own line followed by a "Plus" group of real additions, not one flat list.
+- [x] Shawn caught a real regression: narrowing carousel cards to 72% made them *taller* (same bullet text wraps across more lines in a narrower box), which is why it looked worse and needed more scrolling - not a real tradeoff. Asked for another Jony-led team round (not immediate coding) before fixing. Team round presented, Shawn approved following it exactly:
+  - [x] Reverted carousel cards to 82% width (peek back to ~9% per side, offset math restored).
+  - [x] Added peek affordance without narrowing: edge-fade gradient at both screen edges, plus a one-time "nudge" hint animation on first load only (`carousel-nudge` keyframe in `globals.css`) to teach the swipe gesture.
+  - [x] Moved the CTA inside the card for the mobile carousel only (Home and Industry both) - `showCta` is true for whichever card is currently selected, standalone button below the dots removed for mobile. Desktop 3-card row unchanged (still one shared CTA below, to avoid reintroducing three redundant buttons).
+  - [x] Swapped the "Everything in X" up-arrow icon (Shawn: "does not make sense") for a solid checkmark-in-a-filled-circle, visually distinct from the outline checkmarks in the "Plus" bullets below it.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after all four changes.
+- [ ] Shawn QA: carousel cards are back to the original (shorter) proportions; peek cards feel noticeably more "there" via the edge fade/nudge without needing to swipe blind; CTA is visible immediately inside the active card on mobile with no scrolling; icon reads as "included" rather than confusing.
 
 ## 2026-08-11 - Supabase Security
 

@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - FOUND Systems: Width Revert + Inside-Card CTA + Icon Swap
+
+### Progress This Pass
+- Shawn caught a real regression from the desktop-fix pass: narrowing the mobile carousel cards from 82% to 72% (to widen the peek) made the card *taller*, because the same amount of bullet text now wraps across more lines in a narrower box. That's why it looked worse and needed more scrolling, not a real design tradeoff. He also raised: wants the CTA living inside the card instead of below it so people don't have to scroll to find it (Home cards are long; Industry cards are already shorter so it's less urgent there, deferred to Jony), and the "Everything in X" line's up-arrow icon "does not make sense" - suggested a star or heart as alternatives.
+- Explicit instruction: present to the team first (Jony leading design), no coding until then.
+- Team round presented covering all three items; Shawn approved following it exactly.
+- **Width reverted** to 82% (peek back to ~9% per side, centering math restored to the original tuned values). Peek visibility is now handled without narrowing the main card: an edge-fade gradient at both screen edges of the carousel (`pointer-events-none`, background-to-transparent) plus a one-time "nudge" hint - the carousel viewport gently shifts left/right and settles on first load only, via a new `carousel-nudge` keyframe in `globals.css` gated by a `showNudgeHint` state that clears after 1.1s.
+- **CTA moved inside the card for the mobile carousel only** (Home and Industry both use the same `PlanPicker`, so both got this): `MarketingPlanCard`'s `showCta` is now true for whichever card is currently selected/visible in the carousel - only one card is ever visible there, so there's no risk of the "three redundant CTAs" problem from two rounds ago. The standalone button that used to sit below the dots was removed for mobile. The tablet/desktop 3-card row is unchanged (all three cards visible at once there, so it still needs one shared CTA below the row, not three inside-card buttons).
+- **Icon swap**: Jony's evaluation - a star risked visually colliding with the "Recommended" badge (both read as "featured/rated"), a heart tends to signal "favorited" rather than "carried over from your other plan." Went with a solid checkmark-in-a-filled-circle instead - visually distinct from the plain outline checkmarks in the "Plus" bullets below it, reads clearly as "included."
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Get Shawn's approval to push this commit. After deploy: Shawn QA on a real iPhone - carousel cards should look like the original (shorter) proportions again, peek cards should feel noticeably more "there" via the edge fade/nudge without narrowing, the CTA should be visible immediately inside the active card with no scrolling, and the inherited-features icon should read as "included" rather than a confusing arrow.
+
+---
+
 ## 2026-08-13 - FOUND Systems: Jony-Led Round Built - Card Compression + Bullet Grouping
 
 ### Progress This Pass
