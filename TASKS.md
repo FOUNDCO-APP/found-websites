@@ -50,7 +50,12 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
 - [x] Industry pricing peek layering fix: side cards are opaque visual peeks with no readable text, and the selected card is solid/opaque so iPhone users do not see stacked transparent pricing copy.
 - [x] Replace fake pricing peeks with an Apple-style real card track: Starter -> Pro -> Business, Pro centered first, neighboring real cards visible at the edges, swipe/tap updates the centered plan and CTA.
 - [ ] Future marketing visual system: create purpose-made visuals for each industry and for the major Found marketing pages. Do not reuse the homepage hero device image everywhere. Use real-looking site previews, onboarding preview screenshots, device mockups, or generated industry-specific assets that show what Found actually builds.
-- [ ] Extend the safer controlled one-card plan selector beyond industry pages only after real iPhone QA passes. Do not use native horizontal-scroll pricing rows on Found marketing pages until the pattern is proven not to create body-level overflow.
+- [x] Extend the shared pricing-card system beyond industry pages: `MarketingPlanCard` is now used by Home, Plans, and Industry pages off one `foundPlans.ts` source of truth (`ddd638f`), plans relabeled for consistency (`808d511`).
+- [x] Team review (Jony-led) after Shawn's live QA of the unified cards: Recommended badge clipped, homepage cards too cramped, three redundant CTAs stacked on the homepage, industry carousel forcing a phone pattern onto iPad/desktop. Layout/spacing/CTA-behavior only, no copy changes.
+- [x] Fixed Recommended badge clipping - moved inside the card's own padding instead of floating outside the border, so it can't clip regardless of container overflow (Home, Plans, Industry).
+- [x] Increased homepage pricing card spacing and replaced the three per-card CTAs with one shared "Start with {Plan}" button below the group that follows the selected card.
+- [x] Split the industry pricing carousel: iPhone keeps the swipe carousel unchanged; iPad/desktop now gets a real non-clipping 3-card row on the same shared `MarketingPlanCard` component instead of a stretched phone carousel.
+- [ ] Shawn QA: Recommended badge no longer clipped on iPhone/iPad/desktop; homepage pricing cards have real breathing room; homepage shows one "Start with X" button that updates with the selected card; industry pages on iPad/desktop show a clean 3-card row (no carousel, no clipping) while iPhone still swipes.
 
 ## 2026-08-11 - Supabase Security
 

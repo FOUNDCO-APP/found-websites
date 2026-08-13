@@ -1,3 +1,29 @@
+## Session: August 13, 2026 - FOUND Systems: Pricing Card Unification + Layout Polish
+**AI:** Claude
+
+### Context
+Two commits (`ddd638f`, `808d511`) landed and deployed to production without matching doc updates - caught while reading current state at session start. Shawn then shared a team review (Codex/Jony-led) written after live-testing `808d511`: the unified pricing cards worked, but the "Recommended" badge clipped, homepage cards felt cramped, three redundant CTA buttons appeared stacked on the homepage, and the industry-page carousel forced a phone swipe pattern onto iPad/desktop. Shawn approved following that review exactly - layout/spacing/CTA-behavior only, no new copy.
+
+### Changed (previously undocumented, already live)
+- Built `MarketingPlanCard.tsx`, a shared pricing-card component now used by Home, Plans, and Industry pages instead of three separate implementations.
+- Extended `foundPlans.ts` with `shortLine`, `homepageBullets`, and `industryBullets` so each surface can pull tailored copy from one source of truth.
+- Renamed the `Found` plan to `Found Starter` everywhere for consistent labeling; added a `Recommended` badge on Found Pro.
+
+### Changed (this pass, team-directed layout fixes)
+- Fixed the clipped Recommended badge: moved it inside the card's own padding (top of the card content) instead of floating outside the border on an absolute offset, so it can't clip regardless of a parent's overflow/padding - fixed in `MarketingPlanCard.tsx` and the industry carousel card in `IndustryPage.tsx`.
+- Increased homepage pricing grid spacing (`gap-4` -> `gap-6`/`gap-8` at `md`) in `HomeClient.tsx`.
+- Replaced the three per-card "Get started" buttons on the homepage with card-selection behavior plus one shared button below the group that reads "Start with {Plan}" and follows whichever card is selected - matches the pattern already used on industry pages. Added a `showCta` prop to `MarketingPlanCard` so it can render without its own button.
+- Split the industry pricing carousel in `IndustryPage.tsx`: the existing swipe carousel is now iPhone-only (`md:hidden`); iPad/desktop gets a real 3-card row built on the shared `MarketingPlanCard` component - no carousel, no clipping, all three plans visible at once.
+- `/plans` (the dedicated comparison page) was left untouched - it links directly to a plan via `href` per card rather than using select-then-one-CTA behavior, so it wasn't in scope for the CTA consolidation.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- `git diff --check` passed (CRLF-normalization warnings only, no real whitespace errors).
+
+---
+
 ## Session: August 11, 2026 - FOUND Systems: Industry Page Pro Anchor + Proof
 **AI:** Codex
 

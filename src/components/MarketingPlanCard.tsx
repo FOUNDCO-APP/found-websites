@@ -18,6 +18,7 @@ type MarketingPlanCardProps = {
   bullets?: string[]
   ctaLabel?: string
   href?: string
+  showCta?: boolean
   onSelect?: (plan: FoundPlanKey) => void
   onCta?: (plan: FoundPlanKey) => void
   className?: string
@@ -43,6 +44,7 @@ export default function MarketingPlanCard({
   bullets = [],
   ctaLabel = "Get my site",
   href,
+  showCta = true,
   onSelect,
   onCta,
   className = "",
@@ -77,14 +79,12 @@ export default function MarketingPlanCard({
       style={cardStyle}
     >
       {featured && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
-          <span
-            className="rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest"
-            style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-          >
-            Recommended
-          </span>
-        </div>
+        <span
+          className="mb-4 inline-block rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest"
+          style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
+        >
+          Recommended
+        </span>
       )}
 
       <p className="mb-1 text-base font-black text-white">{headline}</p>
@@ -120,7 +120,7 @@ export default function MarketingPlanCard({
         </ul>
       )}
 
-      {href ? (
+      {showCta && (href ? (
         <Link href={href} className={ctaClassName} style={ctaStyle}>
           {ctaLabel}
         </Link>
@@ -136,7 +136,7 @@ export default function MarketingPlanCard({
         >
           {ctaLabel}
         </button>
-      )}
+      ))}
     </div>
   )
 }

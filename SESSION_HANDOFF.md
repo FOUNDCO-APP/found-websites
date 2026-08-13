@@ -1,5 +1,36 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - FOUND Systems: Pricing Card Unification + Layout Polish
+
+### Progress This Pass
+- Session started by reading current state: git tree clean, on `main`, up to date with origin, but two recent commits (`ddd638f` "Unify Found pricing card system", `808d511` "Align pricing plan labels and badges") had been pushed and deployed to production with no matching SESSION_HANDOFF/TASKS/CHANGELOG updates. Confirmed via Vercel that `808d511` is the exact commit live on `foundco.app` and all aliased domains.
+- Those two undocumented commits had already built `MarketingPlanCard.tsx` (one shared pricing-card component for Home, Plans, and Industry pages instead of three separate ones), extended `foundPlans.ts` with `shortLine`/`homepageBullets`/`industryBullets`, renamed the `Found` plan to `Found Starter`, and added a `Recommended` badge on Found Pro.
+- Shawn then shared a team review (Codex/Jony-led) written after live-testing `808d511` on his phone, and asked to follow it exactly - layout/spacing/CTA-behavior only, no new copy:
+  1. Fix the clipped "Recommended" pill (spacing/container issue).
+  2. Give homepage stacked pricing cards more breathing room.
+  3. Remove the three repetitive "Get my site" buttons on the homepage; use card-selection + one shared CTA below that follows the selected plan.
+  4. Give iPad/desktop industry pricing its own layout instead of a stretched phone swipe carousel; keep the swipe carousel for iPhone only.
+  5. No copy changes.
+- Verified in code before touching anything that none of the 5 fixes existed yet (checked git log/origin/other branches - nothing newer than `808d511` anywhere).
+- Implemented all 4 code fixes:
+  - `MarketingPlanCard.tsx`: moved the `Recommended` badge from an absolute-positioned floating pill (which clipped inside overflow-hidden parents) to an inline badge inside the card's own padding - can't clip regardless of container. Added a `showCta` prop so the card can render without its own button.
+  - `HomeClient.tsx`: increased the pricing grid gap (`gap-4` -> `gap-6`/`gap-8`), removed the three per-card CTAs (`showCta={false}`), added one shared "Start with {Plan}" button below the grid that reads from whichever card is selected.
+  - `IndustryPage.tsx`: badge fix applied to the carousel card too. Wrapped the existing swipe carousel in `md:hidden` (iPhone-only, unchanged behavior below `md`) and added a new `hidden md:grid md:grid-cols-3` row for iPad/desktop, reusing `MarketingPlanCard` - all three plans visible, no clipping, no carousel.
+  - `/plans` (the dedicated comparison page) intentionally left untouched - it links directly per card via `href`, not select-then-one-CTA, so it wasn't in scope.
+- Caught up `CHANGELOG.md` and `TASKS.md` for both the previously-undocumented commits and this pass.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- `git diff --check` passed (CRLF-normalization warnings only).
+- Not yet deployed or pushed - working tree has the changes, awaiting Shawn's go-ahead to commit/push/deploy.
+
+### Explicit Next Step
+Get Shawn's confirmation to commit, push, and deploy. After deploy, Shawn QA on a real iPhone AND a tablet/desktop: confirm the Recommended badge is no longer clipped anywhere, homepage cards have real breathing room, homepage shows one "Start with X" button that updates with the selected card, and industry pages show a clean 3-card row on iPad/desktop (no carousel, no clipping) while iPhone still swipes as before.
+
+---
+
 ## 2026-08-11 - FOUND Systems: Industry Page Pro Anchor + Proof
 
 ### Progress This Pass

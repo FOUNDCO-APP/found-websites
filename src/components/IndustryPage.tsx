@@ -5,6 +5,7 @@ import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
+import MarketingPlanCard from "./MarketingPlanCard"
 import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 import { FOUND_PLAN_OPTIONS, type FoundPlanKey } from "@/lib/foundPlans"
 
@@ -82,7 +83,8 @@ function PlanCarousel({
   }
 
   return (
-    <div className="w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6 md:ml-0 md:mr-0 md:w-full md:max-w-full">
+    <>
+    <div className="w-[calc(100%+48px)] max-w-none min-w-0 overflow-hidden -ml-6 -mr-6 md:hidden">
       <div
         className="w-full max-w-full min-w-0 overflow-hidden py-2"
         onTouchStart={(event) => {
@@ -115,12 +117,11 @@ function PlanCarousel({
                   : "none",
                 }}
               >
-              {isRecommended && (
-                <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
+              {isRecommended ? (
+                <span className="mb-2 inline-block rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
                   Recommended
                 </span>
-              )}
-              {!isRecommended && (
+              ) : (
                 <span className="text-xs font-black uppercase tracking-widest text-white/40">
                   {plan.label}
                 </span>
@@ -171,6 +172,26 @@ function PlanCarousel({
         })}
       </div>
     </div>
+
+    <div className="hidden md:grid md:grid-cols-3 md:gap-6">
+      {INDUSTRY_PLAN_OPTIONS.map((plan) => (
+        <MarketingPlanCard
+          key={plan.key}
+          planKey={plan.key}
+          name={plan.name}
+          headline={plan.line}
+          price={`$${plan.price(intro)}`}
+          normalPrice={`$${plan.price(false)}`}
+          featured={plan.key === "found_pro"}
+          selected={selectedPlan === plan.key}
+          intro={intro}
+          bullets={plan.bullets}
+          showCta={false}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+    </>
   )
 }
 
