@@ -76,6 +76,11 @@ Shawn's question: besides PostHog, what's free or near-free to track everything 
   - [x] Swapped the "Everything in X" up-arrow icon (Shawn: "does not make sense") for a solid checkmark-in-a-filled-circle, visually distinct from the outline checkmarks in the "Plus" bullets below it.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after all four changes.
 - [ ] Shawn QA: carousel cards are back to the original (shorter) proportions; peek cards feel noticeably more "there" via the edge fade/nudge without needing to swipe blind; CTA is visible immediately inside the active card on mobile with no scrolling; icon reads as "included" rather than confusing.
+- [x] Shawn confirmed the above round looked right on a real iPhone. Two smaller items raised, routed through a Jony-led team round before coding: Home's Pro card still feels long top-to-bottom, and a "Get my site"/"Learn more" button pair after "How it works" felt unclear/possibly redundant. Team round presented, Shawn approved following it exactly:
+  - [x] Home's Pro card tagline shortened to one line: "Automatic follow-ups with every lead." (local to `HomeClient.tsx`, confirmed via grep it's not shared with `/plans`, `FoundPlanSelector.tsx`, or `OnboardingFlow.tsx`).
+  - [x] Removed the "Learn more" link from the "How it works" section's closing CTA - kept "Get my site" and the "Most sites are ready the same day" line; `/how-it-works` is still reachable from the main nav.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after both changes.
+- [ ] Shawn QA: Home's Pro card tagline reads as one line; the "How it works" section shows only "Get my site" with no adjacent "Learn more" link.
 
 ## 2026-08-11 - Supabase Security
 

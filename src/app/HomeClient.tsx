@@ -299,13 +299,6 @@ export default function HomeClient() {
               >
                 Get my site
               </button>
-              <a
-                href="/how-it-works"
-                className="ml-0 mt-4 inline-flex text-xs font-black uppercase tracking-[0.16em] transition hover:opacity-80 sm:ml-6 sm:mt-0"
-                style={{ color: SIGNAL_GREEN }}
-              >
-                Learn more
-              </a>
               <p className="mt-4 text-xs text-white/30 font-medium">Most sites are ready the same day.</p>
             </div>
           </div>
@@ -455,7 +448,7 @@ export default function HomeClient() {
                   {
                     key: "found_pro",
                     shortName: "Pro",
-                    headline: "Follow up with every lead. Automatically.",
+                    headline: "Automatic follow-ups with every lead.",
                     name: "Found Pro",
                     price: isIntroRatePeriod ? "$39" : "$69",
                     normalPrice: "$69",

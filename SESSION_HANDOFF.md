@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - FOUND Systems: Home Pro Tagline + Redundant Learn-More Link
+
+### Progress This Pass
+- Shawn confirmed the prior round's fixes (width revert, edge-fade/nudge, inside-card CTA, checkmark-circle icon) looked right on a real iPhone via PhotoDrop screenshots.
+- Two smaller items raised, both explicitly routed through a Jony-led team round before coding: (1) the Home Pro card still feels long top-to-bottom - Shawn floated either moving the Recommended badge or shortening the two-line tagline; (2) a "Get my site" + "Learn more" button pair sits right after the "How it works" 3-step section, before "What's actually different" - Shawn wasn't sure if it's needed or just needs fixing.
+- Team round: badge isn't the height driver (already compact); the two-line tagline wrap is the real, fixable cost - recommended one line: "Automatic follow-ups with every lead." Named the deeper cause (Home's Pro card carries 7 bullets vs. Industry's 2) as a possible future follow-up, not acted on now. On the CTA pair: keep "Get my site" (legitimate conversion point right after the 3-step explanation) but drop "Learn more" - it points at `/how-it-works`, a page re-explaining the same 3 steps just read, competing with the one action that matters right then; still reachable via the main nav.
+- Shawn approved following the team round exactly.
+- `HomeClient.tsx`: Home's Pro tagline (confirmed via grep to be a field local to this file, not shared with `/plans`, `FoundPlanSelector.tsx`, or `OnboardingFlow.tsx`) changed to "Automatic follow-ups with every lead."
+- `HomeClient.tsx`: removed the "Learn more" link from the "How it works" section's closing CTA.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: Shawn QA that Home's Pro card tagline reads as one line, and the "How it works" section shows only "Get my site" with no adjacent "Learn more" link.
+
+---
+
 ## 2026-08-13 - FOUND Systems: Width Revert + Inside-Card CTA + Icon Swap
 
 ### Progress This Pass

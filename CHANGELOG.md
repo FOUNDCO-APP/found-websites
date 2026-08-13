@@ -1,3 +1,24 @@
+## Session: August 13, 2026 - FOUND Systems: Home Pro Tagline + Redundant Learn-More Link
+**AI:** Claude
+
+### Context
+Shawn confirmed the prior round's fixes looked right on a real iPhone (card back to shorter proportions, checkmark-in-circle icon, CTA inside the card). Two smaller items raised, both explicitly routed through a Jony-led team round before coding: (1) the Home Pro card still feels long top-to-bottom - considered moving the Recommended badge or shortening the two-line tagline; (2) a "Get my site" + "Learn more" button pair sits right after the "How it works" 3-step section, before "What's actually different" - unsure if it's needed or needs fixing.
+
+### Team round
+- Tagline: the badge isn't the height driver (already compact); the two-line tagline wrapping is the real, fixable cost. Recommended changing "Follow up with every lead. Automatically." to one line: "Automatic follow-ups with every lead." Named but did not act on the deeper cause (Home's Pro card carries 7 bullets vs. Industry's 2) as a possible future follow-up.
+- Learn-more link: keep the "Get my site" button (legitimate conversion point right after the 3-step explanation) but drop the adjacent "Learn more" link - it points at `/how-it-works`, a full page re-explaining the same 3 steps just read, competing with the one action that matters at that moment. Still reachable via the main nav.
+
+### Changed
+- `HomeClient.tsx`: Home's Pro card tagline (a hardcoded field local to this file, not shared with `/plans`, `FoundPlanSelector.tsx`, or `OnboardingFlow.tsx` - confirmed via grep before touching it) changed to "Automatic follow-ups with every lead."
+- `HomeClient.tsx`: removed the "Learn more" link from the "How it works" section's closing CTA, keeping the "Get my site" button and the "Most sites are ready the same day" line.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+---
+
 ## Session: August 13, 2026 - FOUND Systems: Width Revert + Inside-Card CTA + Icon Swap
 **AI:** Claude
 
