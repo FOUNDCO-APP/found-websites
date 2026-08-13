@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
@@ -16,30 +16,34 @@ type IndustryPlanOption = {
   name: string
   label: string
   line: string
+  bullets: string[]
   price: (intro: boolean) => number
 }
 
 const INDUSTRY_PLAN_OPTIONS: IndustryPlanOption[] = [
   {
+    key: "found",
+    name: "Found Starter",
+    label: "Get online",
+    line: "Your site, photos, gallery, and leads — easy to update from your phone.",
+    bullets: ["Camera system", "Photo/video gallery", "Lead form"],
+    price: (intro) => (intro ? 29 : 39),
+  },
+  {
     key: "found_pro",
     name: "Found Pro",
     label: "Recommended",
-    line: "Website plus follow-up so leads do not go cold.",
+    line: "Everything in Starter, plus one included growth tool for how your business works.",
+    bullets: ["Everything in Starter", "One included add-on", "Built for follow-up"],
     price: (intro) => (intro ? 39 : 69),
   },
   {
     key: "found_business",
     name: "Found Business",
-    label: "Most complete",
-    line: "Bookings, estimates, payments, campaigns, and team tools.",
+    label: "Full system",
+    line: "The full Found system for customers, tools, team, and growth.",
+    bullets: ["Includes Pro", "More business tools", "Team/workers"],
     price: (intro) => (intro ? 69 : 99),
-  },
-  {
-    key: "found",
-    name: "Found Starter",
-    label: "Website only",
-    line: "A clean site, lead capture, and instant replies.",
-    price: (intro) => (intro ? 29 : 39),
   },
 ]
 
@@ -66,18 +70,68 @@ function PlanCarousel({
   onSelect: (plan: FoundPlanKey) => void
   intro: boolean
 }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null)
+  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+
+  useEffect(() => {
+    cardRefs.current[selectedPlan]?.scrollIntoView({ behavior: "instant", block: "nearest", inline: "center" })
+  }, [])
+
+  useEffect(() => {
+    const scroller = scrollRef.current
+    if (!scroller) return
+
+    let frame = 0
+    const updateSelectedFromCenter = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => {
+        const center = scroller.getBoundingClientRect().left + scroller.clientWidth / 2
+        let closestPlan = INDUSTRY_PLAN_OPTIONS[0]
+        let closestDistance = Number.POSITIVE_INFINITY
+
+        for (const plan of INDUSTRY_PLAN_OPTIONS) {
+          const card = cardRefs.current[plan.key]
+          if (!card) continue
+          const rect = card.getBoundingClientRect()
+          const distance = Math.abs(center - (rect.left + rect.width / 2))
+          if (distance < closestDistance) {
+            closestDistance = distance
+            closestPlan = plan
+          }
+        }
+
+        if (closestPlan.key !== selectedPlan) onSelect(closestPlan.key)
+      })
+    }
+
+    scroller.addEventListener("scroll", updateSelectedFromCenter, { passive: true })
+    return () => {
+      window.cancelAnimationFrame(frame)
+      scroller.removeEventListener("scroll", updateSelectedFromCenter)
+    }
+  }, [onSelect, selectedPlan])
+
   return (
     <div className="max-w-full overflow-hidden">
-      <div className="max-w-full overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex snap-x snap-mandatory gap-4">
+      <div
+        ref={scrollRef}
+        className="-mx-6 max-w-none overflow-x-auto overscroll-x-contain px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex w-max snap-x snap-mandatory gap-4">
           {INDUSTRY_PLAN_OPTIONS.map((plan) => {
             const selected = selectedPlan === plan.key
             return (
               <button
                 key={plan.key}
+                ref={(node) => {
+                  cardRefs.current[plan.key] = node
+                }}
                 type="button"
-                onClick={() => onSelect(plan.key)}
-                className="min-h-[250px] w-[calc(100%-2rem)] max-w-[340px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
+                onClick={() => {
+                  onSelect(plan.key)
+                  cardRefs.current[plan.key]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+                }}
+                className="min-h-[300px] w-[calc(100vw-5rem)] max-w-[340px] shrink-0 snap-center rounded-[2rem] border p-6 text-left transition md:w-[330px]"
                 style={{
                   borderColor: selected ? SIGNAL_GREEN : "rgba(255,255,255,0.09)",
                   background: selected
@@ -96,6 +150,14 @@ function PlanCarousel({
                 <span className="mt-3 block text-5xl font-black tracking-tight text-white">${plan.price(intro)}</span>
                 <span className="mt-1 block text-sm font-bold text-white/45">per month</span>
                 <span className="mt-6 block text-sm leading-6 text-white/58">{plan.line}</span>
+                <span className="mt-5 block space-y-2">
+                  {plan.bullets.map((bullet) => (
+                    <span key={bullet} className="flex items-center gap-2 text-xs font-bold text-white/54">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                      {bullet}
+                    </span>
+                  ))}
+                </span>
               </button>
             )
           })}
@@ -109,7 +171,10 @@ function PlanCarousel({
             <button
               key={plan.key}
               type="button"
-              onClick={() => onSelect(plan.key)}
+              onClick={() => {
+                onSelect(plan.key)
+                cardRefs.current[plan.key]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" })
+              }}
               aria-label={`Choose ${plan.name}`}
               className="h-2.5 rounded-full transition-all"
               style={{
@@ -150,13 +215,13 @@ function IndustryOutcomeProof({
         </span>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid min-w-0 gap-4 md:grid-cols-[1.08fr_0.92fr]">
         <div className="relative overflow-hidden rounded-[1.55rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_12%,rgba(50,208,116,0.2),transparent_32%)]" />
           <p className="relative mb-5 text-[10px] font-black uppercase tracking-[0.22em] text-white/38">
             {industryLabel}
           </p>
-          <h2 className="relative max-w-[12ch] text-[2.45rem] font-normal leading-[0.98] tracking-tight text-white md:text-6xl">
+          <h2 className="relative max-w-[12ch] text-[2.2rem] font-normal leading-[1.02] tracking-tight text-white md:text-6xl">
             A better {industryTitle.toLowerCase()} site, built to get the request.
           </h2>
           <p className="relative mt-5 max-w-xl text-sm leading-7 text-white/58 md:text-base">
@@ -167,7 +232,7 @@ function IndustryOutcomeProof({
           </div>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid min-w-0 gap-3">
           {previewFeatures.map((feature) => (
             <div key={feature.label} className="rounded-[1.35rem] border border-white/[0.08] bg-[#101411] p-5">
               <div className="mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
@@ -186,8 +251,6 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<FoundPlanKey>("found_pro")
   const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
-  const proPrice = isIntroRatePeriod ? 39 : 69
-  const businessPrice = isIntroRatePeriod ? 69 : 99
   const industryLabel = industry.replace(/-/g, " ")
   const selectedPlanOption = INDUSTRY_PLAN_OPTIONS.find((plan) => plan.key === selectedPlan) ?? INDUSTRY_PLAN_OPTIONS[0]
 
@@ -224,33 +287,19 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
             >
               Build my business site
             </button>
-            {isIntroRatePeriod && (
-              <div className="flex items-center gap-3 pt-1">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4">
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: SIGNAL_GREEN }}>
-                    Most owners start with Pro
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-2xl font-black text-white">Pro ${proPrice}/mo</span>
-                    <span className="text-sm text-white/45">Business ${businessPrice}/mo</span>
-                  </div>
-                  <p className="mt-1 text-xs text-white/35">Starter is available for simple website-only launches.</p>
-                </div>
-              </div>
-            )}
           </div>
         </section>
 
         {/* Visual preview and plan choice */}
-        <section className="px-6 pb-20 md:px-10 max-w-5xl mx-auto">
-          <div className="grid gap-5">
+        <section className="px-6 pb-20 md:px-10 max-w-5xl mx-auto overflow-hidden">
+          <div className="grid min-w-0 gap-5">
             <IndustryOutcomeProof
               industryLabel={industryLabel}
               subheadline={subheadline}
               features={features}
             />
 
-            <div className="grid gap-5 lg:grid-cols-[0.86fr_1.14fr]">
+            <div className="grid min-w-0 gap-5 lg:grid-cols-[0.86fr_1.14fr]">
               <div className="rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-6 md:p-7">
                 <p className="text-xs font-black uppercase tracking-[0.22em] mb-5" style={{ color: SIGNAL_GREEN }}>
                   What happens after launch
@@ -274,7 +323,10 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                 <p className="text-xs font-black uppercase tracking-[0.22em] mb-3" style={{ color: SIGNAL_GREEN }}>
                   Choose your path
                 </p>
-                <h2 className="text-2xl font-normal leading-tight text-white">Pro is recommended. You still choose the plan.</h2>
+                <h2 className="text-2xl font-normal leading-tight text-white">Starter, Pro, or Business. Pro is centered first.</h2>
+                <p className="mt-3 text-sm leading-6 text-white/48">
+                  Most owners start with Pro. Swipe left for Starter or right for Business.
+                </p>
                 <div className="mt-5">
                   <PlanCarousel selectedPlan={selectedPlan} onSelect={setSelectedPlan} intro={isIntroRatePeriod} />
                 </div>
@@ -283,7 +335,7 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                   className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-full px-6 text-xs font-black uppercase tracking-widest transition hover:opacity-90"
                   style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
                 >
-                  Continue with {selectedPlanOption.name}
+                  Start with {selectedPlanOption.name.replace("Found ", "")}
                 </button>
               </div>
             </div>
@@ -309,31 +361,6 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
                 </div>
               </div>
             ))}
-          </div>
-        </section>
-
-        {/* Mid CTA */}
-        <section className="px-6 py-16 md:px-10 max-w-4xl mx-auto text-center">
-          <div
-            className="rounded-2xl px-8 py-12"
-            style={{ backgroundColor: "rgba(50,208,116,0.06)", border: "2px solid rgba(50,208,116,0.3)" }}
-          >
-            {isIntroRatePeriod && (
-              <p className="text-xs font-black uppercase tracking-[0.22em] mb-4" style={{ color: SIGNAL_GREEN }}>
-                Pro-first launch offer
-              </p>
-            )}
-            <h2 className="text-3xl font-normal text-white mb-3 md:text-4xl">Your site. Your leads. Your follow-up.</h2>
-            <p className="text-white/50 mb-8 font-medium">
-              Most owners choose Found Pro for automatic follow-up, or Business when they want bookings, estimates, orders, and customer tools.
-            </p>
-            <button
-              onClick={() => setDrawerOpen(true)}
-              className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
-              style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
-            >
-              Continue with {selectedPlanOption.name}
-            </button>
           </div>
         </section>
 
@@ -373,23 +400,26 @@ export default function IndustryPage({ industry, eyebrow, headline, subheadline,
           <div className="max-w-xl mx-auto">
             <h2 className="text-3xl font-normal text-white mb-4">{closingLine}</h2>
             <p className="text-white/45 mb-8 font-medium">
-              {isIntroRatePeriod ? `Found Pro starts at $${proPrice}/mo during the launch offer. Business starts at $${businessPrice}/mo when you want the full operating system.` : "Found Pro and Business help turn the site into a customer system."}
+              Pick the level that fits today. Starter gets your site, photos, gallery, and leads moving. Pro adds one included growth tool. Business opens the fuller operating system.
             </p>
             <button
               onClick={() => setDrawerOpen(true)}
               className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-sm font-black uppercase tracking-widest transition hover:opacity-90"
               style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}
             >
-              Continue with {selectedPlanOption.name}
+              Start with {selectedPlanOption.name.replace("Found ", "")}
             </button>
             <p className="mt-6 text-xs text-white/25">
-              {isIntroRatePeriod
+              <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Compare all plans
+              </Link>
+              {false && (isIntroRatePeriod
                 ? <>Starter is still available for website-only launches. Use the plan cards above or{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       compare all plans
                     </Link>.</>
                 : <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>Compare all plans →</Link>
-              }
+              )}
             </p>
           </div>
         </section>

@@ -24,6 +24,7 @@
 - Jony-led audit after Shawn's iPhone screenshots found two separate issues:
   - engineering: the root app viewport did not explicitly set `width=device-width` / `initialScale=1`, matching the symptom of iPhone Safari rendering a wider page and shrinking it down;
   - design: the coded fake site preview was the wrong proof asset, so it was replaced instead of polished.
+- Shawn clarified Starter is not "website only"; it includes the Found site, camera system, photo/video gallery, and easier updates. Team direction applied: remove the confusing mini pricing teaser, use Starter -> Pro -> Business order, center Pro by default, and make the CTA follow the selected/centered card.
 - Future item added: build a proper marketing visual system with purpose-made visuals by industry and across major Found pages.
 
 ### Verification This Pass

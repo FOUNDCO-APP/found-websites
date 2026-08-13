@@ -16,6 +16,7 @@ Steve/Phil: do not make the cheapest plan the mental anchor on industry pages. J
 - iPhone correction after Shawn's screenshot: the mobile preview no longer nests a tiny phone mockup inside the page. Mobile now gets one readable full-width preview card, with the extra device overlay reserved for desktop/tablet only.
 - Team-directed iPhone correction: rebuilt the industry proof/pricing area as a single-column mobile experience. Removed the desktop-browser-style preview framing and changed the plan picker into a Pro-first, Apple-style swipe carousel with one large card at a time and pill indicators instead of three squeezed pricing cards.
 - Jony-led audit correction: added an explicit root mobile viewport (`width=device-width`, `initialScale=1`) after iPhone screenshots showed Safari rendering the page like a wider desktop canvas. Replaced the weak fake site-preview mockup with a customer-facing outcome/proof section so industry pages no longer ship an internal-looking schematic as visual proof.
+- Team-directed pricing correction: removed the confusing hero mini pricing teaser, rewrote plan positioning around Found's actual value, reordered the industry plan chooser as Starter -> Pro -> Business, defaulted Pro to the centered card, and wired the selected/centered plan to the CTA.
 - Added the broader follow-up: create purpose-made visual assets per industry and improve visual proof across all marketing pages without repeating the homepage hero image.
 
 ### Verification
