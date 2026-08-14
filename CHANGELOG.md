@@ -1,3 +1,22 @@
+## Session: August 14, 2026 - Rebuild Emails Page to Match Clients' Proven Pattern
+**AI:** Claude
+
+### Context
+Shawn tested the nav/detail-view fix live and reacted strongly negative - search bar invisible, page felt unformatted and non-intuitive despite being tech-comfortable himself. Asked for Steve and Jony to co-lead a real review, not a two-bug patch. Root cause traced before the team round: the Emails page never reused Found HQ's own established patterns. Clients already has a proper `.hq-input` (visible border/background/focus ring) inside a responsive `.hq-business-toolbar`, plus instant client-side search/filter via a small client component (`ClientsWorkspace.tsx`) - Emails was hand-built instead with a bare unstyled `<input>` and full-page-reload search-param filtering, which is exactly why it looked inconsistent and behaved differently from the rest of the tool Shawn already knows. Team round (Steve + Jony co-leading) recommended rebuilding to match the Clients pattern exactly rather than redesigning from scratch. Shawn approved.
+
+### Changed
+- **New** `src/app/admin/emails/EmailsWorkspace.tsx`: client component modeled directly on `ClientsWorkspace.tsx` - real `.hq-input` search box inside `.hq-business-toolbar`, `.hq-filter-row` toggle pills (All/Failed/Flagged) instead of separate link-buttons, instant client-side filtering via `useState`/`useMemo` instead of a server round-trip. "Preview templates" moved out of the primary filter row into a small footnote link at the bottom, matching how Clients handles its own "quality tools are in More" footnote.
+- `src/app/admin/emails/page.tsx` simplified to a plain server component: fetches and joins the data (company names, flagged-lead lookup), hands it to `EmailsWorkspace`.
+- `src/app/admin/emails/[id]/page.tsx`: fixed the empty-state contrast bug - the "no stored copy" fallback message was using a dark-background text class (`hq-row-meta`) on the light `#f5f5f5` iframe-placeholder background, making it nearly invisible. Now uses an explicit dark-on-light color.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet tested live - the rebuilt toolbar/filtering and the contrast fix haven't been checked on a real phone yet. Also still unverified: whether real email content (html) actually renders for anything sent after the html-persisting deploy went live, since the two emails Shawn tested with pre-dated it.
+
+---
+
 ## Session: August 14, 2026 - Nav Fix, Click-Through Email Detail, Lead Flagging
 **AI:** Claude
 

@@ -1,5 +1,28 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern
+
+### Progress This Pass
+- Shawn tested the nav/detail-view fix live and reacted strongly negative - "looks like a blob of shit," search bar invisible, page felt unformatted and non-intuitive even to him as a tech-comfortable user. Asked for Steve and Jony to co-lead a real review of the whole page, not a two-bug patch.
+- Root-caused before running the team round (so it wasn't operating blind): checked how the Clients page - which Shawn has never complained about - builds its own search/filter UI. It uses an established `.hq-input` class (real border, background, focus ring) inside a responsive `.hq-business-toolbar`, plus instant client-side filtering through a small client component (`ClientsWorkspace.tsx`, `useState`/`useMemo`, no page reload). The Emails page never used either - it had a bare unstyled `<input>` and full-page-reload search-param filtering. That mismatch - a different, uncoordinated interaction pattern living inside the same product - is what actually made it feel broken and unintuitive, not a design failure needing a from-scratch redesign.
+- Team round (Steve + Jony co-leading, as Shawn asked) presented this finding and recommended rebuilding to match the Clients pattern exactly. Shawn approved.
+- Built:
+  - New `src/app/admin/emails/EmailsWorkspace.tsx`: client component modeled directly on `ClientsWorkspace.tsx` - real `.hq-input` search, `.hq-filter-row` toggle pills (All/Failed/Flagged) replacing the old separate link-buttons, instant client-side filtering. "Preview templates" moved out of the primary filter row into a small footnote link, matching how Clients handles its own "quality tools are in More" footnote.
+  - `src/app/admin/emails/page.tsx` simplified to a plain server component - fetches and joins company names + flagged-lead lookups, hands the assembled rows to `EmailsWorkspace`.
+  - `src/app/admin/emails/[id]/page.tsx`: fixed the empty-state contrast bug caught in the prior investigation - the "no stored copy" fallback text was using a dark-background text class on the light `#f5f5f5` iframe-placeholder background, nearly invisible. Now an explicit dark-on-light color.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet tested live - the rebuilt toolbar/filtering and the contrast fix haven't been checked on a real phone yet.
+- Still unverified: whether real email content (`html`) actually renders for anything sent after the html-persisting deploy went live - the two emails Shawn tested with pre-dated that fix, so this specific claim hasn't been proven on a real, newer email yet.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: confirm the search box is visible and filters instantly like Clients does, the Failed/Flagged pills behave the same way Clients' filter tabs do, and check whether the overall page now feels consistent with the rest of Found HQ. Separately, trigger a fresh test lead and confirm its email actually renders content in the detail view (not the empty-state fallback) - that's the one part of this whole thread still unproven end-to-end.
+
+---
+
 ## 2026-08-14 - Nav Fix, Click-Through Email Detail, Lead Flagging
 
 ### Progress This Pass

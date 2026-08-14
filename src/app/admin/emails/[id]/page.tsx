@@ -103,7 +103,7 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
             />
           ) : (
             <div style={{ padding: 24 }}>
-              <p className="hq-row-meta">No stored copy of this email's content (sent before this page tracked it).</p>
+              <p style={{ color: "#555555", fontSize: 13, margin: 0 }}>No stored copy of this email&apos;s content (sent before this page tracked it).</p>
             </div>
           )}
         </div>

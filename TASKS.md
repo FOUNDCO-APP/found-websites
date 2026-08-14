@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern
+
+Shawn tested the nav/detail-view fix live and reacted strongly negative - invisible search bar, felt unformatted and non-intuitive even to him as a tech-comfortable user. Asked Steve and Jony to co-lead a real review, not a two-bug patch.
+
+- [x] Root-caused before the team round: the Emails page never reused Found HQ's own established patterns. Clients already has a proper `.hq-input` + responsive `.hq-business-toolbar` and instant client-side filtering via a small client component; Emails was hand-built with a bare unstyled `<input>` and full-page-reload search instead - that mismatch, not a design flaw, is why it felt inconsistent and unintuitive.
+- [x] Team round (Steve + Jony co-leading) recommended rebuilding to match the Clients pattern exactly rather than redesigning from scratch. Shawn approved.
+- [x] New `EmailsWorkspace.tsx` client component modeled directly on `ClientsWorkspace.tsx` - real `.hq-input` search, `.hq-filter-row` toggle pills (All/Failed/Flagged), instant client-side filtering, "Preview templates" moved to a footnote link matching Clients' own footnote pattern.
+- [x] Simplified `/admin/emails/page.tsx` to a plain server component that fetches/joins data and hands it to the client component.
+- [x] Fixed the detail page's empty-state contrast bug - the "no stored copy" message was using dark-background text styling on a light background, nearly invisible.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
+- [ ] Shawn QA: confirm the search box is visible and filters instantly, the Failed/Flagged pills behave like Clients' filter tabs, and the page finally feels consistent with the rest of Found HQ.
+- [ ] Still unverified: whether real email content (html) renders correctly for anything sent after the html-persisting deploy - the two test emails Shawn checked pre-dated that fix, so this hasn't been proven live yet.
+
 ## 2026-08-14 - Nav Fix, Click-Through Email Detail, Lead Flagging
 
 Shawn tested the shipped email log live: bottom nav wrapped to two rows, search/filter row visually broken on phone. Explicitly clarified this page is for him only, not customers - keep the 5-tab nav, don't demote back to More. Team round (Jony leading design, Steve deciding Craig owns engineering) presented and approved before building.
