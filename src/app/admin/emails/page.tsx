@@ -26,23 +26,35 @@ export default async function AdminEmailsPage({
   const params = await searchParams
   const q = (typeof params.q === "string" ? params.q : "").trim().toLowerCase()
   const failedOnly = params.failed === "1"
+  const flaggedOnly = params.flagged === "1"
 
   const admin = getAdminClient()
   const { data: rows } = await admin
     .from("email_log")
-    .select("id, company_id, recipient_email, recipient_type, email_type, subject, success, error, source, created_at")
+    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, success, error, created_at")
     .order("created_at", { ascending: false })
     .limit(300)
 
   const companyIds = [...new Set((rows ?? []).map((r) => r.company_id).filter((id): id is string => !!id))]
+  const leadIds = [...new Set((rows ?? []).map((r) => r.lead_id).filter((id): id is string => !!id))]
   const companyNames = new Map<string, string>()
-  if (companyIds.length > 0) {
-    const { data: companies } = await admin.from("companies").select("id, name").in("id", companyIds)
-    for (const c of companies ?? []) companyNames.set(c.id, c.name)
-  }
+  const flaggedLeads = new Set<string>()
+  await Promise.all([
+    companyIds.length > 0
+      ? admin.from("companies").select("id, name").in("id", companyIds).then(({ data }) => {
+          for (const c of data ?? []) companyNames.set(c.id, c.name)
+        })
+      : Promise.resolve(),
+    leadIds.length > 0
+      ? admin.from("leads").select("id, flagged").in("id", leadIds).then(({ data }) => {
+          for (const l of data ?? []) if (l.flagged) flaggedLeads.add(l.id)
+        })
+      : Promise.resolve(),
+  ])
 
   let filtered = rows ?? []
   if (failedOnly) filtered = filtered.filter((r) => !r.success)
+  if (flaggedOnly) filtered = filtered.filter((r) => r.lead_id && flaggedLeads.has(r.lead_id))
   if (q) {
     filtered = filtered.filter((r) => {
       const companyName = (r.company_id ? companyNames.get(r.company_id) : "") ?? ""
@@ -56,6 +68,20 @@ export default async function AdminEmailsPage({
   }
 
   const failedCount = (rows ?? []).filter((r) => !r.success).length
+  const flaggedCount = (rows ?? []).filter((r) => r.lead_id && flaggedLeads.has(r.lead_id)).length
+
+  const buildLink = (overrides: Record<string, string | undefined>) => {
+    const next = new URLSearchParams()
+    if (q) next.set("q", q)
+    if (failedOnly) next.set("failed", "1")
+    if (flaggedOnly) next.set("flagged", "1")
+    for (const [key, value] of Object.entries(overrides)) {
+      if (value === undefined) next.delete(key)
+      else next.set(key, value)
+    }
+    const qs = next.toString()
+    return `/admin/emails${qs ? `?${qs}` : ""}`
+  }
 
   return (
     <div className="hq-page">
@@ -68,14 +94,19 @@ export default async function AdminEmailsPage({
         <span className="hq-count">{filtered.length}</span>
       </header>
 
-      <div className="hq-filter-row" style={{ marginBottom: 16 }}>
-        <form method="get" style={{ display: "flex", gap: 8, flex: 1 }}>
-          <input type="text" name="q" defaultValue={q} placeholder="Search by company, recipient, subject, or type" style={{ flex: 1 }} />
-          {failedOnly && <input type="hidden" name="failed" value="1" />}
-          <button type="submit" className="hq-button hq-button-secondary">Search</button>
-        </form>
-        <Link href={failedOnly ? "/admin/emails" : `/admin/emails?failed=1${q ? `&q=${encodeURIComponent(q)}` : ""}`} className="hq-button hq-button-secondary" data-active={failedOnly}>
+      <form method="get" style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+        <input type="text" name="q" defaultValue={q} placeholder="Search company, recipient, subject, or type" style={{ flex: "1 1 240px", minWidth: 0 }} />
+        {failedOnly && <input type="hidden" name="failed" value="1" />}
+        {flaggedOnly && <input type="hidden" name="flagged" value="1" />}
+        <button type="submit" className="hq-button hq-button-secondary">Search</button>
+      </form>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+        <Link href={buildLink({ failed: failedOnly ? undefined : "1" })} className="hq-button hq-button-secondary" data-active={failedOnly}>
           {failedOnly ? "Show all" : `Failed only (${failedCount})`}
+        </Link>
+        <Link href={buildLink({ flagged: flaggedOnly ? undefined : "1" })} className="hq-button hq-button-secondary" data-active={flaggedOnly}>
+          {flaggedOnly ? "Show all" : `Flagged only (${flaggedCount})`}
         </Link>
         <Link href="/admin/emails/templates" className="hq-button hq-button-secondary">Preview templates</Link>
       </div>
@@ -85,22 +116,23 @@ export default async function AdminEmailsPage({
           <div className="hq-empty-state"><strong>No emails found.</strong><span>Try a different search, or check back after Found sends more.</span></div>
         ) : (
           filtered.map((row) => (
-            <div key={row.id} className="hq-row">
+            <Link key={row.id} href={`/admin/emails/${row.id}`} className="hq-row hq-link-row">
               <div style={{ minWidth: 0, flex: 1 }}>
                 <p className="hq-row-title">
                   {row.subject}
                   {!row.success && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Failed</span>}
+                  {row.lead_id && flaggedLeads.has(row.lead_id) && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Flagged</span>}
                 </p>
                 <p className="hq-row-meta">
                   {row.company_id && companyNames.get(row.company_id) ? `${companyNames.get(row.company_id)} · ` : ""}
                   To {row.recipient_email} ({RECIPIENT_LABELS[row.recipient_type] ?? row.recipient_type}) · {row.email_type}
                 </p>
-                {row.error && <p className="hq-row-meta" style={{ color: "var(--hq-danger, #F43F5E)" }}>{row.error}</p>}
               </div>
               <span className="hq-row-meta" style={{ whiteSpace: "nowrap" }}>
                 {new Date(row.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
               </span>
-            </div>
+              <span className="hq-chevron" aria-hidden="true" />
+            </Link>
           ))
         )}
       </div>

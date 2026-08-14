@@ -18,7 +18,7 @@ export default async function AdminEmailTemplatesPage() {
       <header className="hq-header"><div><p className="hq-eyebrow">Quality</p><h1 className="hq-title">Email templates</h1><p className="hq-subtitle">Inspect the transactional messages owners and customers receive.</p></div><span className="hq-count">{rows.length}</span></header>
       <div className="hq-panel">
         {rows.map((company) => (
-          <Link key={company.id} href={`/admin/emails/${company.id}`} className="hq-row hq-link-row">
+          <Link key={company.id} href={`/admin/emails/templates/${company.id}`} className="hq-row hq-link-row">
             <div style={{ minWidth: 0 }}><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{company.industry_category ?? "Uncategorized"} / {intentLabels[company.primary_intent ?? ""] ?? company.primary_intent ?? "No intent"}{company.email ? ` / ${company.email}` : " / No owner email"}</p></div>
             <span className="hq-chevron" aria-hidden="true" />
           </Link>

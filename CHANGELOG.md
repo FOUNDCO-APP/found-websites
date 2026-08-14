@@ -1,3 +1,31 @@
+## Session: August 14, 2026 - Nav Fix, Click-Through Email Detail, Lead Flagging
+**AI:** Claude
+
+### Context
+Shawn tested the shipped email log live and sent a real screenshot: the admin bottom nav had wrapped to two rows (adding "Emails" as a 5th tab broke it), and the search/filter row was visually overlapping/broken on phone width - "looks like horrible UI, horrible UX." He also asked to verify whether one of the two real emails now in the log ("We got your message, Bianca" / "New lead: Bianca Foster") was spam, wanted to be able to click into an email to see its actual content, and wanted a way to flag a lead for himself or any AI to investigate later. Explicitly clarified this whole page is for him only, not customers - keep the 5-tab nav, don't demote it back to More. Team round (Jony leading design, Steve deciding Craig owns the engineering) presented and approved before building.
+
+### Verified before building
+- **Spam check on Bianca, confirmed not guessed**: pulled the real lead row - message field was literally `"6508877769"` (the phone number restated, no real inquiry), sender domain `toptalentvas.com` reads as VA/staffing outreach, the same category as two domains already on the spam blocklist (`vettedvas.com`, `vas4hire.com`) - just not this one. Computed the actual spam score by hand against `spamGuard.ts`'s real rules: only tripped "message is mostly a phone number" (+2), well under the spam threshold of 5, because the domain list is exact-match only. Real, evidenced gap - not a scoring bug, a missing pattern.
+- **Nav wrap root cause**: `admin.css`'s mobile bottom-nav grid was hardcoded `grid-template-columns: repeat(4, minmax(0,1fr))` regardless of how many nav items exist - a straightforward oversight, not a capacity problem with the tab bar itself.
+
+### Changed
+- `admin.css`: mobile nav grid changed to `repeat(5, minmax(0,1fr))` - five tabs now render in one row as before, no redesign needed.
+- **New migration** `20260814100000_email_log_detail_and_lead_flag.sql` (applied live via the Supabase Management API, confirmed with a direct query): `email_log` gains `html`, `text_body`, `lead_id`; `leads` gains `flagged`, `flag_note`.
+- `src/lib/emailLog.ts`: `sendTrackedEmail()` now also accepts and stores `leadId`, and persists the actual `html`/`text` sent - both needed for the detail view and for linking an email back to the lead it came from.
+- Threaded `leadId` through every call site where a lead naturally exists at send time: `actions/leads.ts` (4 sends), `actions/reply.ts`, `api/bookings/create` (2), `api/cron/lead-followup` (3), `api/online-order/complete` (2), `api/shopping-cart/complete` (2). Sends with no lead concept (team invites, magic links, admin alerts, Stripe webhook estimate emails) intentionally left without one - scoped to the real use case, not padded out everywhere.
+- **New** `src/app/admin/emails/[id]/page.tsx`: click any row to see the actual rendered email (same iframe/srcDoc pattern as the existing template previewer, not a new rendering approach), plus the linked lead's details and a flag/clear-flag form when a lead is attached.
+- **New** `src/app/admin/emails/actions.ts`: `setLeadFlag()` sets `flagged`/`flag_note` directly on the `leads` row (Priya/Steve's call: the flag belongs on the lead, not the email, since a lead can be spam with no email ever sent).
+- `/admin/emails` list: rows are now real links into the detail view, a flagged badge shows per row, added a "Flagged only" filter alongside "Failed only", and the search/filter controls now wrap cleanly on phone width instead of overlapping.
+- **Routing fix caught during build**: the existing per-company template previewer at `/admin/emails/[companyId]` collided with the new `/admin/emails/[id]` detail route (both single dynamic segments at the same level - Next.js can't tell them apart). Moved the template previewer to `/admin/emails/templates/[companyId]`, consistent with the templates list already living at `/admin/emails/templates`.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed - confirmed all four `/admin/emails*` routes in the actual build output after fixing the routing conflict, not just a clean exit code.
+- Not yet tested live - the nav fix, detail view, and flagging haven't been checked on a real phone yet.
+
+---
+
 ## Session: August 14, 2026 - Real Email System: Log Table, Shared Sender, Searchable Admin Page
 **AI:** Claude
 

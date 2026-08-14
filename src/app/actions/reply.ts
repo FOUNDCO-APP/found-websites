@@ -44,6 +44,7 @@ export async function sendReply(_: unknown, formData: FormData) {
     html: buildCustomerReplyHtml({ company, message }),
     text: buildCustomerReplyText({ company, message }),
     companyId: lead.company_id,
+    leadId: lead.id,
     recipientType: "lead",
     emailType: "owner_reply_to_lead",
     source: "actions/reply/sendReply",

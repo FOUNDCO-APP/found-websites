@@ -1,5 +1,21 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Nav Fix, Click-Through Email Detail, Lead Flagging
+
+Shawn tested the shipped email log live: bottom nav wrapped to two rows, search/filter row visually broken on phone. Explicitly clarified this page is for him only, not customers - keep the 5-tab nav, don't demote back to More. Team round (Jony leading design, Steve deciding Craig owns engineering) presented and approved before building.
+
+- [x] Verified (not guessed) whether "Bianca" was spam: real lead message was just the phone number restated, sender domain `toptalentvas.com` is the same VA/staffing-outreach category as two domains already blocklisted (`vettedvas.com`, `vas4hire.com`) - just not this one. Computed the actual score against `spamGuard.ts`'s real rules: only scored 2 (mostly-a-phone-number), well under the threshold of 5, because the domain list is exact-match only. Real gap, not a scoring bug - add to the spam-filter to-do list.
+- [x] Root-caused the nav wrap: `admin.css`'s mobile bottom-nav grid was hardcoded to exactly 4 columns regardless of item count - fixed to 5, tabs render in one row again, no redesign needed.
+- [x] New migration (`20260814100000_email_log_detail_and_lead_flag.sql`, applied live, confirmed with a direct query): `email_log` gains `html`/`text_body`/`lead_id`; `leads` gains `flagged`/`flag_note`.
+- [x] `sendTrackedEmail()` now stores the actual sent html/text and an optional `leadId`, threaded through every call site where a lead naturally exists (leads, reply, bookings, lead-followup cron, online orders, shopping cart - 14 sends total). Left un-threaded where there's no lead concept (team invites, magic links, admin alerts, Stripe estimate emails) - scoped to the real need, not padded everywhere.
+- [x] Built `/admin/emails/[id]`: click any email to see its actual rendered content (same iframe pattern as the existing template previewer) plus the linked lead and a flag/clear-flag form.
+- [x] Built `setLeadFlag()`: flag lives on the `leads` row, not the email (Priya/Steve's call - a lead can be spam with no email ever sent).
+- [x] `/admin/emails` list: rows are real links now, flagged badge per row, added "Flagged only" filter next to "Failed only", search/filter controls wrap cleanly on phone instead of overlapping.
+- [x] Caught and fixed a real routing conflict during build: `/admin/emails/[companyId]` (old template previewer) collided with the new `/admin/emails/[id]` (both single dynamic segments, same level). Moved the previewer to `/admin/emails/templates/[companyId]`.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` - confirmed all four `/admin/emails*` routes in the actual build output after the routing fix.
+- [ ] Shawn QA: confirm the nav shows all 5 tabs in one row on a real phone; click into the Bianca email and confirm the content renders and the flag button works; confirm search/filter controls no longer overlap.
+- [ ] Follow-up, not yet built: broaden the spam filter to catch the `*vas.com`/VA-outsourcing domain pattern (found via the Bianca investigation, not yet fixed).
+
 ## 2026-08-14 - Real Email System: Log Table, Shared Sender, Searchable Admin Page
 
 Shawn clarified last round's "Emails sent" list wasn't what he meant - wanted a real system: see every email Found has sent, someday received mail too, plus manual send for office/marketing use. Team round (Steve leading, full team input) recommended and Shawn approved: sent-visibility across everything first (no new infra beyond one table), manual send and received mail as separate later decisions, migrate all 13 existing send points in one pass rather than half now/half later.
