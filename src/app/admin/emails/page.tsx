@@ -14,7 +14,7 @@ export default async function AdminEmailsPage() {
   const admin = getAdminClient()
   const { data: rows } = await admin
     .from("email_log")
-    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, success, created_at")
+    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, success, email_scope, delivery_status, created_at")
     .order("created_at", { ascending: false })
     .limit(300)
 
@@ -44,6 +44,8 @@ export default async function AdminEmailsPage() {
     subject: row.subject,
     success: row.success,
     flagged: !!(row.lead_id && flaggedLeads.has(row.lead_id)),
+    emailScope: row.email_scope,
+    deliveryStatus: row.delivery_status,
     created_at: row.created_at,
   }))
 
@@ -53,7 +55,7 @@ export default async function AdminEmailsPage() {
         <div>
           <p className="hq-eyebrow">Found HQ</p>
           <h1 className="hq-title">Emails</h1>
-          <p className="hq-subtitle">Every email Found has sent - owners, leads, team, admin alerts. Most recent 300.</p>
+          <p className="hq-subtitle">Every email Found has sent - client business emails and Found's own. Most recent 300.</p>
         </div>
         <span className="hq-count">{emailRows.length}</span>
       </header>

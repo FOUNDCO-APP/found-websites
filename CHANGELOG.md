@@ -1,3 +1,26 @@
+## Session: August 14, 2026 (part 2) - Email Scope Split (Found vs. Client) + Delivery/Bounce Tracking
+**AI:** Claude
+
+### Context
+Shawn asked whether the empty email-history state was real (verified live: only 2 rows existed, both correctly predating the html-persistence fix) and whether new sends are certain to work going forward (proved live by submitting a real test lead through `cameras.foundco.app` and confirming both resulting emails landed with full stored content). He then asked to also track Found's own email, not just his business clients', as a real high-end email system - bounce/delivery visibility, inbound mail, and a Found-vs-client split - and asked for a team review first. Team round (Steve leading) split this into three pieces by size: Found-vs-client separation and outbound delivery/bounce status (both additive, no new vendor, done together now) versus real inbound email (its own future initiative requiring a vendor/DNS decision). Shawn approved the first two.
+
+### Changed
+- Migration `20260814130000_email_scope_and_delivery_status.sql` (applied live): `email_log` gains `email_scope` (`client`/`found`, default `client`), `resend_email_id`, `delivery_status`, `delivery_status_at`.
+- `src/lib/emailLog.ts`: `sendTrackedEmail()` accepts `emailScope` (default `"client"`), captures Resend's message id from the send response as `resend_email_id` for later webhook matching.
+- `src/lib/adminAlerts.ts`: the new-signup alert to Shawn (Found's own internal correspondence, not a tenant's business voice) is now `emailScope: "found"` - the one existing call site that qualifies; every other send point stays the `"client"` default.
+- **New** `src/app/api/resend/webhook/route.ts`: verifies Resend's Svix-signed delivery webhook (added the `svix` package), updates `delivery_status`/`delivery_status_at` on the matching `email_log` row for `email.sent`/`delivered`/`delivery_delayed`/`bounced`/`complained` events.
+- `EmailsWorkspace.tsx`: added an All senders/Client emails/Found emails filter row and a delivery-status badge per row. `page.tsx`/`[id]/page.tsx` updated to select and display the new fields.
+- `admin.css`: added `.hq-badge-quiet` for non-warning delivery states.
+
+### Verification
+- Live-proved via a real test lead submitted through `cameras.foundco.app/contact` that new sends persist full `html`/`text_body` content.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, including the new `/api/resend/webhook` route.
+- Not yet live: the Resend Dashboard webhook itself hasn't been created and `RESEND_WEBHOOK_SECRET` isn't set - delivery badges won't appear until Shawn creates it and hands back the secret.
+
+---
+
 ## Session: August 14, 2026 - Rebuild Emails Page to Match Clients' Proven Pattern
 **AI:** Claude
 

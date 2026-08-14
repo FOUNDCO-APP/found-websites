@@ -2,6 +2,7 @@ import { Resend } from "resend"
 import { createClient as createSupabaseClient, type SupabaseClient } from "@supabase/supabase-js"
 
 export type EmailRecipientType = "client_owner" | "lead" | "admin" | "team_member" | "prospect"
+export type EmailScope = "client" | "found"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -20,6 +21,16 @@ function getAdminClient() {
  * so Shawn can click into a row and see exactly what was sent, and leadId
  * (where known) links the email back to the lead it came from, so a
  * suspicious email can be flagged at the lead level in one click.
+ *
+ * emailScope marks whose voice the email speaks in: "client" (default) for
+ * anything happening inside a tenant's own business - their leads, bookings,
+ * orders, receipts, account access. "found" is reserved for Found Co.'s own
+ * internal/operational correspondence (e.g. the new-signup alert to Shawn),
+ * not a tenant's business talking to its customers.
+ *
+ * resend_email_id captures Resend's own message id so the Resend delivery
+ * webhook (src/app/api/resend/webhook/route.ts) can match a bounce/delivered
+ * event back to this exact row.
  */
 export async function sendTrackedEmail({
   to,
@@ -32,6 +43,7 @@ export async function sendTrackedEmail({
   recipientType,
   emailType,
   source,
+  emailScope = "client",
   admin,
 }: {
   to: string
@@ -44,13 +56,14 @@ export async function sendTrackedEmail({
   recipientType: EmailRecipientType
   emailType: string
   source: string
+  emailScope?: EmailScope
   admin?: SupabaseClient
 }): Promise<boolean> {
   const client = admin ?? getAdminClient()
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({ from, to, subject, html, text })
+    const { data } = await resend.emails.send({ from, to, subject, html, text })
     await client.from("email_log").insert({
       company_id: companyId,
       lead_id: leadId,
@@ -62,6 +75,8 @@ export async function sendTrackedEmail({
       text_body: text,
       success: true,
       source,
+      email_scope: emailScope,
+      resend_email_id: data?.id ?? null,
     })
     return true
   } catch (err) {
@@ -79,6 +94,7 @@ export async function sendTrackedEmail({
         success: false,
         error: err instanceof Error ? err.message : String(err),
         source,
+        email_scope: emailScope,
       })
     } catch (logErr) {
       console.error("[emailLog] failed to write failure row:", logErr)

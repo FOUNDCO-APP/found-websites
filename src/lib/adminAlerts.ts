@@ -21,6 +21,7 @@ export async function sendNewSignupAlert(company: { id: string; name: string; sl
       recipientType: "admin",
       emailType: "new_signup_alert",
       source: "adminAlerts/sendNewSignupAlert",
+      emailScope: "found",
       text: `New signup: ${company.name}\n\n${planLabel} plan${location ? ` - ${location}` : ""}\n${company.slug}.${ROOT_DOMAIN}`,
       html: `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:${BLACK};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#F6F6F0;">

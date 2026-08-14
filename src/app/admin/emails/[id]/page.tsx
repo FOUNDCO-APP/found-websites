@@ -14,6 +14,14 @@ const RECIPIENT_LABELS: Record<string, string> = {
   prospect: "Prospect",
 }
 
+const DELIVERY_LABELS: Record<string, string> = {
+  sent: "Sent",
+  delivered: "Delivered",
+  delayed: "Delayed",
+  bounced: "Bounced",
+  complained: "Marked as spam",
+}
+
 export const metadata = { title: "Email - Found HQ" }
 
 export default async function AdminEmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -24,7 +32,7 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
   const admin = getAdminClient()
   const { data: row } = await admin
     .from("email_log")
-    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, html, text_body, success, error, source, created_at")
+    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, html, text_body, success, error, source, email_scope, delivery_status, delivery_status_at, created_at")
     .eq("id", id)
     .maybeSingle()
 
@@ -40,11 +48,16 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
       <Link href="/admin/emails" className="hq-back-link"><span className="hq-back-chevron" />Emails</Link>
       <header className="hq-header">
         <div>
-          <p className="hq-eyebrow">{company?.name ?? "No company"}</p>
+          <p className="hq-eyebrow">{row.email_scope === "found" ? "Found" : company?.name ?? "No company"}</p>
           <h1 className="hq-title" style={{ fontSize: 22 }}>{row.subject}</h1>
           <p className="hq-subtitle">
             To {row.recipient_email} ({RECIPIENT_LABELS[row.recipient_type] ?? row.recipient_type}) · {row.email_type}
             {!row.success && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Failed</span>}
+            {row.delivery_status && (
+              <span className={`hq-badge ${row.delivery_status === "bounced" || row.delivery_status === "complained" || row.delivery_status === "delayed" ? "hq-badge-warning" : "hq-badge-quiet"}`} style={{ marginLeft: 8 }}>
+                {DELIVERY_LABELS[row.delivery_status] ?? row.delivery_status}
+              </span>
+            )}
           </p>
           <p className="hq-subtitle">{new Date(row.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>

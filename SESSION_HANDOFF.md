@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14 - Email Scope Split (Found vs. Client) + Real Delivery/Bounce Tracking
+
+### Progress This Pass
+- Follow-up to the Emails rebuild below. Shawn asked two direct questions about the just-shipped detail view showing "no stored copy of this email's content": is there really nothing in history, and are we certain new sends will work going forward. Verified both live rather than asserting confidence - queried `email_log` directly (only 2 rows existed total, both the earlier Bianca test emails, both correctly predating the html-persisting fix), then proved the going-forward case by actually submitting a real test lead through the "cameras" test account's live public contact form and confirming the resulting two emails landed in `email_log` with full `html`/`text_body` content (2,229 and 4,624 characters) and a correctly linked `lead_id`.
+- Shawn then said the Emails page isn't just for tracking his business clients' email - he wants to track Found's own email too, ideally as a real high-end email system: outbound bounce/delivery visibility, inbound email, and a clear separation between "client emails" and "Found emails." Explicitly asked for a team review before any build.
+- Team round (Steve leading): broke this into three pieces of very different size - (1) Found-vs-client separation, (2) outbound bounce/delivery status via Resend's webhooks, both additive with no new vendor; (3) real inbound email, which needs a new vendor/DNS decision (MX records) and is its own future initiative, not bundled in. Shawn approved building (1) and (2) now, deferring (3).
+- Built:
+  - Migration `20260814130000_email_scope_and_delivery_status.sql` (applied live): `email_log` gains `email_scope` (`client`/`found`, defaults to `client`), `resend_email_id`, `delivery_status`, `delivery_status_at`.
+  - `src/lib/emailLog.ts`: `sendTrackedEmail()` now accepts an `emailScope` param (default `"client"`), captures Resend's own message id from the send response and stores it as `resend_email_id` so delivery events can be matched back to the row later.
+  - `src/lib/adminAlerts.ts`: the one existing call site that's genuinely Found's own internal correspondence (the new-signup alert to Shawn, not a tenant's business talking to its customers) is now marked `emailScope: "found"`. Every other existing send point stays `"client"` (default) - they're all leads, bookings, orders, receipts, account access, or team invites happening inside a specific tenant's business relationship with Found, not Found operating as itself. This is a narrow first pass; the "found" bucket will fill out more once a future manual-send/prospect-email feature exists.
+  - New `src/app/api/resend/webhook/route.ts`: verifies Resend's Svix-signed webhook (added the `svix` package), maps `email.sent`/`delivered`/`delivery_delayed`/`bounced`/`complained` events to `delivery_status` on the matching `email_log` row via `resend_email_id`. Requires a `RESEND_WEBHOOK_SECRET` env var - **not yet set**, since the webhook itself first needs to be created in Resend's Dashboard (Resend has no public API for this, same as the earlier Stripe Connect event-destination pattern) pointing at `https://foundco.app/api/resend/webhook`, with the signing secret Resend gives back pasted into Vercel.
+  - `EmailsWorkspace.tsx`: added a second filter row - All senders / Client emails / Found emails - plus a delivery-status badge (Bounced/Delivered/Sent/etc.) per row once the webhook is live and populating data. `page.tsx` and `[id]/page.tsx` updated to select/display the new fields; the detail page's eyebrow shows "Found" instead of a company name for found-scope emails.
+  - Added `.hq-badge-quiet` to `admin.css` for the non-warning delivery states (Sent/Delivered), matching the existing badge-tone pattern.
+
+### Verification This Pass
+- Live-proved (not just code-reviewed) that new sends persist full content: real test lead submitted through `cameras.foundco.app/contact`, confirmed via direct query that both resulting `email_log` rows have real `html`/`text_body`.
+- `npx tsc --noEmit` passed.
+- `npm run test:industry-mobile-layout` passed.
+- `npm run build` passed, including the new `/api/resend/webhook` route confirmed present in the build output.
+- Not yet tested live: the webhook itself has never received a real event, because the corresponding webhook hasn't been created in Resend's Dashboard yet and `RESEND_WEBHOOK_SECRET` isn't set anywhere - this is a real gap, not an oversight, see Explicit Next Step.
+
+### Explicit Next Step
+Get Shawn's approval to push. Separately, this feature has one manual step only Shawn can do: create a new webhook in the Resend Dashboard (Webhooks tab) pointed at `https://foundco.app/api/resend/webhook`, subscribed to at least `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.complained`, then hand back the signing secret Resend generates so it can be set as `RESEND_WEBHOOK_SECRET` in Vercel. Until that's done, the Found/Client filter will work immediately after deploy, but every email will show no delivery badge (webhook not receiving events yet). After the secret is set, send a real test email and confirm a delivery badge appears on its row within a minute or two.
+
 ## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern
 
 ### Progress This Pass

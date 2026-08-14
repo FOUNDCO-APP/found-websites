@@ -1,5 +1,21 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Email Scope Split (Found vs. Client) + Delivery/Bounce Tracking
+
+Shawn asked whether the empty email-history state was real and whether new sends are certain to work - both verified live (only 2 pre-fix rows existed; a real test lead submitted through `cameras.foundco.app` proved new sends store full content). He then asked to also track Found's own email as a real high-end system - bounce visibility, inbound mail, Found-vs-client separation - and asked for a team review first. Team split it into three pieces by size and Shawn approved building the first two now.
+
+- [x] Verified live (not just code-reviewed) that new sends persist content: submitted a real test lead through the "cameras" test site's public contact form, confirmed both resulting emails in `email_log` have full `html`/`text_body`.
+- [x] Team round (Steve leading): Found-vs-client split and outbound bounce/delivery tracking are both additive, no new vendor - do together now. Real inbound email needs a vendor/DNS decision - its own future initiative, not bundled in.
+- [x] New migration (`20260814130000_email_scope_and_delivery_status.sql`, applied live, confirmed via direct query): `email_log` gains `email_scope` (client/found), `resend_email_id`, `delivery_status`, `delivery_status_at`.
+- [x] `sendTrackedEmail()` now accepts `emailScope` (defaults to `"client"`) and captures Resend's own message id for later webhook matching.
+- [x] Marked the one existing genuinely-Found-internal send (`adminAlerts.ts`'s new-signup alert to Shawn) as `emailScope: "found"`. Every other existing send point is a tenant's own business activity (leads, bookings, orders, receipts, account access, team invites) and stays `"client"`.
+- [x] New `/api/resend/webhook` route: verifies Resend's Svix-signed delivery webhook, updates `delivery_status` on the matching email when Resend reports sent/delivered/delayed/bounced/complained.
+- [x] `EmailsWorkspace.tsx` gets an All senders/Client emails/Found emails filter row plus a delivery-status badge per row.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - the new webhook route confirmed present in the build output.
+- [ ] **Shawn action needed, not something Claude can do:** create a webhook in the Resend Dashboard pointed at `https://foundco.app/api/resend/webhook`, subscribed to sent/delivered/delivery_delayed/bounced/complained, then hand back the signing secret so it can be set as `RESEND_WEBHOOK_SECRET` in Vercel. Until then the Found/Client filter works but no delivery badges will appear.
+- [ ] Shawn QA after the secret is set: send a real test email, confirm a delivery badge shows up on its row within a minute or two.
+- [ ] Deferred, explicitly its own future initiative per the team round: real inbound email (receiving mail into Found's own system) - needs a vendor/DNS decision (MX records) Craig should scope before anything touches DNS.
+
 ## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern
 
 Shawn tested the nav/detail-view fix live and reacted strongly negative - invisible search bar, felt unformatted and non-intuitive even to him as a tech-comfortable user. Asked Steve and Jony to co-lead a real review, not a two-bug patch.
