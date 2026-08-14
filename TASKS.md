@@ -1,5 +1,20 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Real Email System: Log Table, Shared Sender, Searchable Admin Page
+
+Shawn clarified last round's "Emails sent" list wasn't what he meant - wanted a real system: see every email Found has sent, someday received mail too, plus manual send for office/marketing use. Team round (Steve leading, full team input) recommended and Shawn approved: sent-visibility across everything first (no new infra beyond one table), manual send and received mail as separate later decisions, migrate all 13 existing send points in one pass rather than half now/half later.
+
+- [x] Verified before building: `/admin/emails` was template-preview only, never a history; grepped and found 13 files sending real email via Resend, none logging anywhere except the two built last round.
+- [x] New `email_log` table (migration `20260814000000_create_email_log.sql`) - applied live via the Supabase Management API, confirmed with a direct read-only query before trusting it (not just the migration file).
+- [x] New `src/lib/emailLog.ts` - `sendTrackedEmail()` is the one function everything now calls: sends via Resend and logs success/failure to `email_log` in the same call, never throws.
+- [x] Rewired all 13 existing send points (leads, reservations, reply-to-lead, bookings, lead-followup cron, online orders, shopping cart, Stripe webhook estimate/order payments, team invites, magic-link login, abandoned-onboarding save, site-live/activation-reminder emails, admin new-signup alert) plus the two from last round - confirmed via grep that zero direct Resend usage remains anywhere outside `emailLog.ts`.
+- [x] Rebuilt `/admin/emails` as the real searchable log (search + failed-only filter, most recent 300); moved the old template browser to `/admin/emails/templates`.
+- [x] Promoted Emails to a real top-level nav item (Today/Growth/Clients/Emails/More) instead of buried in More, per the team's read that it deserves the same weight as Clients/Growth.
+- [x] Clients page's "Emails sent" list now reads from `email_log` instead of last round's `client_activities` version.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
+- [ ] Shawn QA: trigger a real lead/booking/order/estimate email and confirm it shows up correctly in `/admin/emails`; check the new Emails nav tab and the "failed only" filter; confirm template previews still work at `/admin/emails/templates`.
+- [ ] Explicitly deferred to later, per the team's phased plan: manual send composer (office one-off + marketing), and received/inbound mail (real new infrastructure - no MX/inbound parsing exists in Found at all today).
+
 ## 2026-08-13 - Admin New-Client Tool + Deferred Billing
 
 Real scenario: migrating Shawn's friend Richard (mbjheatingandcooling.com) onto Found. Richard already paid this cycle via Zelle outside Stripe, isn't ready to enter a card today, needs one on file by next cycle. Multiple team rounds, each approved by Shawn before building:

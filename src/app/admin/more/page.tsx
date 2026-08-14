@@ -6,10 +6,7 @@ export const metadata = { title: "More - Found HQ" }
 
 export default async function AdminMorePage() {
   const admin = getAdminClient()
-  const [{ data: configs }, { count: companyCount }] = await Promise.all([
-    admin.from("website_config").select("copy_generated"),
-    admin.from("companies").select("id", { count: "exact", head: true }),
-  ])
+  const { data: configs } = await admin.from("website_config").select("copy_generated")
   const fallbackCount = (configs ?? []).filter((row) => row.copy_generated !== true).length
   return (
     <div className="hq-page hq-page-narrow">
@@ -25,7 +22,6 @@ export default async function AdminMorePage() {
         <div className="hq-panel">
           <Link href="/admin/copy" className="hq-row hq-link-row"><div><p className="hq-row-title">Website copy</p><p className="hq-row-meta">Review and safely regenerate live content</p></div><div className="hq-action-end"><span className={`hq-badge ${fallbackCount ? "hq-badge-warning" : "hq-badge-success"}`}>{fallbackCount ? `${fallbackCount} review` : "Clear"}</span><span className="hq-chevron" /></div></Link>
           <Link href="/admin/photos" className="hq-row hq-link-row"><div><p className="hq-row-title">Photo library</p><p className="hq-row-meta">Curate shared industry photo pools</p></div><span className="hq-chevron" /></Link>
-          <Link href="/admin/emails" className="hq-row hq-link-row"><div><p className="hq-row-title">Email previews</p><p className="hq-row-meta">Inspect owner and customer templates</p></div><div className="hq-action-end"><span className="hq-badge hq-badge-info">{companyCount ?? 0}</span><span className="hq-chevron" /></div></Link>
         </div>
       </section>
       <section className="hq-section">

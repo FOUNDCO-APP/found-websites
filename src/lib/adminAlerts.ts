@@ -1,4 +1,4 @@
-import { Resend } from "resend"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const GREEN = "#32D074"
@@ -13,10 +13,15 @@ export async function sendNewSignupAlert(company: { id: string; name: string; sl
   const location = [company.city, company.state].filter(Boolean).join(", ")
   const planLabel = company.plan === "found_business" ? "Business" : company.plan === "found_pro" ? "Pro" : "Starter"
   try {
-    await new Resend(process.env.RESEND_API_KEY).emails.send({
+    await sendTrackedEmail({
       from: "Found HQ <hello@foundco.app>",
-      to: [to],
+      to,
       subject: `New signup: ${company.name}`,
+      companyId: company.id,
+      recipientType: "admin",
+      emailType: "new_signup_alert",
+      source: "adminAlerts/sendNewSignupAlert",
+      text: `New signup: ${company.name}\n\n${planLabel} plan${location ? ` - ${location}` : ""}\n${company.slug}.${ROOT_DOMAIN}`,
       html: `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:${BLACK};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#F6F6F0;">
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:32px 16px;">

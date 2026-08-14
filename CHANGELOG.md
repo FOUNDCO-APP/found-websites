@@ -1,3 +1,26 @@
+## Session: August 14, 2026 - Real Email System: Log Table, Shared Sender, Searchable Admin Page
+**AI:** Claude
+
+### Context
+Shawn clarified the "Emails sent" list from last round wasn't what he meant - he wanted a real system: a page to see every email Found has sent (and someday received), plus manual sending for office/marketing use. Verified before scoping: `/admin/emails` was a template *preview* tool only, not a history; grepped the codebase and found 13 separate files sending real email through Resend, none of them (except the two admin/new-client emails from last round) logging anywhere. Team round (Steve leading): build sent-visibility across everything first, achievable with no new infra beyond one table; manual send and received mail as separate later decisions. Shawn approved following the team's plan exactly, including their explicit call to migrate all 13 send points in one pass rather than half now/half later, since partial coverage defeats the point.
+
+### Changed
+- **New `email_log` table** (migration `20260814000000_create_email_log.sql`, applied live via the Supabase Management API and confirmed with a direct read-only query - not just trusted from the migration file, matching this project's established live-apply-then-migration-file pattern): `company_id` (nullable), `recipient_email`, `recipient_type`, `email_type`, `subject`, `success`, `error`, `source`, `created_at`.
+- **New `src/lib/emailLog.ts`**: `sendTrackedEmail()` is now the one function every part of the app calls to send email - it sends via Resend and logs to `email_log` in the same call, success or failure, and never throws (a failed notification email should never break the underlying action, like a lead being saved or a booking being confirmed).
+- **All 13 existing Resend call sites rewired** to use it instead of constructing their own `Resend` client: `actions/leads.ts` (4 sends), `actions/reply.ts`, `api/bookings/create`, `api/cron/lead-followup` (3 sends), `api/online-order/complete`, `api/shopping-cart/complete`, `api/stripe/webhook` (5 sends across estimate deposit/balance and online-order handlers), `dashboard/team/actions.ts`, `dashboard/api/send-login`, `onboarding/actions.ts` (abandoned-lead save), `lib/activationEmails.ts` (2 sends), `lib/adminAlerts.ts`. `admin/new-client/actions.ts`'s local duplicate sender from last round was removed in favor of the shared one. Confirmed via grep afterward that no direct `resend.emails.send`/`new Resend(` calls remain anywhere outside `emailLog.ts`.
+- **`/admin/emails` rebuilt** as the real thing: a searchable, filterable log (search by company/recipient/subject/type, "failed only" filter, most recent 300) instead of a template browser. The old template-preview list moved to `/admin/emails/templates`; the per-company preview detail page is unchanged, just its back-link updated.
+- **Promoted to a real top-level nav item** (Today/Growth/Clients/Emails/More) instead of buried in More, per the team's own read that this deserves the same weight as Clients or Growth.
+- Clients page's "Emails sent" per-row list now reads from `email_log` instead of the `client_activities` version built last round (which is removed in favor of the shared table).
+
+### Verification
+- Confirmed via grep that zero direct Resend usage remains outside `emailLog.ts`.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, including all three `/admin/emails*` routes.
+- Not yet tested live - no real lead/booking/order/estimate email has been sent through the rewired paths yet to confirm `email_log` actually populates correctly end to end.
+
+---
+
 ## Session: August 13, 2026 - Public Banner Fix, Permanent Comp, Sent-Email Log
 **AI:** Claude
 

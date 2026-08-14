@@ -1,12 +1,11 @@
 "use server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
-import { Resend } from "resend"
 import { headers } from "next/headers"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 export async function sendReply(_: unknown, formData: FormData) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const token = formData.get("token") as string
   const subject = (formData.get("subject") as string)?.trim()
   const message = (formData.get("message") as string)?.trim()
@@ -38,16 +37,20 @@ export async function sendReply(_: unknown, formData: FormData) {
     slug: string
   }
 
-  const { error } = await resend.emails.send({
+  const ok = await sendTrackedEmail({
     from: `${company.name} <hello@foundco.app>`,
     to: lead.email,
     subject,
     html: buildCustomerReplyHtml({ company, message }),
     text: buildCustomerReplyText({ company, message }),
+    companyId: lead.company_id,
+    recipientType: "lead",
+    emailType: "owner_reply_to_lead",
+    source: "actions/reply/sendReply",
+    admin: supabase,
   })
 
-  if (error) {
-    console.error("Resend reply error:", error)
+  if (!ok) {
     return { success: false, error: "Failed to send. Please try again." }
   }
 

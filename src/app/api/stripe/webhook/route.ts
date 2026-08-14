@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { Resend } from "resend"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -188,14 +188,19 @@ async function handleOnlineOrderCheckout(
   const ownerEmail = company?.lead_email || company?.email
   if (!ownerEmail || !lead || !process.env.RESEND_API_KEY) return
 
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const total = formatOrderTotal(existingAnswers.subtotal_cents)
-  await resend.emails.send({
+  await sendTrackedEmail({
     from: "Found <hello@foundco.app>",
     to: ownerEmail,
     subject: `Paid online order: ${lead.name || "Customer"} - ${total}`,
     html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 20px;"><tr><td align="center"><table width="100%" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:32px;text-align:center;"><p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#888888;">Paid Online Order</p><h1 style="margin:0;font-size:22px;font-weight:900;color:#ffffff;">${company?.name || "Found"}</h1></td></tr><tr><td style="padding:36px 32px;"><p style="margin:0 0 20px;font-size:18px;font-weight:900;color:#111111;">${total} paid</p><p style="margin:0 0 14px;font-size:15px;color:#333333;line-height:1.6;white-space:pre-wrap;">${lead.message || "New online order"}</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;padding:20px;margin-top:20px;"><tr><td><p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#999999;">Customer</p><p style="margin:0;font-size:16px;font-weight:800;color:#111111;">${lead.name || "Customer"}</p></td></tr><tr><td style="padding-top:14px;"><p style="margin:0;font-size:14px;color:#333333;">${lead.phone || ""}${lead.email ? ` &middot; ${lead.email}` : ""}</p></td></tr></table></td></tr></table></td></tr></table></body></html>`,
-  }).catch((err) => console.error("[Resend] Online order notification error:", err))
+    text: `Paid online order: ${lead.name || "Customer"} - ${total}\n${lead.phone || ""}${lead.email ? ` / ${lead.email}` : ""}`,
+    companyId,
+    recipientType: "client_owner",
+    emailType: "online_order_notification_webhook",
+    source: "api/stripe/webhook/handleOnlineOrderCheckout",
+    admin: supabase,
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -269,7 +274,6 @@ export async function POST(req: NextRequest) {
 
         const ownerEmail = company?.lead_email || company?.email
         if (process.env.RESEND_API_KEY) {
-          const resend = new Resend(process.env.RESEND_API_KEY)
           const clientName = estimate.client_first_name
             ? `${estimate.client_first_name} ${estimate.client_last_name ?? ""}`.trim()
             : (estimate.client_name ?? "Your client")
@@ -284,25 +288,34 @@ export async function POST(req: NextRequest) {
           const estimateLink = company?.slug ? `https://${company.slug}.${rootDomain}/q/${estimateId}` : dashboardLink
 
           if (ownerEmail) {
-            await resend.emails.send({
+            await sendTrackedEmail({
               from: "Found <hello@foundco.app>",
               to: ownerEmail,
               subject: `${paymentStatus === "paid" ? "Payment" : "Deposit"} received: ${clientName} paid ${depositFmt}`,
               html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="background:linear-gradient(135deg,${color}18 0%,${color}06 100%);padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 6px;color:#111;font-size:22px;font-weight:800;letter-spacing:-0.02em">${paymentStatus === "paid" ? "Payment received" : "Deposit received"}</h1><p style="margin:0;color:#666;font-size:15px">${clientName} paid ${depositFmt}</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:18px 20px;margin-bottom:20px;border:1px solid #d0eeda"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Confirmed</div><div style="font-size:24px;color:#1A7A3C;font-weight:800;letter-spacing:-0.02em">${depositFmt}</div>${total > 0 ? `<div style="font-size:13px;color:#4A8C5C;margin-top:4px">of ${totalFmt} total</div>` : ""}</div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">The customer has paid from the estimate page. Reach out while the decision is fresh.</p><a href="${dashboardLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">Open in Found</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
-            }).catch((err) => console.error("[Resend] Estimate deposit webhook owner email error:", err))
+              text: `${paymentStatus === "paid" ? "Payment" : "Deposit"} received: ${clientName} paid ${depositFmt}${total > 0 ? ` of ${totalFmt} total` : ""}.`,
+              companyId: estimate.company_id,
+              recipientType: "client_owner",
+              emailType: "estimate_deposit_owner",
+              source: "api/stripe/webhook/payment_intent.succeeded",
+              admin: supabase,
+            })
           }
 
           if (estimate.client_email && !estimate.receipt_sent_at) {
-            const sent = await resend.emails.send({
+            const ok = await sendTrackedEmail({
               from: `${companyName} <hello@foundco.app>`,
               to: estimate.client_email,
               subject: `Payment received by ${companyName}`,
               html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 8px;color:#111;font-size:24px;font-weight:800;letter-spacing:-0.02em">Payment received</h1><p style="margin:0;color:#666;font-size:15px">${companyName} has been notified.</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #d0eeda;text-align:center"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paid Today</div><div style="font-size:30px;color:#1A7A3C;font-weight:800;letter-spacing:-0.03em">${depositFmt}</div>${remaining > 0 ? `<div style="font-size:13px;color:#4A8C5C;margin-top:6px">${remainingFmt} remaining later</div>` : ""}</div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">Thanks, ${clientName}. Your estimate is accepted and your payment is confirmed.</p><a href="${estimateLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">View Estimate</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
-            }).catch((err) => {
-              console.error("[Resend] Estimate deposit webhook receipt email error:", err)
-              return null
+              text: `Payment received by ${companyName}. Thanks, ${clientName} - your estimate is accepted and your payment of ${depositFmt} is confirmed.`,
+              companyId: estimate.company_id,
+              recipientType: "lead",
+              emailType: "estimate_deposit_receipt",
+              source: "api/stripe/webhook/payment_intent.succeeded",
+              admin: supabase,
             })
-            if (sent?.data?.id) await supabase.from("estimates").update({ receipt_sent_at: now }).eq("id", estimateId)
+            if (ok) await supabase.from("estimates").update({ receipt_sent_at: now }).eq("id", estimateId)
           }
         }
       }
@@ -335,7 +348,6 @@ export async function POST(req: NextRequest) {
 
         const ownerEmail = company?.lead_email || company?.email
         if (process.env.RESEND_API_KEY) {
-          const resend = new Resend(process.env.RESEND_API_KEY)
           const clientName = estimate.client_first_name
             ? `${estimate.client_first_name} ${estimate.client_last_name ?? ""}`.trim()
             : (estimate.client_name ?? "Your client")
@@ -348,25 +360,34 @@ export async function POST(req: NextRequest) {
           const estimateLink = company?.slug ? `https://${company.slug}.${rootDomain}/q/${estimateId}` : dashboardLink
 
           if (ownerEmail) {
-            await resend.emails.send({
+            await sendTrackedEmail({
               from: "Found <hello@foundco.app>",
               to: ownerEmail,
               subject: `Final payment received: ${clientName} paid ${balanceFmt}`,
               html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="background:linear-gradient(135deg,${color}18 0%,${color}06 100%);padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 6px;color:#111;font-size:22px;font-weight:800;letter-spacing:-0.02em">Final payment received</h1><p style="margin:0;color:#666;font-size:15px">${clientName} paid the remaining ${balanceFmt}</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:18px 20px;margin-bottom:20px;border:1px solid #d0eeda"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paid in full</div><div style="font-size:24px;color:#1A7A3C;font-weight:800;letter-spacing:-0.02em">${totalFmt}</div></div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">The customer has paid the balance from the estimate page.</p><a href="${dashboardLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">Open in Found</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
-            }).catch((err) => console.error("[Resend] Estimate balance webhook owner email error:", err))
+              text: `Final payment received: ${clientName} paid the remaining ${balanceFmt}. Estimate is now paid in full (${totalFmt}).`,
+              companyId: estimate.company_id,
+              recipientType: "client_owner",
+              emailType: "estimate_balance_owner",
+              source: "api/stripe/webhook/payment_intent.succeeded",
+              admin: supabase,
+            })
           }
 
           if (estimate.client_email && !estimate.receipt_sent_at) {
-            const sent = await resend.emails.send({
+            const ok = await sendTrackedEmail({
               from: `${companyName} <hello@foundco.app>`,
               to: estimate.client_email,
               subject: `Payment received by ${companyName}`,
               html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 0"><tr><td align="center"><table width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;background:white;border-radius:16px;overflow:hidden;border:1px solid #eee"><tr><td style="padding:32px;border-bottom:1px solid #f0f0f0;text-align:center"><h1 style="margin:0 0 8px;color:#111;font-size:24px;font-weight:800;letter-spacing:-0.02em">Payment received</h1><p style="margin:0;color:#666;font-size:15px">${companyName} has been notified.</p></td></tr><tr><td style="padding:28px 32px"><div style="background:#f0f9f3;border-radius:12px;padding:20px;margin-bottom:20px;border:1px solid #d0eeda;text-align:center"><div style="font-size:12px;color:#1A7A3C;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Paid in full</div><div style="font-size:30px;color:#1A7A3C;font-weight:800;letter-spacing:-0.03em">${totalFmt}</div></div><p style="margin:0 0 20px;color:#444;font-size:15px;line-height:1.6">Thanks, ${clientName}. Your estimate is fully paid.</p><a href="${estimateLink}" style="display:inline-block;background:${color};color:white;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:12px">View Estimate</a></td></tr><tr><td style="padding:16px 32px;border-top:1px solid #f0f0f0;text-align:center"><p style="margin:0;color:#bbb;font-size:12px">Found - ${companyName}</p></td></tr></table></td></tr></table></body></html>`,
-            }).catch((err) => {
-              console.error("[Resend] Estimate balance webhook receipt email error:", err)
-              return null
+              text: `Payment received by ${companyName}. Thanks, ${clientName} - your estimate is now fully paid (${totalFmt}).`,
+              companyId: estimate.company_id,
+              recipientType: "lead",
+              emailType: "estimate_balance_receipt",
+              source: "api/stripe/webhook/payment_intent.succeeded",
+              admin: supabase,
             })
-            if (sent?.data?.id) await supabase.from("estimates").update({ receipt_sent_at: now }).eq("id", estimateId)
+            if (ok) await supabase.from("estimates").update({ receipt_sent_at: now }).eq("id", estimateId)
           }
         }
       }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
-import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 function cleanText(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
@@ -127,7 +127,6 @@ export async function POST(req: NextRequest) {
 
   const total = formatOrderTotal(existingAnswers.subtotal_cents)
   const businessName = company.name || "the business"
-  const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
   const ownerEmail = company.lead_email || company.email
   const rows = orderItemsHtml(existingAnswers.items)
   const pickupTime = typeof existingAnswers.pickup_time === "string" ? existingAnswers.pickup_time : ""
@@ -141,21 +140,33 @@ export async function POST(req: NextRequest) {
   const pickupHtml = detailBlockHtml("Pickup details", pickupReceiptText(businessName, pickupTime, pickupLocation))
   const orderNotes = typeof existingAnswers.notes === "string" ? existingAnswers.notes : ""
 
-  if (ownerEmail && resend) {
-    await resend.emails.send({
+  if (ownerEmail) {
+    await sendTrackedEmail({
       from: "Found Orders <hello@foundco.app>",
       to: ownerEmail,
       subject: `Online order for ${pickupTime || "pickup"}: ${lead.name || "Customer"} - ${total}`,
       html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Paid online order</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr><td><p style="margin:0 0 4px;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#888888;">Customer</p><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${escapeHtml(lead.name || "Customer")}</p></td><td align="right"><p style="margin:0;font-size:22px;font-weight:900;color:#111111;">${total}</p><p style="margin:4px 0 0;font-size:13px;color:#555555;">paid</p></td></tr></table>${pickupHtml}<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table>${orderNotes ? `<table width="100%" cellpadding="0" cellspacing="0" style="background:#fff8e8;border-radius:12px;margin:0 0 20px;"><tr><td style="padding:16px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#8a6d1f;">Notes</p><p style="margin:0;font-size:15px;line-height:1.5;color:#222222;white-space:pre-wrap;">${escapeHtml(orderNotes)}</p></td></tr></table>` : ""}<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f9f9;border-radius:12px;"><tr><td style="padding:18px;"><p style="margin:0 0 4px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#999999;">Contact</p><p style="margin:0;font-size:16px;font-weight:800;color:#111111;">${escapeHtml(lead.phone || "No phone")}${lead.email ? ` &middot; ${escapeHtml(lead.email)}` : ""}</p></td></tr></table></td></tr></table></td></tr></table></body></html>`,
-    }).catch((err) => console.error("[Resend] Online order notification error:", err))
+      text: `Paid online order: ${lead.name || "Customer"} - ${total}\n${lead.phone || ""}${lead.email ? ` / ${lead.email}` : ""}`,
+      companyId,
+      recipientType: "client_owner",
+      emailType: "online_order_notification",
+      source: "api/online-order/complete",
+      admin,
+    })
   }
-  if (lead.email && resend) {
-    await resend.emails.send({
+  if (lead.email) {
+    await sendTrackedEmail({
       from: `${businessName} <hello@foundco.app>`,
       to: lead.email,
       subject: `Your ${businessName} order receipt`,
       html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f6f6;padding:32px 16px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;"><tr><td style="background:#111111;padding:28px 28px 24px;"><p style="margin:0 0 6px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#cccccc;">Order receipt</p><h1 style="margin:0;font-size:24px;line-height:1.15;color:#ffffff;">${escapeHtml(businessName)}</h1></td></tr><tr><td style="padding:30px 28px;"><p style="margin:0 0 10px;font-size:18px;font-weight:900;color:#111111;">Thanks, ${escapeHtml(lead.name || "there")}.</p><p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#444444;">Your payment was received and your order was sent to ${escapeHtml(businessName)}.</p><table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #eeeeee;border-bottom:1px solid #eeeeee;padding:10px 0;margin:0 0 20px;">${rows}</table><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:16px;font-weight:900;color:#111111;">Total paid</td><td align="right" style="font-size:16px;font-weight:900;color:#111111;">${total}</td></tr></table>${pickupHtml}${existingAnswers.notes ? `<p style="margin:8px 0 0;font-size:14px;color:#444444;"><strong>Notes:</strong> ${escapeHtml(existingAnswers.notes)}</p>` : ""}</td></tr></table></td></tr></table></body></html>`,
-    }).catch((err) => console.error("[Resend] Customer order confirmation error:", err))
+      text: `Thanks${lead.name ? `, ${lead.name}` : ""}. Your order from ${businessName} is confirmed - total paid ${total}.`,
+      companyId,
+      recipientType: "lead",
+      emailType: "online_order_receipt",
+      source: "api/online-order/complete",
+      admin,
+    })
   }
   return NextResponse.json({ ok: true })
 }

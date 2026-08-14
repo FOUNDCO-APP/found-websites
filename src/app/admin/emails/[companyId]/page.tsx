@@ -126,7 +126,7 @@ export default async function AdminEmailPreviewPage({
 
         <header className="hq-header" style={{ position: "relative", paddingRight: 52 }}>
           <Link
-            href="/admin/emails"
+            href="/admin/emails/templates"
             aria-label="Close email preview"
             title="Close email preview"
             style={{

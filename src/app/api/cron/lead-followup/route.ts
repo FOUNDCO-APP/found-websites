@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { Resend } from "resend"
-
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY!)
-}
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 function getAdminClient() {
   return createClient(
@@ -82,15 +78,19 @@ export async function GET(req: NextRequest) {
     if (dryRun) continue
 
     if (nextStep === "day1") {
-      const { error: sendError } = await getResend().emails.send({
+      const ok = await sendTrackedEmail({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `Hi ${firstName}, just checking in`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 1, service: lead.service }),
         text: `Hi ${firstName},\n\nWe wanted to make sure we got everything you need. If you have any questions about${lead.service ? ` ${lead.service}` : " our services"}, we're happy to help.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n-- ${company.name}`,
+        companyId: lead.company_id,
+        recipientType: "lead",
+        emailType: "lead_followup_day1",
+        source: "api/cron/lead-followup",
+        admin: supabase,
       })
-      if (sendError) {
-        console.error("[Resend] Day-1 follow-up error:", sendError)
+      if (!ok) {
         skipped.send_error = (skipped.send_error ?? 0) + 1
         continue
       }
@@ -101,15 +101,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (nextStep === "day3") {
-      const { error: sendError } = await getResend().emails.send({
+      const ok = await sendTrackedEmail({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `Still thinking about it, ${firstName}?`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 3, service: lead.service }),
         text: `Hi ${firstName},\n\nJust following up to see if you're still looking for help${lead.service ? ` with ${lead.service}` : ""}. We'd love to work with you.\n\nGive us a call anytime${company.phone ? ` at ${company.phone}` : ""}.\n\n-- ${company.name}`,
+        companyId: lead.company_id,
+        recipientType: "lead",
+        emailType: "lead_followup_day3",
+        source: "api/cron/lead-followup",
+        admin: supabase,
       })
-      if (sendError) {
-        console.error("[Resend] Day-3 follow-up error:", sendError)
+      if (!ok) {
         skipped.send_error = (skipped.send_error ?? 0) + 1
         continue
       }
@@ -120,15 +124,19 @@ export async function GET(req: NextRequest) {
     }
 
     if (nextStep === "day7") {
-      const { error: sendError } = await getResend().emails.send({
+      const ok = await sendTrackedEmail({
         from: `${company.name} <hello@foundco.app>`,
         to: lead.email,
         subject: `We're here when you're ready, ${firstName}`,
         html: buildFollowUpEmail({ company, name: lead.name, day: 7, service: lead.service }),
         text: `Hi ${firstName},\n\nWe wanted to check in one last time. Whenever you're ready to move forward, ${company.name} is here.\n\n${company.phone ? `Call us at ${company.phone}.` : ""}\n\n-- ${company.name}`,
+        companyId: lead.company_id,
+        recipientType: "lead",
+        emailType: "lead_followup_day7",
+        source: "api/cron/lead-followup",
+        admin: supabase,
       })
-      if (sendError) {
-        console.error("[Resend] Day-7 follow-up error:", sendError)
+      if (!ok) {
         skipped.send_error = (skipped.send_error ?? 0) + 1
         continue
       }

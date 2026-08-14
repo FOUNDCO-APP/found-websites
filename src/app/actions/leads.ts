@@ -1,8 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { Resend } from "resend"
 import { headers } from "next/headers"
+import { sendTrackedEmail } from "@/lib/emailLog"
 import {
   buildLeadEmail,
   buildAutoReplyEmail,
@@ -14,7 +14,6 @@ import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rat
 import { checkLeadSpam } from "@/lib/security/spamGuard"
 
 export async function submitReservation(_: unknown, formData: FormData) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const companyId = formData.get("company_id") as string
   const name = (formData.get("name") as string)?.trim()
   const phone = (formData.get("phone") as string)?.trim()
@@ -78,22 +77,32 @@ export async function submitReservation(_: unknown, formData: FormData) {
   const displayDate = new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })
 
   if (company?.email) {
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: `Found <hello@foundco.app>`,
       to: company.email,
       subject: `Reservation request: ${name} — ${displayDate} at ${displayTime}`,
       html: buildReservationEmail({ company, name, phone, email, date: displayDate, time: displayTime, partySize, notes, replyUrl }),
-    }).catch((err) => console.error("[Resend] Reservation notification error:", err))
+      text: `Reservation request from ${name} for ${displayDate} at ${displayTime}${partySize ? ` (party of ${partySize})` : ""}.\nPhone: ${phone}${email ? `\nEmail: ${email}` : ""}${notes ? `\nNotes: ${notes}` : ""}\n\nReply: ${replyUrl}`,
+      companyId,
+      recipientType: "client_owner",
+      emailType: "reservation_notification",
+      source: "actions/leads/submitReservation",
+    })
   }
 
   if (email && company) {
     const firstName = name.split(" ")[0]
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: `${company.name} <hello@foundco.app>`,
       to: email,
       subject: `Reservation request received, ${firstName}`,
       html: buildReservationAutoReply({ company, name, date: displayDate, time: displayTime, partySize, phone: company.phone }),
-    }).catch((err) => console.error("[Resend] Reservation auto-reply error:", err))
+      text: `Hi ${firstName},\n\nWe received your reservation request for ${displayDate} at ${displayTime}${partySize ? ` (party of ${partySize})` : ""}. We'll be in touch to confirm.\n\n— ${company.name}`,
+      companyId,
+      recipientType: "lead",
+      emailType: "reservation_auto_reply",
+      source: "actions/leads/submitReservation",
+    })
   }
 
   // Pro/Business: auto-save reservation as contact
@@ -118,7 +127,6 @@ export async function submitReservation(_: unknown, formData: FormData) {
 }
 
 export async function submitLead(_: unknown, formData: FormData) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const companyId = formData.get("company_id") as string
   const name = (formData.get("name") as string)?.trim()
   const phone = (formData.get("phone") as string)?.trim()
@@ -188,24 +196,33 @@ export async function submitLead(_: unknown, formData: FormData) {
 
   // Notify the owner
   if (company?.email) {
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: `Found <hello@foundco.app>`,
       to: company.email,
       subject: `New lead: ${name}${service ? ` — ${service}` : ""}`,
       html: buildLeadEmail({ company, name, phone, email, service, message, replyUrl }),
-    }).catch((err) => console.error("[Resend] Owner notification error:", err))
+      text: `New lead: ${name}${service ? ` — ${service}` : ""}\nPhone: ${phone}${email ? `\nEmail: ${email}` : ""}${message ? `\nMessage: ${message}` : ""}\n\nReply: ${replyUrl}`,
+      companyId,
+      recipientType: "client_owner",
+      emailType: "lead_notification",
+      source: "actions/leads/submitLead",
+    })
   }
 
   // Auto-reply to the customer
   if (email && company) {
     const firstName = name.split(" ")[0]
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: `${company.name} <hello@foundco.app>`,
       to: email,
       subject: `We got your message, ${firstName}`,
       html: buildAutoReplyEmail({ company, name, phone: company.phone }),
       text: `Hi ${firstName},\n\nThank you for reaching out to ${company.name}. We received your message and someone will be in touch with you as soon as possible.\n\nIf you need to reach us right away, call us at ${company.phone || "the number on our website"}.\n\n— ${company.name}`,
-    }).catch((err) => console.error("[Resend] Auto-reply error:", err))
+      companyId,
+      recipientType: "lead",
+      emailType: "lead_auto_reply",
+      source: "actions/leads/submitLead",
+    })
   }
 
   // Pro/Business: auto-save lead as contact (skip if phone/email already exists)

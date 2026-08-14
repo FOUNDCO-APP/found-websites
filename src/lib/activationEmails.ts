@@ -1,4 +1,4 @@
-import { Resend } from "resend"
+import { sendTrackedEmail } from "@/lib/emailLog"
 import { polishBusinessName } from "@/lib/copyPolish"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -149,13 +149,16 @@ export async function sendSiteLiveEmailOnce(admin: AdminClient, companyId: strin
   if (!reserved) return { sent: false, reason: "already_reserved" }
 
   const email = buildSiteLiveEmail(company)
-  await new Resend(process.env.RESEND_API_KEY).emails.send({
-    from: "Found <hello@foundco.app>",
-    replyTo: "hello@foundco.app",
+  await sendTrackedEmail({
     to: company.email,
     subject: email.subject,
     html: email.html,
     text: email.text,
+    companyId: company.id,
+    recipientType: "client_owner",
+    emailType: "site_live",
+    source: "activationEmails/sendSiteLiveEmailOnce",
+    admin,
   })
 
   return { sent: true }
@@ -173,13 +176,16 @@ export async function sendActivationReminderEmailOnce(admin: AdminClient, compan
   if (!reserved) return { sent: false, reason: "already_reserved" }
 
   const email = buildActivationReminderEmail(company)
-  await new Resend(process.env.RESEND_API_KEY).emails.send({
-    from: "Found <hello@foundco.app>",
-    replyTo: "hello@foundco.app",
+  await sendTrackedEmail({
     to: company.email,
     subject: email.subject,
     html: email.html,
     text: email.text,
+    companyId: company.id,
+    recipientType: "client_owner",
+    emailType: "activation_reminder",
+    source: "activationEmails/sendActivationReminderEmailOnce",
+    admin,
   })
 
   return { sent: true }

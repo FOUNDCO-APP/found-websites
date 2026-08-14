@@ -1,13 +1,13 @@
 "use server"
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
-import { Resend } from "resend"
 import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { guardGeneratedCopyUniqueness } from "@/lib/copySimilarity"
 import { loadCopySimilarityReferences } from "@/lib/copySimilaritySupabase"
 import { getIndustryManifest } from "@/lib/industryManifests"
 import { sendNewSignupAlert } from "@/lib/adminAlerts"
 import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 type OnboardingInput = {
   name: string
@@ -169,7 +169,6 @@ export async function saveAbandonedLead({
   stepAbandoned: string
   partialAnswers: Record<string, unknown>
 }): Promise<{ success: boolean; error?: string }> {
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const trimmedEmail = email.trim()
   const trimmedFirst = firstName.trim()
 
@@ -200,13 +199,16 @@ export async function saveAbandonedLead({
 
   const resumeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://foundco.app"}/?start=1`
 
-  await resend.emails.send({
-    from: "Found <hello@foundco.app>",
+  await sendTrackedEmail({
     to: trimmedEmail,
     subject: trimmedFirst ? `Your site is waiting, ${trimmedFirst}` : "Your site is waiting",
     html: buildSaveSpotEmail({ firstName: trimmedFirst, businessName, resumeUrl }),
     text: `Hey ${trimmedFirst || "there"},\n\nYou started building ${businessName ? `${businessName}'s website` : "your website"} — you were almost there.\n\nCome back when you're ready. It only takes a few more minutes.\n\n${resumeUrl}\n\n— The Found team`,
-  }).catch((err: unknown) => console.error("[Resend] save-spot email error:", err))
+    recipientType: "prospect",
+    emailType: "abandoned_onboarding_save",
+    source: "onboarding/saveAbandonedLead",
+    admin: supabase,
+  })
 
   return { success: true }
 }

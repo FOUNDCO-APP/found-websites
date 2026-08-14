@@ -10,21 +10,26 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const initialSearch = typeof params.q === "string" ? params.q : ""
   const initialFilter = typeof params.state === "string" ? params.state : undefined
   const admin = getAdminClient()
-  const [{ data: companies }, { data: configs }, { data: activities }] = await Promise.all([
+  const [{ data: companies }, { data: configs }, { data: activities }, { data: emails }] = await Promise.all([
     admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
-    admin.from("client_activities").select("company_id, summary, created_at, activity_type").order("created_at", { ascending: false }),
+    admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
+    admin.from("email_log").select("company_id, subject, email_type, recipient_email, success, created_at").not("company_id", "is", null).order("created_at", { ascending: false }),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
   const lastActivity = new Map<string, string>()
+  for (const activity of activities ?? []) if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
   const emailsByCompany = new Map<string, { summary: string; created_at: string }[]>()
-  for (const activity of activities ?? []) {
-    if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
-    if (activity.activity_type === "email") {
-      const list = emailsByCompany.get(activity.company_id) ?? []
-      if (list.length < 10) list.push({ summary: activity.summary, created_at: activity.created_at })
-      emailsByCompany.set(activity.company_id, list)
+  for (const email of emails ?? []) {
+    if (!email.company_id) continue
+    const list = emailsByCompany.get(email.company_id) ?? []
+    if (list.length < 10) {
+      list.push({
+        summary: `${email.success ? "Sent" : "FAILED"}: ${email.email_type} to ${email.recipient_email}`,
+        created_at: email.created_at,
+      })
     }
+    emailsByCompany.set(email.company_id, list)
   }
   const rows: ClientRow[] = (companies ?? []).map((company) => {
     const issues: string[] = []

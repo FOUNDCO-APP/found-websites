@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
-import { Resend } from "resend"
 import { requireAdmin, getAdminClient } from "../lib"
 import { createOnboardingSite } from "@/app/onboarding/actions"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -70,43 +70,6 @@ function buildPermanentCompEmail({ businessName, siteUrl }: { businessName: stri
   })
 }
 
-async function sendClientEmail({
-  admin,
-  companyId,
-  to,
-  subject,
-  html,
-  text,
-  label,
-}: {
-  admin: ReturnType<typeof getAdminClient>
-  companyId: string
-  to: string
-  subject: string
-  html: string
-  text: string
-  label: string
-}) {
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    await resend.emails.send({ from: "Found <hello@foundco.app>", to, subject, html, text })
-    await admin.from("client_activities").insert({
-      company_id: companyId,
-      activity_type: "email",
-      summary: `Sent: ${label} to ${to}`,
-    })
-    return true
-  } catch (err) {
-    console.error("[admin/new-client] email failed:", label, err)
-    await admin.from("client_activities").insert({
-      company_id: companyId,
-      activity_type: "email",
-      summary: `FAILED to send: ${label} to ${to} - send manually`,
-    })
-    return false
-  }
-}
-
 export async function createManualClientSite(formData: FormData) {
   await requireAdmin()
 
@@ -170,14 +133,16 @@ export async function deferClientBilling(formData: FormData) {
     if (company?.email) {
       const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
       const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${company.slug}`
-      await sendClientEmail({
-        admin,
-        companyId,
+      await sendTrackedEmail({
         to: company.email,
         subject: `${company.name}, your website is live`,
         html: buildAddCardEmail({ businessName: company.name, siteUrl, activateUrl, dueDateLabel }),
         text: `Your website is live: ${siteUrl}\n\nAdd a card to keep it running - nothing is charged today, billing starts ${dueDateLabel}.\n\nAdd your card: ${activateUrl}\n\n- The Found team`,
-        label: "Add your card (deferred billing)",
+        companyId,
+        recipientType: "client_owner",
+        emailType: "deferred_billing_add_card",
+        source: "admin/new-client/deferClientBilling",
+        admin,
       })
     }
   }
@@ -213,14 +178,16 @@ export async function setPermanentComp(formData: FormData) {
     const { data: company } = await admin.from("companies").select("name, slug, email").eq("id", companyId).single()
     if (company?.email) {
       const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
-      await sendClientEmail({
-        admin,
-        companyId,
+      await sendTrackedEmail({
         to: company.email,
         subject: `${company.name}, your website is live`,
         html: buildPermanentCompEmail({ businessName: company.name, siteUrl }),
         text: `Your website is live: ${siteUrl}\n\nNo card needed - it's on us.\n\n- The Found team`,
-        label: "Site is live (permanent, no charge)",
+        companyId,
+        recipientType: "client_owner",
+        emailType: "permanent_comp_live",
+        source: "admin/new-client/setPermanentComp",
+        admin,
       })
     }
   }

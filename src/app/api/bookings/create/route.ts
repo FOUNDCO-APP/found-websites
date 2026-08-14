@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
 import { buildBookingNotification, buildBookingConfirmation } from "@/lib/emailBuilders"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 function clean(v: unknown, max = 200): string {
   return typeof v === "string" ? v.trim().slice(0, max) : ""
 }
 
 export async function POST(req: NextRequest) {
-  const resend = new Resend(process.env.RESEND_API_KEY)
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: "Invalid request." }, { status: 400 })
 
@@ -146,7 +145,7 @@ export async function POST(req: NextRequest) {
 
   // 4. Owner notification email
   if (company.email) {
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: "Found <hello@foundco.app>",
       to: company.email,
       subject: `New ${bookingNoun.noun}: ${name} — ${displayDate} at ${displayTime}`,
@@ -156,12 +155,18 @@ export async function POST(req: NextRequest) {
         replyUrl: `https://foundco.app/reply/${replyToken}`,
         bookingNoun: bookingNoun.noun,
       }),
-    }).catch(err => console.error("[Resend] booking notification:", err))
+      text: `New ${bookingNoun.noun}: ${name} — ${displayDate} at ${displayTime}\nPhone: ${phone}${email ? `\nEmail: ${email}` : ""}${notes ? `\nNotes: ${notes}` : ""}\nConfirmation: ${confirmationCode}`,
+      companyId,
+      recipientType: "client_owner",
+      emailType: "booking_notification",
+      source: "api/bookings/create",
+      admin,
+    })
   }
 
   // 5. Customer confirmation email
   if (email) {
-    await resend.emails.send({
+    await sendTrackedEmail({
       from: `${company.name} <hello@foundco.app>`,
       to: email,
       subject: `${nounCap} ${bookingNoun.pastTense} — ${displayDate} at ${displayTime}`,
@@ -170,7 +175,13 @@ export async function POST(req: NextRequest) {
         bookingNoun: bookingNoun.noun,
         confirmMode: bookingNoun.confirmMode,
       }),
-    }).catch(err => console.error("[Resend] booking confirmation:", err))
+      text: `Your ${bookingNoun.noun} with ${company.name} is ${bookingNoun.pastTense} for ${displayDate} at ${displayTime}.\nConfirmation: ${confirmationCode}`,
+      companyId,
+      recipientType: "lead",
+      emailType: "booking_confirmation",
+      source: "api/bookings/create",
+      admin,
+    })
   }
 
   return NextResponse.json({ success: true, confirmationCode })

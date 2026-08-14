@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { Resend } from "resend"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
     const limit = checkPublicRateLimit(req, { key: `magic-login:${normalizedEmail}`, limit: 5, windowMs: 15 * 60 * 1000 })
     if (!limit.allowed) return rateLimitResponse(limit)
 
-    const resend = new Resend(process.env.RESEND_API_KEY)
     const admin = createAdminClient()
 
     const { data, error } = await admin.auth.admin.generateLink({
@@ -35,11 +34,15 @@ export async function POST(req: NextRequest) {
 
     const link = data.properties.action_link
 
-    await resend.emails.send({
-      from: "Found <hello@foundco.app>",
+    await sendTrackedEmail({
       to: normalizedEmail,
       subject: "Your Found link \u2192",
       html: buildMagicLinkEmail(link),
+      text: `Your Found link: ${link}\n\nThis link expires in 60 minutes and can only be used once.`,
+      recipientType: "client_owner",
+      emailType: "magic_link_login",
+      source: "dashboard/api/send-login",
+      admin,
     })
 
     return NextResponse.json({ ok: true })

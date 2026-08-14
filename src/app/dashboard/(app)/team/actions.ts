@@ -3,7 +3,7 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess, type CompanyRow } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { Resend } from "resend"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -90,9 +90,10 @@ export async function inviteWorker(rawEmail: string): Promise<{ error: string } 
     if (error) return { error: error.message }
   }
 
-  await sendWorkerInviteEmail(email, linkData.properties.action_link, company)
+  await sendWorkerInviteEmail(email, linkData.properties.action_link, company, admin)
   return { success: true }
 }
+
 
 export async function revokeWorker(memberId: string): Promise<{ error: string } | { success: true }> {
   const ctx = await getOwnerContext()
@@ -108,20 +109,18 @@ export async function revokeWorker(memberId: string): Promise<{ error: string } 
   return { success: true }
 }
 
-async function sendWorkerInviteEmail(email: string, link: string, company: Pick<CompanyRow, "name">) {
-  const resendKey = process.env.RESEND_API_KEY
-  if (!resendKey) return
-  const resend = new Resend(resendKey)
-  try {
-    await resend.emails.send({
-      from: "Found <hello@foundco.app>",
-      to: email,
-      subject: `${company.name} added you to their Found team`,
-      html: buildInviteEmail(link, company.name),
-    })
-  } catch (err) {
-    console.error("[inviteWorker] email send failed:", err)
-  }
+async function sendWorkerInviteEmail(email: string, link: string, company: Pick<CompanyRow, "id" | "name">, admin: ReturnType<typeof createAdminClient>) {
+  await sendTrackedEmail({
+    to: email,
+    subject: `${company.name} added you to their Found team`,
+    html: buildInviteEmail(link, company.name),
+    text: `${company.name} added you to their Found team.\n\nOpen your camera: ${link}\n\nThis link expires in 60 minutes and can only be used once.`,
+    companyId: company.id,
+    recipientType: "team_member",
+    emailType: "team_invite",
+    source: "dashboard/team",
+    admin,
+  })
 }
 
 function buildInviteEmail(link: string, companyName: string) {

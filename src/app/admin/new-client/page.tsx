@@ -31,16 +31,16 @@ export default async function AdminNewClientPage({
       .eq("id", createdId)
       .maybeSingle()
 
-    let lastActivitySummary: string | null = null
+    let lastEmailSuccess: boolean | null = null
     if (deferred && company) {
-      const { data: activity } = await admin
-        .from("client_activities")
-        .select("summary")
+      const { data: emailRow } = await admin
+        .from("email_log")
+        .select("success")
         .eq("company_id", company.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
-      lastActivitySummary = activity?.summary ?? null
+      lastEmailSuccess = emailRow?.success ?? null
     }
 
     if (!company) {
@@ -54,8 +54,8 @@ export default async function AdminNewClientPage({
 
     const siteUrl = `https://${company.slug}.foundco.app`
     const activateUrl = `https://foundco.app/activate?slug=${company.slug}`
-    const emailSent = lastActivitySummary?.startsWith("Sent:")
-    const emailFailed = lastActivitySummary?.startsWith("FAILED to send:")
+    const emailSent = lastEmailSuccess === true
+    const emailFailed = lastEmailSuccess === false
 
     return (
       <div className="hq-page hq-page-narrow">

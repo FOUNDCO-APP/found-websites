@@ -8,7 +8,8 @@ const NAV_ITEMS = [
   { href: "/admin", label: "Today", icon: "today", match: ["/admin"] },
   { href: "/admin/growth", label: "Growth", icon: "sales", match: ["/admin/growth"] },
   { href: "/admin/clients", label: "Clients", icon: "clients", match: ["/admin/clients"] },
-  { href: "/admin/more", label: "More", icon: "more", match: ["/admin/more", "/admin/photos", "/admin/emails", "/admin/copy", "/admin/health", "/admin/billing", "/admin/new-client"] },
+  { href: "/admin/emails", label: "Emails", icon: "emails", match: ["/admin/emails"] },
+  { href: "/admin/more", label: "More", icon: "more", match: ["/admin/more", "/admin/photos", "/admin/copy", "/admin/health", "/admin/billing", "/admin/new-client"] },
 ] as const
 
 function NavIcon({ name }: { name: string }) {
@@ -16,6 +17,7 @@ function NavIcon({ name }: { name: string }) {
   if (name === "today") return <svg {...common}><path d="M5 3v3M19 3v3"/><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 15l2 2 5-5"/></svg>
   if (name === "sales") return <svg {...common}><path d="M4 19V9M10 19V5M16 19v-7M22 19V3"/><path d="M2 19h20"/></svg>
   if (name === "clients") return <svg {...common}><rect x="3" y="7" width="18" height="14" rx="2"/><path d="M7 7V4a1 1 0 011-1h8a1 1 0 011 1v3"/></svg>
+  if (name === "emails") return <svg {...common}><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
   if (name === "signout") return <svg {...common}><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
   return <svg {...common}><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>
 }

@@ -1,5 +1,31 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14 - Real Email System: Log Table, Shared Sender, Searchable Admin Page
+
+### Progress This Pass
+- Shawn clarified the "Emails sent" list built last round wasn't what he meant - he wants a real email system: see every email Found has sent (someday received too), plus manual sending for both office reasons and marketing. Explicitly said he's not technical enough to know what's feasible and wanted the team's full recommendation and build directions before anything got touched.
+- Verified before scoping: `/admin/emails` was a template *preview* tool only (pick a company, see what a transactional email would render as) - never a history of what was actually sent. Grepped the whole codebase and found 13 separate files sending real email through Resend directly, none of them logging anywhere except the two built into `admin/new-client/actions.ts` last round.
+- Team round (Steve leading, full team weighing in - Craig on architecture, Priya on data model, Marcus on migration sizing, Jony/Angela on where this lives): build sent-visibility across everything first since it needs no new infrastructure beyond one table; manual send (office + marketing) and received/inbound mail are real, separate, bigger builds - explicitly not touched this pass. Craig/Marcus's honest sizing: migrate all 13 send points in the same pass rather than half now/half later, since partial coverage leaves the same "can't see what we sent" gap for whichever ones get skipped.
+- Shawn approved the team's full plan exactly. Built it:
+  - New `email_log` table (`company_id` nullable, `recipient_email`, `recipient_type`, `email_type`, `subject`, `success`, `error`, `source`, `created_at`) via migration `20260814000000_create_email_log.sql` - applied live through the Supabase Management API (using the project's access token from `.env.local`, since this worktree had no local Supabase link), confirmed with a direct read-only REST query before trusting it existed, not just assumed from the migration file.
+  - New `src/lib/emailLog.ts`: `sendTrackedEmail()` is the one shared function - sends via Resend and logs success/failure to `email_log` in the same call, never throws (so a failed notification email can never break the real action underneath it, like a lead being saved or a booking being confirmed).
+  - Rewired all 13 existing send points one by one, reading each file fully first to preserve exact existing behavior (including two places - the Stripe webhook's estimate receipt emails - that conditionally update `receipt_sent_at` based on whether the send actually succeeded, now driven by `sendTrackedEmail`'s boolean return instead of Resend's raw response shape). Removed `admin/new-client/actions.ts`'s local duplicate sender from last round in favor of the shared one. Confirmed via grep afterward that zero direct `resend.emails.send`/`new Resend(` calls remain anywhere in `src/` outside `emailLog.ts` itself.
+  - Rebuilt `/admin/emails` as the real thing: a searchable/filterable log (company, recipient, subject, type; a "failed only" toggle; most recent 300 rows) instead of the template browser. Moved the old template-preview list to `/admin/emails/templates`, left the per-company preview detail page itself unchanged (just updated its back-link).
+  - Promoted Emails to a real top-level admin nav item (Today / Growth / Clients / Emails / More) instead of leaving it buried inside More, matching the team's own read that it deserves the same weight as Clients or Growth.
+  - Clients page's "Emails sent" per-row list now reads from `email_log` instead of last round's `client_activities`-based version, which is fully replaced.
+
+### Verification This Pass
+- Confirmed via grep that no direct Resend usage remains outside `emailLog.ts`.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, including all three `/admin/emails*` routes (verified in the build output directly, not just assumed from a clean exit).
+- Not yet tested live - no real lead/booking/order/estimate email has actually been sent through the rewired paths yet to prove `email_log` populates correctly end to end in production.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: trigger a real email (a test lead submission is the easiest) and confirm it shows up correctly in `/admin/emails` with the right company/recipient/type; check the new Emails nav tab renders; confirm `/admin/emails/templates` still works for template previews. Manual send (office + marketing) and received/inbound mail remain explicitly deferred - no infrastructure exists for inbound email at all today, that's a real separate build whenever Shawn wants to pick it up.
+
+---
+
 ## 2026-08-13 - Public Banner Fix, Permanent Comp, Sent-Email Log
 
 ### Progress This Pass
