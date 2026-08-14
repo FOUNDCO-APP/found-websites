@@ -16,6 +16,13 @@ Real scenario: migrating Shawn's friend Richard (mbjheatingandcooling.com) onto 
 - [x] Follow-up: Shawn asked for an automated email option alongside manual (both always available, not either/or) - client gets an email with a "View my site" link and an "Add my card" link, billing starts on the due date, nothing charged today (Shawn specified this content directly). Built: `deferClientBilling()` sends this via Resend to the company's own email when the new "also email them now" checkbox is checked; failure doesn't block the deferral, manual link stays available either way; confirmation screen shows whether the email actually sent.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after the email addition.
 - [ ] Shawn QA: defer a real test account with "email them now" checked, confirm the email actually arrives and both links in it work.
+- [x] Shawn caught a real bug testing a real test site ("cameras"): even with a 30-day deferral set, the public site still showed the "Activate my site / add payment" banner. Traced and team-reviewed (Craig/Marcus/Priya/Jony/Angela/Steve) before fixing:
+  - [x] Root cause: `PreviewBanner`'s day-count logic only special-cases the final 9 days and the post-deadline paused state - anything further out falls through to the same copy used for a never-arranged site, and the banner was never gated to the owner, so real customers of a deferred client would see it too.
+  - [x] Shawn's call: suppress the banner entirely whenever a deferral or permanent arrangement exists, not just rewrite the copy - fixed with a one-line condition change (`trial_ends_at` is only ever set by this admin tool, so it's a safe signal).
+  - [x] Also approved building "Permanent" (free forever) as a third billing choice, reusing the existing `is_comp`/`comp_reason` mechanism per the prior round's tech review - built `setPermanentComp()`, its own email copy, and a third panel on the billing page.
+  - [x] Added email history: emails sent through this tool now log with `activity_type: "email"` (previously mixed into the general note) and show as an "Emails sent" list on each client's row in Clients. Scoped honestly - only this tool's emails log this way today, other existing email sends elsewhere in the app don't yet.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build` after all three fixes.
+- [ ] Shawn QA: re-check the "cameras" test site (or any deferred account) - banner should no longer show; set a permanent-comp test account and confirm no billing chrome ever appears; check the Clients page shows "Emails sent" for an account that got the automated email.
 
 ## 2026-08-11 - FOUND Systems: Analytics/SEO/AEO/GEO Tracking Stack (Started)
 

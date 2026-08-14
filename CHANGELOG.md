@@ -1,3 +1,23 @@
+## Session: August 13, 2026 - Public Banner Fix, Permanent Comp, Sent-Email Log
+**AI:** Claude
+
+### Context
+Shawn tested the deferred-billing tool on a real test site ("cameras") and caught a real bug: even with 30 days deferred, the public site showed the "Live preview - Add payment to turn it on for customers - Activate my site" banner. Root cause traced and team-reviewed before fixing: `getBannerState()` only special-cases the final 9 days and the post-deadline paused state - any deferral further out than that falls through to the same copy used for a site that's never been arranged at all, and the banner was never gated to the owner in the first place, so real customers of a deferred-billing client would see it too. Shawn's call: suppress it entirely whenever a deferral/permanent arrangement exists - he already tracks the due date from the Clients list, a public billing banner isn't needed or appropriate during that window. Same message also approved building the previously-reviewed "permanent" (free forever) option, and asked for a way to see what emails have been sent to a client.
+
+### Changed
+- `src/components/PreviewBanner.tsx`: banner now only shows when `!isActivated && !trialEndsAt` - since `trial_ends_at` is only ever set by the admin deferred-billing/permanent tool, this suppresses it for every Shawn-arranged account (deferred or permanent, at any point in the term) while leaving it unchanged for genuinely brand-new, never-arranged self-serve sites.
+- `src/app/admin/new-client/actions.ts`: added `setPermanentComp()` - sets `is_comp: true`, `subscription_status: "active"`, `comp_reason`, `client_state: "comp"` (reusing the existing comp mechanism per last round's tech review, no schema change), with the same optional "email them now" pattern as deferral, using its own email copy ("no card needed - it's on us"). Refactored email sending into a shared `sendClientEmail()` helper that now logs to `client_activities` with its own `activity_type: "email"` (previously folded into the general deferral note), so email history is filterable instead of mixed into other notes.
+- `src/app/admin/new-client/page.tsx`: added the "Permanent" panel alongside "Activate now" / "Defer billing"; the confirmation screen now handles both deferred and permanent outcomes and reads the email send/fail state from the new `activity_type: "email"` log format.
+- `src/app/admin/clients/page.tsx`, `ClientsWorkspace.tsx`: added an "Emails sent" list to each client's existing "Manage relationship" detail panel, sourced from `client_activities` where `activity_type = "email"` (up to 10 most recent). Scoped honestly: only emails sent through the new-client tool log this way today - other existing email sends elsewhere in the app (site-live notice, abandoned-lead save) don't yet, flagged as a known gap rather than silently implied as covered.
+
+### Verification
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet tested live - the "cameras" test site that surfaced the original bug hasn't been re-checked against the fix yet.
+
+---
+
 ## Session: August 13, 2026 - Automated Add-Card Email for Deferred Billing
 **AI:** Claude
 

@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { getAdminClient } from "../lib"
-import { createManualClientSite, deferClientBilling } from "./actions"
+import { createManualClientSite, deferClientBilling, setPermanentComp } from "./actions"
+
+const checkboxLabelStyle: React.CSSProperties = { display: "flex", alignItems: "center", gap: 8, flexDirection: "row" }
 
 export const metadata = { title: "New Client - Found HQ" }
 
@@ -25,7 +27,7 @@ export default async function AdminNewClientPage({
     const admin = getAdminClient()
     const { data: company } = await admin
       .from("companies")
-      .select("id, name, slug, trial_ends_at")
+      .select("id, name, slug, trial_ends_at, is_comp")
       .eq("id", createdId)
       .maybeSingle()
 
@@ -52,6 +54,8 @@ export default async function AdminNewClientPage({
 
     const siteUrl = `https://${company.slug}.foundco.app`
     const activateUrl = `https://foundco.app/activate?slug=${company.slug}`
+    const emailSent = lastActivitySummary?.startsWith("Sent:")
+    const emailFailed = lastActivitySummary?.startsWith("FAILED to send:")
 
     return (
       <div className="hq-page hq-page-narrow">
@@ -67,19 +71,28 @@ export default async function AdminNewClientPage({
         {deferred ? (
           <section className="hq-section">
             <div className="hq-panel" style={{ padding: 16 }}>
-              <p className="hq-row-title">Billing deferred</p>
-              <p className="hq-row-meta">
-                Card due by {company.trial_ends_at ? new Date(company.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}.
-                If no card is added by then, the public site pauses automatically.
-              </p>
+              {company.is_comp ? (
+                <>
+                  <p className="hq-row-title">Permanent - free forever</p>
+                  <p className="hq-row-meta">No billing, no card, ever - unless you change it later from Clients.</p>
+                </>
+              ) : (
+                <>
+                  <p className="hq-row-title">Billing deferred</p>
+                  <p className="hq-row-meta">
+                    Card due by {company.trial_ends_at ? new Date(company.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}.
+                    If no card is added by then, the public site pauses automatically.
+                  </p>
+                </>
+              )}
               <p className="hq-row-meta" style={{ marginTop: 10 }}>
                 Send this link yourself anytime:<br />
                 <a href={activateUrl}>{activateUrl}</a>
               </p>
-              {lastActivitySummary?.includes("Card-link email sent") && (
-                <p className="hq-row-meta" style={{ marginTop: 10, color: "var(--hq-success, #32D074)" }}>Card-link email sent.</p>
+              {emailSent && (
+                <p className="hq-row-meta" style={{ marginTop: 10, color: "var(--hq-success, #32D074)" }}>Email sent.</p>
               )}
-              {lastActivitySummary?.includes("Card-link email FAILED") && (
+              {emailFailed && (
                 <p className="hq-row-meta" style={{ marginTop: 10, color: "var(--hq-danger, #F43F5E)" }}>The automated email failed to send - use the link above manually.</p>
               )}
             </div>
@@ -107,11 +120,26 @@ export default async function AdminNewClientPage({
                 <label className="hq-form-wide">Reason (for your own records)
                   <textarea name="reason" rows={2} required placeholder="e.g. Richard Zelle'd this month directly, still old-school about entering a card - needs one on file by next cycle." />
                 </label>
-                <label className="hq-form-wide" style={{ display: "flex", alignItems: "center", gap: 8, flexDirection: "row" }}>
+                <label className="hq-form-wide" style={checkboxLabelStyle}>
                   <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />
-                  Also email {company.name} the card link now (you'll still get the link either way to send yourself)
+                  Also email {company.name} the card link now (you&apos;ll still get the link either way to send yourself)
                 </label>
                 <div className="hq-form-wide"><button className="hq-button hq-button-primary" type="submit">Defer billing</button></div>
+              </form>
+            </div>
+            <div className="hq-panel" style={{ padding: 16, marginTop: 12 }}>
+              <p className="hq-row-title">Permanent</p>
+              <p className="hq-row-meta">Free forever, no card ever needed - family, friends, trade deals.</p>
+              <form action={setPermanentComp} className="hq-create-form" style={{ marginTop: 12 }}>
+                <input type="hidden" name="companyId" value={company.id} />
+                <label className="hq-form-wide">Reason (for your own records)
+                  <textarea name="reason" rows={2} required placeholder="e.g. Richard is a personal friend, permanent comp." />
+                </label>
+                <label className="hq-form-wide" style={checkboxLabelStyle}>
+                  <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />
+                  Also email {company.name} that their site is live now
+                </label>
+                <div className="hq-form-wide"><button className="hq-button hq-button-secondary" type="submit">Set as permanent</button></div>
               </form>
             </div>
           </section>

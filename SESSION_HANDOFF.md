@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-13 - Public Banner Fix, Permanent Comp, Sent-Email Log
+
+### Progress This Pass
+- Shawn tested the deferred-billing tool live on a real test site ("cameras," a camera-installation test business) - deferred 30 days, but the public site still showed the "Live preview / Add payment to turn it on for customers / Activate my site" banner. Asked whether that was intentional and how it was supposed to work.
+- Traced the root cause precisely before touching anything: `PreviewBanner.tsx`'s `getBannerState()` only has special copy for the final 9 days (amber warning) and the post-deadline paused state (rose) - any deferral further out than 9 days falls through to the exact same "Live preview" branch used when no deferral has ever been arranged at all. Separately, the banner was never gated to the owner - it shows to any visitor of a non-active site, so real customers of a deferred-billing client would see Found's own billing chrome sitting on that business's real site.
+- Brought this to the team (Angela on customer exposure, Jony on the copy-vs-gating options, Steve on whether a public banner is even needed given Shawn already tracks the due date on Clients, Craig on the technical constraint that owner auth doesn't exist on the public `[slug]` domain today).
+- Shawn's explicit call: suppress the banner entirely whenever an arrangement exists (deferred or permanent) - he already tracks it from Clients, a real customer shouldn't see billing status about the business they're looking at, regardless of how many days are left. In the same message: build the previously-reviewed "Permanent" (free forever) option, and add a way to see what emails have been sent to a client "somewhere in the system."
+- Built all three, following the team's technical findings exactly:
+  - `src/components/PreviewBanner.tsx`: banner visibility condition changed to `!isActivated && !trialEndsAt`. Since `trial_ends_at` is only ever written by the admin deferred-billing/permanent tool, this cleanly suppresses the banner for every Shawn-arranged account at any point in the term, while leaving genuinely brand-new never-arranged self-serve sites unchanged (that's the one case where "add payment to activate" is still accurate).
+  - `src/app/admin/new-client/actions.ts`: added `setPermanentComp()` reusing the existing `is_comp`/`comp_reason` mechanism (confirmed in the prior round's tech review - no schema change needed), with its own "no card needed - it's on us" email copy. Refactored email sending into a shared `sendClientEmail()` helper that logs to `client_activities` under its own `activity_type: "email"` instead of being folded into the general deferral note - makes email history filterable.
+  - `src/app/admin/new-client/page.tsx`: added the "Permanent" panel alongside "Activate now"/"Defer billing"; the confirmation screen now handles both deferred and permanent outcomes.
+  - `src/app/admin/clients/page.tsx` + `ClientsWorkspace.tsx`: added an "Emails sent" list to each client's existing detail panel, reading `client_activities` where `activity_type = "email"`. Scoped honestly - only emails sent through this tool log this way today; other existing email sends elsewhere in the app (site-live notice, abandoned-lead) don't yet, called out as a known gap rather than implied as already covered.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+- Not yet re-tested live - the "cameras" test site that surfaced the original bug hasn't been re-checked against the fix.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: re-check "cameras" (or any deferred test account) and confirm the banner no longer shows; set a permanent-comp test account and confirm no billing chrome ever appears there either; defer or comp a test account with the email checkbox on and confirm it shows up under "Emails sent" on Clients.
+
+---
+
 ## 2026-08-13 - Automated Add-Card Email for Deferred Billing
 
 ### Progress This Pass

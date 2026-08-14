@@ -83,10 +83,14 @@ export default function PreviewBanner({
     const isPreview = new URLSearchParams(window.location.search).get("preview") === "true"
     setPreviewOnly(isPreview)
     if (isPreview) return
-    if (!isActivated) {
+    // trialEndsAt only ever gets set via the admin deferred-billing tool -
+    // Shawn already arranged a real term (or permanent) with this owner, so
+    // real visitors to the site shouldn't see Found's own billing chrome.
+    // Only a genuinely brand-new, never-arranged site shows this banner.
+    if (!isActivated && !trialEndsAt) {
       setVisible(true)
     }
-  }, [isActivated])
+  }, [isActivated, trialEndsAt])
 
   if (!mounted || previewOnly) return null
 

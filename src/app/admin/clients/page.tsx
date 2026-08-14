@@ -13,11 +13,19 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   const [{ data: companies }, { data: configs }, { data: activities }] = await Promise.all([
     admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
-    admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
+    admin.from("client_activities").select("company_id, summary, created_at, activity_type").order("created_at", { ascending: false }),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
   const lastActivity = new Map<string, string>()
-  for (const activity of activities ?? []) if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
+  const emailsByCompany = new Map<string, { summary: string; created_at: string }[]>()
+  for (const activity of activities ?? []) {
+    if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
+    if (activity.activity_type === "email") {
+      const list = emailsByCompany.get(activity.company_id) ?? []
+      if (list.length < 10) list.push({ summary: activity.summary, created_at: activity.created_at })
+      emailsByCompany.set(activity.company_id, list)
+    }
+  }
   const rows: ClientRow[] = (companies ?? []).map((company) => {
     const issues: string[] = []
     if (company.client_state === "past_due") issues.push("Payment")
@@ -50,6 +58,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       is_test: company.is_test,
       included_addon_slug: company.included_addon_slug ?? null,
       issues,
+      emails: emailsByCompany.get(company.id) ?? [],
     }
   })
   const realClients = rows.filter((row) => row.account_kind === "client").length

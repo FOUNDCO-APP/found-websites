@@ -25,6 +25,7 @@ export type ClientRow = {
   is_test: boolean | null
   included_addon_slug: string | null
   issues: string[]
+  emails: { summary: string; created_at: string }[]
 }
 
 function planLabel(plan: string | null) {
@@ -121,6 +122,16 @@ function ClientItem({ row }: { row: ClientRow }) {
             <button className="hq-button hq-button-secondary" type="submit">Add note</button>
           </form>
           {row.last_activity && <p className="hq-form-note">Latest: {row.last_activity}</p>}
+          {row.emails.length > 0 && (
+            <div className="hq-form-note">
+              <strong>Emails sent</strong>
+              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
+                {row.emails.map((email, i) => (
+                  <li key={i}>{new Date(email.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {email.summary}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </details>
     </article>
