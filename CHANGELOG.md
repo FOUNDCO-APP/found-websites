@@ -14,7 +14,12 @@ Shawn tried to test the deferred-billing fix via the Clients tab and found there
 
 ### Verification
 - `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed; new route confirmed in build output.
-- Not yet tested live - needs a real click-through before trusting it.
+
+### Same-night follow-up (1)
+Shawn tested live: contact name saved fine, but there was no way to enter an address - confirmed neither onboarding path ever asks for one, it's only ever been editable from the owner's own dashboard. Added a real address/city/state/zip edit form to the same panel (`updateClientAddress`). Separately, Shawn flagged the whole Found HQ admin side needs a real design pass (slow, doesn't feel like Found, billing section reads as raw text) - explicitly deferred by him ("put it on notes"), logged as a backlog item, not built tonight. Re-verified all three checks after the address fix.
+
+### Same-night follow-up (2) - real bug found before pushing
+Shawn ran a full real deferral test on "cameras" before agreeing to push, and nothing saved - confirmed directly against the database that `billing_cycle_day`/`deferred_payment_amount`/`trial_ends_at` never changed and no email was ever logged. Root cause: the Defer billing form had two overlapping free-text fields (required "Reason" + optional "Payment note") - leaving one blank silently blocked the whole form via native browser validation, no visible error. Fixed by merging them into one required "Notes" field on both the admin new-client form and the client detail page. Also built the manual "resend card-link email" button Shawn asked for (`resendCardLinkEmail()`), usable anytime a company isn't active yet, not just at initial deferral. Confirmed the duplicate "Aug 13" history entries he also flagged are unrelated pre-existing data from before tonight. Re-verified all three checks.
 
 ---
 

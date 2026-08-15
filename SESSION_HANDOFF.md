@@ -24,6 +24,22 @@
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: click into "cameras" or RC Bicycles from Clients and confirm the new page loads with contact/address/billing sections; add a contact name and confirm it saves; submit a test deferral from that page and confirm it stays on the page instead of bouncing to `/admin/new-client`; run through onboarding far enough to confirm the new "And your name?" step appears and doesn't block progress.
 
+### Same-Night Follow-Up: Real Live Feedback, One Bug Fixed, One Item Logged for Later
+- Shawn tested live and found the Contact & Address panel let him save a contact name, but had no way to enter an address at all - confirmed by checking the code directly: neither onboarding path (public or admin) has ever asked for a street address; it's only ever been editable from inside the business owner's own dashboard (Site Editor's Business Info tile). That's why RC Bicycles (a real client who's used their dashboard) has one and "cameras" (an admin-created test site) doesn't.
+- Fixed: added a real address/city/state/zip edit form to the Contact & Address panel, same admin-authenticated pattern as the contact-name edit (new `updateClientAddress` action).
+- Shawn's separate, bigger note - explicitly scoped by him as "put it on notes," not fixed tonight: the whole Found HQ admin side "looks like shit," doesn't feel like Found, felt slow (5-7s clicking into a client, not yet root-caused), and the billing section specifically reads as a wall of raw text/forms. Logged as its own backlog item at the top of `TASKS.md` for a real Jony-led design pass later.
+- Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed after the address-edit addition.
+
+### Second Follow-Up: Real Deferral Test Revealed a Silent Form-Submission Bug
+- Shawn ran a full real test on "cameras" (term 30, billing day 25, $69 already collected via cash/Zelle, email checkbox checked) before agreeing to push. Reported: nothing showed up in history for it, the two old "Aug 13" entries he saw predate tonight, and no email arrived despite the log saying "Email sent" - later clarified that "Email sent" line is what he expected to see, not something the UI actually showed him yet, since no new record existed at all.
+- Investigated directly against the live database rather than guessing: confirmed `billing_cycle_day`/`deferred_payment_amount`/`trial_ends_at` were completely untouched by his test, and zero new `email_log` rows exist for `deferred_billing_add_card` - the whole submission never reached the server at all.
+- Root cause: the Defer billing form had two separate free-text fields - a required "Reason" and an optional "Payment note" - that look like they cover the same thing. Shawn filled in payment context in one and (most likely) left the other blank; the browser's native required-field validation silently blocked the whole form from submitting, with no visible error. He then submitted the separate Relationship "Save" button instead, which is the only thing that actually saved (explains the real "account classified as client" log entry).
+- Confirmed the old duplicate "Aug 13" history entries are unrelated - they predate tonight's billing-day/cash-payment fields entirely (their text has neither), timestamped `2026-08-14T02:56 UTC` which is ~7:56pm Aug 13 in Arizona time. Pre-existing history, not something tonight caused.
+- Fixed: merged "Reason" and "Payment note" into one required "Notes" field (both `admin/new-client/page.tsx` and the new client detail page), removing the duplicate-field trap entirely.
+- Built the manual resend Shawn asked for: new `resendCardLinkEmail()` action, a button on the client detail page's Billing panel ("Resend card-link email to {email}") that works anytime a company isn't yet active - not just at the moment billing was first deferred.
+- Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- **Still needs a real live re-test** - Shawn should re-run the exact same deferral test on "cameras" now that the duplicate field is gone, confirm it actually saves this time, and confirm the card-link email actually arrives.
+
 ## 2026-08-14 - Intro Rate Extended + Deferred-Billing Money-Safety Fix (Real Bug Found)
 
 ### Progress This Pass

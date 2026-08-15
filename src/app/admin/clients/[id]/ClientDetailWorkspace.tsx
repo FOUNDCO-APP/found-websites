@@ -3,8 +3,8 @@
 import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleTest, setIncludedAddon } from "../../businesses/actions"
 import { getAllAddonsRanked } from "@/lib/featureAccess"
-import { updateClientRecord, addClientNote, updateClientContactName } from "../actions"
-import { deferClientBilling, setPermanentComp } from "../../new-client/actions"
+import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
+import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -69,6 +69,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const [includedAddon, setIncludedAddonState] = useState(client.included_addon_slug)
   const [addonPending, startAddonTransition] = useTransition()
   const [editingContact, setEditingContact] = useState(false)
+  const [editingAddress, setEditingAddress] = useState(false)
   const relevantAddons = client.plan === "found_pro" ? getAllAddonsRanked(client.industry_category ?? "") : []
   const isActiveSubscription = client.subscription_status === "active" || client.subscription_status === "trialing"
   const returnTo = `/admin/clients/${client.id}`
@@ -128,10 +129,32 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             </div>
           )}
           <p className="hq-row-meta" style={{ marginTop: 10 }}>{client.email ?? "No email"}{client.phone ? ` / ${client.phone}` : ""}</p>
-          <p className="hq-row-meta" style={{ marginTop: 4 }}>
-            {addressLine || "No address on file"}
-            {client.address && !client.address_visible ? " (hidden from public site)" : ""}
-          </p>
+
+          {editingAddress ? (
+            <form
+              action={async (formData) => { await updateClientAddress(formData); setEditingAddress(false) }}
+              className="hq-create-form"
+              style={{ marginTop: 10 }}
+            >
+              <input type="hidden" name="id" value={client.id} />
+              <label className="hq-form-wide">Street address<input name="address" defaultValue={client.address ?? ""} placeholder="e.g. 428 N. Fremont Ave" autoFocus /></label>
+              <label>City<input name="city" defaultValue={client.city ?? ""} /></label>
+              <label>State<input name="state" defaultValue={client.state ?? ""} maxLength={2} placeholder="AZ" /></label>
+              <label>ZIP<input name="zip" defaultValue={client.zip ?? ""} /></label>
+              <div className="hq-form-wide" style={{ display: "flex", gap: 8 }}>
+                <button className="hq-button hq-button-primary" type="submit">Save</button>
+                <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(false)}>Cancel</button>
+              </div>
+            </form>
+          ) : (
+            <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p className="hq-row-meta">
+                {addressLine || "No address on file"}
+                {client.address && !client.address_visible ? " (hidden from public site)" : ""}
+              </p>
+              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(true)}>Edit</button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -147,6 +170,14 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           )}
           {client.deferred_payment_amount != null && (
             <p className="hq-row-meta">Already collected: ${Number(client.deferred_payment_amount).toFixed(2)}{client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}{client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}</p>
+          )}
+          {!isActiveSubscription && !client.is_comp && client.trial_ends_at && (
+            <form action={resendCardLinkEmail} style={{ marginTop: 10 }}>
+              <input type="hidden" name="companyId" value={client.id} />
+              <button className="hq-button hq-button-secondary" type="submit" disabled={!client.email}>
+                {client.email ? `Resend card-link email to ${client.email}` : "No email on file to resend to"}
+              </button>
+            </form>
           )}
         </div>
 
@@ -173,9 +204,6 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 <label>Billing day (optional)
                   <input type="number" name="billingDay" min={1} max={28} placeholder="e.g. 25" />
                 </label>
-                <label className="hq-form-wide">Reason (for your own records)
-                  <textarea name="reason" rows={2} required placeholder="e.g. paid cash for this cycle, needs a card on file for next" />
-                </label>
                 <label>Already collected? Amount
                   <input type="number" name="paymentAmount" min={0} step="0.01" placeholder="e.g. 69.00" />
                 </label>
@@ -187,8 +215,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                     <option value="other">Other</option>
                   </select>
                 </label>
-                <label className="hq-form-wide">Payment note (optional)
-                  <input type="text" name="paymentNote" placeholder="e.g. Paid in person, 8/14" />
+                <label className="hq-form-wide">Notes (for your own records)
+                  <textarea name="reason" rows={2} required placeholder="e.g. paid $69 cash for this cycle, needs a card on file for next" />
                 </label>
                 <label className="hq-form-wide" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />

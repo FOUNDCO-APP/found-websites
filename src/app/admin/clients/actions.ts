@@ -57,6 +57,21 @@ export async function updateClientContactName(formData: FormData) {
   revalidatePath(`/admin/clients/${id}`)
 }
 
+export async function updateClientAddress(formData: FormData) {
+  await requireAdmin()
+  const id = value(formData, "id")
+  if (!id) throw new Error("Missing client.")
+  const { error } = await getAdminClient().from("companies").update({
+    address: value(formData, "address") || null,
+    city: value(formData, "city") || null,
+    state: value(formData, "state") || null,
+    zip: value(formData, "zip") || null,
+  }).eq("id", id)
+  if (error) throw new Error(error.message)
+  revalidatePath("/admin/clients")
+  revalidatePath(`/admin/clients/${id}`)
+}
+
 export async function addClientNote(formData: FormData) {
   await requireAdmin()
   const id = value(formData, "id")

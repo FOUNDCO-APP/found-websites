@@ -123,9 +123,6 @@ export default async function AdminNewClientPage({
                 <p className="hq-form-wide hq-row-meta" style={{ marginTop: -8 }}>
                   Leave blank to bill on whatever day the card actually gets added. Set a day (1-28) if the owner wants their cycle to always land there - e.g. the 25th - regardless of when the card goes in. The site is still protected the same way either way: no card by the term above, it pauses.
                 </p>
-                <label className="hq-form-wide">Reason (for your own records)
-                  <textarea name="reason" rows={2} required placeholder="e.g. Richard Zelle'd this month directly, still old-school about entering a card - needs one on file by next cycle." />
-                </label>
                 <label>Already collected? Amount
                   <input type="number" name="paymentAmount" min={0} step="0.01" placeholder="e.g. 69.00" />
                 </label>
@@ -137,8 +134,8 @@ export default async function AdminNewClientPage({
                     <option value="other">Other</option>
                   </select>
                 </label>
-                <label className="hq-form-wide">Payment note (optional)
-                  <input type="text" name="paymentNote" placeholder="e.g. Paid in person for this cycle, 8/14" />
+                <label className="hq-form-wide">Notes (for your own records)
+                  <textarea name="reason" rows={2} required placeholder="e.g. Richard Zelle'd $69 on 8/10, still old-school about entering a card - needs one on file by next cycle." />
                 </label>
                 <label className="hq-form-wide" style={checkboxLabelStyle}>
                   <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />

@@ -1,5 +1,13 @@
 ## 2026-08-05 - CURRENT NOW
 
+## BACKLOG - Found HQ Admin Needs a Real Design Pass (Shawn's note, 2026-08-14)
+
+Shawn's live reaction to the new client detail page, but scoped by him as bigger than that one page: "this whole back end administration side looks like shit... doesn't feel like Found... the whole structure sucks." Specific complaints to carry into that pass:
+- Slow: clicking into a client took 5-7 seconds to switch pages. Not yet root-caused - possible first-hit cold start on a brand-new route right after deploy, but not confirmed, worth checking with a second click before assuming that's the whole story.
+- The billing section specifically reads as raw stacked text/forms - "like some geeky guy opened a spreadsheet" - not any deliberate visual hierarchy.
+- General ask: the admin side is Shawn's own daily tool and should feel as considered as anything Found ships to a client, not an afterthought bolted onto Found HQ's existing look.
+Explicitly deferred - Shawn's own words: "put it on notes." Not scoped or built this session; needs its own real team round (Jony leading) when picked up.
+
 ## 2026-08-14 - Real Client Profile Page
 
 Shawn tried to test the deferred-billing fix via Clients and found no way back to billing controls, no contact name, no visible address. Asked for planning-mode/team-meeting first, then approved building a real per-client page.
@@ -13,7 +21,14 @@ Shawn tried to test the deferred-billing fix via Clients and found no way back t
 - [x] Fixed `deferClientBilling()`/`setPermanentComp()` to redirect back to wherever submitted from instead of always bouncing to `/admin/new-client`.
 - [x] `ClientsWorkspace.tsx`: business name links into the new page; old inline "Manage relationship" expander removed.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - new route confirmed in output.
-- [ ] **Not yet tested live** - click into cameras/RC Bicycles, add a contact name, submit a test deferral and confirm it stays on the page, confirm the new onboarding step doesn't block progress.
+- [x] Shawn tested live: contact name saved correctly. Found a real gap - no way to enter an address at all. Confirmed via code: neither onboarding path has ever collected a street address; it was only ever editable from the owner's own dashboard. Fixed: added a real address/city/state/zip edit form to the same panel (`updateClientAddress`).
+- [x] Re-verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` after the address fix - all passed.
+- [x] Shawn ran a full real deferral test before agreeing to push - nothing saved. Confirmed directly against the database (not guessed): `billing_cycle_day`/`deferred_payment_amount`/`trial_ends_at` untouched, zero new email_log rows.
+- [x] Root cause found: two overlapping free-text fields ("Reason" required, "Payment note" optional) - leaving one blank silently blocked the whole form via native browser validation, no visible error. Fixed by merging into one required "Notes" field on both forms.
+- [x] Confirmed the duplicate "Aug 13" history entries Shawn also flagged are unrelated - pre-existing data from before tonight's build, not caused by it.
+- [x] Built the manual resend Shawn asked for: `resendCardLinkEmail()` + a button on the client detail page, usable anytime a company isn't active yet.
+- [x] Re-verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Still needs live testing: re-run the exact same deferral test on "cameras" now that the field bug is fixed, confirm it actually saves and the email arrives; also still owed: address save, the deferred-billing return-to-page fix, and the new onboarding "And your name?" step.
 
 ## 2026-08-14 - Intro Rate Extended + Deferred-Billing Money-Safety Fix
 

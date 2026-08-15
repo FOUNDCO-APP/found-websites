@@ -140,14 +140,13 @@ export async function deferClientBilling(formData: FormData) {
   const paymentAmount = paymentAmountRaw ? Number(paymentAmountRaw) : null
   const paymentMethodRaw = value(formData, "paymentMethod")
   const paymentMethod = paymentMethodRaw && PAYMENT_METHODS.has(paymentMethodRaw) ? paymentMethodRaw : null
-  const paymentNote = value(formData, "paymentNote")
   if (paymentAmount !== null && (Number.isNaN(paymentAmount) || paymentAmount < 0)) {
     throw new Error("Payment amount must be a real number.")
   }
 
   if (!companyId) throw new Error("Missing company.")
   if (!DEFERRAL_TERMS.has(termDays)) throw new Error("Pick 30, 60, or 90 days.")
-  if (!reason) throw new Error("A reason is required.")
+  if (!reason) throw new Error("A note is required.")
 
   const admin = getAdminClient()
   const dueAt = dueDateFor(termDays, billingDay)
@@ -160,13 +159,13 @@ export async function deferClientBilling(formData: FormData) {
       billing_cycle_day: billingDay,
       deferred_payment_amount: paymentAmount,
       deferred_payment_method: paymentMethod,
-      deferred_payment_note: paymentNote || null,
+      deferred_payment_note: paymentAmount !== null ? reason : null,
     })
     .eq("id", companyId)
   if (error) throw new Error(error.message)
 
   const paymentNoteLine = paymentAmount
-    ? ` Already collected: $${paymentAmount.toFixed(2)}${paymentMethod ? ` (${paymentMethod})` : ""}${paymentNote ? ` - ${paymentNote}` : ""}.`
+    ? ` Already collected: $${paymentAmount.toFixed(2)}${paymentMethod ? ` (${paymentMethod})` : ""}.`
     : ""
   const billingDayLine = billingDay ? ` Billing anchored to the ${billingDay}${ordinalSuffix(billingDay)} of the month.` : ""
 
@@ -199,6 +198,48 @@ export async function deferClientBilling(formData: FormData) {
   revalidatePath(`/admin/clients/${companyId}`)
   const returnTo = value(formData, "returnTo")
   redirect(returnTo || `/admin/new-client?created=${companyId}&deferred=1`)
+}
+
+// Shawn's ask: if a client says "I never got that email," he needs to be
+// able to fire it again on demand - not just at the moment billing was first
+// deferred. Reuses the exact same template/content, rebuilt from whatever
+// the company's real trial_ends_at is right now (not whatever it was when
+// originally deferred).
+export async function resendCardLinkEmail(formData: FormData) {
+  await requireAdmin()
+  const companyId = value(formData, "companyId")
+  if (!companyId) throw new Error("Missing company.")
+
+  const admin = getAdminClient()
+  const { data: company } = await admin.from("companies").select("name, slug, email, trial_ends_at").eq("id", companyId).single()
+  if (!company) throw new Error("Company not found.")
+  if (!company.email) throw new Error("This company has no email on file.")
+
+  const dueDateLabel = company.trial_ends_at
+    ? new Date(company.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : "your due date"
+  const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
+  const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${company.slug}`
+
+  const sent = await sendTrackedEmail({
+    to: company.email,
+    subject: `${company.name}, your website is live`,
+    html: buildAddCardEmail({ businessName: company.name, siteUrl, activateUrl, dueDateLabel }),
+    text: `Your website is live: ${siteUrl}\n\nAdd a card to keep it running - nothing is charged today, billing starts ${dueDateLabel}.\n\nAdd your card: ${activateUrl}\n\n- The Found team`,
+    companyId,
+    recipientType: "client_owner",
+    emailType: "deferred_billing_add_card",
+    source: "admin/new-client/resendCardLinkEmail",
+    admin,
+  })
+
+  await admin.from("client_activities").insert({
+    company_id: companyId,
+    activity_type: "note",
+    summary: sent ? "Card-link email resent manually." : "Manual resend of card-link email failed - check Emails for the error.",
+  })
+
+  revalidatePath(`/admin/clients/${companyId}`)
 }
 
 export async function setPermanentComp(formData: FormData) {
