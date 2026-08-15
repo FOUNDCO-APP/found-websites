@@ -21,8 +21,15 @@
 - `npm run build` passed, including the new `/api/resend/webhook` route confirmed present in the build output.
 - Not yet tested live: the webhook itself has never received a real event, because the corresponding webhook hasn't been created in Resend's Dashboard yet and `RESEND_WEBHOOK_SECRET` isn't set anywhere - this is a real gap, not an oversight, see Explicit Next Step.
 
+### Closed Out Same Day - Webhook Live and Verified End to End
+- Pushed (`11455af`), confirmed on `origin/main`.
+- Discovered Resend actually does have a real webhooks API (`api.resend.com/webhooks`) - corrected the earlier assumption that this required manual dashboard setup only. Shawn generated a new "Full access" Resend API key and shared it directly; used it to create the webhook via API (`POST https://api.resend.com/webhooks`, endpoint `https://foundco.app/api/resend/webhook`, all 5 event types) rather than needing Shawn to click through the dashboard.
+- Set the resulting `RESEND_WEBHOOK_SECRET` in Vercel (production + preview) via the Vercel API, then triggered a fresh production redeploy so the running app actually picked up the new secret (env var changes don't apply to an already-built deployment).
+- Deleted every temp file that touched the raw API key or webhook secret once the Vercel env var was confirmed created.
+- **Verified live, not just deployed:** submitted a second real test lead through `cameras.foundco.app/contact`. Both resulting `email_log` rows now show `delivery_status: "delivered"` with a real timestamp and a populated `resend_email_id` - proof the full loop works: send -> Resend delivers -> Resend fires the webhook -> the endpoint verifies the signature and updates the row. This closes out both P0 items from the team round (Found/Client split and delivery/bounce tracking) as fully working in production, not just shipped.
+
 ### Explicit Next Step
-Get Shawn's approval to push. Separately, this feature has one manual step only Shawn can do: create a new webhook in the Resend Dashboard (Webhooks tab) pointed at `https://foundco.app/api/resend/webhook`, subscribed to at least `email.sent`, `email.delivered`, `email.delivery_delayed`, `email.bounced`, `email.complained`, then hand back the signing secret Resend generates so it can be set as `RESEND_WEBHOOK_SECRET` in Vercel. Until that's done, the Found/Client filter will work immediately after deploy, but every email will show no delivery badge (webhook not receiving events yet). After the secret is set, send a real test email and confirm a delivery badge appears on its row within a minute or two.
+Nothing blocking. Shawn QA when convenient: open `/admin/emails`, confirm the All senders/Client emails/Found emails filter works, and confirm the two "Webhook Delivery Test" rows show a "Delivered" badge.
 
 ## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern
 

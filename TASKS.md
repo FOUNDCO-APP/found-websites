@@ -12,8 +12,11 @@ Shawn asked whether the empty email-history state was real and whether new sends
 - [x] New `/api/resend/webhook` route: verifies Resend's Svix-signed delivery webhook, updates `delivery_status` on the matching email when Resend reports sent/delivered/delayed/bounced/complained.
 - [x] `EmailsWorkspace.tsx` gets an All senders/Client emails/Found emails filter row plus a delivery-status badge per row.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - the new webhook route confirmed present in the build output.
-- [ ] **Shawn action needed, not something Claude can do:** create a webhook in the Resend Dashboard pointed at `https://foundco.app/api/resend/webhook`, subscribed to sent/delivered/delivery_delayed/bounced/complained, then hand back the signing secret so it can be set as `RESEND_WEBHOOK_SECRET` in Vercel. Until then the Found/Client filter works but no delivery badges will appear.
-- [ ] Shawn QA after the secret is set: send a real test email, confirm a delivery badge shows up on its row within a minute or two.
+- [x] Pushed (`11455af`) and confirmed on `origin/main`.
+- [x] Corrected an earlier wrong assumption: Resend does have a real webhooks API. Shawn generated a "Full access" API key and shared it; used it to create the webhook via API (`POST api.resend.com/webhooks`) instead of the dashboard.
+- [x] Set `RESEND_WEBHOOK_SECRET` in Vercel (production + preview) via API, triggered a fresh production redeploy so it actually took effect, deleted every temp file that touched the raw key/secret afterward.
+- [x] **Verified live end to end**, not just deployed: submitted a real test lead through `cameras.foundco.app`, confirmed both resulting `email_log` rows show `delivery_status: "delivered"` with a real timestamp and populated `resend_email_id` - the full send -> Resend -> webhook -> database-update loop actually works in production.
+- [ ] Shawn QA when convenient: open `/admin/emails`, confirm the sender filter and delivery badges look right.
 - [ ] Deferred, explicitly its own future initiative per the team round: real inbound email (receiving mail into Found's own system) - needs a vendor/DNS decision (MX records) Craig should scope before anything touches DNS.
 
 ## 2026-08-14 - Rebuild Emails Page to Match Clients' Proven Pattern

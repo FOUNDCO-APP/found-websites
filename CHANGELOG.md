@@ -17,7 +17,7 @@ Shawn asked whether the empty email-history state was real (verified live: only 
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run test:industry-mobile-layout` passed.
 - `cmd /c npm run build` passed, including the new `/api/resend/webhook` route.
-- Not yet live: the Resend Dashboard webhook itself hasn't been created and `RESEND_WEBHOOK_SECRET` isn't set - delivery badges won't appear until Shawn creates it and hands back the secret.
+- **Closed out same day:** discovered Resend has a real webhooks API (corrected the earlier dashboard-only assumption); Shawn generated a "Full access" key, used it to create the webhook via API, set `RESEND_WEBHOOK_SECRET` in Vercel, redeployed, and verified live - a real test lead's two emails both show `delivery_status: "delivered"` with a populated `resend_email_id`, proving the full loop works in production.
 
 ---
 
