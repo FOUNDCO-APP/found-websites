@@ -2193,7 +2193,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           { key: "wellness_cinematic", label: "Wellness Cinematic", desc: "Dramatic, premium, and booking-focused for beauty and appointment brands." },
         ]
         const autoLayout = getLayout(industryCategory, vibe)
-        const autoLabel = LAYOUT_OPTIONS.find(o => o.key === autoLayout)?.label ?? "Impact"
+        const activeLayoutKey = (activeLayout ?? autoLayout) as LayoutType
         const swatch = /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#2E7D32"
 
         function LayoutMockup({ layout }: { layout: LayoutType }) {
@@ -2266,28 +2266,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <div>
                 <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>Style</h2>
                 <p style={{ margin: "4px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                  Your homepage layout - your content and photos stay exactly where you put them.
+                  Found picked the best layout from your onboarding answers. You can change it without losing your content or photos.
                 </p>
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              <button onClick={() => saveLayout(null)} disabled={savingLayout}
-                style={{
-                  padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
-                  minWidth: 0, width: "100%", boxSizing: "border-box" as const,
-                  backgroundColor: !activeLayout ? `${GREEN}18` : "rgba(255,255,255,0.03)",
-                  border: `1.5px solid ${!activeLayout ? GREEN + "55" : "rgba(255,255,255,0.07)"}`,
-                }}>
-                <div style={{ height: 56, borderRadius: 8, border: "1px dashed rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1 }}>Suggested</span>
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: !activeLayout ? GREEN : "rgba(255,255,255,0.85)" }}>Suggested: {autoLabel}</div>
-                <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2 }}>Recommended for this business</div>
-              </button>
               {LAYOUT_OPTIONS.map(opt => {
-                const isActive = activeLayout === opt.key
+                const isActive = activeLayoutKey === opt.key
+                const isFoundPick = autoLayout === opt.key
                 return (
-                  <button key={opt.key} onClick={() => saveLayout(opt.key)} disabled={savingLayout}
+                  <button key={opt.key} onClick={() => saveLayout(isFoundPick ? null : opt.key)} disabled={savingLayout}
                     style={{
                       padding: 10, borderRadius: 16, textAlign: "left", cursor: savingLayout ? "default" : "pointer",
                       minWidth: 0, width: "100%", boxSizing: "border-box" as const,
@@ -2298,11 +2286,25 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                       <LayoutMockup layout={opt.key} />
                     </div>
                     <div style={{ fontSize: 13, fontWeight: 700, color: isActive ? GREEN : "rgba(255,255,255,0.85)" }}>{opt.label}</div>
+                    {isFoundPick && (
+                      <div style={{ fontSize: 10, fontWeight: 900, color: GREEN, letterSpacing: 1, textTransform: "uppercase", marginTop: 3 }}>
+                        Found picked this
+                      </div>
+                    )}
                     <div style={{ fontSize: 11, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, marginTop: 2, lineHeight: 1.35 }}>{opt.desc}</div>
                   </button>
                 )
               })}
             </div>
+            {activeLayout && activeLayout !== autoLayout && (
+              <button onClick={() => saveLayout(null)} disabled={savingLayout}
+                style={{
+                  marginTop: 10, padding: 0, border: "none", background: "transparent", color: GREEN,
+                  fontSize: 12, fontWeight: 800, cursor: savingLayout ? "default" : "pointer",
+                }}>
+                Reset to Found's pick
+              </button>
+            )}
           </div>
         )
       })()}
