@@ -12,8 +12,14 @@
 - `cmd /c npm run test:industry-mobile-layout` passed.
 - `cmd /c npm run build` passed.
 
+### Follow-Up: Link Still Showing - Found the Real Reason
+- Pushed (`64e19e9`), deployed, and Shawn reported Link was still showing on `/activate?slug=cameras` after reload.
+- Root cause, confirmed against live data before proposing a fix: "cameras" already had a `pending_setup_intent_secret` cached from before tonight's change - Stripe locks a SetupIntent's `payment_method_types` in permanently at creation time, and `createActivationSetup()`'s reuse logic never checked whether a cached intent's payment methods still matched what the code currently wants to offer - it only checked company/plan/intro-price/promo/addon. So the code fix was correct for brand-new intents, but every company with an already-cached intent (from before tonight) kept getting served the old Link-enabled one indefinitely.
+- Fixed properly (self-healing, not a one-time DB patch): added a `matchesPaymentMethods` check to the reuse condition in `createActivationSetup()` - if a cached intent's `payment_method_types` doesn't match `["card"]`, it's discarded and a fresh correct one is created automatically, no manual cleanup needed for any existing company.
+- Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+
 ### Explicit Next Step
-Get Shawn's approval to push. After deploy: reload `/activate?slug=cameras` (or any not-yet-active company) and confirm the "Secure, fast checkout with Link" row is gone, card entry still works normally.
+Get Shawn's approval to push. After deploy: reload `/activate?slug=cameras` again and confirm Link is actually gone this time - the first fix was real but incomplete, so this one needs its own real re-check, not assumed.
 
 ## 2026-08-14 - Real Client Profile Page (Contact Name, Address, Billing All in One Place)
 

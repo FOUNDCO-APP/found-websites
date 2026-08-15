@@ -7,7 +7,10 @@ Shawn confirmed the deferral test worked, then asked to remove Stripe's "Link" s
 - [x] Checked every Stripe payment-method config in the app first: only `activateActions.ts`'s SetupIntent listed Link explicitly. Shop/order/onboarding-setup were already card-only. Estimate payments intentionally keep broader options (Cash App, Klarna) for the customer paying a Found client - separate, already-settled decision, not touched.
 - [x] Fixed: SetupIntent now `["card"]` only. Covers both `/activate` and the in-app `ActivateOverlay` drawer since they share the same SetupIntent.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
-- [ ] Shawn QA: reload `/activate?slug=cameras`, confirm "Secure, fast checkout with Link" is gone.
+- [x] Shawn re-tested after deploy - Link was still showing. Confirmed the real cause: "cameras" had a `pending_setup_intent_secret` cached from before tonight, and the code's reuse logic never checked whether a cached intent's payment methods still matched - it kept serving the old Link-enabled one regardless of the new code.
+- [x] Fixed self-healingly: added a `matchesPaymentMethods` check to the reuse condition - any mismatched cached intent now gets discarded and replaced automatically, for every company, not just a one-time patch.
+- [x] Re-verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: reload `/activate?slug=cameras` again, confirm Link is actually gone this time.
 
 ## BACKLOG - Found HQ Admin Needs a Real Design Pass (Shawn's note, 2026-08-14)
 

@@ -205,7 +205,13 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
       const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
-      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon) {
+      // A SetupIntent's payment_method_types is locked in at creation and
+      // can't be changed afterward - a company with an older cached intent
+      // (e.g. from before Link was removed) must not silently reuse it just
+      // because the plan/promo still match, or the stale payment methods
+      // keep showing up forever regardless of what the code now creates.
+      const matchesPaymentMethods = JSON.stringify(existingIntent?.payment_method_types ?? []) === JSON.stringify(["card"])
+      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
       }
     }

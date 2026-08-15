@@ -10,6 +10,9 @@ Shawn confirmed the deferral fix worked live, then asked to remove Stripe's "Lin
 ### Verification
 - `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed.
 
+### Follow-up - Link still showed up after deploy
+Shawn re-tested and Link was still there. Confirmed against live data: "cameras" had a `pending_setup_intent_secret` cached from before tonight - Stripe locks payment_method_types in at creation, and the reuse-matching logic in `createActivationSetup()` never checked whether a cached intent's payment methods still matched, only plan/promo/intro-price/addon. Fixed self-healingly: added a `matchesPaymentMethods` check so any mismatched cached intent gets discarded and replaced automatically, for every company, not just this one. Re-verified all three checks.
+
 ---
 
 ## Session: August 14, 2026 (part 4) - Real Client Profile Page
