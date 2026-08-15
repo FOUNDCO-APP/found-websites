@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Remove Stripe Link From Found's Own Billing Screen
+
+Shawn confirmed the deferral test worked, then asked to remove Stripe's "Link" saved-card option from `/activate` and anywhere else cards get taken for Found's own billing.
+
+- [x] Checked every Stripe payment-method config in the app first: only `activateActions.ts`'s SetupIntent listed Link explicitly. Shop/order/onboarding-setup were already card-only. Estimate payments intentionally keep broader options (Cash App, Klarna) for the customer paying a Found client - separate, already-settled decision, not touched.
+- [x] Fixed: SetupIntent now `["card"]` only. Covers both `/activate` and the in-app `ActivateOverlay` drawer since they share the same SetupIntent.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: reload `/activate?slug=cameras`, confirm "Secure, fast checkout with Link" is gone.
+
 ## BACKLOG - Found HQ Admin Needs a Real Design Pass (Shawn's note, 2026-08-14)
 
 Shawn's live reaction to the new client detail page, but scoped by him as bigger than that one page: "this whole back end administration side looks like shit... doesn't feel like Found... the whole structure sucks." Specific complaints to carry into that pass:

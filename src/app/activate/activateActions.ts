@@ -232,7 +232,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
-      payment_method_types: ["card", "link"],
+      payment_method_types: ["card"],
       usage: "off_session",
       metadata: {
         company_id: company.id,

@@ -1,5 +1,20 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14 - Remove Stripe Link From Found's Own Billing Screen
+
+### Progress This Pass
+- Shawn confirmed the re-run deferral test worked correctly (screenshot: "Nothing charged today. Billing starts Sep 25, 2026" - matches the 25th he set). Then asked to remove Stripe's "Link" saved-card option from the activation screen and "anywhere we take card," reasoning Found's clients don't need it since their card is already saved with Found once entered.
+- Checked every real Stripe payment-method config in the codebase before touching anything: `activateActions.ts`'s SetupIntent (Found's own billing - a client entering their card to pay Found) was the only place explicitly listing `payment_method_types: ["card", "link"]`. Every other checkout (shop, online order, onboarding's own setup) was already card-only - nothing to change there. The one place using `automatic_payment_methods: { enabled: true }` (estimate/quote payments) is a different context entirely - that's a Found client's own *customer* paying *them* via Stripe Connect, and keeping broader payment options there (Cash App, Klarna, etc.) was an earlier, separate, deliberate decision - not what Shawn was asking about tonight.
+- Fixed: `activateActions.ts`'s SetupIntent now only allows `["card"]`. Since `ActivateOverlay` (the in-app activation drawer) reuses the same server action/SetupIntent as the standalone `/activate` page, this one change covers both surfaces. The `ExpressCheckoutElement` on the activate page has no separate payment-method listing - it just reflects whatever the SetupIntent allows, so it automatically stops offering Link too.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: reload `/activate?slug=cameras` (or any not-yet-active company) and confirm the "Secure, fast checkout with Link" row is gone, card entry still works normally.
+
 ## 2026-08-14 - Real Client Profile Page (Contact Name, Address, Billing All in One Place)
 
 ### Progress This Pass

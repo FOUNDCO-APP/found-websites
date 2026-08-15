@@ -1,3 +1,17 @@
+## Session: August 14, 2026 (part 5) - Remove Stripe Link From Found's Own Billing
+**AI:** Claude
+
+### Context
+Shawn confirmed the deferral fix worked live, then asked to remove Stripe's "Link" saved-card option from the activate screen and everywhere else cards get taken, since Found's clients don't need it once their card is on file with Found. Checked every payment-method config in the app first: only `activateActions.ts`'s SetupIntent (Found's own billing) explicitly listed Link; everything else was already card-only, and the one place using broader `automatic_payment_methods` (estimate payments) is a separate, already-settled decision about end customers paying a Found client's business, not in scope here.
+
+### Changed
+- `activateActions.ts`: SetupIntent's `payment_method_types` reduced to `["card"]`. Covers both the standalone `/activate` page and the in-app `ActivateOverlay` drawer, since both share this same SetupIntent creation.
+
+### Verification
+- `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed.
+
+---
+
 ## Session: August 14, 2026 (part 4) - Real Client Profile Page
 **AI:** Claude
 
