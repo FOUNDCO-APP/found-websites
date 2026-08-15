@@ -2194,6 +2194,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
         ]
         const autoLayout = getLayout(industryCategory, vibe)
         const activeLayoutKey = (activeLayout ?? autoLayout) as LayoutType
+        const wellnessLayoutKeys = new Set<LayoutType>(["wellness_luxe", "wellness_cinematic"])
+        const wellnessEligibleCategories = new Set(["wellness", "beauty", "healthcare", "fitness"])
+        const showWellnessLayouts = wellnessEligibleCategories.has(industryCategory) || wellnessLayoutKeys.has(activeLayoutKey)
+        const visibleLayoutOptions = LAYOUT_OPTIONS.filter(opt => showWellnessLayouts || !wellnessLayoutKeys.has(opt.key))
         const swatch = /^#[0-9a-fA-F]{6}$/.test(activeColor) ? activeColor : "#2E7D32"
 
         function LayoutMockup({ layout }: { layout: LayoutType }) {
@@ -2271,7 +2275,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               </div>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {LAYOUT_OPTIONS.map(opt => {
+              {visibleLayoutOptions.map(opt => {
                 const isActive = activeLayoutKey === opt.key
                 const isFoundPick = autoLayout === opt.key
                 return (
