@@ -1,3 +1,24 @@
+## Session: August 14, 2026 (part 3) - Intro Rate Extended + Deferred-Billing Money-Safety Fix
+**AI:** Claude
+
+### Context
+Shawn asked to extend the intro-rate cutoff to end of month, then separately live-tested the deferred-billing admin tool as a dry run for onboarding a real client (Richard) and flagged the activate page looked like a live charge screen rather than "save your card for later." Tracing that led to a real finding: the deferred-billing flow's "nothing charged today" promise was not actually enforced in code - `confirmActivation()` created a real, immediately-invoiced Stripe subscription regardless of any `trial_ends_at` on the company. Team round (Priya leading) identified the fix and confirmed it also delivers the separately-requested "bill on a specific day of the month" capability via the same mechanism.
+
+### Changed
+- `src/lib/introRate.ts`: cutoff moved to Sept 1 (displays as "August 31"). Found and fixed 9 hardcoded "August 15" copy instances across `compare/page.tsx`, `HomeClient.tsx`, `plans/page.tsx`, `PlanPage.tsx` that weren't using the shared `INTRO_RATE_CUTOFF_LABEL` - same class of bug that let the July cutoff silently expire before.
+- Migration `20260814140000_deferred_billing_day_and_cash_record.sql` (applied live): `companies` gains `billing_cycle_day`, `deferred_payment_amount`, `deferred_payment_method`, `deferred_payment_note`.
+- `src/app/activate/activateActions.ts`: `confirmActivation()` now passes `trial_end`/`proration_behavior: "none"` to Stripe for companies with a future `trial_ends_at`, and stores Stripe's real `subscription.status` instead of hardcoding `"active"`. Fixed `createActivationSetup()`'s stale-activation guard to also check `"trialing"`.
+- `src/app/admin/new-client/actions.ts`/`page.tsx`: `deferClientBilling()` accepts an optional billing day (1-28, computed via new `dueDateFor()`) and structured cash/check payment fields, replacing the free-text-only reason field for that purpose.
+- `src/app/activate/ActivateFlow.tsx`: deferred companies now see "Nothing charged today. Billing starts {date}..." with a "Save my card" button instead of the standard immediate-charge copy.
+
+### Verification
+- Confirmed zero hardcoded "August 15" strings remain in `src/`.
+- Hand-verified `dueDateFor()`'s day-of-month math against 4 scenarios.
+- `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed.
+- Not yet tested with a real live card submission - flagged as the required next step before Richard's real onboarding.
+
+---
+
 ## Session: August 14, 2026 (part 2) - Email Scope Split (Found vs. Client) + Delivery/Bounce Tracking
 **AI:** Claude
 

@@ -43,6 +43,7 @@ type ActivationSetupResult = {
   plan: string | null
   price: ActivationPriceSummary | null
   promoError?: string
+  deferredUntilLabel?: string | null
 }
 
 function fallbackPlanDetails(plan?: string | null): ActivationPriceSummary {
@@ -125,12 +126,14 @@ function CardForm({
   companyName,
   plan,
   priceSummary,
+  deferredUntilLabel,
   onSetupUpdated,
 }: {
   slug: string
   companyName: string
   plan?: string | null
   priceSummary: ActivationPriceSummary | null
+  deferredUntilLabel?: string | null
   onSetupUpdated: (result: ActivationSetupResult) => void
 }) {
   const stripe = useStripe()
@@ -235,22 +238,35 @@ function CardForm({
             style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
           <span className="text-[10px] font-black uppercase tracking-[0.22em]"
             style={{ color: SIGNAL_GREEN }}>
-            {hasPromo ? "Promo applied" : "Intro rate"}
+            {deferredUntilLabel ? "Save your card" : hasPromo ? "Promo applied" : "Intro rate"}
           </span>
         </div>
         <div className="mb-6">
-          <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
-            {formatCurrency(summary.discountedAmount, summary.currency)}/month.
-          </p>
-          {hasPromo ? (
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.42)" }}>
-              <span className="line-through">{formatCurrency(summary.originalAmount, summary.currency)}/month</span>
-              {" "}with {summary.promo?.discountLabel} for {promoDurationLabel(summary.promo?.duration)}.
-            </p>
+          {deferredUntilLabel ? (
+            <>
+              <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
+                Nothing charged today.
+              </p>
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                Billing starts {deferredUntilLabel} at {formatCurrency(summary.discountedAmount, summary.currency)}/month. Your card is only saved for that date.
+              </p>
+            </>
           ) : (
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Locked in for 12 months, then {formatCurrency(normal, summary.currency)}/month. Cancel anytime.
-            </p>
+            <>
+              <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
+                {formatCurrency(summary.discountedAmount, summary.currency)}/month.
+              </p>
+              {hasPromo ? (
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.42)" }}>
+                  <span className="line-through">{formatCurrency(summary.originalAmount, summary.currency)}/month</span>
+                  {" "}with {summary.promo?.discountLabel} for {promoDurationLabel(summary.promo?.duration)}.
+                </p>
+              ) : (
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Locked in for 12 months, then {formatCurrency(normal, summary.currency)}/month. Cancel anytime.
+                </p>
+              )}
+            </>
           )}
         </div>
 
@@ -300,7 +316,7 @@ function CardForm({
           <button type="submit" disabled={!stripe || loading}
             className="sticky bottom-0 z-10 w-full rounded-xl py-4 text-xs font-black uppercase tracking-[0.18em] shadow-[0_-14px_26px_rgba(22,22,22,0.92)] transition hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
             style={{ backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK }}>
-            {loading ? "One moment..." : "Activate my site"}
+            {loading ? "One moment..." : deferredUntilLabel ? "Save my card" : "Activate my site"}
           </button>
           <p className="text-center text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
             {companyName} - Powered by Found
@@ -326,6 +342,7 @@ export default function ActivateFlow({
   const [companyName, setCompanyName] = useState<string>(preloadedName ?? "")
   const [plan, setPlan] = useState<string | null>(null)
   const [priceSummary, setPriceSummary] = useState<ActivationPriceSummary | null>(null)
+  const [deferredUntilLabel, setDeferredUntilLabel] = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(error ?? null)
   const [stripeReady, setStripeReady] = useState(false)
   const [minTimeReady, setMinTimeReady] = useState(false)
@@ -345,6 +362,7 @@ export default function ActivateFlow({
     if (!companyName) setCompanyName(result.companyName)
     if (result.plan) setPlan(result.plan)
     if (result.price) setPriceSummary(result.price)
+    setDeferredUntilLabel(result.deferredUntilLabel ?? null)
   }
 
   useEffect(() => {
@@ -428,6 +446,7 @@ export default function ActivateFlow({
               companyName={companyName}
               plan={plan}
               priceSummary={priceSummary}
+              deferredUntilLabel={deferredUntilLabel}
               onSetupUpdated={applySetupResult}
             />
           </Elements>

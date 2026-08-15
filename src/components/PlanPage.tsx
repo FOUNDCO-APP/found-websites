@@ -5,7 +5,7 @@ import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
-import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import { INTRO_RATE_CUTOFF, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -150,7 +150,7 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
             </button>
             <p className="mt-6 text-xs text-white/25">
               {isIntroRatePeriod
-                ? <>Intro rate expires August 15 · locked for 12 months, then ${normalPrice}/month.{" "}
+                ? <>Intro rate expires {INTRO_RATE_CUTOFF_LABEL} · locked for 12 months, then ${normalPrice}/month.{" "}
                     <Link href="/plans" className="underline" style={{ color: "rgba(255,255,255,0.4)" }}>
                       Compare all plans
                     </Link></>

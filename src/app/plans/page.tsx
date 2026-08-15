@@ -3,7 +3,7 @@ import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
 import MarketingPlanCard from "@/components/MarketingPlanCard"
-import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import { INTRO_RATE_CUTOFF, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
 import { FOUND_PLAN_OPTIONS } from "@/lib/foundPlans"
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description: "Compare Found Starter, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
   openGraph: {
     title: "Compare Found Plans — $29, $39, $69/month",
-    description: "Found Starter, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire August 15.",
+    description: `Found Starter, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire ${INTRO_RATE_CUTOFF_LABEL}.`,
     url: "https://foundco.app/plans",
   },
 }
@@ -84,7 +84,7 @@ export default function PlansPage() {
           The right plan for where you are.
         </h1>
         <p className="text-base text-white/50 font-medium">
-          {IS_INTRO_RATE_PERIOD ? "Intro rates expire August 15. Locked in for your first year." : "Simple, honest pricing. Cancel anytime."}
+          {IS_INTRO_RATE_PERIOD ? `Intro rates expire ${INTRO_RATE_CUTOFF_LABEL}. Locked in for your first year.` : "Simple, honest pricing. Cancel anytime."}
         </p>
       </section>
 
@@ -162,7 +162,7 @@ export default function PlansPage() {
       <div className="px-6 md:px-10 pb-20 text-center">
         <p className="text-xs text-white/25 max-w-md mx-auto">
           {IS_INTRO_RATE_PERIOD
-            ? <>Intro rates expire August 15 — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
+            ? <>Intro rates expire {INTRO_RATE_CUTOFF_LABEL} — <span className="font-black text-white/50">locked for 12 months</span>, then regular price. Results vary by market and business type.</>
             : "Cancel anytime. Results vary by market and business type."}
         </p>
       </div>

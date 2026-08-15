@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import IndustryPage from "@/components/IndustryPage"
+import { INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
 
 export const metadata: Metadata = {
   title: "Found vs. Wix & Squarespace | Found",
-  description: "Wix and Squarespace still hand you a drag-and-drop editor to finish the design yourself, even with their AI. Found never hands you an editor at all. Starting at $29/month — intro rate expires August 15.",
+  description: `Wix and Squarespace still hand you a drag-and-drop editor to finish the design yourself, even with their AI. Found never hands you an editor at all. Starting at $29/month — intro rate expires ${INTRO_RATE_CUTOFF_LABEL}.`,
   openGraph: {
     title: "Found vs. Wix & Squarespace | Found",
     description: "A drag-and-drop editor to finish yourself, or a finished site with nothing left to design. Here's the real difference.",

@@ -1,5 +1,19 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Intro Rate Extended + Deferred-Billing Money-Safety Fix
+
+Shawn asked to push the intro-rate cutoff to end of month, then live-tested the deferred-billing admin tool as a dry run for onboarding Richard and flagged the activate page looked like a live charge. Tracing it found a real bug, not just a UX issue.
+
+- [x] Fixed the intro-rate cutoff to Aug 31, and found/fixed 9 hardcoded "August 15" copy instances that weren't using the shared label constant - same bug class that let the July cutoff silently expire before.
+- [x] **Real finding:** the deferred-billing flow's "nothing charged today" promise was unenforced - `confirmActivation()` created an immediately-invoiced Stripe subscription with zero awareness of `trial_ends_at`. A real deferred client entering their card today would have been charged today.
+- [x] Team round (Priya leading): fix is to pass Stripe `trial_end` for deferred companies - same mechanism also delivers the separately-requested "bill on a specific day of the month" capability, since Stripe anchors future renewals to the first invoice date.
+- [x] Migration (`20260814140000_deferred_billing_day_and_cash_record.sql`, applied live): `companies` gains `billing_cycle_day`, `deferred_payment_amount`, `deferred_payment_method`, `deferred_payment_note`.
+- [x] `confirmActivation()` now passes `trial_end`/`proration_behavior: "none"` to Stripe when deferred, stores Stripe's real `subscription.status` instead of hardcoded `"active"`, and fixed a stale-activation guard that only checked `"active"` not `"trialing"`.
+- [x] `deferClientBilling()` accepts an optional billing day (1-28) and structured cash/check payment fields; admin form updated to match.
+- [x] `/activate` page shows deferred-aware copy ("Nothing charged today. Billing starts {date}...", "Save my card" button) instead of looking like a live charge screen.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed. Hand-verified the day-of-month date math against 4 scenarios.
+- [ ] **Not yet tested with a real live card** - needs a real test-card run through a deferred test company before Richard's real onboarding, confirming Stripe shows `trialing`/correct `trial_end` rather than an immediate invoice.
+
 ## 2026-08-14 - Email Scope Split (Found vs. Client) + Delivery/Bounce Tracking
 
 Shawn asked whether the empty email-history state was real and whether new sends are certain to work - both verified live (only 2 pre-fix rows existed; a real test lead submitted through `cameras.foundco.app` proved new sends store full content). He then asked to also track Found's own email as a real high-end system - bounce visibility, inbound mail, Found-vs-client separation - and asked for a team review first. Team split it into three pieces by size and Shawn approved building the first two now.

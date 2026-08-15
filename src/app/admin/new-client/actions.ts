@@ -10,8 +10,29 @@ function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
 
+function ordinalSuffix(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return "st"
+  if (n % 10 === 2 && n % 100 !== 12) return "nd"
+  if (n % 10 === 3 && n % 100 !== 13) return "rd"
+  return "th"
+}
+
 const DEFERRAL_TERMS = new Set([30, 60, 90])
+const PAYMENT_METHODS = new Set(["cash", "check", "other"])
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+
+// The owner's due date is at least termDays out, landing on their requested
+// day of month if they have one (e.g. "the 25th") - same mechanism the
+// activation flow uses to both delay the first charge and anchor every
+// renewal after it. Capped 1-28 so there's never a short-month edge case.
+function dueDateFor(termDays: number, billingDay: number | null): Date {
+  const minDate = new Date(Date.now() + termDays * 24 * 60 * 60 * 1000)
+  if (!billingDay) return minDate
+
+  let candidate = new Date(minDate.getFullYear(), minDate.getMonth(), billingDay)
+  if (candidate < minDate) candidate = new Date(minDate.getFullYear(), minDate.getMonth() + 1, billingDay)
+  return candidate
+}
 
 function emailShell({ eyebrow, businessName, bodyHtml }: { eyebrow: string; businessName: string; bodyHtml: string }) {
   return `<!DOCTYPE html>
@@ -108,24 +129,50 @@ export async function deferClientBilling(formData: FormData) {
   const reason = value(formData, "reason")
   const sendEmail = value(formData, "sendEmail") === "1"
 
+  const billingDayRaw = value(formData, "billingDay")
+  const billingDay = billingDayRaw ? Number(billingDayRaw) : null
+  if (billingDay !== null && (!Number.isInteger(billingDay) || billingDay < 1 || billingDay > 28)) {
+    throw new Error("Billing day must be between 1 and 28.")
+  }
+
+  const paymentAmountRaw = value(formData, "paymentAmount")
+  const paymentAmount = paymentAmountRaw ? Number(paymentAmountRaw) : null
+  const paymentMethodRaw = value(formData, "paymentMethod")
+  const paymentMethod = paymentMethodRaw && PAYMENT_METHODS.has(paymentMethodRaw) ? paymentMethodRaw : null
+  const paymentNote = value(formData, "paymentNote")
+  if (paymentAmount !== null && (Number.isNaN(paymentAmount) || paymentAmount < 0)) {
+    throw new Error("Payment amount must be a real number.")
+  }
+
   if (!companyId) throw new Error("Missing company.")
   if (!DEFERRAL_TERMS.has(termDays)) throw new Error("Pick 30, 60, or 90 days.")
   if (!reason) throw new Error("A reason is required.")
 
   const admin = getAdminClient()
-  const dueAt = new Date(Date.now() + termDays * 24 * 60 * 60 * 1000)
+  const dueAt = dueDateFor(termDays, billingDay)
   const dueDateLabel = dueAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 
   const { error } = await admin
     .from("companies")
-    .update({ trial_ends_at: dueAt.toISOString() })
+    .update({
+      trial_ends_at: dueAt.toISOString(),
+      billing_cycle_day: billingDay,
+      deferred_payment_amount: paymentAmount,
+      deferred_payment_method: paymentMethod,
+      deferred_payment_note: paymentNote || null,
+    })
     .eq("id", companyId)
   if (error) throw new Error(error.message)
+
+  const paymentNoteLine = paymentAmount
+    ? ` Already collected: $${paymentAmount.toFixed(2)}${paymentMethod ? ` (${paymentMethod})` : ""}${paymentNote ? ` - ${paymentNote}` : ""}.`
+    : ""
+  const billingDayLine = billingDay ? ` Billing anchored to the ${billingDay}${ordinalSuffix(billingDay)} of the month.` : ""
 
   await admin.from("client_activities").insert({
     company_id: companyId,
     activity_type: "note",
-    summary: `Deferred billing set: card due by ${dueDateLabel} (${termDays} days). If no card is added by then, the public site pauses automatically. Reason: ${reason}`,
+    summary: `Deferred billing set: card due by ${dueDateLabel} (${termDays} days).${billingDayLine} If no card is added by then, the public site pauses automatically. Reason: ${reason}.${paymentNoteLine}`,
   })
 
   if (sendEmail) {

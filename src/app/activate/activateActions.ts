@@ -48,6 +48,17 @@ type ActivationSetupResult = {
   plan: string | null
   price: ActivationPriceSummary | null
   promoError?: string
+  // Set when this company has a Shawn-arranged deferred/permanent billing
+  // start date (companies.trial_ends_at) still in the future - the activate
+  // page shows "save your card" copy instead of implying an immediate charge.
+  deferredUntilLabel?: string | null
+}
+
+function deferredUntilLabelFor(trialEndsAt: string | null | undefined): string | null {
+  if (!trialEndsAt) return null
+  const date = new Date(trialEndsAt)
+  if (Number.isNaN(date.getTime()) || date.getTime() <= Date.now()) return null
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
 
 function normalizePromoCode(code?: string | null) {
@@ -159,12 +170,15 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   const admin = getAdminClient()
   const { data: company } = await admin
     .from("companies")
-    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status, is_founding_member")
+    .select("id, name, email, stripe_customer_id, pending_setup_intent_secret, plan, subscription_status, is_founding_member, trial_ends_at")
     .eq("slug", slug)
     .single()
 
   if (!company) return null
-  if ((company as Record<string, unknown>).subscription_status === "active") return null
+  const currentStatus = String((company as Record<string, unknown>).subscription_status ?? "")
+  if (currentStatus === "active" || currentStatus === "trialing") return null
+
+  const deferredUntilLabel = deferredUntilLabelFor((company as Record<string, unknown>).trial_ends_at as string | null | undefined)
 
   const requestedPlan = targetPlan || company.plan || "found"
   const useIntroPrice = !!company.is_founding_member || (company.subscription_status !== "active" && company.subscription_status !== "trialing")
@@ -192,7 +206,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
       if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon) {
-        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError }
+        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
       }
     }
 
@@ -250,7 +264,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       .update(companyUpdate)
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError }
+    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
   } catch (err) {
     console.error("[Activate] createActivationSetup failed:", err)
     return null
@@ -297,7 +311,7 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
 
     const { data: company } = await admin
       .from("companies")
-      .select("id, slug, user_id, subscription_status")
+      .select("id, slug, user_id, subscription_status, trial_ends_at")
       .eq("id", companyId)
       .eq("slug", slug)
       .maybeSingle()
@@ -330,6 +344,19 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       items: [{ price: priceId }],
       default_payment_method: paymentMethodId,
       metadata: { company_id: companyId, slug, plan },
+    }
+
+    // Shawn-arranged deferred/permanent billing (companies.trial_ends_at, set
+    // by the admin new-client tool) must not bill Stripe the moment the card
+    // is saved - the owner was promised nothing is charged until this date.
+    // Passing trial_end also anchors every future renewal to this same date,
+    // which is how a requested billing day of month (e.g. "the 25th") is
+    // actually delivered - one mechanism covers both asks.
+    const trialEndsAtMs = company.trial_ends_at ? new Date(company.trial_ends_at as string).getTime() : NaN
+    const hasFutureDeferral = !Number.isNaN(trialEndsAtMs) && trialEndsAtMs > Date.now() + 5 * 60 * 1000
+    if (hasFutureDeferral) {
+      subscriptionParams.trial_end = Math.floor(trialEndsAtMs / 1000)
+      subscriptionParams.proration_behavior = "none"
     }
 
     if (setupIntent.metadata?.promotion_code_id) {
@@ -368,8 +395,13 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       }
     }
 
+    // subscription.status is Stripe's real state - "trialing" for a deferred
+    // company (matches subscriptionParams.trial_end above), "active" for a
+    // normal one. Every other place in the app already treats active and
+    // trialing as equivalent "has a real subscription" states, so this stays
+    // consistent instead of lying that a deferred client is fully active.
     const companyUpdate: Record<string, string | boolean | null> = {
-      subscription_status: "active",
+      subscription_status: subscription.status,
       pending_setup_intent_secret: null,
       plan,
     }
