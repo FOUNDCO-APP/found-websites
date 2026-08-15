@@ -1,5 +1,26 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14/15 - END OF SESSION WRAP - read this first, then the dated entries below for detail
+
+Long session, both marketing-site fixes and a real production money-safety bug found and fixed. Everything below is committed and pushed to `main` (last commit `9c12aca`, verified clean working tree, no uncommitted changes). This entry is the fast-read summary; the dated entries below (same session) have full detail on each piece if needed.
+
+### What shipped, in order
+1. **Intro rate extended to August 31** (from an already-passed August 15) - and found/fixed a real gap while doing it: the visible "expires ___" copy was hardcoded as literal text in 9 places across 4 marketing files, none of them reading from the shared date constant. Same brittleness that let the July cutoff silently expire unnoticed before - now every mention derives from one source.
+2. **Real money-safety bug found and fixed in deferred billing.** `confirmActivation()` was creating an immediately-invoiced Stripe subscription for every activation, with zero awareness of a company's deferred due date - meaning a real deferred client (this was being built for Shawn's friend Richard) would have been charged the day they entered their card, not on the promised date. Fixed by passing Stripe's real `trial_end` for deferred companies. This same mechanism also delivered a separately-requested capability: a specific billing day of the month (e.g. "bill on the 25th"), which Shawn tested live and confirmed working (`Sep 25, 2026` matched exactly what he set).
+3. **Real client profile page built**: `/admin/clients/[id]` - contact name (a genuinely new field, now captured at both onboarding entry points), business address (existing data, now actually editable - it never had an input field before), and the billing controls (Activate now / Defer billing / Permanent) that previously only existed for a few seconds right after creating a new site, now permanently reachable. Old inline "Manage relationship" list-row expander removed since the real page replaced it.
+4. **Found and fixed a silent form-submission bug** during Shawn's own live test: the Defer billing form had two overlapping required/optional text fields that looked like they covered the same thing - leaving one blank made the browser silently block the whole submission with no visible error. Merged into one field. Also built the manual "resend card-link email" button Shawn asked for.
+5. **Removed Stripe Link** from Found's own billing screen. Took two follow-up rounds to fully resolve: first a code fix (removing `link` from `payment_method_types`), then a self-healing fix for stale cached SetupIntents that don't auto-invalidate when payment-method requirements change, then a real diagnostic (temporary logging, confirmed removed afterward - `git diff` verified clean) proving the code was correct all along - the actual remaining cause was a Stripe Dashboard-level Link toggle, which Shawn found and disabled himself. Confirmed working.
+6. **Real email system work carried over from earlier in the session**: verified email content persistence works via a real live test lead; built a Found-vs-client email scope split and real Resend delivery/bounce-status tracking (webhook created via the Resend API directly, verified end-to-end with a real test email showing `delivered` status).
+7. **Pre-announcement team review**: pulled real Sentry data (last 24h of production errors) before Shawn posts this on social media - nothing new or blocking from tonight's changes; the two most active issues are both pre-existing, low-severity, known-class errors unrelated to tonight. One honest gap flagged: none of tonight's fixes have been checked on a real phone yet, only desktop/automated browser testing - worth a quick real-phone glance before or right after posting, given social traffic skews mobile.
+
+### Explicitly logged, not built - real backlog items
+- **Found HQ admin redesign** (Shawn's own words: "put it on notes") - the whole admin side needs a real design pass: feels slow, doesn't look like Found, billing section reads like raw spreadsheet text. Logged at the top of `TASKS.md`, needs its own Jony-led round when picked up - explicitly not started.
+- Changing an already-active client's billing date after the fact (today only sets it once, at initial activation) - real, buildable (Stripe supports it), not yet built, not urgent.
+- Real inbound email, spam-filter domain-pattern broadening, marketing visual system, App Store decision - all pre-existing backlog items, untouched this session.
+
+### Explicit Next Step
+Shawn was about to announce Found on social media as of this entry. No outstanding blocker was found. If picking this up cold: check whether the announcement happened and whether any real user hit anything unexpected, then continue down whatever Shawn raises next - there's no unfinished mid-task work sitting open right now, every thread from tonight was closed out and verified before moving to the next.
+
 ## 2026-08-14 - Remove Stripe Link From Found's Own Billing Screen
 
 ### Progress This Pass

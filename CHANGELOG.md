@@ -16,6 +16,9 @@ Shawn re-tested and Link was still there. Confirmed against live data: "cameras"
 ### Follow-up (2) - real diagnostic run, root cause is outside the codebase
 Shawn re-tested again - Link still showed. Rather than guess again, ran a real diagnostic: two small temporary builds surfaced the actual live Stripe SetupIntent data (first attempted via Vercel's deployment-events API, which only exposes build logs; switched to passing the diagnostic to the browser console instead, then triggered the page directly and read the console). Confirmed with real proof: the live SetupIntent genuinely has `payment_method_types: ["card"]` only - the code fix is correct and working. Link is a Stripe account-level Dashboard setting (Settings -> Payment methods -> Link), an autofill/checkout-acceleration layer independent of `payment_method_types` restriction - not something the application code controls. Removed all temporary diagnostic code, confirmed via `git diff` against the last real commit that nothing was left behind. Re-verified all three checks.
 
+### Resolved
+Shawn found and disabled the Link toggle directly in Stripe Dashboard > Settings > Payment methods, confirmed it resolved. Closed - no further code action needed.
+
 ---
 
 ## Session: August 14, 2026 (part 4) - Real Client Profile Page
