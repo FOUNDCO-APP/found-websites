@@ -211,6 +211,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       // because the plan/promo still match, or the stale payment methods
       // keep showing up forever regardless of what the code now creates.
       const matchesPaymentMethods = JSON.stringify(existingIntent?.payment_method_types ?? []) === JSON.stringify(["card"])
+      console.log("[Activate DIAG]", slug, "existing intent id:", setupIntentId, "status:", existingIntent?.status, "payment_method_types:", existingIntent?.payment_method_types, "matchesPaymentMethods:", matchesPaymentMethods, "willReuse:", existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods)
       if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
       }
@@ -250,6 +251,8 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
         ...promoMetadata,
       },
     })
+
+    console.log("[Activate DIAG]", slug, "created fresh intent id:", setupIntent.id, "payment_method_types:", setupIntent.payment_method_types)
 
     if (!setupIntent.client_secret) {
       console.error("[Activate] SetupIntent created but no client_secret")
