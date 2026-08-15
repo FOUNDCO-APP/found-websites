@@ -10,8 +10,11 @@ Shawn confirmed the deferral fix worked live, then asked to remove Stripe's "Lin
 ### Verification
 - `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed.
 
-### Follow-up - Link still showed up after deploy
+### Follow-up (1) - Link still showed up after deploy
 Shawn re-tested and Link was still there. Confirmed against live data: "cameras" had a `pending_setup_intent_secret` cached from before tonight - Stripe locks payment_method_types in at creation, and the reuse-matching logic in `createActivationSetup()` never checked whether a cached intent's payment methods still matched, only plan/promo/intro-price/addon. Fixed self-healingly: added a `matchesPaymentMethods` check so any mismatched cached intent gets discarded and replaced automatically, for every company, not just this one. Re-verified all three checks.
+
+### Follow-up (2) - real diagnostic run, root cause is outside the codebase
+Shawn re-tested again - Link still showed. Rather than guess again, ran a real diagnostic: two small temporary builds surfaced the actual live Stripe SetupIntent data (first attempted via Vercel's deployment-events API, which only exposes build logs; switched to passing the diagnostic to the browser console instead, then triggered the page directly and read the console). Confirmed with real proof: the live SetupIntent genuinely has `payment_method_types: ["card"]` only - the code fix is correct and working. Link is a Stripe account-level Dashboard setting (Settings -> Payment methods -> Link), an autofill/checkout-acceleration layer independent of `payment_method_types` restriction - not something the application code controls. Removed all temporary diagnostic code, confirmed via `git diff` against the last real commit that nothing was left behind. Re-verified all three checks.
 
 ---
 

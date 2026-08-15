@@ -21,6 +21,16 @@
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: reload `/activate?slug=cameras` again and confirm Link is actually gone this time - the first fix was real but incomplete, so this one needs its own real re-check, not assumed.
 
+### Second Follow-Up: Self-Healing Fix Confirmed Correct, But Link Still Showed - Root Cause Is a Stripe Dashboard Setting
+- Shawn re-tested after the self-healing fix deployed - Link was still there. Rather than guess a third time, ran a real diagnostic: pushed two small temporary builds that surfaced the actual live Stripe data directly (first tried Vercel's deployment-events API for server logs - that only exposes build logs, not runtime function logs, so switched to passing the diagnostic back to the browser console instead, then triggered the page myself and read the console directly).
+- **Confirmed with real proof, not a guess:** the live SetupIntent Stripe is actually using for "cameras" right now has `payment_method_types: ["card"]` - genuinely card-only. The code fix from earlier tonight is working correctly.
+- **Real conclusion:** Link showing up is not a code bug at all. Stripe treats "Link" as an autofill/checkout-acceleration convenience layered on top of the card field itself, controlled by an account-level Stripe Dashboard setting (Settings -> Payment methods -> Link) - not fully suppressed just by restricting `payment_method_types` on the intent. This is outside what Found's application code controls.
+- Removed all temporary diagnostic code (both the server-side logging attempt and the client-console version) - confirmed via `git diff` against the last real commit that the working tree matches exactly, no leftovers.
+- Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed after cleanup.
+
+### Explicit Next Step
+Get Shawn's approval to push the diagnostic cleanup. Separately, and not something Claude can do: Shawn needs to check Stripe Dashboard -> Settings -> Payment methods -> Link directly to see the actual account-level toggle, since that's genuinely outside the codebase. Alternative if he'd rather stay in code: build a named Stripe "Payment Method Configuration" via the API that explicitly excludes Link and attach it to this SetupIntent specifically - not yet attempted, only offered as an option pending Shawn's direction.
+
 ## 2026-08-14 - Real Client Profile Page (Contact Name, Address, Billing All in One Place)
 
 ### Progress This Pass

@@ -44,7 +44,6 @@ type ActivationSetupResult = {
   price: ActivationPriceSummary | null
   promoError?: string
   deferredUntilLabel?: string | null
-  diag?: string
 }
 
 function fallbackPlanDetails(plan?: string | null): ActivationPriceSummary {
@@ -359,7 +358,6 @@ export default function ActivateFlow({
   }, [])
 
   function applySetupResult(result: ActivationSetupResult) {
-    if (result.diag) console.log("[Activate DIAG]", result.diag)
     setClientSecret(result.clientSecret)
     if (!companyName) setCompanyName(result.companyName)
     if (result.plan) setPlan(result.plan)

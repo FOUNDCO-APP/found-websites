@@ -10,7 +10,11 @@ Shawn confirmed the deferral test worked, then asked to remove Stripe's "Link" s
 - [x] Shawn re-tested after deploy - Link was still showing. Confirmed the real cause: "cameras" had a `pending_setup_intent_secret` cached from before tonight, and the code's reuse logic never checked whether a cached intent's payment methods still matched - it kept serving the old Link-enabled one regardless of the new code.
 - [x] Fixed self-healingly: added a `matchesPaymentMethods` check to the reuse condition - any mismatched cached intent now gets discarded and replaced automatically, for every company, not just a one-time patch.
 - [x] Re-verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
-- [ ] Shawn QA: reload `/activate?slug=cameras` again, confirm Link is actually gone this time.
+- [x] Shawn re-tested again - Link was still there. Ran a real diagnostic (temporary builds surfacing live Stripe data to the browser console) instead of guessing a third time.
+- [x] Confirmed with real proof: the live SetupIntent genuinely has `payment_method_types: ["card"]` only - the code fix is correct. Link is a Stripe account-level Dashboard setting, not something application code controls - outside the codebase entirely.
+- [x] Removed all temporary diagnostic code, confirmed via `git diff` against the last real commit that nothing was left behind.
+- [x] Re-verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] **Shawn action needed, not something Claude can do:** check Stripe Dashboard -> Settings -> Payment methods -> Link directly. Alternative if he'd rather stay in code: build a named Stripe "Payment Method Configuration" via API that explicitly excludes Link - not yet attempted, pending his direction.
 
 ## BACKLOG - Found HQ Admin Needs a Real Design Pass (Shawn's note, 2026-08-14)
 
