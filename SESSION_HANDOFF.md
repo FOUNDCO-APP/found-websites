@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-14 - Real Client Profile Page (Contact Name, Address, Billing All in One Place)
+
+### Progress This Pass
+- Follow-up to the deferred-billing fix above. Shawn tried to test it on "cameras" via the Clients tab and hit a wall: clicking into a client only ever showed "Manage relationship" (client state, account type, a note) - no contact name, no address, and no way back to the billing controls he'd just built tonight. Confirmed in the code before proposing anything: `/admin/new-client`'s billing panel only ever renders once, immediately after creating a new site via a one-time `?created=<id>` link - there was never a way to reach it again for an existing client. Same root cause behind both complaints: nothing about a client persisted past the moment it was created.
+- Shawn was explicit: planning/team-meeting mode first, no code until the plan was settled. Team round (Steve leading): build a real `/admin/clients/[id]` profile page - reachable by clicking into any client - holding contact info, address, and billing controls permanently, replacing the list's bolted-on inline expander.
+- Confirmed real gaps vs. what already existed before building: business email/phone already existed and were already shown (just as a plain unlabeled line, easy to miss); business address already existed as real columns (`address`/`city`/`state`/`zip`/`address_visible`) but was never surfaced anywhere in the admin; there was no owner/contact-name field anywhere in the schema at all - not hidden, genuinely never captured.
+- Shawn confirmed: business address (not a separate personal address) is correct, list stays sorted by business name, and asked to also start collecting the contact's name at onboarding going forward.
+- Built:
+  - Migration `20260814150000_company_contact_name.sql` (applied live): `companies.contact_name`.
+  - Public onboarding (`OnboardingFlow.tsx`/`actions.ts`): new "And your name?" step right after business phone/email, clearly labeled as internal-only ("never shown on your site"). Threaded through to the company insert.
+  - Admin manual onboarding (`admin/new-client/page.tsx`/`actions.ts`): added the same "Contact name" field to the form Shawn uses when building a site on someone's behalf.
+  - New `/admin/clients/[id]` - a real per-client page: contact name (editable inline), business email/phone/address, relationship status (client state, account type, comp reason, notes - moved from the old inline panel), the included-addon picker and hide-from-search toggle, and - closing the original gap - the Activate-now link / Defer billing form (with the billing-day and cash-payment fields from the last round) / Permanent form, all permanently reachable instead of disappearing after site creation.
+  - Fixed `deferClientBilling()`/`setPermanentComp()` to redirect back to wherever they were submitted from (`returnTo` field) instead of always bouncing to `/admin/new-client` - needed so submitting billing from the new client page keeps you there.
+  - `ClientsWorkspace.tsx` simplified: business name is now a link into the new detail page; the inline "Manage relationship" expander (state/account-type/note only, no contact/address/billing) is removed since the real page fully replaces it.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed, confirmed `/admin/clients/[id]` present in the route output.
+- Not yet tested live - the new page, the onboarding name step, and the redirect fix all need a real click-through before trusting them.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: click into "cameras" or RC Bicycles from Clients and confirm the new page loads with contact/address/billing sections; add a contact name and confirm it saves; submit a test deferral from that page and confirm it stays on the page instead of bouncing to `/admin/new-client`; run through onboarding far enough to confirm the new "And your name?" step appears and doesn't block progress.
+
 ## 2026-08-14 - Intro Rate Extended + Deferred-Billing Money-Safety Fix (Real Bug Found)
 
 ### Progress This Pass

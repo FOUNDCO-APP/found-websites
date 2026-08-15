@@ -183,6 +183,7 @@ export default async function AdminNewClientPage({
 
       <form action={createManualClientSite} className="hq-create-form">
         <label>Business name<input name="name" required /></label>
+        <label>Contact name<input name="contactName" required placeholder="e.g. Richard Martinez - who you're actually dealing with" /></label>
         <label>Phone<input name="phone" type="tel" required /></label>
         <label>Email<input name="email" type="email" required /></label>
         <label>Industry

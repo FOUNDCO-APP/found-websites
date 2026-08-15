@@ -24,7 +24,7 @@ type Phase = "welcome" | "plan" | "questions"
 
 type Step =
   | "welcome" | "name" | "description" | "subIndustry" | "location"
-  | "phone" | "email" | "different" | "focus" | "services" | "photos" | "logo"
+  | "phone" | "email" | "contactName" | "different" | "focus" | "services" | "photos" | "logo"
   | "color" | "vibe" | "testimonials"
 
 type Answers = {
@@ -36,6 +36,7 @@ type Answers = {
   serviceAreas: string[]
   phone: string
   email: string
+  contactName: string
   phoneVisible: boolean
   emailVisible: boolean
   separateLeads: boolean
@@ -59,13 +60,13 @@ type Answers = {
 
 const STEPS: Step[] = [
   "welcome", "name", "description", "subIndustry", "location",
-  "phone", "email", "different", "focus", "services", "photos", "logo",
+  "phone", "email", "contactName", "different", "focus", "services", "photos", "logo",
   "color", "vibe", "testimonials",
 ]
 
 const INITIAL: Answers = {
   name: "", description: "", industry: null, subIndustry: "",
-  location: "", serviceAreas: [], phone: "", email: "",
+  location: "", serviceAreas: [], phone: "", email: "", contactName: "",
   phoneVisible: true, emailVisible: true, separateLeads: false, leadPhone: "", leadEmail: "",
   different: "", idealCustomer: "", serviceAreaNote: "", proofPoint: "",
   services: [], photoChoice: "", logoChoice: "",
@@ -158,6 +159,7 @@ function canAdvance(step: Step, a: Answers): boolean {
     case "location":     return a.location.trim().length > 2
     case "phone":        return a.phone.replace(/\D/g, "").length >= 10
     case "email":        return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(a.email)
+    case "contactName":  return a.contactName.trim().length > 1
     case "different":    return a.different.trim().length > 8
     case "focus":        return [a.idealCustomer, a.serviceAreaNote, a.proofPoint].some((value) => value.trim().length > 4)
     case "services":     return a.services.length > 0
@@ -178,6 +180,7 @@ function questionTitle(step: Step, a: Answers): string {
     case "location":     return "Where are you based?"
     case "phone":        return "What's your business phone number?"
     case "email":        return "What's your business email?"
+    case "contactName":  return "And your name?"
     case "different":    return "What makes you different?"
     case "focus":        return "What should this site help you win?"
     case "services":     return "What services do you offer?"
@@ -1897,6 +1900,9 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                       {step === "email" && (
                         <p className="mt-2 text-sm" style={{ color: tk.hint }}>You control whether this shows publicly — there's a toggle below.</p>
                       )}
+                      {step === "contactName" && (
+                        <p className="mt-2 text-sm" style={{ color: tk.hint }}>Just for us — never shown on your site. Helps us know who we're talking to.</p>
+                      )}
                       {ready && affirm && (
                         <p className="mt-4 text-xs font-black uppercase tracking-[0.18em]"
                           style={{ color: SIGNAL_GREEN, animation: "fade-in 0.3s ease-out both" }}>
@@ -2104,6 +2110,20 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                               : "Hidden from your site — tap to show"}
                           </button>
                         )}
+                      </div>
+                    )}
+
+                    {step === "contactName" && (
+                      <div className="space-y-4">
+                        <input
+                          autoFocus type="text" autoComplete="name"
+                          value={answers.contactName}
+                          onChange={(e) => set("contactName", e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && advance()}
+                          placeholder="Your first and last name"
+                          className={`w-full text-[1.8rem] ${tk.inputCls} ${tk.placeholder}`}
+                          style={{ color: tk.text, borderBottomColor: answers.contactName.trim() ? SIGNAL_GREEN : tk.border(false) }}
+                        />
                       </div>
                     )}
 

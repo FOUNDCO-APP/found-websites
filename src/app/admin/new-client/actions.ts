@@ -104,6 +104,7 @@ export async function createManualClientSite(formData: FormData) {
     location,
     phone: value(formData, "phone"),
     email: value(formData, "email"),
+    contactName: value(formData, "contactName"),
     different: value(formData, "different"),
     services: value(formData, "services"),
     testimonials: value(formData, "testimonials"),
@@ -195,7 +196,9 @@ export async function deferClientBilling(formData: FormData) {
   }
 
   revalidatePath("/admin/clients")
-  redirect(`/admin/new-client?created=${companyId}&deferred=1`)
+  revalidatePath(`/admin/clients/${companyId}`)
+  const returnTo = value(formData, "returnTo")
+  redirect(returnTo || `/admin/new-client?created=${companyId}&deferred=1`)
 }
 
 export async function setPermanentComp(formData: FormData) {
@@ -240,5 +243,7 @@ export async function setPermanentComp(formData: FormData) {
   }
 
   revalidatePath("/admin/clients")
-  redirect(`/admin/new-client?created=${companyId}&deferred=1`)
+  revalidatePath(`/admin/clients/${companyId}`)
+  const returnTo = value(formData, "returnTo")
+  redirect(returnTo || `/admin/new-client?created=${companyId}&deferred=1`)
 }

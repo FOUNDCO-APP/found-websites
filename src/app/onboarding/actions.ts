@@ -18,6 +18,7 @@ type OnboardingInput = {
   serviceAreas?: string[]
   phone: string
   email: string
+  contactName?: string
   phoneVisible?: boolean
   emailVisible?: boolean
   leadPhone?: string
@@ -409,6 +410,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       secondary_intent: manifest.secondaryIntent,
       phone,
       email,
+      contact_name: input.contactName?.trim() || null,
       phone_visible: input.phoneVisible ?? true,
       email_visible: input.emailVisible ?? true,
       lead_phone: input.leadPhone?.trim() || null,

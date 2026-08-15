@@ -1,5 +1,20 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-14 - Real Client Profile Page
+
+Shawn tried to test the deferred-billing fix via Clients and found no way back to billing controls, no contact name, no visible address. Asked for planning-mode/team-meeting first, then approved building a real per-client page.
+
+- [x] Confirmed the root cause before proposing anything: `/admin/new-client`'s billing panel only ever shows once, right after creating a site - no persistent way back for an existing client.
+- [x] Confirmed business email/phone already existed (just unlabeled/easy to miss) and business address already existed as real columns, just never surfaced - only a contact-name field was genuinely missing.
+- [x] Migration (`20260814150000_company_contact_name.sql`, applied live): `companies.contact_name`.
+- [x] Added "And your name?" step to public onboarding, right after phone/email, clearly marked internal-only.
+- [x] Added the same field to the admin manual-onboarding form.
+- [x] New `/admin/clients/[id]` real client profile page: contact name (editable), business email/phone/address, relationship status, billing controls (Activate now/Defer billing/Permanent) permanently reachable instead of one-time-only.
+- [x] Fixed `deferClientBilling()`/`setPermanentComp()` to redirect back to wherever submitted from instead of always bouncing to `/admin/new-client`.
+- [x] `ClientsWorkspace.tsx`: business name links into the new page; old inline "Manage relationship" expander removed.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - new route confirmed in output.
+- [ ] **Not yet tested live** - click into cameras/RC Bicycles, add a contact name, submit a test deferral and confirm it stays on the page, confirm the new onboarding step doesn't block progress.
+
 ## 2026-08-14 - Intro Rate Extended + Deferred-Billing Money-Safety Fix
 
 Shawn asked to push the intro-rate cutoff to end of month, then live-tested the deferred-billing admin tool as a dry run for onboarding Richard and flagged the activate page looked like a live charge. Tracing it found a real bug, not just a UX issue.

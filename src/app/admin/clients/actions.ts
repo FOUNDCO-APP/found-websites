@@ -43,6 +43,18 @@ export async function updateClientRecord(formData: FormData) {
   if (activities.length) await admin.from("client_activities").insert(activities)
   revalidatePath("/admin")
   revalidatePath("/admin/clients")
+  revalidatePath(`/admin/clients/${id}`)
+}
+
+export async function updateClientContactName(formData: FormData) {
+  await requireAdmin()
+  const id = value(formData, "id")
+  const contactName = value(formData, "contactName")
+  if (!id) throw new Error("Missing client.")
+  const { error } = await getAdminClient().from("companies").update({ contact_name: contactName || null }).eq("id", id)
+  if (error) throw new Error(error.message)
+  revalidatePath("/admin/clients")
+  revalidatePath(`/admin/clients/${id}`)
 }
 
 export async function addClientNote(formData: FormData) {
@@ -53,4 +65,5 @@ export async function addClientNote(formData: FormData) {
   const { error } = await getAdminClient().from("client_activities").insert({ company_id: id, activity_type: "note", summary: note })
   if (error) throw new Error(error.message)
   revalidatePath("/admin/clients")
+  revalidatePath(`/admin/clients/${id}`)
 }

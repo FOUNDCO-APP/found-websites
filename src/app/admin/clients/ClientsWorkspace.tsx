@@ -1,10 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useMemo, useState, useTransition } from "react"
-import { setViewAsCookie, toggleTest, setIncludedAddon } from "../businesses/actions"
-import { getAllAddonsRanked } from "@/lib/featureAccess"
-import { addClientNote, updateClientRecord } from "./actions"
+import { useMemo, useState } from "react"
+import { setViewAsCookie } from "../businesses/actions"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -51,38 +49,19 @@ function stateTone(state: string) {
 }
 
 function ClientItem({ row }: { row: ClientRow }) {
-  const [state, setState] = useState(row.client_state)
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
-  const [isTest, setIsTest] = useState(Boolean(row.is_test))
-  const [testPending, startTestTransition] = useTransition()
-  const [includedAddon, setIncludedAddonState] = useState(row.included_addon_slug)
-  const [addonPending, startAddonTransition] = useTransition()
-  const relevantAddons = row.plan === "found_pro" ? getAllAddonsRanked(row.industry_category ?? "") : []
-
-  function handleTestToggle() {
-    const next = !isTest
-    setIsTest(next)
-    startTestTransition(() => { toggleTest(row.id, next) })
-  }
-
-  function handleAddonChange(slug: string | null) {
-    if (slug === includedAddon) return
-    setIncludedAddonState(slug)
-    startAddonTransition(() => { setIncludedAddon(row.id, slug) })
-  }
 
   return (
     <article className="hq-business-row">
       <div className="hq-business-main">
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
-            <h2>{row.name}</h2>
+            <Link href={`/admin/clients/${row.id}`}><h2>{row.name}</h2></Link>
             <span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span>
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
-            {isTest && <span className="hq-badge hq-badge-info">Hidden from search</span>}
+            {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
           <p>{planLabel(row.plan)} / Billing: {row.subscription_status ?? "not active"}</p>
-          <p>{row.email ?? "No email"}{row.phone ? ` / ${row.phone}` : ""}</p>
           {row.issues.length > 0 && <div className="hq-business-issues">{row.issues.map((issue) => <span key={issue} className="hq-badge hq-badge-warning">{issue}</span>)}</div>}
         </div>
         <div className="hq-business-actions">
@@ -90,50 +69,6 @@ function ClientItem({ row }: { row: ClientRow }) {
           <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(row.id)}>View as</button>
         </div>
       </div>
-      <details className="hq-business-manage">
-        <summary>Manage relationship</summary>
-        <div className="hq-business-manage-body hq-sales-forms">
-          <form action={updateClientRecord} className="hq-inline-form">
-            <input type="hidden" name="id" value={row.id} />
-            <label>Client state<select name="client_state" value={state} onChange={(event) => setState(event.target.value)}><option value="onboarding">Onboarding</option><option value="active">Active</option><option value="comp">Comp</option><option value="past_due">Past due</option><option value="cancelled">Cancelled</option></select></label>
-            <label>Account type<select name="account_kind" defaultValue={row.account_kind}><option value="client">Client</option><option value="test">Test</option></select></label>
-            {state === "comp" && <label>Comp reason<input name="comp_reason" required defaultValue={row.comp_reason ?? ""} /></label>}
-            <label className="hq-form-grow">Optional note<input name="activity_note" placeholder="Why this changed" /></label>
-            <button className="hq-button hq-button-primary" type="submit">Save</button>
-          </form>
-          {row.plan === "found_pro" && relevantAddons.length > 0 && (
-            <div className="hq-inline-form">
-              <label className="hq-form-grow">Included add-on (Pro plan, one pick, free)
-                <div className="hq-filter-row">
-                  <button type="button" data-active={!includedAddon} disabled={addonPending} onClick={() => handleAddonChange(null)}>None</button>
-                  {relevantAddons.map((addon) => (
-                    <button key={addon.slug} type="button" data-active={includedAddon === addon.slug} disabled={addonPending} onClick={() => handleAddonChange(addon.slug)}>{addon.label}</button>
-                  ))}
-                </div>
-              </label>
-            </div>
-          )}
-          <div className="hq-inline-form">
-            <button type="button" onClick={handleTestToggle} disabled={testPending} className="hq-button hq-button-secondary">{isTest ? "Show in search" : "Hide from search"}</button>
-          </div>
-          <form action={addClientNote} className="hq-inline-form">
-            <input type="hidden" name="id" value={row.id} />
-            <label className="hq-form-grow">Dated note<input name="note" required placeholder="Conversation, promise, or context" /></label>
-            <button className="hq-button hq-button-secondary" type="submit">Add note</button>
-          </form>
-          {row.last_activity && <p className="hq-form-note">Latest: {row.last_activity}</p>}
-          {row.emails.length > 0 && (
-            <div className="hq-form-note">
-              <strong>Emails sent</strong>
-              <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                {row.emails.map((email, i) => (
-                  <li key={i}>{new Date(email.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {email.summary}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </details>
     </article>
   )
 }

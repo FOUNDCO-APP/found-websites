@@ -1,3 +1,23 @@
+## Session: August 14, 2026 (part 4) - Real Client Profile Page
+**AI:** Claude
+
+### Context
+Shawn tried to test the deferred-billing fix via the Clients tab and found there was no way back to the billing controls for an existing client, and no way to see who actually runs a business (no contact name field ever existed; address existed but was never shown). Explicitly asked for planning-only/team-meeting mode before any code. Team round (Steve leading) landed on a real `/admin/clients/[id]` profile page replacing the list's inline "Manage relationship" expander.
+
+### Changed
+- Migration `20260814150000_company_contact_name.sql` (applied live): `companies.contact_name`.
+- `OnboardingFlow.tsx`/`onboarding/actions.ts`: new "And your name?" step captures contact name going forward (public flow).
+- `admin/new-client/page.tsx`/`actions.ts`: same field added to the admin manual-onboarding form.
+- **New** `admin/clients/[id]/page.tsx` + `ClientDetailWorkspace.tsx`: real per-client profile - contact name (editable), business email/phone/address, relationship status, and the billing controls (Activate now/Defer billing/Permanent) that previously only existed transiently right after site creation.
+- `admin/new-client/actions.ts`: `deferClientBilling()`/`setPermanentComp()` now accept a `returnTo` field and redirect there instead of always bouncing to `/admin/new-client`.
+- `ClientsWorkspace.tsx`: business name links into the new detail page; inline "Manage relationship" expander removed (fully superseded).
+
+### Verification
+- `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed; new route confirmed in build output.
+- Not yet tested live - needs a real click-through before trusting it.
+
+---
+
 ## Session: August 14, 2026 (part 3) - Intro Rate Extended + Deferred-Billing Money-Safety Fix
 **AI:** Claude
 
