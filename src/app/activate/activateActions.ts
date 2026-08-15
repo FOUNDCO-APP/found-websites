@@ -52,6 +52,7 @@ type ActivationSetupResult = {
   // start date (companies.trial_ends_at) still in the future - the activate
   // page shows "save your card" copy instead of implying an immediate charge.
   deferredUntilLabel?: string | null
+  diag?: string
 }
 
 function deferredUntilLabelFor(trialEndsAt: string | null | undefined): string | null {
@@ -196,6 +197,8 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     const { price, promoError } = await priceSummaryFor(stripe, priceId, normalizedPromoCode)
     const promotionCodeId = price?.promo?.promotionCodeId ?? ""
 
+    let diag = `no pending_setup_intent_secret on company (value=${JSON.stringify(company.pending_setup_intent_secret)}), targetAddonSlug=${targetAddonSlug}`
+
     // Reuse a pre-created setup intent only if Stripe metadata still matches this exact base plan and promo state.
     if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan) && !promoError) {
       const setupIntentId = setupIntentIdFromSecret(company.pending_setup_intent_secret)
@@ -211,9 +214,10 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       // because the plan/promo still match, or the stale payment methods
       // keep showing up forever regardless of what the code now creates.
       const matchesPaymentMethods = JSON.stringify(existingIntent?.payment_method_types ?? []) === JSON.stringify(["card"])
-      console.log("[Activate DIAG]", slug, "existing intent id:", setupIntentId, "status:", existingIntent?.status, "payment_method_types:", existingIntent?.payment_method_types, "matchesPaymentMethods:", matchesPaymentMethods, "willReuse:", existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods)
-      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods) {
-        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
+      const willReuse = existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods
+      diag = `reuseBranch id=${setupIntentId} status=${existingIntent?.status} pmt=${JSON.stringify(existingIntent?.payment_method_types)} matchesPMT=${matchesPaymentMethods} willReuse=${willReuse}`
+      if (willReuse) {
+        return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel, diag }
       }
     }
 
@@ -252,7 +256,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       },
     })
 
-    console.log("[Activate DIAG]", slug, "created fresh intent id:", setupIntent.id, "payment_method_types:", setupIntent.payment_method_types)
+    diag = `${diag} | fresh id=${setupIntent.id} pmt=${JSON.stringify(setupIntent.payment_method_types)}`
 
     if (!setupIntent.client_secret) {
       console.error("[Activate] SetupIntent created but no client_secret")
@@ -273,7 +277,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       .update(companyUpdate)
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
+    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel, diag }
   } catch (err) {
     console.error("[Activate] createActivationSetup failed:", err)
     return null
