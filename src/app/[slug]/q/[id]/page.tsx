@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import AcceptButton from "./AcceptButton"
 import DeclineButton from "./DeclineButton"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
+import { formatPhoneDisplay } from "@/lib/formatPhone"
 
 export const dynamic = "force-dynamic"
 
@@ -364,7 +365,7 @@ export default async function EstimateClientPage({
           {/* Footer */}
           <div style={{ textAlign: "center", color: "#AAA", fontSize: 13, lineHeight: 1.9 }}>
             <div style={{ fontWeight: 700, color: "#888", marginBottom: 2 }}>{companyDisplayName}</div>
-            {company.phone && <div>{company.phone}</div>}
+            {company.phone && <div>{formatPhoneDisplay(company.phone)}</div>}
             {company.email && <div>{company.email}</div>}
             <div style={{ marginTop: 12, fontSize: 11, color: "#CCC", fontWeight: 600, letterSpacing: "0.04em" }}>Powered by Found</div>
           </div>

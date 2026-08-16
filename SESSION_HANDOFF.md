@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Phone Number Display Formatting on Public Site
+
+### Progress This Pass
+- Shawn: the Contact page phone number shows with no formatting at all, thinks it's every template.
+- Traced it before touching anything: Contact is one shared page/route for every business regardless of template - that's why it looked like "all templates," it's really one place. Root cause: owners type a phone number into Site Editor in whatever shape they want (raw digits, dashes, dots, parens - the existing validation only checks it's 10-11 digits, per `feedback_found_phone_display` memory), it's stored exactly as typed, and nothing has ever normalized it for display.
+- Checked every place `company.phone` renders as visible text (not just inside a `tel:` link) across the whole public site - most places already correctly show a plain "Call Us"/"Call" button per the existing phone-display design rule (never show raw digits except on Contact). Found 3 real occurrences of raw, unformatted display: the Contact page itself, the public quote/estimate page's footer, and the printable quote page (masthead + footer, 2 spots).
+- Built a small shared `formatPhoneDisplay()` helper (`src/lib/formatPhone.ts`) - normalizes a 10 or 11-digit (leading 1) US number to `(520) 425-5542` for display only; leaves anything else (extension, international, unrecognized shape) exactly as typed rather than risk mangling it. Stored value and every `tel:` link are untouched - only what's shown on screen changed.
+- Wired into the 3 real spots: `[slug]/contact/page.tsx`, `[slug]/q/[id]/page.tsx`, `[slug]/q/[id]/print/page.tsx`.
+- Deliberately out of scope: transactional emails (lead follow-ups, reply drafts, estimate confirmation emails) that also mention a raw phone number in body text - Shawn asked about "on site," this was scoped to public web pages only.
+
+### Verification This Pass
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: open any business's `/contact` page and confirm the phone now reads like `(520) 425-5542` instead of raw digits, regardless of how the owner originally typed it into Site Editor. Also worth a spot-check on a sent estimate's public view and its Download PDF/print view.
+
 ## 2026-08-16 - Backfilled disabled_addons for Every Existing Business-Plan Company
 
 ### Progress This Pass

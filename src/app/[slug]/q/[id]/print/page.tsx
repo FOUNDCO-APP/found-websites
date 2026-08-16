@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import AutoPrint from "./AutoPrint"
+import { formatPhoneDisplay } from "@/lib/formatPhone"
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
@@ -221,7 +222,7 @@ export default async function EstimatePrintPage({
                   {(company.city || company.state) && (
                     <div style={{ fontSize: 13, color: textMid }}>{[company.city, company.state].filter(Boolean).join(", ")}</div>
                   )}
-                  {company.phone && <div style={{ fontSize: 13, color: textMid }}>{company.phone}</div>}
+                  {company.phone && <div style={{ fontSize: 13, color: textMid }}>{formatPhoneDisplay(company.phone)}</div>}
                   {company.email && <div style={{ fontSize: 13, color: textMid }}>{company.email}</div>}
                 </div>
               </div>
@@ -402,7 +403,7 @@ export default async function EstimatePrintPage({
           <div className="pg-foot" style={{ background: "#F7F7F7", borderTop: "1px solid #EFEFEF", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ fontSize: 12, color: "#999", lineHeight: 1.7 }}>
               <span style={{ fontWeight: 700, color: "#555" }}>{companyName}</span>
-              {company.phone && <span style={{ color: "#BBBBBB" }}> · {company.phone}</span>}
+              {company.phone && <span style={{ color: "#BBBBBB" }}> · {formatPhoneDisplay(company.phone)}</span>}
               {company.email && <span style={{ color: "#BBBBBB" }}> · {company.email}</span>}
             </div>
             <div style={{ fontSize: 11, fontWeight: 600, color: "#CCCCCC", letterSpacing: "0.05em", flexShrink: 0, marginLeft: 16 }}>

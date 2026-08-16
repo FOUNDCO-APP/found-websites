@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Phone Number Display Formatting on Public Site
+
+Shawn: Contact page phone shows unformatted, thought it was every template. Traced it: Contact is one shared page across templates, so the bug looked universal but was one spot. Checked every public-site raw-phone render and found 3 real occurrences.
+
+- [x] New `formatPhoneDisplay()` helper (`src/lib/formatPhone.ts`) - normalizes 10/11-digit US numbers to `(520) 425-5542` for display only, leaves anything else as typed, stored value/tel: links untouched.
+- [x] Wired into Contact page, public quote page, and printable quote page - the only 3 real raw-digit spots on the public site.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: open any business's `/contact` page, confirm the phone reads formatted. Check a sent estimate's public view + Download PDF/print view too.
+- [ ] Not touched, explicitly out of scope: transactional email body text that also mentions a raw phone number - Shawn's ask was scoped to "on site."
+
 ## 2026-08-16 - Real Control Over Add-On Visibility (Edit Website, Any Plan)
 
 Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibility is controlled and whether it's adjustable anywhere. First pass put the toggle on `/billing` for Business plan only - Shawn corrected that: it's a "show on my site" decision, not a billing one, and asked it also cover Pro/Starter's paid add-ons (with a clear warning that hiding ≠ cancelling).

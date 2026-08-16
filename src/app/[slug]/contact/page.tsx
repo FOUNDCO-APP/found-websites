@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { isVideoMedia } from "@/lib/mediaKind"
 import ContactForm from "./ContactForm"
 import { getSiteCopy } from "@/lib/siteCopy"
+import { formatPhoneDisplay } from "@/lib/formatPhone"
 import type { Metadata } from "next"
 import type { WebsiteConfig } from "@/types/company"
 
@@ -94,7 +95,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Phone</p>
                     <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                       className="text-xl font-black hover:underline" style={{ color: "#111111" }}>
-                      {company.phone}
+                      {formatPhoneDisplay(company.phone)}
                     </a>
                   </div>
                 </div>

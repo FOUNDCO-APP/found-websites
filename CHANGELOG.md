@@ -1,3 +1,20 @@
+## Session: August 16, 2026 (part 9) - Phone Number Display Formatting
+**AI:** Claude
+
+### Context
+Shawn: Contact page phone shows with no formatting, thinks it's every template. Traced it: Contact is one shared route across all templates, so the same bug looked universal. Owners type a phone in Site Editor in any shape; it's stored as typed and never normalized for display. Checked every public-site occurrence of `company.phone` rendered as visible text - most places already correctly show a "Call Us" button, not raw digits. Found 3 real spots that did show raw digits.
+
+### Changed
+- `src/lib/formatPhone.ts` (new): `formatPhoneDisplay()` - normalizes a 10/11-digit US number to `(520) 425-5542` for display only. Anything else shown as typed. Stored value and `tel:` links untouched.
+- Wired into `[slug]/contact/page.tsx`, `[slug]/q/[id]/page.tsx`, `[slug]/q/[id]/print/page.tsx` - the only 3 places on the public site that rendered a raw phone number.
+- Deliberately out of scope: transactional email body text - Shawn's ask was scoped to "on site."
+
+### Verification
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 16, 2026 (part 8) - Backfilled disabled_addons for Every Existing Business-Plan Company
 **AI:** Claude
 
