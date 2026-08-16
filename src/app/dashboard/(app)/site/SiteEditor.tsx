@@ -13,7 +13,8 @@ import { isVideoMedia } from "@/lib/mediaKind"
 import { getFeaturedUpdateDraft, isGenericFeaturedCopy } from "@/lib/featuredUpdate"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getAvailablePrimaryActions, getSiteCTAs } from "@/lib/industryCTAs"
-import { getEffectiveAddons } from "@/lib/featureAccess"
+import { getEffectiveAddons, ALL_ADDONS } from "@/lib/featureAccess"
+import SiteFeatureVisibilityPanel from "@/components/dashboard/SiteFeatureVisibilityPanel"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSitePhotoSections, type SitePhotoSlot } from "@/lib/siteSectionRegistry"
@@ -23,7 +24,7 @@ type Photo = { id: string; url: string; website_section: string | null; in_galle
 type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = SitePhotoSlot
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
-type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design"
+type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design" | "features"
 
 type Props = {
   company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
@@ -382,6 +383,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   const publicSiteOrigin = getPublicSiteOrigin(company.slug, (config?.custom_domain as string | null | undefined) ?? null)
   const publicSiteHost = publicSiteOrigin.replace(/^https?:\/\//, "")
   const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
+  // Every add-on the owner actually has, however they got it (bundled free
+  // with Business, Pro's one free pick, or a real paid purchase), so the
+  // Features view can offer a plain show/hide toggle for each - paid ones
+  // get a billing note, free ones don't (see SiteFeatureVisibilityPanel).
+  const featureRows = effectiveAddons
+    .map(slug => {
+      const def = ALL_ADDONS.find(a => a.slug === slug)
+      if (!def) return null
+      return { slug: def.slug, label: def.label, description: def.description, price: def.price, isPaid: activeAddons.includes(slug) }
+    })
+    .filter((f): f is NonNullable<typeof f> => !!f)
   const isFoodCatalog = industryCategory === "food" || industryCategory === "home_based_food"
   const isShopCatalog = effectiveAddons.includes("shopping_cart")
   const showCatalog = isFoodCatalog || isShopCatalog
@@ -1032,6 +1044,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
               <HubTile label="Design" sub="Color, style, theme" onClick={() => setView("design")} />
               <HubTile label="Photo library" sub="All your photos" href="/photos" />
               <HubTile label="Domain" sub={publicSiteHost} onClick={() => setView("domain")} />
+              {featureRows.length > 0 && <HubTile label="Features" sub="What shows on your site" onClick={() => setView("features")} />}
             </div>
           </div>
         </>
@@ -2082,6 +2095,20 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           companySlug={company.slug}
         />
       </div>
+      </>
+      )}
+
+      {view === "features" && (
+      <>
+      <BackHeader label="Features" onBack={() => setView("hub")} />
+      <div style={{ padding: "10px 20px 0" }}>
+        <SectionIntro title="Choose what customers can do on your site." body="This is about what shows, not what you're paying for - see Billing to change your plan or cancel a paid add-on." />
+      </div>
+      <SiteFeatureVisibilityPanel
+        companyId={company.id}
+        features={featureRows}
+        disabledAddons={disabledAddons}
+      />
       </>
       )}
 

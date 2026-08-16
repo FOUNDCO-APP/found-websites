@@ -1,3 +1,22 @@
+## Session: August 16, 2026 (part 7) - Moved Add-On Toggle to Edit Website, Generalized It
+**AI:** Claude
+
+### Context
+Shawn corrected the just-shipped bundled-add-ons toggle (part 6, below): Billing was the wrong home - for Business plan everything's free, so it's purely a "show on my site or not" decision, which belongs in Edit Website, not Billing. He also wanted the same toggle to cover Pro/Starter's paid add-ons, but flagged the real ambiguity himself: does hiding a paid add-on also cancel the charge? Asked directly rather than guessing (real billing consequence either way) - answer: hide only, with a clear warning; cancelling stays a deliberate, separate Billing action.
+
+### Changed
+- `src/lib/featureAccess.ts`: `getEffectiveAddons()` now applies `disabled_addons` uniformly across paid add-ons, Pro's free pick, and Business's bundle - previously only the Business bundle respected it, so the toggle could never have worked for a paid add-on. Safe broadly since `disabled_addons` had zero real usage before yesterday.
+- `src/app/dashboard/(app)/more/actions.ts`: `toggleBundledAddon` renamed/generalized to `toggleAddonVisibility` - works for any add-on the company has, any plan.
+- `src/components/dashboard/SiteFeatureVisibilityPanel.tsx` (new, replaces `BundledAddonsPanel.tsx`): moved out of `/billing` into a new "Features" tile in Edit Website's Site-wide section. Paid add-ons that are hidden show a persistent billing-continues warning with a link to `/billing`.
+- `src/app/dashboard/(app)/site/SiteEditor.tsx`: new `"features"` view, new `featureRows` computed from the company's real effective add-ons.
+- `src/app/dashboard/(app)/billing/page.tsx`: reverted the panel that was added there yesterday.
+
+### Verification
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 16, 2026 (part 6) - Real Control Over Bundled Add-Ons
 **AI:** Claude
 

@@ -1,23 +1,32 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { toggleBundledAddon } from "@/app/dashboard/(app)/more/actions"
+import Link from "next/link"
+import { toggleAddonVisibility } from "@/app/dashboard/(app)/more/actions"
 import { TYPE, TEXT_OPACITY, GREEN } from "@/lib/dashboard/typography"
 
-type AddonDef = { slug: string; label: string; description: string }
+type FeatureRow = { slug: string; label: string; description: string; price: number; isPaid: boolean }
 
-export default function BundledAddonsPanel({
+// Pure visibility - lives in Edit Website because it answers "does this
+// show on my site," not "am I paying for this." A free/bundled feature
+// (Business's 5, or Pro's one free pick) is a plain show/hide toggle. A
+// paid feature keeps working and keeps being billed either way - hiding it
+// here only removes it from the site; the warning + Billing link is there
+// so nobody mistakes "hidden" for "cancelled."
+export default function SiteFeatureVisibilityPanel({
   companyId,
-  addons,
+  features,
   disabledAddons,
 }: {
   companyId: string
-  addons: AddonDef[]
+  features: FeatureRow[]
   disabledAddons: string[]
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(disabledAddons))
   const [pending, startTransition] = useTransition()
   const [errorSlug, setErrorSlug] = useState<string | null>(null)
+
+  if (features.length === 0) return null
 
   function handleToggle(slug: string) {
     const willHide = !hidden.has(slug)
@@ -28,7 +37,7 @@ export default function BundledAddonsPanel({
       return next
     })
     startTransition(async () => {
-      const result = await toggleBundledAddon(companyId, slug, willHide)
+      const result = await toggleAddonVisibility(companyId, slug, willHide)
       if (!result.success) {
         // Roll back - the write failed, don't leave the toggle showing a
         // state that isn't actually saved.
@@ -43,18 +52,16 @@ export default function BundledAddonsPanel({
   }
 
   return (
-    <section style={{ marginBottom: 20 }}>
-      <p style={{ margin: "0 0 2px", ...TYPE.title, fontWeight: 700, color: "white" }}>
-        Bundled Features
-      </p>
+    <div style={{ padding: "26px 20px 0" }}>
+      <div style={{ ...TYPE.caption, color: GREEN, marginBottom: 4 }}>What shows on your site</div>
       <p style={{ margin: "0 0 12px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-        All included free with Found Business. Hide anything you don&apos;t use - your site only shows what&apos;s on.
+        Turn a feature off here and it disappears from your site - it doesn&apos;t cancel anything you&apos;re paying for.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {addons.map((addon) => {
-          const isHidden = hidden.has(addon.slug)
+        {features.map((feature) => {
+          const isHidden = hidden.has(feature.slug)
           return (
-            <div key={addon.slug} style={{
+            <div key={feature.slug} style={{
               borderRadius: 14,
               backgroundColor: "rgba(255,255,255,0.04)",
               border: `1px solid ${isHidden ? "rgba(255,255,255,0.06)" : `${GREEN}35`}`,
@@ -66,12 +73,23 @@ export default function BundledAddonsPanel({
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
                     {!isHidden && <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: GREEN, boxShadow: `0 0 6px ${GREEN}`, flexShrink: 0 }} />}
-                    <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 600, color: "white" }}>{addon.label}</p>
+                    <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 600, color: "white" }}>{feature.label}</p>
+                    {feature.isPaid && (
+                      <span style={{ ...TYPE.footnote, fontWeight: 800, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                        ${feature.price}/mo
+                      </span>
+                    )}
                   </div>
                   <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                    {addon.description}
+                    {feature.description}
                   </p>
-                  {errorSlug === addon.slug && (
+                  {feature.isPaid && isHidden && (
+                    <p style={{ margin: "8px 0 0", ...TYPE.footnote, lineHeight: 1.4, color: "rgba(255,200,90,0.85)" }}>
+                      Hidden from your site, but you&apos;re still being billed ${feature.price}/mo for it.{" "}
+                      <Link href="/billing" style={{ color: GREEN, fontWeight: 700, textDecoration: "underline" }}>Manage in Billing</Link>
+                    </p>
+                  )}
+                  {errorSlug === feature.slug && (
                     <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 700, color: "#F43F5E" }}>
                       Couldn&apos;t save - please try again.
                     </p>
@@ -81,7 +99,7 @@ export default function BundledAddonsPanel({
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => handleToggle(addon.slug)}
+                    onClick={() => handleToggle(feature.slug)}
                     style={{
                       minHeight: 34,
                       borderRadius: 999,
@@ -94,6 +112,7 @@ export default function BundledAddonsPanel({
                       cursor: pending ? "default" : "pointer",
                       opacity: pending ? 0.6 : 1,
                       letterSpacing: "0.01em",
+                      whiteSpace: "nowrap" as const,
                     }}
                   >
                     {isHidden ? "Show on my site" : "Hide from my site"}
@@ -104,6 +123,6 @@ export default function BundledAddonsPanel({
           )
         })}
       </div>
-    </section>
+    </div>
   )
 }

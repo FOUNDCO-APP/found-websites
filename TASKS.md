@@ -1,15 +1,17 @@
 ## 2026-08-05 - CURRENT NOW
 
-## 2026-08-16 - Real Control Over Bundled Add-Ons (Business Plan)
+## 2026-08-16 - Real Control Over Add-On Visibility (Edit Website, Any Plan)
 
-Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibility is controlled and whether it's adjustable anywhere. Team round found `disabled_addons` was a fully dead column (read in 15+ places, written nowhere) and Business plan bundles all 5 add-ons regardless of industry fit.
+Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibility is controlled and whether it's adjustable anywhere. First pass put the toggle on `/billing` for Business plan only - Shawn corrected that: it's a "show on my site" decision, not a billing one, and asked it also cover Pro/Starter's paid add-ons (with a clear warning that hiding ≠ cancelling).
 
-- [x] Owner-facing toggle: new `BundledAddonsPanel` on `/billing` for Business-plan companies, real hide/show per bundled add-on via new `toggleBundledAddon()` action.
-- [x] Admin-facing counterpart: new toggle row in `/admin/clients/[id]` via new `setDisabledAddon()` action, parallel to the existing Pro-plan included-addon picker.
-- [x] Smarter default: new `defaultDisabledAddonsForIndustry()` helper, wired into `createOnboardingSite()` (covers both public onboarding and the admin manual-creation tool) - new Business-plan signups now start with industry-irrelevant add-ons already hidden. Deliberately not touched at plan-upgrade/webhook-sync time - existing-company mutation risk, own caution class.
+- [x] Owner-facing toggle: new `SiteFeatureVisibilityPanel`, moved to a new "Features" tile in Edit Website's Site-wide section, via generalized `toggleAddonVisibility()` action - works for any add-on the company has, any plan.
+- [x] Fixed `getEffectiveAddons()` to apply `disabled_addons` uniformly (paid add-ons + Pro's free pick, not just Business's bundle) - previously the toggle could never have worked outside Business plan.
+- [x] Paid add-ons that get hidden show a persistent "still being billed $X/mo" note with a link to Billing - hiding never cancels the charge, confirmed directly with Shawn rather than guessed.
+- [x] Admin-facing counterpart: toggle row in `/admin/clients/[id]` via `setDisabledAddon()` action, parallel to the existing Pro-plan included-addon picker (unchanged from yesterday).
+- [x] Smarter default: `defaultDisabledAddonsForIndustry()` helper wired into `createOnboardingSite()` - new Business-plan signups start with industry-irrelevant add-ons already hidden. Creation-time only, not plan-upgrade/webhook-sync - existing-company mutation risk, own caution class.
 - [x] Existing accounts (MBJ) unaffected by the new default - fixed via the manual toggle, not a backfill.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
-- [ ] Shawn QA: MBJ's `/billing` should show a new Bundled Features section; hiding Shopping Cart there should remove "Shop" from the live public nav. Admin toggle should work the same way from `/admin/clients/[id]`. A fresh non-retail Business-plan signup should start with Shopping Cart already hidden.
+- [ ] Shawn QA: Edit Website should show a new "Features" tile under Site-wide; hiding Shopping Cart there should remove "Shop" from the live public nav. If a real test account has a paid add-on active, confirm hiding it shows the billing warning and the charge is untouched. Admin toggle in `/admin/clients/[id]` should still work the same way. A fresh non-retail Business-plan signup should start with Shopping Cart already hidden.
 - [ ] Not built, explicitly deferred to its own future session per Shawn: self-serve packages/memberships for service businesses (distinct from retail Shop - checkout would need a no-shipping/no-address mode at minimum, real recurring billing for true "memberships").
 
 ## 2026-08-16 - Three CTA Redundancy Bugs Fixed

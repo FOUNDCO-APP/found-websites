@@ -43,15 +43,21 @@ export function getEffectiveAddons(
   // is just changing this one field, safe at any time, and never at risk of
   // being reconciled away by the Stripe webhook sync.
   includedAddonSlug?: string | null,
-  // A Found Business company's included add-ons they've chosen to hide,
-  // even though technically bundled free with the plan.
+  // Add-ons the owner has chosen to hide from their site, regardless of why
+  // they're active (bundled free with Business, Pro's one free pick, or a
+  // real paid purchase) - this is a visibility choice, separate from
+  // billing. Hiding a paid add-on here does not cancel it; the owner
+  // manages that in Billing (see toggleAddonVisibility in
+  // dashboard/(app)/more/actions.ts, and the warning shown alongside a
+  // hidden paid add-on's toggle).
   disabledAddons: string[] = [],
 ): AddonSlug[] {
-  const merged = new Set(activeAddons as AddonSlug[])
+  const merged = new Set<AddonSlug>()
+  activeAddons.forEach(slug => { if (!disabledAddons.includes(slug)) merged.add(slug as AddonSlug) })
   const p = plan ?? "found"
   if (p === "found_business") {
     BUSINESS_INCLUDED_ADDONS.forEach(slug => { if (!disabledAddons.includes(slug)) merged.add(slug) })
-  } else if (p === "found_pro" && includedAddonSlug) {
+  } else if (p === "found_pro" && includedAddonSlug && !disabledAddons.includes(includedAddonSlug)) {
     merged.add(includedAddonSlug as AddonSlug)
   }
   return Array.from(merged)
@@ -201,9 +207,9 @@ export function getAllAddonsRanked(industryCategory: string): AddonDef[] {
 // through createOnboardingSite) to seed a sensible starting disabled_addons
 // value - never called on an existing company, since that would risk
 // silently clobbering an owner's already-made choice. An owner or admin can
-// always re-enable anything from here via the real toggle
-// (toggleBundledAddon / setDisabledAddon) if they genuinely need it -
-// this is a starting point, not a hard restriction.
+// always re-enable anything from here via the real visibility toggle in
+// Edit Website (toggleAddonVisibility / setDisabledAddon) if they
+// genuinely need it - this is a starting point, not a hard restriction.
 export function defaultDisabledAddonsForIndustry(industryCategory: string): AddonSlug[] {
   return BUSINESS_INCLUDED_ADDONS.filter((slug) => {
     const def = ALL_ADDONS.find((a) => a.slug === slug)

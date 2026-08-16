@@ -6,11 +6,11 @@ import { redirect } from "next/navigation"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
-import { BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
+import { ALL_ADDONS } from "@/lib/featureAccess"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
-const BUSINESS_INCLUDED_ADDONS_SET = new Set<string>(BUSINESS_INCLUDED_ADDONS)
+const KNOWN_ADDON_SLUGS = new Set<string>(ALL_ADDONS.map(a => a.slug))
 
 // Every action below mutates billing/subscription state for a companyId
 // the caller supplies directly - without this, any authenticated user
@@ -164,22 +164,27 @@ export async function switchIncludedAddon(companyId: string, addonSlug: string |
   return { success: true }
 }
 
-// Found Business bundles all 5 add-ons on by default regardless of whether
-// they're relevant to the company's industry (a home_services business gets
-// Shopping Cart same as a retail one) - disabled_addons is the existing
-// column that already gates every access check (getEffectiveAddons and
-// everything downstream of it), but until now nothing ever wrote to it, so
-// there was no way for an owner to hide a bundled feature they don't use.
-// Confirmed live 2026-08-16: MBJ Heating and Cooling (HVAC) had a dead
-// "Shop" link in its public nav with nothing behind it, no way to remove it.
-export async function toggleBundledAddon(companyId: string, addonSlug: string, hide: boolean): Promise<{ success: boolean; error?: string }> {
+// A pure site-visibility toggle, separate from billing - lives in Edit
+// Website, not Billing, because it answers "does this show on my site,"
+// not "am I paying for this." Works the same way regardless of why an
+// add-on is active (bundled free with Business, Pro's one free pick, or a
+// real paid purchase): disabled_addons is the existing column that already
+// gates every access check (getEffectiveAddons and everything downstream
+// of it), but until 2026-08-16 nothing ever wrote to it. Confirmed live
+// that day: MBJ Heating and Cooling (HVAC, Found Business) had a dead
+// "Shop" link in its public nav with no way to remove it. Hiding a PAID
+// add-on here does not cancel the charge - the panel that calls this shows
+// a warning and a link to Billing for that, kept as a deliberately
+// separate action so "hide from my site" never silently changes what
+// someone is being billed for.
+export async function toggleAddonVisibility(companyId: string, addonSlug: string, hide: boolean): Promise<{ success: boolean; error?: string }> {
   if (!companyId || !addonSlug) return { success: false, error: "Missing required fields." }
   if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
-  if (!BUSINESS_INCLUDED_ADDONS_SET.has(addonSlug)) return { success: false, error: "Not a bundled feature." }
+  if (!KNOWN_ADDON_SLUGS.has(addonSlug)) return { success: false, error: "Not a recognized feature." }
 
   const admin = createAdminClient()
-  const { data: company } = await admin.from("companies").select("plan, disabled_addons").eq("id", companyId).single()
-  if (!company || company.plan !== "found_business") return { success: false, error: "Not available on this plan." }
+  const { data: company } = await admin.from("companies").select("disabled_addons").eq("id", companyId).single()
+  if (!company) return { success: false, error: "Company not found." }
 
   const current = new Set((company.disabled_addons ?? []) as string[])
   if (hide) current.add(addonSlug); else current.delete(addonSlug)

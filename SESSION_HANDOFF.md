@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Follow-Up: Moved the Add-On Toggle From Billing to Edit Website
+
+### Progress This Pass
+- Shawn caught a real placement/mental-model mistake in the just-shipped bundled-add-ons toggle (entry directly below): putting it on `/billing` was wrong. His reasoning: for Business plan, all 5 add-ons are free, so an owner has no reason to think "let me go to Billing" to control what shows on their site - this is purely a "show it or don't" decision, which belongs with the rest of site editing. He also flagged the same toggle needs to extend to Pro/Starter's *paid* add-ons too, since it's the same underlying question there ("show on site or not"), but was clear that toggling a paid add-on off must not be confused with cancelling it.
+- Confirmed a real, separate bug while investigating: `getEffectiveAddons()` (the one function every access check in the app calls through) only ever checked `disabled_addons` against Found Business's bundled 5 - a paid add-on (`activeAddons`, real Stripe subscription items) or Found Pro's one free pick were both added to the merged set unconditionally, with zero regard for `disabled_addons`. So even with yesterday's fix, a "hide" toggle could never have worked for a paid add-on or a Pro free pick - only Business's bundle.
+- One real, genuinely ambiguous product question on this pass: if an owner hides a *paid* add-on from Edit Website, should that just hide it (charge continues, clear warning shown) or should it also cancel the charge in the same action? Asked directly rather than guessing, since this touches real billing. Shawn's answer: hide only, with a clear warning - cancelling stays a separate, deliberate action in Billing.
+- Built:
+  - `getEffectiveAddons()` in `featureAccess.ts` now applies `disabled_addons` uniformly - to paid add-ons and Pro's free pick, not just Business's bundle. Safe to ship broadly: `disabled_addons` has literally never been written to before yesterday, so this is behaviorally inert for every company until the new toggle is actually used.
+  - Renamed/generalized the owner-facing action from `toggleBundledAddon` to `toggleAddonVisibility` (`more/actions.ts`) - works for any add-on the company currently has, on any plan, not just Business's bundle.
+  - Replaced `BundledAddonsPanel` (removed) with a new `SiteFeatureVisibilityPanel`, moved out of `/billing` entirely and into a new "Features" tile under Edit Website's Site-wide section. Shows every add-on the owner actually has (free or paid) with a plain show/hide toggle; a paid one that's hidden shows a persistent note - "Hidden from your site, but you're still being billed $X/mo for it" - with a link to Billing to actually cancel.
+  - Admin-side `setDisabledAddon` and its `/admin/clients/[id]` UI untouched functionally, comment references to the renamed action corrected.
+
+### Verification This Pass
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean (one build collided with a leftover background process from a prior attempt and threw a false ENOENT error on `.next` output - re-ran clean afterward and confirmed zero errors).
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: open Edit Website on a Business-plan account, confirm a new "Features" tile appears under Site-wide, and hiding Shopping Cart there removes it from the public nav exactly like before, just from the right place this time. Separately, if there's a real test account with a paid Pro/Starter add-on active, confirm hiding it there shows the billing warning and the Billing link works, and that the charge itself is untouched.
+
 ## 2026-08-16 - Real Control Over Bundled Add-Ons (Business Plan)
 
 ### Progress This Pass

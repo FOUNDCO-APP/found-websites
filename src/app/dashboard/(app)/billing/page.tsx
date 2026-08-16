@@ -4,12 +4,11 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { openBillingPortal } from "../more/actions"
 import AddonsPanel from "@/components/dashboard/AddonsPanel"
-import BundledAddonsPanel from "@/components/dashboard/BundledAddonsPanel"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlanUpgradeButton from "@/components/dashboard/PlanUpgradeButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
-import { getEffectiveAddons, getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
+import { getEffectiveAddons, getAllAddonsRanked, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
@@ -284,18 +283,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           addons={rankedAddons}
           includedAddonSlug={company.included_addon_slug ?? null}
           activeAddonSlugs={activeAddonSlugs}
-        />
-      )}
-
-      {/* Business plan bundles all 5 add-ons free, regardless of industry
-          relevance - this is the real control an owner needs to hide one
-          that doesn't apply to them (e.g. Shopping Cart for an HVAC
-          company), instead of a dead nav link with nothing behind it. */}
-      {plan === "found_business" && company.id && (
-        <BundledAddonsPanel
-          companyId={company.id}
-          addons={BUSINESS_INCLUDED_ADDONS.map(slug => ALL_ADDONS.find(a => a.slug === slug)).filter((a): a is NonNullable<typeof a> => !!a)}
-          disabledAddons={company.disabled_addons ?? []}
         />
       )}
 
