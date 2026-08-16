@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Standardize Public CTA Copy to "Estimate"
+
+Shawn asked why the hero says "Quote" while other text says "Estimate," whether it's on every template, and whether the mobile sticky bar's "Our Services" label could be changed by a client.
+
+- [x] Traced precisely: buttons (hero/final-CTA/sticky bar) already share one consistent source (`getSiteCTAs()`) - the mismatch was between that button and a separately AI-generated `cta_headline` with no awareness of the button's real wording.
+- [x] Confirmed the sticky bar's "Our Services" is intentional (deliberately the non-primary real action) - not a bug, but there is no owner/admin control to customize it today, a real feature gap.
+- [x] Team round: standardize on "Estimate" - matches Found's own internal "Estimates" naming. Fixed across 3 independent copy systems that never cross-checked each other: `industryCTAs.ts` (4 industries' real button label), `industryDefaults.ts` (mixed-language fallback content), `contentGeneration.ts` (quote_me job-family fallback).
+- [x] Fixed the root cause: added an explicit rule to the live AI-generation prompt so future AI copy can't independently pick "quote" again.
+- [x] MBJ's own `cta_headline` already said "estimate" - now fully consistent automatically, no manual fix needed. RC Bicycles unaffected (different industry, unrelated CTA).
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run test:copy-quality`, `npm run build` - all passed.
+- [ ] Shawn QA: reload MBJ's site, confirm hero button/final CTA button/headline all agree now.
+- [ ] Not built, flagged as its own future decision: owner-editable sticky-bar secondary label - real feature gap, needs its own team round if Shawn wants it.
+
 ## 2026-08-16 - Gallery Auto-Scroll + MBJ About-Page Grammar Fix
 
 Shawn asked for the gallery strip to slowly auto-scroll on all devices, and flagged broken About-page grammar on MBJ, asking whether it meant a template problem.

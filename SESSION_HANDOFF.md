@@ -1,5 +1,28 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Standardize Public CTA Copy to "Estimate" (Never "Quote")
+
+### Progress This Pass
+- Shawn noticed the hero button said "Get a Free Quote" while other text on the same page said "Get a Free Estimate," asked why, whether it's on all templates, and separately asked about the mobile sticky-bar button ("Our Services") - could it be changed, and can a client change it themselves.
+- Traced precisely before proposing anything: the actual clickable buttons (hero, final CTA section, mobile sticky bar) all correctly share one source of truth (`getSiteCTAs()` in `industryCTAs.ts`, which the code itself documents as exactly that). For MBJ those buttons were consistent with each other, all saying "Get a Free Quote." The mismatch was between that button and the free-text headline above it (`cta_headline`, "Ready for a free estimate?") - a completely separate, AI-generated-per-business field with zero awareness of what the real button already says.
+- The sticky bar showing "Our Services" is not a bug - it's deliberately the "other" real action, distinct from the primary button, so the two never repeat each other. Confirmed there is currently no owner-facing (or admin) control to customize that secondary label specifically - a real feature gap, not something a client can do today.
+- Team round (Steve leading): standardize on "Estimate" everywhere - matches Found's own internal "Estimates" tool/route/dashboard naming already. Traced the actual scope across three independent copy systems that had never been cross-checked against each other:
+  - `industryCTAs.ts` - the 4 industries whose real CTA button said "Get a Free Quote" (home_services, cleaning, landscaping, audio_visual).
+  - `industryDefaults.ts` - the deterministic fallback content, several industries mixing "estimate" and "quote" within the same section (a "Free Estimates" label whose own body said "get a clear quote").
+  - `contentGeneration.ts` - the `quote_me` job-family fallback had the same internal mix (its own hero/about text already said "estimates" twice, only the ctaHeadline said "quote").
+- Fixed the actual root cause, not just the symptom: added an explicit rule to the live AI-generation prompt ("always say estimate, never quote") so future AI-authored copy for any business can't independently pick "quote" again and silently contradict the fixed button - this is exactly the mechanism that produced MBJ's original mismatch.
+- Internal code identifiers (`quote_me` job-family key, the `"quote"` primary-intent value) deliberately left untouched - not user-facing.
+- MBJ's own `cta_headline` already said "estimate" - fixing the button to match makes MBJ fully consistent automatically, no manual data patch needed. RC Bicycles (the only other real client) is unaffected - its industry's real CTA has nothing to do with quote/estimate wording.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run test:copy-quality` passed (54 fixture groups) - confirms nothing in the existing copy-quality test suite broke.
+- `cmd /c npm run build` passed (webpack mode).
+
+### Explicit Next Step
+After deploy: reload `mbjheatingandcooling.com` and confirm the hero button, final CTA button, and the "Ready for a free estimate?" headline all now agree. Separately flagged, not built: making the mobile sticky-bar's secondary label owner-editable is a real, undecided feature request - needs its own team round if Shawn wants to pursue it.
+
 ## 2026-08-16 - Gallery Auto-Scroll + MBJ About-Page Grammar Fix
 
 ### Progress This Pass
