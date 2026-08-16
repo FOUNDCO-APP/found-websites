@@ -1,3 +1,25 @@
+## Session: August 16, 2026 - Admin Billing Snapshot and Email Copy
+**AI:** Codex
+**Worked on:** Made deferred billing safer and clearer from Found HQ after MBJ Heating and Cooling exposed the billing-date display confusion.
+
+### Completed
+- Card-link emails sent from the admin deferred-billing flow now copy Shawn at `shawnlopez@me.com`.
+- Manual "resend card link" emails now also copy Shawn and record that copy in client activity.
+- Permanent-comp "site is live" emails from the same admin billing area now also copy Shawn.
+- Client billing details now show a clear Billing snapshot: status, plan, card due / billing starts, billing day, and already-collected notes.
+- Admin billing date display now formats stored billing dates as date-only values, preventing Sep 15 UTC from showing as Sep 14 in Arizona.
+- Shortened the resend button so it no longer overflows on mobile.
+
+### Verification
+- `git diff --check` passed with only the repo's normal CRLF warnings.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed.
+
+### Doc note
+This entry was found pasted into the middle of the file (inside a July announcement entry) rather than at the top - moved here during the next session's doc-integrity check.
+
+---
+
 ## Session: August 15, 2026 - MBJ Deferred Billing Date Correction
 **AI:** Codex
 
@@ -3790,25 +3812,6 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Apply migration if needed.
 - Turn announcement on for a retail/shop site and verify the live block + CTA.
 - Repeat for restaurant/menu and service/estimate destinations.
----
-
-# August 16, 2026 - Admin Billing Snapshot and Email Copy
-**AI:** Codex
-**Worked on:** Made deferred billing safer and clearer from Found HQ after MBJ Heating and Cooling exposed the billing-date display confusion.
-
-### Completed
-- Card-link emails sent from the admin deferred-billing flow now copy Shawn at `shawnlopez@me.com`.
-- Manual “resend card link” emails now also copy Shawn and record that copy in client activity.
-- Permanent-comp “site is live” emails from the same admin billing area now also copy Shawn.
-- Client billing details now show a clear Billing snapshot: status, plan, card due / billing starts, billing day, and already-collected notes.
-- Admin billing date display now formats stored billing dates as date-only values, preventing Sep 15 UTC from showing as Sep 14 in Arizona.
-- Shortened the resend button so it no longer overflows on mobile.
-
-### Verification
-- `git diff --check` passed with only the repo's normal CRLF warnings.
-- `cmd /c npx tsc --noEmit` passed.
-- `cmd /c npm run build` passed.
-
 ---
 
 ## July 26, 2026 - Announcement QA Correction

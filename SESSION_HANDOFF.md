@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - MBJ Deferred Billing / Admin Billing Clarity Fix
+
+### Progress This Pass
+- Follow-up to the Sep 15 date correction below: this pass fixes the product/admin side for MBJ Heating and Cooling (contact: Richard Munoz), the real client this whole deferred-billing/client-profile thread was built for.
+- Card-link emails from Defer billing and the manual resend button now BCC/copy Shawn at `shawnlopez@me.com`, so he has his own record of exactly what a client received.
+- Permanent-comp "your site is live" emails from the same billing area now copy Shawn too.
+- Admin Client Detail page now shows a clear Billing snapshot: status, plan, card due/billing-starts date, billing day, and any already-collected payment record - one readable summary instead of scattered fields.
+- Fixed a real date-display bug: billing dates were being read as full timestamps and could display a day early depending on the browser's timezone (e.g. Sep 15 showing as Sep 14 in Arizona). Now reads stored dates as date-only values.
+- Resend button shortened for mobile and now explains that Shawn is copied on the send.
+
+### Verification This Pass
+- `git diff --check` passed (normal CRLF warnings only).
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed.
+
+### Documentation Note
+This entry's content originally landed pasted into the middle of an old August 9 Jobs-feature entry further down this file (between "Public shared job pages:" and its own sub-bullets), instead of at the top where current entries belong - moved here and the split bullet list repaired. Worth double-checking entry placement before ending a session, especially right before running low on context/credit.
+
 ## 2026-08-15 - MBJ Deferred Billing Date Correction
 
 ### Progress This Pass
@@ -3368,25 +3386,6 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
   - Job names should display in title case when presented to owners or shared publicly.
   - All Photos should include job photos too; Jobs are a workspace on top of the same photo library.
 - Public shared job pages:
-# Current handoff - August 16, 2026
-
-## MBJ deferred billing/admin clarity fix
-- Client: MBJ Heating and Cooling / Richard Munoz.
-- Live database had already been corrected so `trial_ends_at` is Sep 15, 2026 and `billing_cycle_day` remains 15.
-- This pass fixes the product/admin side:
-  - Card-link emails from defer billing and manual resend now BCC/copy Shawn at `shawnlopez@me.com`.
-  - Permanent-comp live emails from the same billing area also copy Shawn.
-  - Admin Client Detail now shows a clear Billing snapshot: status, plan, card due / billing starts, billing day, and already-collected records.
-  - Billing date display now reads stored dates as date-only values so Sep 15 does not display as Sep 14 in Arizona.
-  - The resend button was shortened for mobile and explains that Shawn is copied.
-
-## Verification status
-- `git diff --check` passed with only the repo's normal CRLF warnings.
-- `cmd /c npx tsc --noEmit` passed.
-- `cmd /c npm run build` passed.
-
----
-
   - The public page title is the job name, such as `Kitchen Remodel`.
   - Do not repeat the business name as an eyebrow directly above the title because the logo/header already provides that identity.
   - Hide the street address by default for privacy. Add an explicit owner control later if showing the address becomes needed.
