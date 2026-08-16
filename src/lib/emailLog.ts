@@ -34,6 +34,7 @@ function getAdminClient() {
  */
 export async function sendTrackedEmail({
   to,
+  bcc,
   subject,
   html,
   text,
@@ -47,6 +48,7 @@ export async function sendTrackedEmail({
   admin,
 }: {
   to: string
+  bcc?: string | string[]
   subject: string
   html: string
   text: string
@@ -63,7 +65,7 @@ export async function sendTrackedEmail({
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { data } = await resend.emails.send({ from, to, subject, html, text })
+    const { data } = await resend.emails.send({ from, to, bcc, subject, html, text })
     await client.from("email_log").insert({
       company_id: companyId,
       lead_id: leadId,

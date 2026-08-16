@@ -20,6 +20,7 @@ function ordinalSuffix(n: number): string {
 const DEFERRAL_TERMS = new Set([30, 60, 90])
 const PAYMENT_METHODS = new Set(["cash", "check", "other"])
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+const ADMIN_EMAIL_COPY = "shawnlopez@me.com"
 
 // The owner's due date is at least termDays out, landing on their requested
 // day of month if they have one (e.g. "the 25th") - same mechanism the
@@ -39,6 +40,25 @@ function dueDateFor(termDays: number, billingDay: number | null): Date {
   const minDay = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()).getTime()
   if (candidateDay < minDay) candidate = new Date(minDate.getFullYear(), minDate.getMonth() + 1, billingDay)
   return candidate
+}
+
+function formatBillingDate(value: Date | string | null | undefined) {
+  if (!value) return "your due date"
+  if (value instanceof Date) {
+    return value.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  }
+
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) {
+    const [, year, month, day] = match
+    return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
 
 function emailShell({ eyebrow, businessName, bodyHtml }: { eyebrow: string; businessName: string; bodyHtml: string }) {
@@ -157,7 +177,7 @@ export async function deferClientBilling(formData: FormData) {
 
   const admin = getAdminClient()
   const dueAt = dueDateFor(termDays, billingDay)
-  const dueDateLabel = dueAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+  const dueDateLabel = formatBillingDate(dueAt)
 
   const { error } = await admin
     .from("companies")
@@ -189,6 +209,7 @@ export async function deferClientBilling(formData: FormData) {
       const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${company.slug}`
       await sendTrackedEmail({
         to: company.email,
+        bcc: ADMIN_EMAIL_COPY,
         subject: `${company.name}, your website is live`,
         html: buildAddCardEmail({ businessName: company.name, siteUrl, activateUrl, dueDateLabel }),
         text: `Your website is live: ${siteUrl}\n\nAdd a card to keep it running - nothing is charged today, billing starts ${dueDateLabel}.\n\nAdd your card: ${activateUrl}\n\n- The Found team`,
@@ -222,14 +243,13 @@ export async function resendCardLinkEmail(formData: FormData) {
   if (!company) throw new Error("Company not found.")
   if (!company.email) throw new Error("This company has no email on file.")
 
-  const dueDateLabel = company.trial_ends_at
-    ? new Date(company.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    : "your due date"
+  const dueDateLabel = formatBillingDate(company.trial_ends_at)
   const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
   const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${company.slug}`
 
   const sent = await sendTrackedEmail({
     to: company.email,
+    bcc: ADMIN_EMAIL_COPY,
     subject: `${company.name}, your website is live`,
     html: buildAddCardEmail({ businessName: company.name, siteUrl, activateUrl, dueDateLabel }),
     text: `Your website is live: ${siteUrl}\n\nAdd a card to keep it running - nothing is charged today, billing starts ${dueDateLabel}.\n\nAdd your card: ${activateUrl}\n\n- The Found team`,
@@ -243,7 +263,9 @@ export async function resendCardLinkEmail(formData: FormData) {
   await admin.from("client_activities").insert({
     company_id: companyId,
     activity_type: "note",
-    summary: sent ? "Card-link email resent manually." : "Manual resend of card-link email failed - check Emails for the error.",
+    summary: sent
+      ? `Card-link email resent manually. Copy sent to ${ADMIN_EMAIL_COPY}.`
+      : "Manual resend of card-link email failed - check Emails for the error.",
   })
 
   revalidatePath(`/admin/clients/${companyId}`)
@@ -278,6 +300,7 @@ export async function setPermanentComp(formData: FormData) {
       const siteUrl = `https://${company.slug}.${ROOT_DOMAIN}`
       await sendTrackedEmail({
         to: company.email,
+        bcc: ADMIN_EMAIL_COPY,
         subject: `${company.name}, your website is live`,
         html: buildPermanentCompEmail({ businessName: company.name, siteUrl }),
         text: `Your website is live: ${siteUrl}\n\nNo card needed - it's on us.\n\n- The Found team`,

@@ -3368,6 +3368,25 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
   - Job names should display in title case when presented to owners or shared publicly.
   - All Photos should include job photos too; Jobs are a workspace on top of the same photo library.
 - Public shared job pages:
+# Current handoff - August 16, 2026
+
+## MBJ deferred billing/admin clarity fix
+- Client: MBJ Heating and Cooling / Richard Munoz.
+- Live database had already been corrected so `trial_ends_at` is Sep 15, 2026 and `billing_cycle_day` remains 15.
+- This pass fixes the product/admin side:
+  - Card-link emails from defer billing and manual resend now BCC/copy Shawn at `shawnlopez@me.com`.
+  - Permanent-comp live emails from the same billing area also copy Shawn.
+  - Admin Client Detail now shows a clear Billing snapshot: status, plan, card due / billing starts, billing day, and already-collected records.
+  - Billing date display now reads stored dates as date-only values so Sep 15 does not display as Sep 14 in Arizona.
+  - The resend button was shortened for mobile and explains that Shawn is copied.
+
+## Verification status
+- `git diff --check` passed with only the repo's normal CRLF warnings.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed.
+
+---
+
   - The public page title is the job name, such as `Kitchen Remodel`.
   - Do not repeat the business name as an eyebrow directly above the title because the logo/header already provides that identity.
   - Hide the street address by default for privacy. Add an explicit owner control later if showing the address becomes needed.

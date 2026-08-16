@@ -47,6 +47,34 @@ function planLabel(plan: string | null) {
   return "No plan"
 }
 
+function planDisplay(plan: string | null) {
+  if (plan === "found_business") return { name: "Found Business", price: "$69/month" }
+  if (plan === "found_pro") return { name: "Found Pro", price: "$39/month" }
+  if (plan === "found") return { name: "Found Starter", price: "$29/month" }
+  return { name: "No plan", price: "No monthly price" }
+}
+
+function ordinalSuffix(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return "st"
+  if (n % 10 === 2 && n % 100 !== 12) return "nd"
+  if (n % 10 === 3 && n % 100 !== 13) return "rd"
+  return "th"
+}
+
+function formatStoredDate(value: string | null | undefined) {
+  if (!value) return null
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (match) {
+    const [, year, month, day] = match
+    return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    })
+  }
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+}
+
 function stateTone(state: string) {
   if (state === "active" || state === "comp") return "success"
   if (state === "past_due" || state === "cancelled") return "warning"
@@ -76,6 +104,21 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const siteUrl = `https://${client.slug}.${ROOT_DOMAIN}`
   const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${client.slug}`
   const addressLine = [client.address, [client.city, client.state].filter(Boolean).join(", "), client.zip].filter(Boolean).join(" · ")
+  const plan = planDisplay(client.plan)
+  const cardDueLabel = formatStoredDate(client.trial_ends_at)
+  const billingAnchorLabel = client.billing_cycle_day
+    ? `${client.billing_cycle_day}${ordinalSuffix(client.billing_cycle_day)} of every month`
+    : "Not anchored"
+  const billingStatusLabel = isActiveSubscription
+    ? `Active in Stripe (${client.subscription_status})`
+    : client.is_comp
+      ? "Permanent comp - no card needed"
+      : cardDueLabel
+        ? "Card not on file yet"
+        : "Not activated"
+  const collectedLabel = client.deferred_payment_amount != null
+    ? `$${Number(client.deferred_payment_amount).toFixed(2)}${client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}${client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}`
+    : "Nothing recorded"
 
   function handleTestToggle() {
     const next = !isTest
@@ -161,22 +204,36 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
       <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Billing</h2></div>
         <div className="hq-panel" style={{ padding: 16 }}>
-          <p className="hq-row-title">{isActiveSubscription ? `Billing: ${client.subscription_status}` : client.is_comp ? "Permanent - free forever" : "Not yet activated"}</p>
-          {!isActiveSubscription && client.trial_ends_at && !client.is_comp && (
-            <p className="hq-row-meta">
-              Card due by {new Date(client.trial_ends_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              {client.billing_cycle_day ? ` · billing anchored to the ${client.billing_cycle_day} of the month` : ""}
-            </p>
-          )}
-          {client.deferred_payment_amount != null && (
-            <p className="hq-row-meta">Already collected: ${Number(client.deferred_payment_amount).toFixed(2)}{client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}{client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}</p>
-          )}
+          <p className="hq-row-title">Billing snapshot</p>
+          <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+            <div>
+              <p className="hq-row-meta">Status</p>
+              <p className="hq-row-title">{billingStatusLabel}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Plan</p>
+              <p className="hq-row-title">{plan.name} / {plan.price}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Card due / billing starts</p>
+              <p className="hq-row-title">{cardDueLabel ?? "No date set"}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Billing day</p>
+              <p className="hq-row-title">{billingAnchorLabel}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Already collected</p>
+              <p className="hq-row-title">{collectedLabel}</p>
+            </div>
+          </div>
           {!isActiveSubscription && !client.is_comp && client.trial_ends_at && (
             <form action={resendCardLinkEmail} style={{ marginTop: 10 }}>
               <input type="hidden" name="companyId" value={client.id} />
-              <button className="hq-button hq-button-secondary" type="submit" disabled={!client.email}>
-                {client.email ? `Resend card-link email to ${client.email}` : "No email on file to resend to"}
+              <button className="hq-button hq-button-secondary" type="submit" disabled={!client.email} style={{ width: "100%" }}>
+                {client.email ? "Resend card link + copy me" : "No email on file to resend to"}
               </button>
+              {client.email && <p className="hq-row-meta" style={{ marginTop: 8 }}>Sends to {client.email} and copies Shawn.</p>}
             </form>
           )}
         </div>
@@ -220,7 +277,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 </label>
                 <label className="hq-form-wide" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />
-                  Also email {client.name} the card link now
+                  Also email {client.name} the card link now and copy Shawn
                 </label>
                 <div className="hq-form-wide"><button className="hq-button hq-button-primary" type="submit">Defer billing</button></div>
               </form>
@@ -236,7 +293,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 </label>
                 <label className="hq-form-wide" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input type="checkbox" name="sendEmail" value="1" style={{ width: "auto" }} />
-                  Also email {client.name} that their site is live now
+                  Also email {client.name} that their site is live now and copy Shawn
                 </label>
                 <div className="hq-form-wide"><button className="hq-button hq-button-secondary" type="submit">Set as permanent</button></div>
               </form>
