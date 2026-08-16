@@ -6,8 +6,10 @@
 - [x] Remove visible "Example preview" / proof-style labeling from the contractor visual section.
 - [x] Remove contractor visual outer card wrapper and convert the approved image to a product-band layout.
 - [x] Add hero-style gradient blending to the contractor product image band so it has no hard bottom edge or clipped side glow.
+- [x] Add homepage one-phone product visual after the "How it works" section.
 - [x] Verify `git diff --check`, `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
 - [ ] Shawn QA: `/industries/contractors` on iPhone after deploy.
+- [ ] Shawn QA: homepage one-phone product visual on iPhone after deploy.
 - [ ] Future: create homepage product-image sections so the marketing site is not mostly copy.
 - [ ] Future: decide where product visuals belong on `/compare` and `/how-it-works`.
 - [ ] Future: create equivalent visuals for restaurants, real estate, spas/wellness, retail, salons, photographers, and cleaning only after the contractor pattern is approved live.

@@ -1,5 +1,30 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Homepage Phone Product Visual
+
+### Progress This Pass
+- Shawn approved the next visual-system step: homepage visual, but not a copy of the contractor/iPad visual and not a duplicate of the hero.
+- Team direction:
+  - Steve: homepage visual should answer "Found builds a professional mobile-first business presence from your phone."
+  - Jony: one premium iPhone only, large and iconic, blended into Found Black with a soft green glow.
+  - Phil: use simple homepage copy, no labels like "mockup" or "preview."
+  - Angela: place it after the intro/how-it-works section so the hero still sells the dream first.
+  - Craig/Marcus: homepage only, new local image asset, no onboarding/pricing/tracking/template changes.
+- Generated and saved a new product asset at `public/marketing/found-homephone-product-v1.png`.
+- Added a new homepage section in `src/app/HomeClient.tsx` after "How it works":
+  - eyebrow `Built from your phone`,
+  - headline `A business site you can actually run from your pocket.`,
+  - one iPhone product image blended into the Found Black background.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+After deploy, Shawn should QA the homepage on iPhone first. Check whether the new phone visual adds Apple-style product imagery without feeling like the contractor visual, a template grid, or another hero clone.
+
 ## 2026-08-15 - Contractor Visual Hero-Blend Pass
 
 ### Progress This Pass

@@ -1,3 +1,27 @@
+## Session: August 15, 2026 - Homepage Phone Product Visual
+**AI:** Codex
+
+### Context
+After approving the contractor product-band pattern, Shawn approved the next visual-system step for the homepage. The team direction was explicit: do not copy the contractor image, do not duplicate the hero, and do not make a template grid. Use one premium iPhone visual to show that Found creates a business site owners can run from their phone.
+
+### Changed
+- Added `public/marketing/found-homephone-product-v1.png`.
+- Updated `src/app/HomeClient.tsx`:
+  - inserted a new homepage product visual section after "How it works",
+  - added copy: `Built from your phone` / `A business site you can actually run from your pocket.`,
+  - placed the one-phone image in a blended Found Black product band with soft gradient fades.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Deploy and QA homepage on iPhone. Confirm the visual feels like Found product imagery, not the contractor visual, not a template grid, and not a duplicate of the hero.
+
+---
+
 ## Session: August 15, 2026 - Contractor Visual Hero-Blend Pass
 **AI:** Codex
 

@@ -305,6 +305,37 @@ export default function HomeClient() {
         </section>
 
         {/* ── What's actually different ── */}
+        <section className="relative overflow-hidden bg-[#080A09] px-6 py-20 md:px-10 md:py-28">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+                Built from your phone
+              </p>
+              <h2 className="text-4xl font-light leading-tight text-white md:text-6xl">
+                A business site you can actually run from your pocket.
+              </h2>
+              <p className="mt-6 max-w-xl text-base font-medium leading-8 text-white/55 md:text-lg">
+                Photos, leads, updates, and follow-up all start where owners already work — their phone.
+              </p>
+            </div>
+          </div>
+
+          <div className="relative left-1/2 mt-8 ml-[-50vw] w-screen overflow-hidden bg-[#080A09] md:mt-0">
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-24 bg-gradient-to-b from-[#080A09] via-[#080A09]/75 to-transparent" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-36 bg-gradient-to-t from-[#080A09] via-[#080A09]/82 to-transparent md:h-48" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#080A09] to-transparent md:w-32" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#080A09] to-transparent md:w-32" />
+            <Image
+              src="/marketing/found-homephone-product-v1.png"
+              alt="A Found-built mobile business website shown on an iPhone"
+              width={1024}
+              height={1536}
+              sizes="(max-width: 768px) 100vw, 760px"
+              className="relative z-0 mx-auto block h-auto w-full max-w-[620px] scale-[1.06] md:max-w-[760px] md:scale-100"
+            />
+          </div>
+        </section>
+
         <section className="bg-[#0B0E0C] px-6 py-24 md:px-10">
           <div className="mx-auto max-w-7xl">
             <p className="mb-4 text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
