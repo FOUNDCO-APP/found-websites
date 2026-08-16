@@ -1,5 +1,30 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Restaurant Industry Product Visual
+
+### Progress This Pass
+- Shawn approved the team recommendation to move next from contractor/homepage visuals to restaurants.
+- Team direction:
+  - Steve: restaurants should prove Found is not only for contractors; the visual must show a restaurant site that makes the next table/order feel close.
+  - Jony: use a distinct product image, not a copy of the contractor iPad/phone layout and not another generic mockup block.
+  - Phil: sell appetite, menu/order/reservation intent, and premium presentation without adding corny image labels.
+  - Angela: keep it in the same `What Found builds` moment so the industry page answers "what will my site look like?"
+  - Craig/Marcus: restaurant industry page only, new local asset, no pricing/onboarding/tracking/template changes.
+- Generated and saved a restaurant product asset at `public/marketing/found-restaurant-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx` with a restaurant-only visual branch:
+  - eyebrow stays `What Found builds`,
+  - headline `A restaurant site that makes the next table feel close.`,
+  - full-bleed blended image band matching the approved contractor visual-system pattern.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+After deploy, Shawn should QA `/industries/restaurants` on iPhone. Check that the image feels restaurant-specific, premium, and real enough to sell what Found builds without looking like a duplicate of the contractor or homepage visual.
+
 ## 2026-08-15 - Homepage Phone Product Visual
 
 ### Progress This Pass

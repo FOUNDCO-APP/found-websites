@@ -1,3 +1,28 @@
+## Session: August 15, 2026 - Restaurant Industry Product Visual
+**AI:** Codex
+
+### Context
+After Shawn approved the homepage phone visual, the team recommended restaurants as the next industry visual because it proves Found can sell food/menu/reservation businesses, not only contractors. Shawn approved that direction and asked to follow the team explicitly.
+
+### Changed
+- Added `public/marketing/found-restaurant-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx`:
+  - added a restaurant-only product visual branch for `/industries/restaurants`,
+  - kept the approved full-bleed blended product-band pattern,
+  - used restaurant-specific copy: `A restaurant site that makes the next table feel close.`,
+  - left contractor, homepage, pricing, onboarding, tracking, and templates unchanged.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Deploy and QA `/industries/restaurants` on iPhone. Confirm the visual feels restaurant-specific, premium, and distinct from contractor/homepage imagery.
+
+---
+
 ## Session: August 15, 2026 - Homepage Phone Product Visual
 **AI:** Codex
 

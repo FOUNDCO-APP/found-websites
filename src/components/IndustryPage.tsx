@@ -56,6 +56,7 @@ function IndustryOutcomeProof({
   features: Feature[]
 }) {
   const isContractorShowroom = ["contractors", "home services", "home-services"].includes(industryLabel)
+  const isRestaurantShowroom = ["restaurants", "restaurant", "food", "food businesses"].includes(industryLabel)
 
   if (isContractorShowroom) {
     return (
@@ -165,6 +166,33 @@ function IndustryOutcomeProof({
         </div>
         )}
 
+      </div>
+    )
+  }
+
+  if (isRestaurantShowroom) {
+    return (
+      <div className="relative w-full max-w-full min-w-0 overflow-visible py-3 pb-12 md:py-8 md:pb-16">
+        <div className="mb-6 px-1 md:mb-8">
+          <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+            What Found builds
+          </p>
+          <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
+            A restaurant site that makes the next table feel close.
+          </h2>
+        </div>
+
+        <div className="relative left-1/2 ml-[-50vw] w-screen overflow-hidden bg-[#050706] py-2 shadow-[0_34px_110px_rgba(0,0,0,0.5)] md:py-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-gradient-to-b from-[#080A09] via-[#080A09]/72 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-[#080A09] via-[#080A09]/80 to-transparent md:h-36" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#080A09] to-transparent md:w-28" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#080A09] to-transparent md:w-28" />
+          <img
+            src="/marketing/found-restaurant-site-preview-v1.png"
+            alt="Finished Found restaurant website shown on a mobile phone"
+            className="relative z-0 mx-auto block h-auto w-full max-w-[760px] scale-[1.02] md:scale-100"
+          />
+        </div>
       </div>
     )
   }

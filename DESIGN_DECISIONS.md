@@ -15,6 +15,7 @@ Why: Shawn clarified that Found's marketing pages should work like Apple product
 - The approved image is treated as a responsive marketing asset, not a labeled mockup.
 - Major product visuals should not be trapped inside a card inside another card. When the goal is to show what Found can build, prefer a clean product band/hero-like image after contextual copy, with no extra caption unless the team explicitly asks for one.
 - Homepage product imagery should not duplicate the contractor image or the homepage hero. The approved homepage pattern is a single premium iPhone visual that communicates mobile-first ownership: a business site the owner can run from their pocket.
+- Restaurant industry product imagery should not reuse the contractor device composition. It should show food/menu/order/reservation intent through a premium finished restaurant website, with appetite and warmth, while still staying inside Found Black and Signal Green.
 
 ---
 
