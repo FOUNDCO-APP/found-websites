@@ -30,8 +30,13 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
   const ctaImage = sectionImages?.cta ?? null
   // Owner-uploaded gallery photos always come first, but a strip with only
   // 1-2 real photos reads as sparse/broken - top it up with stock photos
-  // until there are enough real ones to fill it on their own.
-  const ownerGalleryImages = sectionImages?.gallery ?? []
+  // until there are enough real ones to fill it on their own. Capped to 4
+  // regardless of how many real photos exist - the strip below is built for
+  // exactly 4 tiles (3 visible on desktop via flex-1, a 4th only in the
+  // mobile scroll). An owner with many real gallery photos would otherwise
+  // squeeze every one of them into that same fixed desktop row with no
+  // scroll, crushing each tile to a sliver.
+  const ownerGalleryImages = (sectionImages?.gallery ?? []).slice(0, 4)
   const stockFillImages = [img(1), img(2), img(3), img(4)].filter(Boolean) as string[]
   const galleryImages = ownerGalleryImages.length >= 4
     ? ownerGalleryImages
