@@ -9,9 +9,9 @@ export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
   beauty:                { label: "Book Now",             href: "/book" },
   fitness:               { label: "Book a Class",         href: "/book" },
   healthcare:            { label: "Book Appointment",     href: "/book" },
-  home_services:         { label: "Get a Free Quote",     href: "/estimate" },
-  cleaning:              { label: "Get a Free Quote",     href: "/estimate" },
-  landscaping:           { label: "Get a Free Quote",     href: "/estimate" },
+  home_services:         { label: "Get a Free Estimate",  href: "/estimate" },
+  cleaning:              { label: "Get a Free Estimate",  href: "/estimate" },
+  landscaping:           { label: "Get a Free Estimate",  href: "/estimate" },
   events:                { label: "Book Your Date",       href: "/book" },
   pet_services:          { label: "Book Now",             href: "/book" },
   automotive:            { label: "Schedule Service",     href: "/book" },
@@ -23,7 +23,7 @@ export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
   professional_services: { label: "Schedule a Call",      href: "/book" },
   childcare:             { label: "Schedule a Tour",      href: "/book" },
   home_property:         { label: "Schedule a Visit",     href: "/book" },
-  audio_visual:          { label: "Get a Free Quote",     href: "/estimate" },
+  audio_visual:          { label: "Get a Free Estimate",  href: "/estimate" },
   // Team-approved 2026-08-06 - these 3 were the only industries genuinely
   // missing a scheduling CTA (confirmed against this file directly, after
   // an earlier draft wrongly assumed 4 more were also missing).

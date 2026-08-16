@@ -21,10 +21,10 @@ const defaults: Record<string, IndustryDefaults> = {
     values: [
       { label: "Locally Owned", body: (city) => `Based right here in ${city || "your community"} — not a franchise, not a call center.` },
       { label: "Quality First",  body: () => "We stand behind every job. If something isn't right, we make it right." },
-      { label: "Free Estimates", body: () => "No pressure. No surprises. Get a clear quote before any work begins." },
+      { label: "Free Estimates", body: () => "No pressure. No surprises. Get a clear estimate before any work begins." },
     ],
     process: [
-      { step: "01", title: "Free Estimate",      body: "Tell us what you need. We come out, take a look, and give you a clear, honest quote — no pressure." },
+      { step: "01", title: "Free Estimate",      body: "Tell us what you need. We come out, take a look, and give you a clear, honest estimate — no pressure." },
       { step: "02", title: "We Get to Work",      body: "Our own crew shows up on time, keeps the job site clean, and communicates with you every step of the way." },
       { step: "03", title: "You Love the Result", body: "We don't consider the job done until you're satisfied. Quality you can see, craftsmanship that lasts." },
     ],
@@ -168,7 +168,7 @@ const defaults: Record<string, IndustryDefaults> = {
   cleaning: {
     footerTagline: "Cleaner home. Clearer mind.",
     servicesIntro: "Professional cleaning services that leave your space spotless — every single time.",
-    ctaHeadline: "Get a Free Quote.",
+    ctaHeadline: "Get a Free Estimate.",
     galleryLabel: "Our Work",
     gallerySubtitle: "Clean spaces. Happy spaces.",
     values: [
@@ -177,7 +177,7 @@ const defaults: Record<string, IndustryDefaults> = {
       { label: "Satisfaction Guaranteed",      body: () => "Not happy with something? We come back and fix it. No questions asked." },
     ],
     process: [
-      { step: "01", title: "Get a Quote",           body: "Tell us your space and your needs. We'll give you a clear, honest price." },
+      { step: "01", title: "Get an Estimate",        body: "Tell us your space and your needs. We'll give you a clear, honest price." },
       { step: "02", title: "We Clean",              body: "Our team shows up on time and gets to work. You don't have to do a thing." },
       { step: "03", title: "Come Home to Clean",    body: "Walk into a spotless space and breathe easy. That's the feeling." },
     ],
@@ -361,10 +361,10 @@ const defaults: Record<string, IndustryDefaults> = {
     values: [
       { label: "Locally Trusted",      body: (city) => `${city || "The community"} has relied on us for years — not a franchise, not a call center.` },
       { label: "Licensed & Insured",   body: () => "Full coverage and proper licensing means you're protected and the work is done right." },
-      { label: "No Hidden Costs",      body: () => "Clear, honest quotes before we start. No surprises when the job is done." },
+      { label: "No Hidden Costs",      body: () => "Clear, honest estimates before we start. No surprises when the job is done." },
     ],
     process: [
-      { step: "01", title: "Free Estimate",     body: "Tell us what you need. We come out, assess the job, and give you a clear quote — no obligation." },
+      { step: "01", title: "Free Estimate",     body: "Tell us what you need. We come out, assess the job, and give you a clear estimate — no obligation." },
       { step: "02", title: "We Handle It",      body: "Our team shows up on time, works carefully, and keeps you informed at every stage." },
       { step: "03", title: "Done Right",        body: "We don't wrap up until the work meets our standard — which is the same standard we'd hold for our own home." },
     ],
@@ -372,16 +372,16 @@ const defaults: Record<string, IndustryDefaults> = {
   audio_visual: {
     footerTagline: "Real sound, done right.",
     servicesIntro: "From a single speaker to a full home theater — we handle the equipment and the wiring so it just works.",
-    ctaHeadline: "Get a Free Quote.",
+    ctaHeadline: "Get a Free Estimate.",
     galleryLabel: "Recent Installs",
     gallerySubtitle: "Real equipment, real installs — not stock photos.",
     values: [
       { label: "Technical Expertise",  body: () => "We know the equipment, the wiring, and the acoustics — not just the sales pitch." },
       { label: "Clean Installs",       body: () => "No exposed wires, no guesswork. Every install looks as good as it sounds." },
-      { label: "Honest Quotes",        body: () => "A clear price before we start, based on what your space actually needs." },
+      { label: "Honest Estimates",     body: () => "A clear price before we start, based on what your space actually needs." },
     ],
     process: [
-      { step: "01", title: "Free Quote",        body: "Tell us what you're working with. We'll assess the space and give you a clear price — no obligation." },
+      { step: "01", title: "Free Estimate",     body: "Tell us what you're working with. We'll assess the space and give you a clear price — no obligation." },
       { step: "02", title: "We Install It",     body: "Our team handles the equipment, the wiring, and the setup, start to finish." },
       { step: "03", title: "You Enjoy It",      body: "We walk you through everything before we leave, so it's simple to use from day one." },
     ],

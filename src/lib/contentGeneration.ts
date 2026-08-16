@@ -223,7 +223,7 @@ function buildJobFamilyCopy(
         aboutPreview: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}We give straight answers and fair prices - no guesswork, no surprises.`,
         aboutStory: `${name} is ${locationPhrase}'s go-to ${ind}. ${diff}The process is built around clear estimates, practical guidance, and work customers can understand before they say yes.`,
         aboutHighlights: highlightsForJob(job),
-        ctaHeadline: "Request a free quote",
+        ctaHeadline: "Request a free estimate",
       }
     case "visit_me":
       return {
@@ -452,6 +452,7 @@ function buildPrompt(input: ContentGenerationInput) {
     "- Do not start every service description with the service name.",
     "- Preserve the provided service names unless they are unclear; lightly clean them only.",
     "- Do not invent license numbers, awards, prices, guarantees, credentials, or years in business.",
+    "- When referring to a free pre-work assessment (pricing, scope, walkthrough), always say \"estimate\", never \"quote\" - this matches Found's own internal terminology and the business's actual call-to-action button, so the two must never contradict each other on the same page.",
     "- Use the best jobs/customers, service area detail, and safe proof point when provided, but do not label them as form answers.",
     "- Generate exactly 3 FAQ entries in faqItems. Questions and answers should sound like a real owner wrote them, specific to this business type and location.",
     "- FAQ answers must include the business name and city naturally, and should be 1-2 sentences max.",
