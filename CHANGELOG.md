@@ -153,6 +153,39 @@ Shawn reported MBJ Heating and Cooling's homepage showing squished gallery photo
 
 ### Doc note
 This entry was found pasted into the middle of the file (inside a July announcement entry) rather than at the top - moved here during the next session's doc-integrity check.
+## Session: August 16, 2026 - Custom Domain Root + WWW Reliability
+**AI:** Codex
+
+### Context
+Shawn set up DNS for Richard's MBJ Heating and Cooling domain and found the manual flow was too fragile. The core issue: Found needs to make both the root domain and `www` work, and the admin flow needs to make that obvious.
+
+### Changed
+- Audited the domain connection path:
+  - admin UI: `src/app/dashboard/(app)/site/DomainConnector.tsx`,
+  - server actions: `src/app/dashboard/(app)/site/actions.ts`,
+  - custom-domain routing: `src/middleware.ts`,
+  - public site URL helper: `src/lib/siteUrl.ts`.
+- Updated `connectCustomDomain()` so one connection registers both:
+  - `domain.com`,
+  - `www.domain.com`.
+- Updated status checks so a domain is only considered live when both root and `www` are live.
+- Updated disconnect so both hostnames are removed from Vercel.
+- Added visible root/www status rows in the admin UI.
+- Added a “Fix Found setup” repair button for existing root-only/custom-domain setups. This repairs Vercel/Found registration only; it does not change registrar DNS.
+- Updated manual DNS copy to state both records clearly:
+  - `A @ 76.76.21.21`,
+  - `CNAME www cname.vercel-dns.com`.
+- Added registrar guidance: recommend GoDaddy first, then Namecheap; other registrars still work manually.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Run `git diff --check`, `npx tsc --noEmit`, and `npm run build`.
+- QA a real domain screen and confirm both root and `www` statuses are visible.
+- Future: research safe registrar automation via Domain Connect/Entri-style guided setup before collecting or storing any registrar credentials.
 
 ---
 

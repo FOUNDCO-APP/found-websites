@@ -11,6 +11,24 @@ type Props = {
   companySlug: string
 }
 
+type HostnameStatus = {
+  hostname: string
+  label: "Root" | "WWW"
+  ownershipVerified: boolean
+  misconfigured: boolean
+  registered?: boolean
+  error?: string
+}
+
+type DomainCheckResult = {
+  verified: boolean
+  misconfigured?: boolean
+  root?: HostnameStatus
+  www?: HostnameStatus
+  needsFoundRepair?: boolean
+  error?: string
+}
+
 const DNS_RECORDS = [
   { type: "A",     host: "@",   value: "76.76.21.21",         note: "Points your root domain to Found" },
   { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
@@ -33,6 +51,8 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [manualStepConfirmed, setManualStepConfirmed] = useState(false)
   const [misconfigured, setMisconfigured] = useState(false)
   const [checkAttempts, setCheckAttempts] = useState(0)
+  const [domainStatuses, setDomainStatuses] = useState<{ root: HostnameStatus; www: HostnameStatus } | null>(null)
+  const [needsFoundRepair, setNeedsFoundRepair] = useState(false)
 
   const isConnected = !!connectedDomain
   // Below this many checks, always show the calm "still checking" message even
@@ -44,11 +64,14 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const MISCONFIGURED_GRACE_CHECKS = 3
   const showMisconfiguredHelp = !verified && manualStepConfirmed && misconfigured && checkAttempts >= MISCONFIGURED_GRACE_CHECKS
 
-  function applyCheckResult(result: { verified: boolean; misconfigured?: boolean; error?: string }) {
+  function applyCheckResult(result: DomainCheckResult) {
     setVerified(result.verified)
+    if (result.root && result.www) setDomainStatuses({ root: result.root, www: result.www })
+    setNeedsFoundRepair(!!result.needsFoundRepair)
     if (result.verified) {
       setCheckAttempts(0)
       setMisconfigured(false)
+      setNeedsFoundRepair(false)
       return
     }
     // A network/API error isn't evidence the records are wrong - only count
@@ -96,12 +119,26 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     }
     setConnectedDomain(result.domain)
     setDomain(result.domain)
-    setVerified(result.verified ?? false)
+    applyCheckResult({ ...result, verified: result.verified ?? false })
     setVerificationRecords(result.verificationRecords ?? [])
     setManualStepConfirmed(false)
-    setMisconfigured(false)
-    setCheckAttempts(0)
     setInputValue("")
+  }
+
+  async function handleRepairFoundConnection() {
+    if (!connectedDomain) return
+    setConnecting(true)
+    setError("")
+    const result = await connectCustomDomain(connectedDomain)
+    setConnecting(false)
+    if (!result.success || !result.domain) {
+      setError(result.error ?? "Could not finish the Found domain setup")
+      return
+    }
+    setConnectedDomain(result.domain)
+    setDomain(result.domain)
+    setVerificationRecords(result.verificationRecords ?? [])
+    applyCheckResult({ ...result, verified: result.verified ?? false })
   }
 
   async function handleCheck() {
@@ -145,6 +182,49 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     )
   }
 
+  function DomainStatusRows() {
+    if (!domainStatuses) return null
+    const rows = [domainStatuses.root, domainStatuses.www]
+
+    return (
+      <div style={{ padding: "0 18px 14px", display: "flex", flexDirection: "column" as const, gap: 8 }}>
+        {rows.map(status => {
+          const live = status.ownershipVerified && !status.misconfigured
+          const label = live ? "Live" : status.registered === false ? "Needs Found setup" : "Needs DNS"
+          const color = live ? GREEN : status.registered === false ? "rgba(255,130,130,0.9)" : "rgba(255,180,0,0.9)"
+
+          return (
+            <div
+              key={status.hostname}
+              style={{
+                borderRadius: 12,
+                padding: "10px 12px",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10,
+              }}
+            >
+              <div>
+                <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontWeight: 700, textTransform: "uppercase" }}>
+                  {status.label === "Root" ? "Root domain" : "www address"}
+                </div>
+                <div style={{ ...TYPE.footnote, color: "white", fontWeight: 700, wordBreak: "break-word" }}>
+                  {status.hostname}
+                </div>
+              </div>
+              <div style={{ ...TYPE.caption, color, fontWeight: 800, whiteSpace: "nowrap" }}>
+                {label}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   async function handleDisconnect() {
     if (!connectedDomain) return
     setDisconnecting(true)
@@ -156,6 +236,8 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     setManualStepConfirmed(false)
     setMisconfigured(false)
     setCheckAttempts(0)
+    setDomainStatuses(null)
+    setNeedsFoundRepair(false)
     setError("")
     setDisconnecting(false)
   }
@@ -186,23 +268,49 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
             <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
             <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : "rgba(255,180,0,0.8)" }}>
               {verified
-                ? "Live — your site is live at this domain"
-                : manualStepConfirmed
-                  ? "Checking your connection — this can take a few minutes"
-                  : "Add the records below to finish connecting"}
+                ? "Live — root and www both work"
+                : needsFoundRepair
+                  ? "Found needs to finish adding both domain versions"
+                  : manualStepConfirmed
+                    ? "Checking root and www — this can take a few minutes"
+                    : "Add both records below to finish connecting"}
             </div>
           </div>
         </div>
+
+        <DomainStatusRows />
+
+        {!verified && needsFoundRepair && (
+          <div style={{ padding: "0 18px 16px" }}>
+            <div style={{
+              borderRadius: 14,
+              padding: "13px 14px",
+              backgroundColor: "rgba(255,100,100,0.07)",
+              border: "1px solid rgba(255,100,100,0.16)",
+            }}>
+              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,210,210,0.9)", lineHeight: 1.6 }}>
+                Found needs to add or repair one of the domain versions before DNS can finish.
+                This only updates Found/Vercel. It will not change GoDaddy, Namecheap, or any registrar settings.
+              </p>
+              <button
+                onClick={handleRepairFoundConnection}
+                disabled={connecting}
+                style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: connecting ? "rgba(255,255,255,0.06)" : GREEN, color: connecting ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: connecting ? "default" : "pointer" }}>
+                {connecting ? "Fixing…" : "Fix Found setup"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {!verified && !manualStepConfirmed && (
           <>
             {/* DNS Records */}
             <div style={{ padding: "0 18px 16px" }}>
               <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-                These two lines tell the internet where to send visitors when they type your domain. Add them exactly as shown below.
+                Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
               </p>
               <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.)
+                Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
               </p>
               <DnsRecordsList />
 
@@ -364,12 +472,12 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
       )}
 
       <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
-        You&apos;ll get step-by-step DNS instructions for any registrar.
+        You&apos;ll get step-by-step DNS instructions for root and www.
         Usually live within minutes.
       </p>
 
       <p style={{ margin: "8px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
-        Don&apos;t have a domain yet? We recommend GoDaddy or Namecheap.
+        Don&apos;t have a domain yet? We recommend GoDaddy first, then Namecheap. Other registrars still work manually.
       </p>
 
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>

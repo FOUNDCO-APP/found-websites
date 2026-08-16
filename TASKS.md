@@ -75,6 +75,22 @@ Shawn caught MBJ Heating and Cooling's homepage showing squished gallery photos 
 - [x] Fixed: capped owner gallery photos to 4 at the source in both files, matching the other four templates.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
 - [ ] Shawn QA: reload `mbjheatingandcooling.com` on desktop/iPad, confirm 3-4 properly-sized tiles instead of ~16 slivers.
+## 2026-08-16 - Custom Domain Flow: Root + WWW Reliability
+
+- [x] Audit finding: current custom-domain flow saved the root domain but only registered/checked one hostname in Vercel, while real customer domains need both `domain.com` and `www.domain.com`.
+- [x] Server action now normalizes entered domains and registers both root and `www` with Vercel.
+- [x] Status check now checks both hostnames and only reports the domain as live when both are verified and correctly configured.
+- [x] Disconnect now removes both root and `www` from Vercel.
+- [x] Admin domain UI now shows separate root/www status rows.
+- [x] Added a repair path for existing root-only/custom-domain setups: “Fix Found setup” re-registers both hostnames in Found/Vercel without changing registrar DNS.
+- [x] Manual DNS instructions now explicitly say both records are required:
+  - `A @ 76.76.21.21`
+  - `CNAME www cname.vercel-dns.com`
+- [x] Registrar guidance now recommends GoDaddy first, then Namecheap; all other registrars remain supported manually with the same DNS values.
+- [x] Verify `git diff --check`, `npx tsc --noEmit`, and `npm run build`.
+- [ ] Shawn QA: open a real client domain screen, connect/check a custom domain, confirm both root and `www` show separate statuses.
+- [ ] Future: research automated registrar connection options. Preferred direction: Domain Connect/Entri-style guided setup if it avoids collecting registrar passwords or broad DNS credentials.
+- [ ] Future: create a registrar recommendation page/FAQ: “Buy with GoDaddy or Namecheap for easiest Found support; otherwise use manual DNS.”
 
 ## 2026-08-15 - Marketing Visual System: Product Imagery Rollout
 

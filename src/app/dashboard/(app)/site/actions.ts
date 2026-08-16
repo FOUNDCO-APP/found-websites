@@ -448,9 +448,32 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
 // ambiguous pass. Short in-memory cache so an owner with two tabs open (or
 // the 20s poll firing close to a manual "Check Connection" tap) doesn't
 // double the Vercel calls for the same domain within the same few seconds.
-type DomainStatus = { ownershipVerified: boolean; misconfigured: boolean; error?: string }
+type DomainStatus = { ownershipVerified: boolean; misconfigured: boolean; registered?: boolean; error?: string }
+type DomainHostnameStatus = DomainStatus & { hostname: string; label: "Root" | "WWW" }
+type DomainPairStatus = {
+  root: DomainHostnameStatus
+  www: DomainHostnameStatus
+  verified: boolean
+  misconfigured: boolean
+  needsFoundRepair: boolean
+  error?: string
+}
 const domainStatusCache = new Map<string, { data: DomainStatus; expiresAt: number }>()
 const DOMAIN_STATUS_CACHE_MS = 12000
+
+function normalizeCustomDomain(rawDomain: string) {
+  return rawDomain.trim().toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .replace(/^www\./, "")
+}
+
+function domainHostnames(domain: string) {
+  return {
+    root: domain,
+    www: `www.${domain}`,
+  }
+}
 
 async function getVercelDomainStatus(domain: string): Promise<DomainStatus> {
   const cached = domainStatusCache.get(domain)
@@ -474,12 +497,18 @@ async function getVercelDomainStatus(domain: string): Promise<DomainStatus> {
     if (!domainRes.ok || !configRes.ok) {
       const errSource = !domainRes.ok ? domainRes : configRes
       const errData = await errSource.json().catch(() => ({}))
-      result = { ownershipVerified: false, misconfigured: true, error: errData.error?.message ?? "Couldn't check domain status" }
+      result = {
+        ownershipVerified: false,
+        misconfigured: true,
+        registered: domainRes.ok,
+        error: errData.error?.message ?? "Couldn't check domain status",
+      }
     } else {
       const domainData = await domainRes.json()
       const configData = await configRes.json()
       result = {
         ownershipVerified: domainData.verified ?? false,
+        registered: true,
         // Fail closed: only a explicit `false` counts as correctly configured.
         misconfigured: configData.misconfigured !== false,
       }
@@ -496,16 +525,74 @@ function isDomainLive(status: DomainStatus) {
   return status.ownershipVerified && !status.misconfigured
 }
 
+async function getVercelDomainPairStatus(domain: string): Promise<DomainPairStatus> {
+  const hosts = domainHostnames(domain)
+  const [rootStatus, wwwStatus] = await Promise.all([
+    getVercelDomainStatus(hosts.root),
+    getVercelDomainStatus(hosts.www),
+  ])
+
+  const root: DomainHostnameStatus = { ...rootStatus, hostname: hosts.root, label: "Root" }
+  const www: DomainHostnameStatus = { ...wwwStatus, hostname: hosts.www, label: "WWW" }
+  const verified = isDomainLive(rootStatus) && isDomainLive(wwwStatus)
+  const needsFoundRepair = rootStatus.registered === false || wwwStatus.registered === false
+  const error = [rootStatus.error, wwwStatus.error].filter(Boolean).join(" / ") || undefined
+
+  return {
+    root,
+    www,
+    verified,
+    misconfigured: rootStatus.misconfigured || wwwStatus.misconfigured,
+    needsFoundRepair,
+    error,
+  }
+}
+
+async function addVercelProjectDomain(domain: string): Promise<{
+  ok: boolean
+  status: number
+  verification: { type: string; host: string; value: string }[]
+  error?: string
+}> {
+  const token = process.env.VERCEL_API_TOKEN
+  const projectId = process.env.VERCEL_PROJECT_ID
+  if (!token || !projectId) {
+    return { ok: false, status: 500, verification: [], error: "Domain connection not configured" }
+  }
+
+  const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ name: domain }),
+  })
+  const data = await res.json().catch(() => ({}))
+
+  if (!res.ok && res.status !== 409) {
+    return {
+      ok: false,
+      status: res.status,
+      verification: [],
+      error: data.error?.message ?? `Failed to register ${domain}`,
+    }
+  }
+
+  return {
+    ok: true,
+    status: res.status,
+    verification: (data.verification ?? []) as { type: string; host: string; value: string }[],
+  }
+}
+
 export async function connectCustomDomain(rawDomain: string): Promise<{
   success: boolean; domain?: string; verified?: boolean; misconfigured?: boolean
+  root?: DomainHostnameStatus; www?: DomainHostnameStatus; needsFoundRepair?: boolean
   verificationRecords?: { type: string; host: string; value: string }[]
   error?: string
 }> {
   const ctx = await getContext()
   if (!ctx) return { success: false, error: "Not authenticated" }
 
-  const domain = rawDomain.trim().toLowerCase()
-    .replace(/^https?:\/\//, "").replace(/\/$/, "").replace(/^www\./, "")
+  const domain = normalizeCustomDomain(rawDomain)
 
   if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]{2,})+$/.test(domain)) {
     return { success: false, error: "Enter a valid domain (e.g. mybusiness.com)" }
@@ -515,15 +602,17 @@ export async function connectCustomDomain(rawDomain: string): Promise<{
   const projectId = process.env.VERCEL_PROJECT_ID
   if (!token || !projectId) return { success: false, error: "Domain connection not configured" }
 
-  const res = await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ name: domain }),
-  })
-  const data = await res.json()
+  const hosts = domainHostnames(domain)
+  const [rootRegistration, wwwRegistration] = await Promise.all([
+    addVercelProjectDomain(hosts.root),
+    addVercelProjectDomain(hosts.www),
+  ])
 
-  if (!res.ok && res.status !== 409) {
-    return { success: false, error: data.error?.message ?? "Failed to register domain" }
+  if (!rootRegistration.ok || !wwwRegistration.ok) {
+    return {
+      success: false,
+      error: rootRegistration.error ?? wwwRegistration.error ?? "Failed to register domain",
+    }
   }
 
   await ctx.admin.from("website_config")
@@ -532,21 +621,40 @@ export async function connectCustomDomain(rawDomain: string): Promise<{
 
   revalidatePath(`/${ctx.company.slug}`)
 
-  domainStatusCache.delete(domain) // just changed - never serve a stale cached status right after connecting
-  const status = await getVercelDomainStatus(domain)
+  // Just changed both hostnames - never serve stale cached status right after connecting.
+  domainStatusCache.delete(hosts.root)
+  domainStatusCache.delete(hosts.www)
+  const status = await getVercelDomainPairStatus(domain)
 
   return {
     success: true,
     domain,
-    verified: isDomainLive(status),
+    verified: status.verified,
     misconfigured: status.misconfigured,
-    verificationRecords: (data.verification ?? []) as { type: string; host: string; value: string }[],
+    root: status.root,
+    www: status.www,
+    needsFoundRepair: status.needsFoundRepair,
+    verificationRecords: [...rootRegistration.verification, ...wwwRegistration.verification],
   }
 }
 
-export async function checkDomainStatus(domain: string): Promise<{ verified: boolean; misconfigured: boolean; error?: string }> {
-  const status = await getVercelDomainStatus(domain)
-  return { verified: isDomainLive(status), misconfigured: status.misconfigured, error: status.error }
+export async function checkDomainStatus(domain: string): Promise<{
+  verified: boolean
+  misconfigured: boolean
+  root: DomainHostnameStatus
+  www: DomainHostnameStatus
+  needsFoundRepair: boolean
+  error?: string
+}> {
+  const status = await getVercelDomainPairStatus(normalizeCustomDomain(domain))
+  return {
+    verified: status.verified,
+    misconfigured: status.misconfigured,
+    root: status.root,
+    www: status.www,
+    needsFoundRepair: status.needsFoundRepair,
+    error: status.error,
+  }
 }
 
 export async function disconnectDomain(domain: string): Promise<{ success: boolean; error?: string }> {
@@ -557,17 +665,26 @@ export async function disconnectDomain(domain: string): Promise<{ success: boole
   const projectId = process.env.VERCEL_PROJECT_ID
 
   if (token && projectId) {
-    await fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${domain}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const cleanDomain = normalizeCustomDomain(domain)
+    const hosts = domainHostnames(cleanDomain)
+    await Promise.all([
+      fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${hosts.root}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`https://api.vercel.com/v10/projects/${projectId}/domains/${hosts.www}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ])
+    domainStatusCache.delete(hosts.root)
+    domainStatusCache.delete(hosts.www)
   }
 
   await ctx.admin.from("website_config")
     .update({ custom_domain: null, updated_at: new Date().toISOString() })
     .eq("company_id", ctx.company.id)
 
-  domainStatusCache.delete(domain)
   revalidatePath(`/${ctx.company.slug}`)
   return { success: true }
 }

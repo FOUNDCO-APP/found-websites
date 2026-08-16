@@ -173,6 +173,31 @@ After deploy: reload `mbjheatingandcooling.com` on desktop and iPad, confirm the
 
 ### Documentation Note
 This entry's content originally landed pasted into the middle of an old August 9 Jobs-feature entry further down this file (between "Public shared job pages:" and its own sub-bullets), instead of at the top where current entries belong - moved here and the split bullet list repaired. Worth double-checking entry placement before ending a session, especially right before running low on context/credit.
+## 2026-08-16 - Custom Domain Root + WWW Reliability
+
+### Progress This Pass
+- Shawn moved from MBJ/Richard DNS setup into a broader domain-flow audit. The concern is valid: the product should not leave owners guessing whether root or `www` works.
+- Audit finding:
+  - `DomainConnector.tsx` showed DNS instructions for both root and `www`, but the action layer only registered/checked one hostname.
+  - `middleware.ts` already strips `www.` when resolving custom domains, so storing the root domain in Supabase remains correct.
+  - `siteUrl.ts` also keeps the canonical public URL as the root domain, which is fine.
+- Fixed the current Vercel/manual DNS flow:
+  - connecting a custom domain now registers both `domain.com` and `www.domain.com`;
+  - checking status now checks both;
+  - “live” only means both root and `www` are verified and correctly configured;
+  - disconnect removes both hostnames from Vercel;
+  - existing root-only setups get a “Fix Found setup” repair action.
+- Updated admin copy:
+  - manual DNS explicitly requires `A @ 76.76.21.21` and `CNAME www cname.vercel-dns.com`;
+  - registrar recommendation is GoDaddy first, then Namecheap; other registrars still work manually.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Finish verification. Then, if clean, Shawn should QA the real custom-domain screen and confirm both root and `www` appear as separate statuses. Do not start registrar automation yet; document it as a future Domain Connect/Entri-style research item.
 
 ## 2026-08-15 - MBJ Deferred Billing Date Correction
 
