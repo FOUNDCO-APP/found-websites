@@ -1,5 +1,31 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Contractor Marketing Visual Uses Product Imagery, Not Labels
+
+### Progress This Pass
+- Shawn clarified the core Apple-style direction: Found needs visuals throughout the marketing site so visitors see what they are buying, not just read copy.
+- Team round:
+  - Jony: image should not carry corny labels like "example preview" or "proof of concept." Normal section copy gives context; the visual should sell by itself.
+  - Steve: do not block promotions on a full template rebuild; ship the honest visual now if it represents Found's target output direction.
+  - Phil: use direct product language, not a disclaimer.
+  - Marcus/Craig: contractor industry page first, local responsive asset, no iframe or screenshot pipeline yet.
+  - Angela: do not touch onboarding, pricing, plan preselection, or tracking in this pass.
+- Added the approved local marketing image at `public/marketing/found-contractor-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx` for contractor/home-services only:
+  - section label is now `WHAT FOUND BUILDS`,
+  - headline is now `See what Found can build for your business.`,
+  - visible coded mockup replaced with the approved responsive image,
+  - visible "Example preview" caption removed.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Push, deploy, then Shawn QA on `/industries/contractors` from iPhone. Judge only whether the visual feels like Apple-style product imagery and whether the section reads naturally without a label. Other industry/homepage visuals remain future rollout items.
+
 ## 2026-08-15 - Contractor Showroom Preview Replaces Workflow Proof Block
 
 ### Progress This Pass

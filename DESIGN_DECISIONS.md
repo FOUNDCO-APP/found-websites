@@ -1,3 +1,20 @@
+**[2026-08-15] - Marketing visuals should act like product imagery, not labeled proof blocks.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Phil Schiller + Angela Ahrendts + Marcus Webb + Craig Federighi
+Why: Shawn clarified that Found's marketing pages should work like Apple product pages: the visitor should see what they are buying, not read a disclaimer or decode a labeled mockup. Images do not need visible labels like "proof of concept" or "example preview" when the surrounding section copy already explains the context.
+
+**Rule:**
+- Use normal page copy to introduce the section.
+- Let the visual sell the product.
+- Avoid corny labels on the image itself.
+- Do not overpromise: visuals must either match what Found can generate now or represent an actively tracked template-parity target.
+- Roll out one pattern at a time, starting with contractor/home-services before cloning across every industry.
+
+**Current approved first implementation:**
+- `/industries/contractors` contractor/home-services section uses `WHAT FOUND BUILDS` and `See what Found can build for your business.`
+- The approved image is treated as a responsive marketing asset, not a labeled mockup.
+
+---
+
 **[2026-07-27] - Edit My Site becomes a three-tier dashboard of entry points, not one long scrolling page. Every editing surface inside it must feel as easy as taking a picture.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts + Craig Federighi + Chris Lattner + Marcus Webb + Phil Schiller
 Why: Shawn flagged that Edit My Site had become cramped and chaotic - the July 26 rebuild alone added Homepage (6 fields), Featured Update, About, Contact, Menu/Shop, Services, Photos, and Domain, all stacked as one continuous scroll. Team discussion (documented properly this time, after an earlier undiscovered version of this same discussion happened on Codex) converged on reorganizing by page, not by content type, because it mirrors what the owner already understands - their own live website - rather than internal Found terminology.

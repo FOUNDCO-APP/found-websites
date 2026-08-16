@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-15 - Marketing Visual System: Product Imagery Rollout
+
+- [x] Contractor/home-services first pass: replace labeled proof/mockup block with approved product-style image.
+- [x] Remove visible "Example preview" / proof-style labeling from the contractor visual section.
+- [x] Verify `git diff --check`, `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
+- [ ] Shawn QA: `/industries/contractors` on iPhone after deploy.
+- [ ] Future: create homepage product-image sections so the marketing site is not mostly copy.
+- [ ] Future: decide where product visuals belong on `/compare` and `/how-it-works`.
+- [ ] Future: create equivalent visuals for restaurants, real estate, spas/wellness, retail, salons, photographers, and cleaning only after the contractor pattern is approved live.
+- [ ] Future: align generated templates with the level shown in marketing visuals so Found is not promising a better design than onboarding can produce.
+
 ## 2026-08-14 - Remove Stripe Link From Found's Own Billing Screen
 
 Shawn confirmed the deferral test worked, then asked to remove Stripe's "Link" saved-card option from `/activate` and anywhere else cards get taken for Found's own billing.

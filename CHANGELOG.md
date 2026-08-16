@@ -1,3 +1,29 @@
+## Session: August 15, 2026 - Contractor Marketing Visual Becomes Product Imagery
+**AI:** Codex
+
+### Context
+Shawn clarified that the marketing site needs Apple-style product visuals: show what the customer is buying, not a labeled proof block. Team confirmed the image does not need a visible "example" label. Jony's direction: the section copy gives context; the image sells the product.
+
+### Changed
+- Added `public/marketing/found-contractor-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx` for contractor/home-services only:
+  - label changed to `WHAT FOUND BUILDS`,
+  - headline changed to `See what Found can build for your business.`,
+  - visible coded showroom mockup replaced with the approved responsive image,
+  - removed the visible `Example preview` caption.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Deploy and QA `/industries/contractors` on iPhone.
+- Future rollout: add comparable product imagery to homepage and other high-value marketing sections after the contractor pattern is approved live.
+
+---
+
 ## Session: August 15, 2026 - Contractor Showroom Preview
 **AI:** Codex
 

@@ -62,14 +62,22 @@ function IndustryOutcomeProof({
       <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:p-7">
         <div className="mb-5">
           <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
-            What your site can look like
+            What Found builds
           </p>
           <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight tracking-tight text-white md:text-5xl">
-            A finished site for the kind of work you do.
+            See what Found can build for your business.
           </h2>
         </div>
 
-        <div className="overflow-hidden rounded-[1.75rem] bg-[#EEE9DC] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-3">
+        <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#050706] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+          <img
+            src="/marketing/found-contractor-site-preview-v1.png"
+            alt="Finished Found contractor website shown across devices"
+            className="block h-auto w-full"
+          />
+        </div>
+
+        <div className="hidden overflow-hidden rounded-[1.75rem] bg-[#EEE9DC] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-3">
           <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-[#080A09]/45 md:px-4">
             <div className="flex gap-1.5">
               <span className="size-2.5 rounded-full bg-[#FF6B57]" />
@@ -151,9 +159,6 @@ function IndustryOutcomeProof({
           </div>
         </div>
 
-        <p className="mt-4 text-xs leading-6 text-white/38">
-          Example preview. Your site is generated from your business, services, photos, and style.
-        </p>
       </div>
     )
   }
