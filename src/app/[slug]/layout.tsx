@@ -120,12 +120,16 @@ export default async function CompanyLayout({
     .eq("company_id", company.id)
     .eq("active", true)
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
-  const { primary, secondary } = getSiteCTAs(company, activeAddons)
-  const bookingLedIndustries = new Set(["wellness", "beauty", "fitness", "healthcare", "pet_services", "events", "music_performance", "education", "childcare"])
-  const usePrimaryMobileCTA = bookingLedIndustries.has(company.industry_category) && primary.href !== "/services"
-  // Appointment-led sites need one persistent mobile action: book/call now. Other
-  // industries can still use the alternate content action when that is clearer.
-  const barCTA = usePrimaryMobileCTA ? primary : secondary ?? primary
+  const { primary } = getSiteCTAs(company, activeAddons)
+  // The sticky mobile bar always tracks the same primary action shown in the
+  // hero - it used to fall back to "secondary" for most industries, but the
+  // hero already shows secondary inline whenever one exists, so the bar was
+  // just repeating a button already on screen (confirmed live on a real
+  // client's site, same duplication on every non-booking-led industry, which
+  // is most of them). Always delaying until the hero scrolls out of view
+  // (see StickyCtaBar's own delayUntilScroll doc comment) is what actually
+  // prevents the same CTA showing twice at once, not which CTA is picked.
+  const barCTA = primary
   const barMatchPath = barCTA.href.startsWith("tel:") ? null : barCTA.href
 
   return (
@@ -158,7 +162,7 @@ export default async function CompanyLayout({
         href={barCTA.href}
         matchPath={barMatchPath}
         color={company.primary_color}
-        delayUntilScroll={usePrimaryMobileCTA || !secondary}
+        delayUntilScroll={true}
       />
       <PreviewBanner
         slug={company.slug}

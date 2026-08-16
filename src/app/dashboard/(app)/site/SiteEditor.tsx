@@ -1112,7 +1112,13 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           ? ['book', 'call', 'contact']
           : SHOP_LIKE.includes(industryCategory)
           ? ['shop', 'reserve', 'visit', 'call']
-          : ['quote', 'reserve', 'contact', 'call']
+          // 'quote' used to sit alongside 'reserve' here, but both resolve
+          // through the same SCHEDULING_INTENTS bucket in getSiteCTAs(), so
+          // they always produced the identical button label/link - a fake
+          // fourth option, not a real choice (confirmed live on a real
+          // client's account: two of the four picker rows read exactly the
+          // same). Removed the duplicate; 'reserve' already covers this case.
+          : ['reserve', 'contact', 'call']
         const describeCta = (intent: string, href: string) => {
           if (href === '/services' && SHOP_LIKE.includes(industryCategory)) return 'Takes customers to your products and services page'
           if (href === '/services') return 'Takes customers to your services page'

@@ -1,3 +1,21 @@
+## Session: August 16, 2026 (part 5) - Three CTA Redundancy Bugs Fixed
+**AI:** Claude
+
+### Context
+Same button system as part 4, one layer deeper. Shawn found, via direct code questions and a real PhotoDrop screenshot of MBJ Heating and Cooling's live site, three separate redundancy bugs in how CTAs are chosen and rendered: (1) Site Editor's Main Website Button picker offered 4 "options" but 2 secretly resolved to the identical CTA; (2) the mobile sticky dock bar duplicated the hero's own secondary button on every non-booking-led industry (confirmed live: "GET A FREE ESTIMATE" shown twice, stacked); (3) every layout's Final CTA section hardcoded "Call Us" as its second button regardless of the business's actual secondary CTA. Brought to a team round (Steve leading) per Shawn's explicit request; approved with "yes build it all and follow team directions."
+
+### Changed
+- `src/app/[slug]/layout.tsx`: sticky bar's CTA is now always the hero's own `primary` action (no more industry-based branching to guess a "complementary" secondary); `delayUntilScroll` is now unconditionally `true` so it never appears stacked directly under the hero's identical button.
+- `src/app/dashboard/(app)/site/SiteEditor.tsx`: removed the redundant `'quote'` entry from the trade/service-industry picker options - was `['quote', 'reserve', 'contact', 'call']`, now `['reserve', 'contact', 'call']`. `'quote'` and `'reserve'` both resolve through `SCHEDULING_INTENTS` in `getSiteCTAs()`, so they were always the same button.
+- `src/lib/industryCTAs.ts`: new shared `finalCtaSecondary(secondaryCTA, phone)` - real secondary CTA first, phone-call fallback only if the business has a phone, otherwise nothing.
+- All 6 public layout files (`ImpactLayout`, `PortraitLayout`, `EditorialLayout`, `CinematicLayout`, `WellnessLuxeLayout`, `WellnessCinematicLayout`): Final CTA section's second button now uses `finalCtaSecondary()` instead of an independently hardcoded `tel:` link, each preserving that layout's own existing button styling (icon-pill vs. plain rounded-pill).
+
+### Verification
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 16, 2026 (part 4) - Standardize Public CTA Copy to "Estimate"
 **AI:** Claude
 

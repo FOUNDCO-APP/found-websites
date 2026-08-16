@@ -12,6 +12,7 @@ import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
+import { finalCtaSecondary } from "@/lib/industryCTAs"
 
 const INK = "#111715"
 const PAPER = "#FBFCF8"
@@ -41,6 +42,7 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
   const galleryImages = Array.from(new Set([...ownerGalleryImages, imageAt(imgs, 2), imageAt(imgs, 3), imageAt(imgs, 4)].filter(Boolean) as string[])).slice(0, 5)
   const serviceCount = Math.min(services.length, 3)
   const serviceGridCols = serviceCount <= 1 ? "md:grid-cols-1" : serviceCount === 2 ? "md:grid-cols-2" : "md:grid-cols-3"
+  const finalSecondary = finalCtaSecondary(secondaryCTA, company.phone)
 
   return (
     <>
@@ -206,10 +208,16 @@ export default function WellnessLuxeLayout({ company, activeAddons, primaryCTA, 
               <Link href={primaryCTA.href} className="inline-flex min-h-14 items-center justify-center rounded-full px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:opacity-90" style={{ backgroundColor: primary }}>
                 {primaryCTA.label}
               </Link>
-              {company.phone && (
-                <a href={`tel:${company.phone.replace(/\D/g, "")}`} className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:border-white/50">
-                  Call Us
-                </a>
+              {finalSecondary && (
+                finalSecondary.href.startsWith("tel:") ? (
+                  <a href={finalSecondary.href} className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:border-white/50">
+                    {finalSecondary.label}
+                  </a>
+                ) : (
+                  <Link href={finalSecondary.href} className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/25 px-8 text-xs font-black uppercase tracking-[0.16em] text-white transition hover:border-white/50">
+                    {finalSecondary.label}
+                  </Link>
+                )
               )}
             </div>
           </div>

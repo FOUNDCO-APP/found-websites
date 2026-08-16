@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Three CTA Redundancy Bugs Fixed
+
+Follow-up to the Quote-vs-Estimate task below, found while reviewing the same button system live. Shawn traced three separate redundancy bugs with real evidence (a PhotoDrop screenshot of MBJ's live site plus direct questions about Site Editor's picker) and asked for a team round before any fix.
+
+- [x] Bug 1: Site Editor's Main Website Button picker offered 4 options for trade/service industries, but `'quote'` and `'reserve'` both resolve through `SCHEDULING_INTENTS` in `getSiteCTAs()`, so 2 of the 4 were secretly identical. Removed the duplicate `'quote'` entry.
+- [x] Bug 2: mobile sticky dock bar duplicated the hero's own secondary button for every non-booking-led industry (confirmed live: "GET A FREE ESTIMATE" shown twice, stacked, on MBJ). Sticky bar now always tracks the hero's `primary` action and always waits until scrolled past the hero (`delayUntilScroll={true}`) instead of branching by industry.
+- [x] Bug 3: every layout's Final CTA section hardcoded "Call Us" as its second button regardless of the business's real secondary CTA. New shared `finalCtaSecondary()` helper in `industryCTAs.ts`, wired into all 6 layout files - real secondary CTA first, phone-call fallback only if no secondary exists and the business has a phone.
+- [x] Team round (Steve leading, Craig/Priya/Jony/Angela) approved by Shawn: "yes build it all and follow team directions."
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: MBJ's mobile sticky bar should no longer repeat the hero's secondary button; Site Editor picker should show 3 genuinely distinct options for trade/service industries; a business with a real secondary CTA should show it (not "Call Us") in the bottom Final CTA section.
+
 ## 2026-08-16 - Standardize Public CTA Copy to "Estimate"
 
 Shawn asked why the hero says "Quote" while other text says "Estimate," whether it's on every template, and whether the mobile sticky bar's "Our Services" label could be changed by a client.

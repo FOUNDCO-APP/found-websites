@@ -2,6 +2,20 @@ import { intentLabel, intentHref } from "@/types/company"
 
 export type CTA = { label: string; href: string }
 
+// Every layout's closing "Final CTA" section used to hardcode a phone "Call
+// Us" button as its second action, independent of whatever the hero itself
+// decided to show as secondaryCTA - producing a third, inconsistent CTA
+// pairing on top of the hero and the mobile sticky bar (confirmed live on a
+// real client's account, team-reviewed 2026-08-16). This makes the final
+// section's second button track the hero's secondaryCTA exactly, and only
+// falls back to a phone call when the business genuinely has no secondary
+// action to show.
+export function finalCtaSecondary(secondaryCTA: CTA | null, phone: string | null | undefined): CTA | null {
+  if (secondaryCTA) return secondaryCTA
+  if (!phone) return null
+  return { label: "Call Us", href: `tel:${phone.replace(/\D/g, "")}` }
+}
+
 // The scheduling action — upgradeable to full calendar add-on
 export const SCHEDULING_CTA: Partial<Record<string, CTA>> = {
   food:                  { label: "Reserve a Table",     href: "/book" },

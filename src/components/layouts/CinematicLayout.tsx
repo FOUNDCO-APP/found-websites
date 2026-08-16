@@ -12,6 +12,7 @@ import SiteAnnouncement from "@/components/layouts/SiteAnnouncement"
 import HeroVideo from "@/components/layouts/HeroVideo"
 import EmailSignupSection from "@/components/layouts/EmailSignupSection"
 import type { LayoutProps } from "@/types/layout"
+import { finalCtaSecondary } from "@/lib/industryCTAs"
 
 export default function CinematicLayout({ company, activeAddons, primaryCTA, secondaryCTA, imgs, gradient, heroImage, heroVideo, sectionImages, locations = [] }: LayoutProps) {
   const config = company.website_config
@@ -32,6 +33,7 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
   // inside About - real photos only, no stock fallback, so the restraint
   // rule still holds for anyone who hasn't tagged a gallery yet.
   const ownerGalleryImages = (sectionImages?.gallery ?? []).slice(0, 4)
+  const finalSecondary = finalCtaSecondary(secondaryCTA, company.phone)
 
   return (
     <>
@@ -299,16 +301,22 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
                 style={{ backgroundColor: primary, borderColor: primary }}>
                 {primaryCTA.label}
               </Link>
-              {company.phone && (
-                <a href={`tel:${company.phone.replace(/\D/g, "")}`}
+              {finalSecondary && (finalSecondary.href.startsWith("tel:") ? (
+                <a href={finalSecondary.href}
                   className="btn inline-flex items-center justify-center gap-2 w-full sm:w-auto"
                   style={{ borderColor: "rgba(255,255,255,0.3)", color: "#ffffff" }}>
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  Call Us
+                  {finalSecondary.label}
                 </a>
-              )}
+              ) : (
+                <Link href={finalSecondary.href}
+                  className="btn inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+                  style={{ borderColor: "rgba(255,255,255,0.3)", color: "#ffffff" }}>
+                  {finalSecondary.label}
+                </Link>
+              ))}
             </div>
           </div>
         </InView>

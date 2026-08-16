@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Three CTA Redundancy Bugs, Team-Reviewed, All Fixed
+
+### Progress This Pass
+- Follow-up to the Quote-vs-Estimate standardization below. While reviewing that same button system live on MBJ Heating and Cooling, Shawn found three separate, related CTA bugs, each confirmed precisely before any fix was proposed:
+  1. Site Editor's "Main Website Button" picker (Edit Website > Home) showed 4 options for most trade/service industries, but two of them ("quote" and "reserve") always resolved to the exact same button - a fake choice, not a real one. Root cause: both intent keys fall into the same `SCHEDULING_INTENTS` bucket in `getSiteCTAs()`, so the picker offered two rows with identical label/link.
+  2. The mobile sticky "dock" bar duplicated whatever the hero's own secondary button already said, for every industry except the 9 "booking-led" ones - confirmed via a real screenshot Shawn dropped in PhotoDrop showing "GET A FREE ESTIMATE" stacked twice on MBJ's live site, one directly under the other.
+  3. Every layout's Final CTA section (near the bottom, before the footer) hardcoded a phone "Call Us" button as its second action regardless of what the business's real secondary CTA actually was - a third, independently-built pattern inconsistent with both the hero and the dock bar.
+- Shawn asked this be brought to a team round before any code changed. Team direction (Steve leading, Craig/Priya/Jony/Angela weighing in), approved by Shawn with "yes build it all and follow team directions":
+  - Sticky bar should always track the hero's own primary action and simply wait until the hero scrolls out of view before appearing (the existing `delayUntilScroll` mechanism already exists for exactly this purpose) - not try to guess a different, "complementary" action per industry.
+  - Site Editor's picker should only ever offer real, distinct choices - remove the duplicate.
+  - The Final CTA section's second button should match the hero's real secondaryCTA, falling back to a phone call only when the business genuinely has none - not hardcode a call button unconditionally.
+- Built all three:
+  - `src/app/[slug]/layout.tsx`: removed the `bookingLedIndustries`/`usePrimaryMobileCTA` branching entirely - the sticky bar's CTA is now always `primary` (the same one the hero shows), and `delayUntilScroll` is now unconditionally `true` instead of only for booking-led industries or businesses with no secondary.
+  - `src/app/dashboard/(app)/site/SiteEditor.tsx`: removed the redundant `'quote'` entry from the else-bucket `intentOptions` array (trade/service industries) - was `['quote', 'reserve', 'contact', 'call']`, now `['reserve', 'contact', 'call']`. Existing companies with `primary_intent = 'quote'` already saved are unaffected; `getSiteCTAs()` still resolves that value correctly, this only changes which options the picker itself offers going forward.
+  - New shared `finalCtaSecondary(secondaryCTA, phone)` helper in `src/lib/industryCTAs.ts` - returns the hero's real `secondaryCTA` when one exists, otherwise a phone-call CTA only if the business has a phone number, otherwise nothing. Wired into all 6 public layout files (`ImpactLayout`, `PortraitLayout`, `EditorialLayout`, `CinematicLayout`, `WellnessLuxeLayout`, `WellnessCinematicLayout`), each of which previously had its own independent hardcoded `{company.phone && <a href="tel:...">Call Us</a>}` block in its Final CTA section. Each file's rendering now branches on whether the resolved CTA is a phone link (`tel:`) or a real page link, matching that layout's own existing button styling exactly (4 files use the phone-icon SVG pill button, 2 wellness layouts use the plain rounded-pill button with no icon).
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run test:industry-mobile-layout` passed.
+- `npm run build` passed clean, all routes generated, no errors.
+- Not yet tested live - none of the three fixes have been checked on a real phone against a real business account yet.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: on MBJ Heating and Cooling (or any non-booking-led test account), confirm the mobile sticky bar no longer repeats the hero's secondary button - it should show the same label as the hero's primary button, and only appear after scrolling past the hero. In Edit Website > Home > Main Website Button, confirm the picker for a trade/service business now shows only 3 genuinely distinct options instead of 4 with a hidden duplicate. On a business with a real secondary CTA (e.g. one offering both "Get a Free Estimate" and "Contact Us"), scroll to the bottom Final CTA section and confirm the second button now says "Contact Us" (or whatever the real secondary is) instead of always "Call Us".
+
+---
+
 ## 2026-08-16 - Standardize Public CTA Copy to "Estimate" (Never "Quote")
 
 ### Progress This Pass
