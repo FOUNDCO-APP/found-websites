@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Squished Gallery Photos on Impact/Portrait Templates
+
+Shawn caught MBJ Heating and Cooling's homepage showing squished gallery photos on desktop/iPad, asked to check every template.
+
+- [x] Traced to a real bug: gallery-strip owner-photo array had no upper cap, only a stock-photo top-up for too-few photos. Strip is built for exactly 4 tiles; an owner with more (Richard has ~16) got every one crushed into one fixed desktop row via `flex-1` with scrolling disabled.
+- [x] Checked all 6 templates: `ImpactLayout` and `PortraitLayout` both had the identical copy-pasted bug. `Cinematic`, `Editorial`, `WellnessLuxe`, `WellnessCinematic` already cap correctly - unaffected.
+- [x] Fixed: capped owner gallery photos to 4 at the source in both files, matching the other four templates.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: reload `mbjheatingandcooling.com` on desktop/iPad, confirm 3-4 properly-sized tiles instead of ~16 slivers.
+
 ## 2026-08-15 - Marketing Visual System: Product Imagery Rollout
 
 - [x] Contractor/home-services first pass: replace labeled proof/mockup block with approved product-style image.

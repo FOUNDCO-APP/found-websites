@@ -1,3 +1,17 @@
+## Session: August 16, 2026 (part 2) - Squished Gallery Photos on Impact/Portrait Templates
+**AI:** Claude
+
+### Context
+Shawn reported MBJ Heating and Cooling's homepage showing squished gallery photos on desktop/iPad, asked to check every template. Traced it to MBJ's `layout_override` of `impact`, then read the actual gallery-strip code: the owner-photo array had no upper cap, only a stock-photo top-up for too few real photos. The strip is built for exactly 4 tiles (desktop shows 3 via `flex-1` with scrolling disabled, a 4th only in mobile scroll) - Richard's ~16 real gallery photos all got squeezed into that same fixed row.
+
+### Changed
+- `ImpactLayout.tsx` and `PortraitLayout.tsx`: capped `ownerGalleryImages` to 4 at the source (`.slice(0, 4)`), matching the pattern already used correctly in `CinematicLayout`, `EditorialLayout`, `WellnessLuxeLayout`, and `WellnessCinematicLayout` - checked all 6 templates, only these two had the bug (Impact's strip was originally ported from Portrait, same copy-pasted code).
+
+### Verification
+- `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` (webpack mode) all passed.
+
+---
+
 ## Session: August 16, 2026 - Admin Billing Snapshot and Email Copy
 **AI:** Codex
 **Worked on:** Made deferred billing safer and clearer from Found HQ after MBJ Heating and Cooling exposed the billing-date display confusion.

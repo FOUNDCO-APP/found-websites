@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Squished Gallery Photos on Impact/Portrait Templates (Real Bug, Fixed)
+
+### Progress This Pass
+- Shawn reported MBJ Heating and Cooling's homepage showing squished, sliver-thin gallery photos on desktop/iPad - "doesn't make sense because on other sites we made I never saw this happen." Asked to check every template.
+- Traced it precisely before touching anything: MBJ has a manual `layout_override` set to `impact` (not the layout the industry/vibe matrix would normally pick for home_services/modern, which is `cinematic`). Read `ImpactLayout.tsx`'s gallery-strip code directly.
+- Root cause confirmed: the gallery strip's owner-photo array (`ownerGalleryImages = sectionImages?.gallery ?? []`) had no upper cap - only a stock-photo top-up path for owners with *too few* real photos. The strip itself is built for exactly 4 tiles (desktop switches from a scrollable mobile strip to `flex-1` tiles with scrolling disabled, showing 3 tiles plus a 4th hidden on desktop). Richard has ~16 real gallery-tagged job photos - every single one of them (all but index 3) got squeezed into that same fixed desktop row via `flex-1`, crushing each to a sliver.
+- Checked all 6 templates, not just the one that broke: `PortraitLayout.tsx` has the exact same copy-pasted bug (confirmed - Impact's strip was originally ported from Portrait). `CinematicLayout`, `EditorialLayout`, `WellnessLuxeLayout`, and `WellnessCinematicLayout` all already cap the photo count correctly (`.slice(0, 4)`/`.slice(0, 3)`/`.slice(0, 5)` at the source or before final render) - unaffected.
+- This explains why it was never seen before: it only triggers when a real owner has more than 4 real gallery photos on Impact or Portrait specifically - most prior test/practice sites never had that many real photos tagged.
+- Fixed: capped `ownerGalleryImages` to 4 at the source in both `ImpactLayout.tsx` and `PortraitLayout.tsx`, matching the pattern the other four templates already use correctly.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed (webpack build mode, per Codex's earlier stability fix - slower than the previous default but completed clean).
+
+### Explicit Next Step
+After deploy: reload `mbjheatingandcooling.com` on desktop and iPad, confirm the gallery strip now shows 3-4 properly-sized tiles instead of a squished row of ~16 slivers. Also worth a spot-check on any other real client using Impact or Portrait with a large real gallery, if one exists.
+
 ## 2026-08-16 - MBJ Deferred Billing / Admin Billing Clarity Fix
 
 ### Progress This Pass
