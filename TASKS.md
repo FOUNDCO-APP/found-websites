@@ -9,10 +9,18 @@ Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibili
 - [x] Paid add-ons that get hidden show a persistent "still being billed $X/mo" note with a link to Billing - hiding never cancels the charge, confirmed directly with Shawn rather than guessed.
 - [x] Admin-facing counterpart: toggle row in `/admin/clients/[id]` via `setDisabledAddon()` action, parallel to the existing Pro-plan included-addon picker (unchanged from yesterday).
 - [x] Smarter default: `defaultDisabledAddonsForIndustry()` helper wired into `createOnboardingSite()` - new Business-plan signups start with industry-irrelevant add-ons already hidden. Creation-time only, not plan-upgrade/webhook-sync - existing-company mutation risk, own caution class.
-- [x] Existing accounts (MBJ) unaffected by the new default - fixed via the manual toggle, not a backfill.
+- [x] Existing accounts, corrected 2026-08-16 (see entry below): all 29 `found_business` companies backfilled with the same industry-relevance default, since none had ever had a real choice recorded here.
 - [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
 - [ ] Shawn QA: Edit Website should show a new "Features" tile under Site-wide; hiding Shopping Cart there should remove "Shop" from the live public nav. If a real test account has a paid add-on active, confirm hiding it shows the billing warning and the charge is untouched. Admin toggle in `/admin/clients/[id]` should still work the same way. A fresh non-retail Business-plan signup should start with Shopping Cart already hidden.
 - [ ] Not built, explicitly deferred to its own future session per Shawn: self-serve packages/memberships for service businesses (distinct from retail Shop - checkout would need a no-shipping/no-address mode at minimum, real recurring billing for true "memberships").
+
+## 2026-08-16 - Backfilled disabled_addons for Every Existing Business-Plan Company
+
+Shawn asked whether the Shop tile problem was MBJ-specific or systemic. Confirmed live: all 29 `found_business` companies had `disabled_addons: []` (the column had no writer before this session), so every non-retail Business-plan account - real ones included: `cameras`, `Heating and Cooling`, `MBJ Heating and Cooling`, `Hvac`, `Flooring`, `contractor`, `dj`, `restaurant` - had the same dead tile.
+
+- [x] Confirmed the Edit Website Pages-section Shop tile is gated by the same `effectiveAddons` check as the public nav - no separate fix needed, the Features toggle already clears both.
+- [x] Ran a one-time backfill (approved by Shawn) applying `defaultDisabledAddonsForIndustry()` to all 29 companies via direct Supabase writes - zero risk of clobbering a real choice since none existed. All 29 succeeded, verified live post-write.
+- [x] No application code changed - pure data correction, temp script deleted after running.
 
 ## 2026-08-16 - Three CTA Redundancy Bugs Fixed
 

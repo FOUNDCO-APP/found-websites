@@ -1,3 +1,17 @@
+## Session: August 16, 2026 (part 8) - Backfilled disabled_addons for Every Existing Business-Plan Company
+**AI:** Claude
+
+### Context
+Shawn asked whether Edit Website's own Shop editing tile has the same dead-link problem as the public nav, and whether it's just MBJ or others too. Confirmed the tile is gated by the same `effectiveAddons` check as the public nav, so nothing extra was needed there. Queried all 29 `found_business` companies live and found every one has `disabled_addons: []` - the column had no writer before yesterday, so this is universal, not MBJ-specific. Real accounts affected: `cameras`, `Heating and Cooling`, `MBJ Heating and Cooling`, `Hvac`, `Flooring`, `contractor`, `dj`, `restaurant`.
+
+### Changed
+- No application code - pure data correction. Ran a one-time script applying `defaultDisabledAddonsForIndustry()`'s exact logic against live Supabase for all 29 companies, since none had a real prior choice to risk clobbering. All 29 updated successfully, verified live post-write (not just trusted script output). Script deleted after running.
+
+### Verification
+- Live read-back confirmed MBJ's `disabled_addons` actually saved: `["online_ordering", "shopping_cart", "reservation_calendar"]`.
+
+---
+
 ## Session: August 16, 2026 (part 7) - Moved Add-On Toggle to Edit Website, Generalized It
 **AI:** Claude
 

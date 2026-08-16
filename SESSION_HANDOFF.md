@@ -1,5 +1,21 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Backfilled disabled_addons for Every Existing Business-Plan Company
+
+### Progress This Pass
+- Shawn asked directly: does the Shop editing tile in Edit Website's own Pages section have the same problem as the public nav, and is it just MBJ or others too? Confirmed via a live query rather than assuming: the Pages-section tile is driven by the exact same `effectiveAddons` check as the public nav (`isShopCatalog = effectiveAddons.includes("shopping_cart")` in `SiteEditor.tsx`), so using the new Features toggle already clears both at once - nothing extra needed there.
+- The real question was scope: queried all 29 `found_business` companies and found every single one - test and real alike - has `disabled_addons: []`. Confirmed this is structurally guaranteed, not a coincidence: the column had zero writers anywhere in the codebase before yesterday, so no company has ever had a real choice recorded here. Real (non-test) accounts affected beyond MBJ: `cameras`, `Heating and Cooling`, `Hvac`, `Flooring`, `contractor`, `dj`, `restaurant` - all showing at least one irrelevant bundled add-on in both their public nav and their own Edit Website Pages list.
+- Since there was zero risk of clobbering a real prior choice (there wasn't one, for any of the 29), ran a one-time backfill applying the same `defaultDisabledAddonsForIndustry()` logic used for new signups directly against live Supabase - confirmed each write with a follow-up read, not assumed from the script's own success output.
+- All 29 updated successfully (0 failures). Example: MBJ Heating and Cooling now has `disabled_addons: ["online_ordering", "shopping_cart", "reservation_calendar"]` - keeps `quote_payments` (its real relevant add-on) and `email_marketing` (universal), hides the 3 that don't apply to HVAC.
+- No code changed this pass - pure data correction, using logic already shipped and verified in the prior two entries below. The temporary backfill script was deleted after running; it's not part of the app going forward, same as the one-time nature of the fix itself.
+
+### Verification This Pass
+- Verified live via direct Supabase read-back that MBJ's `disabled_addons` actually saved correctly, not just trusted the script's own success log.
+- No build/tsc/test run needed - no application code touched.
+
+### Explicit Next Step
+Shawn QA: reload MBJ's public site and confirm "Shop" is gone from the nav (should already have been true even before this pass, since the toggle logic was already live - this backfill just applied the hide automatically instead of requiring a manual tap). Also worth a spot-check on one of the other real accounts, e.g. `Heating and Cooling` or `Hvac`, to confirm the same. All 29 companies can still have any individual add-on turned back on anytime via the Features toggle in Edit Website if a business genuinely needs it despite the default (the bike-shop-selling-merch scenario already discussed).
+
 ## 2026-08-16 - Follow-Up: Moved the Add-On Toggle From Billing to Edit Website
 
 ### Progress This Pass
