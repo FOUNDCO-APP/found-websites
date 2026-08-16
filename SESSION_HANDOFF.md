@@ -1,5 +1,32 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - MBJ Deferred Billing Date Correction
+
+### Progress This Pass
+- Shawn paused visual rollout because MBJ Heating and Cooling was created with a 30-day deferral and billing day 15, but the system set the card/billing date to Oct 15 instead of the intended Sep 15.
+- Verified live Supabase row before changing anything:
+  - company: `MBJ Heating and Cooling`
+  - slug: `mbj-heating-and-cooling`
+  - email: `mbjmechanical@gmail.com`
+  - plan: `found_business`
+  - Stripe customer/subscription: not created yet
+  - prior `trial_ends_at`: `2026-10-15 00:00:00+00`
+- Corrected live Supabase data:
+  - `trial_ends_at` set to `2026-09-15 00:00:00+00`
+  - `billing_cycle_day` remains `15`
+  - added an internal client activity note documenting the correction.
+- Verified the previously delivered client email said Oct 15. Local code could not resend because Vercel does not expose sensitive env values through `vercel env pull`; production's admin resend button should now use the corrected Sep 15 date because it reads `companies.trial_ends_at`.
+- Fixed the source bug in `src/app/admin/new-client/actions.ts`: deferred billing now compares calendar dates instead of exact timestamps so same-day billing anchors do not jump an extra month.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Push the source fix, then use Found HQ's MBJ client page to resend the card-link email so Richard receives the corrected Sep 15 billing date.
+
 ## 2026-08-15 - Real Estate Industry Product Visual
 
 ### Progress This Pass

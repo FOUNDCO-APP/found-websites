@@ -25,12 +25,19 @@ const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 // day of month if they have one (e.g. "the 25th") - same mechanism the
 // activation flow uses to both delay the first charge and anchor every
 // renewal after it. Capped 1-28 so there's never a short-month edge case.
+//
+// Compare calendar dates, not exact timestamps. If Shawn creates a 30-day
+// deferral late on Aug 15 and anchors billing to the 15th, the intended due
+// date is Sep 15. A timestamp comparison would see Sep 15 00:00 as "earlier"
+// than Aug 15 late-night + 30 days and incorrectly jump to Oct 15.
 function dueDateFor(termDays: number, billingDay: number | null): Date {
   const minDate = new Date(Date.now() + termDays * 24 * 60 * 60 * 1000)
   if (!billingDay) return minDate
 
   let candidate = new Date(minDate.getFullYear(), minDate.getMonth(), billingDay)
-  if (candidate < minDate) candidate = new Date(minDate.getFullYear(), minDate.getMonth() + 1, billingDay)
+  const candidateDay = new Date(candidate.getFullYear(), candidate.getMonth(), candidate.getDate()).getTime()
+  const minDay = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate()).getTime()
+  if (candidateDay < minDay) candidate = new Date(minDate.getFullYear(), minDate.getMonth() + 1, billingDay)
   return candidate
 }
 

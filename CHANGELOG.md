@@ -1,3 +1,28 @@
+## Session: August 15, 2026 - MBJ Deferred Billing Date Correction
+**AI:** Codex
+
+### Context
+Shawn created MBJ Heating and Cooling with a 30-day deferral and billing day 15. The system set the due/billing date to Oct 15, but Shawn intended Sep 15.
+
+### Changed
+- Corrected MBJ's live Supabase company row:
+  - `trial_ends_at = 2026-09-15 00:00:00+00`,
+  - `billing_cycle_day = 15`.
+- Added an internal client activity note documenting the correction.
+- Fixed `src/app/admin/new-client/actions.ts` so deferred billing compares calendar dates instead of exact timestamps. This prevents same-day billing anchors from jumping an extra month.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Push the source fix.
+- Resend MBJ's card-link email from Found HQ so Richard gets the corrected Sep 15 date; the old delivered email said Oct 15.
+
+---
+
 ## Session: August 15, 2026 - Real Estate Industry Product Visual
 **AI:** Codex
 
