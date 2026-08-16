@@ -19,6 +19,28 @@ Shawn reported that the latest production deployment failed, so the restaurant v
 
 ---
 
+## Session: August 15, 2026 - Restaurant Visual Asset Crop Correction
+**AI:** Codex
+
+### Context
+Shawn QA'd the live restaurant industry page and found the restaurant image was overdone after the CSS crop/scale fix. The team agreed the actual problem was the restaurant image asset's baked-in empty top space, not the page layout.
+
+### Changed
+- Restored `src/components/IndustryPage.tsx` restaurant visual layout to the simpler approved full-bleed product-band structure.
+- Cropped `public/marketing/found-restaurant-site-preview-v1.png` from `864x1821` to `864x1521`, removing 300px of empty top space so the phone appears closer to the copy naturally.
+- Kept the change restaurant-only; no homepage, contractor, pricing, onboarding, tracking, or template changes.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Run local verification, commit, push, and retest `/industries/restaurants` on iPhone.
+
+---
+
 ## Session: August 15, 2026 - Restaurant Industry Product Visual
 **AI:** Codex
 

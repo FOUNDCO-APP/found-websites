@@ -20,6 +20,27 @@
 ### Explicit Next Step
 Run build verification, commit, push, then confirm Vercel production is Ready for the latest commit before Shawn retests `/industries/restaurants`.
 
+## 2026-08-15 - Restaurant Visual Asset Crop Correction
+
+### Progress This Pass
+- Shawn QA'd the live restaurant page and found the restaurant visual was over-cropped/overdone after the CSS framing fix.
+- Team review:
+  - Steve: undo the layout hack; solve the real image problem.
+  - Jony: the issue is baked into the restaurant image composition, not the page spacing.
+  - Craig: restore the approved simple visual-band layout and crop the asset itself.
+  - Marcus: keep the correction restaurant-only; do not affect contractor, homepage, pricing, onboarding, or other industry pages.
+- Restored the restaurant visual code to the approved simple product-band structure.
+- Cropped `public/marketing/found-restaurant-site-preview-v1.png` from `864x1821` to `864x1521`, removing 300px of empty top space so the phone appears sooner without CSS forcing.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Run verification, commit, push, and QA `/industries/restaurants` on iPhone. The image should sit closer to the copy without looking oversized or cut off.
+
 ## 2026-08-15 - Restaurant Industry Product Visual
 
 ### Progress This Pass
