@@ -4,6 +4,7 @@
 
 - [x] Contractor/home-services first pass: replace labeled proof/mockup block with approved product-style image.
 - [x] Remove visible "Example preview" / proof-style labeling from the contractor visual section.
+- [x] Remove contractor visual outer card wrapper and convert the approved image to a product-band layout.
 - [x] Verify `git diff --check`, `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
 - [ ] Shawn QA: `/industries/contractors` on iPhone after deploy.
 - [ ] Future: create homepage product-image sections so the marketing site is not mostly copy.

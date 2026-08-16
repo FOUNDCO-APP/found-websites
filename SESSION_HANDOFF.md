@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Contractor Visual Removed From Card Wrapper
+
+### Progress This Pass
+- Shawn QA'd the first product-image version on iPhone and approved the image quality, but asked whether it needed to live inside a card.
+- Team round with Jony leading:
+  - Jony: remove the double-card/module feeling. The image should feel like product imagery, closer to an Apple product band.
+  - Steve: keep the section where it is, directly after the intro copy, so the page still explains the problem before showing the product.
+  - Phil: shorten the headline because the image now does the selling.
+  - Marcus/Craig: keep the same image asset; no iframe, screenshot pipeline, onboarding, pricing, or tracking changes.
+- Updated `src/components/IndustryPage.tsx` contractor/home-services only:
+  - removed the visible outer rounded card/border/background treatment,
+  - changed headline to `A site that looks ready to win work.`,
+  - made the image span wider/cleaner like product imagery,
+  - kept no caption and no visible image label.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+After deploy, Shawn should re-check `/industries/contractors` on iPhone. Look only at whether the visual now feels like a clean product band instead of a card inside a card.
+
 ## 2026-08-15 - Contractor Marketing Visual Uses Product Imagery, Not Labels
 
 ### Progress This Pass

@@ -1,3 +1,27 @@
+## Session: August 15, 2026 - Contractor Visual Removed From Card Wrapper
+**AI:** Codex
+
+### Context
+Shawn QA'd the first product-image version on iPhone and approved the asset, but pushed back on the double-card/module feeling. Team round with Jony leading approved treating the visual like an Apple-style product band: context in the copy, image doing the selling, no extra label/caption/card wrapper.
+
+### Changed
+- Updated `src/components/IndustryPage.tsx` for contractor/home-services only:
+  - removed the visible outer rounded card/border/background treatment around the product image,
+  - changed the headline to `A site that looks ready to win work.`,
+  - widened the image treatment so it reads more like product imagery than a card inside a card,
+  - kept the same approved local image asset and no visible caption.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Deploy and QA `/industries/contractors` on iPhone. Judge only whether the visual now feels like a clean product band instead of a card inside a card.
+
+---
+
 ## Session: August 15, 2026 - Contractor Marketing Visual Becomes Product Imagery
 **AI:** Codex
 

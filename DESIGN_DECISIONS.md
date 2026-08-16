@@ -12,6 +12,7 @@ Why: Shawn clarified that Found's marketing pages should work like Apple product
 **Current approved first implementation:**
 - `/industries/contractors` contractor/home-services section uses `WHAT FOUND BUILDS` and `See what Found can build for your business.`
 - The approved image is treated as a responsive marketing asset, not a labeled mockup.
+- Major product visuals should not be trapped inside a card inside another card. When the goal is to show what Found can build, prefer a clean product band/hero-like image after contextual copy, with no extra caption unless the team explicitly asks for one.
 
 ---
 

@@ -59,17 +59,17 @@ function IndustryOutcomeProof({
 
   if (isContractorShowroom) {
     return (
-      <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:p-7">
-        <div className="mb-5">
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden py-3 md:py-8">
+        <div className="mb-6 px-1 md:mb-8">
           <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
             What Found builds
           </p>
-          <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight tracking-tight text-white md:text-5xl">
-            See what Found can build for your business.
+          <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
+            A site that looks ready to win work.
           </h2>
         </div>
 
-        <div className="overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#050706] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="-mx-6 overflow-hidden bg-[#050706] shadow-[0_28px_90px_rgba(0,0,0,0.42)] sm:mx-0 sm:rounded-[2rem] md:-mx-10 lg:-mx-16">
           <img
             src="/marketing/found-contractor-site-preview-v1.png"
             alt="Finished Found contractor website shown across devices"
@@ -77,6 +77,7 @@ function IndustryOutcomeProof({
           />
         </div>
 
+        {false && (
         <div className="hidden overflow-hidden rounded-[1.75rem] bg-[#EEE9DC] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-3">
           <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-[#080A09]/45 md:px-4">
             <div className="flex gap-1.5">
@@ -158,6 +159,7 @@ function IndustryOutcomeProof({
             </div>
           </div>
         </div>
+        )}
 
       </div>
     )
