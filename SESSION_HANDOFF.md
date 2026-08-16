@@ -1,5 +1,30 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Real Estate Industry Product Visual
+
+### Progress This Pass
+- Shawn asked to continue the approved marketing visual rollout.
+- Team review:
+  - Steve: choose real estate next to prove Found is not only for contractors and restaurants.
+  - Jony: make it a distinct premium listing/trust/home-search visual, not a clone of the contractor iPad or restaurant phone.
+  - Phil: real estate should sell credibility, listings, and buyer/seller trust quickly.
+  - Angela: keep it in the same `What Found builds` moment so prospects immediately understand what their site can look like.
+  - Craig/Marcus: real-estate industry page only, new local asset, no onboarding, pricing, tracking, database, or template changes.
+- Generated and saved a real-estate product asset at `public/marketing/found-real-estate-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx` with a real-estate-only visual branch:
+  - eyebrow stays `What Found builds`,
+  - headline `A real estate site that makes trust feel immediate.`,
+  - full-bleed blended image band matching the approved product-visual pattern.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+Run verification, commit, push, confirm Vercel production is Ready, then Shawn should QA `/industries/real-estate` on iPhone.
+
 ## 2026-08-15 - Vercel Production Build Stability
 
 ### Progress This Pass

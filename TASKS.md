@@ -8,13 +8,15 @@
 - [x] Add hero-style gradient blending to the contractor product image band so it has no hard bottom edge or clipped side glow.
 - [x] Add homepage one-phone product visual after the "How it works" section.
 - [x] Add restaurant industry product visual using a distinct food/menu/reservation image, not a contractor clone.
+- [x] Add real estate industry product visual using a distinct listing/trust/home-search image, not a contractor or restaurant clone.
 - [x] Verify `git diff --check`, `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, and `npm run build`.
 - [ ] Shawn QA: `/industries/contractors` on iPhone after deploy.
 - [ ] Shawn QA: homepage one-phone product visual on iPhone after deploy.
 - [ ] Shawn QA: `/industries/restaurants` on iPhone after deploy.
+- [ ] Shawn QA: `/industries/real-estate` on iPhone after deploy.
 - [ ] Future: create homepage product-image sections so the marketing site is not mostly copy.
 - [ ] Future: decide where product visuals belong on `/compare` and `/how-it-works`.
-- [ ] Future: create equivalent visuals for real estate, spas/wellness, retail, salons, photographers, and cleaning only after the restaurant pattern is approved live.
+- [ ] Future: create equivalent visuals for spas/wellness, retail, salons, photographers, and cleaning only after each prior visual is approved live.
 - [ ] Future: align generated templates with the level shown in marketing visuals so Found is not promising a better design than onboarding can produce.
 
 ## 2026-08-14 - Remove Stripe Link From Found's Own Billing Screen

@@ -1,3 +1,29 @@
+## Session: August 15, 2026 - Real Estate Industry Product Visual
+**AI:** Codex
+
+### Context
+Shawn asked to continue the approved visual rollout. The team selected real estate next so the Found marketing site proves the visual system beyond contractors and restaurants.
+
+### Changed
+- Added `public/marketing/found-real-estate-site-preview-v1.png`.
+- Updated `src/components/IndustryPage.tsx`:
+  - added a real-estate-only product visual branch for `/industries/real-estate`,
+  - used distinct real estate copy: `A real estate site that makes trust feel immediate.`,
+  - kept the approved full-bleed blended product-band pattern,
+  - left homepage, contractor, restaurant, pricing, onboarding, tracking, database, and templates unchanged.
+- Updated `TASKS.md` and `SESSION_HANDOFF.md` so the rollout stays durable across AI handoffs.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Commit, push, confirm production is Ready, and retest `/industries/real-estate` on iPhone.
+
+---
+
 ## Session: August 15, 2026 - Vercel Production Build Stability
 **AI:** Codex
 
