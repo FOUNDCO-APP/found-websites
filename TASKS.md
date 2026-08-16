@@ -1,5 +1,15 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Gallery Auto-Scroll + MBJ About-Page Grammar Fix
+
+Shawn asked for the gallery strip to slowly auto-scroll on all devices, and flagged broken About-page grammar on MBJ, asking whether it meant a template problem.
+
+- [x] Investigated before touching anything: searched every deterministic content-generation path - all clean, none matched the broken text. Spot-checked another real client for comparison, found nothing similar. Conclusion: one-off AI-generation quality slip, not a systemic template bug.
+- [x] Corrected MBJ's `about_story` directly in the live database with accurate, grammatical copy; also fixed a lowercase "hvac" issue in `about_text`/`about_preview`.
+- [x] Built gallery auto-scroll on the already-proven `.catalog-showcase-track` pattern - new `.gallery-strip-track` keyframe (55s, slower/more ambient), applied to both `ImpactLayout.tsx` and `PortraitLayout.tsx`. Pauses on hover, respects `prefers-reduced-motion`.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: reload `mbjheatingandcooling.com/about` for the corrected copy, and the homepage on mobile + desktop for the new slow auto-scroll (should pause on hover).
+
 ## 2026-08-16 - Squished Gallery Photos on Impact/Portrait Templates
 
 Shawn caught MBJ Heating and Cooling's homepage showing squished gallery photos on desktop/iPad, asked to check every template.

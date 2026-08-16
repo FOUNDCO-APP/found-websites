@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Gallery Auto-Scroll + MBJ About-Page Grammar Fix
+
+### Progress This Pass
+- Shawn asked for two things after the squished-gallery fix: make the gallery strip slowly auto-scroll on all devices (not just a manual mobile swipe), and flagged broken grammar on MBJ's About page ("We handle for more than twenty years and mbj mechanical has been the hvac partner tucson relies on...") - asked whether this meant a template problem.
+- **About-page grammar, investigated before touching anything:** searched every deterministic content-generation path (`contentGeneration.ts`'s per-industry fallback templates, `aboutContent.ts`, `copySimilarity.ts`'s rewrite path) - all produce clean, grammatical text; none matched the broken pattern. `about_text`/`about_preview` for MBJ were already fine (different, cleaner structure) - only `about_story` was broken, meaning it came from AI generation directly, not a deterministic template. Spot-checked another real client (RC Bicycles) for comparison - no similar issue found there. Conclusion: a one-off AI-generation quality slip for this specific business, not a systemic template bug.
+- Corrected MBJ's `about_story` directly in the live database with accurate, grammatical copy preserving all the same real facts (20+ years, clear communication, install/repair/maintenance). Also fixed a smaller lowercase "hvac" capitalization issue in `about_text`/`about_preview` while in the same record.
+- **Gallery auto-scroll**, built on top of an already-proven pattern in this codebase (`CatalogShowcase.tsx`'s `.catalog-showcase-track`, a doubled-content + `-50%` translate loop already used for the shop/menu preview strip). Added a matching `.gallery-strip-track` keyframe (55s, slower/more ambient than the 34s product carousel), applied to both `ImpactLayout.tsx` and `PortraitLayout.tsx`'s gallery strips - replaces the old split behavior (static desktop row, manual mobile swipe) with one consistent slow auto-scroll everywhere. Pauses on hover, respects `prefers-reduced-motion` (falls back to manual scroll). Tile width changed from viewport-relative (`75vw`, meant for the old single-tile-per-swipe mobile pattern) to a fixed `320px` on desktop so multiple tiles are actually visible scrolling by.
+
+### Verification This Pass
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed (webpack mode).
+- MBJ's corrected `about_story`/`about_text`/`about_preview` confirmed applied live via direct query.
+
+### Explicit Next Step
+After deploy: reload `mbjheatingandcooling.com/about` and confirm the "Who we are" copy now reads correctly. Reload the homepage on both mobile and desktop and confirm the gallery strip is now slowly, continuously scrolling rather than static/swipe-only, and that hovering over it pauses the motion.
+
 ## 2026-08-16 - Squished Gallery Photos on Impact/Portrait Templates (Real Bug, Fixed)
 
 ### Progress This Pass

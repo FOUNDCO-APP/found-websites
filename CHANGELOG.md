@@ -1,3 +1,19 @@
+## Session: August 16, 2026 (part 3) - Gallery Auto-Scroll + MBJ About-Page Grammar Fix
+**AI:** Claude
+
+### Context
+Shawn asked for the gallery strip to slowly auto-scroll on all devices, and flagged broken About-page grammar on MBJ ("We handle for more than twenty years and mbj mechanical has been..."), asking whether it meant a template problem. Investigated every deterministic content-generation path first - all clean, none matched. Spot-checked another real client for comparison, found nothing similar. Conclusion: one-off AI-generation slip specific to this business's `about_story` field, not a systemic bug.
+
+### Changed
+- Corrected MBJ's `about_story`/`about_text`/`about_preview` directly in the live database with accurate, grammatical copy.
+- `globals.css`: new `.gallery-strip-track` keyframe (55s loop), built on the same doubled-content + `-50%` translate technique already proven in `.catalog-showcase-track`.
+- `ImpactLayout.tsx`/`PortraitLayout.tsx`: gallery strip now auto-scrolls slowly on every device instead of the old split behavior (static desktop row, manual mobile swipe). Pauses on hover, respects `prefers-reduced-motion`. Tile width changed from `75vw` to a fixed `320px` on desktop so multiple tiles are visible scrolling by.
+
+### Verification
+- `cmd /c npx tsc --noEmit`, `cmd /c npm run test:industry-mobile-layout`, `cmd /c npm run build` all passed.
+
+---
+
 ## Session: August 16, 2026 (part 2) - Squished Gallery Photos on Impact/Portrait Templates
 **AI:** Claude
 
