@@ -581,3 +581,32 @@ h1, h2, h3, h4, h5, h6 {
     display: none;
   }
 }
+
+/* Impact/Portrait homepage gallery strip - slow continuous scroll on every
+   device (not just a mobile swipe). Same doubled-content + -50% translate
+   technique as .catalog-showcase-track above, just slower since this is
+   meant to feel ambient, not like a product carousel. */
+.gallery-strip-track {
+  animation: gallery-strip-scroll 55s linear infinite;
+}
+
+.gallery-strip-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes gallery-strip-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-strip-track {
+    animation: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .gallery-strip-track::-webkit-scrollbar {
+    display: none;
+  }
+}

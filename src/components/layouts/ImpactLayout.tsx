@@ -91,22 +91,24 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
 
       <SiteAnnouncement company={company} image={sectionImages?.announcement ?? null} activeAddons={activeAddons} />
 
-      {/* ── GALLERY STRIP ── */}
+      {/* ── GALLERY STRIP — slow continuous auto-scroll on every device ── */}
       {galleryImages.length > 0 && (
-        <div className="flex gap-0.5 overflow-x-auto scrollbar-hide md:overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
-          {galleryImages.map((src, i) => (
-            <div
-              key={i}
-              className={`relative flex-none overflow-hidden ${i === 3 ? "md:hidden" : "md:flex-1"}`}
-              style={{ height: "260px", width: "75vw" }}
-            >
-              <img
-                src={src}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
-              />
-            </div>
-          ))}
+        <div className="overflow-hidden" style={{ backgroundColor: "#0a0a0a" }}>
+          <div className={galleryImages.length >= 4 ? "flex w-max gap-0.5 gallery-strip-track" : "flex gap-0.5 overflow-x-auto scrollbar-hide"}>
+            {(galleryImages.length >= 4 ? [...galleryImages, ...galleryImages] : galleryImages).map((src, i) => (
+              <div
+                key={i}
+                className="relative flex-none overflow-hidden w-[70vw] md:w-[320px]"
+                style={{ height: "260px" }}
+              >
+                <img
+                  src={src}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
