@@ -11,6 +11,7 @@ After Shawn approved the homepage phone visual, the team recommended restaurants
   - kept the approved full-bleed blended product-band pattern,
   - used restaurant-specific copy: `A restaurant site that makes the next table feel close.`,
   - left contractor, homepage, pricing, onboarding, tracking, and templates unchanged.
+- After Shawn's iPhone QA screenshot, tightened the restaurant-only image framing so the phone appears sooner under the headline instead of showing the asset's large empty black top area.
 
 ### Verification
 - `git diff --check` passed.

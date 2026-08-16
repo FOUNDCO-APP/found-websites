@@ -182,7 +182,7 @@ function IndustryOutcomeProof({
           </h2>
         </div>
 
-        <div className="relative left-1/2 ml-[-50vw] w-screen overflow-hidden bg-[#050706] py-2 shadow-[0_34px_110px_rgba(0,0,0,0.5)] md:py-6">
+        <div className="relative left-1/2 ml-[-50vw] mt-[-1.5rem] h-[560px] w-screen overflow-hidden bg-[#050706] shadow-[0_34px_110px_rgba(0,0,0,0.5)] md:mt-[-2rem] md:h-[680px]">
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-gradient-to-b from-[#080A09] via-[#080A09]/72 to-transparent" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-28 bg-gradient-to-t from-[#080A09] via-[#080A09]/80 to-transparent md:h-36" />
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#080A09] to-transparent md:w-28" />
@@ -190,7 +190,7 @@ function IndustryOutcomeProof({
           <img
             src="/marketing/found-restaurant-site-preview-v1.png"
             alt="Finished Found restaurant website shown on a mobile phone"
-            className="relative z-0 mx-auto block h-auto w-full max-w-[760px] scale-[1.02] md:scale-100"
+            className="relative z-0 mx-auto block h-full w-full max-w-[760px] scale-[1.08] object-cover object-[center_78%] md:scale-105"
           />
         </div>
       </div>

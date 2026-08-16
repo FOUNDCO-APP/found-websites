@@ -15,6 +15,7 @@
   - eyebrow stays `What Found builds`,
   - headline `A restaurant site that makes the next table feel close.`,
   - full-bleed blended image band matching the approved contractor visual-system pattern.
+- Shawn QA'd the first deploy screenshot and found too much empty space between the copy and image. Tightened the restaurant-only image framing so the phone appears sooner under the copy by cropping the baked-in top empty space in CSS.
 
 ### Verification This Pass
 - `git diff --check` passed.
