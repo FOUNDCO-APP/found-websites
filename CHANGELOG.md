@@ -1,3 +1,25 @@
+## Session: August 15, 2026 - Marketing Visual System V1: Industry Proof Block
+**AI:** Codex
+
+### Context
+Shawn confirmed the dashboard style picker cleanup worked both ways: HVAC no longer shows Wellness Luxe/Cinematic, while a spa slug does. Moved to the next team-approved item: Future Marketing Visual System. Team direction was Jony-led and explicitly scoped: start with the industry-page `What Found builds` proof block, make it feel like a real Found output, keep it static/data-driven, and do not touch the homepage, templates, database, or build a screenshot pipeline yet.
+
+### Changed
+- `src/components/IndustryPage.tsx`: rebuilt `IndustryOutcomeProof` from a generic proof/mockup block into a stronger browser/device-frame style Found-built-site visual.
+- The new proof block is industry-aware and still uses existing page data only: industry label, subheadline, and the first three feature entries.
+- Visual now shows an actual finished-site structure: industry hero, request/help CTA, "New request" lead cue, services/gallery/contact proof cards, and lower feature cards.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed after rerunning with a longer timeout.
+
+### Next
+- Not pushed yet. After deploy, Shawn should QA `/industries/contractors`, `/industries/spas`, `/industries/restaurants`, `/industries/real-estate`, and `/compare`, especially on iPhone, judging only whether the `What Found builds` proof visual looks believable, premium, and representative of what Found can actually build.
+
+---
+
 ## Session: August 14, 2026 (part 5) - Remove Stripe Link From Found's Own Billing
 **AI:** Claude
 

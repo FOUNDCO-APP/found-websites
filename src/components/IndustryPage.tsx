@@ -60,9 +60,12 @@ function IndustryOutcomeProof({
     .split(" ")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
+  const primaryFeature = previewFeatures[0]
+  const secondaryFeature = previewFeatures[1]
+  const tertiaryFeature = previewFeatures[2]
 
   return (
-    <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 md:p-7">
+    <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:p-7">
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
           What Found builds
@@ -72,31 +75,71 @@ function IndustryOutcomeProof({
         </span>
       </div>
 
-      <div className="grid w-full min-w-0 max-w-full gap-4 md:grid-cols-[1.08fr_0.92fr]">
-        <div className="relative w-full min-w-0 overflow-hidden rounded-[1.55rem] border border-white/[0.08] bg-[#0B0E0C] p-6 md:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_12%,rgba(50,208,116,0.2),transparent_32%)]" />
-          <p className="relative mb-5 text-[10px] font-black uppercase tracking-[0.22em] text-white/38">
-            {industryLabel}
-          </p>
-          <h2 className="relative max-w-[12ch] [overflow-wrap:anywhere] text-[2.2rem] font-normal leading-[1.02] tracking-tight text-white md:text-6xl">
-            A better {industryTitle.toLowerCase()} site, built to get the request.
-          </h2>
-          <p className="relative mt-5 max-w-xl break-words text-sm leading-7 text-white/58 md:text-base">
-            {subheadline}
-          </p>
-          <div className="relative mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
-            Request help
+      <div className="overflow-hidden rounded-[1.75rem] bg-[#EEE9DC] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-3">
+        <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-[#080A09]/45 md:px-4">
+          <div className="flex gap-1.5">
+            <span className="size-2.5 rounded-full bg-[#FF6B57]" />
+            <span className="size-2.5 rounded-full bg-[#F6C85F]" />
+            <span className="size-2.5 rounded-full bg-[#32D074]" />
           </div>
+          <p className="text-[8px] font-black uppercase tracking-[0.22em] md:text-[9px]">Found-built site</p>
         </div>
 
-        <div className="grid w-full min-w-0 max-w-full gap-3">
-          {previewFeatures.map((feature) => (
-            <div key={feature.label} className="w-full min-w-0 rounded-[1.35rem] border border-white/[0.08] bg-[#101411] p-5">
-              <div className="mb-4 h-1.5 w-10 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
-              <p className="break-words text-base font-black text-white">{feature.label}</p>
-              <p className="mt-2 break-words text-sm leading-6 text-white/48">{feature.desc}</p>
+        <div className="relative overflow-hidden rounded-b-[1.35rem] bg-[#0B0E0C]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_8%,rgba(50,208,116,0.3),transparent_34%)]" />
+
+          <div className="relative grid gap-4 p-5 md:grid-cols-[1.05fr_0.95fr] md:p-7">
+            <div className="min-w-0">
+              <p className="mb-4 text-[9px] font-black uppercase tracking-[0.24em] text-white/38">
+                {industryLabel}
+              </p>
+              <h2 className="max-w-[13ch] [overflow-wrap:anywhere] text-[2.35rem] font-normal leading-[1.02] tracking-tight text-white md:text-6xl">
+                {industryTitle} site, ready for the next request.
+              </h2>
+              <p className="mt-5 max-w-xl break-words text-sm leading-7 text-white/58 md:text-base">
+                {subheadline}
+              </p>
+              <div className="mt-7 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+                Request help
+              </div>
             </div>
-          ))}
+
+            <div className="grid min-w-0 content-start gap-3">
+              <div className="rounded-[1.35rem] border border-white/[0.1] bg-white/[0.08] p-4 backdrop-blur">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="size-2.5 rounded-full bg-[#32D074]" />
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/48">New request</p>
+                </div>
+                <p className="text-base font-black text-white">A customer asks for help.</p>
+                <p className="mt-2 text-sm leading-6 text-white/52">
+                  Name, phone, and project details come through the site instead of getting lost.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[primaryFeature, secondaryFeature, tertiaryFeature].filter(Boolean).map((feature, index) => (
+                  <div key={feature!.label} className="min-h-24 rounded-[1rem] border border-white/[0.08] bg-white/[0.06] p-3">
+                    <div className="mb-3 h-1.5 w-8 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                    <p className="break-words text-[11px] font-black leading-snug text-white">
+                      {index === 0 ? "Services" : index === 1 ? "Gallery" : "Contact"}
+                    </p>
+                    <p className="mt-1 line-clamp-2 break-words text-[10px] leading-4 text-white/42">
+                      {feature!.label}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative grid gap-px bg-white/[0.08] text-[#080A09] md:grid-cols-3">
+            {previewFeatures.map((feature) => (
+              <div key={feature.label} className="bg-[#F7F3EA] p-4 md:p-5">
+                <p className="break-words text-sm font-black">{feature.label}</p>
+                <p className="mt-2 line-clamp-3 break-words text-xs leading-5 text-black/55">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

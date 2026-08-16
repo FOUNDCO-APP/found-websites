@@ -1,5 +1,27 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Marketing Visual System V1 Started: Industry Proof Block
+
+### Progress This Pass
+- Shawn confirmed the dashboard style picker filter worked both ways: HVAC does not show Wellness Luxe/Cinematic, while the spa slug does. That closes the style-picker cleanup item.
+- Moved to the next team-approved item: Future Marketing Visual System. Shawn approved the team direction exactly: Jony-led, start with the existing industry-page `What Found builds` proof block, no homepage changes, no screenshot pipeline, no template changes, no database work.
+- Built only the approved first step in `src/components/IndustryPage.tsx`: `IndustryOutcomeProof` now renders a stronger Found-built-site visual instead of the older generic/fake proof card.
+- The new block is still static/data-driven from the existing industry props. It shows:
+  - a browser/device-frame style site preview,
+  - an industry-aware hero,
+  - a real request/help CTA,
+  - a "New request" lead cue,
+  - services/gallery/contact proof cards based on the page's existing feature data.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed after rerunning with a longer timeout.
+
+### Explicit Next Step
+Not pushed yet. Shawn QA after deploy should check `/industries/contractors`, `/industries/spas`, `/industries/restaurants`, `/industries/real-estate`, and `/compare` on iPhone first, then desktop/tablet. Focus only on whether the new `What Found builds` proof visual looks believable, premium, and representative of what Found can actually build.
+
 ## 2026-08-14/15 - END OF SESSION WRAP - read this first, then the dated entries below for detail
 
 Long session, both marketing-site fixes and a real production money-safety bug found and fixed. Everything below is committed and pushed to `main` (last commit `9c12aca`, verified clean working tree, no uncommitted changes). This entry is the fast-read summary; the dated entries below (same session) have full detail on each piece if needed.
