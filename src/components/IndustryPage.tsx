@@ -55,6 +55,109 @@ function IndustryOutcomeProof({
   subheadline: string
   features: Feature[]
 }) {
+  const isContractorShowroom = ["contractors", "home services", "home-services"].includes(industryLabel)
+
+  if (isContractorShowroom) {
+    return (
+      <div className="relative w-full max-w-full min-w-0 overflow-hidden rounded-[2rem] border border-white/[0.08] bg-white/[0.035] p-4 shadow-[0_32px_90px_rgba(0,0,0,0.28)] md:p-7">
+        <div className="mb-5">
+          <p className="text-xs font-black uppercase tracking-[0.22em]" style={{ color: SIGNAL_GREEN }}>
+            What your site can look like
+          </p>
+          <h2 className="mt-4 max-w-2xl text-3xl font-normal leading-tight tracking-tight text-white md:text-5xl">
+            A finished site for the kind of work you do.
+          </h2>
+        </div>
+
+        <div className="overflow-hidden rounded-[1.75rem] bg-[#EEE9DC] p-2 shadow-[0_24px_80px_rgba(0,0,0,0.35)] md:p-3">
+          <div className="flex items-center justify-between border-b border-black/10 px-3 py-2 text-[#080A09]/45 md:px-4">
+            <div className="flex gap-1.5">
+              <span className="size-2.5 rounded-full bg-[#FF6B57]" />
+              <span className="size-2.5 rounded-full bg-[#F6C85F]" />
+              <span className="size-2.5 rounded-full bg-[#32D074]" />
+            </div>
+            <p className="text-[8px] font-black uppercase tracking-[0.22em] md:text-[9px]">Example site preview</p>
+          </div>
+
+          <div className="relative overflow-hidden rounded-b-[1.35rem] bg-[#090D0A] text-white">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_10%,rgba(50,208,116,0.32),transparent_34%)]" />
+            <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
+
+            <div className="relative grid min-h-[540px] content-between gap-8 p-6 md:min-h-[500px] md:grid-cols-[1.04fr_0.96fr] md:p-9">
+              <div className="flex min-w-0 flex-col justify-between gap-10">
+                <div>
+                  <div className="mb-12 flex items-center justify-between gap-5">
+                    <p className="text-[11px] font-black uppercase tracking-[0.34em] text-white/78">
+                      Canyon Ridge Builders
+                    </p>
+                    <p className="shrink-0 text-[9px] font-black uppercase tracking-[0.2em] text-white/36">
+                      Tucson, AZ
+                    </p>
+                  </div>
+
+                  <p className="mb-5 text-[9px] font-black uppercase tracking-[0.26em]" style={{ color: SIGNAL_GREEN }}>
+                    Remodels · Roofing · Outdoor living
+                  </p>
+                  <h3 className="max-w-[11ch] text-[3.15rem] font-normal leading-[0.96] tracking-[-0.045em] text-white md:text-7xl">
+                    Built work. Shown beautifully.
+                  </h3>
+                  <p className="mt-6 max-w-md text-base leading-7 text-white/58">
+                    Premium remodeling and home improvement work presented with clear services, recent projects, and a simple way to request an estimate.
+                  </p>
+                  <div className="mt-8 inline-flex rounded-full bg-[#32D074] px-6 py-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#080A09]">
+                    Request an estimate
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {["Remodeling", "Roofing", "Painting"].map((service) => (
+                    <div key={service} className="rounded-2xl border border-white/[0.08] bg-white/[0.06] p-3">
+                      <div className="mb-5 h-1.5 w-8 rounded-full" style={{ backgroundColor: SIGNAL_GREEN }} />
+                      <p className="text-[11px] font-black leading-snug text-white">{service}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid min-w-0 content-end gap-3 md:gap-4">
+                <div className="overflow-hidden rounded-[1.55rem] border border-white/[0.1] bg-[#151A15] shadow-[0_24px_80px_rgba(0,0,0,0.32)]">
+                  <div className="h-48 bg-[linear-gradient(135deg,rgba(255,255,255,0.2),rgba(50,208,116,0.12)_38%,rgba(0,0,0,0.35)),radial-gradient(circle_at_24%_18%,rgba(245,247,244,0.34),transparent_18%),linear-gradient(145deg,#253026,#0E130F)] md:h-60" />
+                  <div className="bg-[#F7F3EA] p-5 text-[#080A09]">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-black/36">Featured project</p>
+                    <p className="mt-3 text-xl font-black leading-tight">Backyard patio and exterior refresh</p>
+                    <p className="mt-3 text-sm leading-6 text-black/55">
+                      Recent work appears with clean project copy, strong photography, and a direct estimate path.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  {["Recent work", "Services"].map((label, index) => (
+                    <div key={label} className="rounded-[1.2rem] border border-white/[0.08] bg-white/[0.07] p-4">
+                      <div
+                        className={[
+                          "mb-4 h-20 rounded-xl",
+                          index === 0
+                            ? "bg-[linear-gradient(135deg,rgba(50,208,116,0.18),rgba(255,255,255,0.1)),linear-gradient(145deg,#19251C,#0D120F)]"
+                            : "bg-[linear-gradient(135deg,rgba(255,255,255,0.16),rgba(50,208,116,0.1)),linear-gradient(145deg,#20251F,#0E120F)]",
+                        ].join(" ")}
+                      />
+                      <p className="text-sm font-black text-white">{label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-4 text-xs leading-6 text-white/38">
+          Example preview. Your site is generated from your business, services, photos, and style.
+        </p>
+      </div>
+    )
+  }
+
   const previewFeatures = features.slice(0, 3)
   const industryTitle = industryLabel
     .split(" ")

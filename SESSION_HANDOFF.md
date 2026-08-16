@@ -1,26 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
-## 2026-08-15 - Marketing Visual System V1 Started: Industry Proof Block
+## 2026-08-15 - Contractor Showroom Preview Replaces Workflow Proof Block
 
 ### Progress This Pass
 - Shawn confirmed the dashboard style picker filter worked both ways: HVAC does not show Wellness Luxe/Cinematic, while the spa slug does. That closes the style-picker cleanup item.
-- Moved to the next team-approved item: Future Marketing Visual System. Shawn approved the team direction exactly: Jony-led, start with the existing industry-page `What Found builds` proof block, no homepage changes, no screenshot pipeline, no template changes, no database work.
-- Built only the approved first step in `src/components/IndustryPage.tsx`: `IndustryOutcomeProof` now renders a stronger Found-built-site visual instead of the older generic/fake proof card.
-- The new block is still static/data-driven from the existing industry props. It shows:
-  - a browser/device-frame style site preview,
-  - an industry-aware hero,
-  - a real request/help CTA,
-  - a "New request" lead cue,
-  - services/gallery/contact proof cards based on the page's existing feature data.
+- Moved to the next team-approved item: Future Marketing Visual System. Shawn approved the team direction exactly, then corrected the intent after seeing the first shipped proof block: this section should show what a finished customer website can look like, not explain lead flow or Found workflow.
+- Team reset with Jony leading: replace the request-card/proof-block direction with a showroom direction. Steve's approved product sentence: "Show me the website Found can make for my business."
+- Built only the approved first showroom step in `src/components/IndustryPage.tsx`: contractor/home-services now gets a finished-site preview inside `IndustryOutcomeProof`.
+- Scope intentionally held tight:
+  - contractor/home-services only,
+  - no homepage changes,
+  - no pricing changes,
+  - no onboarding/template-assignment changes,
+  - no screenshot/image-generation pipeline,
+  - no database work.
+- The new contractor preview removes the "New request" card, Services/Gallery/Contact mini product cards, and "Lead-ready" badge. It now shows a premium example contractor site preview with a fictional business, contractor-specific hero, estimate CTA, service chips, project/gallery surfaces, and the required caption: "Example preview. Your site is generated from your business, services, photos, and style."
 
 ### Verification This Pass
 - `git diff --check` passed.
 - `cmd /c npx tsc --noEmit` passed.
 - `cmd /c npm run test:industry-mobile-layout` passed.
-- `cmd /c npm run build` passed after rerunning with a longer timeout.
+- `cmd /c npm run build` passed.
 
 ### Explicit Next Step
-Not pushed yet. Shawn QA after deploy should check `/industries/contractors`, `/industries/spas`, `/industries/restaurants`, `/industries/real-estate`, and `/compare` on iPhone first, then desktop/tablet. Focus only on whether the new `What Found builds` proof visual looks believable, premium, and representative of what Found can actually build.
+Not pushed yet. Shawn QA after deploy should check `/industries/contractors` on iPhone first. Focus only on whether the `WHAT YOUR SITE CAN LOOK LIKE` showroom feels like a finished premium contractor website Found could actually generate. Other industry pages are intentionally not converted yet until their showroom standards are approved.
 
 ## 2026-08-14/15 - END OF SESSION WRAP - read this first, then the dated entries below for detail
 

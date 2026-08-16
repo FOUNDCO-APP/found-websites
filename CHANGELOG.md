@@ -1,3 +1,35 @@
+## Session: August 15, 2026 - Contractor Showroom Preview
+**AI:** Codex
+
+### Context
+Shawn tested the first industry proof visual live and clarified the intent: the section needs to show what a finished customer website can look like, not explain what Found does or how leads flow. Team reset with Jony leading. Steve approved the product direction: "Show me the website Found can make for my business." Shawn approved the exact team direction and instructed Codex not to make additional decisions.
+
+### Changed
+- `src/components/IndustryPage.tsx`: contractor/home-services now gets a finished-site showroom in `IndustryOutcomeProof`.
+- The new contractor showroom uses:
+  - section label `WHAT YOUR SITE CAN LOOK LIKE`,
+  - headline `A finished site for the kind of work you do.`,
+  - a fictional premium contractor website preview,
+  - contractor-specific hero/service/project surfaces,
+  - an estimate CTA,
+  - the caption: `Example preview. Your site is generated from your business, services, photos, and style.`
+- Removed the prior workflow/proof elements from the contractor version only:
+  - no `New request` card,
+  - no Services/Gallery/Contact product mini-cards,
+  - no `Lead-ready` badge.
+- Scope intentionally stayed contractor-only because the team approved starting with one industry. Other industries keep their prior block until their showroom standards are approved.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Not pushed yet. After deploy, Shawn should QA `/industries/contractors` on iPhone first and judge only whether the showroom feels like a finished premium contractor website Found could actually generate.
+
+---
+
 ## Session: August 15, 2026 - Marketing Visual System V1: Industry Proof Block
 **AI:** Codex
 
