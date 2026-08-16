@@ -8,6 +8,7 @@ Why: Shawn clarified that Found's marketing pages should work like Apple product
 - Avoid corny labels on the image itself.
 - Do not overpromise: visuals must either match what Found can generate now or represent an actively tracked template-parity target.
 - Roll out one pattern at a time, starting with contractor/home-services before cloning across every industry.
+- Product-image sections should inherit the homepage hero's softness: blended black gradients, no hard image cutoff, no visible clipped glow, and enough breathing room before the next section.
 
 **Current approved first implementation:**
 - `/industries/contractors` contractor/home-services section uses `WHAT FOUND BUILDS` and `See what Found can build for your business.`

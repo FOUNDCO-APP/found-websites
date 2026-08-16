@@ -1,3 +1,27 @@
+## Session: August 15, 2026 - Contractor Visual Hero-Blend Pass
+**AI:** Codex
+
+### Context
+Shawn compared the contractor product visual against the homepage hero and clarified the gap: the image was better, but still had a hard rectangular bottom edge and clipped glow, so it did not feel magical or Apple-like yet. Team approved a CSS/layout-only hero-blend pass.
+
+### Changed
+- Updated `src/components/IndustryPage.tsx` for contractor/home-services only:
+  - product image now sits in a full-bleed viewport-width band,
+  - added top and bottom gradient fades to blend into Found Black,
+  - added side fades to soften the left/right glow edges,
+  - added more bottom spacing before the next section.
+
+### Verification
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Next
+- Deploy and QA `/industries/contractors` on iPhone. Compare against the homepage hero: no hard bottom line, no clipped side glow, and the image should feel blended into the page.
+
+---
+
 ## Session: August 15, 2026 - Contractor Visual Removed From Card Wrapper
 **AI:** Codex
 

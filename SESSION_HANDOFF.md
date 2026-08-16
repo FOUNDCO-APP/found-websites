@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Contractor Visual Hero-Blend Pass
+
+### Progress This Pass
+- Shawn compared the contractor visual section against the homepage hero and clarified the exact problem: it still felt like a hard-edged inserted image, not a blended Apple-style product moment.
+- Team round with Jony leading:
+  - Jony: make it a hero-like visual band with softened edges, not a rectangular block.
+  - Steve: keep the same section placement and message; this is a layout polish pass, not a product-flow change.
+  - Phil: keep the copy minimal; the image should sell without labels or disclaimers.
+  - Marcus/Craig: contractor page only, same image asset, CSS/layout only.
+- Updated `src/components/IndustryPage.tsx` contractor/home-services only:
+  - product image now uses a full-bleed viewport-width band,
+  - added top/bottom black gradient fades to remove the hard image edge,
+  - added side fades so the green glow does not look clipped,
+  - added extra bottom breathing room before the next section.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed.
+
+### Explicit Next Step
+After deploy, Shawn should re-check `/industries/contractors` on iPhone and compare against the homepage hero: the visual should feel blended into the page, with no hard bottom line and no obviously clipped side glow.
+
 ## 2026-08-15 - Contractor Visual Removed From Card Wrapper
 
 ### Progress This Pass
