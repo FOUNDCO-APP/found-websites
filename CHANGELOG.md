@@ -1,3 +1,23 @@
+## Session: August 16, 2026 (part 6) - Real Control Over Bundled Add-Ons
+**AI:** Claude
+
+### Context
+Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibility is controlled - automated by industry, or adjustable on the admin side. Traced against live data: MBJ is `found_business`, `disabled_addons: []`. Business plan bundles all 5 add-ons regardless of industry relevance (the `relevantIndustries` list on each addon def is only used to sort the picker UI, never to restrict what's granted), and `disabled_addons` - the column that already gates every access check in 15+ places - had zero writer anywhere in the codebase. Mid-round Shawn raised a bigger idea (self-serve packages/memberships for service businesses); checked the real checkout flow and confirmed it's built for retail (always asks Shipping-vs-Pickup, collects an address) and memberships would need real recurring billing that doesn't exist today - team recommended scoping that as its own future session rather than rushing it in, Shawn agreed.
+
+### Changed
+- `src/app/dashboard/(app)/more/actions.ts`: new `toggleBundledAddon()` - owner-authenticated, Business-plan-only, writes to `disabled_addons`.
+- `src/components/dashboard/BundledAddonsPanel.tsx` (new): shown on `/billing` for Business-plan companies (a real gap - `AddonsPanel` explicitly excludes `found_business`). Each of the 5 bundled features gets a real hide/show toggle, optimistic with rollback on failure.
+- `src/app/admin/businesses/actions.ts`: new `setDisabledAddon()`, admin-authenticated counterpart.
+- `src/app/admin/clients/[id]/ClientDetailWorkspace.tsx` + `page.tsx`: new Business-plan toggle row alongside the existing Pro-plan included-addon picker.
+- `src/lib/featureAccess.ts`: new `defaultDisabledAddonsForIndustry()` - seeds a sensible starting `disabled_addons` value for industry-irrelevant bundled add-ons.
+- `src/app/onboarding/actions.ts`: wired the new default into `createOnboardingSite()`'s insert - the one real creation choke point (public onboarding and the admin manual-creation tool both funnel through it). Deliberately NOT wired into plan-upgrade or Stripe-webhook-sync paths - those mutate an existing company and risk clobbering an owner's real choice; same caution class as the deferred-billing webhook bug found earlier this session.
+
+### Verification
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 16, 2026 (part 5) - Three CTA Redundancy Bugs Fixed
 **AI:** Claude
 

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { setViewAsCookie, toggleTest, setIncludedAddon } from "../../businesses/actions"
-import { getAllAddonsRanked } from "@/lib/featureAccess"
+import { setViewAsCookie, toggleTest, setIncludedAddon, setDisabledAddon } from "../../businesses/actions"
+import { getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
 import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
 
@@ -34,6 +34,7 @@ export type ClientDetail = {
   industry_category: string | null
   is_test: boolean | null
   included_addon_slug: string | null
+  disabled_addons: string[] | null
   stripe_connect_account_id: string | null
   created_at: string
   activities: { summary: string; activity_type: string; created_at: string }[]
@@ -96,9 +97,14 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const [testPending, startTestTransition] = useTransition()
   const [includedAddon, setIncludedAddonState] = useState(client.included_addon_slug)
   const [addonPending, startAddonTransition] = useTransition()
+  const [disabledAddons, setDisabledAddons] = useState<string[]>(client.disabled_addons ?? [])
+  const [bundledPending, startBundledTransition] = useTransition()
   const [editingContact, setEditingContact] = useState(false)
   const [editingAddress, setEditingAddress] = useState(false)
   const relevantAddons = client.plan === "found_pro" ? getAllAddonsRanked(client.industry_category ?? "") : []
+  const bundledAddons = client.plan === "found_business"
+    ? BUSINESS_INCLUDED_ADDONS.map(slug => ALL_ADDONS.find(a => a.slug === slug)).filter((a): a is NonNullable<typeof a> => !!a)
+    : []
   const isActiveSubscription = client.subscription_status === "active" || client.subscription_status === "trialing"
   const returnTo = `/admin/clients/${client.id}`
   const siteUrl = `https://${client.slug}.${ROOT_DOMAIN}`
@@ -130,6 +136,12 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
     if (slug === includedAddon) return
     setIncludedAddonState(slug)
     startAddonTransition(() => { setIncludedAddon(client.id, slug) })
+  }
+
+  function handleBundledToggle(slug: string) {
+    const hide = !disabledAddons.includes(slug)
+    setDisabledAddons((prev) => hide ? [...prev, slug] : prev.filter((s) => s !== slug))
+    startBundledTransition(() => { setDisabledAddon(client.id, slug, hide) })
   }
 
   return (
@@ -328,6 +340,17 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                   <button type="button" data-active={!includedAddon} disabled={addonPending} onClick={() => handleAddonChange(null)}>None</button>
                   {relevantAddons.map((addon) => (
                     <button key={addon.slug} type="button" data-active={includedAddon === addon.slug} disabled={addonPending} onClick={() => handleAddonChange(addon.slug)}>{addon.label}</button>
+                  ))}
+                </div>
+              </label>
+            </div>
+          )}
+          {client.plan === "found_business" && bundledAddons.length > 0 && (
+            <div className="hq-inline-form" style={{ marginTop: 12 }}>
+              <label className="hq-form-grow">Bundled add-ons (Business plan, all free - tap to hide one that doesn&apos;t apply)
+                <div className="hq-filter-row">
+                  {bundledAddons.map((addon) => (
+                    <button key={addon.slug} type="button" data-active={!disabledAddons.includes(addon.slug)} disabled={bundledPending} onClick={() => handleBundledToggle(addon.slug)}>{addon.label}</button>
                   ))}
                 </div>
               </label>

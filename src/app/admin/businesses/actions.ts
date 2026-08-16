@@ -136,3 +136,18 @@ export async function setIncludedAddon(companyId: string, addonSlug: string | nu
   const admin = getAdminClient()
   await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
 }
+
+// Found Business bundles all 5 add-ons free regardless of industry
+// relevance - disabled_addons is what lets a specific one be hidden without
+// losing the underlying feature (see toggleBundledAddon in
+// dashboard/(app)/more/actions.ts for the owner-facing equivalent). This is
+// the admin-side counterpart, so Shawn can set it up correctly before a
+// client ever logs in, same as the Pro-plan included-addon picker above.
+export async function setDisabledAddon(companyId: string, addonSlug: string, hide: boolean) {
+  await requireAdmin()
+  const admin = getAdminClient()
+  const { data: company } = await admin.from("companies").select("disabled_addons").eq("id", companyId).single()
+  const current = new Set((company?.disabled_addons ?? []) as string[])
+  if (hide) current.add(addonSlug); else current.delete(addonSlug)
+  await admin.from("companies").update({ disabled_addons: Array.from(current) }).eq("id", companyId)
+}

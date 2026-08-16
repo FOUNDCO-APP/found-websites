@@ -193,3 +193,20 @@ export function getAllAddonsRanked(industryCategory: string): AddonDef[] {
   const rest = ALL_ADDONS.filter((a) => !relevantSlugs.has(a.slug))
   return [...relevant, ...rest]
 }
+
+// Found Business bundles all 5 add-ons in automatically, regardless of
+// industry (confirmed live 2026-08-16: MBJ, an HVAC company, had a dead
+// Shopping Cart nav link with nothing behind it). Used only at company
+// creation time (onboarding + the admin manual-creation tool both funnel
+// through createOnboardingSite) to seed a sensible starting disabled_addons
+// value - never called on an existing company, since that would risk
+// silently clobbering an owner's already-made choice. An owner or admin can
+// always re-enable anything from here via the real toggle
+// (toggleBundledAddon / setDisabledAddon) if they genuinely need it -
+// this is a starting point, not a hard restriction.
+export function defaultDisabledAddonsForIndustry(industryCategory: string): AddonSlug[] {
+  return BUSINESS_INCLUDED_ADDONS.filter((slug) => {
+    const def = ALL_ADDONS.find((a) => a.slug === slug)
+    return def && def.relevantIndustries.length > 0 && !def.relevantIndustries.includes(industryCategory)
+  })
+}

@@ -8,6 +8,7 @@ import { getIndustryManifest } from "@/lib/industryManifests"
 import { sendNewSignupAlert } from "@/lib/adminAlerts"
 import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
 import { sendTrackedEmail } from "@/lib/emailLog"
+import { defaultDisabledAddonsForIndustry } from "@/lib/featureAccess"
 
 type OnboardingInput = {
   name: string
@@ -426,6 +427,9 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
       accent_color_2: mix(primaryColor, "#ffffff", 0.72),
       photo_keywords: subIndustry,
       plan: ["found", "found_pro", "found_business"].includes(input.plan ?? "") ? input.plan : "found",
+      // Only matters if/when this company is ever on found_business (see
+      // getEffectiveAddons) - inert otherwise, so it's safe to always seed.
+      disabled_addons: defaultDisabledAddonsForIndustry(industry ?? ""),
       active: true,
       preview_completed_at: new Date().toISOString(),
       ...(isComp ? { is_comp: true, subscription_status: "active" } : {}),

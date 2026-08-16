@@ -1,5 +1,17 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Real Control Over Bundled Add-Ons (Business Plan)
+
+Shawn noticed MBJ (HVAC) shows a dead "Shop" nav link and asked how nav visibility is controlled and whether it's adjustable anywhere. Team round found `disabled_addons` was a fully dead column (read in 15+ places, written nowhere) and Business plan bundles all 5 add-ons regardless of industry fit.
+
+- [x] Owner-facing toggle: new `BundledAddonsPanel` on `/billing` for Business-plan companies, real hide/show per bundled add-on via new `toggleBundledAddon()` action.
+- [x] Admin-facing counterpart: new toggle row in `/admin/clients/[id]` via new `setDisabledAddon()` action, parallel to the existing Pro-plan included-addon picker.
+- [x] Smarter default: new `defaultDisabledAddonsForIndustry()` helper, wired into `createOnboardingSite()` (covers both public onboarding and the admin manual-creation tool) - new Business-plan signups now start with industry-irrelevant add-ons already hidden. Deliberately not touched at plan-upgrade/webhook-sync time - existing-company mutation risk, own caution class.
+- [x] Existing accounts (MBJ) unaffected by the new default - fixed via the manual toggle, not a backfill.
+- [x] Verify `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` - all passed.
+- [ ] Shawn QA: MBJ's `/billing` should show a new Bundled Features section; hiding Shopping Cart there should remove "Shop" from the live public nav. Admin toggle should work the same way from `/admin/clients/[id]`. A fresh non-retail Business-plan signup should start with Shopping Cart already hidden.
+- [ ] Not built, explicitly deferred to its own future session per Shawn: self-serve packages/memberships for service businesses (distinct from retail Shop - checkout would need a no-shipping/no-address mode at minimum, real recurring billing for true "memberships").
+
 ## 2026-08-16 - Three CTA Redundancy Bugs Fixed
 
 Follow-up to the Quote-vs-Estimate task below, found while reviewing the same button system live. Shawn traced three separate redundancy bugs with real evidence (a PhotoDrop screenshot of MBJ's live site plus direct questions about Site Editor's picker) and asked for a team round before any fix.

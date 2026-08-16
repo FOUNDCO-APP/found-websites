@@ -16,7 +16,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         id, name, slug, contact_name, email, phone, address, city, state, zip, address_visible,
         plan, subscription_status, client_state, account_kind, comp_reason, is_comp,
         trial_ends_at, billing_cycle_day, deferred_payment_amount, deferred_payment_method, deferred_payment_note,
-        industry_category, is_test, included_addon_slug, stripe_connect_account_id, created_at
+        industry_category, is_test, included_addon_slug, disabled_addons, stripe_connect_account_id, created_at
       `)
       .eq("id", id)
       .maybeSingle(),

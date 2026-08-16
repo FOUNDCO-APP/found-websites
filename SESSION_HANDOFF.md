@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Real Control Over Bundled Add-Ons (Business Plan)
+
+### Progress This Pass
+- Follow-up to the sticky-bar fix Shawn just confirmed working live. He noticed MBJ (HVAC) shows a "Shop" link in its public nav and asked how nav visibility is actually controlled - automated by industry, or adjustable anywhere on the admin side.
+- Traced it precisely before proposing anything, confirmed against live data: MBJ is on `found_business`, `disabled_addons: []`. Found Business bundles all 5 add-ons (online ordering, shopping cart, quote/estimate payments, booking calendar, email marketing) automatically, with zero regard for whether the add-on is relevant to the company's industry - `shopping_cart`'s own `relevantIndustries` list doesn't include `home_services`, but that list was only ever used to sort the admin/owner add-on picker, never to restrict what's actually granted. Also traced `disabled_addons` (the column that's supposed to let something bundled-but-unwanted be hidden) and found it's read in 15+ places to gate features, but nothing anywhere ever wrote to it - a fully dead column.
+- Brought to the team per Shawn's request. Mid-round Shawn raised a real, bigger idea: should a service business be able to sell something self-serve too - a maintenance package, a membership - not framed as "Shop"? Checked the actual checkout flow (`ShopClient.tsx`) and confirmed it's not just labeled for retail, it's *built* for retail - it always asks Shipping-vs-Pickup and collects a street address, which would make zero sense for a maintenance-package purchase. "Membership" specifically implies real recurring billing, which doesn't exist anywhere today for a Found client's own customers (shopping_cart is one-time Stripe PaymentIntent checkout only). Team recommendation, approved by Shawn: fix the toggle/default problem now, scope self-serve packages/memberships as its own dedicated session later - real, different-sized pieces of work that shouldn't block each other.
+- Built:
+  - **Owner-facing toggle**: new `toggleBundledAddon()` action in `more/actions.ts`, new `BundledAddonsPanel.tsx` component shown on `/billing` for Business-plan companies only (the panel Business-plan owners never had - `AddonsPanel` was explicitly `plan !== "found_business"`-gated) - each of the 5 bundled features gets a real "Hide from my site" / "Show on my site" toggle, optimistic with rollback on failure.
+  - **Admin-facing counterpart**: new `setDisabledAddon()` action in `admin/businesses/actions.ts`, wired into `/admin/clients/[id]` right alongside the existing Pro-plan included-addon picker - lets Shawn set this up correctly for a client before they ever log in.
+  - **Smarter default for new signups**: new `defaultDisabledAddonsForIndustry()` helper in `featureAccess.ts`, wired into the one real creation choke point (`createOnboardingSite()` in `onboarding/actions.ts` - both public onboarding and the admin manual-creation tool funnel through this same function). A brand-new Business-plan company now starts with industry-irrelevant add-ons already hidden, instead of everyone getting all 5 regardless of fit. Deliberately scoped to creation only, not touched at plan-upgrade or Stripe-webhook-sync time - editing those would risk silently clobbering an existing owner's already-made choice, and after the deferred-billing webhook bug earlier this session, billing-adjacent webhook code gets extra caution rather than a same-day trailing edit.
+  - Existing accounts (MBJ included) are unaffected by the new default - real data already existed before this shipped. Fix for them is the new toggle, not a retroactive backfill.
+
+### Verification This Pass
+- `npx tsc --noEmit`, `npm run test:industry-mobile-layout`, `npm run build` all passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: on MBJ's `/billing` page, confirm a new "Bundled Features" section shows all 5 add-ons with a working hide/show toggle, and hiding Shopping Cart makes the public nav's "Shop" link disappear. In `/admin/clients/[id]` for a Business-plan client, confirm the matching admin toggle works. Run a brand-new test signup on Found Business as a non-retail industry and confirm Shopping Cart starts hidden automatically. Separately, not built: self-serve packages/memberships for service businesses - flagged as its own future scoping session, not started.
+
 ## 2026-08-16 - Three CTA Redundancy Bugs, Team-Reviewed, All Fixed
 
 ### Progress This Pass
