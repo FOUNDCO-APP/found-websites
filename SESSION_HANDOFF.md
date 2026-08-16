@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-15 - Vercel Production Build Stability
+
+### Progress This Pass
+- Shawn reported that the latest production deployment failed and that the restaurant spacing update was not visible live.
+- Team review:
+  - Steve: restore production deploy health before making more visual changes.
+  - Jony: do not change brand/design fonts unless required.
+  - Craig: Vercel failed inside Next/Turbopack while resolving `next/font/google` Oswald assets; use the stable webpack build path.
+  - Marcus: the restaurant spacing update is isolated to the restaurant industry visual branch and does not affect other industry pages.
+- Updated `package.json` build script from `next build` to `next build --webpack` so Vercel does not use the failing Turbopack font path.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `cmd /c npx tsc --noEmit` passed.
+- `cmd /c npm run test:industry-mobile-layout` passed.
+- `cmd /c npm run build` passed using `next build --webpack`.
+
+### Explicit Next Step
+Run build verification, commit, push, then confirm Vercel production is Ready for the latest commit before Shawn retests `/industries/restaurants`.
+
 ## 2026-08-15 - Restaurant Industry Product Visual
 
 ### Progress This Pass

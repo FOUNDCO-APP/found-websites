@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "test:copy-quality": "node scripts/check-copy-quality-fixtures.mjs",
     "test:public-hero-typography": "node scripts/check-public-hero-typography.mjs",
