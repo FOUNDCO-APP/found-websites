@@ -70,6 +70,27 @@ Get Shawn's approval to push. After deploy: connect a test domain, confirm the s
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: connect a test domain, confirm DNS records show immediately (no toggle needed), and the "Still stuck?" panel appears below with a clean single-line "Have us reach out instead" link, not a wrapped button.
 
+## 2026-08-17 (part 6) - Real Team Round on Domain Screen Visuals + Full Rewrite
+
+### Progress This Pass
+- Shawn rejected part 5 outright: reordering fixed priority but the underlying visuals were still the pre-redesign "geeky IT guy" look - amber/orange tinting the entire card for the whole unverified lifetime (not just real problems), a monospace DNS record table, and "still stuck" nested inside the same wrapper as the DNS steps and the Check Connection/Remove buttons. Asked for an explicit Jony-led team round with everyone's input shown before any code, per `BRIEF.md`.
+- Held it live. Jony's three concrete findings: (1) the outer card's `border/backgroundColor` used `rgba(255,180,0,...)` (amber) for the entire unverified state, including the instant after connecting - amber should mean "something is actually wrong," not "you haven't finished yet." (2) DNS record values were rendered `fontFamily: "monospace"` - a literal violation of the already-locked decision in `DECISIONS.md` (2026-07-03): "Found's product app has one typeface: Inter. No per-page font drift, ever." (3) One single wrapper held the header, DNS steps, "still stuck" panel, and Check/Remove buttons together with only a divider line between them - no real separation.
+- Steve confirmed this is pure presentation, no logic risk. Angela: "not verified yet" is a normal waiting state, not a warning - reserve amber for a real problem only. Craig confirmed the monospace-to-Inter swap and card-splitting are both safe, contained changes.
+- Mid-round, Shawn added one more correction after seeing the direction: the "Still stuck" panel's copy ("We'll set it up for you") oversells what Found can actually do - Found has no registrar credentials (locked decision, 2026-07-30) and can only guide an owner live, never connect a domain unilaterally. Fixed the promise to "We'll walk you through it" / "we'll stay with you live while you connect it" - matches what's actually true.
+- Rebuilt `DomainConnector.tsx` end to end on the approved direction:
+  - Two fully separate cards, siblings not nested: the domain-status card (header, status rows, DNS steps, Check/Remove) and a standalone `StillStuckPanel` card below it, with its own border.
+  - Card coloring now driven by `hasRealProblem` (only true for the misconfigured-after-trying state) - neutral dark card (matching the rest of the file's existing neutral style) for the normal waiting state, amber only for a genuine problem, green only once verified. Applied consistently to the card border/background, header status dot/text, and the per-hostname status row colors (which previously read amber "Needs DNS" even seconds after connecting).
+  - `DnsRecordsList` redesigned: no monospace, Inter throughout, the record type/host as a quiet label and the value (the thing actually copied) as the visually prominent line - not a shouting orange code table.
+  - `StillStuckPanel` (renamed from `SetupForYouPanel`) copy corrected to accurately promise live guidance, not unilateral setup.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: connect a test domain and confirm the card reads calm/neutral (not amber) while waiting, DNS records display in normal Found typography (no monospace), and the "Still stuck?" card sits visibly separate below the status card - not sharing a border with the Check Connection/Remove row.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status

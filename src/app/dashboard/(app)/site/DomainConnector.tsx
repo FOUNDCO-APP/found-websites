@@ -48,9 +48,19 @@ const DNS_RECORDS = [
   { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
 ]
 
+// Amber/red are reserved for a genuine problem, not for "you haven't
+// finished yet." Neutral matches the same dark-card look used everywhere
+// else in this file (see the no-domain-connected card below).
+const AMBER = "rgba(255,180,0,0.9)"
+const RED = "rgba(255,130,130,0.9)"
+const NEUTRAL_BORDER = "1px solid rgba(255,255,255,0.08)"
+const NEUTRAL_BG = "rgba(255,255,255,0.025)"
+
 // Guide-only support contact for owners who get stuck on DNS. We never take
 // a client's registrar login - Shawn stays on text/call while they click,
-// per the locked no-registrar-credentials security decision.
+// per the locked no-registrar-credentials security decision. Copy must
+// never imply Found does the setup unilaterally - Found can only walk an
+// owner through it live, not connect the domain without their involvement.
 const FOUND_HELP_PHONE_DISPLAY = "(520) 222-6308"
 const FOUND_HELP_PHONE_SMS = "5202226308"
 
@@ -88,6 +98,10 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
   // something the owner may actually need to fix, not just wait out.
   const MISCONFIGURED_GRACE_CHECKS = 3
   const showMisconfiguredHelp = !verified && manualStepConfirmed && misconfigured && checkAttempts >= MISCONFIGURED_GRACE_CHECKS
+  // The only state that earns the amber "something's actually wrong" look.
+  // Every other unverified moment (just connected, waiting, checking) is a
+  // normal step in a normal flow, not a warning.
+  const hasRealProblem = showMisconfiguredHelp
 
   function applyCheckResult(result: DomainCheckResult) {
     setVerified(result.verified)
@@ -214,26 +228,35 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
     handleCheck()
   }
 
+  // Redesigned 2026-08-17 (Jony-led team round): the previous version used
+  // fontFamily: "monospace" for the value, a real violation of the locked
+  // "Found has one typeface: Inter, no per-page font drift" decision
+  // (DECISIONS.md 2026-07-03) - and colored the record type bold orange,
+  // making a normal instruction step read as an alert. Now plain Inter
+  // throughout; the type/host sit as a quiet label, the value (the thing
+  // they actually copy) is the visually prominent part.
   function DnsRecordsList() {
     return (
-      <div style={{ display: "flex", flexDirection: "column" as const, gap: 6 }}>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
         {DNS_RECORDS.map((rec, i) => (
           <div key={i} style={{
-            borderRadius: 12, padding: "11px 14px",
-            backgroundColor: "rgba(255,255,255,0.05)",
+            borderRadius: 12, padding: "12px 14px",
+            backgroundColor: "rgba(255,255,255,0.04)",
             border: "1px solid rgba(255,255,255,0.08)",
-            display: "flex", alignItems: "center", gap: 10,
           }}>
-            <div style={{ display: "flex", gap: 14, flex: 1, fontFamily: "monospace", fontSize: 12 }}>
-              <span style={{ color: "rgba(255,180,0,0.9)", fontWeight: 700, minWidth: 44 }}>{rec.type}</span>
-              <span style={{ color: "rgba(255,255,255,0.5)", minWidth: 30 }}>{rec.host}</span>
-              <span style={{ color: "white", fontWeight: 600, flex: 1 }}>{rec.value}</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
+                {rec.type} record — {rec.host === "@" ? "root domain" : rec.host}
+              </div>
+              <button
+                onClick={() => copyToClipboard(rec.value, rec.type + rec.host)}
+                style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6, backgroundColor: copied === rec.type + rec.host ? `${GREEN}22` : "rgba(255,255,255,0.06)", color: copied === rec.type + rec.host ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700 }}>
+                {copied === rec.type + rec.host ? "✓" : "Copy"}
+              </button>
             </div>
-            <button
-              onClick={() => copyToClipboard(rec.value, rec.type + rec.host)}
-              style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6, backgroundColor: copied === rec.type + rec.host ? `${GREEN}22` : "rgba(255,255,255,0.06)", color: copied === rec.type + rec.host ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700 }}>
-              {copied === rec.type + rec.host ? "✓" : "Copy"}
-            </button>
+            <div style={{ ...TYPE.subhead, fontWeight: 600, color: "white", marginTop: 3, wordBreak: "break-all" as const }}>
+              {rec.value}
+            </div>
           </div>
         ))}
       </div>
@@ -252,27 +275,26 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
     setHelpRequested(true)
   }
 
-  // Shawn's direct correction 2026-08-17, after live testing: self-serve
-  // DNS should be the first thing shown, this panel is the fallback for
-  // "still can't get it done" - not the leading action anymore. Also fixed
-  // the secondary action: it was a full bordered button whose long label
-  // wrapped onto two lines inside the button ("looks horrible"). Now a
-  // plain text link with its explanation as separate text outside the
-  // tappable element, matching the "I'll connect it myself" link style.
-  function SetupForYouPanel() {
+  // Fully standalone card, rendered as a sibling of the domain-status card
+  // below, never nested inside it - Shawn's explicit correction 2026-08-17.
+  // Copy fixed the same session: Found can only guide an owner live (no
+  // registrar credentials, per the locked security decision), never
+  // "set it up for you" unilaterally - the heading and body must say that
+  // honestly, not promise something Found can't do without the owner.
+  function StillStuckPanel() {
     const smsBody = encodeURIComponent(
       `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.${contactName ? ` - ${contactName}` : ""}`
     )
     return (
       <div style={{
-        borderRadius: 16, padding: "18px 18px 16px",
-        backgroundColor: `${GREEN}12`, border: `1px solid ${GREEN}3a`,
+        borderRadius: 18, padding: "18px 18px 16px",
+        backgroundColor: `${GREEN}0d`, border: `1px solid ${GREEN}33`,
       }}>
         <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>
-          Still stuck? We&apos;ll set it up for you
+          Still stuck? We&apos;ll walk you through it
         </p>
         <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
-          Text us and we&apos;ll walk you through it live — no tech skills needed.
+          Text us and we&apos;ll stay with you live while you connect it — no tech skills needed.
         </p>
         <a
           href={`sms:${FOUND_HELP_PHONE_SMS}?body=${smsBody}`}
@@ -297,7 +319,7 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           </>
         )}
         {helpError && (
-          <p style={{ margin: "8px 0 0", ...TYPE.caption, color: "rgba(255,130,130,0.9)", textAlign: "center" as const }}>{helpError}</p>
+          <p style={{ margin: "8px 0 0", ...TYPE.caption, color: RED, textAlign: "center" as const }}>{helpError}</p>
         )}
       </div>
     )
@@ -311,8 +333,12 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
       <div style={{ padding: "0 18px 14px", display: "flex", flexDirection: "column" as const, gap: 8 }}>
         {rows.map(status => {
           const live = status.ownershipVerified && !status.misconfigured
+          // Only escalate to amber once the owner has actually tried and
+          // it's still wrong - before that, "Needs DNS" is just the normal
+          // starting state, not a problem.
+          const rowHasProblem = status.misconfigured && manualStepConfirmed
           const label = live ? "Live" : status.registered === false ? "Needs Found setup" : "Needs DNS"
-          const color = live ? GREEN : status.registered === false ? "rgba(255,130,130,0.9)" : "rgba(255,180,0,0.9)"
+          const color = live ? GREEN : status.registered === false ? RED : rowHasProblem ? AMBER : "rgba(255,255,255,0.45)"
 
           return (
             <div
@@ -365,188 +391,206 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
 
   if (isConnected) {
     return (
-      <div style={{
-        borderRadius: 18, overflow: "hidden",
-        border: verified ? `1px solid ${GREEN}44` : "1px solid rgba(255,180,0,0.25)",
-        backgroundColor: verified ? `${GREEN}08` : "rgba(255,180,0,0.04)",
-      }}>
-        {/* Domain header */}
-        <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-            backgroundColor: verified ? `${GREEN}22` : "rgba(255,180,0,0.15)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            {verified ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            ) : (
-              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "rgba(255,180,0,0.8)", animation: "pulse 2s infinite" }}/>
-            )}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
-            <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : "rgba(255,180,0,0.8)" }}>
-              {verified
-                ? "Live — root and www both work"
-                : needsFoundRepair
-                  ? "Found needs to finish adding both domain versions"
-                  : manualStepConfirmed
-                    ? "Checking root and www — this can take a few minutes"
-                    : "Almost there — let's finish connecting it"}
-            </div>
-          </div>
-        </div>
-
-        <DomainStatusRows />
-
-        {!verified && needsFoundRepair && (
-          <div style={{ padding: "0 18px 16px" }}>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+        <div style={{
+          borderRadius: 18, overflow: "hidden",
+          border: verified ? `1px solid ${GREEN}44` : hasRealProblem ? "1px solid rgba(255,180,0,0.28)" : NEUTRAL_BORDER,
+          backgroundColor: verified ? `${GREEN}08` : hasRealProblem ? "rgba(255,180,0,0.045)" : NEUTRAL_BG,
+        }}>
+          {/* Domain header */}
+          <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
-              borderRadius: 14,
-              padding: "13px 14px",
-              backgroundColor: "rgba(255,100,100,0.07)",
-              border: "1px solid rgba(255,100,100,0.16)",
+              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
+              backgroundColor: verified ? `${GREEN}22` : hasRealProblem ? "rgba(255,180,0,0.15)" : "rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,210,210,0.9)", lineHeight: 1.6 }}>
-                Found needs to add or repair one of the domain versions before DNS can finish.
-                This only updates Found/Vercel. It will not change GoDaddy, Namecheap, or any registrar settings.
-              </p>
-              <button
-                onClick={handleRepairFoundConnection}
-                disabled={connecting}
-                style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: connecting ? "rgba(255,255,255,0.06)" : GREEN, color: connecting ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: connecting ? "default" : "pointer" }}>
-                {connecting ? "Fixing…" : "Fix Found setup"}
-              </button>
+              {verified ? (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              ) : (
+                <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: hasRealProblem ? AMBER : "rgba(255,255,255,0.4)", animation: "pulse 2s infinite" }}/>
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
+              <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : hasRealProblem ? AMBER : "rgba(255,255,255,0.55)" }}>
+                {verified
+                  ? "Live — root and www both work"
+                  : needsFoundRepair
+                    ? "Found needs to finish adding both domain versions"
+                    : manualStepConfirmed
+                      ? "Checking root and www — this can take a few minutes"
+                      : "Almost there — let's finish connecting it"}
+              </div>
             </div>
           </div>
-        )}
 
-        {!verified && !manualStepConfirmed && (
-          <div style={{ padding: "0 18px 16px" }}>
-            <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-              Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
-            </p>
-            <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
-            </p>
-            <DnsRecordsList />
+          <DomainStatusRows />
 
-            {verificationRecords.length > 0 && (
-              <div style={{ marginTop: 10 }}>
-                <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-                  Also add this verification record:
-                </p>
-                {verificationRecords.map((rec, i) => (
-                  <div key={i} style={{ borderRadius: 12, padding: "10px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                    <span style={{ color: "rgba(255,180,0,0.8)", fontWeight: 700 }}>{rec.type}</span>
-                    {" "}<span>{rec.host}</span>
-                    {" "}<span style={{ color: "rgba(255,255,255,0.7)", wordBreak: "break-all" as const }}>{rec.value}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.85)", lineHeight: 1.6 }}>
-              If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
-            </p>
-
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
-                style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                Open GoDaddy DNS settings →
-              </a>
-              <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
-                style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                Open Namecheap DNS settings →
-              </a>
-            </div>
-
-            <button
-              onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
-              style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
-              {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
-            </button>
-
-            {enableDomainConnectProbe && (
-              <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
-                <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
-                  Internal automation proof
-                </div>
-                <p style={{ margin: "7px 0 10px", ...TYPE.footnote, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
-                  Checks whether this registrar exposes Domain Connect. Customers do not see this yet.
+          {!verified && needsFoundRepair && (
+            <div style={{ padding: "0 18px 16px" }}>
+              <div style={{
+                borderRadius: 14,
+                padding: "13px 14px",
+                backgroundColor: "rgba(255,100,100,0.07)",
+                border: "1px solid rgba(255,100,100,0.16)",
+              }}>
+                <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,210,210,0.9)", lineHeight: 1.6 }}>
+                  Found needs to add or repair one of the domain versions before DNS can finish.
+                  This only updates Found/Vercel. It will not change GoDaddy, Namecheap, or any registrar settings.
                 </p>
                 <button
-                  onClick={handleDomainConnectProbe}
-                  disabled={probingDomainConnect}
-                  style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: probingDomainConnect ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.8)", ...TYPE.footnote, fontWeight: 700, cursor: probingDomainConnect ? "default" : "pointer" }}>
-                  {probingDomainConnect ? "Checking…" : "Check automatic setup"}
+                  onClick={handleRepairFoundConnection}
+                  disabled={connecting}
+                  style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: connecting ? "rgba(255,255,255,0.06)" : GREEN, color: connecting ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: connecting ? "default" : "pointer" }}>
+                  {connecting ? "Fixing…" : "Fix Found setup"}
                 </button>
-                {domainConnectProbe && (
-                  <div style={{ marginTop: 10, display: "grid", gap: 6, ...TYPE.caption, color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
-                    <div>Domain Connect: <strong style={{ color: domainConnectProbe.registrarSupportsDomainConnect ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.registrarSupportsDomainConnect ? "Detected" : "Not detected"}</strong></div>
-                    {domainConnectProbe.discoveryName && <div>Lookup: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.discoveryName}</span></div>}
-                    {domainConnectProbe.providerHost && <div>Provider: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.providerHost}</span></div>}
-                    <div>Template: <strong style={{ color: domainConnectProbe.templateAvailable ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.templateAvailable === true ? "Available" : domainConnectProbe.templateAvailable === false ? "Unavailable" : "Not proven yet"}</strong></div>
-                    <div style={{ color: domainConnectProbe.error ? "rgba(255,130,130,0.9)" : "rgba(255,255,255,0.5)" }}>
-                      {domainConnectProbe.error ?? domainConnectProbe.message}
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
-
-            <button
-              onClick={handleConfirmManualStep}
-              style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
-              Done — I added these records
-            </button>
-
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-              <SetupForYouPanel />
             </div>
-          </div>
-        )}
+          )}
 
-        {!verified && manualStepConfirmed && !showMisconfiguredHelp && (
-          <div style={{ padding: "0 18px 16px" }}>
-            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-              We're checking now. This usually takes a few minutes, but can take longer depending on your registrar — no need to keep refreshing, this screen will say &quot;Live&quot; the moment it's ready.
-            </p>
-            <button
-              onClick={() => setManualStepConfirmed(false)}
-              style={{ marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: GREEN, textDecoration: "underline" }}>
-              Show the records again
-            </button>
-          </div>
-        )}
+          {!verified && !manualStepConfirmed && (
+            <div style={{ padding: "0 18px 16px" }}>
+              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
+              </p>
+              <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
+              </p>
+              <DnsRecordsList />
 
-        {!verified && manualStepConfirmed && showMisconfiguredHelp && (
-          <div style={{ padding: "0 18px 16px" }}>
-            <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.9)", lineHeight: 1.6 }}>
-              We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
-            </p>
-            <DnsRecordsList />
-            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-              Fixed it? Give it a few minutes, then check again below.
-            </p>
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-              <SetupForYouPanel />
-            </div>
-          </div>
-        )}
+              {verificationRecords.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                    Also add this verification record:
+                  </p>
+                  {verificationRecords.map((rec, i) => (
+                    <div key={i} style={{ borderRadius: 12, padding: "10px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{rec.type} record — {rec.host}</div>
+                      <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginTop: 2, wordBreak: "break-all" as const }}>{rec.value}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-        {!verified && (
-          <>
-            {/* Check / Disconnect buttons */}
-            <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
+              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
+              </p>
+
+              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                  Open GoDaddy DNS settings →
+                </a>
+                <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
+                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                  Open Namecheap DNS settings →
+                </a>
+              </div>
+
               <button
-                onClick={handleCheck}
-                disabled={checking}
-                style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: checking ? "rgba(255,255,255,0.06)" : GREEN, color: checking ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: checking ? "default" : "pointer" }}>
-                {checking ? "Checking…" : "Check Connection"}
+                onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
+                style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
+                {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
               </button>
+
+              {enableDomainConnectProbe && (
+                <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
+                  <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
+                    Internal automation proof
+                  </div>
+                  <p style={{ margin: "7px 0 10px", ...TYPE.footnote, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                    Checks whether this registrar exposes Domain Connect. Customers do not see this yet.
+                  </p>
+                  <button
+                    onClick={handleDomainConnectProbe}
+                    disabled={probingDomainConnect}
+                    style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: probingDomainConnect ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.8)", ...TYPE.footnote, fontWeight: 700, cursor: probingDomainConnect ? "default" : "pointer" }}>
+                    {probingDomainConnect ? "Checking…" : "Check automatic setup"}
+                  </button>
+                  {domainConnectProbe && (
+                    <div style={{ marginTop: 10, display: "grid", gap: 6, ...TYPE.caption, color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
+                      <div>Domain Connect: <strong style={{ color: domainConnectProbe.registrarSupportsDomainConnect ? GREEN : AMBER }}>{domainConnectProbe.registrarSupportsDomainConnect ? "Detected" : "Not detected"}</strong></div>
+                      {domainConnectProbe.discoveryName && <div>Lookup: <span>{domainConnectProbe.discoveryName}</span></div>}
+                      {domainConnectProbe.providerHost && <div>Provider: <span>{domainConnectProbe.providerHost}</span></div>}
+                      <div>Template: <strong style={{ color: domainConnectProbe.templateAvailable ? GREEN : AMBER }}>{domainConnectProbe.templateAvailable === true ? "Available" : domainConnectProbe.templateAvailable === false ? "Unavailable" : "Not proven yet"}</strong></div>
+                      <div style={{ color: domainConnectProbe.error ? RED : "rgba(255,255,255,0.5)" }}>
+                        {domainConnectProbe.error ?? domainConnectProbe.message}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button
+                onClick={handleConfirmManualStep}
+                style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
+                Done — I added these records
+              </button>
+            </div>
+          )}
+
+          {!verified && manualStepConfirmed && !showMisconfiguredHelp && (
+            <div style={{ padding: "0 18px 16px" }}>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                We're checking now. This usually takes a few minutes, but can take longer depending on your registrar — no need to keep refreshing, this screen will say &quot;Live&quot; the moment it's ready.
+              </p>
+              <button
+                onClick={() => setManualStepConfirmed(false)}
+                style={{ marginTop: 10, background: "none", border: "none", padding: 0, cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: GREEN, textDecoration: "underline" }}>
+                Show the records again
+              </button>
+            </div>
+          )}
+
+          {!verified && manualStepConfirmed && showMisconfiguredHelp && (
+            <div style={{ padding: "0 18px 16px" }}>
+              <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: AMBER, lineHeight: 1.6 }}>
+                We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
+              </p>
+              <DnsRecordsList />
+              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                Fixed it? Give it a few minutes, then check again below.
+              </p>
+            </div>
+          )}
+
+          {!verified && (
+            <>
+              {/* Check / Disconnect buttons */}
+              <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
+                <button
+                  onClick={handleCheck}
+                  disabled={checking}
+                  style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: checking ? "rgba(255,255,255,0.06)" : GREEN, color: checking ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: checking ? "default" : "pointer" }}>
+                  {checking ? "Checking…" : "Check Connection"}
+                </button>
+                <button
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,100,100,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                  {disconnecting ? "…" : "Remove"}
+                </button>
+              </div>
+
+              {error && (
+                <div style={{ margin: "0 18px 14px", padding: "10px 14px", borderRadius: 10, backgroundColor: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.15)" }}>
+                  <p style={{ margin: 0, ...TYPE.footnote, color: RED }}>{error}</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {verified && (
+            <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
+              <a
+                href={`https://${connectedDomain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}15`, color: GREEN, ...TYPE.subhead, fontWeight: 700, textDecoration: "none", textAlign: "center" as const }}>
+                Visit Site →
+              </a>
               <button
                 onClick={handleDisconnect}
                 disabled={disconnecting}
@@ -554,34 +598,17 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
                 {disconnecting ? "…" : "Remove"}
               </button>
             </div>
+          )}
 
-            {error && (
-              <div style={{ margin: "0 18px 14px", padding: "10px 14px", borderRadius: 10, backgroundColor: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.15)" }}>
-                <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(255,130,130,0.9)" }}>{error}</p>
-              </div>
-            )}
-          </>
+          <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
+        </div>
+
+        {/* Fully separate card, not nested inside the status card above -
+            Shawn's explicit correction: "still stuck" has nothing to do
+            with checking the connection or removing it. */}
+        {!verified && (!manualStepConfirmed || showMisconfiguredHelp) && (
+          <StillStuckPanel />
         )}
-
-        {verified && (
-          <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
-            <a
-              href={`https://${connectedDomain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}15`, color: GREEN, ...TYPE.subhead, fontWeight: 700, textDecoration: "none", textAlign: "center" as const }}>
-              Visit Site →
-            </a>
-            <button
-              onClick={handleDisconnect}
-              disabled={disconnecting}
-              style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,100,100,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-              {disconnecting ? "…" : "Remove"}
-            </button>
-          </div>
-        )}
-
-        <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
       </div>
     )
   }
@@ -590,8 +617,8 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
   return (
     <div style={{
       borderRadius: 18, padding: "20px",
-      backgroundColor: "rgba(255,255,255,0.03)",
-      border: "1px solid rgba(255,255,255,0.07)",
+      backgroundColor: NEUTRAL_BG,
+      border: NEUTRAL_BORDER,
     }}>
       <div style={{ marginBottom: 14 }}>
         <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>Custom Domain</p>
@@ -627,7 +654,7 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
       </div>
 
       {error && (
-        <p style={{ margin: "10px 0 0", ...TYPE.footnote, color: "rgba(255,130,130,0.9)" }}>{error}</p>
+        <p style={{ margin: "10px 0 0", ...TYPE.footnote, color: RED }}>{error}</p>
       )}
 
       <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>

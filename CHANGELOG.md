@@ -1,3 +1,18 @@
+## Session: August 17, 2026 (part 6) - Real Team Round on Domain Screen Visuals + Full Rewrite
+**AI:** Claude
+
+### Context
+Shawn rejected part 5 outright - the reorder was right but the visuals underneath were still the pre-redesign look: amber tinting the entire card for the whole unverified state, a monospace DNS table, "still stuck" nested inside the same wrapper as the DNS steps and Check/Remove buttons. Asked for an explicit Jony-led team round, everyone's input shown, before any code. Held live: Jony found the amber-as-default-state bug, and a real violation of the locked "Found has one typeface: Inter" decision (`DECISIONS.md` 2026-07-03) - DNS values were rendered in `fontFamily: "monospace"`. Mid-round Shawn added: the "We'll set it up for you" copy oversells - Found has no registrar credentials and can only guide live, never connect a domain unilaterally - fixed to "We'll walk you through it."
+
+### Changed
+- `src/app/dashboard/(app)/site/DomainConnector.tsx`: rebuilt end to end. Two fully separate sibling cards (domain-status/DNS/Check-Remove vs. a standalone `StillStuckPanel`, renamed from `SetupForYouPanel`). New `hasRealProblem` flag drives all warning coloring - neutral dark card by default, amber only for a genuine misconfigured-after-trying state, green only once verified; applied to the card border/background, header status dot/text, and per-hostname status rows (previously amber "Needs DNS" even seconds after connecting). `DnsRecordsList` redesigned in Inter with no monospace - record type/host as a quiet label, the value as the prominent copyable line.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 17, 2026 (part 5) - Reversed Domain Screen Order + Fixed Wrapping Button
 **AI:** Claude
 

@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - Domain Screen: Real Jony-Led Team Round + Full Visual Rewrite
+
+Shawn rejected the previous reorder pass outright - visuals were still the pre-redesign "geeky IT guy" look (amber card for the whole unverified state, monospace DNS table, "still stuck" nested inside the same wrapper as Check/Remove). Asked for an explicit Jony-led team round with everyone's input before any code.
+
+- [x] Jony's diagnosis: amber used as the ambient card color for the entire unverified lifetime, not just real problems; DNS values in `fontFamily: "monospace"` violating the locked one-typeface-Inter decision (`DECISIONS.md` 2026-07-03); one wrapper holding everything together.
+- [x] Shawn's mid-round correction: "We'll set it up for you" oversells - Found has no registrar credentials and can only guide live, never connect unilaterally. Fixed to "We'll walk you through it."
+- [x] Rebuilt: two fully separate cards (status/DNS/Check-Remove vs. standalone "Still stuck?" panel). Card color now neutral by default, amber only for a genuine misconfigured-after-trying problem, green only verified - applied to card border/bg, header dot/text, and per-hostname status rows.
+- [x] DNS records redesigned in Inter (no monospace), value as the prominent line instead of a shouting orange type badge.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: connect a test domain, confirm the card is calm/neutral while waiting (not amber), DNS records read in normal typography, and the "Still stuck?" card is visibly separate from the status card.
+
 ## 2026-08-17 - Domain Screen: Self-Serve First, Wrapping Button Fixed
 
 Shawn tested the redesign live and corrected it directly: DNS records should show first (self-serve), "we'll set it up for you" is the fallback for people who still can't get it done - not the leading action. Also flagged the secondary help button's label wrapping two lines inside the button.
