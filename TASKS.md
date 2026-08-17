@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - Domain Screen: Self-Serve First, Wrapping Button Fixed
+
+Shawn tested the redesign live and corrected it directly: DNS records should show first (self-serve), "we'll set it up for you" is the fallback for people who still can't get it done - not the leading action. Also flagged the secondary help button's label wrapping two lines inside the button.
+
+- [x] Removed the hide-by-default `showTechnical` toggle - DNS records/registrar links/copy-instructions/admin probe show directly again, same as pre-redesign.
+- [x] `SetupForYouPanel` moved to after the technical section, reframed "Still stuck? We'll set it up for you."
+- [x] Fixed the wrapping button - "or have us reach out" is now a short plain-text link ("Have us reach out instead") with its explanation as separate text outside the tappable element.
+- [x] Same ordering applied to the misconfigured-retry state.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: connect a test domain, confirm DNS shows immediately and the help panel/link look clean below it.
+
 ## 2026-08-17 - Domain Screen Redesign + Two Live Bugs Fixed
 
 Shawn tested the domain-help feature live (Spa Mambo test account) and reported: "View in Found HQ" 404s, the text message should include the customer's actual name, and the whole domain screen is "a catastrophe... looks like Chinese... needs to be the best user experience." Asked for an immediate Jony+Steve-led team round.

@@ -1,3 +1,19 @@
+## Session: August 17, 2026 (part 5) - Reversed Domain Screen Order + Fixed Wrapping Button
+**AI:** Claude
+
+### Context
+Shawn tested part 4's redesign live and corrected the ordering directly: DNS records should be shown first (self-serve), with "we'll set it up for you" as the fallback for "still can't get it done" - reverse of part 4's hide-by-default approach. Also flagged the secondary help button's label wrapping two lines inside a bordered button.
+
+### Changed
+- `DomainConnector.tsx`: removed the `showTechnical` toggle entirely - DNS records/registrar links/copy-instructions/admin probe show directly again. `SetupForYouPanel` moved after the technical section, reframed "Still stuck? We'll set it up for you." Same order applied to the misconfigured-retry state.
+- Fixed the wrapping button: "or have us reach out" full bordered button replaced with a short underlined text link ("Have us reach out instead"), explanation text moved outside the tappable element as its own line.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 17, 2026 (part 4) - Domain Screen Redesign + Two Live Bugs Fixed
 **AI:** Claude
 

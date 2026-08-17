@@ -54,6 +54,22 @@ Get Shawn's approval to push. After deploy: open a test account's domain screen,
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: connect a test domain, confirm the screen now leads with "We'll set this up for you" and the DNS table stays hidden until "I'll connect it myself" is tapped. Confirm the SMS/email now includes the contact name when one exists (Spa Mambo's test account is a good real check since it's the one that surfaced the gap). Confirm "View in Found HQ" opens correctly this time.
 
+## 2026-08-17 (part 5) - Reversed Domain Screen Order + Fixed Wrapping Button (Shawn's Live Correction)
+
+### Progress This Pass
+- Shawn tested part 4's redesign live and corrected the ordering directly (not a new team round - a direct design call from Shawn after seeing it work): DNS records should be the first thing shown (self-serve first), with "we'll set it up for you" as the fallback for "still can't get it done," not the other way around. Also flagged the secondary "or have us reach out" button specifically - its label text was wrapping onto two lines inside a bordered button, which he called out as looking bad regardless of ordering.
+- Reversed part 4's hide-by-default toggle: removed the `showTechnical` state entirely, DNS records/registrar links/copy-instructions/admin probe are shown directly again (no extra tap required), same as before part 4 - but now followed by the `SetupForYouPanel` fallback beneath a divider, reframed "Still stuck? We'll set it up for you" instead of leading.
+- Fixed the wrapping button: the "or have us reach out — no typing needed" full bordered button (whose label wrapped two lines) is now a short plain-text underlined link ("Have us reach out instead"), with the "no typing needed" explanation as separate small text below it, outside the tappable element - matches the pattern already used for other quiet secondary actions in this file.
+- Applied the same before/after ordering to the misconfigured-retry state (technical detail first, help panel after).
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: connect a test domain, confirm DNS records show immediately (no toggle needed), and the "Still stuck?" panel appears below with a clean single-line "Have us reach out instead" link, not a wrapped button.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status
