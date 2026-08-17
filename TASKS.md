@@ -39,7 +39,11 @@ Team direction, approved by Shawn:
 - [x] Added `DOMAIN_CONNECT_FEASIBILITY.md` as the working spec for the proof.
 - [x] Added draft Domain Connect template at `docs/domain-connect/foundco.app.website.json`.
 - [x] Added GoDaddy proof runbook at `docs/domain-connect/godaddy-proof-runbook.md`.
-- [ ] Validate the template with the Domain Connect editor/schema tooling.
+- [x] Validate the template with the Domain Connect schema tooling:
+  - JSON syntax passed.
+  - Official `template.schema` passed with AJV draft-07, strict mode disabled for Domain Connect custom schema keywords.
+  - Manual quality checks passed: `syncPubKeyDomain` present, `warnPhishing` absent, only root + `www` website records included, no email records touched.
+  - Official Go linter not run locally because Go is not installed in this workspace.
 - [ ] Use Shawn's disposable GoDaddy domain for the first end-to-end proof.
 - [ ] Angela/Phil: keep registrar guidance plain-English: “For easiest setup, buy/connect with GoDaddy. Namecheap and others still work manually.”
 - [ ] Priya: security guardrail - no registrar passwords, no broad DNS credentials, no stored owner registrar API keys unless a later team decision explicitly reopens it.

@@ -71,6 +71,20 @@ The template only creates the records Found already asks owners to add manually:
 
 It must not touch MX, TXT, SPF, DKIM, DMARC, or other email-related records.
 
+Per Domain Connect's current template quality guidance, the template must include `syncPubKeyDomain` unless Found intentionally uses an async-only flow. Found's first proof keeps the synchronous owner-approval path, so the draft sets `syncPubKeyDomain` to `foundco.app`. The template intentionally does not set `warnPhishing`; the official validator rejects using `warnPhishing` and `syncPubKeyDomain` together.
+
+Validation status as of 2026-08-17:
+
+- JSON syntax passes.
+- Official Domain Connect `template.schema` validation passes with AJV in draft-07 mode and strict mode disabled for Domain Connect's custom `qt-*` schema keywords.
+- Manual quality checks pass for the current proof:
+  - includes `syncPubKeyDomain`;
+  - does not combine `syncPubKeyDomain` with `warnPhishing`;
+  - only adds the two website records Found already asks for manually;
+  - does not include email/MX/TXT/SPF/DKIM/DMARC records.
+- Not yet run: official Go-based Domain Connect linter, because Go is not installed in this workspace.
+- Not yet proven: whether GoDaddy will accept/apply this template before Found submits or hosts it through the required Domain Connect provider process.
+
 ### Step 2 - GoDaddy test domain
 
 Use a disposable GoDaddy-owned test domain first, not a real client domain.

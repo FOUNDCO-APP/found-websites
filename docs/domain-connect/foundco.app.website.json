@@ -6,8 +6,8 @@
   "version": 1,
   "logoUrl": "https://foundco.app/icon-512.png",
   "description": "Connects a business domain to a Found website without changing email records.",
+  "syncPubKeyDomain": "foundco.app",
   "syncRedirectDomain": "foundco.app",
-  "warnPhishing": true,
   "records": [
     {
       "type": "A",
