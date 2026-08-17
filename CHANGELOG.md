@@ -10,6 +10,7 @@ Richard asked Shawn how to install Found on his phone. Shawn noticed the "Add to
 ### Verification
 - Visually inspected both PNGs - centered, legible at 192px and 512px.
 - No code changed - static assets only, no build/tsc needed.
+- **Live device test failed**: Shawn tested on a real iPhone after deploy (`7e2bddf`) - the wordmark still did not show. Ruled out a service worker cache (none exists in this app). Not yet confirmed whether the new PNGs are actually live at the real URLs, or whether Shawn tested against a stale already-added home-screen icon (iOS is known to cache these aggressively per-URL). Handed off to Codex per Shawn's request rather than continuing to guess blind.
 
 ---
 

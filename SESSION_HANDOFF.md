@@ -15,6 +15,13 @@
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: on an iPhone, remove any previously-added Found home screen icon (old ones can cache), reload `my.foundco.app`, add to home screen again, confirm the new icon shows the FOUND wordmark instead of a blank black square.
 
+### Update - confirmed NOT working live
+- Pushed as commit `7e2bddf`. Shawn tested on a real iPhone after deploy - still not showing the wordmark. Root cause not yet found; handing this off to Codex per Shawn's request rather than guessing further blind.
+- Ruled out: no service worker exists anywhere in this app (`grep` across `src/` and `public/` for `serviceWorker`/`sw.js`/`worker` found nothing beyond unrelated Sentry `instrumentation.ts`), so a cached service-worker response is not the cause.
+- Not yet verified: whether the new PNGs are actually live at `https://my.foundco.app/icons/icon-192.png` / `icon-512.png` post-deploy (Vercel build/propagation timing not confirmed), or whether Shawn tested with a stale existing home-screen icon still on his phone rather than a fresh add.
+- Leading suspect, not confirmed: iOS Safari is known to aggressively cache "Add to Home Screen" icons per-URL and can be stubborn about picking up a new one even after re-adding - may need the old icon fully deleted, Safari website data cleared for the domain, or a device restart, not just re-adding from the home screen. Worth testing directly against the live PNG URLs first (confirm the new image is actually being served) before assuming it's purely an iOS caching quirk.
+- The generated PNGs themselves were visually verified correct in this session (FOUND wordmark, centered, on Found Black) before pushing - if Codex regenerates, that source SVG approach (Inter/weight 300/wide tracking via `sharp`, `viewBox 0 0 512 512`, `text-anchor="middle" dominant-baseline="central"`) is a reasonable starting point, but confirm the live device is actually fetching the new file before concluding the image itself is wrong.
+
 ## 2026-08-17 (part 2) - Guide-Only "Text Us" Help on Domain Setup
 
 ### Progress This Pass

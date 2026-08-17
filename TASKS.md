@@ -6,7 +6,9 @@ Richard asked Shawn how to add Found to his phone; Shawn noticed the home screen
 
 - [x] Found the cause: `icon-192.png`/`icon-512.png` were blank Found-Black squares (179/205 bytes), never actually branded.
 - [x] Regenerated both with the real FOUND wordmark (Inter, weight 300, wide tracking) centered on Found Black, matching `FoundWordmark.tsx`. Updated `icon.svg` to match.
-- [ ] Shawn QA: add Found to an iPhone home screen (remove any old cached icon first), confirm the wordmark shows.
+- [x] Pushed (`7e2bddf`). Shawn tested live on a real iPhone - **still not showing the wordmark.**
+- [x] Ruled out a service worker cache - none exists anywhere in this app.
+- [ ] **Handed off to Codex per Shawn's request.** Not yet checked: whether the new PNGs are actually being served live at `/icons/icon-192.png`/`icon-512.png` post-deploy, vs. Shawn testing against a stale already-added home-screen icon (iOS caches these aggressively per-URL). Confirm the live file first before assuming the image itself is the problem.
 - [ ] Future, not this pass: `favicon.svg` (marketing site tab icon) is also a stale placeholder - wrong green, plain "F" instead of the wordmark.
 
 ## 2026-08-17 - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
