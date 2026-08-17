@@ -1,6 +1,7 @@
 "use client"
 import { useActionState, useMemo } from "react"
 import { submitLead } from "@/app/actions/leads"
+import { getServiceField } from "@/lib/bookings/bookingVocab"
 
 const initialState = { success: false, error: "" }
 
@@ -71,6 +72,7 @@ export default function EstimateForm({
   const [state, formAction, pending] = useActionState(submitLead, initialState)
   const formLoadedAt = useMemo(() => String(Date.now()), [])
   const extraFields = getExtraFields(industryCategory)
+  const serviceField = getServiceField(industryCategory, services.map((service) => service.name))
 
   if (state.success) {
     return (
@@ -122,13 +124,13 @@ export default function EstimateForm({
         <p className="text-xs text-gray-400 mt-1.5">We&apos;ll send you a confirmation right away.</p>
       </div>
 
-      {/* Service dropdown */}
-      {services.length > 0 && (
+      {/* Industry-aware service / intake dropdown */}
+      {serviceField && (
         <div>
-          <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>What do you need?</label>
+          <label className="block text-sm font-semibold mb-1.5" style={{ color: "#111111" }}>{serviceField.label}</label>
           <select name="service" className={inputClass}>
             <option value="">Select a service...</option>
-            {services.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+            {serviceField.options.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         </div>
       )}
