@@ -1,5 +1,14 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - PWA Home Screen Icon Had No Found Branding
+
+Richard asked Shawn how to add Found to his phone; Shawn noticed the home screen icon was blank - wanted the FOUND wordmark like the nav logo.
+
+- [x] Found the cause: `icon-192.png`/`icon-512.png` were blank Found-Black squares (179/205 bytes), never actually branded.
+- [x] Regenerated both with the real FOUND wordmark (Inter, weight 300, wide tracking) centered on Found Black, matching `FoundWordmark.tsx`. Updated `icon.svg` to match.
+- [ ] Shawn QA: add Found to an iPhone home screen (remove any old cached icon first), confirm the wordmark shows.
+- [ ] Future, not this pass: `favicon.svg` (marketing site tab icon) is also a stale placeholder - wrong green, plain "F" instead of the wordmark.
+
 ## 2026-08-17 - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
 
 Shawn correctly called out that removing amber color alone didn't fix anything - typography, spacing, and hierarchy were still cramped and dashboard-y. Built an actual visual mockup first (matching Found's real Inter/Black/Green tokens) instead of guessing again in code; Shawn confirmed the direction and said build it.

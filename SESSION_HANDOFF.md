@@ -1,5 +1,20 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 8) - PWA Home Screen Icon Was a Blank Black Square
+
+### Progress This Pass
+- Shawn: Richard asked how to add the Found app to his phone. Reminded him App Store approval isn't done yet (PWA "Add to Home Screen" is the real path today), then noticed the home screen icon itself had no Found branding - wanted the FOUND wordmark, matching the nav logo.
+- Root cause: `public/icons/icon-192.png` and `icon-512.png` (referenced by `dashboard-manifest.json` and the `apple` icon in `dashboard/layout.tsx`) were literal blank Found-Black squares - 179 and 205 bytes, no logo at all, clearly a placeholder never replaced since June.
+- Regenerated both from the real `FoundWordmark.tsx` styling (Inter, weight 300, wide tracking, uppercase FOUND) via a one-off `sharp` script - white wordmark centered on Found Black, sized with margin for Android's maskable-icon safe zone. `public/icons/icon.svg` updated to match; the script itself was deleted after running, not committed.
+- Separately noticed but did not touch (out of scope for this ask): `public/favicon.svg` (marketing site browser tab icon) is also a stale placeholder - wrong green (`#1EAB46`, Barrio Builders' color, not Found's `#32D074`) and a plain "F" instead of the wordmark. Worth a future pass.
+
+### Verification This Pass
+- Visually inspected both generated PNGs directly - centered, legible wordmark at both 192px and 512px.
+- No code changed, only static image assets - no build/tsc run needed.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: on an iPhone, remove any previously-added Found home screen icon (old ones can cache), reload `my.foundco.app`, add to home screen again, confirm the new icon shows the FOUND wordmark instead of a blank black square.
+
 ## 2026-08-17 (part 2) - Guide-Only "Text Us" Help on Domain Setup
 
 ### Progress This Pass

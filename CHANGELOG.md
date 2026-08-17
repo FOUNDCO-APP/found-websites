@@ -1,3 +1,18 @@
+## Session: August 17, 2026 (part 8) - PWA Home Screen Icon Had No Found Branding
+**AI:** Claude
+
+### Context
+Richard asked Shawn how to install Found on his phone. Shawn noticed the "Add to Home Screen" icon was a blank black square - wanted the FOUND wordmark, matching the nav logo.
+
+### Changed
+- `public/icons/icon-192.png`, `icon-512.png`, `icon.svg`: regenerated from blank Found-Black placeholders (179/205 bytes) to the real FOUND wordmark (Inter, weight 300, wide tracking, matching `FoundWordmark.tsx`) centered on Found Black, sized with margin for Android's maskable safe zone. Generated via a one-off `sharp` script, deleted after running.
+
+### Verification
+- Visually inspected both PNGs - centered, legible at 192px and 512px.
+- No code changed - static assets only, no build/tsc needed.
+
+---
+
 ## Session: August 17, 2026 (part 7) - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
 **AI:** Claude
 
