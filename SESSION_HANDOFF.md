@@ -16,6 +16,22 @@
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: open a test account's domain setup screen, confirm the "Text us" button opens Messages pre-filled with the domain name, and the DNS-still-wrong state also shows the help block. Separately, not yet done - Shawn still needs to actually provision the `support@foundco.app` inbox (or set up forwarding) so replies land somewhere; the mailto link works today but nothing receives it until that inbox exists. `PROJECT.md` already lists "Set up foundco.app email" as a pending Shawn admin task.
 
+## 2026-08-17 (part 3) - Domain Help Request Goes Through Resend, Not a Real Inbox
+
+### Progress This Pass
+- Shawn caught the gap right after the "text us" build shipped: `support@foundco.app` isn't a real inbox yet, so the `mailto:` link in the help block would silently go nowhere. Asked whether Found could just use Resend (already wired up) to notify him directly instead of requiring a real mailbox.
+- This matches an existing pattern already in the codebase - `sendNewSignupAlert()` in `src/lib/adminAlerts.ts` already notifies Shawn at `ADMIN_ALERT_EMAIL`/`shawnlopez@me.com` via Resend for new signups, so this reuses the same mechanism rather than inventing a new one.
+- Built: `requestDomainHelp()` server action in `site/actions.ts` - owner-authenticated, rate-limited (3/hour/company), sends Shawn a Resend email via `sendTrackedEmail` with the company name, the domain they're trying to connect, and their contact info, plus a link straight into Found HQ's client page. The client's own address is never shown or required - the `NeedHelpBlock` in `DomainConnector.tsx` now has a one-tap "or have us reach out" button (no typing) alongside the "Text us" button, with a quiet "We got it" confirmation after sending.
+- The `support@foundco.app` mailto link was removed entirely from the client-facing UI - it doesn't behave honestly until a real inbox exists, and the in-app notify button is strictly better anyway (works today, Shawn's address never touches client-visible markup).
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live - the Resend send itself hasn't been fired against a real test account yet.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: open a test account's domain screen, tap "or have us reach out," confirm Shawn actually receives the email (check `/admin/emails` too - it should log as `emailScope: "found"`, `emailType: "domain_help_request"`). Provisioning a real `support@foundco.app` inbox is no longer required for this flow to work end to end, though it's still worth having eventually for anything not covered by this specific button.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status

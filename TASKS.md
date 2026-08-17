@@ -10,7 +10,10 @@ Shawn: DNS instructions look like Chinese to non-technical clients. Wants an eas
 - [x] Built `NeedHelpBlock` in `DomainConnector.tsx` - "Text us" button (pre-filled sms with domain name) + `support@foundco.app` mailto, shown after the DNS records and again if records still look wrong.
 - [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
 - [ ] Shawn QA: open domain setup, confirm the Text Us button opens Messages pre-filled correctly on a real phone.
-- [ ] Shawn to do (not code): actually provision the `support@foundco.app` inbox/forwarding - the mailto link works today but nothing receives replies until that exists. Already listed in `PROJECT.md`'s pending admin tasks.
+- [x] Shawn caught that `support@foundco.app` isn't a real inbox yet - replaced the mailto link with an in-app "or have us reach out" button that sends Shawn a Resend notification directly (reuses the existing `sendNewSignupAlert()` pattern from `adminAlerts.ts`). No inbox provisioning needed for this flow anymore.
+- [x] Built `requestDomainHelp()` in `site/actions.ts` - rate-limited 3/hour/company, emails Shawn via `sendTrackedEmail` with company/domain/contact info, logs to `/admin/emails` as `emailScope: "found"`.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: tap "or have us reach out" on a test account's domain screen, confirm the email actually lands and shows up in `/admin/emails`.
 - [ ] Held for later today per Shawn: sending the drafted GoDaddy Domain Connect outreach email (`docs/domain-connect/provider-onboarding-package.md`).
 
 ## 2026-08-16 - Lead Form Service Dropdown: Plain Intake Options

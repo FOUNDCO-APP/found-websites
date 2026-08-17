@@ -12,6 +12,8 @@ import { isVideoMedia, mediaKindFromUrl } from "@/lib/mediaKind"
 import { checkPublicRateLimit, publicRateLimitMessage } from "@/lib/security/rateLimit"
 import { createDarkLogoVariant, createWhiteLogoVariant, detectLogoTone, removeLightLogoBackground } from "@/lib/logoVariants"
 import { extractLogoColors } from "@/lib/logoColors"
+import { sendTrackedEmail } from "@/lib/emailLog"
+import { GREEN, BLACK } from "@/lib/dashboard/typography"
 import type { MenuCategory } from "@/types/company"
 
 
@@ -751,6 +753,57 @@ export async function checkDomainStatus(domain: string): Promise<{
     needsFoundRepair: status.needsFoundRepair,
     error: status.error,
   }
+}
+
+// Guide-only help request from the domain screen - notifies Shawn directly
+// via Resend rather than requiring a real support@foundco.app inbox to
+// exist. Never exposes Shawn's real address to the owner; "to" comes from
+// an env var/fallback, not anything client-visible. Rate-limited per
+// company since this is a real (if cheap) Resend send, not just a DB write.
+export async function requestDomainHelp(rawDomain: string): Promise<{ success: boolean; error?: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { success: false, error: "Not authenticated" }
+
+  const limit = checkPublicRateLimit(await headers(), { key: `domain-help:${ctx.company.id}`, limit: 3, windowMs: 60 * 60 * 1000 })
+  if (!limit.allowed) return { success: false, error: publicRateLimitMessage(limit) }
+
+  if (!process.env.RESEND_API_KEY) return { success: false, error: "Help requests aren't available right now - text us instead." }
+
+  const to = process.env.ADMIN_ALERT_EMAIL || "shawnlopez@me.com"
+  const domain = rawDomain?.trim() || "no domain entered yet"
+  const contactLine = [ctx.company.phone, ctx.company.email].filter(Boolean).join(" / ") || "no contact info on file"
+
+  const sent = await sendTrackedEmail({
+    from: "Found HQ <hello@foundco.app>",
+    to,
+    subject: `Domain help requested: ${ctx.company.name}`,
+    companyId: ctx.company.id,
+    recipientType: "admin",
+    emailType: "domain_help_request",
+    source: "site/actions/requestDomainHelp",
+    emailScope: "found",
+    text: `${ctx.company.name} (${ctx.company.slug}) needs help connecting their domain.\n\nDomain: ${domain}\nReach them: ${contactLine}`,
+    html: `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:${BLACK};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#F6F6F0;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:420px;">
+        <tr><td style="padding-bottom:6px;color:${GREEN};font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">Domain help requested</td></tr>
+        <tr><td style="padding-bottom:14px;font-size:24px;font-weight:800;">${ctx.company.name}</td></tr>
+        <tr><td style="padding-bottom:4px;color:#B8BCB7;font-size:14px;">Domain: ${domain}</td></tr>
+        <tr><td style="padding-bottom:24px;color:#B8BCB7;font-size:14px;">Reach them: ${contactLine}</td></tr>
+        <tr><td>
+          <a href="https://my.foundco.app/admin/clients?q=${encodeURIComponent(ctx.company.name)}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+    admin: ctx.admin,
+  })
+
+  if (!sent) return { success: false, error: "Couldn't send the request - text us instead." }
+  return { success: true }
 }
 
 export async function disconnectDomain(domain: string): Promise<{ success: boolean; error?: string }> {

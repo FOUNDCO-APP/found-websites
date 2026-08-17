@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { connectCustomDomain, checkDomainStatus, disconnectDomain, probeDomainConnect } from "./actions"
+import { connectCustomDomain, checkDomainStatus, disconnectDomain, probeDomainConnect, requestDomainHelp } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type Props = {
@@ -52,7 +52,6 @@ const DNS_RECORDS = [
 // per the locked no-registrar-credentials security decision.
 const FOUND_HELP_PHONE_DISPLAY = "(520) 222-6308"
 const FOUND_HELP_PHONE_SMS = "5202226308"
-const FOUND_HELP_EMAIL = "support@foundco.app"
 
 // Custom domains are free on every plan (shipped June 2026) - this component
 // used to gate behind Pro/Business, left stale after that decision. Kept the
@@ -75,6 +74,9 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
   const [needsFoundRepair, setNeedsFoundRepair] = useState(false)
   const [probingDomainConnect, setProbingDomainConnect] = useState(false)
   const [domainConnectProbe, setDomainConnectProbe] = useState<DomainConnectProbeResult | null>(null)
+  const [requestingHelp, setRequestingHelp] = useState(false)
+  const [helpRequested, setHelpRequested] = useState(false)
+  const [helpError, setHelpError] = useState("")
 
   const isConnected = !!connectedDomain
   // Below this many checks, always show the calm "still checking" message even
@@ -237,6 +239,18 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     )
   }
 
+  async function handleRequestHelp() {
+    setRequestingHelp(true)
+    setHelpError("")
+    const result = await requestDomainHelp(connectedDomain)
+    setRequestingHelp(false)
+    if (!result.success) {
+      setHelpError(result.error ?? "Couldn't send that — text us instead.")
+      return
+    }
+    setHelpRequested(true)
+  }
+
   function NeedHelpBlock() {
     const smsBody = encodeURIComponent(
       `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.`
@@ -254,9 +268,21 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
           style={{ display: "block", textAlign: "center" as const, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.footnote, fontWeight: 700, textDecoration: "none" }}>
           Text us: {FOUND_HELP_PHONE_DISPLAY}
         </a>
-        <p style={{ margin: "9px 0 0", ...TYPE.caption, color: "rgba(255,255,255,0.4)", textAlign: "center" as const }}>
-          or email <a href={`mailto:${FOUND_HELP_EMAIL}`} style={{ color: "rgba(255,255,255,0.55)" }}>{FOUND_HELP_EMAIL}</a>
-        </p>
+        {helpRequested ? (
+          <p style={{ margin: "9px 0 0", ...TYPE.caption, color: GREEN, textAlign: "center" as const, fontWeight: 700 }}>
+            We got it — we&apos;ll reach out shortly.
+          </p>
+        ) : (
+          <button
+            onClick={handleRequestHelp}
+            disabled={requestingHelp}
+            style={{ display: "block", width: "100%", marginTop: 8, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: requestingHelp ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)", ...TYPE.caption, fontWeight: 700, cursor: requestingHelp ? "default" : "pointer", textAlign: "center" as const }}>
+            {requestingHelp ? "Sending…" : "or have us reach out — no typing needed"}
+          </button>
+        )}
+        {helpError && (
+          <p style={{ margin: "8px 0 0", ...TYPE.caption, color: "rgba(255,130,130,0.9)", textAlign: "center" as const }}>{helpError}</p>
+        )}
       </div>
     )
   }

@@ -1,3 +1,19 @@
+## Session: August 17, 2026 (part 3) - Domain Help Request Goes Through Resend, Not a Real Inbox
+**AI:** Claude
+
+### Context
+Shawn caught the gap right after the previous entry shipped: `support@foundco.app` isn't a real inbox, so its `mailto:` link would go nowhere. Asked whether Found could just use Resend (already wired up) to notify him directly. This reuses the exact pattern `sendNewSignupAlert()` already established in `src/lib/adminAlerts.ts` for notifying Shawn of new signups.
+
+### Changed
+- `src/app/dashboard/(app)/site/actions.ts`: new `requestDomainHelp()` - owner-authenticated, rate-limited (3/hour/company), sends Shawn a Resend email via `sendTrackedEmail` with company name, the domain being connected, and the company's contact info, plus a link into Found HQ.
+- `src/app/dashboard/(app)/site/DomainConnector.tsx`: `NeedHelpBlock` gets a one-tap "or have us reach out" button (no typing, no client-visible email address) alongside "Text us," with a quiet "We got it" confirmation. The `support@foundco.app` mailto link was removed - it wasn't honest about actually reaching anyone yet.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 17, 2026 (part 2) - Guide-Only "Text Us" Help on Domain Setup
 **AI:** Claude
 
