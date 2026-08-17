@@ -37,6 +37,10 @@ Team direction, approved by Shawn:
   - flow must still verify both root and `www` after approval;
   - gate behind internal/admin-only UI until verified end to end.
 - [x] Added `DOMAIN_CONNECT_FEASIBILITY.md` as the working spec for the proof.
+- [x] Added draft Domain Connect template at `docs/domain-connect/foundco.app.website.json`.
+- [x] Added GoDaddy proof runbook at `docs/domain-connect/godaddy-proof-runbook.md`.
+- [ ] Validate the template with the Domain Connect editor/schema tooling.
+- [ ] Use Shawn's disposable GoDaddy domain for the first end-to-end proof.
 - [ ] Angela/Phil: keep registrar guidance plain-English: “For easiest setup, buy/connect with GoDaddy. Namecheap and others still work manually.”
 - [ ] Priya: security guardrail - no registrar passwords, no broad DNS credentials, no stored owner registrar API keys unless a later team decision explicitly reopens it.
 - [ ] Shawn QA after feasibility proof exists: run it on a test GoDaddy domain, then confirm both root and `www` become live.

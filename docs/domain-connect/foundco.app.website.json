@@ -1,0 +1,27 @@
+{
+  "providerId": "foundco.app",
+  "providerName": "Found",
+  "serviceId": "website",
+  "serviceName": "Found Website",
+  "version": 1,
+  "logoUrl": "https://foundco.app/icon-512.png",
+  "description": "Connects a business domain to a Found website without changing email records.",
+  "syncRedirectDomain": "foundco.app",
+  "warnPhishing": true,
+  "records": [
+    {
+      "type": "A",
+      "groupId": "website",
+      "host": "@",
+      "pointsTo": "76.76.21.21",
+      "ttl": 600
+    },
+    {
+      "type": "CNAME",
+      "groupId": "website",
+      "host": "www",
+      "pointsTo": "cname.vercel-dns.com",
+      "ttl": 600
+    }
+  ]
+}

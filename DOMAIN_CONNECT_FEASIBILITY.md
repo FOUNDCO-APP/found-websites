@@ -52,6 +52,61 @@ Internal/admin-only until proven.
    - check root + `www` status using the existing domain-status logic.
 5. If any step fails, keep the current manual DNS instructions visible.
 
+## Team execution plan
+
+### Step 1 - Template draft
+
+Craig and Marcus own the technical proof.
+
+The draft template lives at:
+
+- `docs/domain-connect/foundco.app.website.json`
+
+Plain-English meaning: this is the DNS "recipe" that a supported registrar can apply after the domain owner approves it.
+
+The template only creates the records Found already asks owners to add manually:
+
+- root domain -> Found/Vercel;
+- `www` -> Found/Vercel.
+
+It must not touch MX, TXT, SPF, DKIM, DMARC, or other email-related records.
+
+### Step 2 - GoDaddy test domain
+
+Use a disposable GoDaddy-owned test domain first, not a real client domain.
+
+Test goal:
+
+1. Add the test domain inside Found.
+2. Register both root and `www` with Vercel.
+3. Run the Domain Connect approval flow.
+4. Confirm GoDaddy applies the two records.
+5. Confirm Found reports:
+   - root domain: Live;
+   - `www` address: Live.
+
+### Step 3 - Customer-facing copy
+
+Angela and Phil's approved plain-English positioning:
+
+> For easiest setup, use GoDaddy. Namecheap and other registrars still work, but may require manual DNS setup.
+
+Do not promise one-click setup for Namecheap until it is proven.
+
+### Step 4 - UI gate
+
+The first UI must be admin/internal only:
+
+- label: `Try automatic GoDaddy connection`;
+- fallback: keep manual DNS visible;
+- no customer launch until the GoDaddy test passes root + `www`.
+
+### Step 5 - Launch rule
+
+Steve's launch bar:
+
+If the owner has to understand DNS records, the automated flow is not ready. If the automated path fails, the manual fallback must still be clear enough to finish the job.
+
 ## Open questions before customer launch
 
 - Does GoDaddy require a template submission/approval before Found's service template can be used?
@@ -60,6 +115,13 @@ Internal/admin-only until proven.
 - Can we make the UX work from mobile Safari cleanly?
 - Does the flow preserve existing email/MX records untouched?
 - Can Namecheap support a similar Domain Connect flow? If not, Namecheap remains manual.
+
+## Current registrar stance
+
+- GoDaddy: first automation proof target.
+- Namecheap: supported manually for now; automation not promised.
+- Cloudflare: technically strong, but not the recommended first-owner registrar because many local business owners do not know it.
+- Other registrars: manual DNS fallback.
 
 ## Acceptance criteria
 
@@ -71,4 +133,3 @@ Before this can be exposed to real customers:
 - Existing email-related records are not modified.
 - Failed/unsupported registrar path cleanly falls back to manual DNS instructions.
 - The UI does not mention developer tokens, APIs, DNS jargon, or registrar passwords.
-
