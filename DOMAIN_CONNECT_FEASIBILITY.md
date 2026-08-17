@@ -1,6 +1,6 @@
 # Domain Connect Feasibility Plan
 
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 
 ## Product goal
 
@@ -95,13 +95,32 @@ Manual GoDaddy fallback proof as of 2026-08-17:
 - Meaning: the current manual DNS fallback, Vercel project-domain registration, and root + `www` verification path are proven on a fresh GoDaddy domain.
 - Not proven yet: automatic Domain Connect registrar approval. The next proof must connect a domain without manually editing DNS records.
 
+Internal Domain Connect probe result as of 2026-08-17:
+
+- Shawn removed/retested `supershawn.me` through the admin-only Found domain screen.
+- The internal probe was visible only in admin/view-as mode, not regular customer mode. That is intentional.
+- Probe result shown in Found:
+  - Domain Connect: not detected.
+  - Template: unavailable.
+  - Message: no Domain Connect provider record was found; use manual DNS.
+- Meaning: Found's detection guard works, and this domain/registrar path does not currently expose an automatic Domain Connect route through DNS discovery.
+- Product implication: do not advertise automatic GoDaddy setup yet. Manual DNS remains the production-safe path while Domain Connect/provider requirements stay in research.
+
+Official-source requirement check as of 2026-08-17:
+
+- Domain Connect is template-based. Found cannot safely manufacture DNS changes directly from the browser; the DNS provider must recognize a Found service template and apply it after owner consent.
+- The official spec says service templates are defined by the service provider and manually onboarded with the DNS provider, either through the public template repository or an out-of-band agreement between the service provider and DNS provider.
+- The official spec also says DNS providers may be selective, may require a contractual relationship, or may charge a fee for onboarding a template.
+- The official template repository requires template editor testing and a pull request using the required naming format `providerId.serviceId.json`.
+- Product implication: the current probe result is not just a UI failure. Until GoDaddy/provider recognition exists for Found's template, Found cannot promise one-click GoDaddy setup. Manual DNS remains the shippable path.
+
 ### Step 2 - GoDaddy test domain
 
 Use a disposable GoDaddy-owned test domain first, not a real client domain.
 
 The manual DNS fallback has already passed with `supershawn.me`. Do not count that as the automatic proof. The automatic proof only passes if the registrar approval flow applies the DNS records without Shawn manually creating them in GoDaddy.
 
-Test goal:
+Automatic test goal, still unproven:
 
 1. Add the test domain inside Found.
 2. Register both root and `www` with Vercel.
@@ -111,12 +130,22 @@ Test goal:
    - root domain: Live;
    - `www` address: Live.
 
-Before building customer-facing UI, Found should first add an internal-only probe that reports:
+Internal-only probe, current status:
 
-- registrar exposes Domain Connect for this domain;
-- Found's provider/service template is recognized or not recognized;
-- automatic approval URL is available or blocked;
-- manual DNS fallback remains visible when automatic setup is unavailable.
+- [x] reports whether registrar exposes Domain Connect for this domain;
+- [x] keeps manual DNS fallback visible when automatic setup is unavailable;
+- [x] stays hidden from regular customer view;
+- [ ] does not yet confirm Found's provider/service template is recognized;
+- [ ] does not yet produce an automatic approval URL;
+- [ ] does not yet apply DNS without manual edits.
+
+Official requirement check, current status:
+
+- [x] Confirmed Domain Connect requires provider/template recognition before DNS can be applied automatically.
+- [x] Confirmed public-template submission has a formal PR/testing path.
+- [x] Confirmed DNS providers can reject, gate, contract, or charge for template onboarding.
+- [ ] Submit or otherwise onboard Found's `foundco.app.website` template with a DNS provider.
+- [ ] Receive confirmation that GoDaddy can recognize and apply Found's template.
 
 ### Step 3 - Customer-facing copy
 
@@ -142,7 +171,8 @@ If the owner has to understand DNS records, the automated flow is not ready. If 
 
 ## Open questions before customer launch
 
-- Does GoDaddy require a template submission/approval before Found's service template can be used?
+- Does GoDaddy require public-template PR acceptance, direct provider approval, or a separate partner/onboarding process before Found's service template can be used?
+- What is the expected GoDaddy review timeline, if any?
 - Can Found use the synchronous one-time flow only, or does GoDaddy require an OAuth/asynchronous flow for this use case?
 - What exact success/failure callback does GoDaddy provide after the owner approves?
 - Can we make the UX work from mobile Safari cleanly?
@@ -151,10 +181,28 @@ If the owner has to understand DNS records, the automated flow is not ready. If 
 
 ## Current registrar stance
 
-- GoDaddy: first automation proof target.
+- GoDaddy: manual DNS proven; automatic Domain Connect not proven and was not detected for `supershawn.me` through the current probe.
 - Namecheap: supported manually for now; automation not promised.
 - Cloudflare: technically strong, but not the recommended first-owner registrar because many local business owners do not know it.
 - Other registrars: manual DNS fallback.
+
+## Team next move
+
+Steve/Craig/Marcus recommendation:
+
+1. Do not add another customer-facing automation button yet.
+2. Keep the internal probe as proof tooling only.
+3. Prepare Found's Domain Connect provider package:
+   - validated template;
+   - plain explanation of the two records;
+   - confirmation that email records are untouched;
+   - return/callback URL plan;
+   - mobile Safari approval-flow expectations.
+4. In parallel, make the manual DNS flow strong enough for launch:
+   - detect root and `www` separately;
+   - keep GoDaddy and Namecheap direct DNS links;
+   - state "replace existing record, do not duplicate";
+   - provide a simple "send these instructions to my domain person" option in a future pass.
 
 ## Acceptance criteria
 

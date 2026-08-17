@@ -17,7 +17,8 @@ Team direction, approved by Shawn:
 - [x] If services are too thin or generic, e.g. the owner only typed `HVAC`, fall back to industry defaults instead of showing one useless dropdown option.
 - [x] Always include `Other`.
 - [x] Verify `npm.cmd run build` - passed.
-- [ ] Shawn QA: open MBJ's customer-facing contact/booking flow and confirm "What do you need?" shows useful options like Installation / Repair / Maintenance / Other before testing Richard's notification.
+- [x] Shawn QA: MBJ estimate/contact-page clarification completed. Shawn initially checked `/contact`, which correctly does not show the service dropdown. The team re-confirmed the dropdown lives on the estimate/booking flow. Shawn then confirmed the estimate-page path was the right one and moved forward with Richard's notification test.
+- [x] Richard notification handoff text prepared for Shawn: “Hey bro, I just tested the estimate form on your new website, and you should have received an email. Double check that you got it. I also sent you, I forwarded an email to you of what the customer sees when they fill out a form on your page.”
 - [ ] Future team item: industry-aware onboarding service chips/minimum service guidance so the generated Services page itself does not become one generic "HVAC" or "Contracting" card.
 - [ ] Future team item: owner/admin-editable intake dropdown options, separate from public Services page copy.
 
@@ -31,7 +32,7 @@ Team direction, approved by Shawn:
 - [x] Do not revive the old GoDaddy Personal Access Token flow as the normal customer path. It works technically, but it asks non-technical owners to create developer credentials.
 - [x] Do not ask for or store registrar passwords.
 - [x] Treat Domain Connect-style registrar approval as the preferred product direction: owner enters domain, signs into registrar, approves Found adding the DNS records, and Found verifies root + `www`.
-- [ ] Craig/Marcus: scope a Domain Connect feasibility proof for GoDaddy first:
+- [x] Craig/Marcus: scope a Domain Connect feasibility proof for GoDaddy first:
   - service template should add `A @ 76.76.21.21`;
   - service template should add `CNAME www cname.vercel-dns.com`;
   - flow must still verify both root and `www` after approval;
@@ -45,11 +46,18 @@ Team direction, approved by Shawn:
   - Official `template.schema` passed with AJV draft-07, strict mode disabled for Domain Connect custom schema keywords.
   - Manual quality checks passed: `syncPubKeyDomain` present, `warnPhishing` absent, only root + `www` website records included, no email records touched.
   - Official Go linter not run locally because Go is not installed in this workspace.
-- [ ] Use Shawn's disposable GoDaddy domain for the first **automatic Domain Connect** proof, meaning no manual DNS record edits.
+- [x] Use Shawn's disposable GoDaddy domain for the first **Domain Connect detection** proof before attempting automatic DNS edits.
 - [x] Marcus/Craig: add an internal-only Domain Connect probe that can tell Found whether the registrar exposes Domain Connect for the entered domain. Template application is still intentionally marked “not proven yet” until a registrar accepts the Found template without manual DNS edits.
+- [x] Shawn QA: internal probe ran from admin/view-as mode on `supershawn.me`. Result: **Domain Connect not detected; template unavailable; no provider record found; use manual DNS.** This means GoDaddy/manual fallback remains proven, but automatic Domain Connect is not available for that domain through the current discovery method.
+- [x] Official-source requirement check: Domain Connect needs DNS-provider recognition of Found's service template before one-click setup can work. The local JSON template is only the recipe; GoDaddy/a supported provider still has to accept or expose it through the provider/template process.
+- [x] Added provider onboarding package and GoDaddy outreach draft at `docs/domain-connect/provider-onboarding-package.md`.
+- [x] Added manual-DNS support helper in the domain screen: owners/admins can copy a plain-English instruction block for a domain person without manually explaining DNS.
+- [x] Verify `npm run build` - passed after the first build process finished.
 - [ ] Angela/Phil: keep registrar guidance plain-English: “For easiest setup, buy/connect with GoDaddy. Namecheap and others still work manually.”
 - [ ] Priya: security guardrail - no registrar passwords, no broad DNS credentials, no stored owner registrar API keys unless a later team decision explicitly reopens it.
-- [ ] Shawn QA after feasibility proof exists: run it on a test GoDaddy domain, then confirm both root and `www` become live.
+- [x] Shawn QA after manual proof exists: `supershawn.me` connected and both root + `www` became live after manual GoDaddy DNS setup.
+- [ ] Future automation research: Domain Connect cannot be a launch blocker until a registrar/template path is proven. Next team move is provider/template onboarding research, while improving manual DNS UX as the production path.
+- [x] Future manual-DNS UX improvement: add a simple “copy instructions for my domain person” option so Shawn/clients can forward root + `www` records without explaining DNS by hand.
 
 ## 2026-08-16 - Phone Number Display Formatting on Public Site
 

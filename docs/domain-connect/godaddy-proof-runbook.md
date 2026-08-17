@@ -1,6 +1,6 @@
 # GoDaddy Domain Connect Proof Runbook
 
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 
 ## Goal
 
@@ -61,12 +61,50 @@ Result:
 
 This proves the fallback and verification system. It does not prove the automatic Domain Connect approval path.
 
+## Internal probe result
+
+2026-08-17: Shawn tested the internal-only Domain Connect probe from the Found admin/view-as domain screen.
+
+Result:
+
+- Domain Connect: not detected.
+- Template: unavailable.
+- Message shown: no Domain Connect provider record was found; use manual DNS.
+
+Meaning:
+
+- The admin-only probe is working and stays hidden from normal customer view.
+- `supershawn.me` did not expose a Domain Connect provider record through the current discovery method.
+- Manual DNS remains the only proven GoDaddy path today.
+- Automatic setup remains a research/proof task, not a launch-ready customer feature.
+
+## Official requirement check
+
+2026-08-17: Team reviewed the official Domain Connect spec and public template-repository process.
+
+Conclusion:
+
+- Domain Connect works only when the DNS provider recognizes the service provider's template.
+- Found's local template is necessary, but not enough by itself.
+- A DNS provider can require public-template submission, private onboarding, a contract, or a fee before applying a template.
+- Therefore, the current internal probe result is a valid stop sign: if no provider/template route is detected, the product must stay on manual DNS.
+
+Team decision:
+
+- Do not ship an automatic GoDaddy button to customers yet.
+- Keep the probe internal/admin-only.
+- Continue using manual DNS as the production-safe path.
+- Next automation work is provider/template onboarding research, not more customer UI.
+
 ## Test checklist
 
 - [x] Template passes Domain Connect editor/schema validation.
 - [x] Manual GoDaddy fallback proof works on a fresh GoDaddy domain.
-- [ ] Internal-only probe can identify whether a GoDaddy domain exposes Domain Connect.
+- [x] Internal-only probe can identify whether a domain exposes Domain Connect.
+- [x] Internal-only probe correctly keeps unsupported domains on manual DNS.
+- [x] Official requirement check completed: Found needs provider/template recognition before a one-click flow can work.
 - [ ] Internal-only probe can identify whether the Found template is available/recognized.
+- [ ] Found provider/template package is submitted, accepted, or otherwise recognized by GoDaddy/a supported DNS provider.
 - [ ] GoDaddy accepts or can apply the Found template for a test domain without manual DNS edits.
 - [ ] Found registers root with Vercel.
 - [ ] Found registers `www` with Vercel.
@@ -88,6 +126,10 @@ If GoDaddy proof passes:
 If registrar is not supported:
 
 > This registrar still works, but needs manual DNS setup. Found will show exactly what to copy.
+
+Current customer-safe wording before automatic proof:
+
+> Connect your domain by adding two records where you bought it. Found checks both your main domain and www address, then tells you when the site is live.
 
 ## Namecheap stance
 

@@ -122,6 +122,31 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     setTimeout(() => setCopied(null), 1800)
   }
 
+  function domainPersonInstructions() {
+    return [
+      `Please connect ${connectedDomain} to my Found website.`,
+      "",
+      "Add or replace these DNS records where the domain is managed:",
+      "",
+      "1) Root domain",
+      "Type: A",
+      "Name/Host: @",
+      "Value/Points to: 76.76.21.21",
+      "",
+      "2) WWW address",
+      "Type: CNAME",
+      "Name/Host: www",
+      "Value/Points to: cname.vercel-dns.com",
+      "",
+      "Important: if a record with the same type and name already exists, replace it instead of adding a duplicate.",
+      "Do not change nameservers, MX, SPF, DKIM, DMARC, or any email records.",
+      "",
+      "After the records are saved, Found will check both:",
+      `- ${connectedDomain}`,
+      `- www.${connectedDomain}`,
+    ].join("\n")
+  }
+
   async function handleConnect() {
     if (!inputValue.trim()) return
     setConnecting(true)
@@ -366,6 +391,12 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
                   Open Namecheap DNS settings →
                 </a>
               </div>
+
+              <button
+                onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
+                style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
+                {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
+              </button>
 
               {enableDomainConnectProbe && (
                 <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>

@@ -1,5 +1,47 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
+
+### MBJ estimate/contact form status
+- Shawn paused DNS work for Richard/MBJ Heating and Cooling because the customer intake dropdown was using polished service-card copy instead of plain customer choices.
+- Team-approved fix already built: public Services page keeps polished copy, while the estimate/booking intake dropdown normalizes services into plain labels such as `Installation`, `Repair`, `Maintenance`, `Estimate`, `Inspection`, plus guaranteed `Other`.
+- If saved services are too thin or generic, e.g. only `HVAC`, the dropdown falls back to industry defaults instead of showing one weak option.
+- Shawn later confirmed he was looking at `/contact` by mistake. The service dropdown lives on the estimate/booking flow, not the general contact page. That clarification is complete.
+- Richard handoff text was prepared for Shawn: “Hey bro, I just tested the estimate form on your new website, and you should have received an email. Double check that you got it. I also sent you, I forwarded an email to you of what the customer sees when they fill out a form on your page.”
+
+### MBJ billing/admin status
+- Richard/MBJ was created as a real client with deferred billing/card collection.
+- Shawn found the 30-day + billing day 15 calculation produced an October 15 card due date even though he intended September 15.
+- The live admin history now documents the correction: original due date Oct 15, 2026; intended first billing/card date Sep 15, 2026; `trial_ends_at` corrected to Sep 15, 2026; `billing_cycle_day` remains 15.
+- Open product/admin follow-ups Shawn requested:
+  - Shawn wants a copy of outgoing client emails when Found sends them.
+  - Admin billing UI still needs a cleaner, easier billing summary: next card-charge date, billing anchor, amount already collected, method, and current status should be obvious without digging through raw notes/history.
+
+### Domain/DNS status
+- Manual GoDaddy DNS proof passed with `supershawn.me`.
+- Required records shown by Found:
+  - `A @ 76.76.21.21`
+  - `CNAME www cname.vercel-dns.com`
+- Shawn added those records in GoDaddy. Found then verified both root and `www`, showed the domain live, and the Visit Site button loaded the site after propagation.
+- This proves the manual DNS flow, Vercel domain registration, and root + `www` checks.
+
+### Domain Connect automation status
+- Team direction remains: no registrar passwords, no customer-created GoDaddy developer tokens, no stored broad registrar credentials.
+- Internal-only Domain Connect probe was built and pushed.
+- Shawn tested the probe from admin/view-as mode on `supershawn.me`.
+- Result: Domain Connect not detected; template unavailable; no provider record found; use manual DNS.
+- Meaning: the internal guard works, but automatic Domain Connect is not proven for this domain. Do not advertise automatic GoDaddy setup yet.
+- Official-source check completed 2026-08-17: Domain Connect requires the DNS provider to recognize Found's service template. Found's local template is the DNS recipe, but it does not become a one-click flow until GoDaddy/a supported provider accepts or exposes that template through the provider/template process.
+- Current production-safe path: keep manual DNS, improve the UX/copy until automation is proven.
+
+### Explicit next step
+Team-approved next move:
+
+1. Do not ship a customer-facing automatic GoDaddy button yet.
+2. Keep the internal Domain Connect probe as proof tooling only.
+3. Prepare the Found provider/template onboarding package for GoDaddy/a supported DNS provider.
+4. Continue hardening the manual DNS flow as the production path, including a future “send these instructions to my domain person” option.
+
 ## 2026-08-16 - Immediate Fix: Lead Form Dropdown Uses Plain Intake Choices
 
 ### Progress This Pass
