@@ -27,7 +27,7 @@ type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design" | "features"
 
 type Props = {
-  company: { id: string; name: string; slug: string; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
+  company: { id: string; name: string; slug: string; contact_name?: string | null; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
   config: Config | null
   photos: Photo[]
   stockImages: string[]
@@ -2094,6 +2094,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           plan={plan}
           subscriptionStatus={subscriptionStatus}
           companySlug={company.slug}
+          contactName={company.contact_name ?? null}
           enableDomainConnectProbe={enableDomainConnectProbe}
         />
       </div>

@@ -9,6 +9,7 @@ type Props = {
   plan: string | null
   subscriptionStatus: string | null
   companySlug: string
+  contactName?: string | null
   enableDomainConnectProbe?: boolean
 }
 
@@ -56,7 +57,7 @@ const FOUND_HELP_PHONE_SMS = "5202226308"
 // Custom domains are free on every plan (shipped June 2026) - this component
 // used to gate behind Pro/Business, left stale after that decision. Kept the
 // props so callers don't need to change, just no longer used to gate.
-export default function DomainConnector({ initialDomain, companySlug, enableDomainConnectProbe = false }: Props) {
+export default function DomainConnector({ initialDomain, companySlug, contactName, enableDomainConnectProbe = false }: Props) {
   const [domain, setDomain] = useState(initialDomain ?? "")
   const [connectedDomain, setConnectedDomain] = useState(initialDomain ?? "")
   const [verified, setVerified] = useState(false)
@@ -77,6 +78,12 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
   const [requestingHelp, setRequestingHelp] = useState(false)
   const [helpRequested, setHelpRequested] = useState(false)
   const [helpError, setHelpError] = useState("")
+  // Team decision 2026-08-17 (Jony/Steve, Shawn approved): lead with "we'll
+  // set it up for you," keep raw DNS records fully hidden until an owner
+  // deliberately asks for them. Defaults closed every time a domain is
+  // (re)connected - an owner who opted into the technical view for domain A
+  // shouldn't have it silently stay open for domain B.
+  const [showTechnical, setShowTechnical] = useState(false)
 
   const isConnected = !!connectedDomain
   // Below this many checks, always show the calm "still checking" message even
@@ -171,6 +178,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     applyCheckResult({ ...result, verified: result.verified ?? false })
     setVerificationRecords(result.verificationRecords ?? [])
     setManualStepConfirmed(false)
+    setShowTechnical(false)
     setInputValue("")
   }
 
@@ -251,21 +259,27 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     setHelpRequested(true)
   }
 
-  function NeedHelpBlock() {
+  // Team decision 2026-08-17: this is the primary, leading action for a
+  // just-connected unverified domain - not an addendum bolted onto the DNS
+  // instructions. Most owners should never need to see a DNS record.
+  function SetupForYouPanel() {
     const smsBody = encodeURIComponent(
-      `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.`
+      `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.${contactName ? ` - ${contactName}` : ""}`
     )
     return (
       <div style={{
-        marginTop: 12, borderRadius: 14, padding: "14px 16px",
-        backgroundColor: `${GREEN}0d`, border: `1px solid ${GREEN}2e`,
+        borderRadius: 16, padding: "18px 18px 16px",
+        backgroundColor: `${GREEN}12`, border: `1px solid ${GREEN}3a`,
       }}>
-        <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
-          This part can be confusing — we&apos;ll walk you through it live. Just text us and we&apos;ll get you set up.
+        <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>
+          We&apos;ll set this up for you
+        </p>
+        <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
+          Domain setup can be confusing. Text us and we&apos;ll walk you through it live — no tech skills needed.
         </p>
         <a
           href={`sms:${FOUND_HELP_PHONE_SMS}?body=${smsBody}`}
-          style={{ display: "block", textAlign: "center" as const, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.footnote, fontWeight: 700, textDecoration: "none" }}>
+          style={{ display: "block", textAlign: "center" as const, padding: "13px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, textDecoration: "none" }}>
           Text us: {FOUND_HELP_PHONE_DISPLAY}
         </a>
         {helpRequested ? (
@@ -276,7 +290,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
           <button
             onClick={handleRequestHelp}
             disabled={requestingHelp}
-            style={{ display: "block", width: "100%", marginTop: 8, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "transparent", color: requestingHelp ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)", ...TYPE.caption, fontWeight: 700, cursor: requestingHelp ? "default" : "pointer", textAlign: "center" as const }}>
+            style={{ display: "block", width: "100%", marginTop: 8, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.14)", backgroundColor: "transparent", color: requestingHelp ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.72)", ...TYPE.caption, fontWeight: 700, cursor: requestingHelp ? "default" : "pointer", textAlign: "center" as const }}>
             {requestingHelp ? "Sending…" : "or have us reach out — no typing needed"}
           </button>
         )}
@@ -343,6 +357,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     setCheckAttempts(0)
     setDomainStatuses(null)
     setNeedsFoundRepair(false)
+    setShowTechnical(false)
     setError("")
     setDisconnecting(false)
   }
@@ -378,7 +393,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
                   ? "Found needs to finish adding both domain versions"
                   : manualStepConfirmed
                     ? "Checking root and www — this can take a few minutes"
-                    : "Add both records below to finish connecting"}
+                    : "Almost there — let's finish connecting it"}
             </div>
           </div>
         </div>
@@ -408,90 +423,97 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
         )}
 
         {!verified && !manualStepConfirmed && (
-          <>
-            {/* DNS Records */}
-            <div style={{ padding: "0 18px 16px" }}>
-              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-                Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
-              </p>
-              <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
-              </p>
-              <DnsRecordsList />
+          <div style={{ padding: "0 18px 16px" }}>
+            <SetupForYouPanel />
 
-              {verificationRecords.length > 0 && (
-                <div style={{ marginTop: 10 }}>
-                  <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
-                    Also add this verification record:
-                  </p>
-                  {verificationRecords.map((rec, i) => (
-                    <div key={i} style={{ borderRadius: 12, padding: "10px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
-                      <span style={{ color: "rgba(255,180,0,0.8)", fontWeight: 700 }}>{rec.type}</span>
-                      {" "}<span>{rec.host}</span>
-                      {" "}<span style={{ color: "rgba(255,255,255,0.7)", wordBreak: "break-all" as const }}>{rec.value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <button
+              onClick={() => setShowTechnical(v => !v)}
+              style={{ display: "block", width: "100%", marginTop: 14, background: "none", border: "none", padding: "4px 0", cursor: "pointer", ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.45)", textAlign: "center" as const }}>
+              {showTechnical ? "Hide the technical details" : "I'll connect it myself →"}
+            </button>
 
-              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.85)", lineHeight: 1.6 }}>
-                If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
-              </p>
+            {showTechnical && (
+              <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                  Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
+                </p>
+                <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                  Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
+                </p>
+                <DnsRecordsList />
 
-              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-                <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                  Open GoDaddy DNS settings →
-                </a>
-                <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                  Open Namecheap DNS settings →
-                </a>
-              </div>
-
-              <button
-                onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
-                style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
-                {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
-              </button>
-
-              <NeedHelpBlock />
-
-              {enableDomainConnectProbe && (
-                <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
-                  <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
-                    Internal automation proof
-                  </div>
-                  <p style={{ margin: "7px 0 10px", ...TYPE.footnote, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
-                    Checks whether this registrar exposes Domain Connect. Customers do not see this yet.
-                  </p>
-                  <button
-                    onClick={handleDomainConnectProbe}
-                    disabled={probingDomainConnect}
-                    style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: probingDomainConnect ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.8)", ...TYPE.footnote, fontWeight: 700, cursor: probingDomainConnect ? "default" : "pointer" }}>
-                    {probingDomainConnect ? "Checking…" : "Check automatic setup"}
-                  </button>
-                  {domainConnectProbe && (
-                    <div style={{ marginTop: 10, display: "grid", gap: 6, ...TYPE.caption, color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
-                      <div>Domain Connect: <strong style={{ color: domainConnectProbe.registrarSupportsDomainConnect ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.registrarSupportsDomainConnect ? "Detected" : "Not detected"}</strong></div>
-                      {domainConnectProbe.discoveryName && <div>Lookup: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.discoveryName}</span></div>}
-                      {domainConnectProbe.providerHost && <div>Provider: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.providerHost}</span></div>}
-                      <div>Template: <strong style={{ color: domainConnectProbe.templateAvailable ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.templateAvailable === true ? "Available" : domainConnectProbe.templateAvailable === false ? "Unavailable" : "Not proven yet"}</strong></div>
-                      <div style={{ color: domainConnectProbe.error ? "rgba(255,130,130,0.9)" : "rgba(255,255,255,0.5)" }}>
-                        {domainConnectProbe.error ?? domainConnectProbe.message}
+                {verificationRecords.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
+                      Also add this verification record:
+                    </p>
+                    {verificationRecords.map((rec, i) => (
+                      <div key={i} style={{ borderRadius: 12, padding: "10px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", fontFamily: "monospace", fontSize: 11, color: "rgba(255,255,255,0.5)" }}>
+                        <span style={{ color: "rgba(255,180,0,0.8)", fontWeight: 700 }}>{rec.type}</span>
+                        {" "}<span>{rec.host}</span>
+                        {" "}<span style={{ color: "rgba(255,255,255,0.7)", wordBreak: "break-all" as const }}>{rec.value}</span>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
 
-              <button
-                onClick={handleConfirmManualStep}
-                style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
-                Done — I added these records
-              </button>
-            </div>
-          </>
+                <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.85)", lineHeight: 1.6 }}>
+                  If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
+                </p>
+
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
+                    style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                    Open GoDaddy DNS settings →
+                  </a>
+                  <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
+                    style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
+                    Open Namecheap DNS settings →
+                  </a>
+                </div>
+
+                <button
+                  onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
+                  style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
+                  {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
+                </button>
+
+                {enableDomainConnectProbe && (
+                  <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
+                    <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
+                      Internal automation proof
+                    </div>
+                    <p style={{ margin: "7px 0 10px", ...TYPE.footnote, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                      Checks whether this registrar exposes Domain Connect. Customers do not see this yet.
+                    </p>
+                    <button
+                      onClick={handleDomainConnectProbe}
+                      disabled={probingDomainConnect}
+                      style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: probingDomainConnect ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.8)", ...TYPE.footnote, fontWeight: 700, cursor: probingDomainConnect ? "default" : "pointer" }}>
+                      {probingDomainConnect ? "Checking…" : "Check automatic setup"}
+                    </button>
+                    {domainConnectProbe && (
+                      <div style={{ marginTop: 10, display: "grid", gap: 6, ...TYPE.caption, color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
+                        <div>Domain Connect: <strong style={{ color: domainConnectProbe.registrarSupportsDomainConnect ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.registrarSupportsDomainConnect ? "Detected" : "Not detected"}</strong></div>
+                        {domainConnectProbe.discoveryName && <div>Lookup: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.discoveryName}</span></div>}
+                        {domainConnectProbe.providerHost && <div>Provider: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.providerHost}</span></div>}
+                        <div>Template: <strong style={{ color: domainConnectProbe.templateAvailable ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.templateAvailable === true ? "Available" : domainConnectProbe.templateAvailable === false ? "Unavailable" : "Not proven yet"}</strong></div>
+                        <div style={{ color: domainConnectProbe.error ? "rgba(255,130,130,0.9)" : "rgba(255,255,255,0.5)" }}>
+                          {domainConnectProbe.error ?? domainConnectProbe.message}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleConfirmManualStep}
+                  style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
+                  Done — I added these records
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {!verified && manualStepConfirmed && !showMisconfiguredHelp && (
@@ -509,14 +531,16 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
 
         {!verified && manualStepConfirmed && showMisconfiguredHelp && (
           <div style={{ padding: "0 18px 16px" }}>
-            <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.9)", lineHeight: 1.6 }}>
-              We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
-            </p>
-            <DnsRecordsList />
-            <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-              Fixed it? Give it a few minutes, then check again below.
-            </p>
-            <NeedHelpBlock />
+            <SetupForYouPanel />
+            <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+              <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,180,0,0.9)", lineHeight: 1.6 }}>
+                Still want to fix it yourself? We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
+              </p>
+              <DnsRecordsList />
+              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+                Fixed it? Give it a few minutes, then check again below.
+              </p>
+            </div>
           </div>
         )}
 
@@ -614,8 +638,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
       )}
 
       <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>
-        You&apos;ll get step-by-step DNS instructions for root and www.
-        Usually live within minutes.
+        We&apos;ll walk you through connecting it — or do it yourself if you&apos;d rather. Usually live within minutes.
       </p>
 
       <p style={{ margin: "8px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.6 }}>

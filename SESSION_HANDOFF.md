@@ -32,6 +32,28 @@ Get Shawn's approval to push. After deploy: open a test account's domain setup s
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: open a test account's domain screen, tap "or have us reach out," confirm Shawn actually receives the email (check `/admin/emails` too - it should log as `emailScope: "found"`, `emailType: "domain_help_request"`). Provisioning a real `support@foundco.app` inbox is no longer required for this flow to work end to end, though it's still worth having eventually for anything not covered by this specific button.
 
+## 2026-08-17 (part 4) - Domain Screen Redesign + Two Live Bugs Fixed
+
+### Progress This Pass
+- Shawn tested the domain-help email live on a real account (Spa Mambo) and reported two real bugs plus one strong product/design reaction, all in one message.
+- **Bug 1, "View in Found HQ" 404s:** traced precisely - Found HQ actually lives at `admin.foundco.app`, not `my.foundco.app/admin`. The `my.` host is the customer dashboard; hitting `/admin/*` there redirects and 404s (confirmed directly in `middleware.ts`'s host routing). Fixed in `requestDomainHelp()` - and found the identical bug already living in the pre-existing new-signup alert email (`src/lib/adminAlerts.ts`), fixed both instances, confirmed no other occurrence of the pattern exists in the codebase.
+- **Bug 2, missing customer name:** Shawn wants the actual customer's name in the text/email so he can address them by name on the callback. `contact_name` (added 2026-08-14) existed on the `companies` table but was never in `getCompany()`'s SELECT_FIELDS/CompanyRow type, so it was silently unavailable everywhere the dashboard reads company data. Added it to the shared select - now available app-wide, not just this one feature. Threaded through `page.tsx` -> `SiteEditor` -> `DomainConnector` for the client-side SMS pre-fill; the email side already had it for free once the select changed, since that runs server-side.
+- **The bigger reaction - "the whole page is a catastrophe... looks like Chinese... needs to be the best user experience":** Shawn asked for an immediate Jony+Steve-led team round, per `BRIEF.md` process. Held it live:
+  - Jony: the screen opened straight into a monospace TYPE/HOST/VALUE record table with six competing actions stacked in one card - same failure class Edit My Site had before its July 27 rebuild.
+  - Steve: the screen's real job is "connect with the least fear," not "teach DNS." It was defaulting to the hardest path and burying the easiest one.
+  - Angela: same empathetic-empty-state principle used everywhere else - reassure first, complexity only on request.
+  - Craig: pure UI/IA rework, `connectCustomDomain`/`checkDomainStatus` untouched.
+  - Shawn approved the recommended direction outright: **fully hide raw DNS records by default**, lead with "We'll set this up for you" as the obvious primary action.
+- Built: `DomainConnector.tsx` restructured. The former `NeedHelpBlock` (text/email help) is now `SetupForYouPanel` - promoted to be the leading, prominent action for any unverified domain, not an addendum after DNS instructions. A new `showTechnical` toggle ("I'll connect it myself ->") defaults closed and reveals the DNS record table, registrar links, copy-instructions button, and the admin-only automation probe only when an owner deliberately asks for it. Applied the same lead-with-help pattern to the "records still look wrong" retry state. Softened remaining copy (initial input screen, header status line) that still assumed DNS instructions were the default experience.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: connect a test domain, confirm the screen now leads with "We'll set this up for you" and the DNS table stays hidden until "I'll connect it myself" is tapped. Confirm the SMS/email now includes the contact name when one exists (Spa Mambo's test account is a good real check since it's the one that surfaced the gap). Confirm "View in Found HQ" opens correctly this time.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status

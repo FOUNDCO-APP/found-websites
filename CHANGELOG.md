@@ -1,3 +1,21 @@
+## Session: August 17, 2026 (part 4) - Domain Screen Redesign + Two Live Bugs Fixed
+**AI:** Claude
+
+### Context
+Shawn tested the domain-help feature live (Spa Mambo) and reported the "View in Found HQ" link 404s, the text message should include the customer's real name, and the whole domain screen "looks like Chinese... needs to be the best user experience." Asked for an immediate Jony+Steve-led team round per `BRIEF.md`. Held live: Jony flagged the monospace DNS table and six competing stacked actions as the same failure class Edit My Site had pre-July-27; Steve reframed the screen's real job as "connect with least fear," not "teach DNS"; Craig confirmed it's a pure UI/IA rework. Shawn approved: DNS records fully hidden by default, "We'll set this up for you" as the leading action.
+
+### Changed
+- `src/middleware.ts`-confirmed root cause: Found HQ lives at `admin.foundco.app`, not `my.foundco.app/admin`. Fixed the broken link in `site/actions.ts`'s `requestDomainHelp()` and the identical pre-existing bug in `src/lib/adminAlerts.ts`'s new-signup alert.
+- `src/lib/dashboard/getCompany.ts`: added `contact_name` to `CompanyRow`/`SELECT_FIELDS` - existed on the table since 2026-08-14 but was never selected, so it was silently unavailable everywhere. Now available app-wide.
+- `src/app/dashboard/(app)/site/page.tsx`, `SiteEditor.tsx`, `DomainConnector.tsx`: threaded `contact_name` through as `contactName` prop for the client-side SMS pre-fill; server-side email already gets it for free from the updated select.
+- `DomainConnector.tsx`: `NeedHelpBlock` renamed/promoted to `SetupForYouPanel` - now the primary leading content for any unverified domain. New `showTechnical` toggle ("I'll connect it myself ->") defaults closed, revealing DNS records/registrar links/copy-instructions/admin probe only on request. Same lead-with-help pattern applied to the misconfigured-retry state. Softened copy on the initial input screen and header status line that still assumed DNS instructions were the default.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 17, 2026 (part 3) - Domain Help Request Goes Through Resend, Not a Real Inbox
 **AI:** Claude
 

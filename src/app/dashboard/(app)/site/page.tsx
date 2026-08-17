@@ -28,6 +28,7 @@ export default async function SitePage() {
         id: company.id,
         name: company.name,
         slug: company.slug,
+        contact_name: company.contact_name,
         sub_industry: company.sub_industry,
         phone: company.phone,
         email: company.email,

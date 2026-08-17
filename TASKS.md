@@ -1,5 +1,16 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - Domain Screen Redesign + Two Live Bugs Fixed
+
+Shawn tested the domain-help feature live (Spa Mambo test account) and reported: "View in Found HQ" 404s, the text message should include the customer's actual name, and the whole domain screen is "a catastrophe... looks like Chinese... needs to be the best user experience." Asked for an immediate Jony+Steve-led team round.
+
+- [x] Bug: "View in Found HQ" 404 - link used `my.foundco.app/admin/...` but Found HQ lives at `admin.foundco.app`. Fixed in `requestDomainHelp()` and found/fixed the identical pre-existing bug in `adminAlerts.ts`'s new-signup alert.
+- [x] Bug: SMS/email now includes the customer's real name via `contact_name`, which existed on the `companies` table but was missing from `getCompany()`'s shared select - added it there (now available app-wide), threaded through to the client-side SMS pre-fill.
+- [x] Team round held live (Jony leading, Steve/Angela/Craig weighing in) - approved direction: DNS records fully hidden by default, "We'll set this up for you" promoted to the leading action.
+- [x] Rebuilt `DomainConnector.tsx`: `SetupForYouPanel` (formerly `NeedHelpBlock`) is now the primary content for any unverified domain; new `showTechnical` toggle ("I'll connect it myself") defaults closed and reveals DNS records/registrar links/copy-instructions/admin probe only on request. Same pattern applied to the misconfigured-retry state. Softened remaining copy that assumed DNS was the default path.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: connect a test domain, confirm the screen leads with "We'll set this up for you," DNS stays hidden until asked for, SMS/email includes the contact name, and "View in Found HQ" opens correctly.
+
 ## 2026-08-17 - Guide-Only "Text Us" Help on Domain Setup
 
 Shawn: DNS instructions look like Chinese to non-technical clients. Wants an easy escape hatch - text or email Found for live help - without exposing his personal email or building more scope than needed. Brought to the team before building.

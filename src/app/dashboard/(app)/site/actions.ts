@@ -771,29 +771,32 @@ export async function requestDomainHelp(rawDomain: string): Promise<{ success: b
 
   const to = process.env.ADMIN_ALERT_EMAIL || "shawnlopez@me.com"
   const domain = rawDomain?.trim() || "no domain entered yet"
+  const contactName = ctx.company.contact_name?.trim() || null
   const contactLine = [ctx.company.phone, ctx.company.email].filter(Boolean).join(" / ") || "no contact info on file"
+  const whoLine = contactName ? `${contactName} - ${ctx.company.name}` : ctx.company.name
 
   const sent = await sendTrackedEmail({
     from: "Found HQ <hello@foundco.app>",
     to,
-    subject: `Domain help requested: ${ctx.company.name}`,
+    subject: `Domain help requested: ${whoLine}`,
     companyId: ctx.company.id,
     recipientType: "admin",
     emailType: "domain_help_request",
     source: "site/actions/requestDomainHelp",
     emailScope: "found",
-    text: `${ctx.company.name} (${ctx.company.slug}) needs help connecting their domain.\n\nDomain: ${domain}\nReach them: ${contactLine}`,
+    text: `${whoLine} (${ctx.company.slug}) needs help connecting their domain.\n\nDomain: ${domain}\nReach them: ${contactLine}`,
     html: `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:${BLACK};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#F6F6F0;">
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="padding:32px 16px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:420px;">
         <tr><td style="padding-bottom:6px;color:${GREEN};font-size:11px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;">Domain help requested</td></tr>
-        <tr><td style="padding-bottom:14px;font-size:24px;font-weight:800;">${ctx.company.name}</td></tr>
+        <tr><td style="padding-bottom:14px;font-size:24px;font-weight:800;">${contactName ?? ctx.company.name}</td></tr>
+        ${contactName ? `<tr><td style="padding-bottom:10px;color:#B8BCB7;font-size:14px;">${ctx.company.name}</td></tr>` : ""}
         <tr><td style="padding-bottom:4px;color:#B8BCB7;font-size:14px;">Domain: ${domain}</td></tr>
         <tr><td style="padding-bottom:24px;color:#B8BCB7;font-size:14px;">Reach them: ${contactLine}</td></tr>
         <tr><td>
-          <a href="https://my.foundco.app/admin/clients?q=${encodeURIComponent(ctx.company.name)}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
+          <a href="https://admin.foundco.app/clients?q=${encodeURIComponent(ctx.company.name)}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
         </td></tr>
       </table>
     </td></tr>
