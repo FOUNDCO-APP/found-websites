@@ -1,5 +1,42 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-16 - Immediate Fix: Lead Form Dropdown Uses Plain Intake Choices
+
+### Progress This Pass
+- Shawn paused Domain Connect work for a live MBJ/Richard issue: the customer-facing form's "What do you need?" dropdown was pulling polished website service-card names. Example problem: service cards can say "efficient installations," "reliable repairs," and "comprehensive maintenance," but a real customer dropdown should say plain things like "Installation," "Repair," "Maintenance," and "Other."
+- Traced the bug to `src/lib/bookings/bookingVocab.ts`: `getServiceField()` used hardcoded occasion lists for food, but for every non-food business it preferred `companyServices` directly whenever any services existed.
+- Implemented the team-approved split:
+  - Services page can keep polished marketing/service-card copy.
+  - Intake dropdown normalizes company services into plain labels.
+  - If the owner only gave thin/generic services such as "HVAC," the form falls back to industry defaults instead of presenting one useless choice.
+  - `Other` remains guaranteed.
+- Home-services fallback is now `Installation / Repair / Maintenance / Other`.
+
+### Verification This Pass
+- `npm.cmd run build` passed clean.
+- Not pushed yet.
+
+### Explicit Next Step
+Push when Shawn says so. Then open MBJ's customer-facing contact/booking form and verify the dropdown before Richard tests the email/lead response. Bigger follow-up remains open: industry-aware onboarding service chips/minimum-service guidance so generated Service pages don't become one generic card when the owner types only "HVAC," "contracting," or "balloon decor."
+
+## 2026-08-16 - Domain Automation Direction: Domain Connect First, Manual Fallback
+
+### Progress This Pass
+- Shawn moved from Richard/MBJ's GoDaddy DNS setup into the real scale concern: manual DNS is free in software cost, but expensive in support time. If Found promotes nationally, domain setup cannot depend on Shawn hand-holding every registrar screen.
+- Current shipped state remains correct for the near term: Found registers/checks both root and `www`, and manual DNS asks for:
+  - `A @ 76.76.21.21`
+  - `CNAME www cname.vercel-dns.com`
+- Team direction, approved by Shawn:
+  - Domain Connect-style approval is the preferred automation path because it matches the customer experience Found needs: enter domain, log into registrar, approve DNS changes, done.
+  - The old GoDaddy Personal Access Token path is not the customer-facing answer. It can update DNS technically, but it asks a regular business owner to create developer credentials, which Shawn already rejected as unusable.
+  - Namecheap direct API is also not the easy answer for normal owners; it is more technical and has higher record-replacement risk if not handled carefully.
+  - Cloudflare is technically clean but not a primary recommendation for Found's current audience because most small business owners do not know or use it.
+  - No registrar passwords. No broad registrar credentials. No stored owner API keys unless Shawn and the team explicitly reopen that decision later.
+- Added `DOMAIN_CONNECT_FEASIBILITY.md` with the exact product goal, DNS records, internal proof scope, open questions, and acceptance criteria.
+
+### Explicit Next Step
+Scope a small GoDaddy-first Domain Connect feasibility proof. Do not replace the live manual flow yet. Prototype should be internal/admin-only until it proves root + `www` can be approved and verified end to end. If Domain Connect approval requires external provider/template review, document the exact submission steps and keep manual DNS as the production fallback.
+
 ## 2026-08-16 - Phone Number Display Formatting on Public Site
 
 ### Progress This Pass

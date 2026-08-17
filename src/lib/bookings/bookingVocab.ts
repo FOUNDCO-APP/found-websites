@@ -60,7 +60,7 @@ const SERVICE_FIELD_MAP: Partial<Record<string, ServiceField>> = {
   healthcare:            { label: "Reason for visit",
                            options: ["New Patient", "Follow-up", "Consultation", "Physical", "Other"] },
   home_services:         { label: "What do you need?",
-                           options: ["Estimate", "Repair", "New Installation", "Inspection", "Other"] },
+                           options: ["Installation", "Repair", "Maintenance", "Other"] },
   cleaning:              { label: "Type of cleaning",
                            options: ["Regular Clean", "Deep Clean", "Move-in/out", "Post-construction", "Other"] },
   landscaping:           { label: "Service needed",
@@ -91,6 +91,52 @@ const SERVICE_FIELD_MAP: Partial<Record<string, ServiceField>> = {
                            options: ["Math", "Reading", "Science", "Language", "Music", "Other"] },
 }
 
+const GENERIC_SERVICE_NAMES = new Set([
+  "ac",
+  "air conditioning",
+  "contracting",
+  "contractor",
+  "construction",
+  "home services",
+  "hvac",
+  "service",
+  "services",
+])
+
+function dedupeOptions(options: string[]) {
+  const seen = new Set<string>()
+  return options.filter((option) => {
+    const clean = option.trim()
+    const key = clean.toLowerCase()
+    if (!clean || seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function ensureOther(options: string[]) {
+  const withoutOther = options.filter((option) => option.trim().toLowerCase() !== "other")
+  return [...dedupeOptions(withoutOther), "Other"]
+}
+
+function normalizeIntakeOption(service: string, industry: string | null | undefined): string | null {
+  const clean = service.trim()
+  if (!clean) return null
+
+  const lower = clean.toLowerCase()
+  if (GENERIC_SERVICE_NAMES.has(lower)) return null
+
+  if (industry === "home_services") {
+    if (/(install|replace|new system|new unit)/i.test(clean)) return "Installation"
+    if (/(repair|fix|broken|not working|diagnos)/i.test(clean)) return "Repair"
+    if (/(maint|tune|service plan|seasonal)/i.test(clean)) return "Maintenance"
+    if (/(estimate|quote|bid)/i.test(clean)) return "Estimate"
+    if (/(inspect|inspection)/i.test(clean)) return "Inspection"
+  }
+
+  return clean
+}
+
 export function getServiceField(
   industry: string | null | undefined,
   companyServices: string[]
@@ -100,15 +146,21 @@ export function getServiceField(
   // Food/occasion type — always use the hardcoded occasion list, never pull from services
   if (vocab?.isOccasion) return vocab
 
-  // Non-food with company services configured — build from their list
-  if (companyServices.length > 0) {
+  // Non-food with enough specific services configured: use plain intake labels.
+  const intakeOptions = dedupeOptions(
+    companyServices
+      .map((service) => normalizeIntakeOption(service, industry))
+      .filter((service): service is string => Boolean(service))
+  )
+
+  if (intakeOptions.length >= 3) {
     return {
       label: vocab?.label ?? "Service",
-      options: [...companyServices, "Other"],
+      options: ensureOther(intakeOptions),
     }
   }
 
-  // Non-food without services — use industry defaults
+  // Non-food with thin/generic services: use industry defaults so the form is useful.
   return vocab ?? null
 }
 

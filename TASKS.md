@@ -1,5 +1,46 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-16 - Lead Form Service Dropdown: Plain Intake Options
+
+Shawn: MBJ's public contact/booking form used polished website service-card names such as "efficient installations," "reliable repairs," and "comprehensive maintenance" as dropdown choices. That reads well on a Services page, but it is wrong inside a customer intake form. The form should ask in plain customer language.
+
+Team direction, approved by Shawn:
+
+- [x] Keep polished service copy on the public Services page.
+- [x] Decouple the booking/contact dropdown from raw marketing service names.
+- [x] For home services, normalize service-card names into plain intake labels:
+  - install/replacement/new system -> `Installation`;
+  - repair/fix/broken/diagnosis -> `Repair`;
+  - maintenance/tune/service plan -> `Maintenance`;
+  - estimate/quote/bid -> `Estimate`;
+  - inspection -> `Inspection`.
+- [x] If services are too thin or generic, e.g. the owner only typed `HVAC`, fall back to industry defaults instead of showing one useless dropdown option.
+- [x] Always include `Other`.
+- [x] Verify `npm.cmd run build` - passed.
+- [ ] Shawn QA: open MBJ's customer-facing contact/booking flow and confirm "What do you need?" shows useful options like Installation / Repair / Maintenance / Other before testing Richard's notification.
+- [ ] Future team item: industry-aware onboarding service chips/minimum service guidance so the generated Services page itself does not become one generic "HVAC" or "Contracting" card.
+- [ ] Future team item: owner/admin-editable intake dropdown options, separate from public Services page copy.
+
+## 2026-08-16 - Domain Automation Track: Domain Connect First
+
+Shawn: Richard's GoDaddy DNS setup exposed a scale problem. Manual DNS can work for one client, but Found cannot promote nationally if every custom domain turns into support calls.
+
+Team direction, approved by Shawn:
+
+- [x] Keep the already-shipped root + `www` Vercel/manual DNS flow as the safe fallback.
+- [x] Do not revive the old GoDaddy Personal Access Token flow as the normal customer path. It works technically, but it asks non-technical owners to create developer credentials.
+- [x] Do not ask for or store registrar passwords.
+- [x] Treat Domain Connect-style registrar approval as the preferred product direction: owner enters domain, signs into registrar, approves Found adding the DNS records, and Found verifies root + `www`.
+- [ ] Craig/Marcus: scope a Domain Connect feasibility proof for GoDaddy first:
+  - service template should add `A @ 76.76.21.21`;
+  - service template should add `CNAME www cname.vercel-dns.com`;
+  - flow must still verify both root and `www` after approval;
+  - gate behind internal/admin-only UI until verified end to end.
+- [x] Added `DOMAIN_CONNECT_FEASIBILITY.md` as the working spec for the proof.
+- [ ] Angela/Phil: keep registrar guidance plain-English: “For easiest setup, buy/connect with GoDaddy. Namecheap and others still work manually.”
+- [ ] Priya: security guardrail - no registrar passwords, no broad DNS credentials, no stored owner registrar API keys unless a later team decision explicitly reopens it.
+- [ ] Shawn QA after feasibility proof exists: run it on a test GoDaddy domain, then confirm both root and `www` become live.
+
 ## 2026-08-16 - Phone Number Display Formatting on Public Site
 
 Shawn: Contact page phone shows unformatted, thought it was every template. Traced it: Contact is one shared page across templates, so the bug looked universal but was one spot. Checked every public-site raw-phone render and found 3 real occurrences.
