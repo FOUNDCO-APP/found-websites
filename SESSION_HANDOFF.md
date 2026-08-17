@@ -91,6 +91,27 @@ Get Shawn's approval to push. After deploy: connect a test domain, confirm DNS r
 ### Explicit Next Step
 Get Shawn's approval to push. After deploy: connect a test domain and confirm the card reads calm/neutral (not amber) while waiting, DNS records display in normal Found typography (no monospace), and the "Still stuck?" card sits visibly separate below the status card - not sharing a border with the Check Connection/Remove row.
 
+## 2026-08-17 (part 7) - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
+
+### Progress This Pass
+- Shawn's correct read on part 6: removing amber "did shit" - the underlying typography, spacing, and hierarchy were still the same cramped, dashboard-y bones. He was right that color alone was never the fix.
+- Rather than guess again in code and make Shawn test-and-report on a live phone a fourth time, built an actual visual mockup first (Claude Design canvas, two artboards - waiting state and live state) matching Found's real tokens (Inter, Found Black `#080A09`, Signal Green `#32D074`, the dashboard `TYPE` scale) pulled directly from `typography.ts`, not invented. Shawn then said skip further review, build it - the direction was already decided.
+- Built directly from the mockup:
+  - Domain name promoted to the visual hero (21px/700), status demoted to a quiet pill beneath it instead of competing inline text.
+  - Real spacing rhythm: 22-24px padding/gaps throughout, replacing the prior 10-16px cramped stacking.
+  - DNS records fully redesigned as legible cards: quiet label on top, the value itself large (19px/600) and prominent - the thing an owner actually reads and copies, not a data-table row.
+  - Registrar links and the copy-instructions action demoted to quiet inline text links instead of three stacked competing bordered buttons; one single dominant green primary button ("Done — I added these records") carries the actual next step.
+  - Check Connection / Remove demoted to small centered text links at the bottom of the status card - no longer full-width buttons competing with the primary action above.
+  - `StillStuckPanel` gets a small icon treatment and stays neutral-background (matches Found's own rule that Signal Green is for the action, not a background wash) - only the Text Us button itself is green.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: connect a test domain and confirm it actually reads calmer and more spacious - domain name prominent, DNS values legible at a glance, one clear green action, "Still stuck?" visually separate and quiet until tapped.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status

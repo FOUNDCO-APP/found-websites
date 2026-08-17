@@ -44,8 +44,8 @@ type DomainConnectProbeResult = {
 }
 
 const DNS_RECORDS = [
-  { type: "A",     host: "@",   value: "76.76.21.21",         note: "Points your root domain to Found" },
-  { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
+  { type: "A record",     label: "root domain", host: "@",   value: "76.76.21.21" },
+  { type: "CNAME record", label: "www",          host: "www", value: "cname.vercel-dns.com" },
 ]
 
 // Amber/red are reserved for a genuine problem, not for "you haven't
@@ -54,7 +54,7 @@ const DNS_RECORDS = [
 const AMBER = "rgba(255,180,0,0.9)"
 const RED = "rgba(255,130,130,0.9)"
 const NEUTRAL_BORDER = "1px solid rgba(255,255,255,0.08)"
-const NEUTRAL_BG = "rgba(255,255,255,0.025)"
+const NEUTRAL_BG = "rgba(255,255,255,0.03)"
 
 // Guide-only support contact for owners who get stuck on DNS. We never take
 // a client's registrar login - Shawn stays on text/call while they click,
@@ -228,33 +228,31 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
     handleCheck()
   }
 
-  // Redesigned 2026-08-17 (Jony-led team round): the previous version used
-  // fontFamily: "monospace" for the value, a real violation of the locked
-  // "Found has one typeface: Inter, no per-page font drift" decision
-  // (DECISIONS.md 2026-07-03) - and colored the record type bold orange,
-  // making a normal instruction step read as an alert. Now plain Inter
-  // throughout; the type/host sit as a quiet label, the value (the thing
-  // they actually copy) is the visually prominent part.
+  // Redesigned 2026-08-17 (real mockup reviewed and approved before this
+  // build): each record is a small legible card - a quiet label on top,
+  // the value itself large and prominent (the thing an owner actually
+  // reads/copies), no monospace, no shouting orange type badge. Inter
+  // throughout, matching the locked "one typeface" decision.
   function DnsRecordsList() {
     return (
-      <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
         {DNS_RECORDS.map((rec, i) => (
           <div key={i} style={{
-            borderRadius: 12, padding: "12px 14px",
-            backgroundColor: "rgba(255,255,255,0.04)",
+            borderRadius: 16, padding: "14px 16px",
+            backgroundColor: "rgba(255,255,255,0.045)",
             border: "1px solid rgba(255,255,255,0.08)",
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-              <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>
-                {rec.type} record — {rec.host === "@" ? "root domain" : rec.host}
-              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.42)" }}>
+                {rec.type} — {rec.label}
+              </span>
               <button
                 onClick={() => copyToClipboard(rec.value, rec.type + rec.host)}
-                style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 6, backgroundColor: copied === rec.type + rec.host ? `${GREEN}22` : "rgba(255,255,255,0.06)", color: copied === rec.type + rec.host ? GREEN : "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700 }}>
-                {copied === rec.type + rec.host ? "✓" : "Copy"}
+                style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 12.5, fontWeight: 700, color: copied === rec.type + rec.host ? "rgba(255,255,255,0.5)" : GREEN }}>
+                {copied === rec.type + rec.host ? "Copied" : "Copy"}
               </button>
             </div>
-            <div style={{ ...TYPE.subhead, fontWeight: 600, color: "white", marginTop: 3, wordBreak: "break-all" as const }}>
+            <div style={{ marginTop: 6, fontSize: 19, fontWeight: 600, letterSpacing: "-0.005em", color: "white", wordBreak: "break-all" as const }}>
               {rec.value}
             </div>
           </div>
@@ -276,29 +274,36 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
   }
 
   // Fully standalone card, rendered as a sibling of the domain-status card
-  // below, never nested inside it - Shawn's explicit correction 2026-08-17.
-  // Copy fixed the same session: Found can only guide an owner live (no
-  // registrar credentials, per the locked security decision), never
-  // "set it up for you" unilaterally - the heading and body must say that
-  // honestly, not promise something Found can't do without the owner.
+  // below, never nested inside it. Neutral background - green is reserved
+  // for the one actual action (the Text Us button), not a background wash
+  // for the whole card. Copy promises only what Found can actually do:
+  // guide live, never "set it up for you" unilaterally (no registrar
+  // credentials, per the locked security decision).
   function StillStuckPanel() {
     const smsBody = encodeURIComponent(
       `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.${contactName ? ` - ${contactName}` : ""}`
     )
     return (
       <div style={{
-        borderRadius: 18, padding: "18px 18px 16px",
-        backgroundColor: `${GREEN}0d`, border: `1px solid ${GREEN}33`,
+        borderRadius: 20, padding: "22px 22px 20px",
+        backgroundColor: NEUTRAL_BG, border: NEUTRAL_BORDER,
       }}>
-        <p style={{ margin: "0 0 6px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>
-          Still stuck? We&apos;ll walk you through it
-        </p>
-        <p style={{ margin: "0 0 14px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
-          Text us and we&apos;ll stay with you live while you connect it — no tech skills needed.
-        </p>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 14 }}>
+          <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 11, backgroundColor: `${GREEN}1f`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <div style={{ paddingTop: 2 }}>
+            <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 700, color: "white" }}>
+              Still stuck? We&apos;ll walk you through it
+            </p>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.5)", lineHeight: 1.55 }}>
+              Text us and we&apos;ll stay with you live while you connect it. No tech skills needed.
+            </p>
+          </div>
+        </div>
         <a
           href={`sms:${FOUND_HELP_PHONE_SMS}?body=${smsBody}`}
-          style={{ display: "block", textAlign: "center" as const, padding: "13px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, textDecoration: "none" }}>
+          style={{ display: "block", textAlign: "center" as const, padding: "13px 0", borderRadius: 12, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, textDecoration: "none" }}>
           Text us: {FOUND_HELP_PHONE_DISPLAY}
         </a>
         {helpRequested ? (
@@ -306,17 +311,12 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
             We got it — we&apos;ll reach out shortly.
           </p>
         ) : (
-          <>
-            <button
-              onClick={handleRequestHelp}
-              disabled={requestingHelp}
-              style={{ display: "block", margin: "10px auto 0", background: "none", border: "none", padding: 0, cursor: requestingHelp ? "default" : "pointer", ...TYPE.footnote, fontWeight: 700, color: requestingHelp ? "rgba(255,255,255,0.35)" : GREEN, textDecoration: "underline" }}>
-              {requestingHelp ? "Sending…" : "Have us reach out instead"}
-            </button>
-            <p style={{ margin: "5px 0 0", ...TYPE.caption, color: "rgba(255,255,255,0.45)", textAlign: "center" as const }}>
-              No typing needed — we&apos;ll contact you directly.
-            </p>
-          </>
+          <button
+            onClick={handleRequestHelp}
+            disabled={requestingHelp}
+            style={{ display: "block", width: "100%", marginTop: 10, background: "none", border: "none", padding: 0, cursor: requestingHelp ? "default" : "pointer", ...TYPE.caption, textTransform: "none" as const, letterSpacing: "normal", fontWeight: 600, color: requestingHelp ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.45)", textAlign: "center" as const }}>
+            {requestingHelp ? "Sending…" : "Have us reach out instead — no typing needed"}
+          </button>
         )}
         {helpError && (
           <p style={{ margin: "8px 0 0", ...TYPE.caption, color: RED, textAlign: "center" as const }}>{helpError}</p>
@@ -330,7 +330,7 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
     const rows = [domainStatuses.root, domainStatuses.www]
 
     return (
-      <div style={{ padding: "0 18px 14px", display: "flex", flexDirection: "column" as const, gap: 8 }}>
+      <div style={{ padding: "0 24px 4px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
         {rows.map(status => {
           const live = status.ownershipVerified && !status.misconfigured
           // Only escalate to amber once the owner has actually tried and
@@ -338,33 +338,24 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           // starting state, not a problem.
           const rowHasProblem = status.misconfigured && manualStepConfirmed
           const label = live ? "Live" : status.registered === false ? "Needs Found setup" : "Needs DNS"
-          const color = live ? GREEN : status.registered === false ? RED : rowHasProblem ? AMBER : "rgba(255,255,255,0.45)"
+          const color = live ? GREEN : status.registered === false ? RED : rowHasProblem ? AMBER : "rgba(255,255,255,0.4)"
 
           return (
             <div
               key={status.hostname}
-              style={{
-                borderRadius: 12,
-                padding: "10px 12px",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-              }}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}
             >
-              <div>
-                <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, fontWeight: 700, textTransform: "uppercase" }}>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 2 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>
                   {status.label === "Root" ? "Root domain" : "www address"}
-                </div>
-                <div style={{ ...TYPE.footnote, color: "white", fontWeight: 700, wordBreak: "break-word" }}>
+                </span>
+                <span style={{ fontSize: 14.5, fontWeight: 600, color: "rgba(255,255,255,0.85)", wordBreak: "break-word" as const }}>
                   {status.hostname}
-                </div>
+                </span>
               </div>
-              <div style={{ ...TYPE.caption, color, fontWeight: 800, whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color, whiteSpace: "nowrap" as const }}>
                 {label}
-              </div>
+              </span>
             </div>
           )
         })}
@@ -393,43 +384,45 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
     return (
       <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
         <div style={{
-          borderRadius: 18, overflow: "hidden",
+          borderRadius: 22, overflow: "hidden",
           border: verified ? `1px solid ${GREEN}44` : hasRealProblem ? "1px solid rgba(255,180,0,0.28)" : NEUTRAL_BORDER,
           backgroundColor: verified ? `${GREEN}08` : hasRealProblem ? "rgba(255,180,0,0.045)" : NEUTRAL_BG,
         }}>
-          {/* Domain header */}
-          <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Domain header - the domain name is the hero, status is a quiet pill beneath it */}
+          <div style={{ padding: "24px 24px 20px", display: "flex", flexDirection: "column" as const, gap: 10 }}>
+            <div style={{ fontSize: 21, fontWeight: 700, letterSpacing: "-0.01em", color: "white", wordBreak: "break-all" as const }}>
+              {connectedDomain}
+            </div>
             <div style={{
-              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              backgroundColor: verified ? `${GREEN}22` : hasRealProblem ? "rgba(255,180,0,0.15)" : "rgba(255,255,255,0.08)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "inline-flex", alignItems: "center", gap: 7, width: "fit-content",
+              padding: "5px 11px 5px 9px", borderRadius: 999,
+              backgroundColor: verified ? `${GREEN}26` : hasRealProblem ? "rgba(255,180,0,0.15)" : "rgba(255,255,255,0.07)",
             }}>
               {verified ? (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={GREEN} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               ) : (
-                <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: hasRealProblem ? AMBER : "rgba(255,255,255,0.4)", animation: "pulse 2s infinite" }}/>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: hasRealProblem ? AMBER : "rgba(255,255,255,0.5)", animation: "pulse 2s infinite" }}/>
               )}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>{connectedDomain}</div>
-              <div style={{ ...TYPE.footnote, fontWeight: 400, color: verified ? GREEN : hasRealProblem ? AMBER : "rgba(255,255,255,0.55)" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: verified ? GREEN : hasRealProblem ? AMBER : "rgba(255,255,255,0.65)" }}>
                 {verified
                   ? "Live — root and www both work"
                   : needsFoundRepair
-                    ? "Found needs to finish adding both domain versions"
+                    ? "Found needs to finish setup"
                     : manualStepConfirmed
-                      ? "Checking root and www — this can take a few minutes"
-                      : "Almost there — let's finish connecting it"}
-              </div>
+                      ? "Checking — this can take a few minutes"
+                      : hasRealProblem
+                        ? "Records don't look right yet"
+                        : "Waiting on DNS"}
+              </span>
             </div>
           </div>
 
           <DomainStatusRows />
 
           {!verified && needsFoundRepair && (
-            <div style={{ padding: "0 18px 16px" }}>
+            <div style={{ padding: "20px 24px 0" }}>
               <div style={{
                 borderRadius: 14,
                 padding: "13px 14px",
@@ -451,52 +444,56 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           )}
 
           {!verified && !manualStepConfirmed && (
-            <div style={{ padding: "0 18px 16px" }}>
-              <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-                Found checks both <strong style={{ color: "rgba(255,255,255,0.72)" }}>{connectedDomain}</strong> and <strong style={{ color: "rgba(255,255,255,0.72)" }}>www.{connectedDomain}</strong>. Add both records so either address works.
-              </p>
-              <p style={{ margin: "0 0 12px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                Add these at the registrar where the domain was bought. We recommend GoDaddy first, then Namecheap. Other registrars work manually with the same records.
-              </p>
+            <div style={{ padding: "22px 24px 24px", display: "flex", flexDirection: "column" as const, gap: 16 }}>
+              <div>
+                <p style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: "white" }}>
+                  Add these two records
+                </p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 400, lineHeight: 1.5, color: "rgba(255,255,255,0.45)" }}>
+                  At the registrar where the domain was bought — GoDaddy or Namecheap work the same way.
+                </p>
+              </div>
+
               <DnsRecordsList />
 
               {verificationRecords.length > 0 && (
-                <div style={{ marginTop: 10 }}>
+                <div>
                   <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>
                     Also add this verification record:
                   </p>
-                  {verificationRecords.map((rec, i) => (
-                    <div key={i} style={{ borderRadius: 12, padding: "10px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.5)" }}>{rec.type} record — {rec.host}</div>
-                      <div style={{ ...TYPE.footnote, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginTop: 2, wordBreak: "break-all" as const }}>{rec.value}</div>
-                    </div>
-                  ))}
+                  <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                    {verificationRecords.map((rec, i) => (
+                      <div key={i} style={{ borderRadius: 14, padding: "11px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.42)" }}>{rec.type} record — {rec.host}</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginTop: 2, wordBreak: "break-all" as const }}>{rec.value}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
-              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
-                If your registrar already shows a record with the same type and name, replace it instead of adding a second one — two records at the same spot will conflict.
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 400, lineHeight: 1.55, color: "rgba(255,255,255,0.4)" }}>
+                Already have a record with this name? Replace it instead of adding a second one.
               </p>
 
-              <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" as const }}>
                 <a href="https://dcc.godaddy.com/control/portfolio" target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                  Open GoDaddy DNS settings →
+                  style={{ fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.2)" }}>
+                  Open GoDaddy →
                 </a>
                 <a href="https://ap.www.namecheap.com/domains/list/" target="_blank" rel="noopener noreferrer"
-                  style={{ flex: 1, textAlign: "center" as const, padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)", ...TYPE.footnote, fontWeight: 600, textDecoration: "none" }}>
-                  Open Namecheap DNS settings →
+                  style={{ fontSize: 13.5, fontWeight: 600, color: "rgba(255,255,255,0.55)", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.2)" }}>
+                  Open Namecheap →
                 </a>
+                <button
+                  onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13.5, fontWeight: 600, color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.55)", textDecoration: "underline", textDecorationColor: "rgba(255,255,255,0.2)" }}>
+                  {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
+                </button>
               </div>
 
-              <button
-                onClick={() => copyToClipboard(domainPersonInstructions(), "domain-person-instructions")}
-                style={{ width: "100%", marginTop: 8, padding: "11px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: copied === "domain-person-instructions" ? `${GREEN}18` : "rgba(255,255,255,0.04)", color: copied === "domain-person-instructions" ? GREEN : "rgba(255,255,255,0.72)", ...TYPE.footnote, fontWeight: 700, cursor: "pointer" }}>
-                {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
-              </button>
-
               {enableDomainConnectProbe && (
-                <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
+                <div style={{ borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
                   <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
                     Internal automation proof
                   </div>
@@ -525,14 +522,14 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
 
               <button
                 onClick={handleConfirmManualStep}
-                style={{ width: "100%", marginTop: 10, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.subhead, fontWeight: 700, cursor: "pointer" }}>
+                style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", backgroundColor: GREEN, color: BLACK, fontSize: 15.5, fontWeight: 700, letterSpacing: "-0.005em", cursor: "pointer" }}>
                 Done — I added these records
               </button>
             </div>
           )}
 
           {!verified && manualStepConfirmed && !showMisconfiguredHelp && (
-            <div style={{ padding: "0 18px 16px" }}>
+            <div style={{ padding: "20px 24px 24px" }}>
               <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
                 We're checking now. This usually takes a few minutes, but can take longer depending on your registrar — no need to keep refreshing, this screen will say &quot;Live&quot; the moment it's ready.
               </p>
@@ -545,12 +542,12 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           )}
 
           {!verified && manualStepConfirmed && showMisconfiguredHelp && (
-            <div style={{ padding: "0 18px 16px" }}>
-              <p style={{ margin: "0 0 12px", ...TYPE.footnote, fontWeight: 400, color: AMBER, lineHeight: 1.6 }}>
+            <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column" as const, gap: 14 }}>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: AMBER, lineHeight: 1.6 }}>
                 We&apos;re seeing your domain, but the records don&apos;t look right yet — double check the values below match exactly.
               </p>
               <DnsRecordsList />
-              <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
                 Fixed it? Give it a few minutes, then check again below.
               </p>
             </div>
@@ -558,24 +555,25 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
 
           {!verified && (
             <>
-              {/* Check / Disconnect buttons */}
-              <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
+              {/* Check / Disconnect */}
+              <div style={{ padding: "0 24px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 18 }}>
                 <button
                   onClick={handleCheck}
                   disabled={checking}
-                  style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: checking ? "rgba(255,255,255,0.06)" : GREEN, color: checking ? "rgba(255,255,255,0.3)" : BLACK, ...TYPE.subhead, fontWeight: 700, cursor: checking ? "default" : "pointer" }}>
-                  {checking ? "Checking…" : "Check Connection"}
+                  style={{ background: "none", border: "none", padding: 0, cursor: checking ? "default" : "pointer", fontSize: 13, fontWeight: 600, color: checking ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.5)" }}>
+                  {checking ? "Checking…" : "Check connection"}
                 </button>
+                <span style={{ width: 3, height: 3, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.2)" }}/>
                 <button
                   onClick={handleDisconnect}
                   disabled={disconnecting}
-                  style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,100,100,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
-                  {disconnecting ? "…" : "Remove"}
+                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "rgba(255,120,120,0.6)" }}>
+                  {disconnecting ? "…" : "Remove domain"}
                 </button>
               </div>
 
               {error && (
-                <div style={{ margin: "0 18px 14px", padding: "10px 14px", borderRadius: 10, backgroundColor: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.15)" }}>
+                <div style={{ margin: "0 24px 20px", padding: "10px 14px", borderRadius: 10, backgroundColor: "rgba(255,100,100,0.08)", border: "1px solid rgba(255,100,100,0.15)" }}>
                   <p style={{ margin: 0, ...TYPE.footnote, color: RED }}>{error}</p>
                 </div>
               )}
@@ -583,18 +581,18 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           )}
 
           {verified && (
-            <div style={{ padding: "0 18px 18px", display: "flex", gap: 8 }}>
+            <div style={{ padding: "22px 24px 24px", display: "flex", gap: 10 }}>
               <a
                 href={`https://${connectedDomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}15`, color: GREEN, ...TYPE.subhead, fontWeight: 700, textDecoration: "none", textAlign: "center" as const }}>
+                style={{ flex: 2, padding: "15px 0", borderRadius: 14, border: `1px solid ${GREEN}33`, backgroundColor: `${GREEN}15`, color: GREEN, fontSize: 15, fontWeight: 700, textDecoration: "none", textAlign: "center" as const }}>
                 Visit Site →
               </a>
               <button
                 onClick={handleDisconnect}
                 disabled={disconnecting}
-                style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,100,100,0.7)", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                style={{ flex: 1, padding: "15px 0", borderRadius: 14, border: "1px solid rgba(255,70,70,0.2)", backgroundColor: "rgba(255,70,70,0.08)", color: "rgba(255,100,100,0.7)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 {disconnecting ? "…" : "Remove"}
               </button>
             </div>
@@ -603,9 +601,7 @@ export default function DomainConnector({ initialDomain, companySlug, contactNam
           <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
         </div>
 
-        {/* Fully separate card, not nested inside the status card above -
-            Shawn's explicit correction: "still stuck" has nothing to do
-            with checking the connection or removing it. */}
+        {/* Fully separate card, not nested inside the status card above. */}
         {!verified && (!manualStepConfirmed || showMisconfiguredHelp) && (
           <StillStuckPanel />
         )}

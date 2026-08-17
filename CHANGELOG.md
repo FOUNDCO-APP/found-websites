@@ -1,3 +1,18 @@
+## Session: August 17, 2026 (part 7) - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
+**AI:** Claude
+
+### Context
+Shawn correctly called out that part 6's amber fix "did shit" - typography, spacing, and hierarchy were still the same cramped, dashboard-y bones underneath. Built an actual visual mockup first (matching Found's real tokens - Inter, `#080A09`, `#32D074`, the dashboard `TYPE` scale from `typography.ts`) instead of guessing again in code. Shawn confirmed the direction and said build it directly.
+
+### Changed
+- `src/app/dashboard/(app)/site/DomainConnector.tsx`: domain name promoted to visual hero (21px/700), status demoted to a quiet pill. Padding/gaps widened to 22-24px throughout. `DnsRecordsList` redesigned as legible cards - quiet label, large prominent value. Registrar links and copy-instructions demoted to quiet inline text links; one dominant green primary button carries the real next step. Check Connection/Remove demoted to small centered text links. `StillStuckPanel` gets an icon, stays neutral-background - green reserved for the actual button.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 17, 2026 (part 6) - Real Team Round on Domain Screen Visuals + Full Rewrite
 **AI:** Claude
 

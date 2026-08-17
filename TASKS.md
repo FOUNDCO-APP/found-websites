@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - Domain Screen: Real Typography/Spacing Pass, Built From a Reviewed Mockup
+
+Shawn correctly called out that removing amber color alone didn't fix anything - typography, spacing, and hierarchy were still cramped and dashboard-y. Built an actual visual mockup first (matching Found's real Inter/Black/Green tokens) instead of guessing again in code; Shawn confirmed the direction and said build it.
+
+- [x] Domain name promoted to visual hero (21px/700); status demoted to a quiet pill.
+- [x] Real spacing: 22-24px padding/gaps replacing the prior 10-16px cramped stacking.
+- [x] DNS records redesigned as legible cards - quiet label, large prominent value, no monospace.
+- [x] Registrar links/copy-instructions demoted to quiet text links; one dominant green primary button.
+- [x] Check Connection/Remove demoted to small centered text links, not competing full-width buttons.
+- [x] `StillStuckPanel` gets an icon, stays neutral-background - green reserved for the actual button.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: connect a test domain, confirm it reads calmer/more spacious with a clear single primary action.
+
 ## 2026-08-17 - Domain Screen: Real Jony-Led Team Round + Full Visual Rewrite
 
 Shawn rejected the previous reorder pass outright - visuals were still the pre-redesign "geeky IT guy" look (amber card for the whole unverified state, monospace DNS table, "still stuck" nested inside the same wrapper as Check/Remove). Asked for an explicit Jony-led team round with everyone's input before any code.
