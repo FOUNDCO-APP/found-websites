@@ -1,5 +1,21 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 2) - Guide-Only "Text Us" Help on Domain Setup
+
+### Progress This Pass
+- Shawn: clients see the DNS instructions and it looks like Chinese to them. Wanted an easy way for a stuck client to reach him - text, email, or live help - without exposing his personal email or handing Found's help flow more scope than intended.
+- Brought to the team before building (Steve/Jony/Angela/Craig/Priya/Marcus/Phil per `BRIEF.md` process). Priya flagged the real risk directly: "we'll set it up for you" has two very different versions - guiding the client live while they click (safe, matches the already-locked no-registrar-credentials decision from 2026-07-30), versus Shawn actually logging into a client's registrar with their password (reopens that locked decision, real blast-radius risk if a domain gets mishandled). Craig recommended skipping a real chat-widget build entirely - one person answering doesn't need chat infrastructure, a native `sms:` link is simpler and more reliable.
+- Shawn approved the guide-only version explicitly, confirmed the existing business line (520.222.6308) is fine for now rather than provisioning a separate Found number, and chose `support@foundco.app` as the display email over `domains@foundco.app` or `hello@foundco.app`.
+- Built: `NeedHelpBlock` in `DomainConnector.tsx` - a single "Text us: (520) 222-6308" button (pre-filled `sms:` with the domain name in the body) plus a quieter `support@foundco.app` mailto line underneath. Shown in the two moments an owner is actually stuck: right after the DNS records/copy-instructions button, and again if records still look wrong after their first attempt. Deliberately not added to every screen - one help path, not competing buttons, per Jony's note.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed clean.
+- `npm run build` passed clean.
+- Not yet tested live.
+
+### Explicit Next Step
+Get Shawn's approval to push. After deploy: open a test account's domain setup screen, confirm the "Text us" button opens Messages pre-filled with the domain name, and the DNS-still-wrong state also shows the help block. Separately, not yet done - Shawn still needs to actually provision the `support@foundco.app` inbox (or set up forwarding) so replies land somewhere; the mailto link works today but nothing receives it until that inbox exists. `PROJECT.md` already lists "Set up foundco.app email" as a pending Shawn admin task.
+
 ## 2026-08-17 - Current Handoff: MBJ Form/Billing + Domain DNS Automation
 
 ### MBJ estimate/contact form status

@@ -1,3 +1,18 @@
+## Session: August 17, 2026 (part 2) - Guide-Only "Text Us" Help on Domain Setup
+**AI:** Claude
+
+### Context
+Shawn: DNS instructions read like Chinese to non-technical clients. Wanted an easy way for a stuck client to reach him for live help, without exposing his personal email. Brought to the team first (Steve/Jony/Angela/Craig/Priya/Marcus/Phil per `BRIEF.md`). Priya flagged the real fork: guiding a client live while they click their own registrar (safe, matches the locked no-registrar-credentials decision from 2026-07-30) versus Shawn logging into their account himself (reopens that decision, real risk). Craig recommended skipping chat-widget infrastructure entirely for a one-person operation - native `sms:`/`mailto:` links are simpler and more reliable. Shawn approved guide-only, kept the existing business line (520.222.6308), and chose `support@foundco.app` as the display address.
+
+### Changed
+- `src/app/dashboard/(app)/site/DomainConnector.tsx`: new `NeedHelpBlock` - "Text us" button (pre-filled `sms:` with the domain name) plus a quieter `support@foundco.app` mailto line. Shown after the DNS records/copy-instructions button, and again in the "records still look wrong" state - the two moments an owner is actually stuck. Not added anywhere else, to avoid competing help buttons.
+
+### Verification
+- `npx tsc --noEmit`, `npm run build` both passed clean.
+- Not yet tested live.
+
+---
+
 ## Session: August 16, 2026 (part 9) - Phone Number Display Formatting
 **AI:** Claude
 

@@ -47,6 +47,13 @@ const DNS_RECORDS = [
   { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
 ]
 
+// Guide-only support contact for owners who get stuck on DNS. We never take
+// a client's registrar login - Shawn stays on text/call while they click,
+// per the locked no-registrar-credentials security decision.
+const FOUND_HELP_PHONE_DISPLAY = "(520) 222-6308"
+const FOUND_HELP_PHONE_SMS = "5202226308"
+const FOUND_HELP_EMAIL = "support@foundco.app"
+
 // Custom domains are free on every plan (shipped June 2026) - this component
 // used to gate behind Pro/Business, left stale after that decision. Kept the
 // props so callers don't need to change, just no longer used to gate.
@@ -230,6 +237,30 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
     )
   }
 
+  function NeedHelpBlock() {
+    const smsBody = encodeURIComponent(
+      `Hi, I need help connecting my domain (${connectedDomain || "my domain"}) to Found.`
+    )
+    return (
+      <div style={{
+        marginTop: 12, borderRadius: 14, padding: "14px 16px",
+        backgroundColor: `${GREEN}0d`, border: `1px solid ${GREEN}2e`,
+      }}>
+        <p style={{ margin: "0 0 10px", ...TYPE.footnote, fontWeight: 400, color: "rgba(255,255,255,0.78)", lineHeight: 1.6 }}>
+          This part can be confusing — we&apos;ll walk you through it live. Just text us and we&apos;ll get you set up.
+        </p>
+        <a
+          href={`sms:${FOUND_HELP_PHONE_SMS}?body=${smsBody}`}
+          style={{ display: "block", textAlign: "center" as const, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: GREEN, color: BLACK, ...TYPE.footnote, fontWeight: 700, textDecoration: "none" }}>
+          Text us: {FOUND_HELP_PHONE_DISPLAY}
+        </a>
+        <p style={{ margin: "9px 0 0", ...TYPE.caption, color: "rgba(255,255,255,0.4)", textAlign: "center" as const }}>
+          or email <a href={`mailto:${FOUND_HELP_EMAIL}`} style={{ color: "rgba(255,255,255,0.55)" }}>{FOUND_HELP_EMAIL}</a>
+        </p>
+      </div>
+    )
+  }
+
   function DomainStatusRows() {
     if (!domainStatuses) return null
     const rows = [domainStatuses.root, domainStatuses.www]
@@ -398,6 +429,8 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
                 {copied === "domain-person-instructions" ? "Copied instructions" : "Copy instructions for my domain person"}
               </button>
 
+              <NeedHelpBlock />
+
               {enableDomainConnectProbe && (
                 <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
                   <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
@@ -457,6 +490,7 @@ export default function DomainConnector({ initialDomain, companySlug, enableDoma
             <p style={{ margin: "12px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.6 }}>
               Fixed it? Give it a few minutes, then check again below.
             </p>
+            <NeedHelpBlock />
           </div>
         )}
 

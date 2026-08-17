@@ -1,5 +1,18 @@
 ## 2026-08-05 - CURRENT NOW
 
+## 2026-08-17 - Guide-Only "Text Us" Help on Domain Setup
+
+Shawn: DNS instructions look like Chinese to non-technical clients. Wants an easy escape hatch - text or email Found for live help - without exposing his personal email or building more scope than needed. Brought to the team before building.
+
+- [x] Team direction: guide-only help (Shawn walks the client through it live via text/call) - never take a client's registrar password. Reopening the locked no-registrar-credentials decision was explicitly declined for now.
+- [x] Skip building real chat-widget infrastructure - one person answering doesn't need it. Native `sms:`/`mailto:` links instead.
+- [x] Shawn confirmed: use existing business line 520.222.6308 (not a separate Found number yet), display email `support@foundco.app`.
+- [x] Built `NeedHelpBlock` in `DomainConnector.tsx` - "Text us" button (pre-filled sms with domain name) + `support@foundco.app` mailto, shown after the DNS records and again if records still look wrong.
+- [x] Verify `npx tsc --noEmit`, `npm run build` - both passed.
+- [ ] Shawn QA: open domain setup, confirm the Text Us button opens Messages pre-filled correctly on a real phone.
+- [ ] Shawn to do (not code): actually provision the `support@foundco.app` inbox/forwarding - the mailto link works today but nothing receives replies until that exists. Already listed in `PROJECT.md`'s pending admin tasks.
+- [ ] Held for later today per Shawn: sending the drafted GoDaddy Domain Connect outreach email (`docs/domain-connect/provider-onboarding-package.md`).
+
 ## 2026-08-16 - Lead Form Service Dropdown: Plain Intake Options
 
 Shawn: MBJ's public contact/booking form used polished website service-card names such as "efficient installations," "reliable repairs," and "comprehensive maintenance" as dropdown choices. That reads well on a Services page, but it is wrong inside a customer intake form. The form should ask in plain customer language.
