@@ -39,12 +39,14 @@ Team direction, approved by Shawn:
 - [x] Added `DOMAIN_CONNECT_FEASIBILITY.md` as the working spec for the proof.
 - [x] Added draft Domain Connect template at `docs/domain-connect/foundco.app.website.json`.
 - [x] Added GoDaddy proof runbook at `docs/domain-connect/godaddy-proof-runbook.md`.
+- [x] Manual GoDaddy fallback proof passed with `supershawn.me`: after adding the two DNS records in GoDaddy, Found registered and verified both root and `www`, then the Visit Site button loaded the site. This proves the DNS values, Vercel registration, and root/`www` verification path. It does **not** prove automatic Domain Connect yet.
 - [x] Validate the template with the Domain Connect schema tooling:
   - JSON syntax passed.
   - Official `template.schema` passed with AJV draft-07, strict mode disabled for Domain Connect custom schema keywords.
   - Manual quality checks passed: `syncPubKeyDomain` present, `warnPhishing` absent, only root + `www` website records included, no email records touched.
   - Official Go linter not run locally because Go is not installed in this workspace.
-- [ ] Use Shawn's disposable GoDaddy domain for the first end-to-end proof.
+- [ ] Use Shawn's disposable GoDaddy domain for the first **automatic Domain Connect** proof, meaning no manual DNS record edits.
+- [x] Marcus/Craig: add an internal-only Domain Connect probe that can tell Found whether the registrar exposes Domain Connect for the entered domain. Template application is still intentionally marked “not proven yet” until a registrar accepts the Found template without manual DNS edits.
 - [ ] Angela/Phil: keep registrar guidance plain-English: “For easiest setup, buy/connect with GoDaddy. Namecheap and others still work manually.”
 - [ ] Priya: security guardrail - no registrar passwords, no broad DNS credentials, no stored owner registrar API keys unless a later team decision explicitly reopens it.
 - [ ] Shawn QA after feasibility proof exists: run it on a test GoDaddy domain, then confirm both root and `www` become live.

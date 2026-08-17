@@ -48,10 +48,26 @@ Local draft:
 
 The draft must pass Domain Connect template validation/editor testing before any production UI is built.
 
+## Manual fallback proof result
+
+2026-08-17: Shawn tested `supershawn.me` in GoDaddy.
+
+Result:
+
+- Manual `A @ 76.76.21.21` worked.
+- Manual `CNAME www cname.vercel-dns.com` worked.
+- Found verified both root and `www`.
+- The domain loaded through the Found Visit Site button after propagation.
+
+This proves the fallback and verification system. It does not prove the automatic Domain Connect approval path.
+
 ## Test checklist
 
-- [ ] Template passes Domain Connect editor/schema validation.
-- [ ] GoDaddy accepts or can apply the Found template for a test domain.
+- [x] Template passes Domain Connect editor/schema validation.
+- [x] Manual GoDaddy fallback proof works on a fresh GoDaddy domain.
+- [ ] Internal-only probe can identify whether a GoDaddy domain exposes Domain Connect.
+- [ ] Internal-only probe can identify whether the Found template is available/recognized.
+- [ ] GoDaddy accepts or can apply the Found template for a test domain without manual DNS edits.
 - [ ] Found registers root with Vercel.
 - [ ] Found registers `www` with Vercel.
 - [ ] GoDaddy applies `A @ 76.76.21.21`.

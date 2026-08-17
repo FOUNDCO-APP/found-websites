@@ -1,9 +1,10 @@
 ﻿"use server"
 
+import { resolveTxt } from "node:dns/promises"
 import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { getCompany, isAdminOverrideActive, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
@@ -472,6 +473,101 @@ function domainHostnames(domain: string) {
   return {
     root: domain,
     www: `www.${domain}`,
+  }
+}
+
+type DomainConnectProbeResult = {
+  success: boolean
+  domain?: string
+  discoveryName?: string
+  registrarSupportsDomainConnect?: boolean
+  providerHost?: string
+  templateAvailable?: boolean | null
+  status?: "not_available" | "provider_discovered" | "probe_error" | "internal_only"
+  message?: string
+  error?: string
+}
+
+function findDomainConnectProvider(txtRecords: string[][]) {
+  for (const record of txtRecords) {
+    const value = record.join("")
+    const match = value.match(/(?:^|;)\s*domainconnect=([^;\s]+)/i)
+    if (match?.[1]) {
+      return match[1]
+        .replace(/^https?:\/\//i, "")
+        .replace(/\/.*$/, "")
+        .trim()
+    }
+  }
+  return null
+}
+
+export async function probeDomainConnect(rawDomain: string): Promise<DomainConnectProbeResult> {
+  const ctx = await getContext()
+  if (!ctx) return { success: false, error: "Not authenticated" }
+
+  if (!(await isAdminOverrideActive())) {
+    return {
+      success: false,
+      status: "internal_only",
+      error: "Automatic setup checks are internal until proven.",
+    }
+  }
+
+  const domain = normalizeCustomDomain(rawDomain)
+  if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z]{2,})+$/.test(domain)) {
+    return { success: false, error: "Enter a valid domain first." }
+  }
+
+  const discoveryName = `_domainconnect.${domain}`
+
+  try {
+    const txtRecords = await resolveTxt(discoveryName)
+    const providerHost = findDomainConnectProvider(txtRecords)
+
+    if (!providerHost) {
+      return {
+        success: true,
+        domain,
+        discoveryName,
+        registrarSupportsDomainConnect: false,
+        templateAvailable: false,
+        status: "not_available",
+        message: "No Domain Connect provider record was found. Use manual DNS for this registrar.",
+      }
+    }
+
+    return {
+      success: true,
+      domain,
+      discoveryName,
+      registrarSupportsDomainConnect: true,
+      providerHost,
+      templateAvailable: null,
+      status: "provider_discovered",
+      message: "Registrar exposes Domain Connect. Next proof is confirming the Found template can be applied without manual DNS edits.",
+    }
+  } catch (err) {
+    const code = err instanceof Error && "code" in err ? String((err as Error & { code?: unknown }).code) : ""
+    if (code === "ENOTFOUND" || code === "ENODATA") {
+      return {
+        success: true,
+        domain,
+        discoveryName,
+        registrarSupportsDomainConnect: false,
+        templateAvailable: false,
+        status: "not_available",
+        message: "This domain did not publish a Domain Connect discovery record. Use manual DNS.",
+      }
+    }
+
+    return {
+      success: false,
+      domain,
+      discoveryName,
+      status: "probe_error",
+      error: "Could not check Domain Connect for this domain.",
+    }
   }
 }
 

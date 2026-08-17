@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { connectCustomDomain, checkDomainStatus, disconnectDomain } from "./actions"
+import { connectCustomDomain, checkDomainStatus, disconnectDomain, probeDomainConnect } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   plan: string | null
   subscriptionStatus: string | null
   companySlug: string
+  enableDomainConnectProbe?: boolean
 }
 
 type HostnameStatus = {
@@ -29,6 +30,18 @@ type DomainCheckResult = {
   error?: string
 }
 
+type DomainConnectProbeResult = {
+  success: boolean
+  domain?: string
+  discoveryName?: string
+  registrarSupportsDomainConnect?: boolean
+  providerHost?: string
+  templateAvailable?: boolean | null
+  status?: "not_available" | "provider_discovered" | "probe_error" | "internal_only"
+  message?: string
+  error?: string
+}
+
 const DNS_RECORDS = [
   { type: "A",     host: "@",   value: "76.76.21.21",         note: "Points your root domain to Found" },
   { type: "CNAME", host: "www", value: "cname.vercel-dns.com", note: "Points www to Found" },
@@ -37,7 +50,7 @@ const DNS_RECORDS = [
 // Custom domains are free on every plan (shipped June 2026) - this component
 // used to gate behind Pro/Business, left stale after that decision. Kept the
 // props so callers don't need to change, just no longer used to gate.
-export default function DomainConnector({ initialDomain, companySlug }: Props) {
+export default function DomainConnector({ initialDomain, companySlug, enableDomainConnectProbe = false }: Props) {
   const [domain, setDomain] = useState(initialDomain ?? "")
   const [connectedDomain, setConnectedDomain] = useState(initialDomain ?? "")
   const [verified, setVerified] = useState(false)
@@ -53,6 +66,8 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
   const [checkAttempts, setCheckAttempts] = useState(0)
   const [domainStatuses, setDomainStatuses] = useState<{ root: HostnameStatus; www: HostnameStatus } | null>(null)
   const [needsFoundRepair, setNeedsFoundRepair] = useState(false)
+  const [probingDomainConnect, setProbingDomainConnect] = useState(false)
+  const [domainConnectProbe, setDomainConnectProbe] = useState<DomainConnectProbeResult | null>(null)
 
   const isConnected = !!connectedDomain
   // Below this many checks, always show the calm "still checking" message even
@@ -149,6 +164,14 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
     applyCheckResult(result)
     if (!result.verified) setError("DNS not detected yet — it can take up to 48 hours to propagate.")
     else setError("")
+  }
+
+  async function handleDomainConnectProbe() {
+    if (!connectedDomain) return
+    setProbingDomainConnect(true)
+    const result = await probeDomainConnect(connectedDomain)
+    setDomainConnectProbe(result)
+    setProbingDomainConnect(false)
   }
 
   function handleConfirmManualStep() {
@@ -343,6 +366,34 @@ export default function DomainConnector({ initialDomain, companySlug }: Props) {
                   Open Namecheap DNS settings →
                 </a>
               </div>
+
+              {enableDomainConnectProbe && (
+                <div style={{ marginTop: 12, borderRadius: 14, padding: "12px 14px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px dashed rgba(255,255,255,0.14)" }}>
+                  <div style={{ ...TYPE.caption, color: "rgba(255,255,255,0.42)", fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.4 }}>
+                    Internal automation proof
+                  </div>
+                  <p style={{ margin: "7px 0 10px", ...TYPE.footnote, color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+                    Checks whether this registrar exposes Domain Connect. Customers do not see this yet.
+                  </p>
+                  <button
+                    onClick={handleDomainConnectProbe}
+                    disabled={probingDomainConnect}
+                    style={{ width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.05)", color: probingDomainConnect ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.8)", ...TYPE.footnote, fontWeight: 700, cursor: probingDomainConnect ? "default" : "pointer" }}>
+                    {probingDomainConnect ? "Checking…" : "Check automatic setup"}
+                  </button>
+                  {domainConnectProbe && (
+                    <div style={{ marginTop: 10, display: "grid", gap: 6, ...TYPE.caption, color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
+                      <div>Domain Connect: <strong style={{ color: domainConnectProbe.registrarSupportsDomainConnect ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.registrarSupportsDomainConnect ? "Detected" : "Not detected"}</strong></div>
+                      {domainConnectProbe.discoveryName && <div>Lookup: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.discoveryName}</span></div>}
+                      {domainConnectProbe.providerHost && <div>Provider: <span style={{ fontFamily: "monospace" }}>{domainConnectProbe.providerHost}</span></div>}
+                      <div>Template: <strong style={{ color: domainConnectProbe.templateAvailable ? GREEN : "rgba(255,180,0,0.9)" }}>{domainConnectProbe.templateAvailable === true ? "Available" : domainConnectProbe.templateAvailable === false ? "Unavailable" : "Not proven yet"}</strong></div>
+                      <div style={{ color: domainConnectProbe.error ? "rgba(255,130,130,0.9)" : "rgba(255,255,255,0.5)" }}>
+                        {domainConnectProbe.error ?? domainConnectProbe.message}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={handleConfirmManualStep}

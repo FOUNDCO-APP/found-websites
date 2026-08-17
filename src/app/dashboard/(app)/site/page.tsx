@@ -1,5 +1,5 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
-import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { getCompany, isAdminOverrideActive, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import SiteEditor from "./SiteEditor"
@@ -11,6 +11,7 @@ export default async function SitePage() {
   if (!(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) redirect("/photos")
 
   const admin = createAdminClient()
+  const enableDomainConnectProbe = await isAdminOverrideActive()
 
   const [{ data: config }, { data: photos }, { data: mediaPhotos }, { data: addonRows }] = await Promise.all([
     admin.from("website_config").select("*").eq("company_id", company.id).single(),
@@ -54,6 +55,7 @@ export default async function SitePage() {
       navbarDark={company.navbar_dark ?? false}
       includedAddonSlug={company.included_addon_slug ?? null}
       disabledAddons={company.disabled_addons ?? []}
+      enableDomainConnectProbe={enableDomainConnectProbe}
     />
   )
 }

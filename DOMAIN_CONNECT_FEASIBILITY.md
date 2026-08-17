@@ -85,9 +85,21 @@ Validation status as of 2026-08-17:
 - Not yet run: official Go-based Domain Connect linter, because Go is not installed in this workspace.
 - Not yet proven: whether GoDaddy will accept/apply this template before Found submits or hosts it through the required Domain Connect provider process.
 
+Manual GoDaddy fallback proof as of 2026-08-17:
+
+- Shawn tested `supershawn.me` from GoDaddy.
+- Found showed the correct manual records:
+  - `A @ 76.76.21.21`;
+  - `CNAME www cname.vercel-dns.com`.
+- After Shawn added the records in GoDaddy and clicked the Found confirmation/check step, Found reported both root and `www` live and the Visit Site button loaded the site.
+- Meaning: the current manual DNS fallback, Vercel project-domain registration, and root + `www` verification path are proven on a fresh GoDaddy domain.
+- Not proven yet: automatic Domain Connect registrar approval. The next proof must connect a domain without manually editing DNS records.
+
 ### Step 2 - GoDaddy test domain
 
 Use a disposable GoDaddy-owned test domain first, not a real client domain.
+
+The manual DNS fallback has already passed with `supershawn.me`. Do not count that as the automatic proof. The automatic proof only passes if the registrar approval flow applies the DNS records without Shawn manually creating them in GoDaddy.
 
 Test goal:
 
@@ -98,6 +110,13 @@ Test goal:
 5. Confirm Found reports:
    - root domain: Live;
    - `www` address: Live.
+
+Before building customer-facing UI, Found should first add an internal-only probe that reports:
+
+- registrar exposes Domain Connect for this domain;
+- Found's provider/service template is recognized or not recognized;
+- automatic approval URL is available or blocked;
+- manual DNS fallback remains visible when automatic setup is unavailable.
 
 ### Step 3 - Customer-facing copy
 

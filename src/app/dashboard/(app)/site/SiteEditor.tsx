@@ -44,9 +44,10 @@ type Props = {
   navbarDark: boolean
   includedAddonSlug: string | null
   disabledAddons: string[]
+  enableDomainConnectProbe?: boolean
 }
 
-export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, bookingCtaLabel, vibe, layoutOverride: initialLayoutOverride, primaryColor: initialPrimaryColor, navbarDark: initialNavbarDark, includedAddonSlug, disabledAddons }: Props) {
+export default function SiteEditor({ company, config: initialConfig, photos, stockImages: initialStockImages, mediaPhotos, primaryIntent: initialIntent, industryCategory, activeAddons, plan, subscriptionStatus, bookingCtaLabel, vibe, layoutOverride: initialLayoutOverride, primaryColor: initialPrimaryColor, navbarDark: initialNavbarDark, includedAddonSlug, disabledAddons, enableDomainConnectProbe = false }: Props) {
   const editorTouchStartY = useRef(0)
   const [config, setConfig] = useState<Config>(initialConfig ?? {})
   const [editing, setEditing] = useState<string | null>(null)
@@ -2093,6 +2094,7 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
           plan={plan}
           subscriptionStatus={subscriptionStatus}
           companySlug={company.slug}
+          enableDomainConnectProbe={enableDomainConnectProbe}
         />
       </div>
       </>
