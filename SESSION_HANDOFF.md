@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 11) - PWA Icon Adjusted: No Dot, Stronger Signal Green, Balanced F
+
+### Progress This Pass
+- Shawn rejected the previous custom icon because the green dot read as a random speck at iPhone icon size, and the `F` geometry still did not feel close enough to the Found wordmark.
+- Direct direction from Shawn: no team meeting, remove the dot, make the background Signal Green more prominent, and make the top and middle bars of the `F` much closer in length.
+- Updated `public/icons/icon.svg` to remove the dot, strengthen the Signal Green background glow, and rebuild the `F` with a wider stem plus near-equal top/middle bars.
+- Updated `public/favicon.svg` to match the same no-dot direction.
+- Regenerated all app icon PNGs, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the dashboard manifest label as all caps: `FOUND`.
+
+### Verification This Pass
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: no dot, stronger green field, wider `F`, near-equal top/middle bars.
+- `npm run build` passed.
+- Push still needs to run.
+
+### Explicit Next Step
+Commit and push. After deploy: on iPhone, delete the old Found home-screen app, open Safari to `https://my.foundco.app`, Share -> Add to Home Screen.
+
 ## 2026-08-17 (part 10) - PWA Icon Changed to Custom Found Mark
 
 ### Progress This Pass

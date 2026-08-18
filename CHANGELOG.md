@@ -1,3 +1,21 @@
+## Session: August 17, 2026 (part 11) - PWA Icon Adjusted: No Dot, Stronger Signal Green, Balanced F
+**AI:** Codex
+
+### Context
+The custom mark direction was closer, but the small green dot read as a random speck at iPhone icon size. Shawn also called out that the `F` still did not match the Found wordmark closely enough because the top and middle bars were too different in length.
+
+### Changed
+- `public/icons/icon.svg`, `public/favicon.svg`: removed the dot, strengthened the Signal Green background glow, and rebuilt the `F` with near-equal top and middle bars.
+- Regenerated all icon PNGs at 192px and 512px, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the manifest/home-screen label as all caps: `FOUND`.
+
+### Verification
+- Visually inspected the 512px icon: no dot, stronger green field, wider white `F`, near-equal top/middle bars.
+- `npm run build` passed.
+- Push pending at the time of this changelog entry.
+
+---
+
 ## Session: August 17, 2026 (part 10) - PWA Icon Changed to Custom Found Mark
 **AI:** Codex
 
