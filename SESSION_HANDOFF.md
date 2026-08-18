@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 12) - PWA Icon Rebuilt From Shawn's Supplied Found F Mark
+
+### Progress This Pass
+- Shawn supplied `FOUND LOGO - F word mark.png` from the website logo and directed Codex to use that shape.
+- The uploaded image was a very light F on white, so the icon was recreated as clean SVG geometry using that F's proportions rather than embedding a fuzzy screenshot.
+- Updated `public/icons/icon.svg` and `public/favicon.svg` with the supplied-mark direction: no dot, taller Found-style stem, top/middle bars closer to the real Found F, and stronger Signal Green background.
+- Regenerated all app icon PNGs, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the dashboard manifest label as all caps: `FOUND`.
+
+### Verification This Pass
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: no dot, supplied-F proportions, strong green field.
+- `npm run build` passed.
+- Push still needs to run.
+
+### Explicit Next Step
+Commit and push. After deploy: on iPhone, delete the old Found home-screen app, open Safari to `https://my.foundco.app`, Share -> Add to Home Screen.
+
 ## 2026-08-17 (part 11) - PWA Icon Adjusted: No Dot, Stronger Signal Green, Balanced F
 
 ### Progress This Pass

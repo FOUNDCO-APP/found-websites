@@ -20,6 +20,6 @@
   <rect width="512" height="512" fill="url(#cornerGlow)"/>
 
   <g filter="url(#softShadow)">
-    <path d="M144 140H368V186H200V233H350V279H200V372H144V140Z" fill="#FFFFFF"/>
+    <path d="M142 70H370V124H202V238H356V292H202V442H142V70Z" fill="#FFFFFF"/>
   </g>
 </svg>

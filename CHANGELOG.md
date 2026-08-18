@@ -1,3 +1,21 @@
+## Session: August 17, 2026 (part 12) - PWA Icon Rebuilt From Shawn's Supplied Found F Mark
+**AI:** Codex
+
+### Context
+Shawn supplied a cropped Found `F` mark from the website logo and directed Codex to use that source instead of continuing to guess at the icon shape.
+
+### Changed
+- `public/icons/icon.svg`, `public/favicon.svg`: rebuilt the icon mark around the supplied Found `F` proportions, with no dot and a stronger Signal Green background.
+- Regenerated all icon PNGs at 192px and 512px, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the manifest/home-screen label as all caps: `FOUND`.
+
+### Verification
+- Visually inspected the 512px icon: clean supplied-F proportions, no dot, stronger green field.
+- `npm run build` passed.
+- Push pending at the time of this changelog entry.
+
+---
+
 ## Session: August 17, 2026 (part 11) - PWA Icon Adjusted: No Dot, Stronger Signal Green, Balanced F
 **AI:** Codex
 

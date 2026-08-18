@@ -2,5 +2,5 @@
   <rect width="32" height="32" fill="#080A09"/>
   <circle cx="21" cy="10" r="13" fill="#32D074" opacity="0.30"/>
   <circle cx="6" cy="27" r="12" fill="#32D074" opacity="0.16"/>
-  <path d="M9 8.75H23V11.6H12.5V14.55H21.9V17.4H12.5V23.25H9V8.75Z" fill="#FFFFFF"/>
+  <path d="M8.9 4.4H23.1V7.75H12.65V14.9H22.25V18.25H12.65V27.6H8.9V4.4Z" fill="#FFFFFF"/>
 </svg>
