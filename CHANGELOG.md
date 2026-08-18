@@ -1,3 +1,22 @@
+## Session: August 17, 2026 (part 9) - PWA Icon Switched to Legible Found F
+**AI:** Codex
+
+### Context
+The full `FOUND` wordmark was brand-correct but too small/thin as an iPhone home-screen icon. Team direction was to use a single brand-derived `F` instead.
+
+### Changed
+- `public/icons/icon.svg`, `public/favicon.svg`: replaced wordmark/placeholder treatment with a middle-weight white `F` on Found Black plus restrained Signal Green glow.
+- Regenerated PNG app icons at 192px and 512px, including cache-busted `found-app-icon-v2-*` files.
+- `public/dashboard-manifest.json`, `src/app/dashboard/layout.tsx`: dashboard PWA/Apple icon now points at the v2 icon paths.
+- `public/dashboard-manifest.json`: changed the iPhone home-screen label to all caps: `FOUND`.
+
+### Verification
+- Visually inspected the 512px icon: readable at app-icon size, no internal rounded logo mark.
+- `git diff --check` passed with only the repo's normal CRLF warnings.
+- `npm run build` passed.
+
+---
+
 ## Session: August 17, 2026 (part 8) - PWA Home Screen Icon Had No Found Branding
 **AI:** Claude
 

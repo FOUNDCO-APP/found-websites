@@ -1,5 +1,23 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 9) - PWA Icon Switched From Wordmark to Legible Found F
+
+### Progress This Pass
+- Shawn tested the prior full `FOUND` wordmark home-screen icon and it was not acceptable at iPhone app-icon size - too small/thin for the available square.
+- Team decision carried forward: do **not** use the full wordmark for the app icon. Use a single brand-derived `F` that reads instantly at phone size, keeps Found Black + white, and uses Signal Green only as a restrained glow.
+- Updated `public/icons/icon.svg` and `public/favicon.svg` to a clean middle-weight typed `F`, no rounded internal logo shape. This keeps it closer to the Found wordmark while staying readable at iPhone icon size.
+- Regenerated `icon-192.png`, `icon-512.png`, `found-app-icon-192.png`, `found-app-icon-512.png`, plus cache-busted `found-app-icon-v2-192.png` and `found-app-icon-v2-512.png`.
+- Updated `dashboard-manifest.json` and dashboard Apple icon metadata to use the v2 cache-busted icon paths.
+- Updated the dashboard PWA manifest label from `Found` to `FOUND` so the text under the iPhone home-screen icon reads in all caps.
+
+### Verification This Pass
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: readable white `F` on Found Black with subtle green field.
+- `git diff --check` passed with only the repo's normal CRLF warnings.
+- `npm run build` passed.
+
+### Explicit Next Step
+Push this pass. After deploy: on iPhone, delete the old Found home-screen app, open Safari to `https://my.foundco.app`, Share -> Add to Home Screen. If the old icon persists, clear Safari website data for `foundco.app` or restart the phone; iOS caches home-screen icons aggressively.
+
 ## 2026-08-17 (part 8) - PWA Home Screen Icon Was a Blank Black Square
 
 ### Progress This Pass

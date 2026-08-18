@@ -1,4 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="signal" cx="62%" cy="30%" r="68%">
+      <stop offset="0%" stop-color="#32D074" stop-opacity="0.24"/>
+      <stop offset="48%" stop-color="#123D27" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#080A09" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
   <rect width="512" height="512" fill="#080A09"/>
-  <text x="256" y="258" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="66" font-weight="300" letter-spacing="24" text-anchor="middle" dominant-baseline="central">FOUND</text>
+  <circle cx="334" cy="154" r="218" fill="url(#signal)"/>
+  <text
+    x="256"
+    y="262"
+    fill="#FFFFFF"
+    font-family="Inter, Segoe UI, Arial, sans-serif"
+    font-size="326"
+    font-weight="400"
+    text-anchor="middle"
+    dominant-baseline="central"
+  >F</text>
 </svg>

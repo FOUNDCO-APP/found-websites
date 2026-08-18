@@ -4,6 +4,10 @@
 
 Richard asked Shawn how to add Found to his phone; Shawn noticed the home screen icon was blank - wanted the FOUND wordmark like the nav logo.
 
+- [x] Codex follow-up: team direction changed from full wordmark to a single legible Found `F` because the wordmark is too small at iPhone icon size.
+- [x] Updated SVG/favicon source and regenerated 192/512 PNG icons, including cache-busted `found-app-icon-v2-*` files.
+- [x] Updated dashboard manifest and Apple icon metadata to use v2 icon paths.
+- [ ] Run build, push, and test by deleting/re-adding the home-screen app from Safari. If old icon persists, clear Safari website data for `foundco.app` or restart device because iOS caches icons aggressively.
 - [x] Found the cause: `icon-192.png`/`icon-512.png` were blank Found-Black squares (179/205 bytes), never actually branded.
 - [x] Regenerated both with the real FOUND wordmark (Inter, weight 300, wide tracking) centered on Found Black, matching `FoundWordmark.tsx`. Updated `icon.svg` to match.
 - [x] Pushed (`7e2bddf`). Shawn tested live on a real iPhone - **still not showing the wordmark.**
@@ -1635,3 +1639,8 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] Add search/collapsible categories for long menus.
 - [ ] Keep money formatting consistent across menus, carts, and ordering: `$1.00`, not `1`.
 - [ ] Missing product/menu photos need a premium fallback that does not look fake or cheap.
+
+### PWA App Icon QA - August 17, 2026
+- [ ] After deploy, delete the old Found home-screen icon on iPhone and re-add from Safari at `https://my.foundco.app`.
+- [ ] Confirm the icon is a readable single Found-style `F`, not a blank square and not the full tiny wordmark.
+- [ ] Confirm the text label under the iPhone icon reads `FOUND`.

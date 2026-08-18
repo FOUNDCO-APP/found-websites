@@ -1,6 +1,6 @@
 {
-  "name": "Found",
-  "short_name": "Found",
+  "name": "FOUND",
+  "short_name": "FOUND",
   "description": "Your business, found.",
   "start_url": "https://my.foundco.app/",
   "display": "standalone",
@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icons/found-app-icon-v2-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icons/found-app-icon-v2-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
