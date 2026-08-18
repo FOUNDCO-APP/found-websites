@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { createServerClient } from "@supabase/ssr"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
@@ -34,47 +33,14 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(url)
     }
 
-    // All other dashboard routes require auth
-    let res = NextResponse.next({ request: req })
-
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return req.cookies.getAll() },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
-            res = NextResponse.next({ request: req })
-            cookiesToSet.forEach(({ name, value, options }) =>
-              res.cookies.set(name, value, options)
-            )
-          },
-        },
-      }
-    )
-
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      // "View as" from /admin has no real Supabase session - it proves
-      // access with its own admin_key + found_admin_view cookies instead
-      // (see isAdminOverrideActive in src/lib/dashboard/getCompany.ts).
-      // Without this check, this redirect fires before that logic ever
-      // gets a chance to run, so "View as" only worked by accident, on
-      // whichever browser happened to already have a real session.
-      const adminKey = req.cookies.get("admin_key")?.value
-      const adminView = req.cookies.get("found_admin_view")?.value
-      const isAdminOverride = adminView === "1" && !!adminKey && !!process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY
-      if (!isAdminOverride) {
-        return NextResponse.redirect(new URL("/login", req.url))
-      }
-    }
-
+    // Rewrite immediately and let the dashboard server layout enforce auth.
+    // Doing Supabase auth inside middleware blocks the first byte of the PWA
+    // launch, which makes iOS show a black screen before the app shell can
+    // paint. The layout still calls requireDashboardAccess(), so protected
+    // pages remain protected without delaying the initial shell.
     const url = req.nextUrl.clone()
     url.pathname = `/dashboard${pathname}`
-    res = NextResponse.rewrite(url)
-    return res
+    return NextResponse.rewrite(url)
   }
 
   const isRootHost =

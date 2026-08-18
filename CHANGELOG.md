@@ -1,3 +1,24 @@
+## Session: August 17, 2026 (part 14) - PWA Startup No Longer Blocks on Middleware Auth
+**AI:** Codex
+
+### Context
+Shawn noticed the installed Found PWA shows a black screen for roughly 3 to 3.5 seconds on launch, unlike his Spa Mambo and Blue Luna PWAs.
+
+### Changed
+- Removed the duplicate Supabase auth check from `src/middleware.ts` for `my.foundco.app`.
+- Kept protected dashboard security in the dashboard server layout through `requireDashboardAccess()`.
+- Wrapped the dashboard app chrome in a Suspense boundary so the PWA can show the Found loading shell while auth/company/dashboard data finishes loading.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+
+### Notes
+- The practical effect: iPhone should see a Found-branded loading state sooner instead of waiting on a black screen before the app paints.
+- After deploy, iOS may require fully closing/reopening the PWA. If the old launch behavior persists, delete and re-add the home-screen app because iOS caches PWA shell/icon assets aggressively.
+
+---
+
 ## Session: August 17, 2026 (part 13) - PWA Icon PNGs Generated From Shawn's Actual Uploaded Found F
 **AI:** Codex
 

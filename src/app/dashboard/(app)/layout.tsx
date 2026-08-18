@@ -3,6 +3,7 @@ import { getCompany, hasMultipleCompanies, isAdminOverrideActive, getCompanyRole
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import UploadStatusProvider from "@/components/dashboard/UploadStatusProvider"
 import AccountMenu from "@/components/dashboard/AccountMenu"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
@@ -10,6 +11,7 @@ import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { exitAdminView } from "@/app/admin/businesses/actions"
+import { Suspense } from "react"
 
 import { BLACK } from "@/lib/dashboard/typography"
 import FoundWordmark from "@/components/FoundWordmark"
@@ -18,7 +20,48 @@ export const metadata = { title: "Found" }
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardShellFallback() {
+  return (
+    <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
+      <header className="found-dashboard-header" style={{
+        position: "sticky", top: 0, zIndex: 40,
+        backgroundColor: "rgba(8,10,9,0.92)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        boxShadow: "inset 0 2px 0 rgba(50,208,116,0.7)",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          maxWidth: 760, margin: "0 auto",
+          padding: "14px 20px",
+          paddingTop: "max(env(safe-area-inset-top), 14px)",
+        }}>
+          <FoundWordmark height={18} color="white" />
+          <span style={{
+            width: 78,
+            height: 12,
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.08)",
+          }} />
+        </div>
+      </header>
+      <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px 120px" }}>
+        <DashboardLoadingState />
+      </main>
+    </div>
+  )
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<DashboardShellFallback />}>
+      <DashboardChrome>{children}</DashboardChrome>
+    </Suspense>
+  )
+}
+
+async function DashboardChrome({ children }: { children: React.ReactNode }) {
   const user = await requireDashboardAccess()
 
   const admin = createAdminClient()

@@ -1,5 +1,20 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 14) - PWA Startup Delay Audit/Fix
+
+### Progress This Pass
+- Shawn reported the installed Found PWA opens to a black screen for about 3 to 3.5 seconds before refreshing/painting, unlike Spa Mambo and Blue Luna.
+- Found root cause: `my.foundco.app` dashboard requests were doing Supabase auth work in `src/middleware.ts` before rewriting to `/dashboard`, then doing dashboard auth/company work again in the dashboard server layout.
+- Removed the duplicate middleware auth check. Middleware now rewrites dashboard routes immediately; the dashboard app layout still enforces protected access with `requireDashboardAccess()`.
+- Added a Suspense wrapper around the async dashboard chrome so the PWA can show a Found loading shell while auth/company/nav counts load.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+
+### Explicit Next Step
+Commit and push if Shawn approves. After deploy: fully close the Found PWA on iPhone and reopen it. If the old black-screen behavior persists, delete the old home-screen app and re-add it from Safari because iOS can cache PWA shell/icon assets.
+
 ## 2026-08-17 (part 13) - PWA Icon PNGs Generated From Shawn's Actual Uploaded Found F
 
 ### Progress This Pass
