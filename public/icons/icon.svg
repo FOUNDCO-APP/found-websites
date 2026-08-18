@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="signalGlow" cx="58%" cy="43%" r="58%">
-      <stop offset="0%" stop-color="#32D074" stop-opacity="0.52"/>
-      <stop offset="42%" stop-color="#32D074" stop-opacity="0.22"/>
+    <radialGradient id="signalGlow" cx="58%" cy="38%" r="62%">
+      <stop offset="0%" stop-color="#32D074" stop-opacity="0.82"/>
+      <stop offset="42%" stop-color="#32D074" stop-opacity="0.34"/>
       <stop offset="100%" stop-color="#32D074" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="cornerGlow" cx="0%" cy="100%" r="75%">
-      <stop offset="0%" stop-color="#32D074" stop-opacity="0.34"/>
-      <stop offset="55%" stop-color="#32D074" stop-opacity="0.08"/>
+      <stop offset="0%" stop-color="#32D074" stop-opacity="0.48"/>
+      <stop offset="55%" stop-color="#32D074" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#32D074" stop-opacity="0"/>
     </radialGradient>
     <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
@@ -19,7 +19,7 @@
   <rect width="512" height="512" fill="url(#signalGlow)"/>
   <rect width="512" height="512" fill="url(#cornerGlow)"/>
 
-  <g filter="url(#softShadow)">
+  <g filter="url(#softShadow)" transform="translate(53 53) scale(0.79)">
     <path d="M142 70H370V124H202V238H356V292H202V442H142V70Z" fill="#FFFFFF"/>
   </g>
 </svg>

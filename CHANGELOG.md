@@ -4185,6 +4185,21 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Repeat for restaurant/menu and service/estimate destinations.
 ---
 
+## August 17, 2026 - Found PWA Icon Safe Area
+**AI:** Codex
+**Worked on:** Corrected the Found home-screen icon after Shawn flagged that the F mark was still too large and too close to the icon edges.
+
+### Completed
+- Rebuilt the PWA icon set with a smaller centered Found-style `F` mark.
+- Increased the green background presence while keeping the mark clean and readable.
+- Updated all PNG icon variants used by the app manifest and Apple/mobile install flow.
+
+### Verification
+- Programmatic margin check passed on the 512px icon: ~109px top/bottom breathing room and ~165px side breathing room.
+- `npm run build` passed.
+
+---
+
 ## July 26, 2026 - Announcement QA Correction
 **AI:** Codex
 **Worked on:** Fixed launch QA issues Shawn found in the new announcement editor.

@@ -3879,6 +3879,13 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
   - The title/URL text below the image is handled by iMessage/Facebook metadata.
 
 ### Earlier work from this run that must not be lost
+- PWA icon:
+  - Shawn rejected the full `FOUND` wordmark as too small at iOS home-screen size.
+  - Direction changed to a single Found-style `F` mark.
+  - Shawn clarified the mark still looked too large and should not run edge-to-edge inside the rounded square.
+  - Current icon pass uses a smaller centered `F` with clear safe-area breathing room and a stronger Signal Green glow behind it.
+  - Verified visible mark bounds on `public/icons/found-app-icon-v2-512.png`: left 165px, top 109px, right 167px, bottom 110px.
+  - iOS home-screen icons cache aggressively; after deploy, remove the old home-screen app and re-add it from Safari to see the new icon.
 - Hamburger menu / How It Works issue:
   - Anchor navigation was unreliable after clicking other menu items.
   - Direction moved toward avoiding fragile anchors and using a dedicated How It Works page/flow where needed while preserving SEO/AEO/GEO.
