@@ -1,14 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" fill="#080A09"/>
-  <circle cx="21" cy="10" r="13" fill="#32D074" opacity="0.18"/>
-  <text
-    x="16"
-    y="16.6"
-    fill="#FFFFFF"
-    font-family="Inter, Segoe UI, Arial, sans-serif"
-    font-size="21"
-    font-weight="400"
-    text-anchor="middle"
-    dominant-baseline="central"
-  >F</text>
+  <circle cx="23" cy="8" r="10" fill="#32D074" opacity="0.20"/>
+  <path d="M9.75 8.4H22.7V11H12.75V14.55H20.6V17.15H12.75V22.8H9.75V8.4Z" fill="#FFFFFF"/>
+  <circle cx="22.8" cy="8.4" r="0.9" fill="#32D074"/>
 </svg>

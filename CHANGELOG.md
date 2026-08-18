@@ -1,3 +1,22 @@
+## Session: August 17, 2026 (part 10) - PWA Icon Changed to Custom Found Mark
+**AI:** Codex
+
+### Context
+The pushed typed `F` icon was readable but not brand-specific enough. Team direction: keep the iPhone label as `FOUND`, and make the icon itself a custom Found mark instead of repeating the full wordmark.
+
+### Changed
+- `public/icons/icon.svg`, `public/favicon.svg`: replaced the typed-font `F` with a custom geometric Found app mark on Found Black, with a restrained Signal Green accent/glow.
+- Regenerated all app icon PNGs at 192px and 512px, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the manifest/home-screen label as all caps: `FOUND`.
+
+### Verification
+- Visually inspected the 512px icon: custom white mark, visible green signal accent, no repeated full wordmark inside the icon.
+- `git diff --check` passed with only normal repo CRLF warnings.
+- `npm run build` passed.
+- Push pending at the time of this changelog entry.
+
+---
+
 ## Session: August 17, 2026 (part 9) - PWA Icon Switched to Legible Found F
 **AI:** Codex
 

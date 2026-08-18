@@ -1,5 +1,24 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 10) - PWA Icon Changed to Custom Found Mark
+
+### Progress This Pass
+- Shawn compared the pushed icon on a real iPhone and rejected the typed `F`: too generic, too skinny as an icon mark, not enough Signal Green, and weaker than the earlier wordmark direction.
+- Team decision with Jony leading: because the iPhone label already reads `FOUND`, the icon itself should not repeat the full wordmark. It should be a custom Found app mark: Found Black base, white custom `F`, and a visible but restrained Signal Green signal accent.
+- Replaced the typed-font `F` in `public/icons/icon.svg` with a custom geometric Found mark and green signal dot/glow.
+- Updated `public/favicon.svg` to match the same mark direction.
+- Regenerated all app icon PNGs, including the cache-busted `found-app-icon-v2-*` files used by the dashboard manifest.
+- Kept the dashboard manifest label as all caps: `FOUND`.
+
+### Verification This Pass
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: custom white Found mark on Found Black with visible Signal Green.
+- `git diff --check` passed with only normal repo CRLF warnings.
+- `npm run build` passed.
+- Push still needs to run.
+
+### Explicit Next Step
+Commit and push. After deploy: on iPhone, delete the old Found home-screen app, open Safari to `https://my.foundco.app`, Share -> Add to Home Screen.
+
 ## 2026-08-17 (part 9) - PWA Icon Switched From Wordmark to Legible Found F
 
 ### Progress This Pass
