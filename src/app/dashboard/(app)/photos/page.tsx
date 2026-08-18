@@ -9,7 +9,7 @@ import { uploadDashboardMedia, ensureFreshSession } from "@/lib/uploadDashboardM
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
-import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
+import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
 import { useUploadStatus } from "@/components/dashboard/UploadStatusProvider"
 
 type Photo = {
@@ -982,7 +982,7 @@ function PhotosPageInner() {
       {/* Content */}
       <div style={{ flex: 1, padding: "0 24px 32px" }}>
         {loading ? (
-          <DashboardLoadingState compact />
+          <DashboardLaunchLoader compact />
         ) : activeAlbum ? (
           <DateGroupedGrid
             photos={albumPhotos}

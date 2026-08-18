@@ -1644,3 +1644,6 @@ The estimate page is the decision moment. Found should get the customer from "ye
 - [ ] After deploy, delete the old Found home-screen icon on iPhone and re-add from Safari at `https://my.foundco.app`.
 - [ ] Confirm the icon is a readable single Found-style `F`, not a blank square and not the full tiny wordmark.
 - [ ] Confirm the text label under the iPhone icon reads `FOUND`.
+- [x] Add the Found black/green centered launch loader for dashboard/PWA startup.
+- [x] Remove the older dashboard wireframe/skeleton loader from startup-facing Photos, Leads, Contacts, and Estimates fetches.
+- [ ] After deploy, fully close and reopen the iPhone PWA and confirm the brief wait shows the centered green spinner instead of a white flash or wireframe `Loading` skeleton.

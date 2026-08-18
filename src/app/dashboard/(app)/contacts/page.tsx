@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useTransition } from "react"
 import { getContacts, addContact, deleteContact, updateContact } from "./actions"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK, avatarColorFor, contactCategoriesFor } from "@/lib/dashboard/typography"
-import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
+import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
 
 type Contact = {
   id: string
@@ -236,7 +236,7 @@ export default function ContactsPage() {
 
       {/* Loading */}
       {loading && (
-        <DashboardLoadingState compact />
+        <DashboardLaunchLoader compact />
       )}
 
       {/* Empty state */}

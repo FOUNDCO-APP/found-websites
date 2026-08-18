@@ -93,7 +93,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const isRootSite = (await headers()).get("x-found-root-site") === "1"
 
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className="h-full antialiased" style={{ backgroundColor: "#080A09" }}>
       <body className={[
         inter.variable,
         oswald.variable,
@@ -105,7 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         sourceSans.variable,
         inter.className,
         "min-h-full flex flex-col",
-      ].join(" ")}>
+      ].join(" ")} style={{ backgroundColor: "#080A09" }}>
         {children}
         {isRootSite && (
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(rootSiteSchema(ROOT_DOMAIN)) }} />

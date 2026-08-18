@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlacesInput from "@/components/dashboard/PlacesInput"
-import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
+import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -467,7 +467,7 @@ export default function EstimatesPage() {
 
       {/* List */}
       {loading ? (
-        <DashboardLoadingState compact />
+        <DashboardLaunchLoader compact />
       ) : filtered.length === 0 ? (
         <div style={{ paddingTop: 80, textAlign: "center" }}>
           <div style={{

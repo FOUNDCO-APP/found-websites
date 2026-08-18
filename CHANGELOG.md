@@ -4251,6 +4251,26 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - `cmd /c npm run build` passed.
 - `git diff --check` passed with only the repo's normal CRLF warning.
 
+---
+
+## August 18, 2026 - PWA Dashboard Launch Loader
+**AI:** Codex
+**Worked on:** Shawn asked whether the brief 1-2 second PWA launch wait could show the existing black/green loading circle instead of feeling like a plain black pause.
+
+### Completed
+- Added `DashboardLaunchLoader`, a full-screen Found black loading surface with a larger centered green spinner.
+- Reused it for `/dashboard` loading, dashboard app route loading, and the dashboard shell Suspense fallback.
+- Follow-up: replaced startup-facing Photos, Leads, Contacts, and Estimates skeleton loading states with the same centered spinner after Shawn saw the old wireframe loader still appearing.
+- Set inline Found-black background on the root HTML/body to reduce the pre-CSS white flash.
+
+### Verification
+- `cmd /c npm run build` passed after the initial pass and again after the follow-up correction.
+- `git diff --check` passed with only normal CRLF warnings.
+- Live `https://my.foundco.app/` returned `STATUS 200`.
+
+### Note
+- iOS native pre-launch splash screens cannot reliably run a custom animated spinner; this improves the first web-rendered dashboard loading state.
+
 ### Test next
 1. Open `my.foundco.app` > Edit My Site on Lucky or another test business.
 2. Confirm the top says Site Studio / Make the site ready.

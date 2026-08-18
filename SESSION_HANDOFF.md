@@ -3971,3 +3971,28 @@ Open implementation pipeline:
    - no street address shown by default,
    - photos tap open into the black full-screen viewer,
    - the page does not show corrupted loading text.
+
+---
+
+## August 18, 2026 - Current Handoff: PWA Launch Loader
+
+### Latest completed work
+- Added a reusable full-screen dashboard launch loader with the Found black background and larger green spinning circle.
+- Replaced the dashboard route loading state and dashboard shell fallback with that centered loader.
+- Added a parent `/dashboard` loading file so the `my.foundco.app` rewrite path has the same loader coverage.
+- Follow-up correction after Shawn saw two loaders: replaced the Photos, Leads, Contacts, and Estimates initial client-fetch skeletons with the same centered spinner loader.
+- Set the root HTML/body background inline to Found black to reduce the brief white flash before global CSS finishes applying.
+
+### Important note
+- iOS may still show its native black launch screen before web content is available. That native pre-launch moment cannot reliably animate a custom spinner, but once Next can render the dashboard, Found now shows the black/green loader instead of a skeleton or blank-feeling wait.
+
+### Verification
+- `cmd /c npm run build` passed after the first pass and again after the follow-up correction.
+- `git diff --check` passed with only normal CRLF warnings.
+- Live `https://my.foundco.app/` reachability check returned `STATUS 200`.
+
+### Test next
+1. Deploy this change.
+2. On iPhone, fully close the Found PWA from the app switcher.
+3. Open the home-screen app from Home, Photos, Leads, Contacts, and Estimates if possible; confirm startup uses the centered green spinner on black instead of a white flash followed by the wireframe `Loading` skeleton.
+4. If testing the icon too, delete the old home-screen icon and re-add from Safari at `https://my.foundco.app` so iOS clears its icon cache.
