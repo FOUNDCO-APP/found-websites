@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-17 (part 13) - PWA Icon PNGs Generated From Shawn's Actual Uploaded Found F
+
+### Progress This Pass
+- Shawn asked whether the exact uploaded logo was used. It had not been embedded previously; the prior pass recreated the shape from it.
+- Regenerated the PWA PNG icon files using Shawn's uploaded `FOUND LOGO - F word mark.png` as the actual source mask.
+- Made the Signal Green background substantially stronger so the icon reads more like Found at iPhone home-screen size.
+- Kept the dot removed.
+- Kept the dashboard manifest label as all caps: `FOUND`.
+
+### Verification This Pass
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: white Found F from the uploaded mark, no dot, stronger green field.
+- `npm run build` passed.
+- Push still needs to run.
+
+### Explicit Next Step
+Commit and push. After deploy: on iPhone, delete the old Found home-screen app, open Safari to `https://my.foundco.app`, Share -> Add to Home Screen.
+
 ## 2026-08-17 (part 12) - PWA Icon Rebuilt From Shawn's Supplied Found F Mark
 
 ### Progress This Pass

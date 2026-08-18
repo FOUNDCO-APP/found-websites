@@ -1,3 +1,20 @@
+## Session: August 17, 2026 (part 13) - PWA Icon PNGs Generated From Shawn's Actual Uploaded Found F
+**AI:** Codex
+
+### Context
+Shawn clarified that the actual uploaded Found `F` logo image needed to be used for the app icon, not just visually recreated.
+
+### Changed
+- Regenerated the 192px and 512px PWA PNG icons using Shawn's uploaded Found `F` image as the actual source mask.
+- Increased the Signal Green background presence so the icon stands out more on an iPhone home screen.
+- Kept the icon dot removed and kept the manifest/home-screen label as `FOUND`.
+
+### Verification
+- Visually inspected `public/icons/found-app-icon-v2-512.png`: uploaded Found `F` shape, no dot, stronger green field.
+- `npm run build` passed.
+
+---
+
 ## Session: August 17, 2026 (part 12) - PWA Icon Rebuilt From Shawn's Supplied Found F Mark
 **AI:** Codex
 
