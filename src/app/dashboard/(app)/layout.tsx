@@ -14,6 +14,7 @@ import { exitAdminView } from "@/app/admin/businesses/actions"
 import { Suspense } from "react"
 
 import { BLACK } from "@/lib/dashboard/typography"
+import FoundWordmark from "@/components/FoundWordmark"
 
 export const metadata = { title: "Found" }
 export const dynamic = "force-dynamic"
