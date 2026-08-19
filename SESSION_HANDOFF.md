@@ -3990,9 +3990,9 @@ Open implementation pipeline:
 - `cmd /c npm run build` passed after the first pass and again after the follow-up correction.
 - `git diff --check` passed with only normal CRLF warnings.
 - Live `https://my.foundco.app/` reachability check returned `STATUS 200`.
+- Pushed to `main`; first Vercel deployment failed because of a missing `FoundWordmark` import, then fix commit `ae7b018` deployed successfully and Vercel reported `Ready`.
 
 ### Test next
-1. Deploy this change.
-2. On iPhone, fully close the Found PWA from the app switcher.
-3. Open the home-screen app from Home, Photos, Leads, Contacts, and Estimates if possible; confirm startup uses the centered green spinner on black instead of a white flash followed by the wireframe `Loading` skeleton.
-4. If testing the icon too, delete the old home-screen icon and re-add from Safari at `https://my.foundco.app` so iOS clears its icon cache.
+1. On iPhone, fully close the Found PWA from the app switcher.
+2. Open the home-screen app from Home, Photos, Leads, Contacts, and Estimates if possible; confirm startup uses the centered green spinner on black instead of a white flash followed by the wireframe `Loading` skeleton.
+3. If testing the icon too, delete the old home-screen icon and re-add from Safari at `https://my.foundco.app` so iOS clears its icon cache.
