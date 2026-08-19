@@ -3982,17 +3982,19 @@ Open implementation pipeline:
 - Added a parent `/dashboard` loading file so the `my.foundco.app` rewrite path has the same loader coverage.
 - Follow-up correction after Shawn saw two loaders: replaced the Photos, Leads, Contacts, and Estimates initial client-fetch skeletons with the same centered spinner loader.
 - Set the root HTML/body background inline to Found black to reduce the brief white flash before global CSS finishes applying.
+- Follow-up after Shawn reported a longer white screen: added iOS `apple-touch-startup-image` launch PNGs for common modern iPhone portrait sizes so the native pre-HTML PWA launch surface can be Found black instead of white.
 
 ### Important note
-- iOS may still show its native black launch screen before web content is available. That native pre-launch moment cannot reliably animate a custom spinner, but once Next can render the dashboard, Found now shows the black/green loader instead of a skeleton or blank-feeling wait.
+- iOS controls the pre-HTML PWA launch surface. It cannot run a custom animated spinner there, but it can use static startup images. The new launch images are black with a static green Found loading mark, then the web-rendered spinner takes over once the app HTML paints.
 
 ### Verification
 - `cmd /c npm run build` passed after the first pass and again after the follow-up correction.
 - `git diff --check` passed with only normal CRLF warnings.
 - Live `https://my.foundco.app/` reachability check returned `STATUS 200`.
 - Pushed to `main`; first Vercel deployment failed because of a missing `FoundWordmark` import, then fix commit `ae7b018` deployed successfully and Vercel reported `Ready`.
+- `cmd /c npm run build` passed after adding startup images; local dashboard HTML includes `apple-touch-startup-image` links.
 
 ### Test next
 1. On iPhone, fully close the Found PWA from the app switcher.
-2. Open the home-screen app from Home, Photos, Leads, Contacts, and Estimates if possible; confirm startup uses the centered green spinner on black instead of a white flash followed by the wireframe `Loading` skeleton.
-3. If testing the icon too, delete the old home-screen icon and re-add from Safari at `https://my.foundco.app` so iOS clears its icon cache.
+2. Delete and re-add the home-screen app from Safari at `https://my.foundco.app`; iOS usually caches startup images at install time.
+3. Open the PWA and confirm the launch surface is black with the static green mark, then transitions into the web app without the old wireframe `Loading` skeleton.

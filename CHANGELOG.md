@@ -4262,12 +4262,14 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 - Reused it for `/dashboard` loading, dashboard app route loading, and the dashboard shell Suspense fallback.
 - Follow-up: replaced startup-facing Photos, Leads, Contacts, and Estimates skeleton loading states with the same centered spinner after Shawn saw the old wireframe loader still appearing.
 - Set inline Found-black background on the root HTML/body to reduce the pre-CSS white flash.
+- Follow-up: added static iOS PWA startup PNGs for common modern iPhone portrait sizes and wired them through `appleWebApp.startupImage`.
 
 ### Verification
 - `cmd /c npm run build` passed after the initial pass and again after the follow-up correction.
 - `git diff --check` passed with only normal CRLF warnings.
 - Live `https://my.foundco.app/` returned `STATUS 200`.
 - Pushed to `main`; first deployment for `63b32b1` failed due to a missing import, then `ae7b018` restored it and Vercel reported the production deployment `Ready`.
+- `cmd /c npm run build` passed after adding startup images, and local dashboard HTML includes `apple-touch-startup-image` links.
 
 ### Note
 - iOS native pre-launch splash screens cannot reliably run a custom animated spinner; this improves the first web-rendered dashboard loading state.
