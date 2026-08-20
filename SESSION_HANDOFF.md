@@ -3998,3 +3998,28 @@ Open implementation pipeline:
 1. On iPhone, fully close the Found PWA from the app switcher.
 2. Delete and re-add the home-screen app from Safari at `https://my.foundco.app`; iOS usually caches startup images at install time.
 3. Open the PWA and confirm the launch surface is black with the static green mark, then transitions into the web app without the old wireframe `Loading` skeleton.
+
+---
+
+## August 19, 2026 - Current Handoff: Steve-Led PWA Startup Audit
+
+### Team audit conclusion
+- Steve: the problem is launch confidence, not loader styling. A blank two-to-three-second launch feels broken.
+- Craig/Priya: the backend/code issue is the dashboard layout doing nonessential data work before the owner sees the app shell.
+- Chris: iOS PWA startup images can only mask the native pre-HTML phase; they cannot animate or fix server wait.
+- Jony/Angela: restore a visible intentional fallback while engineering removes startup blockers.
+
+### Latest completed work
+- Restored the server-painted dashboard shell fallback (`FOUND` header plus existing dashboard loading skeleton) so a delayed dashboard route does not look dead.
+- Removed the recent leads/orders/reservations scan from `src/app/dashboard/(app)/layout.tsx`; badge counts now start at zero instead of blocking the first layout render.
+- Preserved paid add-on lookup because it controls which owner tools appear in the dock.
+- Parallelized the remaining role and paid add-on lookups after company resolution.
+
+### Verification
+- `cmd /c npm run build` passed.
+
+### Test next
+1. Deploy this change.
+2. Fully close the iPhone PWA and reopen it.
+3. Confirm the startup no longer sits on a plain black screen as long before showing visible app loading.
+4. Confirm the dashboard dock still shows the correct paid/add-on tools.

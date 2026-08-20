@@ -3,7 +3,7 @@ import { getCompany, hasMultipleCompanies, isAdminOverrideActive, getCompanyRole
 import { createAdminClient } from "@/lib/supabase/admin"
 import { redirect } from "next/navigation"
 import DashboardNav from "@/components/dashboard/DashboardNav"
-import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
+import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import UploadStatusProvider from "@/components/dashboard/UploadStatusProvider"
 import AccountMenu from "@/components/dashboard/AccountMenu"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
@@ -21,7 +21,36 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 function DashboardShellFallback() {
-  return <DashboardLaunchLoader />
+  return (
+    <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
+      <header className="found-dashboard-header" style={{
+        position: "sticky", top: 0, zIndex: 40,
+        backgroundColor: "rgba(8,10,9,0.92)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        boxShadow: "inset 0 2px 0 rgba(50,208,116,0.7)",
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          maxWidth: 760, margin: "0 auto",
+          padding: "14px 20px",
+          paddingTop: "max(env(safe-area-inset-top), 14px)",
+        }}>
+          <FoundWordmark height={18} color="white" />
+          <span style={{
+            width: 78,
+            height: 12,
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.08)",
+          }} />
+        </div>
+      </header>
+      <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px 120px" }}>
+        <DashboardLoadingState />
+      </main>
+    </div>
+  )
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -34,9 +63,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
 async function DashboardChrome({ children }: { children: React.ReactNode }) {
   const user = await requireDashboardAccess()
-
   const admin = createAdminClient()
-  const since = new Date(Date.now() - 7 * 86400000).toISOString()
 
   const [company, hasMultiple, adminKeyValid] = await Promise.all([
     getCompany(user?.id ?? "", user?.email ?? ""),
@@ -46,55 +73,9 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
 
   if (!user && !company) redirect("/admin")
 
-  const memberRole = company
-    ? await getCompanyRole(user?.id ?? "", user?.email ?? "", company)
-    : null
-
-  const viewingAsAdmin = Boolean(adminKeyValid && company)
-
-  // Lead/order/reservation counts (and their latest-activity timestamps)
-  // are owner-only data - a worker's browser shouldn't receive them just
-  // because this layout wraps every dashboard route, even though workers
-  // can never reach the Leads page itself to see the detail behind them.
-  const isOwnerForCounts = memberRole === "owner"
-
-  const [leadCounts, paidAddonSlugs] = company?.id && isOwnerForCounts
+  const [memberRole, paidAddonSlugs] = company
     ? await Promise.all([
-        admin
-          .from("leads")
-          .select("id, type, source, status, created_at")
-          .eq("company_id", company.id)
-          .gte("created_at", since)
-          .then(({ data }) => {
-            const rows = (data ?? []).filter(row => row.type !== "onboarding_abandoned" && row.status !== "spam")
-            const isOrder = (lead: { type: string | null; source: string | null; status?: string | null; created_at?: string | null }) =>
-              lead.type === "online_order" ||
-              lead.source === "online_ordering" ||
-              lead.type === "shopping_order" ||
-              lead.source === "shopping_cart"
-            const isReservation = (lead: { type: string | null; source: string | null; status?: string | null; created_at?: string | null }) =>
-              lead.type === "reservation_request" ||
-              lead.source === "reservation" ||
-              lead.source === "reservations" ||
-              lead.source === "booking_calendar"
-            const latestAt = (items: { created_at?: string | null }[]) =>
-              items.reduce<string | null>((latest, item) => {
-                if (!item.created_at) return latest
-                if (!latest) return item.created_at
-                return new Date(item.created_at).getTime() > new Date(latest).getTime() ? item.created_at : latest
-              }, null)
-            const leadRows = rows.filter(row => !isOrder(row) && !isReservation(row))
-            const orderRows = rows.filter(isOrder)
-            const reservationRows = rows.filter(isReservation)
-            return {
-              leads: leadRows.length,
-              orders: orderRows.length,
-              reservations: reservationRows.length,
-              leadLatestAt: latestAt(leadRows),
-              orderLatestAt: latestAt(orderRows),
-              reservationLatestAt: latestAt(reservationRows),
-            }
-          }),
+        getCompanyRole(user?.id ?? "", user?.email ?? "", company),
         admin
           .from("addon_subscriptions")
           .select("addon_slug")
@@ -102,7 +83,10 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
           .eq("active", true)
           .then(({ data }) => (data ?? []).map((row: { addon_slug: string }) => row.addon_slug)),
       ])
-    : [{ leads: 0, orders: 0, reservations: 0, leadLatestAt: null, orderLatestAt: null, reservationLatestAt: null }, [] as string[]]
+    : [null, [] as string[]]
+
+  const viewingAsAdmin = Boolean(adminKeyValid && company)
+  const effectiveAddons = getEffectiveAddons(company?.plan, paidAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])
 
   return (
     <UploadStatusProvider>
@@ -192,15 +176,15 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
 
       <DashboardNav
         companyName={company?.name ?? null}
-        newLeadCount={leadCounts.leads}
-        newOrderCount={leadCounts.orders}
-        newReservationCount={leadCounts.reservations}
-        newLeadLatestAt={leadCounts.leadLatestAt}
-        newOrderLatestAt={leadCounts.orderLatestAt}
-        newReservationLatestAt={leadCounts.reservationLatestAt}
+        newLeadCount={0}
+        newOrderCount={0}
+        newReservationCount={0}
+        newLeadLatestAt={null}
+        newOrderLatestAt={null}
+        newReservationLatestAt={null}
         industry={company?.industry_category ?? null}
         subIndustry={company?.sub_industry ?? null}
-        activeAddons={getEffectiveAddons(company?.plan, paidAddonSlugs, company?.included_addon_slug, company?.disabled_addons ?? [])}
+        activeAddons={effectiveAddons}
         plan={company?.plan ?? null}
         primaryIntent={company?.primary_intent ?? null}
         role={memberRole === "worker" ? "worker" : "owner"}

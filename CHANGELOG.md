@@ -4274,6 +4274,27 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 ### Note
 - iOS native pre-launch splash screens cannot reliably run a custom animated spinner; this improves the first web-rendered dashboard loading state.
 
+---
+
+## August 19, 2026 - Steve-Led PWA Startup Audit
+**AI:** Codex
+**Worked on:** Shawn asked for a team audit, led by Steve, after PWA startup regressed into a longer blank/black launch screen.
+
+### Team Direction
+- Steve: stop treating this as a loader-design problem; fix the wait.
+- Craig/Priya: remove nonessential dashboard data work from first layout render while keeping auth/company safety.
+- Chris: keep iOS startup images only as a static native launch mask.
+- Jony/Angela: restore a visible, intentional server fallback so the app never feels dead during a route wait.
+
+### Completed
+- Restored the dashboard shell fallback to the server-painted `FOUND` header plus dashboard loading skeleton.
+- Removed the recent leads/orders/reservations scan from the dashboard layout startup path.
+- Kept paid add-on lookup for dock/tool correctness.
+- Parallelized role and paid add-on lookups after company resolution.
+
+### Verification
+- `cmd /c npm run build` passed.
+
 ### Test next
 1. Open `my.foundco.app` > Edit My Site on Lucky or another test business.
 2. Confirm the top says Site Studio / Make the site ready.
