@@ -4249,6 +4249,9 @@ Older detailed entries were moved to `CHANGELOG_ARCHIVE.md` on July 6, 2026.
 
 ### Verification
 - `cmd /c npm run build` passed.
+- Pushed to `main` as `046d730`; Vercel production deployment reported `Ready`.
+- Live timing samples after deploy: first sampled `my.foundco.app` request was `1914ms`, then warm samples were `277ms`, `269ms`, `325ms`, and `262ms`.
+- Live HTML includes the restored server-painted dashboard fallback and existing iOS startup image links.
 - `git diff --check` passed with only the repo's normal CRLF warning.
 
 ---

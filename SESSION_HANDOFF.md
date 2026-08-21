@@ -3795,6 +3795,9 @@ Test next: Open Lucky > Edit My Site > Announcement. Confirm the default says `N
 
 ### Verification
 - `cmd /c npm run build` passed.
+- Pushed to `main` as `046d730`; Vercel production deployment reported `Ready`.
+- Live timing samples after deploy: first sampled `https://my.foundco.app/` request was `1914ms`, then warm samples were `277ms`, `269ms`, `325ms`, and `262ms`.
+- Live HTML includes the restored server-painted dashboard fallback markers and existing iOS startup image links.
 - `git diff --check` passed with only the normal CRLF warning.
 
 ### Next human QA
@@ -4023,3 +4026,4 @@ Open implementation pipeline:
 2. Fully close the iPhone PWA and reopen it.
 3. Confirm the startup no longer sits on a plain black screen as long before showing visible app loading.
 4. Confirm the dashboard dock still shows the correct paid/add-on tools.
+5. If a first-open delay remains but later opens are faster, treat the next team target as cold-start/auth/company resolution, not loader design.
