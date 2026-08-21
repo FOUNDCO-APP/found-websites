@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { getSiteCTAs } from "@/lib/industryCTAs"
+import { getEffectiveAddons } from "@/lib/featureAccess"
 import ServiceIcon from "@/components/ServiceIcon"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { Metadata } from "next"
@@ -30,13 +31,18 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const services = config?.services || []
   const primary = company.primary_color
   const gradient = heroGradient(primary)
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
+  const admin = createAdminClient()
+  const { data: addonRows } = await admin
+    .from("company_addons")
+    .select("addon_slug")
+    .eq("company_id", company.id)
+    .eq("status", "active")
+  const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
+  const { primary: cta } = getSiteCTAs(company, activeAddons)
+  const ctaHref = cta.href
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
-  const admin = createAdminClient()
   const { data: sectionPhotoRows } = await admin
     .from("company_photos")
     .select("url, website_section")
@@ -163,7 +169,7 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href={ctaHref} className="btn text-white w-full sm:w-auto"
               style={{ backgroundColor: primary, borderColor: primary }}>
-              {intentLabel[company.primary_intent] || "Get a Free Estimate"}
+              {cta.label}
             </Link>
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}

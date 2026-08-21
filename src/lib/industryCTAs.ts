@@ -95,6 +95,37 @@ function callCTA(phone: string): CTA {
   return { label: "Call Us", href: `tel:${phone.replace(/\D/g, "")}` }
 }
 
+const RESTAURANT_ONLY_LABEL = /\b(reserve|reservation|table|dine|dining|dinner|menu)\b/i
+const ESTIMATE_ONLY_LABEL = /\b(estimate|quote|bid)\b/i
+const RESTAURANT_ONLY_INTENTS = new Set(["reserve", "menu"])
+
+function safeFallbackIntent(industry: string, primaryIntent: string): string {
+  if (!ORDERING_INDUSTRIES.has(industry) && RESTAURANT_ONLY_INTENTS.has(primaryIntent)) {
+    return "quote"
+  }
+  return primaryIntent
+}
+
+function safeSchedulingLabel(industry: string, baseLabel: string, bookingCtaLabel?: string | null): string {
+  const label = bookingCtaLabel?.trim()
+  if (!label) return baseLabel
+
+  // Old or manually copied restaurant labels must never leak into service
+  // businesses. Seeing "Reserve a Table" on an HVAC site destroys trust, so
+  // render-time safety beats trusting saved data.
+  if (!ORDERING_INDUSTRIES.has(industry) && RESTAURANT_ONLY_LABEL.test(label)) {
+    return baseLabel
+  }
+
+  // Same guard in the other direction: a restaurant should not inherit a
+  // service-business quote label if bad data was saved.
+  if (ORDERING_INDUSTRIES.has(industry) && ESTIMATE_ONLY_LABEL.test(label)) {
+    return baseLabel
+  }
+
+  return label
+}
+
 // The content CTA, upgraded when a paid ordering/cart add-on is actually
 // active — same upgrade previously only applied to the hero's secondary
 // button; now used everywhere a "content" action is resolved, primary
@@ -106,12 +137,13 @@ function contentCTAFor(industry: string, activeAddons: string[]): CTA | null {
   return CONTENT_CTA[industry] ?? null
 }
 
-function fallbackCTA(primaryIntent: string, phone: string | null): CTA {
+function fallbackCTA(primaryIntent: string, phone: string | null, industry: string): CTA {
+  const intent = safeFallbackIntent(industry, primaryIntent)
   return {
-    label: intentLabel[primaryIntent] || "Contact Us",
-    href: primaryIntent === "call"
+    label: intentLabel[intent] || "Contact Us",
+    href: intent === "call"
       ? `tel:${phone?.replace(/\D/g, "") ?? ""}`
-      : intentHref[primaryIntent] || "/contact",
+      : intentHref[intent] || "/contact",
   }
 }
 
@@ -121,10 +153,10 @@ function fallbackCTA(primaryIntent: string, phone: string | null): CTA {
 // "reserve" today still works fine if they add online ordering next month).
 export type PrimaryActionKey = "order" | "shop" | "reserve" | "content" | "call"
 
-function schedulingCTAFor(industry: string, bookingCtaLabel?: string | null): CTA | null {
+export function schedulingCTAFor(industry: string, bookingCtaLabel?: string | null): CTA | null {
   const base = SCHEDULING_CTA[industry]
   if (!base) return null
-  return bookingCtaLabel ? { ...base, label: bookingCtaLabel } : base
+  return { ...base, label: safeSchedulingLabel(industry, base.label, bookingCtaLabel) }
 }
 
 function resolveActionKey(key: PrimaryActionKey, industry: string, activeAddons: string[], phone: string | null, bookingCtaLabel?: string | null): CTA | null {
@@ -160,12 +192,12 @@ export function getAvailablePrimaryActions(industry: string, activeAddons: strin
 function autoPrimaryCTA(company: { industry_category: string; primary_intent: string; phone: string | null; booking_cta_label?: string | null }, activeAddons: string[]): CTA {
   const intent = company.primary_intent
   if (SCHEDULING_INTENTS.has(intent)) {
-    return schedulingCTAFor(company.industry_category, company.booking_cta_label) ?? fallbackCTA(intent, company.phone)
+    return schedulingCTAFor(company.industry_category, company.booking_cta_label) ?? fallbackCTA(intent, company.phone, company.industry_category)
   }
   if (CONTENT_INTENTS.has(intent)) {
-    return contentCTAFor(company.industry_category, activeAddons) ?? fallbackCTA(intent, company.phone)
+    return contentCTAFor(company.industry_category, activeAddons) ?? fallbackCTA(intent, company.phone, company.industry_category)
   }
-  return fallbackCTA(intent, company.phone)
+  return fallbackCTA(intent, company.phone, company.industry_category)
 }
 
 // The single source of truth for a business's site-wide call-to-action.

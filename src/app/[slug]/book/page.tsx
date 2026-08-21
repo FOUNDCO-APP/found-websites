@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
-import { SCHEDULING_CTA } from "@/lib/industryCTAs"
+import { schedulingCTAFor } from "@/lib/industryCTAs"
 import { getBookingNoun } from "@/lib/bookings/bookingVocab"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import { getAvailableSlots } from "@/lib/bookings/getAvailableSlots"
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
-  const pageTitle = company?.booking_cta_label || SCHEDULING_CTA[company?.industry_category ?? ""]?.label || "Book Now"
+  const pageTitle = schedulingCTAFor(company?.industry_category ?? "", company?.booking_cta_label)?.label || "Book Now"
   return { title: company ? `${pageTitle} | ${company.name}` : pageTitle }
 }
 
@@ -83,7 +83,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
 
-  const pageTitle = company.booking_cta_label || SCHEDULING_CTA[company.industry_category ?? ""]?.label || "Book Now"
+  const pageTitle = schedulingCTAFor(company.industry_category ?? "", company.booking_cta_label)?.label || "Book Now"
   const bookingNoun = getBookingNoun(company.industry_category)
   const pageSubtitle = hasCalendar
     ? bookingNoun.confirmMode === "instant"

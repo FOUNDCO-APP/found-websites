@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { intentLabel, intentHref } from "@/types/company"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
@@ -31,9 +31,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const primary = company.primary_color
   const gradient = heroGradient(primary)
   const config = company.website_config
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
+  const { primary: cta } = getSiteCTAs(company, [])
+  const ctaHref = cta.href
   const serviceAreas = config?.service_areas || []
   const services = config?.services || []
   const imgs = await getStockImages(company)
@@ -140,7 +139,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Link href={ctaHref} className="btn text-white"
                     style={{ backgroundColor: primary, borderColor: primary }}>
-                    {intentLabel[company.primary_intent] || "Get in Touch"}
+                    {cta.label}
                   </Link>
                   <Link href="/services" className="btn"
                     style={{ borderColor: primary, color: primary }}>
@@ -259,7 +258,7 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href={ctaHref} className="btn text-white w-full sm:w-auto"
               style={{ backgroundColor: primary, borderColor: primary }}>
-              {intentLabel[company.primary_intent] || "Get in Touch"}
+              {cta.label}
             </Link>
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}

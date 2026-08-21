@@ -1,3 +1,25 @@
+## Session: August 20, 2026 - Industry-Safe Public CTAs
+**AI:** Codex
+
+### Context
+Shawn found a serious demo issue: an HVAC test site button labeled like an estimate action opened restaurant-style booking language ("Reserve a Table"). Team direction: fix this centrally so copied/stale data cannot leak restaurant CTAs into HVAC, contractors, or other non-food industries.
+
+### Changed
+- Added a render-time safety guard in `src/lib/industryCTAs.ts` so restaurant-only saved labels like "Reserve a Table" cannot render on non-food businesses.
+- Added a central fallback guard so stale `reserve`/`menu` primary intents on non-food businesses fall back to estimate language instead of restaurant language.
+- Updated `/book` page titles to use sanitized scheduling CTA labels instead of raw saved `booking_cta_label`.
+- Updated Navbar, Footer, About, Gallery, Menu, Estimate, and Services public CTAs to use the shared industry-aware CTA resolver instead of raw `primary_intent` labels.
+- Added a `src/lib/siteCopy.ts` guard so restaurant FAQ/nudge copy only appears for food/home-based-food industries.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+- After deploy, smoke test:
+  - HVAC/home-services: hero, sticky/footer, services, gallery, about, estimate/menu fallback CTAs should say estimate/service language and should not mention tables/reservations.
+  - Food/restaurant: "Reserve a Table" and menu language should still be allowed.
+
+---
+
 ## Session: August 17, 2026 (part 14) - PWA Startup No Longer Blocks on Middleware Auth
 **AI:** Codex
 

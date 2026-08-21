@@ -1,8 +1,8 @@
 import Link from "next/link"
 import type { Company } from "@/types/company"
-import { intentLabel, intentHref } from "@/types/company"
 import { logoColor } from "@/lib/color"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 
 const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
 
@@ -44,10 +44,9 @@ const socialIcons: Record<string, { label: string; path: string }> = {
 export default function Footer({ company, activeAddons = [] }: { company: Company; activeAddons?: string[] }) {
   const primary = company.primary_color
   const hasEmailMarketing = activeAddons.includes("email_marketing")
-  const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
+  const { primary: cta } = getSiteCTAs(company, activeAddons)
+  const ctaLabel = cta.label
+  const ctaHref = cta.href
 
   const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const footerTagline = company.website_config?.tagline || industryDefs.footerTagline

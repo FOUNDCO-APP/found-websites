@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { intentLabel, intentHref } from "@/types/company"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasAddonAccess } from "@/lib/featureAccess"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getHomepageAboutCopy } from "@/lib/aboutContent"
 import OnlineOrderClient from "../order/OnlineOrderClient"
@@ -35,9 +35,6 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
   const aboutCopy = getHomepageAboutCopy(config)
   const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
 
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
@@ -57,6 +54,8 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     .eq("active", true)
     .maybeSingle()
   const onlineOrderingActive = hasAddonAccess(company.plan, "online_ordering", onlineOrderingAddon ? ["online_ordering"] : [], company.included_addon_slug, company.disabled_addons ?? [])
+  const { primary: cta } = getSiteCTAs(company, onlineOrderingActive ? ["online_ordering"] : [])
+  const ctaHref = cta.href
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
 
   return (
@@ -255,7 +254,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href={ctaHref} className="btn text-white w-full sm:w-auto"
               style={{ backgroundColor: primary, borderColor: primary }}>
-              {intentLabel[company.primary_intent] || "Contact Us"}
+              {cta.label}
             </Link>
             {company.phone && (
               <a href={`tel:${company.phone.replace(/\D/g, "")}`}

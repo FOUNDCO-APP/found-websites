@@ -3,7 +3,7 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStockImages, pickImg } from "@/lib/stockImages"
-import { intentLabel, intentHref } from "@/types/company"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 import GalleryLightbox, { type GalleryMedia } from "@/components/GalleryLightbox"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getVocab } from "@/lib/subIndustryVocabulary"
@@ -42,10 +42,9 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   // wall reads like a dumped folder, not a curated one.
   const galleryIntro = `A closer look at ${company.name}.`
   const albumLabel = albumLabelFor(company.industry_category)
-  const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
+  const { primary: cta } = getSiteCTAs(company, [])
+  const ctaLabel = cta.label
+  const ctaHref = cta.href
   // Real owner photos, if any exist, before ever falling back to stock -
   // the rest of this page shows real photos, so a stock image behind the
   // final CTA read as an obvious, jarring mismatch.

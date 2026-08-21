@@ -12,6 +12,19 @@ export type SiteCopy = {
   leadTypeLabel: string
 }
 
+const FOOD_INDUSTRIES = new Set(["food", "home_based_food"])
+
+function safeIntentForIndustry(intent: string, industryCategory?: string): string {
+  if (FOOD_INDUSTRIES.has(industryCategory ?? "")) return intent
+
+  // Restaurant-only intents can be stale saved data from a copied profile.
+  // Non-food sites should default to estimate language instead of showing
+  // "Reserve a Table" or menu language on service businesses like HVAC.
+  if (intent === "reserve" || intent === "menu") return "quote"
+
+  return intent
+}
+
 export function getSiteCopy(
   intent: string,
   opts: {
@@ -23,6 +36,7 @@ export function getSiteCopy(
   } = {}
 ): SiteCopy {
   const { name, city, subIndustry, industryCategory } = opts
+  const safeIntent = safeIntentForIndustry(intent, industryCategory)
 
   // Use vocab ctaBodyText for galleryCta when sub-industry is available
   const vocab = getVocab(subIndustry ?? null, industryCategory ?? "")
@@ -44,7 +58,7 @@ export function getSiteCopy(
 
   const galleryCtaHeading = galleryCtaHeadingFromJob(vocab.websiteJob)
 
-  switch (intent) {
+  switch (safeIntent) {
     case "quote":
       return {
         nudgeText: "Need a price?",

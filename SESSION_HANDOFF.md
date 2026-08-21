@@ -1,5 +1,31 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-20 - Industry-Safe Public CTA Guard
+
+### Progress This Pass
+- Shawn found an HVAC demo blocker: clicking estimate CTAs could land on restaurant-style "Reserve a Table" language.
+- Team decision: this cannot be fixed as a one-off HVAC patch. Public CTAs must resolve through one industry-aware source of truth.
+- Added central protection in `src/lib/industryCTAs.ts`:
+  - Non-food industries cannot render stale restaurant-only saved labels such as "Reserve a Table."
+  - Non-food industries with stale `reserve`/`menu` intents fall back to quote/estimate language.
+- Updated public CTA consumers to use `getSiteCTAs()` instead of raw company intent labels:
+  - `src/components/Navbar.tsx`
+  - `src/components/Footer.tsx`
+  - `src/app/[slug]/about/page.tsx`
+  - `src/app/[slug]/gallery/page.tsx`
+  - `src/app/[slug]/menu/page.tsx`
+  - `src/app/[slug]/estimate/page.tsx`
+  - `src/app/[slug]/services/page.tsx`
+- Updated `/book` page title logic to use sanitized scheduling labels.
+- Added `src/lib/siteCopy.ts` guard so restaurant FAQ/nudge copy only appears for food/home-based-food industries.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+
+### Explicit Next Step
+Run verification, then deploy only if Shawn approves. After deploy, smoke test an HVAC/home-services site: hero, bottom/sticky, services, about, gallery, estimate, and any menu fallback CTA should not mention "Reserve a Table" or restaurant/table language. Then test a food/restaurant site to confirm restaurant CTAs still work.
+
 ## 2026-08-17 (part 14) - PWA Startup Delay Audit/Fix
 
 ### Progress This Pass

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import type { Company } from "@/types/company"
-import { intentLabel, intentHref } from "@/types/company"
+import { getSiteCTAs } from "@/lib/industryCTAs"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { logoColor } from "@/lib/color"
 
@@ -53,7 +53,7 @@ function getNavLinks(industryCategory: string, subIndustry: string | null, hasSh
   ]
 }
 
-export default function Navbar({ company, transparent = false, hasShop = false }: { company: Company; transparent?: boolean; hasShop?: boolean }) {
+export default function Navbar({ company, transparent = false, hasShop = false, activeAddons = [] }: { company: Company; transparent?: boolean; hasShop?: boolean; activeAddons?: string[] }) {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -77,10 +77,9 @@ export default function Navbar({ company, transparent = false, hasShop = false }
   const showColorLogo = !isOnDark
 
   const isActive = (href: string) => pathname === href
-  const ctaLabel = intentLabel[company.primary_intent] || "Contact Us"
-  const ctaHref = company.primary_intent === "call"
-    ? `tel:${company.phone?.replace(/\D/g, "")}`
-    : intentHref[company.primary_intent] || "/contact"
+  const { primary: cta } = getSiteCTAs(company, activeAddons)
+  const ctaLabel = cta.label
+  const ctaHref = cta.href
 
   const navLinkWeight = "font-medium"
   const inactiveColor = isOnDark ? "rgba(255,255,255,0.75)" : isCalm ? "#aaaaaa" : "#999999"
