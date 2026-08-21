@@ -1216,13 +1216,14 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">(() => (
     estimate.estimate_line_items?.length ? "view" : "edit"
   ))
-  const [editItems, setEditItems] = useState<LineItem[]>([])
-  const [editTax, setEditTax] = useState(0)
-  const [editTaxInput, setEditTaxInput] = useState("")
-  const [editName, setEditName] = useState("")
-  const [editPhone, setEditPhone] = useState("")
-  const [editEmail, setEditEmail] = useState("")
-  const [editAddress, setEditAddress] = useState("")
+  const initialItems = estimate.estimate_line_items ?? []
+  const [editItems, setEditItems] = useState<LineItem[]>(() => initialItems.map(i => ({ ...i })))
+  const [editTax, setEditTax] = useState(() => Number(estimate.tax_rate) || 0)
+  const [editTaxInput, setEditTaxInput] = useState(() => taxInputFromRate(Number(estimate.tax_rate) || 0))
+  const [editName, setEditName] = useState(() => estimate.client_name ?? "")
+  const [editPhone, setEditPhone] = useState(() => estimate.client_phone ?? "")
+  const [editEmail, setEditEmail] = useState(() => estimate.client_email ?? "")
+  const [editAddress, setEditAddress] = useState(() => estimate.property_address ?? "")
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [sending, setSending] = useState<"email" | "payment_link" | null>(null)
@@ -1236,6 +1237,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [newCat, setNewCat] = useState("labor")
   const [fullEstimate, setFullEstimate] = useState<Estimate | null>(null)
   const hasFetched = useRef(false)
+  const editSeededFor = useRef<string | null>(null)
   const [showJobPicker, setShowJobPicker] = useState(false)
   const [attachingJob, setAttachingJob] = useState(false)
 
@@ -1313,15 +1315,29 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const canSendEstimate = items.length > 0 && displayTotal > 0
   const link = shareUrl(estimate.id, companySlug, companyCustomDomain)
 
+  function seedEditFieldsFromEstimate(source: Estimate) {
+    const sourceItems = source.estimate_line_items ?? []
+    const sourceTax = Number(source.tax_rate) || 0
+    setEditItems(sourceItems.map(i => ({ ...i })))
+    setEditTax(sourceTax)
+    setEditTaxInput(taxInputFromRate(sourceTax))
+    setEditName(source.client_name ?? "")
+    setEditPhone(source.client_phone ?? "")
+    setEditEmail(source.client_email ?? "")
+    setEditAddress(source.property_address ?? "")
+    setAddingItem(sourceItems.length === 0)
+  }
+
+  useEffect(() => {
+    if (mode !== "edit") return
+    if (editSeededFor.current === est.id) return
+    seedEditFieldsFromEstimate(est)
+    editSeededFor.current = est.id
+  }, [mode, est.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   function startEdit() {
-    setEditItems(items.map(i => ({ ...i })))
-    setEditTax(est.tax_rate)
-    setEditTaxInput(taxInputFromRate(est.tax_rate))
-    setEditName(est.client_name)
-    setEditPhone(est.client_phone ?? "")
-    setEditEmail(est.client_email ?? "")
-    setEditAddress(est.property_address ?? "")
-    setAddingItem(items.length === 0)
+    seedEditFieldsFromEstimate(est)
+    editSeededFor.current = est.id
     setMode("edit")
   }
 
