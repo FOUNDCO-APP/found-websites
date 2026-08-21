@@ -1213,7 +1213,9 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   onDelete: () => void
   onSync: (fresh: Estimate) => void
 }) {
-  const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">("view")
+  const [mode, setMode] = useState<"view" | "edit" | "confirm_delete" | "send_options">(() => (
+    estimate.estimate_line_items?.length ? "view" : "edit"
+  ))
   const [editItems, setEditItems] = useState<LineItem[]>([])
   const [editTax, setEditTax] = useState(0)
   const [editTaxInput, setEditTaxInput] = useState("")
@@ -1226,7 +1228,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [sending, setSending] = useState<"email" | "payment_link" | null>(null)
   const [sendError, setSendError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
-  const [addingItem, setAddingItem] = useState(false)
+  const [addingItem, setAddingItem] = useState(!(estimate.estimate_line_items?.length))
   const [newDesc, setNewDesc] = useState("")
   const [newQty, setNewQty] = useState("1")
   const [newUnit, setNewUnit] = useState("")
@@ -1303,6 +1305,12 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const paymentStillDue = needsPayment(est)
   const hasPartialPayment = paymentStillDue && paidAmount(est) > 0
   const items = est.estimate_line_items ?? []
+  const computedSubtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0)
+  const displayTaxRate = Number(est.tax_rate) || 0
+  const displaySubtotal = items.length > 0 ? computedSubtotal : Number(est.subtotal) || 0
+  const displayTaxAmount = displaySubtotal * displayTaxRate
+  const displayTotal = displaySubtotal + displayTaxAmount
+  const canSendEstimate = items.length > 0 && displayTotal > 0
   const link = shareUrl(estimate.id, companySlug, companyCustomDomain)
 
   function startEdit() {
@@ -1313,6 +1321,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     setEditPhone(est.client_phone ?? "")
     setEditEmail(est.client_email ?? "")
     setEditAddress(est.property_address ?? "")
+    setAddingItem(items.length === 0)
     setMode("edit")
   }
 
@@ -1339,7 +1348,20 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     setSaveError(null)
     try {
       await onUpdate({ client_name: editName, client_phone: editPhone, client_email: editEmail, property_address: editAddress, line_items: editItems, tax_rate: editTax })
-      setFullEstimate(prev => prev ? { ...prev, client_name: editName, client_phone: editPhone || null, client_email: editEmail || null, property_address: editAddress || null, tax_rate: editTax, estimate_line_items: editItems } : null)
+      const freshEstimate: Estimate = {
+        ...est,
+        client_name: editName,
+        client_phone: editPhone || null,
+        client_email: editEmail || null,
+        property_address: editAddress || null,
+        subtotal: editSubtotal,
+        tax_rate: editTax,
+        tax_amount: editTaxAmt,
+        total: editTotal,
+        estimate_line_items: editItems,
+      }
+      setFullEstimate(freshEstimate)
+      onSync(freshEstimate)
       setMode("view")
     } catch {
       setSaveError("Could not save changes. Try again.")
@@ -1361,7 +1383,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     }
     if (method === "sms") {
       const firstName = (est.client_name ?? "there").split(" ")[0]
-      const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(est.total)
+      const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(displayTotal)
       const msg = `Hi ${firstName}, I put together your estimate${est.property_address ? ` for ${est.property_address}` : ""} - ${totalFmt}. You can view all the details and approve it right here: ${link}`
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       window.open(`sms:${est.client_phone}${isIOS ? "&" : "?"}body=${encodeURIComponent(msg)}`, "_self")
@@ -1433,7 +1455,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
                   <div style={{ color: "white", fontSize: 16, fontWeight: 760, marginBottom: 4 }}>{est.client_name}</div>
                   {est.property_address && <div style={{ color: "rgba(255,255,255,0.34)", fontSize: 13, lineHeight: 1.35 }}>{est.property_address}</div>}
                 </div>
-                <div style={{ color: SIGNAL_GREEN, fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{fmt(est.total)}</div>
+                <div style={{ color: SIGNAL_GREEN, fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{fmt(displayTotal)}</div>
               </div>
             </div>
 
@@ -1625,25 +1647,69 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               )}
             </div>
 
-            <div style={{ margin: "-6px 0 18px", display: "flex" }}><button onClick={startEdit} style={{ border: "none", background: "transparent", color: "rgba(255,255,255,0.46)", fontSize: 13, fontWeight: 720, cursor: "pointer", padding: "4px 0" }}>Edit details</button></div>
-
-            {/* Totals */}
-            <div style={{ marginBottom: 18, padding: "18px 0 16px", borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
-                <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 13, fontWeight: 760 }}>Total</span>
-                <span style={{ color: SIGNAL_GREEN, fontSize: 30, fontWeight: 780, letterSpacing: "-0.02em", lineHeight: 1 }}>{fmt(est.total)}</span>
+            {/* Work first */}
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <span style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, fontWeight: 780, letterSpacing: "0.08em", textTransform: "uppercase" }}>Work</span>
+                {items.length > 0 && <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, fontWeight: 650 }}>{items.length} {items.length === 1 ? "item" : "items"}</span>}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <span style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>Subtotal</span>
-                  <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600 }}>{fmt(est.subtotal)}</span>
+
+              {items.length === 0 ? (
+                <div style={{ padding: 18, borderRadius: 20, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(180deg, ${SIGNAL_GREEN}12, rgba(255,255,255,0.025))` }}>
+                  <div style={{ color: "white", fontSize: 22, fontWeight: 850, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 8 }}>
+                    Add the work before you send.
+                  </div>
+                  <p style={{ margin: "0 0 16px", color: "rgba(255,255,255,0.52)", fontSize: 15, lineHeight: 1.45 }}>
+                    Start with one line item. Found will total it and send a clean estimate.
+                  </p>
+                  <button onClick={startEdit} style={{ width: "100%", minHeight: 54, borderRadius: 16, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
+                    Add first work item
+                  </button>
                 </div>
-                {est.tax_rate > 0 && (
+              ) : (
+                <div style={{ borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.025)", overflow: "hidden" }}>
+                  {items.map((item, i) => (
+                    <div key={i} style={{
+                      display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
+                      padding: "15px 16px",
+                      borderBottom: "1px solid rgba(255,255,255,0.055)",
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: "white", fontSize: 15, fontWeight: 750, marginBottom: 3 }}>{item.description}</div>
+                        <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
+                          {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
+                          {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>}
+                        </div>
+                      </div>
+                      <div style={{ color: "white", fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
+                        {fmt(item.quantity * item.unit_price)}
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={startEdit} style={{ width: "100%", minHeight: 50, padding: "0 16px", border: "none", backgroundColor: "rgba(255,255,255,0.02)", color: SIGNAL_GREEN, fontSize: 14, fontWeight: 850, cursor: "pointer", textAlign: "left" }}>
+                    Add or edit work
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Review total */}
+            <div style={{ marginBottom: 18, padding: "18px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.025)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ color: "rgba(255,255,255,0.42)", fontSize: 13 }}>Subtotal</span>
+                  <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 13, fontWeight: 650 }}>{fmt(displaySubtotal)}</span>
+                </div>
+                {displayTaxRate > 0 && (
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span style={{ color: "rgba(255,255,255,0.36)", fontSize: 13 }}>Tax ({(est.tax_rate * 100).toFixed(2)}%)</span>
-                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontWeight: 600 }}>{fmt(est.tax_amount)}</span>
+                    <span style={{ color: "rgba(255,255,255,0.42)", fontSize: 13 }}>Tax ({(displayTaxRate * 100).toFixed(2)}%)</span>
+                    <span style={{ color: "rgba(255,255,255,0.62)", fontSize: 13, fontWeight: 650 }}>{fmt(displayTaxAmount)}</span>
                   </div>
                 )}
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16, paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                <span style={{ color: "white", fontSize: 17, fontWeight: 850 }}>Total</span>
+                <span style={{ color: SIGNAL_GREEN, fontSize: 34, fontWeight: 850, letterSpacing: "-0.03em", lineHeight: 1 }}>{fmt(displayTotal)}</span>
               </div>
             </div>
 
@@ -1651,18 +1717,18 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
             {(est.status === "draft" || est.status === "sent" || est.status === "viewed") && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22 }}>
                 {/* Send for draft, Resend for sent/viewed */}
-                <button onClick={() => setMode("send_options")} style={{
+                <button onClick={() => canSendEstimate && setMode("send_options")} disabled={!canSendEstimate} style={{
                   width: "100%", padding: "15px 0", borderRadius: 14,
-                  border: est.status === "draft" ? "none" : `1px solid ${SIGNAL_GREEN}33`,
-                  backgroundColor: est.status === "draft" ? SIGNAL_GREEN : "rgba(48,209,88,0.12)",
-                  color: est.status === "draft" ? FOUND_BLACK : SIGNAL_GREEN,
-                  fontSize: 15, fontWeight: 800, cursor: "pointer",
+                  border: !canSendEstimate ? "1px solid rgba(255,255,255,0.08)" : est.status === "draft" ? "none" : `1px solid ${SIGNAL_GREEN}33`,
+                  backgroundColor: !canSendEstimate ? "rgba(255,255,255,0.06)" : est.status === "draft" ? SIGNAL_GREEN : "rgba(48,209,88,0.12)",
+                  color: !canSendEstimate ? "rgba(255,255,255,0.28)" : est.status === "draft" ? FOUND_BLACK : SIGNAL_GREEN,
+                  fontSize: 15, fontWeight: 800, cursor: canSendEstimate ? "pointer" : "default",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 }}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                   </svg>
-                  {est.status === "draft" ? "Send Estimate" : "Resend Estimate"}
+                  {!canSendEstimate ? "Add work before sending" : est.status === "draft" ? "Send Estimate" : "Resend Estimate"}
                 </button>
               </div>
             )}
@@ -1734,37 +1800,6 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               </div>
             )}
 
-
-            {/* Line items */}
-            {items.length > 0 && (
-              <div style={{ marginBottom: 20, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "13px 0 2px" }}>
-                  <span style={{ color: "rgba(255,255,255,0.46)", fontSize: 12, fontWeight: 780, letterSpacing: "0.08em", textTransform: "uppercase" }}>Work</span>
-                  <span style={{ color: "rgba(255,255,255,0.28)", fontSize: 12, fontWeight: 650 }}>{items.length} {items.length === 1 ? "item" : "items"}</span>
-                </div>
-                {items.map((item, i) => (
-                  <div key={i} style={{
-                    display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12,
-                    padding: "13px 0",
-                    borderBottom: i < items.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                  }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ color: "white", fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{item.description}</div>
-                      <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>
-                        {item.quantity} {item.unit || "x"} {fmt(item.unit_price)}
-                        {item.category && <span style={{ marginLeft: 6, textTransform: "capitalize" }}>- {item.category}</span>}
-                      </div>
-                    </div>
-                    <div style={{ color: "white", fontSize: 15, fontWeight: 700, flexShrink: 0 }}>
-                      {fmt(item.quantity * item.unit_price)}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-
-
             <div style={{ height: 22 }} />
             {/* Activity timeline */}
             <ActivityTimeline estimate={est} />
@@ -1779,7 +1814,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
         {mode === "edit" && (
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
-              <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Edit Estimate</h2>
+              <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Build Estimate</h2>
               <CloseIconButton onClick={() => setMode("view")} />
             </div>
 
@@ -1798,7 +1833,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
             <div style={{ marginBottom: 8 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <p style={{ ...labelStyle, margin: 0 }}>Work & pricing</p>
-                <button onClick={() => setAddingItem(v => !v)} style={{ padding: "5px 12px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`, backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>+ Add</button>
+                <button onClick={() => setAddingItem(v => !v)} style={{ padding: "8px 13px", borderRadius: 100, border: `1px solid ${SIGNAL_GREEN}55`, backgroundColor: `${SIGNAL_GREEN}14`, color: SIGNAL_GREEN, fontSize: 13, fontWeight: 820, cursor: "pointer" }}>+ Add work</button>
               </div>
               {rateSheet.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
@@ -1811,7 +1846,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               )}
               {addingItem && (
                 <div style={{ borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}33`, padding: 14, marginBottom: 10, backgroundColor: `${SIGNAL_GREEN}08` }}>
-                  <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Description *" style={{ ...inputStyle, marginBottom: 8 }} />
+                  <input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="What work are you doing? *" style={{ ...inputStyle, marginBottom: 8 }} />
                   <div style={{ display: "grid", gridTemplateColumns: "80px 1fr 100px", gap: 8, marginBottom: 8 }}>
                     <input value={newQty} onChange={e => setNewQty(e.target.value)} type="number" placeholder="Qty" style={inputStyle} />
                     <select value={newUnit} onChange={e => setNewUnit(e.target.value)} style={{ ...inputStyle, appearance: "none" }}>{UNIT_OPTIONS.map(opt => <option key={opt.value} value={opt.value} style={{ color: "#111" }}>{opt.label}</option>)}</select>
@@ -1819,9 +1854,15 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button onClick={() => { setAddingItem(false); setNewDesc(""); setNewQty("1"); setNewUnit(""); setNewPrice("") }} style={{ flex: 1, padding: "9px 0", borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.35)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
-                    <button onClick={addManualItem} disabled={!newDesc.trim() || !newPrice} style={{ flex: 2, padding: "9px 0", borderRadius: 12, border: "none", backgroundColor: newDesc.trim() && newPrice ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newDesc.trim() && newPrice ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Add Item</button>
+                    <button onClick={addManualItem} disabled={!newDesc.trim() || !newPrice} style={{ flex: 2, padding: "9px 0", borderRadius: 12, border: "none", backgroundColor: newDesc.trim() && newPrice ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: newDesc.trim() && newPrice ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>Add work item</button>
                   </div>
                 </div>
+              )}
+              {!addingItem && editItems.length === 0 && (
+                <button onClick={() => setAddingItem(true)} style={{ width: "100%", padding: "18px 16px", borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(180deg, ${SIGNAL_GREEN}10, rgba(255,255,255,0.025))`, color: "white", textAlign: "left", cursor: "pointer", marginBottom: 10 }}>
+                  <div style={{ fontSize: 18, fontWeight: 850, marginBottom: 5 }}>Add the first work item</div>
+                  <div style={{ color: "rgba(255,255,255,0.48)", fontSize: 13, lineHeight: 1.4 }}>Example: room addition framing, HVAC repair, delivery, labor, materials.</div>
+                </button>
               )}
               {editItems.map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, backgroundColor: "rgba(255,255,255,0.04)", marginBottom: 4 }}>
@@ -1860,7 +1901,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setMode("view")} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleSaveEdit} disabled={saving || !editName.trim()} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: editName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: editName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? "Saving..." : "Save & Review"}
               </button>
             </div>
           </>
