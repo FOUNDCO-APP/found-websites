@@ -1,26 +1,50 @@
 import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
-import { getSiteCTAs } from "@/lib/industryCTAs"
 import EstimateForm from "./EstimateForm"
 import { heroGradient } from "@/lib/color"
 import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
-const formHeadlineMap: Record<string, string> = {
-  estimates: "Tell us about your project",
-  bookings: "Tell us about your booking",
-  appointments: "Tell us about your appointment",
-  orders: "Tell us about your order",
-  inquiries: "Tell us about your needs",
-  leads: "Tell us about your needs",
-}
+const SERVICE_ESTIMATE_INDUSTRIES = new Set([
+  "home_services",
+  "cleaning",
+  "landscaping",
+  "audio_visual",
+  "automotive",
+  "home_property",
+])
 
-const heroSubMap: Record<string, string> = {
-  estimates: "Tell us about your project and we'll be in touch within one business day.",
-  bookings: "Fill out the form and we'll confirm your booking within one business day.",
-  appointments: "Fill out the form and we'll confirm your appointment within one business day.",
-  orders: "Fill out the form and we'll follow up within one business day.",
-  inquiries: "Tell us about your needs and we'll be in touch within one business day.",
+const REQUEST_INDUSTRIES = new Set([
+  "food",
+  "home_based_food",
+  "events",
+  "creative_services",
+  "professional_services",
+  "nonprofit",
+])
+
+function estimatePageCopy(industry: string) {
+  if (SERVICE_ESTIMATE_INDUSTRIES.has(industry)) {
+    return {
+      hero: "Get a Free Estimate",
+      headline: "Tell us about your project",
+      sub: "Tell us about your project and we'll be in touch within one business day.",
+    }
+  }
+
+  if (REQUEST_INDUSTRIES.has(industry)) {
+    return {
+      hero: "Request Information",
+      headline: "Tell us what you need",
+      sub: "Tell us what you need and we'll be in touch within one business day.",
+    }
+  }
+
+  return {
+    hero: "Request a Quote",
+    headline: "Tell us about your needs",
+    sub: "Tell us about your needs and we'll be in touch within one business day.",
+  }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -44,7 +68,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   const testimonials = (company.website_config?.testimonials ?? []).slice(0, 2)
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
-  const { primary: cta } = getSiteCTAs(company, [])
+  const copy = estimatePageCopy(company.industry_category ?? "")
 
   return (
     <>
@@ -60,10 +84,10 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>No Obligation</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>
-            {cta.label}
+            {copy.hero}
           </h1>
           <p className="text-lg max-w-xl" style={{ color: "#cccccc" }}>
-            {heroSubMap[company.primary_intent] ?? "Tell us about your needs and we'll be in touch within one business day."}
+            {copy.sub}
           </p>
         </div>
       </section>
@@ -74,7 +98,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
 
             {/* Form */}
             <div className="lg:col-span-2 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
-              <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>{formHeadlineMap[company.primary_intent] ?? "Tell us about your needs"}</h2>
+              <h2 className="text-xl font-black mb-6" style={{ color: "#111111" }}>{copy.headline}</h2>
               <EstimateForm
                 companyId={company.id}
                 services={services}
