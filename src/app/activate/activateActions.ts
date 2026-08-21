@@ -33,6 +33,7 @@ type PromoSummary = {
   discountedAmount: number
   currency: string
   duration: string
+  headstartDays?: number | null
 }
 
 type ActivationPriceSummary = {
@@ -63,6 +64,28 @@ function deferredUntilLabelFor(trialEndsAt: string | null | undefined): string |
 
 function normalizePromoCode(code?: string | null) {
   return code?.trim().toUpperCase() || ""
+}
+
+const HEADSTART_PROMOS: Record<string, { kind: "days" | "month"; days?: number; label: string }> = {
+  F0UND1115: { kind: "days", days: 15, label: "15-day headstart" },
+  F0UND1130: { kind: "month", label: "1-month headstart" },
+}
+
+function headstartPromoFor(code: string) {
+  return HEADSTART_PROMOS[code] ?? null
+}
+
+function addOneCalendarMonth(date: Date) {
+  const result = new Date(date)
+  const day = result.getDate()
+  result.setMonth(result.getMonth() + 1)
+  if (result.getDate() !== day) result.setDate(0)
+  return result
+}
+
+function trialEndIsoForHeadstart(promo: { kind: "days" | "month"; days?: number }) {
+  if (promo.kind === "month") return addOneCalendarMonth(new Date()).toISOString()
+  return new Date(Date.now() + (promo.days ?? 0) * 24 * 60 * 60 * 1000).toISOString()
 }
 
 function discountLabelFor(coupon: Stripe.Coupon) {
@@ -103,6 +126,30 @@ async function priceSummaryFor(stripe: Stripe, priceId: string, promoCode?: stri
   if (!normalizedCode) {
     return {
       price: { originalAmount, discountedAmount: originalAmount, currency, promo: null },
+    }
+  }
+
+  const headstartPromo = headstartPromoFor(normalizedCode)
+  if (headstartPromo) {
+    const headstartDays = headstartPromo.kind === "month" ? null : headstartPromo.days ?? null
+    return {
+      price: {
+        originalAmount,
+        discountedAmount: originalAmount,
+        currency,
+        promo: {
+          code: normalizedCode,
+          promotionCodeId: "",
+          couponId: "",
+          couponName: headstartPromo.label,
+          discountLabel: headstartPromo.label,
+          originalAmount,
+          discountedAmount: originalAmount,
+          currency,
+          duration: headstartPromo.kind === "month" ? "headstart_month" : `headstart_${headstartDays}`,
+          headstartDays,
+        },
+      },
     }
   }
 
@@ -195,6 +242,9 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
     const { price, promoError } = await priceSummaryFor(stripe, priceId, normalizedPromoCode)
     const promotionCodeId = price?.promo?.promotionCodeId ?? ""
+    const headstartPromo = headstartPromoFor(normalizedPromoCode)
+    const headstartDays = price?.promo?.headstartDays ?? null
+    const headstartTrialEnd = headstartPromo ? trialEndIsoForHeadstart(headstartPromo) : null
 
     // Reuse a pre-created setup intent only if Stripe metadata still matches this exact base plan and promo state.
     if (company.pending_setup_intent_secret && !targetAddonSlug && (!targetPlan || company.plan === requestedPlan) && !promoError) {
@@ -204,6 +254,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
       const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
       const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
+      const matchesHeadstart = (existingIntent?.metadata?.headstart_code ?? "") === (headstartPromo ? normalizedPromoCode : "")
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
       // A SetupIntent's payment_method_types is locked in at creation and
       // can't be changed afterward - a company with an older cached intent
@@ -211,7 +262,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       // because the plan/promo still match, or the stale payment methods
       // keep showing up forever regardless of what the code now creates.
       const matchesPaymentMethods = JSON.stringify(existingIntent?.payment_method_types ?? []) === JSON.stringify(["card"])
-      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && hasNoAddon && matchesPaymentMethods) {
+      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && matchesHeadstart && hasNoAddon && matchesPaymentMethods) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
       }
     }
@@ -235,6 +286,15 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       coupon_id: "",
       discount_label: "",
     }
+    const headstartMetadata = headstartPromo ? {
+      headstart_code: normalizedPromoCode,
+      headstart_days: headstartPromo?.kind === "month" ? "month" : String(headstartDays),
+      headstart_trial_end: headstartTrialEnd ?? "",
+    } : {
+      headstart_code: "",
+      headstart_days: "",
+      headstart_trial_end: "",
+    }
 
     const setupIntent = await stripe.setupIntents.create({
       customer: customer.id,
@@ -248,6 +308,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
         intro_rate: String(useIntroPrice),
         addon_slug: targetAddonSlug ?? "",
         ...promoMetadata,
+        ...headstartMetadata,
       },
     })
 
@@ -263,6 +324,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
     if (!targetAddonSlug) {
       companyUpdate.pending_setup_intent_secret = setupIntent.client_secret
       companyUpdate.plan = requestedPlan
+      if (headstartTrialEnd) companyUpdate.trial_ends_at = headstartTrialEnd
     }
 
     await admin
@@ -270,7 +332,14 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       .update(companyUpdate)
       .eq("slug", slug)
 
-    return { clientSecret: setupIntent.client_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
+    return {
+      clientSecret: setupIntent.client_secret,
+      companyName: company.name,
+      plan: requestedPlan,
+      price,
+      promoError,
+      deferredUntilLabel: headstartTrialEnd ? deferredUntilLabelFor(headstartTrialEnd) : deferredUntilLabel,
+    }
   } catch (err) {
     console.error("[Activate] createActivationSetup failed:", err)
     return null
@@ -358,7 +427,9 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
     // Passing trial_end also anchors every future renewal to this same date,
     // which is how a requested billing day of month (e.g. "the 25th") is
     // actually delivered - one mechanism covers both asks.
-    const trialEndsAtMs = company.trial_ends_at ? new Date(company.trial_ends_at as string).getTime() : NaN
+    const metadataTrialEnd = setupIntent.metadata?.headstart_trial_end || null
+    const trialEndsAt = metadataTrialEnd || (company.trial_ends_at as string | null)
+    const trialEndsAtMs = trialEndsAt ? new Date(trialEndsAt).getTime() : NaN
     const hasFutureDeferral = !Number.isNaN(trialEndsAtMs) && trialEndsAtMs > Date.now() + 5 * 60 * 1000
     if (hasFutureDeferral) {
       subscriptionParams.trial_end = Math.floor(trialEndsAtMs / 1000)
@@ -417,6 +488,13 @@ export async function confirmActivation(slug: string, setupIntentId: string): Pr
       companyUpdate.applied_promotion_code = setupIntent.metadata.promotion_code ?? null
       companyUpdate.applied_coupon_id = setupIntent.metadata.coupon_id ?? null
       companyUpdate.applied_discount_label = setupIntent.metadata.discount_label ?? null
+    }
+    if (metadataTrialEnd && setupIntent.metadata?.headstart_days) {
+      companyUpdate.trial_ends_at = metadataTrialEnd
+      companyUpdate.applied_promotion_code_id = null
+      companyUpdate.applied_promotion_code = setupIntent.metadata.promotion_code ?? null
+      companyUpdate.applied_coupon_id = null
+      companyUpdate.applied_discount_label = `${setupIntent.metadata.headstart_days}-day headstart`
     }
 
     const wasAlreadyActive = ["active", "trialing"].includes(String(company.subscription_status ?? ""))
