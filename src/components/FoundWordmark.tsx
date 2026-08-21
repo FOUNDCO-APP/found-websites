@@ -1,5 +1,6 @@
-// Single source of truth for the FOUND wordmark.
-// Uses the Inter variable loaded in the root layout (the app's one true typeface) — never hardcode Arial here again.
+const WORDMARK_ASPECT_RATIO = 3848 / 632
+const WORDMARK_MASK_URL = "/brand/found-wordmark-black.png"
+
 export default function FoundWordmark({
   height = 24,
   width,
@@ -13,28 +14,28 @@ export default function FoundWordmark({
   className?: string
   style?: React.CSSProperties
 }) {
-  const computedWidth = width ?? Math.round(height * (420 / 72))
+  const computedWidth = width ?? Math.round(height * WORDMARK_ASPECT_RATIO)
   return (
-    <svg
-      viewBox="0 0 420 72"
-      width={computedWidth}
-      height={height}
+    <span
       className={className}
-      style={{ display: "block", color, ...style }}
       aria-label="Found"
       role="img"
-    >
-      <text
-        x="0"
-        y="56"
-        fill="currentColor"
-        fontFamily="var(--font-inter), Arial, sans-serif"
-        fontSize="58"
-        fontWeight="300"
-        letterSpacing="25"
-      >
-        FOUND
-      </text>
-    </svg>
+      style={{
+        display: "block",
+        width: computedWidth,
+        height,
+        color,
+        backgroundColor: "currentColor",
+        maskImage: `url(${WORDMARK_MASK_URL})`,
+        maskRepeat: "no-repeat",
+        maskPosition: "center",
+        maskSize: "contain",
+        WebkitMaskImage: `url(${WORDMARK_MASK_URL})`,
+        WebkitMaskRepeat: "no-repeat",
+        WebkitMaskPosition: "center",
+        WebkitMaskSize: "contain",
+        ...style,
+      }}
+    />
   )
 }

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import FoundWordmark from "@/components/FoundWordmark"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -9,10 +10,13 @@ export default function SiteFooter() {
       className="px-6 py-10 md:px-10"
       style={{ borderTop: "1px solid rgba(255,255,255,0.06)", backgroundColor: FOUND_BLACK }}
     >
-      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-xs text-white/25 font-medium">
-          &copy; {new Date().getFullYear()} Found Co. LLC. All rights reserved.
-        </p>
+      <div className="max-w-7xl mx-auto flex flex-col gap-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <FoundWordmark height={18} color="white" />
+          <p className="text-xs text-white/25 font-medium">
+            &copy; {new Date().getFullYear()} Found Co. LLC. All rights reserved.
+          </p>
+        </div>
         <div className="flex items-center gap-6">
           <Link
             href="/terms"

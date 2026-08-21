@@ -41,8 +41,12 @@ export const metadata: Metadata = {
   description: "Found builds your website, writes your copy, and picks your photos — all from your phone. Most owners are live the same day.",
   metadataBase: new URL(`https://${ROOT_DOMAIN}`),
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: [
+      { url: "/icons/found-app-icon-v3-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/found-app-icon-v3-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/icons/found-app-icon-v3-32.png",
+    apple: "/icons/found-app-icon-v3-180.png",
   },
 }
 
@@ -57,7 +61,7 @@ function rootSiteSchema(rootDomain: string) {
         "@id": `${origin}/#organization`,
         name: "Found",
         url: origin,
-        logo: `${origin}/favicon.svg`,
+        logo: `${origin}/icons/found-app-icon-v3-512.png`,
       },
       {
         "@type": "WebSite",

@@ -22,25 +22,19 @@ function isStandalone(): boolean {
 
 function FoundIcon() {
   return (
-    <div style={{
-      width: 72, height: 72, borderRadius: 18,
-      background: "linear-gradient(160deg, #141614 0%, #080A09 100%)",
-      border: "1px solid rgba(255,255,255,0.12)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      boxShadow: "0 12px 32px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)",
-      flexShrink: 0,
-    }}>
-      <span style={{
-        color: "white",
-        fontSize: 11,
-        fontWeight: 300,
-        letterSpacing: "0.28em",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
-        paddingLeft: "0.28em", // offset trailing letterSpacing so text appears truly centered
-      }}>
-        FOUND
-      </span>
-    </div>
+    <img
+      src="/icons/found-app-icon-v3-192.png"
+      alt=""
+      width={72}
+      height={72}
+      style={{
+        width: 72,
+        height: 72,
+        borderRadius: 18,
+        boxShadow: "0 12px 32px rgba(0,0,0,0.7)",
+        flexShrink: 0,
+      }}
+    />
   )
 }
 
