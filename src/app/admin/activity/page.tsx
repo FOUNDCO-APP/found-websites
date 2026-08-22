@@ -91,6 +91,32 @@ function outreachReason(bucket: Bucket, latestAt: string | null) {
   return "Healthy usage"
 }
 
+function outreachCopy(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
+  const reason = outreachReason(bucket, latestAt).toLowerCase()
+  const dashboardUrl = `https://my.foundco.app`
+  const intro = `Hi ${company.name}, this is Shawn with Found.`
+  if (bucket === "trialing_inactive") {
+    return `${intro} I noticed your Found dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you? ${dashboardUrl}`
+  }
+  if (bucket === "no_activity") {
+    return `${intro} I wanted to help you get your first useful action done in Found. A good next step is adding a photo, checking leads, or updating one section of your site. ${dashboardUrl}`
+  }
+  if (bucket === "stagnant") {
+    return `${intro} I noticed Found has been quiet for a bit (${reason}). Want me to help you tighten anything up or find what would make it more useful day to day? ${dashboardUrl}`
+  }
+  return `${intro} Quick check-in: I noticed activity has slowed down in Found. Anything feeling confusing, missing, or worth improving for your business? ${dashboardUrl}`
+}
+
+function mailtoHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
+  const subject = `Checking in on ${company.name}'s Found site`
+  return `mailto:${company.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(outreachCopy(company, bucket, latestAt))}`
+}
+
+function smsHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
+  const phone = company.phone?.replace(/[^\d+]/g, "")
+  return phone ? `sms:${phone}?&body=${encodeURIComponent(outreachCopy(company, bucket, latestAt))}` : null
+}
+
 export default async function AdminActivityPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const filter = FILTERS.some((item) => item.key === params.view) ? params.view as Bucket : "all"
@@ -176,31 +202,36 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {!activityReady && (
             <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before outreach can use customer activity.</span></div>
           )}
-          {activityReady && outreachRows.slice(0, 20).map(({ company, activities, latest, bucket }) => (
-            <div key={company.id} className="hq-business-row">
-              <div className="hq-business-main hq-health-row">
-                <div className="hq-business-copy">
-                  <div className="hq-business-name-line">
-                    <h2>{company.name}</h2>
-                    <span className="hq-badge hq-badge-warning">{bucketLabel(bucket)}</span>
+          {activityReady && outreachRows.slice(0, 20).map(({ company, activities, latest, bucket }) => {
+            const latestAt = latest?.created_at ?? null
+            const textHref = smsHref(company, bucket, latestAt)
+            return (
+              <div key={company.id} className="hq-business-row">
+                <div className="hq-business-main hq-health-row">
+                  <div className="hq-business-copy">
+                    <div className="hq-business-name-line">
+                      <h2>{company.name}</h2>
+                      <span className="hq-badge hq-badge-warning">{bucketLabel(bucket)}</span>
+                    </div>
+                    <p className="hq-client-summary">
+                      <span>{outreachReason(bucket, latestAt)}</span>
+                      <span><i aria-hidden="true" />{planLabel(company.plan)}</span>
+                      <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
+                    </p>
+                    <p className="hq-client-activity">
+                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {company.subscription_status ?? "not active"}
+                    </p>
                   </div>
-                  <p className="hq-client-summary">
-                    <span>{outreachReason(bucket, latest?.created_at ?? null)}</span>
-                    <span><i aria-hidden="true" />{planLabel(company.plan)}</span>
-                    <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
-                  </p>
-                  <p className="hq-client-activity">
-                    {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {company.subscription_status ?? "not active"}
-                  </p>
-                </div>
-                <div className="hq-contact-actions hq-outreach-actions">
-                  {company.phone && <a href={`tel:${company.phone}`}>Call</a>}
-                  {company.email && <a href={`mailto:${company.email}`}>Email</a>}
-                  <Link href={`/admin/clients/${company.id}`}>Open</Link>
+                  <div className="hq-contact-actions hq-outreach-actions">
+                    {company.phone && <a href={`tel:${company.phone}`}>Call</a>}
+                    {textHref && <a href={textHref}>Text</a>}
+                    {company.email && <a href={mailtoHref(company, bucket, latestAt)}>Email</a>}
+                    <Link href={`/admin/clients/${company.id}`}>Open</Link>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
           {activityReady && outreachRows.length === 0 && <div className="hq-empty-state"><strong>No outreach needed.</strong><span>Quiet and inactive clients will appear here automatically.</span></div>}
         </div>
       </section>
