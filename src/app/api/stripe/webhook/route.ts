@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
 import { sendTrackedEmail } from "@/lib/emailLog"
+import { recordBillingPlanEvent } from "@/lib/billingPlanEvents"
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -59,6 +60,17 @@ function planMonthlyValue(plan: string | null | undefined) {
   return 29
 }
 
+function stripeUnixToIso(value: number | null | undefined): string | null {
+  return typeof value === "number" ? new Date(value * 1000).toISOString() : null
+}
+
+function planLabelForAudit(value: string | null | undefined): string {
+  if (value === "found_business") return "Found Business"
+  if (value === "found_pro") return "Found Pro"
+  if (value === "found") return "Found Starter"
+  return value || "unknown"
+}
+
 function addonSlugForItem(item: Stripe.SubscriptionItem): string | null {
   return item.price.metadata?.addon_slug || item.plan?.metadata?.addon_slug || null
 }
@@ -100,8 +112,25 @@ async function syncSubscriptionToSupabase(
   // only ever moves a real client out of "onboarding," nothing else.
   let shouldCaptureActivation = false
   let activationSlug = sub.metadata?.slug ?? null
+  let currentCompany: {
+    slug: string | null
+    plan: string | null
+    subscription_status: string | null
+    client_state: string | null
+    account_kind: string | null
+  } | null = null
+
+  if (companyId) {
+    const { data: current } = await supabase
+      .from("companies")
+      .select("slug, plan, subscription_status, client_state, account_kind")
+      .eq("id", companyId)
+      .maybeSingle()
+    currentCompany = current ?? null
+  }
+
   if (isActivatedStatus && companyId) {
-    const { data: current } = await supabase.from("companies").select("slug, subscription_status, client_state, account_kind").eq("id", companyId).maybeSingle()
+    const current = currentCompany
     shouldCaptureActivation = !["active", "trialing"].includes(String(current?.subscription_status ?? ""))
     activationSlug = activationSlug ?? current?.slug ?? null
     if (current?.account_kind === "client" && current?.client_state === "onboarding") {
@@ -118,6 +147,36 @@ async function syncSubscriptionToSupabase(
   await companyQuery
 
   if (!companyId) return
+
+  const oldPlan = currentCompany?.plan ?? null
+  const newPlan = plan ?? oldPlan
+  const oldStatus = currentCompany?.subscription_status ?? null
+  const newStatus = sub.status
+  if (oldPlan !== newPlan || oldStatus !== newStatus) {
+    const price = baseItem?.price
+    const currentPeriodEnd = (sub as Stripe.Subscription & { current_period_end?: number }).current_period_end
+    await recordBillingPlanEvent(supabase, {
+      company_id: companyId,
+      event_type: "stripe_subscription_synced",
+      source: "stripe_webhook",
+      actor_type: "stripe",
+      old_plan: oldPlan,
+      new_plan: newPlan,
+      old_subscription_status: oldStatus,
+      new_subscription_status: newStatus,
+      stripe_customer_id: customerId,
+      stripe_subscription_id: sub.id,
+      stripe_price_id: price?.id ?? null,
+      amount_cents: price?.unit_amount ?? null,
+      currency: price?.currency ?? "usd",
+      effective_at: stripeUnixToIso(currentPeriodEnd) ?? stripeUnixToIso(sub.trial_end),
+      note: `Stripe synced ${planLabelForAudit(oldPlan)} to ${planLabelForAudit(newPlan)}; status ${oldStatus || "unknown"} to ${newStatus}.`,
+      metadata: {
+        subscription_metadata_plan: sub.metadata?.plan ?? null,
+        subscription_status: sub.status,
+      },
+    })
+  }
 
   if (shouldCaptureActivation) {
     await captureFoundActivationCompleted({

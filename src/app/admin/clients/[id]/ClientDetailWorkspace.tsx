@@ -76,6 +76,10 @@ function formatStoredDate(value: string | null | undefined) {
   return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 }
 
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
+
 function stateTone(state: string) {
   if (state === "active" || state === "comp") return "success"
   if (state === "past_due" || state === "cancelled") return "warning"
@@ -376,7 +380,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 <strong>Activity</strong>
                 <ul style={{ margin: "4px 0 12px", paddingLeft: 18 }}>
                   {client.activities.map((a, i) => (
-                    <li key={i}>{new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {a.summary}</li>
+                    <li key={i}>{formatShortDate(a.created_at)} - {a.summary}</li>
                   ))}
                 </ul>
               </div>
@@ -386,7 +390,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 <strong>Emails sent</strong>
                 <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
                   {client.emails.map((email, i) => (
-                    <li key={i}>{new Date(email.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {email.success ? "Sent" : "FAILED"}: {email.email_type} to {email.recipient_email}</li>
+                    <li key={i}>{formatShortDate(email.created_at)} - {email.success ? "Sent" : "FAILED"}: {email.email_type} to {email.recipient_email}</li>
                   ))}
                 </ul>
               </div>

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { requireAdmin, getAdminClient } from "../lib"
 import { createOnboardingSite } from "@/app/onboarding/actions"
 import { sendTrackedEmail } from "@/lib/emailLog"
+import { recordBillingPlanEvent } from "@/lib/billingPlanEvents"
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -122,6 +123,7 @@ export async function createManualClientSite(formData: FormData) {
   await requireAdmin()
 
   const location = [value(formData, "city"), value(formData, "state")].filter(Boolean).join(", ")
+  const requestedPlan = value(formData, "plan") || "found"
 
   const result = await createOnboardingSite({
     name: value(formData, "name"),
@@ -139,12 +141,27 @@ export async function createManualClientSite(formData: FormData) {
     logoChoice: "initials",
     primaryColor: value(formData, "primaryColor") || "#2E7D32",
     vibe: value(formData, "vibe") || "bold",
-    plan: value(formData, "plan") || "found",
+    plan: requestedPlan,
   })
 
   if (!result.success || !result.companyId) {
     throw new Error(result.error || "Could not create the site.")
   }
+
+  const admin = getAdminClient()
+  await recordBillingPlanEvent(admin, {
+    company_id: result.companyId,
+    event_type: "admin_client_created",
+    source: "admin_new_client",
+    actor_type: "admin",
+    new_plan: requestedPlan,
+    new_subscription_status: "onboarding",
+    note: "Admin created client site from HQ new-client flow.",
+    metadata: {
+      contact_email: value(formData, "email") || null,
+      industry: value(formData, "industry") || null,
+    },
+  })
 
   revalidatePath("/admin/clients")
   redirect(`/admin/new-client?created=${result.companyId}`)
@@ -178,6 +195,11 @@ export async function deferClientBilling(formData: FormData) {
   const admin = getAdminClient()
   const dueAt = dueDateFor(termDays, billingDay)
   const dueDateLabel = formatBillingDate(dueAt)
+  const { data: currentCompany } = await admin
+    .from("companies")
+    .select("plan, subscription_status, stripe_customer_id")
+    .eq("id", companyId)
+    .maybeSingle()
 
   const { error } = await admin
     .from("companies")
@@ -200,6 +222,27 @@ export async function deferClientBilling(formData: FormData) {
     company_id: companyId,
     activity_type: "note",
     summary: `Deferred billing set: card due by ${dueDateLabel} (${termDays} days).${billingDayLine} If no card is added by then, the public site pauses automatically. Reason: ${reason}.${paymentNoteLine}`,
+  })
+
+  await recordBillingPlanEvent(admin, {
+    company_id: companyId,
+    event_type: "admin_deferred_billing",
+    source: "admin_client_detail",
+    actor_type: "admin",
+    old_plan: currentCompany?.plan ?? null,
+    new_plan: currentCompany?.plan ?? null,
+    old_subscription_status: currentCompany?.subscription_status ?? null,
+    new_subscription_status: currentCompany?.subscription_status ?? null,
+    stripe_customer_id: currentCompany?.stripe_customer_id ?? null,
+    amount_cents: paymentAmount !== null ? Math.round(paymentAmount * 100) : null,
+    currency: "usd",
+    effective_at: dueAt.toISOString(),
+    note: `Admin deferred billing: card due by ${dueDateLabel}. Reason: ${reason}.`,
+    metadata: {
+      term_days: termDays,
+      billing_day: billingDay,
+      payment_method: paymentMethod,
+    },
   })
 
   if (sendEmail) {
@@ -281,6 +324,11 @@ export async function setPermanentComp(formData: FormData) {
   if (!reason) throw new Error("A reason is required.")
 
   const admin = getAdminClient()
+  const { data: currentCompany } = await admin
+    .from("companies")
+    .select("plan, subscription_status, stripe_customer_id")
+    .eq("id", companyId)
+    .maybeSingle()
 
   const { error } = await admin
     .from("companies")
@@ -292,6 +340,20 @@ export async function setPermanentComp(formData: FormData) {
     company_id: companyId,
     activity_type: "state_change",
     summary: `Set to permanent comp (free forever, no billing). Reason: ${reason}`,
+  })
+
+  await recordBillingPlanEvent(admin, {
+    company_id: companyId,
+    event_type: "admin_permanent_comp_set",
+    source: "admin_client_detail",
+    actor_type: "admin",
+    old_plan: currentCompany?.plan ?? null,
+    new_plan: currentCompany?.plan ?? null,
+    old_subscription_status: currentCompany?.subscription_status ?? null,
+    new_subscription_status: "active",
+    stripe_customer_id: currentCompany?.stripe_customer_id ?? null,
+    effective_at: new Date().toISOString(),
+    note: `Admin set account to permanent comp. Reason: ${reason}.`,
   })
 
   if (sendEmail) {

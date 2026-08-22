@@ -7,6 +7,7 @@ import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailabil
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { ALL_ADDONS } from "@/lib/featureAccess"
+import { recordBillingPlanEvent } from "@/lib/billingPlanEvents"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const APP_BASE = `https://my.${ROOT_DOMAIN}`
@@ -475,6 +476,30 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
     const latestInvoice = typeof subscription.latest_invoice === "string" ? null : subscription.latest_invoice
     const invoiceWithPaymentIntent = latestInvoice as (Stripe.Invoice & { payment_intent?: string | Stripe.PaymentIntent | null }) | null
     const paymentIntent: Stripe.PaymentIntent | null = invoiceWithPaymentIntent && typeof invoiceWithPaymentIntent.payment_intent !== "string" ? invoiceWithPaymentIntent.payment_intent ?? null : null
+
+    const subscriptionWithPeriod = subscription as Stripe.Subscription & { current_period_end?: number }
+    await recordBillingPlanEvent(ctx.admin, {
+      company_id: ctx.company.id,
+      event_type: "customer_plan_change_requested",
+      source: "dashboard_billing",
+      actor_type: "customer",
+      actor_email: ctx.company.email ?? null,
+      old_plan: ctx.company.plan ?? null,
+      new_plan: targetPlan,
+      old_subscription_status: ctx.sub.status,
+      new_subscription_status: subscription.status,
+      stripe_customer_id: ctx.company.stripe_customer_id ?? null,
+      stripe_subscription_id: subscription.id,
+      stripe_price_id: ctx.priceId,
+      amount_cents: ctx.price.unit_amount ?? null,
+      currency: ctx.price.currency ?? "usd",
+      effective_at: new Date(((subscriptionWithPeriod.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000)).toISOString(),
+      note: `Customer requested plan change from ${ctx.company.plan ?? "unknown"} to ${targetPlan}. Stripe webhook remains source of truth for final sync.`,
+      metadata: {
+        promotion_code: promo.promoCode ?? null,
+        discount_label: promo.discountLabel ?? null,
+      },
+    })
 
     if (paymentIntent && ["requires_action", "requires_payment_method", "requires_confirmation"].includes(paymentIntent.status)) {
       return { ok: false, requiresAction: true, hostedInvoiceUrl: latestInvoice?.hosted_invoice_url ?? null, error: "Stripe needs one more payment step." }
