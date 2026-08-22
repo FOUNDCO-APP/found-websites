@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -53,6 +54,11 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "lead_created",
+    pathname: "/dashboard/leads",
+    metadata: { lead_id: data.id, source: "manual", temperature: data.temperature },
+  })
   return NextResponse.json({ lead: data })
 }
 
@@ -91,5 +97,10 @@ export async function PATCH(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: status !== undefined ? "lead_status_updated" : "lead_updated",
+    pathname: "/dashboard/leads",
+    metadata: { lead_id: data.id, status: data.status },
+  })
   return NextResponse.json({ lead: data })
 }

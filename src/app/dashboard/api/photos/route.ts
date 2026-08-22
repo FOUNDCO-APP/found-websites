@@ -1,5 +1,6 @@
 ﻿import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { mediaKindFromUrl } from "@/lib/mediaKind"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
@@ -74,6 +75,11 @@ export async function POST(req: Request) {
         .single()
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      await recordCustomerActivity({
+        eventType: "photo_uploaded",
+        pathname: "/dashboard/photos",
+        metadata: { photo_id: data.id, album_id: albumId, upload_mode: "signed" },
+      })
       return NextResponse.json({ photo: photoPayload(data, body.mime_type) })
     }
 
@@ -106,7 +112,13 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ photo: photoPayload(data, file.type) })
+  const payload = photoPayload(data, file.type)
+  await recordCustomerActivity({
+    eventType: "photo_uploaded",
+    pathname: "/dashboard/photos",
+    metadata: { photo_id: data.id, album_id: albumId, upload_mode: "form", media_type: payload.media_type },
+  })
+  return NextResponse.json({ photo: payload })
 }
 
 export async function PATCH(req: Request) {
@@ -135,6 +147,11 @@ export async function PATCH(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "photo_updated",
+    pathname: "/dashboard/photos",
+    metadata: { photo_id: id, for_website, for_social, website_section, album_id },
+  })
   return NextResponse.json({ photo: data ? photoPayload(data) : data })
 }
 
@@ -161,5 +178,10 @@ export async function DELETE(req: Request) {
     await admin.from("media").delete().eq("company_id", company.id).eq("thumbnail_url", photo.url)
   }
 
+  await recordCustomerActivity({
+    eventType: "photo_deleted",
+    pathname: "/dashboard/photos",
+    metadata: { photo_id: id },
+  })
   return NextResponse.json({ success: true })
 }

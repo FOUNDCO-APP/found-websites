@@ -1,4 +1,5 @@
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -84,5 +85,10 @@ export async function POST(req: Request) {
     await admin.from("estimate_line_items").insert(items.map((item: Record<string, unknown>) => ({ ...item, estimate_id: estimate.id })))
   }
 
+  await recordCustomerActivity({
+    eventType: "estimate_created",
+    pathname: "/dashboard/estimates",
+    metadata: { estimate_id: estimate.id, total, item_count: items.length },
+  })
   return NextResponse.json({ estimate })
 }

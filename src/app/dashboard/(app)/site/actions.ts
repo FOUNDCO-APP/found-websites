@@ -5,6 +5,7 @@ import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, isAdminOverrideActive, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { polishMenuCategories, polishTitle, polishWebsiteField, polishWebsiteUpdates } from "@/lib/copyPolish"
@@ -141,6 +142,11 @@ export async function updateSiteField(field: string, value: unknown) {
   revalidatePath(`/${ctx.company.slug}/about`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath(`/${ctx.company.slug}/contact`)
+  await recordCustomerActivity({
+    eventType: "site_field_updated",
+    pathname: "/dashboard/site",
+    metadata: { field },
+  })
   return { success: true }
 }
 
@@ -244,6 +250,11 @@ Return ONLY valid JSON: {"tagline": "3-6 word memorable tagline", "cta_headline"
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: "site_section_regenerated",
+    pathname: "/dashboard/site",
+    metadata: { section, used_fallback: usedFallback },
+  })
   return { success: true, updates, usedFallback }
 }
 
@@ -363,6 +374,11 @@ export async function assignPhotoToSection(photoId: string, section: string | nu
   revalidatePath(`/${ctx.company.slug}/contact`)
   revalidatePath("/dashboard/site")
   revalidatePath("/")
+  await recordCustomerActivity({
+    eventType: isRemoving ? "site_photo_removed" : "site_photo_assigned",
+    pathname: "/dashboard/site",
+    metadata: { photo_id: photoId, section },
+  })
   return { success: true }
 }
 
@@ -393,6 +409,10 @@ export async function clearHeroPhoto() {
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
   revalidatePath("/")
+  await recordCustomerActivity({
+    eventType: "site_hero_cleared",
+    pathname: "/dashboard/site",
+  })
   return { success: true }
 }
 
@@ -410,6 +430,11 @@ export async function updateMenuItems(categories: MenuCategory[]) {
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}`)
+  await recordCustomerActivity({
+    eventType: "menu_items_updated",
+    pathname: "/dashboard/menu",
+    metadata: { category_count: categories.length },
+  })
   return { success: true }
 }
 
@@ -436,6 +461,10 @@ export async function uploadMenuItemPhoto(formData: FormData): Promise<{ url: st
 
   revalidatePath(`/${ctx.company.slug}/menu`)
   revalidatePath(`/${ctx.company.slug}/shop`)
+  await recordCustomerActivity({
+    eventType: "menu_item_photo_uploaded",
+    pathname: "/dashboard/menu",
+  })
   return { url: publicUrl }
 }
 
@@ -943,6 +972,11 @@ export async function toggleGalleryPhoto(photoId: string, include: boolean) {
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: include ? "gallery_photo_added" : "gallery_photo_removed",
+    pathname: "/dashboard/photos",
+    metadata: { photo_id: photoId },
+  })
   return { success: true }
 }
 
@@ -1018,6 +1052,10 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: "company_logo_updated",
+    pathname: "/dashboard/site",
+  })
   return { url: logoUrl, whiteUrl: darkBackgroundLogoUrl }
 }
 
@@ -1108,6 +1146,11 @@ export async function updateCompanyField(field: string, value: string) {
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/contact`)
+  await recordCustomerActivity({
+    eventType: "business_info_updated",
+    pathname: "/dashboard/business-info",
+    metadata: { field },
+  })
   return { success: true }
 }
 
@@ -1128,6 +1171,11 @@ export async function updateAddressVisibility(visible: boolean) {
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/contact`)
+  await recordCustomerActivity({
+    eventType: "address_visibility_updated",
+    pathname: "/dashboard/business-info",
+    metadata: { visible },
+  })
   return { success: true }
 }
 
@@ -1146,6 +1194,11 @@ export async function updatePrimaryActionOverride(key: string | null) {
   if (error) return { error: error.message }
 
   revalidatePath(`/${ctx.company.slug}`)
+  await recordCustomerActivity({
+    eventType: "primary_action_updated",
+    pathname: "/dashboard/site",
+    metadata: { key },
+  })
   return { success: true }
 }
 
@@ -1167,6 +1220,11 @@ export async function updateBookingCtaLabel(label: string | null) {
 
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/book`)
+  await recordCustomerActivity({
+    eventType: "booking_cta_updated",
+    pathname: "/dashboard/site",
+    metadata: { has_custom_label: !!trimmed },
+  })
   return { success: true }
 }
 
@@ -1195,6 +1253,11 @@ export async function updateLayoutOverride(key: string | null) {
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: "site_layout_updated",
+    pathname: "/dashboard/site",
+    metadata: { key },
+  })
   return { success: true }
 }
 
@@ -1224,6 +1287,11 @@ export async function updatePrimaryColor(hex: string): Promise<{ error: string }
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: "site_color_updated",
+    pathname: "/dashboard/site",
+    metadata: { hex },
+  })
   return { success: true }
 }
 
@@ -1247,6 +1315,11 @@ export async function updateNavbarDark(dark: boolean) {
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath("/dashboard/site")
+  await recordCustomerActivity({
+    eventType: "navbar_style_updated",
+    pathname: "/dashboard/site",
+    metadata: { dark },
+  })
   return { success: true }
 }
 

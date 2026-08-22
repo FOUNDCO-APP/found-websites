@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -79,6 +80,11 @@ export async function POST(req: NextRequest) {
     email: recipientEmail,
     subject,
     status: "sent",
+  })
+  await recordCustomerActivity({
+    eventType: "lead_email_sent",
+    pathname: "/dashboard/leads",
+    metadata: { recipient_email: recipientEmail, subject },
   })
 
   return NextResponse.json({ success: true })

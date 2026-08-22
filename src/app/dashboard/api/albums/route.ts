@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -139,6 +140,11 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "photo_album_created",
+    pathname: "/dashboard/photos",
+    metadata: { album_id: data?.id, album_type: data?.album_type },
+  })
   return NextResponse.json({ album: data })
 }
 
@@ -181,6 +187,11 @@ export async function PATCH(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "photo_album_updated",
+    pathname: "/dashboard/photos",
+    metadata: { album_id: data?.id },
+  })
   return NextResponse.json({ album: data })
 }
 
@@ -197,5 +208,10 @@ export async function DELETE(req: Request) {
   const admin = createAdminClient()
   await admin.from("photo_albums").delete().eq("id", id).eq("company_id", company.id)
 
+  await recordCustomerActivity({
+    eventType: "photo_album_deleted",
+    pathname: "/dashboard/photos",
+    metadata: { album_id: id },
+  })
   return NextResponse.json({ success: true })
 }

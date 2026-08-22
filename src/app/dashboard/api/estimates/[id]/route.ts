@@ -1,4 +1,5 @@
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { NextResponse } from "next/server"
 
 type Params = { params: Promise<{ id: string }> }
@@ -89,6 +90,11 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const { data, error } = await admin.from("estimates").update(updates).eq("id", id).eq("company_id", company.id).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "estimate_updated",
+    pathname: "/dashboard/estimates",
+    metadata: { estimate_id: id, status: data.status, line_items_updated: line_items !== undefined },
+  })
   return NextResponse.json({ estimate: data })
 }
 
@@ -98,5 +104,10 @@ export async function DELETE(req: Request, { params }: Params) {
   if (!guard.ok) return guard.response
   const { admin, company } = guard
   await admin.from("estimates").delete().eq("id", id).eq("company_id", company.id)
+  await recordCustomerActivity({
+    eventType: "estimate_deleted",
+    pathname: "/dashboard/estimates",
+    metadata: { estimate_id: id },
+  })
   return NextResponse.json({ success: true })
 }

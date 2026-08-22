@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 function clean(v: unknown, max = 200): string {
@@ -56,6 +57,11 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "location_created",
+    pathname: "/dashboard/locations",
+    metadata: { location_id: data.id },
+  })
   return NextResponse.json({ location: data })
 }
 
@@ -85,6 +91,11 @@ export async function PATCH(req: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "location_updated",
+    pathname: "/dashboard/locations",
+    metadata: { location_id: data.id },
+  })
   return NextResponse.json({ location: data })
 }
 
@@ -101,5 +112,10 @@ export async function DELETE(req: NextRequest) {
 
   const admin = createAdminClient()
   await admin.from("company_locations").delete().eq("id", id).eq("company_id", company.id)
+  await recordCustomerActivity({
+    eventType: "location_deleted",
+    pathname: "/dashboard/locations",
+    metadata: { location_id: id },
+  })
   return NextResponse.json({ ok: true })
 }

@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -142,6 +143,11 @@ export async function POST(req: Request) {
 
   const result = await draftsForCompany(company.id)
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: "social_drafts_generated",
+    pathname: "/dashboard/marketing",
+    metadata: { requested_photo_count: requestedPhotoIds.length, draft_count: rows.length },
+  })
   return NextResponse.json({ drafts: result.drafts, tableReady: true })
 }
 
@@ -169,5 +175,10 @@ export async function PATCH(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await recordCustomerActivity({
+    eventType: status === "downloaded" ? "social_post_downloaded" : status === "shared" ? "social_post_shared" : "social_draft_updated",
+    pathname: "/dashboard/marketing",
+    metadata: { draft_id: data.id, status: data.status, format: data.format },
+  })
   return NextResponse.json({ draft: data })
 }

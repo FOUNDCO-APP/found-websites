@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 
 function wrapEmail(body: string, companyName: string, unsubUrl: string): string {
   const htmlBody = body
@@ -129,6 +130,11 @@ export async function POST(req: NextRequest) {
         .eq("id", campaign.id)
     }
 
+    await recordCustomerActivity({
+      eventType: "marketing_campaign_sent",
+      pathname: "/dashboard/marketing",
+      metadata: { campaign_id: campaign?.id ?? null, template_slug: templateSlug, filter, sent, failed },
+    })
     return NextResponse.json({ success: true, sent, failed })
   } catch (err) {
     console.error("[marketing/send] error:", err)

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
@@ -131,6 +132,11 @@ export async function POST(
       updated_at: now,
     }).eq("id", id)
 
+    await recordCustomerActivity({
+      eventType: "estimate_payment_link_sent",
+      pathname: "/dashboard/estimates",
+      metadata: { estimate_id: id, method: "payment_link" },
+    })
     return NextResponse.json({ success: true, method: "payment_link" })
   }
 
@@ -213,6 +219,11 @@ export async function POST(
       updated_at: now,
     }).eq("id", id)
 
+    await recordCustomerActivity({
+      eventType: "estimate_sent",
+      pathname: "/dashboard/estimates",
+      metadata: { estimate_id: id, method: "email" },
+    })
     return NextResponse.json({ success: true, method: "email" })
   }
 
@@ -223,5 +234,10 @@ export async function POST(
     updated_at: now,
   }).eq("id", id)
 
+  await recordCustomerActivity({
+    eventType: "estimate_sent",
+    pathname: "/dashboard/estimates",
+    metadata: { estimate_id: id, method },
+  })
   return NextResponse.json({ success: true, method })
 }
