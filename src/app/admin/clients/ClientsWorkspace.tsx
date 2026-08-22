@@ -45,7 +45,7 @@ function statusLabel(row: ClientRow) {
 
 function formatDate(value: string | null) {
   if (!value) return "No activity yet"
-  return value
+  return value.length > 72 ? `${value.slice(0, 72).trim()}...` : value
 }
 
 function ClientItem({ row }: { row: ClientRow }) {
