@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { recordCustomerActivity } from "@/lib/customerActivity"
 import { ALL_ADDONS } from "@/lib/featureAccess"
 import { recordBillingPlanEvent } from "@/lib/billingPlanEvents"
 
@@ -143,6 +144,11 @@ export async function purchaseAddon(companyId: string, addonSlug: string): Promi
 
   try {
     await markAddonActive(admin, companyId, addonSlug, itemId)
+    await recordCustomerActivity({
+      eventType: existingItem ? "addon_reactivated" : "addon_purchased",
+      pathname: "/dashboard/more",
+      metadata: { addon_slug: addonSlug, stripe_subscription_item_id: itemId },
+    })
     return { success: true }
   } catch (err) {
     return { success: false, error: String(err) }
@@ -162,6 +168,11 @@ export async function switchIncludedAddon(companyId: string, addonSlug: string |
   const { error } = await admin.from("companies").update({ included_addon_slug: addonSlug }).eq("id", companyId)
   if (error) return { success: false, error: error.message }
   if (addonSlug === "reservation_calendar") await ensureDefaultAvailability(companyId)
+  await recordCustomerActivity({
+    eventType: "included_addon_switched",
+    pathname: "/dashboard/more",
+    metadata: { addon_slug: addonSlug },
+  })
   return { success: true }
 }
 
@@ -192,6 +203,11 @@ export async function toggleAddonVisibility(companyId: string, addonSlug: string
 
   const { error } = await admin.from("companies").update({ disabled_addons: Array.from(current) }).eq("id", companyId)
   if (error) return { success: false, error: error.message }
+  await recordCustomerActivity({
+    eventType: hide ? "addon_hidden_from_site" : "addon_shown_on_site",
+    pathname: "/dashboard/more",
+    metadata: { addon_slug: addonSlug },
+  })
   return { success: true }
 }
 
@@ -240,6 +256,11 @@ export async function startAddonCheckout(formData: FormData) {
 
   if (existingItem) {
     await markAddonActive(admin, companyId, addonSlug, existingItem.id)
+    await recordCustomerActivity({
+      eventType: "addon_reactivated",
+      pathname: "/dashboard/more",
+      metadata: { addon_slug: addonSlug, stripe_subscription_item_id: existingItem.id },
+    })
     redirect(`/billing?addon_added=${addonSlug}`)
   }
 
@@ -263,6 +284,11 @@ export async function startAddonCheckout(formData: FormData) {
   if (stripeError || !addedItemId) redirect("/billing?addon_unavailable=1")
 
   await markAddonActive(admin, companyId, addonSlug, addedItemId!)
+  await recordCustomerActivity({
+    eventType: "addon_purchased",
+    pathname: "/dashboard/more",
+    metadata: { addon_slug: addonSlug, stripe_subscription_item_id: addedItemId },
+  })
   redirect(`/billing?addon_added=${addonSlug}`)
 }
 function getStripe() {
@@ -478,6 +504,7 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
     const paymentIntent: Stripe.PaymentIntent | null = invoiceWithPaymentIntent && typeof invoiceWithPaymentIntent.payment_intent !== "string" ? invoiceWithPaymentIntent.payment_intent ?? null : null
 
     const subscriptionWithPeriod = subscription as Stripe.Subscription & { current_period_end?: number }
+    const effectiveAt = new Date(((subscriptionWithPeriod.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000)).toISOString()
     await recordBillingPlanEvent(ctx.admin, {
       company_id: ctx.company.id,
       event_type: "customer_plan_change_requested",
@@ -493,11 +520,14 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
       stripe_price_id: ctx.priceId,
       amount_cents: ctx.price.unit_amount ?? null,
       currency: ctx.price.currency ?? "usd",
-      effective_at: new Date(((subscriptionWithPeriod.current_period_end ?? Math.floor(Date.now() / 1000)) * 1000)).toISOString(),
+      effective_at: effectiveAt,
       note: `Customer requested plan change from ${ctx.company.plan ?? "unknown"} to ${targetPlan}. Stripe webhook remains source of truth for final sync.`,
       metadata: {
         promotion_code: promo.promoCode ?? null,
         discount_label: promo.discountLabel ?? null,
+        proration_behavior: updateParams.proration_behavior,
+        stripe_subscription_status: subscription.status,
+        current_period_end: effectiveAt,
       },
     })
 
@@ -505,6 +535,31 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
       return { ok: false, requiresAction: true, hostedInvoiceUrl: latestInvoice?.hosted_invoice_url ?? null, error: "Stripe needs one more payment step." }
     }
 
+    const companyUpdate: Record<string, string> = {
+      plan: targetPlan,
+      subscription_status: subscription.status,
+    }
+    if (subscription.status === "active" || subscription.status === "trialing") {
+      companyUpdate.client_state = "active"
+    }
+    const { error: companyUpdateError } = await ctx.admin
+      .from("companies")
+      .update(companyUpdate)
+      .eq("id", ctx.company.id)
+    if (companyUpdateError) {
+      console.error("[more] immediate plan sync failed:", companyUpdateError.message)
+    }
+
+    await recordCustomerActivity({
+      eventType: "plan_upgrade_confirmed",
+      pathname: "/dashboard/billing",
+      metadata: {
+        old_plan: ctx.company.plan ?? null,
+        new_plan: targetPlan,
+        stripe_subscription_status: subscription.status,
+        promotion_code: promo.promoCode ?? null,
+      },
+    })
     return { ok: true }
   } catch (err) {
     console.error("[more] custom plan upgrade error:", err)
@@ -533,6 +588,10 @@ export async function openBillingPortal(formData: FormData) {
     return_url: `${APP_BASE}/billing`,
   })
 
+  await recordCustomerActivity({
+    eventType: "billing_portal_opened",
+    pathname: "/dashboard/billing",
+  })
   redirect(session.url)
 }
 
@@ -599,6 +658,11 @@ export async function startUpgradeCheckout(formData: FormData) {
       }
 
       if (!sessionUrl) redirect("/billing?billing_update=1")
+      await recordCustomerActivity({
+        eventType: "plan_upgrade_started",
+        pathname: "/dashboard/billing",
+        metadata: { target_plan: targetPlan },
+      })
       redirect(sessionUrl)
     }
   }
