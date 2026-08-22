@@ -1,6 +1,6 @@
 import { getAdminClient } from "../lib"
 import { planLabel } from "../client-utils"
-import GrowthWorkspace, { type Prospect, type Cohort } from "./GrowthWorkspace"
+import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount } from "./GrowthWorkspace"
 
 export const metadata = { title: "Growth - Found HQ" }
 
@@ -17,7 +17,7 @@ export default async function GrowthPage() {
   const windowStart = new Date(Date.now() - COHORT_WINDOW_DAYS * 86400000).toISOString()
 
   const [{ data: companies }, { data: prospectData }] = await Promise.all([
-    admin.from("companies").select("id, name, slug, email, plan, industry_category, created_at").eq("account_kind", "client"),
+    admin.from("companies").select("id, name, slug, email, plan, subscription_status, client_state, industry_category, created_at").eq("account_kind", "client"),
     admin.from("sales_prospects")
       .select("id, person_name, business_name, email, phone, source, stage, notes, created_at, linked_company_id")
       .order("created_at", { ascending: false }),
@@ -48,6 +48,13 @@ export default async function GrowthPage() {
   const recentSignupCount = (companies ?? []).filter((c) => c.created_at >= windowStart).length
   const prospects = (prospectData ?? []) as Prospect[]
   const openLeads = prospects.filter((p) => p.stage !== "won" && p.stage !== "lost")
+  const accounts: GrowthAccount[] = (companies ?? []).map((company) => ({
+    id: company.id,
+    plan: company.plan,
+    subscription_status: company.subscription_status,
+    client_state: company.client_state ?? "onboarding",
+    created_at: company.created_at,
+  }))
 
   return (
     <div className="hq-page">
@@ -55,7 +62,7 @@ export default async function GrowthPage() {
         <div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Growth</h1><p className="hq-subtitle">Who to reach out to next, and the leads you're tracking by hand.</p></div>
         <span className="hq-count">{openLeads.length} leads</span>
       </header>
-      <GrowthWorkspace cohorts={cohorts} prospects={openLeads} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
+      <GrowthWorkspace accounts={accounts} cohorts={cohorts} prospects={openLeads} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
     </div>
   )
 }

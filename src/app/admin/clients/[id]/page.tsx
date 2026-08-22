@@ -16,11 +16,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         id, name, slug, contact_name, email, phone, address, city, state, zip, address_visible,
         plan, subscription_status, client_state, account_kind, comp_reason, is_comp,
         trial_ends_at, billing_cycle_day, deferred_payment_amount, deferred_payment_method, deferred_payment_note,
-        industry_category, is_test, included_addon_slug, disabled_addons, stripe_connect_account_id, created_at
+        industry_category, is_test, included_addon_slug, disabled_addons, stripe_customer_id, stripe_connect_account_id, created_at
       `)
       .eq("id", id)
       .maybeSingle(),
-    admin.from("client_activities").select("summary, activity_type, created_at").eq("company_id", id).order("created_at", { ascending: false }).limit(30),
+    admin.from("client_activities").select("summary, activity_type, metadata, created_at").eq("company_id", id).order("created_at", { ascending: false }).limit(30),
     admin.from("email_log").select("subject, email_type, recipient_email, success, created_at").eq("company_id", id).order("created_at", { ascending: false }).limit(15),
   ])
 

@@ -35,9 +35,10 @@ export type ClientDetail = {
   is_test: boolean | null
   included_addon_slug: string | null
   disabled_addons: string[] | null
+  stripe_customer_id: string | null
   stripe_connect_account_id: string | null
   created_at: string
-  activities: { summary: string; activity_type: string; created_at: string }[]
+  activities: { summary: string; activity_type: string; metadata?: Record<string, unknown> | null; created_at: string }[]
   emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string }[]
 }
 
@@ -80,6 +81,15 @@ function formatShortDate(value: string) {
   return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
 }
 
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  })
+}
+
 function stateTone(state: string) {
   if (state === "active" || state === "comp") return "success"
   if (state === "past_due" || state === "cancelled") return "warning"
@@ -119,8 +129,11 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const billingAnchorLabel = client.billing_cycle_day
     ? `${client.billing_cycle_day}${ordinalSuffix(client.billing_cycle_day)} of every month`
     : "Not anchored"
+  const stripeStatus = client.subscription_status ?? "not connected"
   const billingStatusLabel = isActiveSubscription
-    ? `Active in Stripe (${client.subscription_status})`
+    ? client.subscription_status === "trialing" && cardDueLabel
+      ? `Active in Stripe - trial until ${cardDueLabel}`
+      : `Active in Stripe - ${stripeStatus}`
     : client.is_comp
       ? "Permanent comp - no card needed"
       : cardDueLabel
@@ -129,6 +142,17 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const collectedLabel = client.deferred_payment_amount != null
     ? `$${Number(client.deferred_payment_amount).toFixed(2)}${client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}${client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}`
     : "Nothing recorded"
+  const lastBillingActivity = client.activities.find((activity) =>
+    activity.activity_type === "billing" || activity.summary.toLowerCase().includes("billing"),
+  )
+  const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
+  const nextAction = client.client_state === "past_due"
+    ? "Fix payment risk"
+    : !isActiveSubscription && !client.is_comp
+      ? "Get card on file"
+      : client.client_state === "onboarding"
+        ? "Finish launch"
+        : "Keep relationship warm"
 
   function handleTestToggle() {
     const next = !isTest
@@ -169,51 +193,21 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
       </div>
 
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Contact & address</h2></div>
-        <div className="hq-panel" style={{ padding: 16 }}>
-          {editingContact ? (
-            <form
-              action={async (formData) => { await updateClientContactName(formData); setEditingContact(false) }}
-              className="hq-inline-form"
-            >
-              <input type="hidden" name="id" value={client.id} />
-              <label className="hq-form-grow">Contact name<input name="contactName" defaultValue={client.contact_name ?? ""} placeholder="First and last name" autoFocus /></label>
-              <button className="hq-button hq-button-primary" type="submit">Save</button>
-              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingContact(false)}>Cancel</button>
-            </form>
-          ) : (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p className="hq-row-title">{client.contact_name || "No contact name on file"}</p>
-              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingContact(true)}>Edit</button>
-            </div>
-          )}
-          <p className="hq-row-meta" style={{ marginTop: 10 }}>{client.email ?? "No email"}{client.phone ? ` / ${client.phone}` : ""}</p>
+        <div className="hq-section-head"><h2 className="hq-section-title">Status</h2></div>
+        <div className="hq-detail-snapshot">
+          <div><span>State</span><strong>{client.client_state.replace("_", " ")}</strong></div>
+          <div><span>Plan</span><strong>{plan.name}</strong></div>
+          <div><span>Billing</span><strong>{billingStatusLabel}</strong></div>
+        </div>
+      </section>
 
-          {editingAddress ? (
-            <form
-              action={async (formData) => { await updateClientAddress(formData); setEditingAddress(false) }}
-              className="hq-create-form"
-              style={{ marginTop: 10 }}
-            >
-              <input type="hidden" name="id" value={client.id} />
-              <label className="hq-form-wide">Street address<input name="address" defaultValue={client.address ?? ""} placeholder="e.g. 428 N. Fremont Ave" autoFocus /></label>
-              <label>City<input name="city" defaultValue={client.city ?? ""} /></label>
-              <label>State<input name="state" defaultValue={client.state ?? ""} maxLength={2} placeholder="AZ" /></label>
-              <label>ZIP<input name="zip" defaultValue={client.zip ?? ""} /></label>
-              <div className="hq-form-wide" style={{ display: "flex", gap: 8 }}>
-                <button className="hq-button hq-button-primary" type="submit">Save</button>
-                <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(false)}>Cancel</button>
-              </div>
-            </form>
-          ) : (
-            <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <p className="hq-row-meta">
-                {addressLine || "No address on file"}
-                {client.address && !client.address_visible ? " (hidden from public site)" : ""}
-              </p>
-              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(true)}>Edit</button>
-            </div>
-          )}
+      <section className="hq-section">
+        <div className="hq-section-head"><h2 className="hq-section-title">Next action</h2></div>
+        <div className="hq-panel hq-next-action">
+          <div>
+            <p className="hq-row-title">{nextAction}</p>
+            <p className="hq-row-meta">{client.client_state === "past_due" ? "This account is a revenue risk." : !isActiveSubscription && !client.is_comp ? "Activation is not complete until billing is handled." : client.client_state === "onboarding" ? "Finish the setup work that blocks launch." : "No urgent risk is visible."}</p>
+          </div>
         </div>
       </section>
 
@@ -223,15 +217,16 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <p className="hq-row-title">Billing snapshot</p>
           <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
             <div>
-              <p className="hq-row-meta">Status</p>
+              <p className="hq-row-meta">Stripe status</p>
               <p className="hq-row-title">{billingStatusLabel}</p>
             </div>
             <div>
-              <p className="hq-row-meta">Plan</p>
-              <p className="hq-row-title">{plan.name} / {plan.price}</p>
+              <p className="hq-row-meta">Current plan</p>
+              <p className="hq-row-title">{plan.name}</p>
+              <p className="hq-row-meta">Expected charge: {expectedChargeLabel}</p>
             </div>
             <div>
-              <p className="hq-row-meta">Card due / billing starts</p>
+              <p className="hq-row-meta">{client.subscription_status === "trialing" ? "First automatic charge" : "Card due / billing starts"}</p>
               <p className="hq-row-title">{cardDueLabel ?? "No date set"}</p>
             </div>
             <div>
@@ -239,9 +234,21 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               <p className="hq-row-title">{billingAnchorLabel}</p>
             </div>
             <div>
+              <p className="hq-row-meta">Stripe customer</p>
+              <p className="hq-row-title">{client.stripe_customer_id ? "Connected" : "Not connected"}</p>
+              {client.stripe_customer_id && <p className="hq-row-meta">{client.stripe_customer_id}</p>}
+            </div>
+            <div>
               <p className="hq-row-meta">Already collected</p>
               <p className="hq-row-title">{collectedLabel}</p>
             </div>
+            {lastBillingActivity && (
+              <div>
+                <p className="hq-row-meta">Last billing record</p>
+                <p className="hq-row-title">{formatDateTime(lastBillingActivity.created_at)}</p>
+                <p className="hq-row-meta">{lastBillingActivity.summary}</p>
+              </div>
+            )}
           </div>
           {!isActiveSubscription && !client.is_comp && client.trial_ends_at && (
             <form action={resendCardLinkEmail} style={{ marginTop: 10 }}>
@@ -316,6 +323,55 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             </div>
           </>
         )}
+      </section>
+
+      <section className="hq-section">
+        <div className="hq-section-head"><h2 className="hq-section-title">Contact</h2></div>
+        <div className="hq-panel" style={{ padding: 16 }}>
+          {editingContact ? (
+            <form
+              action={async (formData) => { await updateClientContactName(formData); setEditingContact(false) }}
+              className="hq-inline-form"
+            >
+              <input type="hidden" name="id" value={client.id} />
+              <label className="hq-form-grow">Contact name<input name="contactName" defaultValue={client.contact_name ?? ""} placeholder="First and last name" autoFocus /></label>
+              <button className="hq-button hq-button-primary" type="submit">Save</button>
+              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingContact(false)}>Cancel</button>
+            </form>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p className="hq-row-title">{client.contact_name || "No contact name on file"}</p>
+              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingContact(true)}>Edit</button>
+            </div>
+          )}
+          <p className="hq-row-meta" style={{ marginTop: 10 }}>{client.email ?? "No email"}{client.phone ? ` / ${client.phone}` : ""}</p>
+
+          {editingAddress ? (
+            <form
+              action={async (formData) => { await updateClientAddress(formData); setEditingAddress(false) }}
+              className="hq-create-form"
+              style={{ marginTop: 10 }}
+            >
+              <input type="hidden" name="id" value={client.id} />
+              <label className="hq-form-wide">Street address<input name="address" defaultValue={client.address ?? ""} placeholder="e.g. 428 N. Fremont Ave" autoFocus /></label>
+              <label>City<input name="city" defaultValue={client.city ?? ""} /></label>
+              <label>State<input name="state" defaultValue={client.state ?? ""} maxLength={2} placeholder="AZ" /></label>
+              <label>ZIP<input name="zip" defaultValue={client.zip ?? ""} /></label>
+              <div className="hq-form-wide" style={{ display: "flex", gap: 8 }}>
+                <button className="hq-button hq-button-primary" type="submit">Save</button>
+                <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(false)}>Cancel</button>
+              </div>
+            </form>
+          ) : (
+            <div style={{ marginTop: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <p className="hq-row-meta">
+                {addressLine || "No address on file"}
+                {client.address && !client.address_visible ? " (hidden from public site)" : ""}
+              </p>
+              <button className="hq-button hq-button-secondary" type="button" onClick={() => setEditingAddress(true)}>Edit</button>
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="hq-section">

@@ -13,12 +13,23 @@ type WorkItem = {
   tone: "warning" | "info"
 }
 
+const PLAN_MRR: Record<string, number> = {
+  found: 29,
+  found_pro: 39,
+  found_business: 69,
+}
+
+function companyMrr(company: { plan: string | null; subscription_status: string | null; client_state: string | null }) {
+  const isPaying = ["active", "trialing"].includes(company.subscription_status ?? "") && company.client_state !== "comp" && company.client_state !== "cancelled"
+  return isPaying ? PLAN_MRR[company.plan ?? ""] ?? 0 : 0
+}
+
 export default async function AdminTodayPage() {
   const admin = getAdminClient()
   const now = new Date().toISOString()
   const [{ data: prospects }, { data: companies }, { data: configs }] = await Promise.all([
     admin.from("sales_prospects").select("id, person_name, business_name, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
-    admin.from("companies").select("id, name, slug, client_state, subscription_status, account_kind, created_at, logo_url, logo_white_url").eq("account_kind", "client").order("created_at", { ascending: false }),
+    admin.from("companies").select("id, name, slug, client_state, subscription_status, account_kind, plan, created_at, logo_url, logo_white_url").eq("account_kind", "client").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
@@ -56,18 +67,34 @@ export default async function AdminTodayPage() {
   const activeClients = (companies ?? []).filter((company) => ["active", "comp"].includes(company.client_state ?? "")).length
   const atRisk = (companies ?? []).filter((company) => company.client_state === "past_due").length
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
   const recentSignups = (companies ?? []).filter((company) => company.created_at >= sevenDaysAgo).slice(0, 8)
+  const monthSignups = (companies ?? []).filter((company) => company.created_at >= thirtyDaysAgo).length
+  const currentMrr = (companies ?? []).reduce((total, company) => total + companyMrr(company), 0)
+  const monthGoal = 10
+  const health = atRisk > 0 ? "Needs attention" : monthSignups >= monthGoal ? "Growing" : monthSignups >= 5 ? "Building" : "Flat"
+  const goalPercent = Math.min(100, Math.round((monthSignups / monthGoal) * 100))
   return (
     <div className="hq-page hq-page-narrow">
-      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Today</h1><p className="hq-subtitle">The work that grows or protects Found Co.</p></div></header>
+      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Today</h1><p className="hq-subtitle">What needs attention now.</p></div></header>
+      <section className="hq-command-status">
+        <div>
+          <span>Found health</span>
+          <strong>{health}</strong>
+          <p>{monthSignups} new account{monthSignups === 1 ? "" : "s"} in the last 30 days. Monthly target is {monthGoal}.</p>
+          <div className="hq-progress"><span style={{ width: `${goalPercent}%` }} /></div>
+        </div>
+        <Link href="/admin/growth">Open Growth<span className="hq-chevron" /></Link>
+      </section>
       <div className="hq-today-summary">
         <div><strong>{items.length}</strong><span>Due now</span></div>
         <Link href="/admin/growth"><strong>{(prospects ?? []).length}</strong><span>Open sales</span></Link>
         <Link href="/admin/clients?state=active"><strong>{activeClients}</strong><span>Active clients</span></Link>
         <Link href="/admin/clients?state=past_due"><strong>{atRisk}</strong><span>At risk</span></Link>
+        <div><strong>${currentMrr}</strong><span>MRR</span></div>
       </div>
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Highest priority first</span></div>
+        <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Payment, launch, and follow-up first</span></div>
         <div className="hq-panel">
           {items.map((item, index) => (
             <Link key={`${item.title}-${index}`} href={item.href} className="hq-row hq-link-row hq-action-row">

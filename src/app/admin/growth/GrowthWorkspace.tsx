@@ -22,6 +22,118 @@ export type Cohort = {
   companies: { id: string; name: string; slug: string; email: string | null }[]
 }
 
+export type GrowthAccount = {
+  id: string
+  plan: string | null
+  subscription_status: string | null
+  client_state: string
+  created_at: string
+}
+
+type GoalWindow = "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
+
+const PLAN_MRR: Record<string, number> = {
+  found: 29,
+  found_pro: 39,
+  found_business: 69,
+}
+
+const GOALS: Record<GoalWindow, { label: string; accountGoal: number; days: number; buckets: number }> = {
+  daily: { label: "Today", accountGoal: 1, days: 1, buckets: 7 },
+  weekly: { label: "This week", accountGoal: 3, days: 7, buckets: 7 },
+  monthly: { label: "This month", accountGoal: 10, days: 31, buckets: 6 },
+  quarterly: { label: "This quarter", accountGoal: 30, days: 92, buckets: 6 },
+  yearly: { label: "This year", accountGoal: 120, days: 365, buckets: 12 },
+}
+
+function isRevenueAccount(account: GrowthAccount) {
+  return ["active", "trialing"].includes(account.subscription_status ?? "") && account.client_state !== "cancelled" && account.client_state !== "comp"
+}
+
+function accountMrr(account: GrowthAccount) {
+  return PLAN_MRR[account.plan ?? ""] ?? 0
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value)
+}
+
+function daysAgo(days: number) {
+  return new Date(Date.now() - days * 86400000)
+}
+
+function periodAccounts(accounts: GrowthAccount[], days: number) {
+  const start = daysAgo(days)
+  return accounts.filter((account) => new Date(account.created_at) >= start)
+}
+
+function chartBuckets(accounts: GrowthAccount[], days: number, bucketCount: number) {
+  const bucketDays = Math.max(1, Math.ceil(days / bucketCount))
+  return Array.from({ length: bucketCount }, (_, index) => {
+    const bucketEnd = daysAgo((bucketCount - index - 1) * bucketDays)
+    const bucketStart = daysAgo((bucketCount - index) * bucketDays)
+    const count = accounts.filter((account) => {
+      const created = new Date(account.created_at)
+      return created >= bucketStart && created < bucketEnd
+    }).length
+    return { label: days <= 7 ? bucketEnd.toLocaleDateString("en-US", { weekday: "short" }) : bucketEnd.toLocaleDateString("en-US", { month: "short", day: "numeric" }), count }
+  })
+}
+
+function GoalScoreboard({ accounts }: { accounts: GrowthAccount[] }) {
+  const [window, setWindow] = useState<GoalWindow>("monthly")
+  const goal = GOALS[window]
+  const currentPeriodAccounts = periodAccounts(accounts, goal.days)
+  const activeAccounts = accounts.filter(isRevenueAccount)
+  const mrr = activeAccounts.reduce((total, account) => total + accountMrr(account), 0)
+  const newMrr = currentPeriodAccounts.reduce((total, account) => total + accountMrr(account), 0)
+  const progress = Math.min(100, Math.round((currentPeriodAccounts.length / goal.accountGoal) * 100))
+  const pace = currentPeriodAccounts.length >= goal.accountGoal ? "Growing" : currentPeriodAccounts.length >= goal.accountGoal * 0.55 ? "Building" : "Needs attention"
+  const yearlyAccounts = window === "yearly" ? currentPeriodAccounts.length : Math.round((currentPeriodAccounts.length / goal.days) * 365)
+  const bars = chartBuckets(accounts, goal.days, goal.buckets)
+  const maxBar = Math.max(1, ...bars.map((bar) => bar.count))
+
+  return (
+    <section>
+      <div className="hq-growth-hero">
+        <div>
+          <p className="hq-eyebrow">Growth scorecard</p>
+          <h2>{pace}</h2>
+          <p>{currentPeriodAccounts.length} new account{currentPeriodAccounts.length === 1 ? "" : "s"} against a {goal.accountGoal} account goal.</p>
+        </div>
+        <div className="hq-period-control" aria-label="Goal window">
+          {(Object.keys(GOALS) as GoalWindow[]).map((key) => (
+            <button key={key} type="button" data-active={window === key} onClick={() => setWindow(key)}>
+              {GOALS[key].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="hq-goal-grid">
+        <div className="hq-goal-primary">
+          <span>{goal.label}</span>
+          <strong>{currentPeriodAccounts.length} / {goal.accountGoal}</strong>
+          <div className="hq-progress"><span style={{ width: `${progress}%` }} /></div>
+        </div>
+        <div><span>Current MRR</span><strong>{formatMoney(mrr)}</strong></div>
+        <div><span>New MRR</span><strong>{formatMoney(newMrr)}</strong></div>
+        <div><span>Year pace</span><strong>{yearlyAccounts}</strong></div>
+      </div>
+
+      <div className="hq-chart" aria-label={`${goal.label} signup chart`}>
+        {bars.map((bar) => (
+          <div key={bar.label} className="hq-chart-bar">
+            <span style={{ height: `${Math.max(8, (bar.count / maxBar) * 100)}%` }} />
+            <strong>{bar.count}</strong>
+            <em>{bar.label}</em>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function CohortCard({ cohort }: { cohort: Cohort }) {
   const [expanded, setExpanded] = useState(false)
   const emails = cohort.companies.map((c) => c.email).filter((e): e is string => !!e)
@@ -109,7 +221,8 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
   )
 }
 
-export default function GrowthWorkspace({ cohorts, prospects, recentSignupCount, windowDays }: {
+export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSignupCount, windowDays }: {
+  accounts: GrowthAccount[]
   cohorts: Cohort[]
   prospects: Prospect[]
   recentSignupCount: number
@@ -119,6 +232,8 @@ export default function GrowthWorkspace({ cohorts, prospects, recentSignupCount,
 
   return (
     <>
+      <GoalScoreboard accounts={accounts} />
+
       <section>
         <div className="hq-section-head">
           <h2 className="hq-section-title">Upgrade opportunities</h2>

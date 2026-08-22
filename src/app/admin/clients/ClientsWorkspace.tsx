@@ -2,9 +2,6 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { setViewAsCookie } from "../businesses/actions"
-
-const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 
 export type ClientRow = {
   id: string
@@ -33,43 +30,48 @@ function planLabel(plan: string | null) {
   return "No plan"
 }
 
-async function openViewAs(companyId: string) {
-  const tab = window.open("about:blank", "_blank")
-  try {
-    const result = await setViewAsCookie(companyId)
-    if (result.success && tab) tab.location.href = `https://my.${ROOT_DOMAIN}/?admin_view=1`
-    else tab?.close()
-  } catch { tab?.close() }
-}
-
 function stateTone(state: string) {
   if (state === "active" || state === "comp") return "success"
   if (state === "past_due" || state === "cancelled") return "warning"
   return "info"
 }
 
+function statusLabel(row: ClientRow) {
+  if (row.issues.length > 0) return row.issues.join(", ")
+  if (row.client_state === "active" || row.client_state === "comp") return "Healthy"
+  if (row.client_state === "onboarding") return "Finish launch"
+  return row.client_state.replace("_", " ")
+}
+
+function formatDate(value: string | null) {
+  if (!value) return "No activity yet"
+  return value
+}
+
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
+  const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
 
   return (
-    <article className="hq-business-row">
+    <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link" data-attention={needsAttention}>
       <div className="hq-business-main">
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
-            <Link href={`/admin/clients/${row.id}`}><h2>{row.name}</h2></Link>
+            <h2>{row.name}</h2>
             <span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span>
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
-          <p>{planLabel(row.plan)} / Billing: {row.subscription_status ?? "not active"}</p>
-          {row.issues.length > 0 && <div className="hq-business-issues">{row.issues.map((issue) => <span key={issue} className="hq-badge hq-badge-warning">{issue}</span>)}</div>}
+          <div className="hq-client-scan-grid">
+            <span><strong>Plan</strong>{planLabel(row.plan)}</span>
+            <span><strong>Billing</strong>{row.subscription_status ?? "not active"}</span>
+            <span><strong>Launch risk</strong>{statusLabel(row)}</span>
+            <span><strong>Last activity</strong>{formatDate(row.last_activity)}</span>
+          </div>
         </div>
-        <div className="hq-business-actions">
-          <a className="hq-button hq-button-secondary" href={`https://${row.slug}.${ROOT_DOMAIN}`} target="_blank" rel="noopener noreferrer">Site</a>
-          <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(row.id)}>View as</button>
-        </div>
+        <span className="hq-chevron" aria-hidden="true" />
       </div>
-    </article>
+    </Link>
   )
 }
 
@@ -93,9 +95,17 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
     <>
       <div className="hq-business-toolbar">
         <input className="hq-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search clients" />
-        <div className="hq-filter-row">
-          {[["clients", "Clients"], ["attention", "Attention"], ["onboarding", "Onboarding"], ["active", "Active"], ["past_due", "Past due"], ["test", "Test"]].map(([key, label]) => <button key={key} type="button" data-active={filter === key} onClick={() => setFilter(key)}>{label}</button>)}
-        </div>
+        <label className="hq-compact-filter">
+          <span>View</span>
+          <select value={filter} onChange={(event) => setFilter(event.target.value)}>
+            <option value="clients">All clients</option>
+            <option value="attention">Needs attention</option>
+            <option value="onboarding">Onboarding</option>
+            <option value="active">Active</option>
+            <option value="past_due">Past due</option>
+            <option value="test">Test</option>
+          </select>
+        </label>
       </div>
       {query.trim() && (
         <div className="hq-filter-notice">

@@ -10,11 +10,11 @@ export default async function AdminMorePage() {
   const fallbackCount = (configs ?? []).filter((row) => row.copy_generated !== true).length
   return (
     <div className="hq-page hq-page-narrow">
-      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">More</h1><p className="hq-subtitle">Quality tools and secondary destinations.</p></div></header>
+      <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">More</h1><p className="hq-subtitle">Secondary tools.</p></div></header>
       <section>
-        <div className="hq-section-head"><h2 className="hq-section-title">Operate</h2></div>
+        <div className="hq-section-head"><h2 className="hq-section-title">Create</h2></div>
         <div className="hq-panel">
-          <Link href="/admin/new-client" className="hq-row hq-link-row"><div><p className="hq-row-title">New client</p><p className="hq-row-meta">Build a real site yourself - phone calls, migrations, deferred billing</p></div><span className="hq-chevron" /></Link>
+          <Link href="/admin/new-client" className="hq-row hq-link-row"><div><p className="hq-row-title">New client</p><p className="hq-row-meta">Build a site for a client you are onboarding manually.</p></div><span className="hq-chevron" /></Link>
         </div>
       </section>
       <section>
@@ -25,22 +25,19 @@ export default async function AdminMorePage() {
         </div>
       </section>
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Monitoring</h2></div>
+        <div className="hq-section-head"><h2 className="hq-section-title">System</h2></div>
         <div className="hq-panel">
           <Link href="/admin/health" className="hq-row hq-link-row"><div><p className="hq-row-title">Health</p><p className="hq-row-meta">Uptime status and error tracking</p></div><span className="hq-chevron" /></Link>
           <Link href="/admin/billing" className="hq-row hq-link-row"><div><p className="hq-row-title">Test billing</p><p className="hq-row-meta">Cancel Stripe subscriptions on your own test accounts</p></div><span className="hq-chevron" /></Link>
         </div>
       </section>
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Destinations</h2></div>
-        <div className="hq-panel">
-          <a href="https://my.foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Customer dashboard</p><p className="hq-row-meta">Open the business-owner product</p></div><span className="hq-chevron" /></a>
-          <a href="https://foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Found website</p><p className="hq-row-meta">Open the public marketing site</p></div><span className="hq-chevron" /></a>
-        </div>
-      </section>
-      <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Account</h2></div>
-        <div className="hq-panel"><form action={adminLogout} className="hq-row"><div><p className="hq-row-title">Sign out</p><p className="hq-row-meta">End this Found HQ session</p></div><button type="submit" className="hq-button hq-button-secondary">Sign out</button></form></div>
+        <div className="hq-panel">
+          <a href="https://my.foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Customer dashboard</p><p className="hq-row-meta">Open the business-owner product.</p></div><span className="hq-chevron" /></a>
+          <a href="https://foundco.app" target="_blank" rel="noreferrer" className="hq-row hq-link-row"><div><p className="hq-row-title">Found website</p><p className="hq-row-meta">Open the public marketing site.</p></div><span className="hq-chevron" /></a>
+          <form action={adminLogout} className="hq-row"><div><p className="hq-row-title">Sign out</p><p className="hq-row-meta">End this Found HQ session.</p></div><button type="submit" className="hq-button hq-button-secondary">Sign out</button></form>
+        </div>
       </section>
     </div>
   )
