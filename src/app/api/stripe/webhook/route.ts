@@ -21,6 +21,17 @@ const PLAN_PRICE_IDS = new Set([
   process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING,
 ].filter(Boolean) as string[])
 
+const PLAN_SLUGS = new Set(["found", "found_pro", "found_business"])
+
+function normalizePlanSlug(value: string | null | undefined): string | null {
+  if (!value) return null
+  const normalized = value.trim().toLowerCase().replace(/-/g, "_")
+  if (normalized === "starter" || normalized === "found_starter" || normalized === "found_foundation") return "found"
+  if (normalized === "pro") return "found_pro"
+  if (normalized === "business") return "found_business"
+  return PLAN_SLUGS.has(normalized) ? normalized : null
+}
+
 function planFromPriceId(priceId: string): string | null {
   const map: Record<string, string> = {
     [process.env.STRIPE_PRICE_ID_FOUND || ""]: "found",
@@ -31,6 +42,15 @@ function planFromPriceId(priceId: string): string | null {
     [process.env.STRIPE_PRICE_ID_FOUND_BUSINESS_FOUNDING || ""]: "found_business",
   }
   return map[priceId] ?? null
+}
+
+function planFromSubscriptionItem(item: Stripe.SubscriptionItem): string | null {
+  return (
+    planFromPriceId(item.price.id) ||
+    normalizePlanSlug(item.price.metadata?.plan) ||
+    normalizePlanSlug(item.price.lookup_key) ||
+    normalizePlanSlug(item.price.nickname)
+  )
 }
 
 function planMonthlyValue(plan: string | null | undefined) {
@@ -65,8 +85,8 @@ async function syncSubscriptionToSupabase(
 ) {
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
   const companyId = await companyIdForSubscription(supabase, sub, customerId)
-  const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id))
-  const plan = baseItem ? planFromPriceId(baseItem.price.id) : null
+  const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id) || Boolean(planFromSubscriptionItem(item)))
+  const plan = baseItem ? planFromSubscriptionItem(baseItem) : normalizePlanSlug(sub.metadata?.plan)
   const isActivatedStatus = sub.status === "active" || sub.status === "trialing"
 
   const update: Record<string, string> = { subscription_status: sub.status }

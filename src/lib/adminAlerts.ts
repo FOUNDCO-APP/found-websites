@@ -33,7 +33,7 @@ export async function sendNewSignupAlert(company: { id: string; name: string; sl
         <tr><td style="padding-bottom:4px;color:#B8BCB7;font-size:14px;">${planLabel} plan${location ? ` &middot; ${location}` : ""}</td></tr>
         <tr><td style="padding-bottom:24px;color:#B8BCB7;font-size:14px;">${company.slug}.${ROOT_DOMAIN}</td></tr>
         <tr><td>
-          <a href="https://admin.${ROOT_DOMAIN}/clients?q=${encodeURIComponent(company.name)}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
+          <a href="https://admin.${ROOT_DOMAIN}/clients/${company.id}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
         </td></tr>
       </table>
     </td></tr>

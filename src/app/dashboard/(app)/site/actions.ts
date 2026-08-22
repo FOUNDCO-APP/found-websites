@@ -796,7 +796,7 @@ export async function requestDomainHelp(rawDomain: string): Promise<{ success: b
         <tr><td style="padding-bottom:4px;color:#B8BCB7;font-size:14px;">Domain: ${domain}</td></tr>
         <tr><td style="padding-bottom:24px;color:#B8BCB7;font-size:14px;">Reach them: ${contactLine}</td></tr>
         <tr><td>
-          <a href="https://admin.foundco.app/clients?q=${encodeURIComponent(ctx.company.name)}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
+          <a href="https://admin.foundco.app/clients/${ctx.company.id}" style="display:inline-block;border-radius:4px;padding:12px 20px;background:${GREEN};color:${BLACK};text-decoration:none;font-size:13px;font-weight:800;">View in Found HQ</a>
         </td></tr>
       </table>
     </td></tr>

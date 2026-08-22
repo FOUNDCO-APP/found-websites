@@ -97,6 +97,14 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
           {[["clients", "Clients"], ["attention", "Attention"], ["onboarding", "Onboarding"], ["active", "Active"], ["past_due", "Past due"], ["test", "Test"]].map(([key, label]) => <button key={key} type="button" data-active={filter === key} onClick={() => setFilter(key)}>{label}</button>)}
         </div>
       </div>
+      {query.trim() && (
+        <div className="hq-filter-notice">
+          <span>
+            Showing {filtered.length} result{filtered.length === 1 ? "" : "s"} for <strong>{query}</strong>. Clear search to see all clients.
+          </span>
+          <button type="button" onClick={() => setQuery("")}>Clear search</button>
+        </div>
+      )}
       <div className="hq-business-list">
         {filtered.map((row) => <ClientItem key={row.id} row={row} />)}
         {!filtered.length && <div className="hq-business-empty">No clients in this view.</div>}

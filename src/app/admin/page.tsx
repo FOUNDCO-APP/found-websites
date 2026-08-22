@@ -47,7 +47,7 @@ export default async function AdminTodayPage() {
       title: company.name,
       detail: paymentProblem ? "Payment needs attention" : "Setup is blocking a complete launch",
       timing: paymentProblem ? "Client risk" : "Onboarding",
-      href: `/admin/clients?q=${encodeURIComponent(company.name)}`,
+      href: `/admin/clients/${company.id}`,
       action: "Resolve",
       tone: paymentProblem ? "warning" : "info",
     })
@@ -82,7 +82,7 @@ export default async function AdminTodayPage() {
         <div className="hq-section-head"><h2 className="hq-section-title">Recent signups</h2><span className="hq-section-meta">Last 7 days</span></div>
         <div className="hq-panel">
           {recentSignups.map((company) => (
-            <Link key={company.id} href={`/admin/clients?q=${encodeURIComponent(company.name)}`} className="hq-row hq-link-row">
+            <Link key={company.id} href={`/admin/clients/${company.id}`} className="hq-row hq-link-row">
               <div><p className="hq-row-title">{company.name}</p><p className="hq-row-meta">{timeAgo(company.created_at)}</p></div>
               <span className="hq-chevron" />
             </Link>

@@ -42,7 +42,7 @@ function CohortCard({ cohort }: { cohort: Cohort }) {
           {cohort.companies.map((c) => (
             <div key={c.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px solid var(--hq-border)" }}>
               <span className="hq-row-title" style={{ fontSize: 13 }}>{c.name}</span>
-              <a href={`/admin/clients?q=${encodeURIComponent(c.name)}`} style={{ color: "var(--hq-green)", fontSize: 11, fontWeight: 750, textDecoration: "none" }}>View</a>
+              <a href={`/admin/clients/${c.id}`} style={{ color: "var(--hq-green)", fontSize: 11, fontWeight: 750, textDecoration: "none" }}>View</a>
             </div>
           ))}
         </div>
@@ -102,7 +102,7 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
       )}
       {converted && (
         <div className="hq-business-manage-body" style={{ paddingTop: 0 }}>
-          <a href={`/admin/clients?q=${encodeURIComponent(prospect.business_name)}`} style={{ color: "var(--hq-green)", fontSize: 12, fontWeight: 750, textDecoration: "none" }}>View client record</a>
+          <a href={prospect.linked_company_id ? `/admin/clients/${prospect.linked_company_id}` : `/admin/clients?q=${encodeURIComponent(prospect.business_name)}`} style={{ color: "var(--hq-green)", fontSize: 12, fontWeight: 750, textDecoration: "none" }}>View client record</a>
         </div>
       )}
     </article>
