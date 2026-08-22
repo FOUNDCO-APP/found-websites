@@ -16,6 +16,14 @@ export type ClientRow = {
   comp_reason: string | null
   created_at: string
   last_activity: string | null
+  last_customer_activity_at: string | null
+  last_customer_surface: string | null
+  customer_activity_count_90d: number
+  customer_activity_status: {
+    label: string
+    level: "using" | "quiet" | "outreach" | "stagnant"
+    days: number | null
+  }
   industry_category: string | null
   is_test: boolean | null
   included_addon_slug: string | null
@@ -43,6 +51,17 @@ function statusLabel(row: ClientRow) {
   return row.client_state.replace("_", " ")
 }
 
+function activityTone(level: ClientRow["customer_activity_status"]["level"]) {
+  if (level === "using") return "success"
+  if (level === "quiet") return "info"
+  return "warning"
+}
+
+function surfaceLabel(surface: string | null) {
+  if (!surface) return "No tracked page"
+  return surface.replace(/_/g, " ")
+}
+
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
@@ -50,6 +69,7 @@ function ClientItem({ row }: { row: ClientRow }) {
     { label: planLabel(row.plan) },
     { label: row.subscription_status ?? "not active" },
     { label: statusLabel(row), tone: needsAttention ? "warning" : undefined },
+    { label: row.customer_activity_status.label, tone: activityTone(row.customer_activity_status.level) },
   ]
 
   return (
@@ -64,11 +84,15 @@ function ClientItem({ row }: { row: ClientRow }) {
           </div>
           <p className="hq-client-summary">
             {summary.map((item, index) => (
-              <span key={`${item.label}-${index}`} className={item.tone === "warning" ? "hq-client-fact-warning" : item.tone === "success" ? "hq-client-fact-success" : undefined}>
+              <span key={`${item.label}-${index}`} className={item.tone === "warning" ? "hq-client-fact-warning" : item.tone === "success" ? "hq-client-fact-success" : item.tone === "info" ? "hq-client-fact-info" : undefined}>
                 {index > 0 && <i aria-hidden="true" />}
                 {item.label}
               </span>
             ))}
+          </p>
+          <p className="hq-client-activity">
+            {surfaceLabel(row.last_customer_surface)}
+            {row.customer_activity_count_90d > 0 ? ` - ${row.customer_activity_count_90d} client action${row.customer_activity_count_90d === 1 ? "" : "s"} in 90d` : " - waiting for first client action"}
           </p>
         </div>
       </div>
@@ -89,7 +113,9 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
     // caught: throwaway accounts reading as if they were real business risk).
     if (row.account_kind !== "client") return false
     if (filter === "clients") return true
-    if (filter === "attention") return row.issues.length > 0 || row.client_state === "past_due"
+    if (filter === "attention") return row.issues.length > 0 || row.client_state === "past_due" || row.customer_activity_status.level === "outreach" || row.customer_activity_status.level === "stagnant"
+    if (filter === "quiet") return row.customer_activity_status.level === "quiet"
+    if (filter === "stagnant") return row.customer_activity_status.level === "outreach" || row.customer_activity_status.level === "stagnant"
     return row.client_state === filter
   }), [rows, query, filter])
   return (
@@ -100,7 +126,9 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
           <span>View</span>
           <select value={filter} onChange={(event) => setFilter(event.target.value)}>
             <option value="clients">All clients</option>
-            <option value="attention">Needs attention</option>
+            <option value="attention">Needs outreach</option>
+            <option value="quiet">Quiet 8-14 days</option>
+            <option value="stagnant">Stagnant 15+ days</option>
             <option value="onboarding">Onboarding</option>
             <option value="active">Active</option>
             <option value="past_due">Past due</option>

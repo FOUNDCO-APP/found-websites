@@ -27,12 +27,20 @@ function companyMrr(company: { plan: string | null; subscription_status: string 
 export default async function AdminTodayPage() {
   const admin = getAdminClient()
   const now = new Date().toISOString()
-  const [{ data: prospects }, { data: companies }, { data: configs }] = await Promise.all([
+  const activitySince = new Date(Date.now() - 90 * 86400000).toISOString()
+  const [{ data: prospects }, { data: companies }, { data: configs }, customerActivityResult] = await Promise.all([
     admin.from("sales_prospects").select("id, person_name, business_name, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
     admin.from("companies").select("id, name, slug, client_state, subscription_status, account_kind, plan, created_at, logo_url, logo_white_url").eq("account_kind", "client").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
+    admin.from("customer_activity_events").select("company_id, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
+  const latestCustomerActivity = new Map<string, string>()
+  if (!customerActivityResult.error) {
+    for (const activity of customerActivityResult.data ?? []) {
+      if (!latestCustomerActivity.has(activity.company_id)) latestCustomerActivity.set(activity.company_id, activity.created_at)
+    }
+  }
   const items: WorkItem[] = []
   for (const prospect of prospects ?? []) {
     const overdue = prospect.next_follow_up_at && prospect.next_follow_up_at < now
@@ -62,6 +70,24 @@ export default async function AdminTodayPage() {
       action: "Resolve",
       tone: paymentProblem ? "warning" : "info",
     })
+  }
+  if (!customerActivityResult.error) {
+    for (const company of companies ?? []) {
+      if (!["active", "comp", "onboarding"].includes(company.client_state ?? "")) continue
+      const lastCustomerUse = latestCustomerActivity.get(company.id)
+      const inactiveDays = lastCustomerUse ? Math.floor((Date.now() - new Date(lastCustomerUse).getTime()) / 86400000) : null
+      const trialing = company.subscription_status === "trialing"
+      if (inactiveDays !== null && inactiveDays < 15 && !(trialing && inactiveDays >= 7)) continue
+      items.push({
+        priority: trialing ? 6 : 7,
+        title: company.name,
+        detail: lastCustomerUse ? "Client-side activity is slowing down" : "No tracked client-side activity yet",
+        timing: lastCustomerUse ? `${inactiveDays}d quiet` : "No use",
+        href: `/admin/clients?state=${lastCustomerUse ? "stagnant" : "attention"}`,
+        action: "Reach out",
+        tone: trialing || !lastCustomerUse ? "warning" : "info",
+      })
+    }
   }
   items.sort((a, b) => a.priority - b.priority)
   const activeClients = (companies ?? []).filter((company) => ["active", "comp"].includes(company.client_state ?? "")).length

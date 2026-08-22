@@ -4,21 +4,47 @@ import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
 export const metadata = { title: "Clients - Found HQ" }
 
 const PAYMENT_RELEVANT_INTENTS = new Set(["estimates", "bookings", "appointments", "reservations", "orders"])
+const ACTIVITY_LOOKBACK_DAYS = 90
+
+type CustomerActivityRow = {
+  company_id: string
+  surface: string
+  feature: string | null
+  created_at: string
+}
+
+function clientActivityStatus(lastActivityAt: string | null) {
+  if (!lastActivityAt) return { label: "No client use yet", level: "stagnant" as const, days: null }
+  const days = Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86400000)
+  if (days <= 7) return { label: days === 0 ? "Used today" : `Used ${days}d ago`, level: "using" as const, days }
+  if (days <= 14) return { label: `Quiet ${days}d`, level: "quiet" as const, days }
+  if (days <= 30) return { label: `Check in ${days}d`, level: "outreach" as const, days }
+  return { label: `Stagnant ${days}d`, level: "stagnant" as const, days }
+}
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const initialSearch = typeof params.q === "string" ? params.q : ""
   const initialFilter = typeof params.state === "string" ? params.state : undefined
   const admin = getAdminClient()
-  const [{ data: companies }, { data: configs }, { data: activities }, { data: emails }] = await Promise.all([
+  const activitySince = new Date(Date.now() - ACTIVITY_LOOKBACK_DAYS * 86400000).toISOString()
+  const [{ data: companies }, { data: configs }, { data: activities }, { data: emails }, customerActivityResult] = await Promise.all([
     admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, account_kind, comp_reason, created_at, logo_url, logo_white_url, industry_category, primary_intent, stripe_connect_account_id, is_test, included_addon_slug, trial_ends_at").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
     admin.from("client_activities").select("company_id, summary, created_at").order("created_at", { ascending: false }),
     admin.from("email_log").select("company_id, subject, email_type, recipient_email, success, created_at").not("company_id", "is", null).order("created_at", { ascending: false }),
+    admin.from("customer_activity_events").select("company_id, surface, feature, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])
+  const customerActivities = (customerActivityResult.data ?? []) as CustomerActivityRow[]
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
   const lastActivity = new Map<string, string>()
   for (const activity of activities ?? []) if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
+  const customerActivityByCompany = new Map<string, CustomerActivityRow[]>()
+  for (const activity of customerActivities) {
+    const list = customerActivityByCompany.get(activity.company_id) ?? []
+    list.push(activity)
+    customerActivityByCompany.set(activity.company_id, list)
+  }
   const emailsByCompany = new Map<string, { summary: string; created_at: string }[]>()
   for (const email of emails ?? []) {
     if (!email.company_id) continue
@@ -46,6 +72,9 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
         issues.push(`Card due ${dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`)
       }
     }
+    const clientActivity = customerActivityByCompany.get(company.id) ?? []
+    const lastClientActivity = clientActivity[0] ?? null
+    const activityStatus = clientActivityStatus(lastClientActivity?.created_at ?? null)
     return {
       id: company.id,
       name: company.name,
@@ -59,6 +88,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       comp_reason: company.comp_reason,
       created_at: company.created_at,
       last_activity: lastActivity.get(company.id) ?? null,
+      last_customer_activity_at: lastClientActivity?.created_at ?? null,
+      last_customer_surface: lastClientActivity?.surface ?? null,
+      customer_activity_count_90d: clientActivity.length,
+      customer_activity_status: activityStatus,
       industry_category: company.industry_category,
       is_test: company.is_test,
       included_addon_slug: company.included_addon_slug ?? null,
