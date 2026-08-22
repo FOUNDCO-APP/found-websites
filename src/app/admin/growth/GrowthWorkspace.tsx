@@ -30,7 +30,7 @@ export type GrowthAccount = {
   created_at: string
 }
 
-type GoalWindow = "daily" | "weekly" | "monthly" | "quarterly" | "yearly"
+type GoalWindow = "weekly" | "monthly" | "quarterly" | "yearly"
 
 const PLAN_MRR: Record<string, number> = {
   found: 29,
@@ -39,7 +39,6 @@ const PLAN_MRR: Record<string, number> = {
 }
 
 const GOALS: Record<GoalWindow, { label: string; accountGoal: number; days: number; buckets: number }> = {
-  daily: { label: "Today", accountGoal: 1, days: 1, buckets: 7 },
   weekly: { label: "This week", accountGoal: 3, days: 7, buckets: 7 },
   monthly: { label: "This month", accountGoal: 10, days: 31, buckets: 6 },
   quarterly: { label: "This quarter", accountGoal: 30, days: 92, buckets: 6 },
@@ -101,13 +100,14 @@ function GoalScoreboard({ accounts }: { accounts: GrowthAccount[] }) {
           <h2>{pace}</h2>
           <p>{currentPeriodAccounts.length} new account{currentPeriodAccounts.length === 1 ? "" : "s"} against a {goal.accountGoal} account goal.</p>
         </div>
-        <div className="hq-period-control" aria-label="Goal window">
-          {(Object.keys(GOALS) as GoalWindow[]).map((key) => (
-            <button key={key} type="button" data-active={window === key} onClick={() => setWindow(key)}>
-              {GOALS[key].label}
-            </button>
-          ))}
-        </div>
+        <label className="hq-period-select">
+          <span>Period</span>
+          <select value={window} onChange={(event) => setWindow(event.target.value as GoalWindow)}>
+            {(Object.keys(GOALS) as GoalWindow[]).map((key) => (
+              <option key={key} value={key}>{GOALS[key].label}</option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="hq-goal-grid">
@@ -234,7 +234,7 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSi
     <>
       <GoalScoreboard accounts={accounts} />
 
-      <section>
+      <section className="hq-section hq-growth-followup">
         <div className="hq-section-head">
           <h2 className="hq-section-title">Upgrade opportunities</h2>
           <span className="hq-section-meta">{recentSignupCount} signups, last {windowDays}d</span>

@@ -62,11 +62,13 @@ function ClientItem({ row }: { row: ClientRow }) {
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
-          <div className="hq-client-scan-grid">
-            <span><strong>Plan</strong>{planLabel(row.plan)}</span>
-            <span><strong>Billing</strong>{row.subscription_status ?? "not active"}</span>
-            <span><strong>Launch risk</strong>{statusLabel(row)}</span>
-            <span><strong>Last activity</strong>{formatDate(row.last_activity)}</span>
+          <div className="hq-client-facts">
+            <span>{planLabel(row.plan)}</span>
+            <span>{row.subscription_status ?? "not active"}</span>
+            <span className={needsAttention ? "hq-client-fact-warning" : undefined}>{statusLabel(row)}</span>
+          </div>
+          <div className="hq-client-activity">
+            {formatDate(row.last_activity)}
           </div>
         </div>
         <span className="hq-chevron" aria-hidden="true" />
