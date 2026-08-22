@@ -51,6 +51,7 @@ function formatDate(value: string | null) {
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
+  const activity = formatDate(row.last_activity)
 
   return (
     <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link" data-attention={needsAttention}>
@@ -62,14 +63,12 @@ function ClientItem({ row }: { row: ClientRow }) {
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
-          <div className="hq-client-facts">
+          <p className="hq-client-summary">
             <span>{planLabel(row.plan)}</span>
             <span>{row.subscription_status ?? "not active"}</span>
             <span className={needsAttention ? "hq-client-fact-warning" : undefined}>{statusLabel(row)}</span>
-          </div>
-          <div className="hq-client-activity">
-            {formatDate(row.last_activity)}
-          </div>
+          </p>
+          {activity !== "No activity yet" && <p className="hq-client-activity">{activity}</p>}
         </div>
         <span className="hq-chevron" aria-hidden="true" />
       </div>
