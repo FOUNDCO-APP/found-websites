@@ -40,6 +40,8 @@ export type ClientDetail = {
   created_at: string
   activities: { summary: string; activity_type: string; metadata?: Record<string, unknown> | null; created_at: string }[]
   emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string }[]
+  customer_activities: { event_type: string; surface: string; feature: string | null; created_at: string }[]
+  customer_activity_ready: boolean
 }
 
 function planLabel(plan: string | null) {
@@ -88,6 +90,23 @@ function formatDateTime(value: string) {
     hour: "numeric",
     minute: "2-digit",
   })
+}
+
+function formatDaysAgo(value: string | null) {
+  if (!value) return "No client use yet"
+  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
+  if (days <= 0) return "Used today"
+  if (days === 1) return "Used yesterday"
+  return `Used ${days} days ago`
+}
+
+function activityLabel(value: string) {
+  return value.replace(/_/g, " ")
+}
+
+function surfaceLabel(value: string | null | undefined) {
+  if (!value) return "Unknown"
+  return value.replace(/_/g, " ")
 }
 
 function stateTone(state: string) {
@@ -145,6 +164,14 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const lastBillingActivity = client.activities.find((activity) =>
     activity.activity_type === "billing" || activity.summary.toLowerCase().includes("billing"),
   )
+  const lastCustomerActivity = client.customer_activities[0] ?? null
+  const customerActivityCount = client.customer_activities.length
+  const surfaceCounts = client.customer_activities.reduce<Record<string, number>>((counts, activity) => {
+    const key = activity.surface || "unknown"
+    counts[key] = (counts[key] ?? 0) + 1
+    return counts
+  }, {})
+  const topSurface = Object.entries(surfaceCounts).sort((a, b) => b[1] - a[1])[0] ?? null
   const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
   const nextAction = client.client_state === "past_due"
     ? "Fix payment risk"
@@ -208,6 +235,35 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             <p className="hq-row-title">{nextAction}</p>
             <p className="hq-row-meta">{client.client_state === "past_due" ? "This account is a revenue risk." : !isActiveSubscription && !client.is_comp ? "Activation is not complete until billing is handled." : client.client_state === "onboarding" ? "Finish the setup work that blocks launch." : "No urgent risk is visible."}</p>
           </div>
+        </div>
+      </section>
+
+      <section className="hq-section">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Client activity</h2>
+          <span className="hq-section-meta">Customer-side only</span>
+        </div>
+        <div className="hq-detail-snapshot hq-activity-snapshot">
+          <div><span>Last use</span><strong>{client.customer_activity_ready ? formatDaysAgo(lastCustomerActivity?.created_at ?? null) : "Waiting on table"}</strong></div>
+          <div><span>90-day actions</span><strong>{client.customer_activity_ready ? customerActivityCount : "Not live"}</strong></div>
+          <div><span>Top area</span><strong>{client.customer_activity_ready && topSurface ? `${surfaceLabel(topSurface[0])} (${topSurface[1]})` : "No signal yet"}</strong></div>
+        </div>
+        <div className="hq-panel hq-client-activity-panel">
+          {!client.customer_activity_ready && (
+            <div className="hq-empty-state"><strong>Activity table is not live yet.</strong><span>Once the Supabase migration is applied, true customer actions will appear here.</span></div>
+          )}
+          {client.customer_activity_ready && customerActivityCount === 0 && (
+            <div className="hq-empty-state"><strong>No customer-side activity yet.</strong><span>Admin views and view-as sessions are intentionally excluded.</span></div>
+          )}
+          {client.customer_activity_ready && client.customer_activities.slice(0, 12).map((activity, index) => (
+            <div key={`${activity.created_at}-${index}`} className="hq-row">
+              <div>
+                <p className="hq-row-title">{activityLabel(activity.event_type)}</p>
+                <p className="hq-row-meta">{surfaceLabel(activity.surface)}{activity.feature ? ` / ${surfaceLabel(activity.feature)}` : ""}</p>
+              </div>
+              <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
+            </div>
+          ))}
         </div>
       </section>
 
