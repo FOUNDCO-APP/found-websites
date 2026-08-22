@@ -62,6 +62,12 @@ function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
   const activity = activityHealth(row)
+  const summary = [
+    { label: planLabel(row.plan) },
+    { label: row.subscription_status ?? "not active" },
+    { label: statusLabel(row), tone: needsAttention ? "warning" : undefined },
+    { label: activity.label, tone: activity.tone },
+  ]
 
   return (
     <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link">
@@ -74,13 +80,14 @@ function ClientItem({ row }: { row: ClientRow }) {
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
           <p className="hq-client-summary">
-            <span>{planLabel(row.plan)}</span>
-            <span>{row.subscription_status ?? "not active"}</span>
-            <span className={needsAttention ? "hq-client-fact-warning" : undefined}>{statusLabel(row)}</span>
-            <span className={activity.tone === "warning" ? "hq-client-fact-warning" : "hq-client-fact-success"}>{activity.label}</span>
+            {summary.map((item, index) => (
+              <span key={`${item.label}-${index}`} className={item.tone === "warning" ? "hq-client-fact-warning" : item.tone === "success" ? "hq-client-fact-success" : undefined}>
+                {index > 0 && <i aria-hidden="true" />}
+                {item.label}
+              </span>
+            ))}
           </p>
         </div>
-        <span className="hq-chevron" aria-hidden="true" />
       </div>
     </Link>
   )
