@@ -24,22 +24,15 @@ function companyMrr(company: { plan: string | null; subscription_status: string 
   return isPaying ? PLAN_MRR[company.plan ?? ""] ?? 0 : 0
 }
 
-function daysSince(value: string) {
-  return Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86400000))
-}
-
 export default async function AdminTodayPage() {
   const admin = getAdminClient()
   const now = new Date().toISOString()
-  const [{ data: prospects }, { data: companies }, { data: configs }, { data: activities }] = await Promise.all([
+  const [{ data: prospects }, { data: companies }, { data: configs }] = await Promise.all([
     admin.from("sales_prospects").select("id, person_name, business_name, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
     admin.from("companies").select("id, name, slug, client_state, subscription_status, account_kind, plan, created_at, logo_url, logo_white_url").eq("account_kind", "client").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
-    admin.from("client_activities").select("company_id, created_at").order("created_at", { ascending: false }),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
-  const lastActivityAt = new Map<string, string>()
-  for (const activity of activities ?? []) if (!lastActivityAt.has(activity.company_id)) lastActivityAt.set(activity.company_id, activity.created_at)
   const items: WorkItem[] = []
   for (const prospect of prospects ?? []) {
     const overdue = prospect.next_follow_up_at && prospect.next_follow_up_at < now
@@ -59,32 +52,15 @@ export default async function AdminTodayPage() {
   for (const company of companies ?? []) {
     const paymentProblem = ["past_due", "unpaid", "incomplete"].includes(company.subscription_status ?? "") || company.client_state === "past_due"
     const launchProblem = company.client_state === "onboarding" && ((!company.logo_url && !company.logo_white_url) || copyByCompany.get(company.id) !== true)
-    if (paymentProblem || launchProblem) {
-      items.push({
-        priority: paymentProblem ? 4 : 5,
-        title: company.name,
-        detail: paymentProblem ? "Payment needs attention" : "Setup is blocking a complete launch",
-        timing: paymentProblem ? "Client risk" : "Onboarding",
-        href: `/admin/clients/${company.id}`,
-        action: "Resolve",
-        tone: paymentProblem ? "warning" : "info",
-      })
-      continue
-    }
-
-    const isRevenueClient = ["active", "trialing"].includes(company.subscription_status ?? "") && !["cancelled", "comp"].includes(company.client_state ?? "")
-    if (!isRevenueClient) continue
-    const referenceDate = lastActivityAt.get(company.id) ?? company.created_at
-    const inactiveDays = daysSince(referenceDate)
-    if (inactiveDays < 14) continue
+    if (!paymentProblem && !launchProblem) continue
     items.push({
-      priority: inactiveDays >= 30 ? 6 : 7,
+      priority: paymentProblem ? 4 : 5,
       title: company.name,
-      detail: lastActivityAt.has(company.id) ? `No recorded activity for ${inactiveDays} days` : `No recorded activity since signup ${inactiveDays} days ago`,
-      timing: inactiveDays >= 30 ? "Stagnant" : "Quiet",
+      detail: paymentProblem ? "Payment needs attention" : "Setup is blocking a complete launch",
+      timing: paymentProblem ? "Client risk" : "Onboarding",
       href: `/admin/clients/${company.id}`,
-      action: "Check in",
-      tone: "warning",
+      action: "Resolve",
+      tone: paymentProblem ? "warning" : "info",
     })
   }
   items.sort((a, b) => a.priority - b.priority)

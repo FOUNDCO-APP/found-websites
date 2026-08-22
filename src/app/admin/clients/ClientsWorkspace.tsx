@@ -16,7 +16,6 @@ export type ClientRow = {
   comp_reason: string | null
   created_at: string
   last_activity: string | null
-  last_activity_at: string | null
   industry_category: string | null
   is_test: boolean | null
   included_addon_slug: string | null
@@ -44,29 +43,13 @@ function statusLabel(row: ClientRow) {
   return row.client_state.replace("_", " ")
 }
 
-function daysSince(value: string | null) {
-  if (!value) return null
-  return Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86400000))
-}
-
-function activityHealth(row: ClientRow) {
-  const days = daysSince(row.last_activity_at ?? row.created_at)
-  if (days == null) return { label: "Stagnant", tone: "warning" }
-  if (!row.last_activity_at && days < 14) return { label: "New", tone: "success" }
-  if (days < 14) return { label: "Active", tone: "success" }
-  if (days < 30) return { label: `Quiet ${days}d`, tone: "warning" }
-  return { label: `Stagnant ${days}d`, tone: "warning" }
-}
-
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
-  const activity = activityHealth(row)
   const summary = [
     { label: planLabel(row.plan) },
     { label: row.subscription_status ?? "not active" },
     { label: statusLabel(row), tone: needsAttention ? "warning" : undefined },
-    { label: activity.label, tone: activity.tone },
   ]
 
   return (
