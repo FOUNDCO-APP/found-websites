@@ -482,6 +482,11 @@
   box-shadow: inset 0 -1px 0 var(--hq-green);
 }
 .hq-health-row { min-height: 92px; }
+.hq-outreach-actions {
+  margin-top: 0;
+  flex: 0 0 auto;
+  align-items: center;
+}
 .hq-client-activity-panel { padding: 0 16px; }
 .hq-client-activity-panel .hq-row {
   min-height: 68px;
@@ -555,6 +560,7 @@
   .hq-health-snapshot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hq-health-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hq-health-filters a { justify-content: flex-start; font-size: 13px; }
+  .hq-outreach-actions { margin-top: 12px; }
   .hq-client-activity-panel { padding: 0 14px; }
   .hq-client-activity-panel .hq-row { align-items: flex-start; }
   .hq-chart { grid-template-columns: repeat(6, minmax(0, 1fr)); height: 114px; gap: 6px; margin-bottom: 18px; }

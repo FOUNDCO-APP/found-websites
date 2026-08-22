@@ -7,6 +7,8 @@ type CompanyRow = {
   id: string
   name: string
   slug: string
+  email: string | null
+  phone: string | null
   plan: string | null
   subscription_status: string | null
   client_state: string | null
@@ -72,6 +74,23 @@ function surfaceLabel(value: string | null | undefined) {
   return value.replace(/_/g, " ")
 }
 
+function outreachPriority(bucket: Bucket) {
+  if (bucket === "trialing_inactive") return 1
+  if (bucket === "no_activity") return 2
+  if (bucket === "stagnant") return 3
+  if (bucket === "quiet") return 4
+  return 99
+}
+
+function outreachReason(bucket: Bucket, latestAt: string | null) {
+  const days = dayAge(latestAt)
+  if (bucket === "trialing_inactive") return days === null ? "Trialing and no customer activity" : `Trialing and quiet for ${days}d`
+  if (bucket === "no_activity") return "No first customer action"
+  if (bucket === "stagnant") return days === null ? "No recent use" : `No use in ${days}d`
+  if (bucket === "quiet") return days === null ? "Activity slowing down" : `Activity slowing down: ${days}d`
+  return "Healthy usage"
+}
+
 export default async function AdminActivityPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
   const filter = FILTERS.some((item) => item.key === params.view) ? params.view as Bucket : "all"
@@ -81,7 +100,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const [{ data: companies }, activityResult] = await Promise.all([
     admin
       .from("companies")
-      .select("id, name, slug, plan, subscription_status, client_state, trial_ends_at, created_at")
+      .select("id, name, slug, email, phone, plan, subscription_status, client_state, trial_ends_at, created_at")
       .eq("account_kind", "client")
       .order("created_at", { ascending: false }),
     admin
@@ -126,6 +145,9 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     return acc
   }, {} as Record<Bucket, number>)
   const visibleRows = filter === "all" ? rows : rows.filter((row) => row.bucket === filter)
+  const outreachRows = rows
+    .filter((row) => outreachPriority(row.bucket) < 99)
+    .sort((a, b) => outreachPriority(a.bucket) - outreachPriority(b.bucket) || (dayAge(b.latest?.created_at ?? null) ?? 999) - (dayAge(a.latest?.created_at ?? null) ?? 999))
 
   return (
     <div className="hq-page">
@@ -144,6 +166,44 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
         <Link href="/admin/activity?view=no_activity"><span>No activity</span><strong>{activityReady ? counts.no_activity : "-"}</strong></Link>
         <Link href="/admin/activity?view=trialing_inactive"><span>Trialing inactive</span><strong>{activityReady ? counts.trialing_inactive : "-"}</strong></Link>
       </div>
+
+      <section className="hq-section">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Outreach queue</h2>
+          <span className="hq-section-meta">{outreachRows.length} account{outreachRows.length === 1 ? "" : "s"} to review</span>
+        </div>
+        <div className="hq-business-list hq-outreach-list">
+          {!activityReady && (
+            <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before outreach can use customer activity.</span></div>
+          )}
+          {activityReady && outreachRows.slice(0, 20).map(({ company, activities, latest, bucket }) => (
+            <div key={company.id} className="hq-business-row">
+              <div className="hq-business-main hq-health-row">
+                <div className="hq-business-copy">
+                  <div className="hq-business-name-line">
+                    <h2>{company.name}</h2>
+                    <span className="hq-badge hq-badge-warning">{bucketLabel(bucket)}</span>
+                  </div>
+                  <p className="hq-client-summary">
+                    <span>{outreachReason(bucket, latest?.created_at ?? null)}</span>
+                    <span><i aria-hidden="true" />{planLabel(company.plan)}</span>
+                    <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
+                  </p>
+                  <p className="hq-client-activity">
+                    {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {company.subscription_status ?? "not active"}
+                  </p>
+                </div>
+                <div className="hq-contact-actions hq-outreach-actions">
+                  {company.phone && <a href={`tel:${company.phone}`}>Call</a>}
+                  {company.email && <a href={`mailto:${company.email}`}>Email</a>}
+                  <Link href={`/admin/clients/${company.id}`}>Open</Link>
+                </div>
+              </div>
+            </div>
+          ))}
+          {activityReady && outreachRows.length === 0 && <div className="hq-empty-state"><strong>No outreach needed.</strong><span>Quiet and inactive clients will appear here automatically.</span></div>}
+        </div>
+      </section>
 
       <section className="hq-section">
         <div className="hq-section-head">
