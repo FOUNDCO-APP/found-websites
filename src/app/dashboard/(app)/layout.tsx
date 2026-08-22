@@ -6,6 +6,7 @@ import DashboardNav from "@/components/dashboard/DashboardNav"
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import UploadStatusProvider from "@/components/dashboard/UploadStatusProvider"
 import AccountMenu from "@/components/dashboard/AccountMenu"
+import CustomerActivityTracker from "@/components/dashboard/CustomerActivityTracker"
 import InstallPrompt from "@/components/dashboard/InstallPrompt"
 import Link from "next/link"
 import ActivationBanner from "@/components/dashboard/ActivationBanner"
@@ -91,6 +92,7 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
   return (
     <UploadStatusProvider>
     <div style={{ minHeight: "100dvh", backgroundColor: BLACK, fontFamily: "var(--font-inter, system-ui, sans-serif)" }}>
+      <CustomerActivityTracker disabled={viewingAsAdmin || !user || !company} />
 
       {/* Main content shifts right of sidebar on desktop */}
       <div className="found-dashboard-main">
