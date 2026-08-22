@@ -16,6 +16,7 @@ export type ClientRow = {
   comp_reason: string | null
   created_at: string
   last_activity: string | null
+  last_activity_at: string | null
   industry_category: string | null
   is_test: boolean | null
   included_addon_slug: string | null
@@ -43,18 +44,27 @@ function statusLabel(row: ClientRow) {
   return row.client_state.replace("_", " ")
 }
 
-function formatDate(value: string | null) {
-  if (!value) return "No activity yet"
-  return value.length > 72 ? `${value.slice(0, 72).trim()}...` : value
+function daysSince(value: string | null) {
+  if (!value) return null
+  return Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 86400000))
+}
+
+function activityHealth(row: ClientRow) {
+  const days = daysSince(row.last_activity_at ?? row.created_at)
+  if (days == null) return { label: "Stagnant", tone: "warning" }
+  if (!row.last_activity_at && days < 14) return { label: "New", tone: "success" }
+  if (days < 14) return { label: "Active", tone: "success" }
+  if (days < 30) return { label: `Quiet ${days}d`, tone: "warning" }
+  return { label: `Stagnant ${days}d`, tone: "warning" }
 }
 
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
-  const activity = formatDate(row.last_activity)
+  const activity = activityHealth(row)
 
   return (
-    <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link" data-attention={needsAttention}>
+    <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link">
       <div className="hq-business-main">
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
@@ -67,8 +77,8 @@ function ClientItem({ row }: { row: ClientRow }) {
             <span>{planLabel(row.plan)}</span>
             <span>{row.subscription_status ?? "not active"}</span>
             <span className={needsAttention ? "hq-client-fact-warning" : undefined}>{statusLabel(row)}</span>
+            <span className={activity.tone === "warning" ? "hq-client-fact-warning" : "hq-client-fact-success"}>{activity.label}</span>
           </p>
-          {activity !== "No activity yet" && <p className="hq-client-activity">{activity}</p>}
         </div>
         <span className="hq-chevron" aria-hidden="true" />
       </div>

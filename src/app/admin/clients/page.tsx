@@ -17,8 +17,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     admin.from("email_log").select("company_id, subject, email_type, recipient_email, success, created_at").not("company_id", "is", null).order("created_at", { ascending: false }),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
-  const lastActivity = new Map<string, string>()
-  for (const activity of activities ?? []) if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
+  const lastActivity = new Map<string, { summary: string; created_at: string }>()
+  for (const activity of activities ?? []) {
+    if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, { summary: activity.summary, created_at: activity.created_at })
+  }
   const emailsByCompany = new Map<string, { summary: string; created_at: string }[]>()
   for (const email of emails ?? []) {
     if (!email.company_id) continue
@@ -58,7 +60,8 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       account_kind: company.account_kind ?? "client",
       comp_reason: company.comp_reason,
       created_at: company.created_at,
-      last_activity: lastActivity.get(company.id) ?? null,
+      last_activity: lastActivity.get(company.id)?.summary ?? null,
+      last_activity_at: lastActivity.get(company.id)?.created_at ?? null,
       industry_category: company.industry_category,
       is_test: company.is_test,
       included_addon_slug: company.included_addon_slug ?? null,
