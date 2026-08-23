@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { getAdminClient, formatDue, timeAgo } from "./lib"
+import { buildClientActivitySignal } from "./customerActivitySignals"
+import { isAdminTestEmail, isAdminTestIdentity } from "./testIdentity"
 
 export const metadata = { title: "Today - Found HQ" }
 
@@ -11,6 +13,29 @@ type WorkItem = {
   href: string
   action: string
   tone: "warning" | "info"
+}
+
+type CompanyRow = {
+  id: string
+  name: string
+  slug: string
+  email: string | null
+  client_state: string | null
+  subscription_status: string | null
+  account_kind: string | null
+  is_test: boolean | null
+  plan: string | null
+  created_at: string
+  logo_url: string | null
+  logo_white_url: string | null
+}
+
+type CustomerActivityRow = {
+  company_id: string
+  event_type?: string | null
+  surface: string | null
+  feature: string | null
+  created_at: string
 }
 
 const PLAN_MRR: Record<string, number> = {
@@ -29,20 +54,24 @@ export default async function AdminTodayPage() {
   const now = new Date().toISOString()
   const activitySince = new Date(Date.now() - 90 * 86400000).toISOString()
   const [{ data: prospects }, { data: companies }, { data: configs }, customerActivityResult] = await Promise.all([
-    admin.from("sales_prospects").select("id, person_name, business_name, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
-    admin.from("companies").select("id, name, slug, client_state, subscription_status, account_kind, plan, created_at, logo_url, logo_white_url").eq("account_kind", "client").order("created_at", { ascending: false }),
+    admin.from("sales_prospects").select("id, person_name, business_name, email, stage, next_follow_up_at, created_at").not("stage", "in", "(won,lost)").order("next_follow_up_at", { ascending: true, nullsFirst: false }),
+    admin.from("companies").select("id, name, slug, email, client_state, subscription_status, account_kind, is_test, plan, created_at, logo_url, logo_white_url").order("created_at", { ascending: false }),
     admin.from("website_config").select("company_id, copy_generated"),
-    admin.from("customer_activity_events").select("company_id, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
+    admin.from("customer_activity_events").select("company_id, event_type, surface, feature, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
-  const latestCustomerActivity = new Map<string, string>()
+  const companyRows = ((companies ?? []) as CompanyRow[]).filter((company) => company.account_kind === "client" && !isAdminTestIdentity(company))
+  const activityByCompany = new Map<string, CustomerActivityRow[]>()
   if (!customerActivityResult.error) {
-    for (const activity of customerActivityResult.data ?? []) {
-      if (!latestCustomerActivity.has(activity.company_id)) latestCustomerActivity.set(activity.company_id, activity.created_at)
+    for (const activity of (customerActivityResult.data ?? []) as CustomerActivityRow[]) {
+      const list = activityByCompany.get(activity.company_id) ?? []
+      list.push(activity)
+      activityByCompany.set(activity.company_id, list)
     }
   }
   const items: WorkItem[] = []
   for (const prospect of prospects ?? []) {
+    if (isAdminTestEmail(prospect.email)) continue
     const overdue = prospect.next_follow_up_at && prospect.next_follow_up_at < now
     const isNew = prospect.stage === "new"
     const proposal = prospect.stage === "proposal_sent"
@@ -57,7 +86,7 @@ export default async function AdminTodayPage() {
       tone: overdue ? "warning" : "info",
     })
   }
-  for (const company of companies ?? []) {
+  for (const company of companyRows) {
     const paymentProblem = ["past_due", "unpaid", "incomplete"].includes(company.subscription_status ?? "") || company.client_state === "past_due"
     const launchProblem = company.client_state === "onboarding" && ((!company.logo_url && !company.logo_white_url) || copyByCompany.get(company.id) !== true)
     if (!paymentProblem && !launchProblem) continue
@@ -72,31 +101,31 @@ export default async function AdminTodayPage() {
     })
   }
   if (!customerActivityResult.error) {
-    for (const company of companies ?? []) {
+    for (const company of companyRows) {
       if (!["active", "comp", "onboarding"].includes(company.client_state ?? "")) continue
-      const lastCustomerUse = latestCustomerActivity.get(company.id)
-      const inactiveDays = lastCustomerUse ? Math.floor((Date.now() - new Date(lastCustomerUse).getTime()) / 86400000) : null
-      const trialing = company.subscription_status === "trialing"
-      if (inactiveDays !== null && inactiveDays < 15 && !(trialing && inactiveDays >= 7)) continue
+      const signal = buildClientActivitySignal(activityByCompany.get(company.id) ?? [], company.subscription_status)
+      const shouldShow = signal.bucket === "trialing_inactive" || signal.bucket === "no_activity" || signal.bucket === "stagnant" || signal.onlyDashboard
+      if (!shouldShow) continue
       items.push({
-        priority: trialing ? 6 : 7,
+        priority: signal.bucket === "trialing_inactive" ? 6 : signal.bucket === "no_activity" ? 7 : signal.onlyDashboard ? 8 : 9,
         title: company.name,
-        detail: lastCustomerUse ? "Client-side activity is slowing down" : "No tracked client-side activity yet",
-        timing: lastCustomerUse ? `${inactiveDays}d quiet` : "No use",
-        href: `/admin/clients?state=${lastCustomerUse ? "stagnant" : "attention"}`,
+        detail: signal.reachOutReason,
+        timing: signal.bucket === "trialing_inactive" ? "Trial risk" : signal.onlyDashboard ? "Dashboard only" : signal.label,
+        href: `/admin/clients/${company.id}`,
         action: "Reach out",
-        tone: trialing || !lastCustomerUse ? "warning" : "info",
+        tone: signal.bucket === "trialing_inactive" || signal.bucket === "no_activity" ? "warning" : "info",
       })
     }
   }
   items.sort((a, b) => a.priority - b.priority)
-  const activeClients = (companies ?? []).filter((company) => ["active", "comp"].includes(company.client_state ?? "")).length
-  const atRisk = (companies ?? []).filter((company) => company.client_state === "past_due").length
+  const visibleItems = items.slice(0, 8)
+  const activeClients = companyRows.filter((company) => ["active", "comp"].includes(company.client_state ?? "")).length
+  const atRisk = companyRows.filter((company) => company.client_state === "past_due").length
   const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString()
   const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
-  const recentSignups = (companies ?? []).filter((company) => company.created_at >= sevenDaysAgo).slice(0, 8)
-  const monthSignups = (companies ?? []).filter((company) => company.created_at >= thirtyDaysAgo).length
-  const currentMrr = (companies ?? []).reduce((total, company) => total + companyMrr(company), 0)
+  const recentSignups = companyRows.filter((company) => company.created_at >= sevenDaysAgo).slice(0, 8)
+  const monthSignups = companyRows.filter((company) => company.created_at >= thirtyDaysAgo).length
+  const currentMrr = companyRows.reduce((total, company) => total + companyMrr(company), 0)
   const monthGoal = 10
   const health = atRisk > 0 ? "Needs attention" : monthSignups >= monthGoal ? "Growing" : monthSignups >= 5 ? "Building" : "Flat"
   const goalPercent = Math.min(100, Math.round((monthSignups / monthGoal) * 100))
@@ -114,15 +143,15 @@ export default async function AdminTodayPage() {
       </section>
       <div className="hq-today-summary">
         <div><strong>{items.length}</strong><span>Due now</span></div>
-        <Link href="/admin/growth"><strong>{(prospects ?? []).length}</strong><span>Open sales</span></Link>
+        <Link href="/admin/growth"><strong>{(prospects ?? []).filter((prospect) => !isAdminTestEmail(prospect.email)).length}</strong><span>Open sales</span></Link>
         <Link href="/admin/clients?state=active"><strong>{activeClients}</strong><span>Active clients</span></Link>
         <Link href="/admin/clients?state=past_due"><strong>{atRisk}</strong><span>At risk</span></Link>
         <div><strong>${currentMrr}</strong><span>MRR</span></div>
       </div>
       <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Payment, launch, and follow-up first</span></div>
+        <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Top {visibleItems.length} of {items.length}</span></div>
         <div className="hq-panel">
-          {items.map((item, index) => (
+          {visibleItems.map((item, index) => (
             <Link key={`${item.title}-${index}`} href={item.href} className="hq-row hq-link-row hq-action-row">
               <div><p className="hq-row-title">{item.title}</p><p className="hq-row-meta">{item.detail}</p></div>
               <div className="hq-action-end"><span className={`hq-badge hq-badge-${item.tone}`}>{item.timing}</span><strong>{item.action}</strong><span className="hq-chevron" /></div>

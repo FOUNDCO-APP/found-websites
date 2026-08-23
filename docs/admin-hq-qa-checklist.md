@@ -14,6 +14,12 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify follow-up due and follow-up later filters show the correct accounts.
 - Verify outreach history appears on the client detail page.
 
+## Today
+
+- Verify Today excludes test accounts and test leads from counts and next actions.
+- Verify Today prioritizes payment risk, launch blockers, lead follow-up, trialing inactive, no activity, dashboard-only, and stagnant clients.
+- Verify Today keeps Next actions short and links each item to the right Growth, Client Health, or client detail page.
+
 ## Clients
 
 - Verify client rows are easy to scan on mobile.
