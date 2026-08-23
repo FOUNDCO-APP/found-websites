@@ -38,6 +38,24 @@ export type GrowthAccount = {
   created_at: string
 }
 
+export type CampaignMember = {
+  id: string
+  type: "client" | "lead"
+  name: string
+  detail: string
+  email: string | null
+  phone: string | null
+  href: string | null
+  status: string
+}
+
+export type CampaignAudience = {
+  id: string
+  title: string
+  description: string
+  members: CampaignMember[]
+}
+
 type GoalWindow = "weekly" | "monthly" | "quarterly" | "yearly"
 type LeadView = "needs_follow_up" | "follow_up_due" | "follow_up_later" | "recently_contacted" | "stale" | "all"
 
@@ -255,6 +273,51 @@ function CohortCard({ cohort }: { cohort: Cohort }) {
   )
 }
 
+function CampaignAudienceCard({ audience }: { audience: CampaignAudience }) {
+  const [expanded, setExpanded] = useState(false)
+  const emails = audience.members.map((member) => member.email).filter((email): email is string => Boolean(email))
+
+  return (
+    <article className="hq-prospect">
+      <button type="button" className="hq-prospect-head" onClick={() => setExpanded((value) => !value)} style={{ width: "100%", border: "none", background: "none", cursor: "pointer", textAlign: "left" }}>
+        <div>
+          <div className="hq-business-name-line">
+            <h2>{audience.title}</h2>
+            <span className="hq-badge hq-badge-info">{audience.members.length}</span>
+          </div>
+          <p className="hq-row-meta">{audience.description}</p>
+        </div>
+        <span className="hq-chevron" style={{ transform: expanded ? "rotate(135deg)" : "rotate(45deg)" }} />
+      </button>
+      {expanded && (
+        <div className="hq-business-manage-body hq-sales-forms">
+          <div className="hq-contact-actions" style={{ marginBottom: 10 }}>
+            {emails.length > 0 && <a href={`mailto:?bcc=${emails.join(",")}`}>Email list {emails.length}</a>}
+          </div>
+          {audience.members.length === 0 ? (
+            <p className="hq-row-meta">No one is in this list right now.</p>
+          ) : (
+            audience.members.slice(0, 25).map((member) => (
+              <div key={`${audience.id}-${member.type}-${member.id}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
+                <div>
+                  <p className="hq-row-title" style={{ fontSize: 13 }}>{member.name}</p>
+                  <p className="hq-row-meta">{member.status} / {member.detail}</p>
+                </div>
+                <div className="hq-contact-actions" style={{ marginTop: 0, alignItems: "center" }}>
+                  {member.phone && <a href={`tel:${member.phone}`}>Call</a>}
+                  {member.email && <a href={`mailto:${member.email}`}>Email</a>}
+                  {member.href && <a href={member.href}>Open</a>}
+                </div>
+              </div>
+            ))
+          )}
+          {audience.members.length > 25 && <p className="hq-row-meta" style={{ marginTop: 10 }}>Showing first 25. Automation will use the full list later.</p>}
+        </div>
+      )}
+    </article>
+  )
+}
+
 function LeadRow({ prospect }: { prospect: Prospect }) {
   const [converting, startConverting] = useTransition()
   const [dismissing, startDismissing] = useTransition()
@@ -330,10 +393,11 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
   )
 }
 
-export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSignupCount, windowDays }: {
+export default function GrowthWorkspace({ accounts, cohorts, prospects, campaignAudiences, recentSignupCount, windowDays }: {
   accounts: GrowthAccount[]
   cohorts: Cohort[]
   prospects: Prospect[]
+  campaignAudiences: CampaignAudience[]
   recentSignupCount: number
   windowDays: number
 }) {
@@ -362,6 +426,16 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSi
       <GoalScoreboard accounts={accounts} />
 
       <section className="hq-section hq-growth-followup">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Campaign lists</h2>
+          <span className="hq-section-meta">{campaignAudiences.reduce((total, audience) => total + audience.members.length, 0)} total matches</span>
+        </div>
+        <div className="hq-business-list">
+          {campaignAudiences.map((audience) => <CampaignAudienceCard key={audience.id} audience={audience} />)}
+        </div>
+      </section>
+
+      <section className="hq-section">
         <div className="hq-section-head">
           <h2 className="hq-section-title">Upgrade opportunities</h2>
           <span className="hq-section-meta">{recentSignupCount} signups, last {windowDays}d</span>

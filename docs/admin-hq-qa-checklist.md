@@ -28,3 +28,6 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify lead call, text, email, and skip logs create follow-up timing.
 - Verify lead follow-up filters show needs follow-up, due, later, recently contacted, stale, and all.
 - Verify lead text and email quick actions include prefilled copy.
+- Verify Growth campaign lists show counts and expandable members.
+- Verify campaign lists include clients, leads, inactive clients, trialing inactive, stale leads, upgrade-ready clients, billing risk, and first-week clients.
+- Verify campaign list email actions use available emails only.
