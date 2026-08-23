@@ -1,5 +1,6 @@
 import { getAdminClient } from "../lib"
 import { planLabel } from "../client-utils"
+import { buildClientActivitySignal } from "../customerActivitySignals"
 import { isAdminTestEmail, isAdminTestIdentity } from "../testIdentity"
 import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount, type CampaignAudience, type AutomationDraft } from "./GrowthWorkspace"
 
@@ -34,6 +35,8 @@ type CompanyRow = {
 
 type CustomerActivity = {
   company_id: string
+  surface: string | null
+  feature: string | null
   created_at: string
 }
 
@@ -118,7 +121,7 @@ export default async function GrowthPage() {
       .order("created_at", { ascending: false })
       .limit(1000),
     admin.from("customer_activity_events")
-      .select("company_id, created_at")
+      .select("company_id, surface, feature, created_at")
       .eq("is_admin_view", false)
       .gte("created_at", outreachStart)
       .order("created_at", { ascending: false })
@@ -134,9 +137,11 @@ export default async function GrowthPage() {
   const allCompanyRows = (companies ?? []) as CompanyRow[]
   const testCompanyRows = allCompanyRows.filter(isTestCompany)
   const companyRows = allCompanyRows.filter((company) => !isTestCompany(company) && company.account_kind === "client")
-  const customerActivityByCompany = new Map<string, CustomerActivity>()
+  const customerActivityByCompany = new Map<string, CustomerActivity[]>()
   for (const activity of (customerActivityData ?? []) as CustomerActivity[]) {
-    if (!customerActivityByCompany.has(activity.company_id)) customerActivityByCompany.set(activity.company_id, activity)
+    const list = customerActivityByCompany.get(activity.company_id) ?? []
+    list.push(activity)
+    customerActivityByCompany.set(activity.company_id, list)
   }
 
   const groups = new Map<string, { plan: string; industry: string | null; companies: { id: string; name: string; slug: string; email: string | null }[] }>()
@@ -176,10 +181,18 @@ export default async function GrowthPage() {
     client_state: company.client_state ?? "onboarding",
     created_at: company.created_at,
   }))
+  const activitySignalByCompany = new Map(companyRows.map((company) => [
+    company.id,
+    buildClientActivitySignal(customerActivityByCompany.get(company.id) ?? [], company.subscription_status),
+  ]))
   const upgradeReadyClients = companyRows.filter((company) => UPGRADEABLE_PLANS.has(company.plan ?? ""))
-  const inactiveClients = companyRows.filter((company) => (dayAge(customerActivityByCompany.get(company.id)?.created_at) ?? 999) >= 15)
+  const inactiveClients = companyRows.filter((company) => (dayAge(activitySignalByCompany.get(company.id)?.latest?.created_at) ?? 999) >= 15)
   const noActivityClients = companyRows.filter((company) => !customerActivityByCompany.has(company.id))
-  const trialingInactiveClients = companyRows.filter((company) => company.subscription_status === "trialing" && (dayAge(customerActivityByCompany.get(company.id)?.created_at) ?? 999) >= 7)
+  const trialingInactiveClients = companyRows.filter((company) => company.subscription_status === "trialing" && (dayAge(activitySignalByCompany.get(company.id)?.latest?.created_at) ?? 999) >= 7)
+  const dashboardOnlyClients = companyRows.filter((company) => activitySignalByCompany.get(company.id)?.onlyDashboard)
+  const noLeadsUsageClients = companyRows.filter((company) => activitySignalByCompany.get(company.id)?.missingCoreTools.includes("leads"))
+  const noPhotosUsageClients = companyRows.filter((company) => activitySignalByCompany.get(company.id)?.missingCoreTools.includes("photos"))
+  const noEstimatesUsageClients = companyRows.filter((company) => activitySignalByCompany.get(company.id)?.missingCoreTools.includes("estimates"))
   const pastDueClients = companyRows.filter((company) => company.client_state === "past_due")
   const newClients = companyRows.filter((company) => (dayAge(company.created_at) ?? 999) <= 7)
   const leadFirstTouch = openLeads.filter((lead) => lead.outreach_activities.length === 0)
@@ -239,6 +252,30 @@ export default async function GrowthPage() {
       title: "Clients with no activity",
       description: "Accounts where no true customer-side activity has been captured.",
       members: noActivityClients.map((company) => companyMember(company, "No activity yet")),
+    },
+    {
+      id: "dashboard-only-clients",
+      title: "Dashboard only",
+      description: "Clients who opened Found but have not used a working tool yet.",
+      members: dashboardOnlyClients.map((company) => companyMember(company, "Dashboard only")),
+    },
+    {
+      id: "no-leads-usage",
+      title: "Never used leads",
+      description: "Clients who have not opened the lead/inbox workflow.",
+      members: noLeadsUsageClients.map((company) => companyMember(company, "No leads usage")),
+    },
+    {
+      id: "no-photos-usage",
+      title: "Never used photos",
+      description: "Clients who have not used the photo/gallery workflow.",
+      members: noPhotosUsageClients.map((company) => companyMember(company, "No photos usage")),
+    },
+    {
+      id: "no-estimates-usage",
+      title: "Never used estimates",
+      description: "Clients who have not used estimate workflows.",
+      members: noEstimatesUsageClients.map((company) => companyMember(company, "No estimates usage")),
     },
   ]
   const automationDrafts: AutomationDraft[] = [

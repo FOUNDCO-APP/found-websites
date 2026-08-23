@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { getAdminClient } from "../lib"
+import { buildClientActivitySignal, activityEventLabel, activitySurfaceLabel } from "../customerActivitySignals"
+import { isAdminTestIdentity } from "../testIdentity"
 import { markClientOutreach } from "./actions"
 
 export const metadata = { title: "Client Health - Found HQ" }
@@ -15,6 +17,8 @@ type CompanyRow = {
   client_state: string | null
   trial_ends_at: string | null
   created_at: string
+  account_kind: string | null
+  is_test: boolean | null
 }
 
 type ActivityRow = {
@@ -81,11 +85,6 @@ function bucketFor(company: CompanyRow, lastActivityAt: string | null): Bucket {
 
 function bucketLabel(bucket: ActivityView) {
   return FILTERS.find((filter) => filter.key === bucket)?.label ?? "All"
-}
-
-function surfaceLabel(value: string | null | undefined) {
-  if (!value) return "No tracked area"
-  return value.replace(/_/g, " ")
 }
 
 function outreachPriority(bucket: Bucket) {
@@ -181,8 +180,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const [{ data: companies }, activityResult, { data: outreachEvents }] = await Promise.all([
     admin
       .from("companies")
-      .select("id, name, slug, email, phone, plan, subscription_status, client_state, trial_ends_at, created_at")
-      .eq("account_kind", "client")
+      .select("id, name, slug, email, phone, plan, subscription_status, client_state, trial_ends_at, created_at, account_kind, is_test")
       .order("created_at", { ascending: false }),
     admin
       .from("customer_activity_events")
@@ -210,15 +208,18 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     }
   }
 
-  const rows = (companies ?? []).map((company: CompanyRow) => {
+  const companyRows = ((companies ?? []) as CompanyRow[]).filter((company) => company.account_kind === "client" && !isAdminTestIdentity(company))
+  const rows = companyRows.map((company) => {
     const activities = activityByCompany.get(company.id) ?? []
-    const latest = activities[0] ?? null
-    const bucket = activityReady ? bucketFor(company, latest?.created_at ?? null) : "no_activity"
+    const signal = activityReady ? buildClientActivitySignal(activities, company.subscription_status) : buildClientActivitySignal([], company.subscription_status)
+    const latest = signal.latest
+    const bucket = signal.bucket
     return {
       company,
       activities,
       latest,
       bucket,
+      signal,
       action:
         bucket === "trialing_inactive" ? "Reach out before trial fades"
         : bucket === "no_activity" ? "Help them take first action"
@@ -293,11 +294,12 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {!activityReady && (
             <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before outreach can use customer activity.</span></div>
           )}
-          {activityReady && outreachRows.slice(0, 20).map(({ company, activities, latest, bucket }) => {
+          {activityReady && outreachRows.slice(0, 20).map(({ company, latest, bucket, signal }) => {
             const latestAt = latest?.created_at ?? null
             const textHref = smsHref(company, bucket, latestAt)
-            const reason = outreachReason(bucket, latestAt)
+            const reason = signal.reachOutReason
             const lastOutreach = lastOutreachByCompany.get(company.id)
+            const missingTools = signal.missingCoreTools.slice(0, 3).map(activitySurfaceLabel).join(", ")
             return (
               <div key={company.id} className="hq-business-row">
                 <div className="hq-business-main hq-health-row">
@@ -309,10 +311,10 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                     <p className="hq-client-summary">
                       <span>{reason}</span>
                       <span><i aria-hidden="true" />{planLabel(company.plan)}</span>
-                      <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
+                      <span><i aria-hidden="true" />{signal.toolCount90d} tool action{signal.toolCount90d === 1 ? "" : "s"} in 90d</span>
                     </p>
                     <p className="hq-client-activity">
-                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {outreachLabel(lastOutreach?.created_at ?? null)}
+                      {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""}{missingTools ? ` / never used: ${missingTools}` : ""} / {outreachLabel(lastOutreach?.created_at ?? null)}
                       {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
                     </p>
                   </div>
@@ -354,7 +356,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {!activityReady && (
             <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before this page can read customer activity.</span></div>
           )}
-          {activityReady && visibleRows.map(({ company, activities, latest, bucket, action }) => {
+          {activityReady && visibleRows.map(({ company, latest, bucket, action, signal }) => {
             const lastOutreach = lastOutreachByCompany.get(company.id)
             return (
               <Link key={company.id} href={`/admin/clients/${company.id}`} className="hq-business-row hq-business-row-link">
@@ -367,11 +369,11 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                     <p className="hq-client-summary">
                       <span>{planLabel(company.plan)}</span>
                       <span><i aria-hidden="true" />{company.subscription_status ?? "not active"}</span>
-                      <span><i aria-hidden="true" />{activityLabel(latest?.created_at ?? null)}</span>
-                      <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
+                      <span><i aria-hidden="true" />{signal.label}</span>
+                      <span><i aria-hidden="true" />{signal.toolCount90d} tool action{signal.toolCount90d === 1 ? "" : "s"} in 90d</span>
                     </p>
                     <p className="hq-client-activity">
-                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {action} / {outreachLabel(lastOutreach?.created_at ?? null)}
+                      {signal.reachOutReason} / {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""} / {action} / {outreachLabel(lastOutreach?.created_at ?? null)}
                       {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
                     </p>
                   </div>

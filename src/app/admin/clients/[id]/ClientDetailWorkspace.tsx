@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleTest, setIncludedAddon, setDisabledAddon } from "../../businesses/actions"
 import { getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
+import { activityEventLabel, activitySurfaceLabel, buildClientActivitySignal } from "../../customerActivitySignals"
 import { adminTestIdentityReason, isAdminTestIdentity } from "../../testIdentity"
 import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
@@ -115,21 +116,12 @@ function nextFollowUpAt(activity: { metadata?: Record<string, unknown> | null } 
   return typeof value === "string" ? value : null
 }
 
-function activityLabel(value: string) {
-  return value.replace(/_/g, " ")
-}
-
-function surfaceLabel(value: string | null | undefined) {
-  if (!value) return "Unknown"
-  return value.replace(/_/g, " ")
-}
-
 function outreachMethodLabel(value: string) {
   if (value === "outreach_call") return "Call"
   if (value === "outreach_text") return "Text"
   if (value === "outreach_email") return "Email"
   if (value === "outreach_skip") return "Skipped"
-  return activityLabel(value)
+  return activityEventLabel(value)
 }
 
 function stateTone(state: string) {
@@ -192,13 +184,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const outreachActivities = client.activities.filter((activity) => activity.activity_type.startsWith("outreach_"))
   const lastOutreachActivity = outreachActivities[0] ?? null
   const lastCustomerActivity = client.customer_activities[0] ?? null
-  const customerActivityCount = client.customer_activities.length
-  const surfaceCounts = client.customer_activities.reduce<Record<string, number>>((counts, activity) => {
-    const key = activity.surface || "unknown"
-    counts[key] = (counts[key] ?? 0) + 1
-    return counts
-  }, {})
-  const topSurface = Object.entries(surfaceCounts).sort((a, b) => b[1] - a[1])[0] ?? null
+  const activitySignal = buildClientActivitySignal(client.customer_activities, client.subscription_status)
+  const customerActivityCount = activitySignal.count90d
+  const missingTools = activitySignal.missingCoreTools.slice(0, 4).map(activitySurfaceLabel).join(", ")
   const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
   const nextAction = client.client_state === "past_due"
     ? "Fix payment risk"
@@ -283,9 +271,17 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
         </div>
         <div className="hq-detail-snapshot hq-activity-snapshot">
           <div><span>Last use</span><strong>{client.customer_activity_ready ? formatDaysAgo(lastCustomerActivity?.created_at ?? null) : "Waiting on table"}</strong></div>
-          <div><span>90-day actions</span><strong>{client.customer_activity_ready ? customerActivityCount : "Not live"}</strong></div>
-          <div><span>Top area</span><strong>{client.customer_activity_ready && topSurface ? `${surfaceLabel(topSurface[0])} (${topSurface[1]})` : "No signal yet"}</strong></div>
+          <div><span>90-day tools</span><strong>{client.customer_activity_ready ? activitySignal.toolCount90d : "Not live"}</strong></div>
+          <div><span>Top tool</span><strong>{client.customer_activity_ready && activitySignal.topToolSurface ? `${activitySurfaceLabel(activitySignal.topToolSurface[0])} (${activitySignal.topToolSurface[1]})` : "No tool use yet"}</strong></div>
         </div>
+        {client.customer_activity_ready && (
+          <div className="hq-panel hq-next-action" style={{ marginBottom: 14 }}>
+            <div>
+              <p className="hq-row-title">{activitySignal.reachOutReason}</p>
+              <p className="hq-row-meta">{activitySignal.summary}{missingTools ? ` / Not used yet: ${missingTools}` : ""}</p>
+            </div>
+          </div>
+        )}
         <div className="hq-panel hq-client-activity-panel">
           {!client.customer_activity_ready && (
             <div className="hq-empty-state"><strong>Activity table is not live yet.</strong><span>Once the Supabase migration is applied, true customer actions will appear here.</span></div>
@@ -296,8 +292,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           {client.customer_activity_ready && client.customer_activities.slice(0, 12).map((activity, index) => (
             <div key={`${activity.created_at}-${index}`} className="hq-row">
               <div>
-                <p className="hq-row-title">{activityLabel(activity.event_type)}</p>
-                <p className="hq-row-meta">{surfaceLabel(activity.surface)}{activity.feature ? ` / ${surfaceLabel(activity.feature)}` : ""}</p>
+                <p className="hq-row-title">{activityEventLabel(activity.event_type)}</p>
+                <p className="hq-row-meta">{activitySurfaceLabel(activity.surface)}{activity.feature ? ` / ${activitySurfaceLabel(activity.feature)}` : ""}</p>
               </div>
               <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
             </div>

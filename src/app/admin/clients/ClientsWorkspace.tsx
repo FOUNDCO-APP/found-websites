@@ -21,11 +21,15 @@ export type ClientRow = {
   last_customer_activity_at: string | null
   last_customer_surface: string | null
   customer_activity_count_90d: number
+  customer_tool_activity_count_90d: number
   customer_activity_status: {
     label: string
     level: "using" | "quiet" | "outreach" | "stagnant"
     days: number | null
   }
+  customer_activity_reason: string
+  customer_activity_summary: string
+  customer_top_tool_surface: string | null
   industry_category: string | null
   is_test: boolean | null
   included_addon_slug: string | null
@@ -61,6 +65,12 @@ function activityTone(level: ClientRow["customer_activity_status"]["level"]) {
 
 function surfaceLabel(surface: string | null) {
   if (!surface) return "No tracked page"
+  if (surface === "site") return "Site"
+  if (surface === "leads") return "Leads"
+  if (surface === "photos") return "Photos"
+  if (surface === "estimates") return "Estimates"
+  if (surface === "marketing") return "Marketing"
+  if (surface === "dashboard") return "Dashboard"
   return surface.replace(/_/g, " ")
 }
 
@@ -93,8 +103,8 @@ function ClientItem({ row }: { row: ClientRow }) {
             ))}
           </p>
           <p className="hq-client-activity">
-            {row.test_identity && row.test_identity_reason ? `${row.test_identity_reason} - ` : ""}{surfaceLabel(row.last_customer_surface)}
-            {row.customer_activity_count_90d > 0 ? ` - ${row.customer_activity_count_90d} client action${row.customer_activity_count_90d === 1 ? "" : "s"} in 90d` : " - waiting for first client action"}
+            {row.test_identity && row.test_identity_reason ? `${row.test_identity_reason} - ` : ""}{row.customer_activity_reason} / {surfaceLabel(row.customer_top_tool_surface ?? row.last_customer_surface)}
+            {row.customer_activity_count_90d > 0 ? ` - ${row.customer_tool_activity_count_90d} tool action${row.customer_tool_activity_count_90d === 1 ? "" : "s"} in 90d` : " - waiting for first client action"}
           </p>
         </div>
       </div>

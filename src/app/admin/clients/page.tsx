@@ -1,4 +1,5 @@
 import { getAdminClient } from "../lib"
+import { buildClientActivitySignal } from "../customerActivitySignals"
 import { adminTestIdentityReason, isAdminTestIdentity } from "../testIdentity"
 import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
 
@@ -12,15 +13,6 @@ type CustomerActivityRow = {
   surface: string
   feature: string | null
   created_at: string
-}
-
-function clientActivityStatus(lastActivityAt: string | null) {
-  if (!lastActivityAt) return { label: "No client use yet", level: "stagnant" as const, days: null }
-  const days = Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86400000)
-  if (days <= 7) return { label: days === 0 ? "Used today" : `Used ${days}d ago`, level: "using" as const, days }
-  if (days <= 14) return { label: `Quiet ${days}d`, level: "quiet" as const, days }
-  if (days <= 30) return { label: `Check in ${days}d`, level: "outreach" as const, days }
-  return { label: `Stagnant ${days}d`, level: "stagnant" as const, days }
 }
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -75,7 +67,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     }
     const clientActivity = customerActivityByCompany.get(company.id) ?? []
     const lastClientActivity = clientActivity[0] ?? null
-    const activityStatus = clientActivityStatus(lastClientActivity?.created_at ?? null)
+    const activitySignal = buildClientActivitySignal(clientActivity, company.subscription_status)
     return {
       id: company.id,
       name: company.name,
@@ -94,7 +86,15 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       last_customer_activity_at: lastClientActivity?.created_at ?? null,
       last_customer_surface: lastClientActivity?.surface ?? null,
       customer_activity_count_90d: clientActivity.length,
-      customer_activity_status: activityStatus,
+      customer_tool_activity_count_90d: activitySignal.toolCount90d,
+      customer_activity_status: {
+        label: activitySignal.label,
+        level: activitySignal.level === "no_activity" ? "stagnant" : activitySignal.level,
+        days: activitySignal.latest ? Math.floor((Date.now() - new Date(activitySignal.latest.created_at).getTime()) / 86400000) : null,
+      },
+      customer_activity_reason: activitySignal.reachOutReason,
+      customer_activity_summary: activitySignal.summary,
+      customer_top_tool_surface: activitySignal.topToolSurface?.[0] ?? null,
       industry_category: company.industry_category,
       is_test: company.is_test,
       included_addon_slug: company.included_addon_slug ?? null,
