@@ -1,6 +1,6 @@
 import { getAdminClient } from "../lib"
 import { planLabel } from "../client-utils"
-import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount, type CampaignAudience } from "./GrowthWorkspace"
+import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount, type CampaignAudience, type AutomationDraft } from "./GrowthWorkspace"
 
 export const metadata = { title: "Growth - Found HQ" }
 
@@ -80,6 +80,10 @@ function prospectMember(prospect: Prospect, status: string) {
     href: null,
     status,
   }
+}
+
+function audienceById(audiences: CampaignAudience[], id: string) {
+  return audiences.find((audience) => audience.id === id)?.members ?? []
 }
 
 export default async function GrowthPage() {
@@ -218,6 +222,53 @@ export default async function GrowthPage() {
       members: noActivityClients.map((company) => companyMember(company, "No activity yet")),
     },
   ]
+  const automationDrafts: AutomationDraft[] = [
+    {
+      id: "lead-first-touch-day-1",
+      title: "Lead first touch",
+      trigger: "Lead added and no outreach logged after 1 day",
+      audience: "Leads needing first touch",
+      channel: "Text",
+      message: "Hey {{first_name}}, this is Super Shawn with Found. I wanted to follow up about {{business_name}} and see if getting a real working website live is still something worth looking at this week.",
+      members: audienceById(campaignAudiences, "lead-first-touch").filter((member) => (dayAge(openLeads.find((lead) => lead.id === member.id)?.created_at) ?? 0) >= 1),
+    },
+    {
+      id: "lead-follow-up-due",
+      title: "Lead follow-up due",
+      trigger: "Lead follow-up date is today or overdue",
+      audience: "Leads due for follow-up",
+      channel: "Text",
+      message: "Hey {{first_name}}, quick follow-up. Want to take a look at what your business site could look like and what we can get working for you?",
+      members: audienceById(campaignAudiences, "lead-follow-up-due"),
+    },
+    {
+      id: "trialing-inactive-7",
+      title: "Trial rescue",
+      trigger: "Trialing client inactive for 7 days",
+      audience: "Trialing clients inactive",
+      channel: "Email",
+      message: "Hey {{business_name}}, this is Super Shawn with Found. I noticed your dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you?",
+      members: audienceById(campaignAudiences, "trialing-inactive"),
+    },
+    {
+      id: "client-inactive-15",
+      title: "Client reactivation",
+      trigger: "Client inactive for 15+ days",
+      audience: "Clients inactive 15+ days",
+      channel: "Email",
+      message: "Hey {{business_name}}, this is Super Shawn with Found. If the system has not been useful lately, I want to know what is blocking you so we can tighten it up.",
+      members: audienceById(campaignAudiences, "inactive-clients"),
+    },
+    {
+      id: "new-client-first-week",
+      title: "First-week check-in",
+      trigger: "New client in first 7 days",
+      audience: "New clients first 7 days",
+      channel: "Manual",
+      message: "Hey {{business_name}}, this is Super Shawn with Found. Just checking in on your first week. I want to make sure you know where to go next and that the system is already helping.",
+      members: audienceById(campaignAudiences, "new-client-first-week"),
+    },
+  ]
 
   return (
     <div className="hq-page">
@@ -225,7 +276,7 @@ export default async function GrowthPage() {
         <div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Growth</h1><p className="hq-subtitle">Who to reach out to next, and the leads you're tracking by hand.</p></div>
         <span className="hq-count">{openLeads.length} leads</span>
       </header>
-      <GrowthWorkspace accounts={accounts} cohorts={cohorts} prospects={openLeads} campaignAudiences={campaignAudiences} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
+      <GrowthWorkspace accounts={accounts} cohorts={cohorts} prospects={openLeads} campaignAudiences={campaignAudiences} automationDrafts={automationDrafts} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
     </div>
   )
 }

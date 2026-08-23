@@ -146,17 +146,17 @@ function isFollowUpLater(outreach: OutreachRow | undefined) {
 function outreachCopy(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
   const reason = outreachReason(bucket, latestAt).toLowerCase()
   const dashboardUrl = `https://my.foundco.app`
-  const intro = `Hi ${company.name}, this is Shawn with Found.`
+  const intro = `Hey ${company.name}, this is Super Shawn with Found.`
   if (bucket === "trialing_inactive") {
-    return `${intro} I noticed your Found dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you? ${dashboardUrl}`
+    return `${intro} I noticed your dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you? ${dashboardUrl}`
   }
   if (bucket === "no_activity") {
-    return `${intro} I wanted to help you get your first useful action done in Found. A good next step is adding a photo, checking leads, or updating one section of your site. ${dashboardUrl}`
+    return `${intro} I wanted to help you get your first useful action done. A good next step is adding a photo, checking leads, or updating one section of your site. ${dashboardUrl}`
   }
   if (bucket === "stagnant") {
-    return `${intro} I noticed Found has been quiet for a bit (${reason}). Want me to help you tighten anything up or find what would make it more useful day to day? ${dashboardUrl}`
+    return `${intro} I noticed things have been quiet for a bit (${reason}). Want me to help you tighten anything up or find what would make it more useful day to day? ${dashboardUrl}`
   }
-  return `${intro} Quick check-in: I noticed activity has slowed down in Found. Anything feeling confusing, missing, or worth improving for your business? ${dashboardUrl}`
+  return `${intro} Quick check-in. I noticed activity has slowed down. Anything feeling confusing, missing, or worth improving for your business? ${dashboardUrl}`
 }
 
 function mailtoHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {

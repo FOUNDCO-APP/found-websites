@@ -31,3 +31,4 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify Growth campaign lists show counts and expandable members.
 - Verify campaign lists include clients, leads, inactive clients, trialing inactive, stale leads, upgrade-ready clients, billing risk, and first-week clients.
 - Verify campaign list email actions use available emails only.
+- Verify outreach and automation draft copy sounds personal from Super Shawn, not like a generic brand blast.

@@ -56,6 +56,16 @@ export type CampaignAudience = {
   members: CampaignMember[]
 }
 
+export type AutomationDraft = {
+  id: string
+  title: string
+  trigger: string
+  audience: string
+  channel: "Email" | "Text" | "Manual"
+  message: string
+  members: CampaignMember[]
+}
+
 type GoalWindow = "weekly" | "monthly" | "quarterly" | "yearly"
 type LeadView = "needs_follow_up" | "follow_up_due" | "follow_up_later" | "recently_contacted" | "stale" | "all"
 
@@ -157,8 +167,8 @@ function leadOutreachReason(prospect: Prospect) {
 }
 
 function leadOutreachCopy(prospect: Prospect) {
-  const intro = `Hi ${prospect.person_name}, this is Shawn with Found.`
-  return `${intro} I wanted to follow up about ${prospect.business_name}. Found helps small businesses get a real working website and business system live quickly. Would it be worth taking a look together this week? https://foundco.app`
+  const intro = `Hey ${prospect.person_name}, this is Super Shawn with Found.`
+  return `${intro} I wanted to follow up about ${prospect.business_name}. I think we can help you get a real working website and business system live without making it complicated. Worth taking a look together this week? https://foundco.app`
 }
 
 function mailtoHref(prospect: Prospect) {
@@ -318,6 +328,57 @@ function CampaignAudienceCard({ audience }: { audience: CampaignAudience }) {
   )
 }
 
+function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
+  const [expanded, setExpanded] = useState(false)
+  const reachable = draft.members.filter((member) => draft.channel === "Text" ? member.phone : member.email)
+
+  return (
+    <article className="hq-prospect">
+      <button type="button" className="hq-prospect-head" onClick={() => setExpanded((value) => !value)} style={{ width: "100%", border: "none", background: "none", cursor: "pointer", textAlign: "left" }}>
+        <div>
+          <div className="hq-business-name-line">
+            <h2>{draft.title}</h2>
+            <span className="hq-badge hq-badge-warning">Draft</span>
+          </div>
+          <p className="hq-row-meta">{draft.trigger} / {draft.channel} / {draft.members.length} match{draft.members.length === 1 ? "" : "es"}</p>
+        </div>
+        <span className="hq-chevron" style={{ transform: expanded ? "rotate(135deg)" : "rotate(45deg)" }} />
+      </button>
+      {expanded && (
+        <div className="hq-business-manage-body hq-sales-forms">
+          <div style={{ display: "grid", gap: 10 }}>
+            <div>
+              <p className="hq-row-meta">Audience</p>
+              <p className="hq-row-title">{draft.audience}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Suggested message</p>
+              <p className="hq-form-note" style={{ marginTop: 6 }}>{draft.message}</p>
+            </div>
+            <div>
+              <p className="hq-row-meta">Ready to reach</p>
+              <p className="hq-row-title">{reachable.length} of {draft.members.length}</p>
+            </div>
+          </div>
+          {draft.members.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              {draft.members.slice(0, 8).map((member) => (
+                <div key={`${draft.id}-${member.type}-${member.id}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
+                  <div>
+                    <p className="hq-row-title" style={{ fontSize: 13 }}>{member.name}</p>
+                    <p className="hq-row-meta">{member.status} / {member.detail}</p>
+                  </div>
+                  {member.href && <a href={member.href} style={{ color: "var(--hq-green)", fontSize: 11, fontWeight: 750, textDecoration: "none" }}>Open</a>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </article>
+  )
+}
+
 function LeadRow({ prospect }: { prospect: Prospect }) {
   const [converting, startConverting] = useTransition()
   const [dismissing, startDismissing] = useTransition()
@@ -393,11 +454,12 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
   )
 }
 
-export default function GrowthWorkspace({ accounts, cohorts, prospects, campaignAudiences, recentSignupCount, windowDays }: {
+export default function GrowthWorkspace({ accounts, cohorts, prospects, campaignAudiences, automationDrafts, recentSignupCount, windowDays }: {
   accounts: GrowthAccount[]
   cohorts: Cohort[]
   prospects: Prospect[]
   campaignAudiences: CampaignAudience[]
+  automationDrafts: AutomationDraft[]
   recentSignupCount: number
   windowDays: number
 }) {
@@ -426,6 +488,16 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, campaign
       <GoalScoreboard accounts={accounts} />
 
       <section className="hq-section hq-growth-followup">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Automation drafts</h2>
+          <span className="hq-section-meta">{automationDrafts.length} rules, no auto-send</span>
+        </div>
+        <div className="hq-business-list">
+          {automationDrafts.map((draft) => <AutomationDraftCard key={draft.id} draft={draft} />)}
+        </div>
+      </section>
+
+      <section className="hq-section">
         <div className="hq-section-head">
           <h2 className="hq-section-title">Campaign lists</h2>
           <span className="hq-section-meta">{campaignAudiences.reduce((total, audience) => total + audience.members.length, 0)} total matches</span>
