@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: "/admin/growth", label: "Growth", icon: "sales", match: ["/admin/growth"] },
   { href: "/admin/clients", label: "Clients", icon: "clients", match: ["/admin/clients"] },
   { href: "/admin/emails", label: "Emails", icon: "emails", match: ["/admin/emails"] },
-  { href: "/admin/more", label: "More", icon: "more", match: ["/admin/more", "/admin/activity", "/admin/photos", "/admin/copy", "/admin/health", "/admin/billing", "/admin/new-client"] },
+  { href: "/admin/more", label: "More", icon: "more", match: ["/admin/more", "/admin/activity", "/admin/photos", "/admin/copy", "/admin/health", "/admin/billing", "/admin/new-client", "/admin/test-center"] },
 ] as const
 
 function NavIcon({ name }: { name: string }) {

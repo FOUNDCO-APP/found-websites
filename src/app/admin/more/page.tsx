@@ -20,6 +20,7 @@ export default async function AdminMorePage() {
       <section>
         <div className="hq-section-head"><h2 className="hq-section-title">Quality</h2></div>
         <div className="hq-panel">
+          <Link href="/admin/test-center" className="hq-row hq-link-row"><div><p className="hq-row-title">Test Center</p><p className="hq-row-meta">Run QA checks and see safe test accounts before ads go live</p></div><span className="hq-chevron" /></Link>
           <Link href="/admin/activity" className="hq-row hq-link-row"><div><p className="hq-row-title">Client health</p><p className="hq-row-meta">See real customer-side activity and outreach risk</p></div><span className="hq-chevron" /></Link>
           <Link href="/admin/copy" className="hq-row hq-link-row"><div><p className="hq-row-title">Website copy</p><p className="hq-row-meta">Review and safely regenerate live content</p></div><div className="hq-action-end"><span className={`hq-badge ${fallbackCount ? "hq-badge-warning" : "hq-badge-success"}`}>{fallbackCount ? `${fallbackCount} review` : "Clear"}</span><span className="hq-chevron" /></div></Link>
           <Link href="/admin/photos" className="hq-row hq-link-row"><div><p className="hq-row-title">Photo library</p><p className="hq-row-meta">Curate shared industry photo pools</p></div><span className="hq-chevron" /></Link>
