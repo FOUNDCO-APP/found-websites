@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { addLead, convertLeadToClient, dismissLead } from "./actions"
+import { addLead, convertLeadToClient, dismissLead, markLeadOutreach } from "./actions"
 
 export type Prospect = {
   id: string
@@ -14,6 +14,14 @@ export type Prospect = {
   notes: string | null
   created_at: string
   linked_company_id: string | null
+  outreach_activities: LeadOutreach[]
+}
+
+export type LeadOutreach = {
+  activity_type: string
+  summary: string
+  created_at: string
+  metadata: Record<string, unknown> | null
 }
 
 export type Cohort = {
@@ -31,6 +39,7 @@ export type GrowthAccount = {
 }
 
 type GoalWindow = "weekly" | "monthly" | "quarterly" | "yearly"
+type LeadView = "needs_follow_up" | "follow_up_due" | "follow_up_later" | "recently_contacted" | "stale" | "all"
 
 const PLAN_MRR: Record<string, number> = {
   found: 29,
@@ -44,6 +53,15 @@ const GOALS: Record<GoalWindow, { label: string; accountGoal: number; days: numb
   quarterly: { label: "This quarter", accountGoal: 30, days: 92, buckets: 6 },
   yearly: { label: "This year", accountGoal: 120, days: 365, buckets: 12 },
 }
+
+const LEAD_VIEWS: { key: LeadView; label: string }[] = [
+  { key: "needs_follow_up", label: "Needs follow-up" },
+  { key: "follow_up_due", label: "Follow-up due" },
+  { key: "follow_up_later", label: "Follow-up later" },
+  { key: "recently_contacted", label: "Recently contacted" },
+  { key: "stale", label: "Stale" },
+  { key: "all", label: "All" },
+]
 
 function isRevenueAccount(account: GrowthAccount) {
   return ["active", "trialing"].includes(account.subscription_status ?? "") && account.client_state !== "cancelled" && account.client_state !== "comp"
@@ -59,6 +77,80 @@ function formatMoney(value: number) {
 
 function daysAgo(days: number) {
   return new Date(Date.now() - days * 86400000)
+}
+
+function dayAge(value: string | null | undefined) {
+  if (!value) return null
+  return Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
+}
+
+function nextFollowUpAt(outreach: LeadOutreach | undefined) {
+  const value = outreach?.metadata?.next_follow_up_at
+  return typeof value === "string" ? value : null
+}
+
+function isFollowUpDue(outreach: LeadOutreach | undefined) {
+  const value = nextFollowUpAt(outreach)
+  if (value) return new Date(value).getTime() <= Date.now()
+  const days = dayAge(outreach?.created_at)
+  return days !== null && days >= 7
+}
+
+function isFollowUpLater(outreach: LeadOutreach | undefined) {
+  const value = nextFollowUpAt(outreach)
+  if (value) return new Date(value).getTime() > Date.now()
+  const days = dayAge(outreach?.created_at)
+  return days !== null && days < 7
+}
+
+function followUpLabel(value: string | null | undefined) {
+  if (!value) return "No follow-up date"
+  const days = dayAge(value)
+  if (days === null) return "No follow-up date"
+  if (days >= 0) return days === 0 ? "Follow up today" : `Follow-up overdue ${days}d`
+  const daysAway = Math.abs(days)
+  if (daysAway === 1) return "Follow up tomorrow"
+  return `Follow up in ${daysAway}d`
+}
+
+function outreachLabel(outreach: LeadOutreach | undefined) {
+  const days = dayAge(outreach?.created_at)
+  if (days === null) return "No outreach logged"
+  if (days <= 0) return "Contacted today"
+  if (days === 1) return "Contacted yesterday"
+  return `Contacted ${days}d ago`
+}
+
+function leadNeedsFollowUp(prospect: Prospect) {
+  const latest = prospect.outreach_activities[0]
+  return !latest || isFollowUpDue(latest)
+}
+
+function isStaleLead(prospect: Prospect) {
+  return prospect.outreach_activities.length === 0 && (dayAge(prospect.created_at) ?? 0) >= 14
+}
+
+function leadOutreachReason(prospect: Prospect) {
+  if (isStaleLead(prospect)) return "Stale lead with no outreach"
+  const latest = prospect.outreach_activities[0]
+  if (!latest) return "New lead needs first touch"
+  if (isFollowUpDue(latest)) return "Follow-up is due"
+  return "Follow-up is scheduled"
+}
+
+function leadOutreachCopy(prospect: Prospect) {
+  const intro = `Hi ${prospect.person_name}, this is Shawn with Found.`
+  return `${intro} I wanted to follow up about ${prospect.business_name}. Found helps small businesses get a real working website and business system live quickly. Would it be worth taking a look together this week? https://foundco.app`
+}
+
+function mailtoHref(prospect: Prospect) {
+  const subject = `Following up about ${prospect.business_name}`
+  return `mailto:${prospect.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(leadOutreachCopy(prospect))}`
+}
+
+function smsHref(prospect: Prospect) {
+  const phone = prospect.phone?.replace(/[^\d+]/g, "")
+  return phone ? `sms:${phone}?&body=${encodeURIComponent(leadOutreachCopy(prospect))}` : null
 }
 
 function periodAccounts(accounts: GrowthAccount[], days: number) {
@@ -168,6 +260,9 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
   const [dismissing, startDismissing] = useTransition()
   const [converted, setConverted] = useState(Boolean(prospect.linked_company_id))
   const [dismissed, setDismissed] = useState(false)
+  const latestOutreach = prospect.outreach_activities[0]
+  const textHref = smsHref(prospect)
+  const reason = leadOutreachReason(prospect)
 
   function handleConvert() {
     startConverting(async () => {
@@ -194,10 +289,24 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
             {converted && <span className="hq-badge hq-badge-success">Converted</span>}
           </div>
           <p className="hq-row-meta">{prospect.person_name} - {prospect.source}</p>
+          <p className="hq-client-activity">
+            {reason} / {outreachLabel(latestOutreach)}
+            {nextFollowUpAt(latestOutreach) ? ` / ${followUpLabel(nextFollowUpAt(latestOutreach))}` : ""}
+          </p>
           <div className="hq-contact-actions">
             {prospect.phone && <a href={`tel:${prospect.phone}`}>Call</a>}
-            {prospect.phone && <a href={`sms:${prospect.phone}`}>Text</a>}
-            {prospect.email && <a href={`mailto:${prospect.email}`}>Email</a>}
+            {textHref && <a href={textHref}>Text</a>}
+            {prospect.email && <a href={mailtoHref(prospect)}>Email</a>}
+          </div>
+          <div className="hq-contact-actions hq-outreach-log-actions">
+            {["call", "text", "email", "skip"].map((method) => (
+              <form key={method} action={markLeadOutreach}>
+                <input type="hidden" name="prospectId" value={prospect.id} />
+                <input type="hidden" name="method" value={method} />
+                <input type="hidden" name="reason" value={reason} />
+                <button type="submit">{method === "skip" ? "Skip" : `Log ${method}`}</button>
+              </form>
+            ))}
           </div>
           {prospect.notes && <p className="hq-form-note" style={{ marginTop: 8 }}>{prospect.notes}</p>}
         </div>
@@ -229,6 +338,24 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSi
   windowDays: number
 }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [leadView, setLeadView] = useState<LeadView>("needs_follow_up")
+  const leadCounts = LEAD_VIEWS.reduce<Record<LeadView, number>>((counts, view) => {
+    counts[view.key] =
+      view.key === "all" ? prospects.length
+      : view.key === "needs_follow_up" ? prospects.filter(leadNeedsFollowUp).length
+      : view.key === "follow_up_due" ? prospects.filter((prospect) => isFollowUpDue(prospect.outreach_activities[0])).length
+      : view.key === "follow_up_later" ? prospects.filter((prospect) => isFollowUpLater(prospect.outreach_activities[0])).length
+      : view.key === "recently_contacted" ? prospects.filter((prospect) => prospect.outreach_activities.length > 0).length
+      : prospects.filter(isStaleLead).length
+    return counts
+  }, {} as Record<LeadView, number>)
+  const visibleProspects =
+    leadView === "all" ? prospects
+    : leadView === "needs_follow_up" ? prospects.filter(leadNeedsFollowUp)
+    : leadView === "follow_up_due" ? prospects.filter((prospect) => isFollowUpDue(prospect.outreach_activities[0]))
+    : leadView === "follow_up_later" ? prospects.filter((prospect) => isFollowUpLater(prospect.outreach_activities[0]))
+    : leadView === "recently_contacted" ? prospects.filter((prospect) => prospect.outreach_activities.length > 0)
+    : prospects.filter(isStaleLead)
 
   return (
     <>
@@ -268,9 +395,22 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, recentSi
         {prospects.length === 0 ? (
           <div className="hq-panel"><div className="hq-empty-state"><strong>No leads yet.</strong><span>Add someone worth following up with - a referral, someone you met.</span></div></div>
         ) : (
-          <div className="hq-business-list">
-            {prospects.map((prospect) => <LeadRow key={prospect.id} prospect={prospect} />)}
-          </div>
+          <>
+            <div className="hq-filter-row hq-health-filters" style={{ marginBottom: 18 }}>
+              {LEAD_VIEWS.map((view) => (
+                <button key={view.key} type="button" data-active={leadView === view.key} onClick={() => setLeadView(view.key)}>
+                  {view.label} ({leadCounts[view.key]})
+                </button>
+              ))}
+            </div>
+            {visibleProspects.length === 0 ? (
+              <div className="hq-panel"><div className="hq-empty-state"><strong>No leads in this view.</strong><span>When a lead matches this follow-up state, it will appear here.</span></div></div>
+            ) : (
+              <div className="hq-business-list">
+                {visibleProspects.map((prospect) => <LeadRow key={prospect.id} prospect={prospect} />)}
+              </div>
+            )}
+          </>
         )}
       </section>
     </>

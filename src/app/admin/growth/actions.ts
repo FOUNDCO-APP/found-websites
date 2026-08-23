@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../lib"
 import { slugify } from "@/lib/slugify"
 
+const OUTREACH_METHODS = new Set(["call", "text", "email", "skip"])
+
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
 }
@@ -11,6 +13,17 @@ function value(formData: FormData, key: string) {
 function refresh() {
   revalidatePath("/admin")
   revalidatePath("/admin/growth")
+}
+
+function methodLabel(method: string) {
+  if (method === "call") return "Call logged"
+  if (method === "text") return "Text sent"
+  if (method === "email") return "Email sent"
+  return "Skipped for now"
+}
+
+function followUpDays(method: string) {
+  return method === "skip" ? 7 : 3
 }
 
 // Deliberately minimal - a name, a business, a way to reach them, and an
@@ -54,6 +67,26 @@ export async function dismissLead(prospectId: string) {
     lost_at: new Date().toISOString(),
     loss_reason: "Not moving forward",
   }).eq("id", prospectId)
+  if (error) throw new Error(error.message)
+  refresh()
+}
+
+export async function markLeadOutreach(formData: FormData) {
+  await requireAdmin()
+  const prospectId = value(formData, "prospectId")
+  const method = value(formData, "method")
+  const reason = value(formData, "reason")
+  if (!prospectId || !OUTREACH_METHODS.has(method)) throw new Error("Invalid lead outreach update.")
+
+  const days = followUpDays(method)
+  const nextFollowUpAt = new Date(Date.now() + days * 86400000).toISOString()
+  const summary = reason ? `${methodLabel(method)}: ${reason}` : methodLabel(method)
+  const { error } = await getAdminClient().from("sales_activities").insert({
+    prospect_id: prospectId,
+    activity_type: `outreach_${method}`,
+    summary,
+    metadata: { method, reason, follow_up_days: days, next_follow_up_at: nextFollowUpAt },
+  })
   if (error) throw new Error(error.message)
   refresh()
 }

@@ -25,3 +25,6 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify period selector works for week, month, quarter, and year.
 - Verify chart spacing and section hierarchy are readable on mobile.
 - Verify upgrade opportunities and leads do not crowd the growth chart.
+- Verify lead call, text, email, and skip logs create follow-up timing.
+- Verify lead follow-up filters show needs follow-up, due, later, recently contacted, stale, and all.
+- Verify lead text and email quick actions include prefilled copy.
