@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleTest, setIncludedAddon, setDisabledAddon } from "../../businesses/actions"
 import { getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
+import { adminTestIdentityReason, isAdminTestIdentity } from "../../testIdentity"
 import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
 
@@ -161,6 +162,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
     ? BUSINESS_INCLUDED_ADDONS.map(slug => ALL_ADDONS.find(a => a.slug === slug)).filter((a): a is NonNullable<typeof a> => !!a)
     : []
   const isActiveSubscription = client.subscription_status === "active" || client.subscription_status === "trialing"
+  const isTestIdentity = isAdminTestIdentity(client)
+  const testIdentityReason = isTestIdentity ? adminTestIdentityReason(client) : null
   const returnTo = `/admin/clients/${client.id}`
   const siteUrl = `https://${client.slug}.${ROOT_DOMAIN}`
   const activateUrl = `https://${ROOT_DOMAIN}/activate?slug=${client.slug}`
@@ -231,12 +234,23 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <h1 className="hq-title">{client.name}</h1>
           <p className="hq-subtitle">
             <span className={`hq-badge hq-badge-${stateTone(client.client_state)}`} style={{ marginRight: 6 }}>
-              {client.account_kind === "test" ? "Test" : client.client_state.replace("_", " ")}
+              {isTestIdentity ? "Test account" : client.client_state.replace("_", " ")}
             </span>
             {planLabel(client.plan)}
           </p>
         </div>
       </header>
+
+      {isTestIdentity && (
+        <section className="hq-command-status" style={{ marginBottom: 16 }}>
+          <div>
+            <span>Admin-only test account</span>
+            <strong>Safe for QA</strong>
+            <p>{testIdentityReason}. This label is only shown inside Found HQ and is excluded from public site pages.</p>
+          </div>
+          <a href="/admin/test-center">Open Test Center<span className="hq-chevron" /></a>
+        </section>
+      )}
 
       <div className="hq-form-wide" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
         <a className="hq-button hq-button-secondary" href={siteUrl} target="_blank" rel="noopener noreferrer">Site</a>

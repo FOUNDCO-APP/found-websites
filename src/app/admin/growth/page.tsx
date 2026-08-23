@@ -1,5 +1,6 @@
 import { getAdminClient } from "../lib"
 import { planLabel } from "../client-utils"
+import { isAdminTestEmail, isAdminTestIdentity } from "../testIdentity"
 import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount, type CampaignAudience, type AutomationDraft } from "./GrowthWorkspace"
 
 export const metadata = { title: "Growth - Found HQ" }
@@ -58,18 +59,12 @@ function isSalesFollowUpDue(activity: SalesActivity | undefined) {
   return days !== null && days >= 7
 }
 
-function isTestEmail(email: string | null | undefined) {
-  const value = email?.trim().toLowerCase() ?? ""
-  if (!value) return false
-  return value.includes("shawnlopez@me.com") || value.includes("seanlopez@me.com") || value.includes("sayitmarketing") || value.includes("marketing")
-}
-
 function isTestCompany(company: CompanyRow) {
-  return company.account_kind === "test" || company.is_test === true || isTestEmail(company.email)
+  return isAdminTestIdentity(company)
 }
 
 function isTestProspect(prospect: Prospect) {
-  return isTestEmail(prospect.email)
+  return isAdminTestEmail(prospect.email)
 }
 
 function companyMember(company: CompanyRow, status: string) {

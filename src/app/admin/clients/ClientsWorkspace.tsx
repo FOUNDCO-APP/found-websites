@@ -15,6 +15,8 @@ export type ClientRow = {
   account_kind: string
   comp_reason: string | null
   created_at: string
+  test_identity: boolean
+  test_identity_reason: string | null
   last_activity: string | null
   last_customer_activity_at: string | null
   last_customer_surface: string | null
@@ -78,7 +80,7 @@ function ClientItem({ row }: { row: ClientRow }) {
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
             <h2>{row.name}</h2>
-            <span className={`hq-badge hq-badge-${stateTone(row.client_state)}`}>{row.account_kind === "test" ? "Test" : row.client_state.replace("_", " ")}</span>
+            <span className={`hq-badge hq-badge-${row.test_identity ? "info" : stateTone(row.client_state)}`}>{row.test_identity ? "Test account" : row.client_state.replace("_", " ")}</span>
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
@@ -91,7 +93,7 @@ function ClientItem({ row }: { row: ClientRow }) {
             ))}
           </p>
           <p className="hq-client-activity">
-            {surfaceLabel(row.last_customer_surface)}
+            {row.test_identity && row.test_identity_reason ? `${row.test_identity_reason} - ` : ""}{surfaceLabel(row.last_customer_surface)}
             {row.customer_activity_count_90d > 0 ? ` - ${row.customer_activity_count_90d} client action${row.customer_activity_count_90d === 1 ? "" : "s"} in 90d` : " - waiting for first client action"}
           </p>
         </div>
@@ -105,13 +107,13 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
   const [filter, setFilter] = useState(initialFilter || "clients")
   const filtered = useMemo(() => rows.filter((row) => {
     if (!`${row.name} ${row.slug} ${row.email ?? ""}`.toLowerCase().includes(query.toLowerCase())) return false
-    if (filter === "test") return row.account_kind === "test"
+    if (filter === "test") return row.test_identity
     if (filter === "all") return true
     // Every other tab (Clients, Attention, Onboarding, Active, Past due) is
     // scoped to real clients only - test accounts have their own dedicated
     // tab and shouldn't leak into state-based views (the exact bug Shawn
     // caught: throwaway accounts reading as if they were real business risk).
-    if (row.account_kind !== "client") return false
+    if (row.account_kind !== "client" || row.test_identity) return false
     if (filter === "clients") return true
     if (filter === "attention") return row.issues.length > 0 || row.client_state === "past_due" || row.customer_activity_status.level === "outreach" || row.customer_activity_status.level === "stagnant"
     if (filter === "quiet") return row.customer_activity_status.level === "quiet"
@@ -132,7 +134,7 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
             <option value="onboarding">Onboarding</option>
             <option value="active">Active</option>
             <option value="past_due">Past due</option>
-            <option value="test">Test</option>
+            <option value="test">Test accounts only</option>
           </select>
         </label>
       </div>

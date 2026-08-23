@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import Link from "next/link"
 import { getAdminClient, planLabel } from "../lib"
+import { isAdminTestIdentity } from "../testIdentity"
 import { getStripe } from "@/lib/stripe/connect"
 import BillingTable, { type BillingRow } from "./BillingTable"
 
@@ -17,15 +18,14 @@ export default async function AdminBillingPage() {
 
   const { data: companies } = await admin
     .from("companies")
-    .select("id, name, slug, email, plan, stripe_customer_id")
-    .eq("account_kind", "test")
+    .select("id, name, slug, email, account_kind, is_test, plan, stripe_customer_id")
     .eq("subscription_status", "active")
     .not("stripe_customer_id", "is", null)
     .order("name")
 
   const rows: BillingRow[] = []
   if (stripe && companies) {
-    await Promise.all(companies.map(async (company) => {
+    await Promise.all(companies.filter(isAdminTestIdentity).map(async (company) => {
       if (!company.stripe_customer_id) return
       try {
         const subs = await stripe.subscriptions.list({ customer: company.stripe_customer_id, status: "active", limit: 20 })
@@ -57,7 +57,7 @@ export default async function AdminBillingPage() {
         <div>
           <p className="hq-eyebrow">Operate</p>
           <h1 className="hq-title">Test Billing</h1>
-          <p className="hq-subtitle">Test accounts (account type: Test) with a live Stripe subscription still billing. Cancel the ones you're done with.</p>
+          <p className="hq-subtitle">Test identities with a live Stripe subscription still billing. Cancel the ones you're done with.</p>
         </div>
         <span className="hq-count">${totalMonthly.toFixed(2)}/mo</span>
       </header>

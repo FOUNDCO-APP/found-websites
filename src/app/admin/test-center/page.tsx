@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getAdminClient } from "../lib"
+import { adminTestIdentityReason, isAdminTestEmail, isAdminTestIdentity } from "../testIdentity"
 import TestCenterWorkspace, { type QaCheck, type TestIdentity } from "./TestCenterWorkspace"
 
 export const metadata = { title: "Test Center - Found HQ" }
@@ -21,21 +22,6 @@ type ProspectRow = {
   business_name: string
   email: string | null
   stage: string | null
-}
-
-function isTestEmail(email: string | null | undefined) {
-  const value = email?.trim().toLowerCase() ?? ""
-  if (!value) return false
-  return value.includes("shawnlopez@me.com") || value.includes("seanlopez@me.com") || value.includes("sayitmarketing") || value.includes("marketing")
-}
-
-function testReason(row: { email: string | null; account_kind?: string | null; is_test?: boolean | null }) {
-  if (row.account_kind === "test") return "account_kind = test"
-  if (row.is_test === true) return "is_test = true"
-  if (row.email?.toLowerCase().includes("sayitmarketing")) return "Sayitmarketing email"
-  if (row.email?.toLowerCase().includes("shawnlopez@me.com") || row.email?.toLowerCase().includes("seanlopez@me.com")) return "Shawn/Sean email"
-  if (row.email?.toLowerCase().includes("marketing")) return "Marketing test email"
-  return "Test identity"
 }
 
 const QA_CHECKS: QaCheck[] = [
@@ -66,9 +52,9 @@ export default async function TestCenterPage() {
 
   const companyRows = (companies ?? []) as CompanyRow[]
   const prospectRows = (prospects ?? []) as ProspectRow[]
-  const testCompanies = companyRows.filter((company) => company.account_kind === "test" || company.is_test === true || isTestEmail(company.email))
+  const testCompanies = companyRows.filter(isAdminTestIdentity)
   const realCompanies = companyRows.filter((company) => company.account_kind === "client" && !testCompanies.some((test) => test.id === company.id))
-  const testProspects = prospectRows.filter((prospect) => prospect.stage !== "won" && prospect.stage !== "lost" && isTestEmail(prospect.email))
+  const testProspects = prospectRows.filter((prospect) => prospect.stage !== "won" && prospect.stage !== "lost" && isAdminTestEmail(prospect.email))
   const activeRealClients = realCompanies.filter((company) => ["active", "onboarding", "comp"].includes(company.client_state ?? "")).length
   const testIdentities: TestIdentity[] = [
     ...testCompanies.map((company) => ({
@@ -76,7 +62,7 @@ export default async function TestCenterPage() {
       type: "account" as const,
       name: company.name,
       email: company.email,
-      reason: testReason(company),
+      reason: adminTestIdentityReason(company),
       href: `/admin/clients/${company.id}`,
     })),
     ...testProspects.map((prospect) => ({
@@ -84,7 +70,7 @@ export default async function TestCenterPage() {
       type: "lead" as const,
       name: prospect.business_name,
       email: prospect.email,
-      reason: testReason(prospect),
+      reason: adminTestIdentityReason(prospect),
       href: "/admin/growth",
     })),
   ]

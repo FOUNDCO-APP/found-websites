@@ -1,4 +1,5 @@
 import { getAdminClient } from "../lib"
+import { adminTestIdentityReason, isAdminTestIdentity } from "../testIdentity"
 import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
 
 export const metadata = { title: "Clients - Found HQ" }
@@ -87,6 +88,8 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       account_kind: company.account_kind ?? "client",
       comp_reason: company.comp_reason,
       created_at: company.created_at,
+      test_identity: isAdminTestIdentity(company),
+      test_identity_reason: isAdminTestIdentity(company) ? adminTestIdentityReason(company) : null,
       last_activity: lastActivity.get(company.id) ?? null,
       last_customer_activity_at: lastClientActivity?.created_at ?? null,
       last_customer_surface: lastClientActivity?.surface ?? null,
@@ -99,7 +102,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       emails: emailsByCompany.get(company.id) ?? [],
     }
   })
-  const realClients = rows.filter((row) => row.account_kind === "client").length
+  const realClients = rows.filter((row) => row.account_kind === "client" && !row.test_identity).length
   return (
     <div className="hq-page">
       <header className="hq-header"><div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Clients</h1><p className="hq-subtitle">Scan accounts. Fix risk. Open any client.</p></div><span className="hq-count">{realClients}</span></header>
