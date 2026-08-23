@@ -32,3 +32,6 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify campaign lists include clients, leads, inactive clients, trialing inactive, stale leads, upgrade-ready clients, billing risk, and first-week clients.
 - Verify campaign list email actions use available emails only.
 - Verify outreach and automation draft copy sounds personal from Super Shawn, not like a generic brand blast.
+- Verify automation draft member actions open prefilled text/email one person at a time.
+- Verify automation draft copy button copies the personalized message.
+- Verify automation draft Mark reviewed logs outreach and creates a short follow-up.

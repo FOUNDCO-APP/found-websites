@@ -194,7 +194,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     admin
       .from("client_activities")
       .select("company_id, activity_type, summary, created_at, metadata")
-      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip"])
+      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip", "outreach_reviewed"])
       .gte("created_at", outreachSince)
       .order("created_at", { ascending: false })
       .limit(1000),

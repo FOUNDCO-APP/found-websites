@@ -61,6 +61,8 @@ function companyMember(company: CompanyRow, status: string) {
     id: company.id,
     type: "client" as const,
     name: company.name,
+    contactName: company.name,
+    businessName: company.name,
     detail: `${planLabel(company.plan)} / ${company.subscription_status ?? "not active"}`,
     email: company.email,
     phone: company.phone,
@@ -74,6 +76,8 @@ function prospectMember(prospect: Prospect, status: string) {
     id: prospect.id,
     type: "lead" as const,
     name: prospect.business_name,
+    contactName: prospect.person_name,
+    businessName: prospect.business_name,
     detail: `${prospect.person_name} / ${prospect.source}`,
     email: prospect.email,
     phone: prospect.phone,
@@ -98,7 +102,7 @@ export default async function GrowthPage() {
       .order("created_at", { ascending: false }),
     admin.from("sales_activities")
       .select("prospect_id, activity_type, summary, created_at, metadata")
-      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip"])
+      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip", "outreach_reviewed"])
       .gte("created_at", outreachStart)
       .order("created_at", { ascending: false })
       .limit(1000),

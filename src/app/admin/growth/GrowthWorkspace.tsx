@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { addLead, convertLeadToClient, dismissLead, markLeadOutreach } from "./actions"
+import { markClientOutreach } from "../activity/actions"
 
 export type Prospect = {
   id: string
@@ -42,6 +43,8 @@ export type CampaignMember = {
   id: string
   type: "client" | "lead"
   name: string
+  contactName: string
+  businessName: string
   detail: string
   email: string | null
   phone: string | null
@@ -328,9 +331,36 @@ function CampaignAudienceCard({ audience }: { audience: CampaignAudience }) {
   )
 }
 
+function draftMessage(draft: AutomationDraft, member: CampaignMember) {
+  const firstName = member.contactName.split(/\s+/)[0] || member.name
+  return draft.message
+    .replaceAll("{{first_name}}", firstName)
+    .replaceAll("{{business_name}}", member.businessName)
+}
+
+function draftMailtoHref(draft: AutomationDraft, member: CampaignMember) {
+  if (!member.email) return null
+  const subject = `${draft.title} - ${member.businessName}`
+  return `mailto:${member.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftMessage(draft, member))}`
+}
+
+function draftSmsHref(draft: AutomationDraft, member: CampaignMember) {
+  const phone = member.phone?.replace(/[^\d+]/g, "")
+  return phone ? `sms:${phone}?&body=${encodeURIComponent(draftMessage(draft, member))}` : null
+}
+
 function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
   const [expanded, setExpanded] = useState(false)
-  const reachable = draft.members.filter((member) => draft.channel === "Text" ? member.phone : member.email)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const reachable = draft.members.filter((member) =>
+    draft.channel === "Text" ? member.phone : draft.channel === "Email" ? member.email : member.phone || member.email,
+  )
+
+  async function copyMessage(member: CampaignMember) {
+    const key = `${draft.id}-${member.type}-${member.id}`
+    await navigator.clipboard.writeText(draftMessage(draft, member))
+    setCopiedKey(key)
+  }
 
   return (
     <article className="hq-prospect">
@@ -363,12 +393,24 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
           {draft.members.length > 0 && (
             <div style={{ marginTop: 12 }}>
               {draft.members.slice(0, 8).map((member) => (
-                <div key={`${draft.id}-${member.type}-${member.id}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
+                <div key={`${draft.id}-${member.type}-${member.id}`} style={{ display: "grid", gap: 8, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
                   <div>
                     <p className="hq-row-title" style={{ fontSize: 13 }}>{member.name}</p>
                     <p className="hq-row-meta">{member.status} / {member.detail}</p>
                   </div>
-                  {member.href && <a href={member.href} style={{ color: "var(--hq-green)", fontSize: 11, fontWeight: 750, textDecoration: "none" }}>Open</a>}
+                  <p className="hq-form-note" style={{ marginTop: 0 }}>{draftMessage(draft, member)}</p>
+                  <div className="hq-contact-actions hq-outreach-actions" style={{ marginTop: 0 }}>
+                    {draftSmsHref(draft, member) && <a href={draftSmsHref(draft, member)!}>Open text</a>}
+                    {draftMailtoHref(draft, member) && <a href={draftMailtoHref(draft, member)!}>Open email</a>}
+                    <button type="button" onClick={() => copyMessage(member)} style={{ border: 0, background: "transparent", color: "var(--hq-green)", font: "inherit", fontSize: 11, fontWeight: 750, padding: 0, cursor: "pointer" }}>{copiedKey === `${draft.id}-${member.type}-${member.id}` ? "Copied" : "Copy"}</button>
+                    {member.href && <a href={member.href}>Open</a>}
+                  </div>
+                  <form action={member.type === "client" ? markClientOutreach : markLeadOutreach} className="hq-contact-actions hq-outreach-log-actions" style={{ marginTop: 0 }}>
+                    <input type="hidden" name={member.type === "client" ? "companyId" : "prospectId"} value={member.id} />
+                    <input type="hidden" name="method" value="reviewed" />
+                    <input type="hidden" name="reason" value={`${draft.title}: ${draft.trigger}`} />
+                    <button type="submit">Mark reviewed</button>
+                  </form>
                 </div>
               ))}
             </div>

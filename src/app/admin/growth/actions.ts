@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../lib"
 import { slugify } from "@/lib/slugify"
 
-const OUTREACH_METHODS = new Set(["call", "text", "email", "skip"])
+const OUTREACH_METHODS = new Set(["call", "text", "email", "skip", "reviewed"])
 
 function value(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim()
@@ -19,10 +19,12 @@ function methodLabel(method: string) {
   if (method === "call") return "Call logged"
   if (method === "text") return "Text sent"
   if (method === "email") return "Email sent"
+  if (method === "reviewed") return "Reviewed"
   return "Skipped for now"
 }
 
 function followUpDays(method: string) {
+  if (method === "reviewed") return 1
   return method === "skip" ? 7 : 3
 }
 
