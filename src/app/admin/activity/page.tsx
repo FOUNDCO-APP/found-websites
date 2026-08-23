@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getAdminClient } from "../lib"
+import { markClientOutreach } from "./actions"
 
 export const metadata = { title: "Client Health - Found HQ" }
 
@@ -21,6 +22,13 @@ type ActivityRow = {
   event_type: string
   surface: string
   feature: string | null
+  created_at: string
+}
+
+type OutreachRow = {
+  company_id: string
+  activity_type: string
+  summary: string
   created_at: string
 }
 
@@ -91,6 +99,15 @@ function outreachReason(bucket: Bucket, latestAt: string | null) {
   return "Healthy usage"
 }
 
+function outreachLabel(value: string | null) {
+  if (!value) return "No outreach logged"
+  const days = dayAge(value)
+  if (days === null) return "No outreach logged"
+  if (days <= 0) return "Contacted today"
+  if (days === 1) return "Contacted yesterday"
+  return `Contacted ${days}d ago`
+}
+
 function outreachCopy(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
   const reason = outreachReason(bucket, latestAt).toLowerCase()
   const dashboardUrl = `https://my.foundco.app`
@@ -123,7 +140,9 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const admin = getAdminClient()
   const activitySince = new Date(Date.now() - 90 * 86400000).toISOString()
 
-  const [{ data: companies }, activityResult] = await Promise.all([
+  const outreachSince = new Date(Date.now() - 30 * 86400000).toISOString()
+
+  const [{ data: companies }, activityResult, { data: outreachEvents }] = await Promise.all([
     admin
       .from("companies")
       .select("id, name, slug, email, phone, plan, subscription_status, client_state, trial_ends_at, created_at")
@@ -136,6 +155,13 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
       .gte("created_at", activitySince)
       .order("created_at", { ascending: false })
       .limit(10000),
+    admin
+      .from("client_activities")
+      .select("company_id, activity_type, summary, created_at")
+      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip"])
+      .gte("created_at", outreachSince)
+      .order("created_at", { ascending: false })
+      .limit(1000),
   ])
 
   const activityReady = !activityResult.error
@@ -171,8 +197,17 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     return acc
   }, {} as Record<Bucket, number>)
   const visibleRows = filter === "all" ? rows : rows.filter((row) => row.bucket === filter)
+  const lastOutreachByCompany = new Map<string, OutreachRow>()
+  for (const outreach of (outreachEvents ?? []) as OutreachRow[]) {
+    if (!lastOutreachByCompany.has(outreach.company_id)) lastOutreachByCompany.set(outreach.company_id, outreach)
+  }
   const outreachRows = rows
     .filter((row) => outreachPriority(row.bucket) < 99)
+    .filter((row) => {
+      const lastOutreach = lastOutreachByCompany.get(row.company.id)
+      const days = dayAge(lastOutreach?.created_at ?? null)
+      return days === null || days >= 7
+    })
     .sort((a, b) => outreachPriority(a.bucket) - outreachPriority(b.bucket) || (dayAge(b.latest?.created_at ?? null) ?? 999) - (dayAge(a.latest?.created_at ?? null) ?? 999))
 
   return (
@@ -205,6 +240,8 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {activityReady && outreachRows.slice(0, 20).map(({ company, activities, latest, bucket }) => {
             const latestAt = latest?.created_at ?? null
             const textHref = smsHref(company, bucket, latestAt)
+            const reason = outreachReason(bucket, latestAt)
+            const lastOutreach = lastOutreachByCompany.get(company.id)
             return (
               <div key={company.id} className="hq-business-row">
                 <div className="hq-business-main hq-health-row">
@@ -214,12 +251,12 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                       <span className="hq-badge hq-badge-warning">{bucketLabel(bucket)}</span>
                     </div>
                     <p className="hq-client-summary">
-                      <span>{outreachReason(bucket, latestAt)}</span>
+                      <span>{reason}</span>
                       <span><i aria-hidden="true" />{planLabel(company.plan)}</span>
                       <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
                     </p>
                     <p className="hq-client-activity">
-                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {company.subscription_status ?? "not active"}
+                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {outreachLabel(lastOutreach?.created_at ?? null)}
                     </p>
                   </div>
                   <div className="hq-contact-actions hq-outreach-actions">
@@ -227,6 +264,16 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                     {textHref && <a href={textHref}>Text</a>}
                     {company.email && <a href={mailtoHref(company, bucket, latestAt)}>Email</a>}
                     <Link href={`/admin/clients/${company.id}`}>Open</Link>
+                  </div>
+                  <div className="hq-contact-actions hq-outreach-log-actions">
+                    {["call", "text", "email", "skip"].map((method) => (
+                      <form key={method} action={markClientOutreach}>
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <input type="hidden" name="method" value={method} />
+                        <input type="hidden" name="reason" value={reason} />
+                        <button type="submit">{method === "skip" ? "Skip" : `Log ${method}`}</button>
+                      </form>
+                    ))}
                   </div>
                 </div>
               </div>
