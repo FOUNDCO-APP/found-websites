@@ -22,6 +22,8 @@ type CompanyRow = {
   slug: string
   email: string | null
   phone: string | null
+  account_kind: string | null
+  is_test: boolean | null
   plan: string | null
   subscription_status: string | null
   client_state: string | null
@@ -54,6 +56,20 @@ function isSalesFollowUpDue(activity: SalesActivity | undefined) {
   if (value) return new Date(value).getTime() <= Date.now()
   const days = dayAge(activity?.created_at)
   return days !== null && days >= 7
+}
+
+function isTestEmail(email: string | null | undefined) {
+  const value = email?.trim().toLowerCase() ?? ""
+  if (!value) return false
+  return value.includes("shawnlopez@me.com") || value.includes("seanlopez@me.com") || value.includes("sayitmarketing") || value.includes("marketing")
+}
+
+function isTestCompany(company: CompanyRow) {
+  return company.account_kind === "test" || company.is_test === true || isTestEmail(company.email)
+}
+
+function isTestProspect(prospect: Prospect) {
+  return isTestEmail(prospect.email)
 }
 
 function companyMember(company: CompanyRow, status: string) {
@@ -96,7 +112,7 @@ export default async function GrowthPage() {
   const outreachStart = new Date(Date.now() - OUTREACH_WINDOW_DAYS * 86400000).toISOString()
 
   const [{ data: companies }, { data: prospectData }, { data: salesActivityData }, { data: customerActivityData }] = await Promise.all([
-    admin.from("companies").select("id, name, slug, email, phone, plan, subscription_status, client_state, industry_category, created_at").eq("account_kind", "client"),
+    admin.from("companies").select("id, name, slug, email, phone, account_kind, is_test, plan, subscription_status, client_state, industry_category, created_at"),
     admin.from("sales_prospects")
       .select("id, person_name, business_name, email, phone, source, stage, notes, created_at, linked_company_id")
       .order("created_at", { ascending: false }),
@@ -120,7 +136,9 @@ export default async function GrowthPage() {
   // reach out to together. This replaces manually tracking deals through
   // pipeline stages with the thing Shawn actually asked for: "you have 10
   // new Starter clients that are all HVAC companies."
-  const companyRows = (companies ?? []) as CompanyRow[]
+  const allCompanyRows = (companies ?? []) as CompanyRow[]
+  const testCompanyRows = allCompanyRows.filter(isTestCompany)
+  const companyRows = allCompanyRows.filter((company) => !isTestCompany(company) && company.account_kind === "client")
   const customerActivityByCompany = new Map<string, CustomerActivity>()
   for (const activity of (customerActivityData ?? []) as CustomerActivity[]) {
     if (!customerActivityByCompany.has(activity.company_id)) customerActivityByCompany.set(activity.company_id, activity)
@@ -153,7 +171,9 @@ export default async function GrowthPage() {
     ...prospect,
     outreach_activities: outreachByProspect.get(prospect.id) ?? [],
   }))
-  const openLeads = prospects.filter((p) => p.stage !== "won" && p.stage !== "lost")
+  const allOpenLeads = prospects.filter((p) => p.stage !== "won" && p.stage !== "lost")
+  const testOpenLeads = allOpenLeads.filter(isTestProspect)
+  const openLeads = allOpenLeads.filter((prospect) => !isTestProspect(prospect))
   const accounts: GrowthAccount[] = companyRows.map((company) => ({
     id: company.id,
     plan: company.plan,
@@ -273,6 +293,18 @@ export default async function GrowthPage() {
       members: audienceById(campaignAudiences, "new-client-first-week"),
     },
   ]
+  const testSandboxDraft: AutomationDraft = {
+    id: "test-send-sandbox",
+    title: "Test send sandbox",
+    trigger: "Test identities only - excluded from real campaign counts",
+    audience: "Shawn, Sayitmarketing, marketing, and test accounts/leads",
+    channel: "Manual",
+    message: "Hey {{first_name}}, this is Super Shawn with Found. This is a test of the Found outreach system. If you got this, email and text workflows are ready to test without touching real client outreach.",
+    members: [
+      ...testCompanyRows.map((company) => companyMember(company, company.account_kind === "test" ? "Test account" : "Test email account")),
+      ...testOpenLeads.map((prospect) => prospectMember(prospect, "Test lead")),
+    ],
+  }
 
   return (
     <div className="hq-page">
@@ -280,7 +312,7 @@ export default async function GrowthPage() {
         <div><p className="hq-eyebrow">Found HQ</p><h1 className="hq-title">Growth</h1><p className="hq-subtitle">Who to reach out to next, and the leads you're tracking by hand.</p></div>
         <span className="hq-count">{openLeads.length} leads</span>
       </header>
-      <GrowthWorkspace accounts={accounts} cohorts={cohorts} prospects={openLeads} campaignAudiences={campaignAudiences} automationDrafts={automationDrafts} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
+      <GrowthWorkspace accounts={accounts} cohorts={cohorts} prospects={openLeads} campaignAudiences={campaignAudiences} automationDrafts={automationDrafts} testSandboxDraft={testSandboxDraft} recentSignupCount={recentSignupCount} windowDays={COHORT_WINDOW_DAYS} />
     </div>
   )
 }

@@ -36,3 +36,6 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify automation draft copy button copies the personalized message.
 - Verify automation draft Mark reviewed logs outreach and creates a short follow-up.
 - Verify automation draft Send email uses Resend for one recipient, creates an email log row, and logs outreach only after success.
+- Verify Growth test send sandbox shows only `account_kind = test`, Shawn/Sean email, Sayitmarketing, and marketing test identities.
+- Verify Growth test send sandbox accounts do not appear in real campaign lists, automation drafts, Growth lead counts, MRR, or signup goals.
+- Verify test sandbox Open text, Open email, Copy, Mark reviewed, and Send email work without changing real outreach queues.

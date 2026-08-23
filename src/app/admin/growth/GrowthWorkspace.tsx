@@ -511,12 +511,13 @@ function LeadRow({ prospect }: { prospect: Prospect }) {
   )
 }
 
-export default function GrowthWorkspace({ accounts, cohorts, prospects, campaignAudiences, automationDrafts, recentSignupCount, windowDays }: {
+export default function GrowthWorkspace({ accounts, cohorts, prospects, campaignAudiences, automationDrafts, testSandboxDraft, recentSignupCount, windowDays }: {
   accounts: GrowthAccount[]
   cohorts: Cohort[]
   prospects: Prospect[]
   campaignAudiences: CampaignAudience[]
   automationDrafts: AutomationDraft[]
+  testSandboxDraft: AutomationDraft
   recentSignupCount: number
   windowDays: number
 }) {
@@ -543,6 +544,16 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, campaign
   return (
     <>
       <GoalScoreboard accounts={accounts} />
+
+      <section className="hq-section hq-growth-followup">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Test send sandbox</h2>
+          <span className="hq-section-meta">{testSandboxDraft.members.length} safe test matches</span>
+        </div>
+        <div className="hq-business-list">
+          <AutomationDraftCard draft={testSandboxDraft} />
+        </div>
+      </section>
 
       <section className="hq-section hq-growth-followup">
         <div className="hq-section-head">
