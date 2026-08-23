@@ -50,6 +50,7 @@ export type CampaignMember = {
   phone: string | null
   href: string | null
   status: string
+  message?: string
 }
 
 export type CampaignAudience = {
@@ -333,7 +334,7 @@ function CampaignAudienceCard({ audience }: { audience: CampaignAudience }) {
 
 function draftMessage(draft: AutomationDraft, member: CampaignMember) {
   const firstName = member.contactName.split(/\s+/)[0] || member.name
-  return draft.message
+  return (member.message ?? draft.message)
     .replaceAll("{{first_name}}", firstName)
     .replaceAll("{{business_name}}", member.businessName)
 }

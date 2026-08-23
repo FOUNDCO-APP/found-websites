@@ -104,3 +104,36 @@ export function buildClientActivitySignal(activities: CustomerActivitySignalRow[
     summary,
   }
 }
+
+export function clientActivityOutreachCopy(input: { businessName: string; signal: ReturnType<typeof buildClientActivitySignal> }) {
+  const dashboardUrl = "https://my.foundco.app"
+  const intro = `Hey ${input.businessName}, this is Super Shawn with Found.`
+  const missingTools = input.signal.missingCoreTools.slice(0, 2).map(activitySurfaceLabel)
+  const missingToolLine = missingTools.length > 0 ? ` I also noticed ${missingTools.join(" and ")} ${missingTools.length === 1 ? "has" : "have"} not been used yet, and those are usually where Found starts becoming more useful.` : ""
+
+  if (input.signal.bucket === "trialing_inactive") {
+    return `${intro} I noticed your Found account has been quiet while it is still in trial. I want to help you get one useful thing done before the trial fades, whether that is updating your site, adding photos, checking leads, or setting up estimates.${missingToolLine} Want me to help you take the next step? ${dashboardUrl}`
+  }
+
+  if (input.signal.bucket === "no_activity") {
+    return `${intro} I wanted to help you get your first useful action done in Found. A good next step is adding a photo, checking leads, or updating one section of your site so the system starts working for your business.${missingToolLine} ${dashboardUrl}`
+  }
+
+  if (input.signal.onlyDashboard) {
+    return `${intro} I saw the dashboard was opened, but it does not look like any of the working tools have been used yet. That usually means something is unclear or the next step is not obvious. Want me to help you use one real tool, like Photos, Leads, Site updates, or Estimates? ${dashboardUrl}`
+  }
+
+  if (input.signal.level === "stagnant") {
+    return `${intro} I noticed there has not been client-side activity in a bit. If Found has not been useful lately, I want to know what is blocking you so we can tighten it up.${missingToolLine} Want me to help you get it moving again? ${dashboardUrl}`
+  }
+
+  if (input.signal.level === "quiet") {
+    return `${intro} Quick check-in. I noticed activity has slowed down a little. Anything feeling confusing, missing, or worth improving so Found keeps helping day to day?${missingToolLine} ${dashboardUrl}`
+  }
+
+  if (missingTools.length > 0) {
+    return `${intro} I noticed Found is getting some use, but ${missingTools.join(" and ")} ${missingTools.length === 1 ? "has" : "have"} not been used yet. Those tools can help the system do more of the work for you. Want me to help you get one of them set up? ${dashboardUrl}`
+  }
+
+  return `${intro} Quick check-in. I want to make sure Found is still helping and that nothing feels confusing, missing, or harder than it should be. ${dashboardUrl}`
+}

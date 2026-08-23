@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getAdminClient } from "../lib"
-import { buildClientActivitySignal, activityEventLabel, activitySurfaceLabel } from "../customerActivitySignals"
+import { buildClientActivitySignal, activityEventLabel, activitySurfaceLabel, clientActivityOutreachCopy } from "../customerActivitySignals"
 import { isAdminTestIdentity } from "../testIdentity"
 import { markClientOutreach } from "./actions"
 
@@ -65,24 +65,6 @@ function dayAge(value: string | null) {
   return Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
 }
 
-function activityLabel(value: string | null) {
-  if (!value) return "No activity yet"
-  const days = dayAge(value)
-  if (days === null) return "No activity yet"
-  if (days <= 0) return "Used today"
-  if (days === 1) return "Used yesterday"
-  return `Used ${days}d ago`
-}
-
-function bucketFor(company: CompanyRow, lastActivityAt: string | null): Bucket {
-  const days = dayAge(lastActivityAt)
-  if (company.subscription_status === "trialing" && (days === null || days >= 7)) return "trialing_inactive"
-  if (days === null) return "no_activity"
-  if (days <= 7) return "active_week"
-  if (days <= 14) return "quiet"
-  return "stagnant"
-}
-
 function bucketLabel(bucket: ActivityView) {
   return FILTERS.find((filter) => filter.key === bucket)?.label ?? "All"
 }
@@ -93,15 +75,6 @@ function outreachPriority(bucket: Bucket) {
   if (bucket === "stagnant") return 3
   if (bucket === "quiet") return 4
   return 99
-}
-
-function outreachReason(bucket: Bucket, latestAt: string | null) {
-  const days = dayAge(latestAt)
-  if (bucket === "trialing_inactive") return days === null ? "Trialing and no customer activity" : `Trialing and quiet for ${days}d`
-  if (bucket === "no_activity") return "No first customer action"
-  if (bucket === "stagnant") return days === null ? "No recent use" : `No use in ${days}d`
-  if (bucket === "quiet") return days === null ? "Activity slowing down" : `Activity slowing down: ${days}d`
-  return "Healthy usage"
 }
 
 function outreachLabel(value: string | null) {
@@ -142,30 +115,14 @@ function isFollowUpLater(outreach: OutreachRow | undefined) {
   return days !== null && days < 7
 }
 
-function outreachCopy(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
-  const reason = outreachReason(bucket, latestAt).toLowerCase()
-  const dashboardUrl = `https://my.foundco.app`
-  const intro = `Hey ${company.name}, this is Super Shawn with Found.`
-  if (bucket === "trialing_inactive") {
-    return `${intro} I noticed your dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you? ${dashboardUrl}`
-  }
-  if (bucket === "no_activity") {
-    return `${intro} I wanted to help you get your first useful action done. A good next step is adding a photo, checking leads, or updating one section of your site. ${dashboardUrl}`
-  }
-  if (bucket === "stagnant") {
-    return `${intro} I noticed things have been quiet for a bit (${reason}). Want me to help you tighten anything up or find what would make it more useful day to day? ${dashboardUrl}`
-  }
-  return `${intro} Quick check-in. I noticed activity has slowed down. Anything feeling confusing, missing, or worth improving for your business? ${dashboardUrl}`
-}
-
-function mailtoHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
+function mailtoHref(company: CompanyRow, signal: ReturnType<typeof buildClientActivitySignal>) {
   const subject = `Checking in on ${company.name}'s Found site`
-  return `mailto:${company.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(outreachCopy(company, bucket, latestAt))}`
+  return `mailto:${company.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(clientActivityOutreachCopy({ businessName: company.name, signal }))}`
 }
 
-function smsHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
+function smsHref(company: CompanyRow, signal: ReturnType<typeof buildClientActivitySignal>) {
   const phone = company.phone?.replace(/[^\d+]/g, "")
-  return phone ? `sms:${phone}?&body=${encodeURIComponent(outreachCopy(company, bucket, latestAt))}` : null
+  return phone ? `sms:${phone}?&body=${encodeURIComponent(clientActivityOutreachCopy({ businessName: company.name, signal }))}` : null
 }
 
 export default async function AdminActivityPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -295,8 +252,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
             <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before outreach can use customer activity.</span></div>
           )}
           {activityReady && outreachRows.slice(0, 20).map(({ company, latest, bucket, signal }) => {
-            const latestAt = latest?.created_at ?? null
-            const textHref = smsHref(company, bucket, latestAt)
+            const textHref = smsHref(company, signal)
             const reason = signal.reachOutReason
             const lastOutreach = lastOutreachByCompany.get(company.id)
             const missingTools = signal.missingCoreTools.slice(0, 3).map(activitySurfaceLabel).join(", ")
@@ -321,7 +277,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                   <div className="hq-contact-actions hq-outreach-actions">
                     {company.phone && <a href={`tel:${company.phone}`}>Call</a>}
                     {textHref && <a href={textHref}>Text</a>}
-                    {company.email && <a href={mailtoHref(company, bucket, latestAt)}>Email</a>}
+                    {company.email && <a href={mailtoHref(company, signal)}>Email</a>}
                     <Link href={`/admin/clients/${company.id}`}>Open</Link>
                   </div>
                   <div className="hq-contact-actions hq-outreach-log-actions">

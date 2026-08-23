@@ -13,6 +13,7 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify skip logs create a 7-day follow-up.
 - Verify follow-up due and follow-up later filters show the correct accounts.
 - Verify outreach history appears on the client detail page.
+- Verify Client Health text/email copy changes for trialing inactive, no activity, dashboard-only, stagnant, and missing-tool clients.
 
 ## Today
 
@@ -45,6 +46,7 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify automation draft copy button copies the personalized message.
 - Verify automation draft Mark reviewed logs outreach and creates a short follow-up.
 - Verify automation draft Send email uses Resend for one recipient, creates an email log row, and logs outreach only after success.
+- Verify client automation drafts use reason-specific copy for dashboard-only, inactive, no activity, and missing-tool clients.
 - Verify Growth test send sandbox shows only `account_kind = test`, Shawn/Sean email, Sayitmarketing, and marketing test identities.
 - Verify Growth test send sandbox accounts do not appear in real campaign lists, automation drafts, Growth lead counts, MRR, or signup goals.
 - Verify test sandbox Open text, Open email, Copy, Mark reviewed, and Send email work without changing real outreach queues.

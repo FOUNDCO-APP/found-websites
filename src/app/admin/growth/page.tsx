@@ -1,6 +1,6 @@
 import { getAdminClient } from "../lib"
 import { planLabel } from "../client-utils"
-import { buildClientActivitySignal } from "../customerActivitySignals"
+import { buildClientActivitySignal, clientActivityOutreachCopy } from "../customerActivitySignals"
 import { isAdminTestEmail, isAdminTestIdentity } from "../testIdentity"
 import GrowthWorkspace, { type Prospect, type Cohort, type GrowthAccount, type CampaignAudience, type AutomationDraft } from "./GrowthWorkspace"
 
@@ -70,7 +70,7 @@ function isTestProspect(prospect: Prospect) {
   return isAdminTestEmail(prospect.email)
 }
 
-function companyMember(company: CompanyRow, status: string) {
+function companyMember(company: CompanyRow, status: string, message?: string) {
   return {
     id: company.id,
     type: "client" as const,
@@ -82,6 +82,7 @@ function companyMember(company: CompanyRow, status: string) {
     phone: company.phone,
     href: `/admin/clients/${company.id}`,
     status,
+    message,
   }
 }
 
@@ -185,6 +186,10 @@ export default async function GrowthPage() {
     company.id,
     buildClientActivitySignal(customerActivityByCompany.get(company.id) ?? [], company.subscription_status),
   ]))
+  const activityMessageForCompany = (company: CompanyRow) => clientActivityOutreachCopy({
+    businessName: company.name,
+    signal: activitySignalByCompany.get(company.id) ?? buildClientActivitySignal([], company.subscription_status),
+  })
   const upgradeReadyClients = companyRows.filter((company) => UPGRADEABLE_PLANS.has(company.plan ?? ""))
   const inactiveClients = companyRows.filter((company) => (dayAge(activitySignalByCompany.get(company.id)?.latest?.created_at) ?? 999) >= 15)
   const noActivityClients = companyRows.filter((company) => !customerActivityByCompany.has(company.id))
@@ -203,13 +208,13 @@ export default async function GrowthPage() {
       id: "trialing-inactive",
       title: "Trialing clients inactive",
       description: "Protect trials before they fade.",
-      members: trialingInactiveClients.map((company) => companyMember(company, "Trialing and quiet")),
+      members: trialingInactiveClients.map((company) => companyMember(company, "Trialing and quiet", activityMessageForCompany(company))),
     },
     {
       id: "inactive-clients",
       title: "Clients inactive 15+ days",
       description: "Retention list for customers who stopped using Found.",
-      members: inactiveClients.map((company) => companyMember(company, "No customer use in 15+ days")),
+      members: inactiveClients.map((company) => companyMember(company, "No customer use in 15+ days", activityMessageForCompany(company))),
     },
     {
       id: "lead-follow-up-due",
@@ -251,31 +256,31 @@ export default async function GrowthPage() {
       id: "no-activity-clients",
       title: "Clients with no activity",
       description: "Accounts where no true customer-side activity has been captured.",
-      members: noActivityClients.map((company) => companyMember(company, "No activity yet")),
+      members: noActivityClients.map((company) => companyMember(company, "No activity yet", activityMessageForCompany(company))),
     },
     {
       id: "dashboard-only-clients",
       title: "Dashboard only",
       description: "Clients who opened Found but have not used a working tool yet.",
-      members: dashboardOnlyClients.map((company) => companyMember(company, "Dashboard only")),
+      members: dashboardOnlyClients.map((company) => companyMember(company, "Dashboard only", activityMessageForCompany(company))),
     },
     {
       id: "no-leads-usage",
       title: "Never used leads",
       description: "Clients who have not opened the lead/inbox workflow.",
-      members: noLeadsUsageClients.map((company) => companyMember(company, "No leads usage")),
+      members: noLeadsUsageClients.map((company) => companyMember(company, "No leads usage", activityMessageForCompany(company))),
     },
     {
       id: "no-photos-usage",
       title: "Never used photos",
       description: "Clients who have not used the photo/gallery workflow.",
-      members: noPhotosUsageClients.map((company) => companyMember(company, "No photos usage")),
+      members: noPhotosUsageClients.map((company) => companyMember(company, "No photos usage", activityMessageForCompany(company))),
     },
     {
       id: "no-estimates-usage",
       title: "Never used estimates",
       description: "Clients who have not used estimate workflows.",
-      members: noEstimatesUsageClients.map((company) => companyMember(company, "No estimates usage")),
+      members: noEstimatesUsageClients.map((company) => companyMember(company, "No estimates usage", activityMessageForCompany(company))),
     },
   ]
   const automationDrafts: AutomationDraft[] = [
@@ -314,6 +319,28 @@ export default async function GrowthPage() {
       channel: "Email",
       message: "Hey {{business_name}}, this is Super Shawn with Found. If the system has not been useful lately, I want to know what is blocking you so we can tighten it up.",
       members: audienceById(campaignAudiences, "inactive-clients"),
+    },
+    {
+      id: "dashboard-only-nudge",
+      title: "Dashboard-only nudge",
+      trigger: "Client opened Found but has not used a working tool",
+      audience: "Dashboard only",
+      channel: "Manual",
+      message: "Hey {{business_name}}, this is Super Shawn with Found. I saw the dashboard was opened, but it does not look like any of the working tools have been used yet. Want me to help you use one real tool, like Photos, Leads, Site updates, or Estimates?",
+      members: audienceById(campaignAudiences, "dashboard-only-clients"),
+    },
+    {
+      id: "tool-adoption-nudge",
+      title: "Tool adoption nudge",
+      trigger: "Client has not used a core Found tool",
+      audience: "Never used leads, photos, or estimates",
+      channel: "Manual",
+      message: "Hey {{business_name}}, this is Super Shawn with Found. I noticed one of the core tools has not been used yet, and that is usually where Found starts becoming more useful. Want me to help you get one set up?",
+      members: [
+        ...audienceById(campaignAudiences, "no-leads-usage"),
+        ...audienceById(campaignAudiences, "no-photos-usage"),
+        ...audienceById(campaignAudiences, "no-estimates-usage"),
+      ].filter((member, index, members) => members.findIndex((item) => item.type === member.type && item.id === member.id) === index),
     },
     {
       id: "new-client-first-week",
