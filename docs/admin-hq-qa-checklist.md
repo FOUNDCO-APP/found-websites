@@ -35,3 +35,4 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify automation draft member actions open prefilled text/email one person at a time.
 - Verify automation draft copy button copies the personalized message.
 - Verify automation draft Mark reviewed logs outreach and creates a short follow-up.
+- Verify automation draft Send email uses Resend for one recipient, creates an email log row, and logs outreach only after success.

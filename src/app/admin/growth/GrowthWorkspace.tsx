@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { addLead, convertLeadToClient, dismissLead, markLeadOutreach } from "./actions"
+import { addLead, convertLeadToClient, dismissLead, markLeadOutreach, sendApprovedAutomationEmail } from "./actions"
 import { markClientOutreach } from "../activity/actions"
 
 export type Prospect = {
@@ -344,6 +344,10 @@ function draftMailtoHref(draft: AutomationDraft, member: CampaignMember) {
   return `mailto:${member.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(draftMessage(draft, member))}`
 }
 
+function draftSubject(draft: AutomationDraft, member: CampaignMember) {
+  return `${draft.title} - ${member.businessName}`
+}
+
 function draftSmsHref(draft: AutomationDraft, member: CampaignMember) {
   const phone = member.phone?.replace(/[^\d+]/g, "")
   return phone ? `sms:${phone}?&body=${encodeURIComponent(draftMessage(draft, member))}` : null
@@ -405,6 +409,17 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
                     <button type="button" onClick={() => copyMessage(member)} style={{ border: 0, background: "transparent", color: "var(--hq-green)", font: "inherit", fontSize: 11, fontWeight: 750, padding: 0, cursor: "pointer" }}>{copiedKey === `${draft.id}-${member.type}-${member.id}` ? "Copied" : "Copy"}</button>
                     {member.href && <a href={member.href}>Open</a>}
                   </div>
+                  {member.email && (
+                    <form action={sendApprovedAutomationEmail} className="hq-contact-actions hq-outreach-log-actions" style={{ marginTop: 0 }}>
+                      <input type="hidden" name="recipientType" value={member.type} />
+                      <input type="hidden" name="recipientId" value={member.id} />
+                      <input type="hidden" name="email" value={member.email} />
+                      <input type="hidden" name="subject" value={draftSubject(draft, member)} />
+                      <input type="hidden" name="message" value={draftMessage(draft, member)} />
+                      <input type="hidden" name="reason" value={`${draft.title}: ${draft.trigger}`} />
+                      <button type="submit">Send email</button>
+                    </form>
+                  )}
                   <form action={member.type === "client" ? markClientOutreach : markLeadOutreach} className="hq-contact-actions hq-outreach-log-actions" style={{ marginTop: 0 }}>
                     <input type="hidden" name={member.type === "client" ? "companyId" : "prospectId"} value={member.id} />
                     <input type="hidden" name="method" value="reviewed" />

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getAdminClient, requireAdmin } from "../lib"
 import { slugify } from "@/lib/slugify"
+import { sendTrackedEmail } from "@/lib/emailLog"
 
 const OUTREACH_METHODS = new Set(["call", "text", "email", "skip", "reviewed"])
 
@@ -26,6 +27,19 @@ function methodLabel(method: string) {
 function followUpDays(method: string) {
   if (method === "reviewed") return 1
   return method === "skip" ? 7 : 3
+}
+
+function htmlEscape(input: string) {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
+function paragraphHtml(input: string) {
+  return input.split(/\n{2,}/).map((paragraph) => `<p>${htmlEscape(paragraph).replace(/\n/g, "<br />")}</p>`).join("")
 }
 
 // Deliberately minimal - a name, a business, a way to reach them, and an
@@ -90,6 +104,55 @@ export async function markLeadOutreach(formData: FormData) {
     metadata: { method, reason, follow_up_days: days, next_follow_up_at: nextFollowUpAt },
   })
   if (error) throw new Error(error.message)
+  refresh()
+}
+
+export async function sendApprovedAutomationEmail(formData: FormData) {
+  await requireAdmin()
+  const recipientType = value(formData, "recipientType")
+  const recipientId = value(formData, "recipientId")
+  const email = value(formData, "email")
+  const subject = value(formData, "subject")
+  const message = value(formData, "message")
+  const reason = value(formData, "reason")
+  if (!["client", "lead"].includes(recipientType) || !recipientId || !email || !subject || !message) {
+    throw new Error("Email, subject, message, and recipient are required.")
+  }
+
+  const admin = getAdminClient()
+  const sent = await sendTrackedEmail({
+    to: email,
+    subject,
+    text: message,
+    html: paragraphHtml(message),
+    companyId: recipientType === "client" ? recipientId : null,
+    recipientType: recipientType === "client" ? "client_owner" : "prospect",
+    emailType: "automation_draft",
+    source: "admin/growth/sendApprovedAutomationEmail",
+    emailScope: "found",
+    admin,
+  })
+  if (!sent) throw new Error("Email failed to send. Check Emails for the failure record.")
+
+  const days = followUpDays("email")
+  const nextFollowUpAt = new Date(Date.now() + days * 86400000).toISOString()
+  if (recipientType === "client") {
+    const { error } = await admin.from("client_activities").insert({
+      company_id: recipientId,
+      activity_type: "outreach_email",
+      summary: reason ? `Email sent: ${reason}` : "Email sent",
+      metadata: { method: "email", reason, follow_up_days: days, next_follow_up_at: nextFollowUpAt, source: "automation_draft" },
+    })
+    if (error) throw new Error(error.message)
+  } else {
+    const { error } = await admin.from("sales_activities").insert({
+      prospect_id: recipientId,
+      activity_type: "outreach_email",
+      summary: reason ? `Email sent: ${reason}` : "Email sent",
+      metadata: { method: "email", reason, follow_up_days: days, next_follow_up_at: nextFollowUpAt, source: "automation_draft" },
+    })
+    if (error) throw new Error(error.message)
+  }
   refresh()
 }
 
