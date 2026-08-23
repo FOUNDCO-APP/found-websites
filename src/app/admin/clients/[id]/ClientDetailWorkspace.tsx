@@ -109,6 +109,14 @@ function surfaceLabel(value: string | null | undefined) {
   return value.replace(/_/g, " ")
 }
 
+function outreachMethodLabel(value: string) {
+  if (value === "outreach_call") return "Call"
+  if (value === "outreach_text") return "Text"
+  if (value === "outreach_email") return "Email"
+  if (value === "outreach_skip") return "Skipped"
+  return activityLabel(value)
+}
+
 function stateTone(state: string) {
   if (state === "active" || state === "comp") return "success"
   if (state === "past_due" || state === "cancelled") return "warning"
@@ -164,6 +172,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const lastBillingActivity = client.activities.find((activity) =>
     activity.activity_type === "billing" || activity.summary.toLowerCase().includes("billing"),
   )
+  const outreachActivities = client.activities.filter((activity) => activity.activity_type.startsWith("outreach_"))
+  const lastOutreachActivity = outreachActivities[0] ?? null
   const lastCustomerActivity = client.customer_activities[0] ?? null
   const customerActivityCount = client.customer_activities.length
   const surfaceCounts = client.customer_activities.reduce<Record<string, number>>((counts, activity) => {
@@ -260,6 +270,32 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               <div>
                 <p className="hq-row-title">{activityLabel(activity.event_type)}</p>
                 <p className="hq-row-meta">{surfaceLabel(activity.surface)}{activity.feature ? ` / ${surfaceLabel(activity.feature)}` : ""}</p>
+              </div>
+              <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="hq-section">
+        <div className="hq-section-head">
+          <h2 className="hq-section-title">Outreach</h2>
+          <span className="hq-section-meta">Admin follow-up</span>
+        </div>
+        <div className="hq-detail-snapshot hq-activity-snapshot">
+          <div><span>Last outreach</span><strong>{lastOutreachActivity ? formatDateTime(lastOutreachActivity.created_at) : "None logged"}</strong></div>
+          <div><span>Logged touches</span><strong>{outreachActivities.length}</strong></div>
+          <div><span>Latest method</span><strong>{lastOutreachActivity ? outreachMethodLabel(lastOutreachActivity.activity_type) : "No signal yet"}</strong></div>
+        </div>
+        <div className="hq-panel hq-client-activity-panel">
+          {outreachActivities.length === 0 && (
+            <div className="hq-empty-state"><strong>No outreach logged yet.</strong><span>Use the Client Health queue to log calls, texts, emails, or skips.</span></div>
+          )}
+          {outreachActivities.slice(0, 12).map((activity, index) => (
+            <div key={`${activity.created_at}-${index}`} className="hq-row">
+              <div>
+                <p className="hq-row-title">{outreachMethodLabel(activity.activity_type)}</p>
+                <p className="hq-row-meta">{activity.summary}</p>
               </div>
               <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
             </div>
