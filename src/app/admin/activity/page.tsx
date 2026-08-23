@@ -30,16 +30,17 @@ type OutreachRow = {
   activity_type: string
   summary: string
   created_at: string
+  metadata: Record<string, unknown> | null
 }
 
 type Bucket = "all" | "active_week" | "quiet" | "stagnant" | "no_activity" | "trialing_inactive"
-type ActivityView = Bucket | "needs_follow_up" | "recently_contacted"
-
-const OUTREACH_PAUSE_DAYS = 7
+type ActivityView = Bucket | "needs_follow_up" | "recently_contacted" | "follow_up_due" | "follow_up_later"
 
 const FILTERS: { key: ActivityView; label: string }[] = [
   { key: "all", label: "All" },
   { key: "needs_follow_up", label: "Needs follow-up" },
+  { key: "follow_up_due", label: "Follow-up due" },
+  { key: "follow_up_later", label: "Follow-up later" },
   { key: "recently_contacted", label: "Recently contacted" },
   { key: "active_week", label: "Active this week" },
   { key: "quiet", label: "Quiet 8-14d" },
@@ -113,6 +114,35 @@ function outreachLabel(value: string | null) {
   return `Contacted ${days}d ago`
 }
 
+function followUpLabel(value: string | null | undefined) {
+  if (!value) return "No follow-up date"
+  const days = dayAge(value)
+  if (days === null) return "No follow-up date"
+  if (days >= 0) return days === 0 ? "Follow up today" : `Follow-up overdue ${days}d`
+  const daysAway = Math.abs(days)
+  if (daysAway === 1) return "Follow up tomorrow"
+  return `Follow up in ${daysAway}d`
+}
+
+function nextFollowUpAt(outreach: OutreachRow | undefined) {
+  const value = outreach?.metadata?.next_follow_up_at
+  return typeof value === "string" ? value : null
+}
+
+function isFollowUpDue(outreach: OutreachRow | undefined) {
+  const value = nextFollowUpAt(outreach)
+  if (value) return new Date(value).getTime() <= Date.now()
+  const days = dayAge(outreach?.created_at ?? null)
+  return days !== null && days >= 7
+}
+
+function isFollowUpLater(outreach: OutreachRow | undefined) {
+  const value = nextFollowUpAt(outreach)
+  if (value) return new Date(value).getTime() > Date.now()
+  const days = dayAge(outreach?.created_at ?? null)
+  return days !== null && days < 7
+}
+
 function outreachCopy(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
   const reason = outreachReason(bucket, latestAt).toLowerCase()
   const dashboardUrl = `https://my.foundco.app`
@@ -163,7 +193,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
       .limit(10000),
     admin
       .from("client_activities")
-      .select("company_id, activity_type, summary, created_at")
+      .select("company_id, activity_type, summary, created_at, metadata")
       .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip"])
       .gte("created_at", outreachSince)
       .order("created_at", { ascending: false })
@@ -202,26 +232,28 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   for (const outreach of (outreachEvents ?? []) as OutreachRow[]) {
     if (!lastOutreachByCompany.has(outreach.company_id)) lastOutreachByCompany.set(outreach.company_id, outreach)
   }
-  const needsFollowUpRows = rows
+  const riskRows = rows.filter((row) => outreachPriority(row.bucket) < 99)
+  const needsFollowUpRows = riskRows
     .filter((row) => outreachPriority(row.bucket) < 99)
     .filter((row) => {
       const lastOutreach = lastOutreachByCompany.get(row.company.id)
-      const days = dayAge(lastOutreach?.created_at ?? null)
-      return days === null || days >= OUTREACH_PAUSE_DAYS
+      return !lastOutreach || isFollowUpDue(lastOutreach)
     })
-  const recentlyContactedRows = rows
-    .filter((row) => outreachPriority(row.bucket) < 99)
+  const recentlyContactedRows = riskRows
     .filter((row) => {
       const lastOutreach = lastOutreachByCompany.get(row.company.id)
-      const days = dayAge(lastOutreach?.created_at ?? null)
-      return days !== null && days < OUTREACH_PAUSE_DAYS
+      return Boolean(lastOutreach)
     })
+  const followUpDueRows = riskRows.filter((row) => isFollowUpDue(lastOutreachByCompany.get(row.company.id)))
+  const followUpLaterRows = riskRows.filter((row) => isFollowUpLater(lastOutreachByCompany.get(row.company.id)))
   const outreachRows = [...needsFollowUpRows]
     .sort((a, b) => outreachPriority(a.bucket) - outreachPriority(b.bucket) || (dayAge(b.latest?.created_at ?? null) ?? 999) - (dayAge(a.latest?.created_at ?? null) ?? 999))
   const counts = FILTERS.reduce<Record<ActivityView, number>>((acc, item) => {
     acc[item.key] =
       item.key === "all" ? rows.length
       : item.key === "needs_follow_up" ? needsFollowUpRows.length
+      : item.key === "follow_up_due" ? followUpDueRows.length
+      : item.key === "follow_up_later" ? followUpLaterRows.length
       : item.key === "recently_contacted" ? recentlyContactedRows.length
       : rows.filter((row) => row.bucket === item.key).length
     return acc
@@ -229,6 +261,8 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const visibleRows =
     filter === "all" ? rows
     : filter === "needs_follow_up" ? needsFollowUpRows
+    : filter === "follow_up_due" ? followUpDueRows
+    : filter === "follow_up_later" ? followUpLaterRows
     : filter === "recently_contacted" ? recentlyContactedRows
     : rows.filter((row) => row.bucket === filter)
 
@@ -244,10 +278,10 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
 
       <div className="hq-detail-snapshot hq-health-snapshot">
         <Link href="/admin/activity?view=needs_follow_up"><span>Needs follow-up</span><strong>{activityReady ? counts.needs_follow_up : "-"}</strong></Link>
+        <Link href="/admin/activity?view=follow_up_due"><span>Follow-up due</span><strong>{activityReady ? counts.follow_up_due : "-"}</strong></Link>
+        <Link href="/admin/activity?view=follow_up_later"><span>Follow-up later</span><strong>{activityReady ? counts.follow_up_later : "-"}</strong></Link>
         <Link href="/admin/activity?view=recently_contacted"><span>Recently contacted</span><strong>{activityReady ? counts.recently_contacted : "-"}</strong></Link>
         <Link href="/admin/activity?view=active_week"><span>Active this week</span><strong>{activityReady ? counts.active_week : "-"}</strong></Link>
-        <Link href="/admin/activity?view=quiet"><span>Quiet</span><strong>{activityReady ? counts.quiet : "-"}</strong></Link>
-        <Link href="/admin/activity?view=stagnant"><span>Stagnant</span><strong>{activityReady ? counts.stagnant : "-"}</strong></Link>
       </div>
 
       <section className="hq-section">
@@ -279,6 +313,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                     </p>
                     <p className="hq-client-activity">
                       {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {outreachLabel(lastOutreach?.created_at ?? null)}
+                      {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
                     </p>
                   </div>
                   <div className="hq-contact-actions hq-outreach-actions">
@@ -337,6 +372,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                     </p>
                     <p className="hq-client-activity">
                       {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {action} / {outreachLabel(lastOutreach?.created_at ?? null)}
+                      {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
                     </p>
                   </div>
                   <span className="hq-chevron" />

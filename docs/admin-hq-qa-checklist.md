@@ -9,6 +9,9 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify admin view-as usage does not count as client activity.
 - Verify quiet, stagnant, no activity, trialing inactive, needs follow-up, and recently contacted filters.
 - Verify call, text, email, and skip logs remove a client from the outreach queue temporarily.
+- Verify call, text, and email logs create a 3-day follow-up.
+- Verify skip logs create a 7-day follow-up.
+- Verify follow-up due and follow-up later filters show the correct accounts.
 - Verify outreach history appears on the client detail page.
 
 ## Clients

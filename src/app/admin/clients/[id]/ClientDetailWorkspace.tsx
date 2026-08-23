@@ -100,6 +100,20 @@ function formatDaysAgo(value: string | null) {
   return `Used ${days} days ago`
 }
 
+function followUpLabel(value: string | null | undefined) {
+  if (!value) return "No follow-up date"
+  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
+  if (days >= 0) return days === 0 ? "Follow up today" : `Follow-up overdue ${days} days`
+  const daysAway = Math.abs(days)
+  if (daysAway === 1) return "Follow up tomorrow"
+  return `Follow up in ${daysAway} days`
+}
+
+function nextFollowUpAt(activity: { metadata?: Record<string, unknown> | null } | undefined) {
+  const value = activity?.metadata?.next_follow_up_at
+  return typeof value === "string" ? value : null
+}
+
 function activityLabel(value: string) {
   return value.replace(/_/g, " ")
 }
@@ -285,7 +299,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
         <div className="hq-detail-snapshot hq-activity-snapshot">
           <div><span>Last outreach</span><strong>{lastOutreachActivity ? formatDateTime(lastOutreachActivity.created_at) : "None logged"}</strong></div>
           <div><span>Logged touches</span><strong>{outreachActivities.length}</strong></div>
-          <div><span>Latest method</span><strong>{lastOutreachActivity ? outreachMethodLabel(lastOutreachActivity.activity_type) : "No signal yet"}</strong></div>
+          <div><span>Next follow-up</span><strong>{lastOutreachActivity ? followUpLabel(nextFollowUpAt(lastOutreachActivity)) : "No signal yet"}</strong></div>
         </div>
         <div className="hq-panel hq-client-activity-panel">
           {outreachActivities.length === 0 && (
@@ -295,7 +309,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             <div key={`${activity.created_at}-${index}`} className="hq-row">
               <div>
                 <p className="hq-row-title">{outreachMethodLabel(activity.activity_type)}</p>
-                <p className="hq-row-meta">{activity.summary}</p>
+                <p className="hq-row-meta">{activity.summary}{nextFollowUpAt(activity) ? ` / ${followUpLabel(nextFollowUpAt(activity))}` : ""}</p>
               </div>
               <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
             </div>
