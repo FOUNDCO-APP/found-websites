@@ -33,9 +33,14 @@ type OutreachRow = {
 }
 
 type Bucket = "all" | "active_week" | "quiet" | "stagnant" | "no_activity" | "trialing_inactive"
+type ActivityView = Bucket | "needs_follow_up" | "recently_contacted"
 
-const FILTERS: { key: Bucket; label: string }[] = [
+const OUTREACH_PAUSE_DAYS = 7
+
+const FILTERS: { key: ActivityView; label: string }[] = [
   { key: "all", label: "All" },
+  { key: "needs_follow_up", label: "Needs follow-up" },
+  { key: "recently_contacted", label: "Recently contacted" },
   { key: "active_week", label: "Active this week" },
   { key: "quiet", label: "Quiet 8-14d" },
   { key: "stagnant", label: "Stagnant 15+d" },
@@ -73,7 +78,7 @@ function bucketFor(company: CompanyRow, lastActivityAt: string | null): Bucket {
   return "stagnant"
 }
 
-function bucketLabel(bucket: Bucket) {
+function bucketLabel(bucket: ActivityView) {
   return FILTERS.find((filter) => filter.key === bucket)?.label ?? "All"
 }
 
@@ -136,7 +141,8 @@ function smsHref(company: CompanyRow, bucket: Bucket, latestAt: string | null) {
 
 export default async function AdminActivityPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
-  const filter = FILTERS.some((item) => item.key === params.view) ? params.view as Bucket : "all"
+  const requestedView = Array.isArray(params.view) ? params.view[0] : params.view
+  const filter = FILTERS.some((item) => item.key === requestedView) ? requestedView as ActivityView : "all"
   const admin = getAdminClient()
   const activitySince = new Date(Date.now() - 90 * 86400000).toISOString()
 
@@ -192,23 +198,39 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
     }
   })
 
-  const counts = FILTERS.reduce<Record<Bucket, number>>((acc, item) => {
-    acc[item.key] = item.key === "all" ? rows.length : rows.filter((row) => row.bucket === item.key).length
-    return acc
-  }, {} as Record<Bucket, number>)
-  const visibleRows = filter === "all" ? rows : rows.filter((row) => row.bucket === filter)
   const lastOutreachByCompany = new Map<string, OutreachRow>()
   for (const outreach of (outreachEvents ?? []) as OutreachRow[]) {
     if (!lastOutreachByCompany.has(outreach.company_id)) lastOutreachByCompany.set(outreach.company_id, outreach)
   }
-  const outreachRows = rows
+  const needsFollowUpRows = rows
     .filter((row) => outreachPriority(row.bucket) < 99)
     .filter((row) => {
       const lastOutreach = lastOutreachByCompany.get(row.company.id)
       const days = dayAge(lastOutreach?.created_at ?? null)
-      return days === null || days >= 7
+      return days === null || days >= OUTREACH_PAUSE_DAYS
     })
+  const recentlyContactedRows = rows
+    .filter((row) => outreachPriority(row.bucket) < 99)
+    .filter((row) => {
+      const lastOutreach = lastOutreachByCompany.get(row.company.id)
+      const days = dayAge(lastOutreach?.created_at ?? null)
+      return days !== null && days < OUTREACH_PAUSE_DAYS
+    })
+  const outreachRows = [...needsFollowUpRows]
     .sort((a, b) => outreachPriority(a.bucket) - outreachPriority(b.bucket) || (dayAge(b.latest?.created_at ?? null) ?? 999) - (dayAge(a.latest?.created_at ?? null) ?? 999))
+  const counts = FILTERS.reduce<Record<ActivityView, number>>((acc, item) => {
+    acc[item.key] =
+      item.key === "all" ? rows.length
+      : item.key === "needs_follow_up" ? needsFollowUpRows.length
+      : item.key === "recently_contacted" ? recentlyContactedRows.length
+      : rows.filter((row) => row.bucket === item.key).length
+    return acc
+  }, {} as Record<ActivityView, number>)
+  const visibleRows =
+    filter === "all" ? rows
+    : filter === "needs_follow_up" ? needsFollowUpRows
+    : filter === "recently_contacted" ? recentlyContactedRows
+    : rows.filter((row) => row.bucket === filter)
 
   return (
     <div className="hq-page">
@@ -221,11 +243,11 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
       </header>
 
       <div className="hq-detail-snapshot hq-health-snapshot">
+        <Link href="/admin/activity?view=needs_follow_up"><span>Needs follow-up</span><strong>{activityReady ? counts.needs_follow_up : "-"}</strong></Link>
+        <Link href="/admin/activity?view=recently_contacted"><span>Recently contacted</span><strong>{activityReady ? counts.recently_contacted : "-"}</strong></Link>
         <Link href="/admin/activity?view=active_week"><span>Active this week</span><strong>{activityReady ? counts.active_week : "-"}</strong></Link>
         <Link href="/admin/activity?view=quiet"><span>Quiet</span><strong>{activityReady ? counts.quiet : "-"}</strong></Link>
         <Link href="/admin/activity?view=stagnant"><span>Stagnant</span><strong>{activityReady ? counts.stagnant : "-"}</strong></Link>
-        <Link href="/admin/activity?view=no_activity"><span>No activity</span><strong>{activityReady ? counts.no_activity : "-"}</strong></Link>
-        <Link href="/admin/activity?view=trialing_inactive"><span>Trialing inactive</span><strong>{activityReady ? counts.trialing_inactive : "-"}</strong></Link>
       </div>
 
       <section className="hq-section">
@@ -297,28 +319,31 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
           {!activityReady && (
             <div className="hq-empty-state"><strong>Activity table is not ready.</strong><span>Apply the Supabase migration before this page can read customer activity.</span></div>
           )}
-          {activityReady && visibleRows.map(({ company, activities, latest, bucket, action }) => (
-            <Link key={company.id} href={`/admin/clients/${company.id}`} className="hq-business-row hq-business-row-link">
-              <div className="hq-business-main hq-health-row">
-                <div className="hq-business-copy">
-                  <div className="hq-business-name-line">
-                    <h2>{company.name}</h2>
-                    <span className={`hq-badge ${bucket === "active_week" ? "hq-badge-success" : bucket === "quiet" ? "hq-badge-info" : "hq-badge-warning"}`}>{bucketLabel(bucket)}</span>
+          {activityReady && visibleRows.map(({ company, activities, latest, bucket, action }) => {
+            const lastOutreach = lastOutreachByCompany.get(company.id)
+            return (
+              <Link key={company.id} href={`/admin/clients/${company.id}`} className="hq-business-row hq-business-row-link">
+                <div className="hq-business-main hq-health-row">
+                  <div className="hq-business-copy">
+                    <div className="hq-business-name-line">
+                      <h2>{company.name}</h2>
+                      <span className={`hq-badge ${bucket === "active_week" ? "hq-badge-success" : bucket === "quiet" ? "hq-badge-info" : "hq-badge-warning"}`}>{bucketLabel(bucket)}</span>
+                    </div>
+                    <p className="hq-client-summary">
+                      <span>{planLabel(company.plan)}</span>
+                      <span><i aria-hidden="true" />{company.subscription_status ?? "not active"}</span>
+                      <span><i aria-hidden="true" />{activityLabel(latest?.created_at ?? null)}</span>
+                      <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
+                    </p>
+                    <p className="hq-client-activity">
+                      {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {action} / {outreachLabel(lastOutreach?.created_at ?? null)}
+                    </p>
                   </div>
-                  <p className="hq-client-summary">
-                    <span>{planLabel(company.plan)}</span>
-                    <span><i aria-hidden="true" />{company.subscription_status ?? "not active"}</span>
-                    <span><i aria-hidden="true" />{activityLabel(latest?.created_at ?? null)}</span>
-                    <span><i aria-hidden="true" />{activities.length} action{activities.length === 1 ? "" : "s"} in 90d</span>
-                  </p>
-                  <p className="hq-client-activity">
-                    {surfaceLabel(latest?.surface)}{latest?.event_type ? ` - ${latest.event_type.replace(/_/g, " ")}` : ""} / {action}
-                  </p>
+                  <span className="hq-chevron" />
                 </div>
-                <span className="hq-chevron" />
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
           {activityReady && !visibleRows.length && <div className="hq-empty-state"><strong>No accounts in this view.</strong><span>When a client crosses this threshold, they will appear here.</span></div>}
         </div>
       </section>
