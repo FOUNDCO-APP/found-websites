@@ -1,5 +1,10 @@
 ## 2026-08-23 - CURRENT NOW
 
+### Documentation Save Process
+
+- [x] Reaffirmed mandatory `BRIEF.md` save process: after every meaningful update, update `SESSION_HANDOFF.md`, `CHANGELOG.md`, `TASKS.md` if priorities changed, and `DECISIONS.md` / `DESIGN_DECISIONS.md` when approved decisions change.
+- [ ] Keep this process active on every future change before calling work complete.
+
 ### Found HQ Admin Operating System
 
 - [x] Team audit started for Found HQ hierarchy, Today/Growth/Clients/Emails, client detail, true client activity, and admin guidance.

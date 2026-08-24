@@ -1,3 +1,19 @@
+## Session: August 24, 2026 - Documentation Save Process Lock
+**AI:** Codex
+
+### Context
+Shawn reiterated that every meaningful update must follow the save process already required by `BRIEF.md`.
+
+### Changed
+- Reaffirmed that every meaningful implementation, copy, design, data, process, or architecture update must end with docs being brought current.
+- Added the rule to the active handoff/change/task/decision docs so future agents do not treat documentation as optional.
+
+### Verification
+- Confirmed current git status before editing docs.
+- Left unrelated worktree items untouched: `src/lib/dashboard/typography.ts` and `.claude/`.
+
+---
+
 ## Session: August 23, 2026 - Found HQ Admin Operating System Sprint
 **AI:** Codex
 

@@ -1,5 +1,22 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Documentation Save Process Reaffirmed
+
+### Progress This Pass
+- Shawn reiterated that the `BRIEF.md` save process must be followed after every meaningful update.
+- Confirmed `BRIEF.md` requires reading the active handoff/task/change/decision docs, checking `git status`, and preserving current truth before making or handing off work.
+- Locked the operating rule: a change is not complete until the relevant docs are updated.
+
+### Required Save Process Going Forward
+- Update `SESSION_HANDOFF.md` with what changed, what was verified, open issues, and Shawn test steps.
+- Update `CHANGELOG.md` with the session/change summary.
+- Update `TASKS.md` when priorities, checklist items, or next steps change.
+- Update `DECISIONS.md` or `DESIGN_DECISIONS.md` when Shawn/team approval changes product, process, design, pricing, copy, data, or architecture direction.
+- Tell Shawn what changed and what to test before calling work done.
+
+### Open / Do Not Lose
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
 ## 2026-08-23 - Found HQ Admin Operating System Sprint
 
 ### Progress This Pass

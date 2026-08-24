@@ -1,3 +1,7 @@
+**[2026-08-24] - BRIEF.md documentation save process is mandatory after meaningful updates.**
+Approved by: Shawn
+Why: Shawn needs continuity across Codex, Claude Code, and any future AI handoff without restarting from memory after connection loss, credit limits, or model switches. Decision: every meaningful implementation, copy, design, data, billing, DNS/domain, analytics, dashboard, admin, process, or architecture update must end with the `BRIEF.md` save process. Work is not complete until the current truth is reflected in `SESSION_HANDOFF.md`, `CHANGELOG.md`, `TASKS.md` when next steps/priorities changed, and `DECISIONS.md` or `DESIGN_DECISIONS.md` when an approved decision changed.
+
 **[2026-08-23] - Found HQ outreach automation stays manual/test-only until explicitly armed.**
 Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair + Angela Ahrendts
 Why: Found needs a retention and growth engine, but real clients should not receive automated emails or texts just because a draft/rule exists. The approved direction is to build the intelligence first: audiences, outreach rules, personalized copy, follow-up memory, test accounts, and one-person manual sends. Arming real automation requires a separate team approval and QA pass. Test identities can be used freely for QA; real-client automation remains off.
