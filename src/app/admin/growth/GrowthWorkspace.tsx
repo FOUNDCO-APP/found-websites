@@ -51,6 +51,7 @@ export type CampaignMember = {
   href: string | null
   status: string
   message?: string
+  outreachMemory?: string | null
 }
 
 export type CampaignAudience = {
@@ -151,6 +152,10 @@ function outreachLabel(outreach: LeadOutreach | undefined) {
   if (days <= 0) return "Contacted today"
   if (days === 1) return "Contacted yesterday"
   return `Contacted ${days}d ago`
+}
+
+function memberMeta(member: CampaignMember) {
+  return [member.status, member.detail, member.outreachMemory].filter(Boolean).join(" / ")
 }
 
 function leadNeedsFollowUp(prospect: Prospect) {
@@ -315,7 +320,7 @@ function CampaignAudienceCard({ audience }: { audience: CampaignAudience }) {
               <div key={`${audience.id}-${member.type}-${member.id}`} style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
                 <div>
                   <p className="hq-row-title" style={{ fontSize: 13 }}>{member.name}</p>
-                  <p className="hq-row-meta">{member.status} / {member.detail}</p>
+                  <p className="hq-row-meta">{memberMeta(member)}</p>
                 </div>
                 <div className="hq-contact-actions" style={{ marginTop: 0, alignItems: "center" }}>
                   {member.phone && <a href={`tel:${member.phone}`}>Call</a>}
@@ -401,7 +406,7 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
                 <div key={`${draft.id}-${member.type}-${member.id}`} style={{ display: "grid", gap: 8, padding: "10px 0", borderTop: "1px solid var(--hq-border)" }}>
                   <div>
                     <p className="hq-row-title" style={{ fontSize: 13 }}>{member.name}</p>
-                    <p className="hq-row-meta">{member.status} / {member.detail}</p>
+                    <p className="hq-row-meta">{memberMeta(member)}</p>
                   </div>
                   <p className="hq-form-note" style={{ marginTop: 0 }}>{draftMessage(draft, member)}</p>
                   <div className="hq-contact-actions hq-outreach-actions" style={{ marginTop: 0 }}>

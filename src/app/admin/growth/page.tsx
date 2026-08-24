@@ -18,6 +18,14 @@ type SalesActivity = {
   metadata: Record<string, unknown> | null
 }
 
+type ClientOutreachActivity = {
+  company_id: string
+  activity_type: string
+  summary: string
+  created_at: string
+  metadata: Record<string, unknown> | null
+}
+
 type CompanyRow = {
   id: string
   name: string
@@ -62,6 +70,46 @@ function isSalesFollowUpDue(activity: SalesActivity | undefined) {
   return days !== null && days >= 7
 }
 
+function clientNextFollowUpAt(activity: ClientOutreachActivity | undefined) {
+  const value = activity?.metadata?.next_follow_up_at
+  return typeof value === "string" ? value : null
+}
+
+function isClientFollowUpLater(activity: ClientOutreachActivity | undefined) {
+  const value = clientNextFollowUpAt(activity)
+  if (value) return new Date(value).getTime() > Date.now()
+  const days = dayAge(activity?.created_at)
+  return days !== null && days < 7
+}
+
+function followUpLabel(value: string | null | undefined) {
+  if (!value) return null
+  const days = dayAge(value)
+  if (days === null) return null
+  if (days >= 0) return days === 0 ? "follow up today" : `follow-up overdue ${days}d`
+  const daysAway = Math.abs(days)
+  return daysAway === 1 ? "follow up tomorrow" : `follow up in ${daysAway}d`
+}
+
+function outreachMethodLabel(activity: ClientOutreachActivity) {
+  const method = activity.metadata?.method
+  const value = typeof method === "string" ? method : activity.activity_type.replace("outreach_", "")
+  if (value === "call") return "Call logged"
+  if (value === "text") return "Text sent"
+  if (value === "email") return "Email sent"
+  if (value === "skip") return "Skipped"
+  if (value === "reviewed") return "Reviewed"
+  return "Outreach logged"
+}
+
+function outreachMemoryLabel(activity: ClientOutreachActivity | undefined) {
+  if (!activity) return null
+  const days = dayAge(activity.created_at)
+  const age = days === null ? null : days <= 0 ? "today" : days === 1 ? "yesterday" : `${days}d ago`
+  const followUp = followUpLabel(clientNextFollowUpAt(activity))
+  return [age ? `${outreachMethodLabel(activity)} ${age}` : outreachMethodLabel(activity), followUp].filter(Boolean).join(" / ")
+}
+
 function isTestCompany(company: CompanyRow) {
   return isAdminTestIdentity(company)
 }
@@ -70,7 +118,7 @@ function isTestProspect(prospect: Prospect) {
   return isAdminTestEmail(prospect.email)
 }
 
-function companyMember(company: CompanyRow, status: string, message?: string) {
+function companyMember(company: CompanyRow, status: string, message?: string, outreachMemory?: string | null) {
   return {
     id: company.id,
     type: "client" as const,
@@ -83,6 +131,7 @@ function companyMember(company: CompanyRow, status: string, message?: string) {
     href: `/admin/clients/${company.id}`,
     status,
     message,
+    outreachMemory,
   }
 }
 
@@ -110,7 +159,7 @@ export default async function GrowthPage() {
   const windowStart = new Date(Date.now() - COHORT_WINDOW_DAYS * 86400000).toISOString()
   const outreachStart = new Date(Date.now() - OUTREACH_WINDOW_DAYS * 86400000).toISOString()
 
-  const [{ data: companies }, { data: prospectData }, { data: salesActivityData }, { data: customerActivityData }] = await Promise.all([
+  const [{ data: companies }, { data: prospectData }, { data: salesActivityData }, { data: customerActivityData }, { data: clientOutreachData }] = await Promise.all([
     admin.from("companies").select("id, name, slug, email, phone, account_kind, is_test, plan, subscription_status, client_state, industry_category, created_at"),
     admin.from("sales_prospects")
       .select("id, person_name, business_name, email, phone, source, stage, notes, created_at, linked_company_id")
@@ -127,6 +176,12 @@ export default async function GrowthPage() {
       .gte("created_at", outreachStart)
       .order("created_at", { ascending: false })
       .limit(10000),
+    admin.from("client_activities")
+      .select("company_id, activity_type, summary, created_at, metadata")
+      .in("activity_type", ["outreach_call", "outreach_text", "outreach_email", "outreach_skip", "outreach_reviewed"])
+      .gte("created_at", outreachStart)
+      .order("created_at", { ascending: false })
+      .limit(1000),
   ])
 
   // Upgrade cohorts: real clients on a plan below the top tier, grouped by
@@ -168,6 +223,10 @@ export default async function GrowthPage() {
     list.push(activity)
     outreachByProspect.set(activity.prospect_id, list)
   }
+  const latestClientOutreachByCompany = new Map<string, ClientOutreachActivity>()
+  for (const activity of (clientOutreachData ?? []) as ClientOutreachActivity[]) {
+    if (!latestClientOutreachByCompany.has(activity.company_id)) latestClientOutreachByCompany.set(activity.company_id, activity)
+  }
   const prospects = ((prospectData ?? []) as Prospect[]).map((prospect) => ({
     ...prospect,
     outreach_activities: outreachByProspect.get(prospect.id) ?? [],
@@ -190,6 +249,10 @@ export default async function GrowthPage() {
     businessName: company.name,
     signal: activitySignalByCompany.get(company.id) ?? buildClientActivitySignal([], company.subscription_status),
   })
+  const campaignMemberForCompany = (company: CompanyRow, status: string, message?: string) =>
+    companyMember(company, status, message, outreachMemoryLabel(latestClientOutreachByCompany.get(company.id)))
+  const clientDraftReady = (member: { id: string; type: "client" | "lead" }) =>
+    member.type !== "client" || !isClientFollowUpLater(latestClientOutreachByCompany.get(member.id))
   const upgradeReadyClients = companyRows.filter((company) => UPGRADEABLE_PLANS.has(company.plan ?? ""))
   const inactiveClients = companyRows.filter((company) => (dayAge(activitySignalByCompany.get(company.id)?.latest?.created_at) ?? 999) >= 15)
   const noActivityClients = companyRows.filter((company) => !customerActivityByCompany.has(company.id))
@@ -208,13 +271,13 @@ export default async function GrowthPage() {
       id: "trialing-inactive",
       title: "Trialing clients inactive",
       description: "Protect trials before they fade.",
-      members: trialingInactiveClients.map((company) => companyMember(company, "Trialing and quiet", activityMessageForCompany(company))),
+      members: trialingInactiveClients.map((company) => campaignMemberForCompany(company, "Trialing and quiet", activityMessageForCompany(company))),
     },
     {
       id: "inactive-clients",
       title: "Clients inactive 15+ days",
       description: "Retention list for customers who stopped using Found.",
-      members: inactiveClients.map((company) => companyMember(company, "No customer use in 15+ days", activityMessageForCompany(company))),
+      members: inactiveClients.map((company) => campaignMemberForCompany(company, "No customer use in 15+ days", activityMessageForCompany(company))),
     },
     {
       id: "lead-follow-up-due",
@@ -238,49 +301,49 @@ export default async function GrowthPage() {
       id: "upgrade-ready",
       title: "Upgrade-ready clients",
       description: "Starter and Pro accounts that may be ready for a plan conversation.",
-      members: upgradeReadyClients.map((company) => companyMember(company, "Upgrade opportunity")),
+      members: upgradeReadyClients.map((company) => campaignMemberForCompany(company, "Upgrade opportunity")),
     },
     {
       id: "past-due-risk",
       title: "Past due billing risk",
       description: "Accounts where revenue or access may be at risk.",
-      members: pastDueClients.map((company) => companyMember(company, "Past due")),
+      members: pastDueClients.map((company) => campaignMemberForCompany(company, "Past due")),
     },
     {
       id: "new-client-first-week",
       title: "New clients first 7 days",
       description: "Early customers who need momentum and confidence.",
-      members: newClients.map((company) => companyMember(company, "First week")),
+      members: newClients.map((company) => campaignMemberForCompany(company, "First week")),
     },
     {
       id: "no-activity-clients",
       title: "Clients with no activity",
       description: "Accounts where no true customer-side activity has been captured.",
-      members: noActivityClients.map((company) => companyMember(company, "No activity yet", activityMessageForCompany(company))),
+      members: noActivityClients.map((company) => campaignMemberForCompany(company, "No activity yet", activityMessageForCompany(company))),
     },
     {
       id: "dashboard-only-clients",
       title: "Dashboard only",
       description: "Clients who opened Found but have not used a working tool yet.",
-      members: dashboardOnlyClients.map((company) => companyMember(company, "Dashboard only", activityMessageForCompany(company))),
+      members: dashboardOnlyClients.map((company) => campaignMemberForCompany(company, "Dashboard only", activityMessageForCompany(company))),
     },
     {
       id: "no-leads-usage",
       title: "Never used leads",
       description: "Clients who have not opened the lead/inbox workflow.",
-      members: noLeadsUsageClients.map((company) => companyMember(company, "No leads usage", activityMessageForCompany(company))),
+      members: noLeadsUsageClients.map((company) => campaignMemberForCompany(company, "No leads usage", activityMessageForCompany(company))),
     },
     {
       id: "no-photos-usage",
       title: "Never used photos",
       description: "Clients who have not used the photo/gallery workflow.",
-      members: noPhotosUsageClients.map((company) => companyMember(company, "No photos usage", activityMessageForCompany(company))),
+      members: noPhotosUsageClients.map((company) => campaignMemberForCompany(company, "No photos usage", activityMessageForCompany(company))),
     },
     {
       id: "no-estimates-usage",
       title: "Never used estimates",
       description: "Clients who have not used estimate workflows.",
-      members: noEstimatesUsageClients.map((company) => companyMember(company, "No estimates usage", activityMessageForCompany(company))),
+      members: noEstimatesUsageClients.map((company) => campaignMemberForCompany(company, "No estimates usage", activityMessageForCompany(company))),
     },
   ]
   const automationDrafts: AutomationDraft[] = [
@@ -309,7 +372,7 @@ export default async function GrowthPage() {
       audience: "Trialing clients inactive",
       channel: "Email",
       message: "Hey {{business_name}}, this is Super Shawn with Found. I noticed your dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you?",
-      members: audienceById(campaignAudiences, "trialing-inactive"),
+      members: audienceById(campaignAudiences, "trialing-inactive").filter(clientDraftReady),
     },
     {
       id: "client-inactive-15",
@@ -318,7 +381,7 @@ export default async function GrowthPage() {
       audience: "Clients inactive 15+ days",
       channel: "Email",
       message: "Hey {{business_name}}, this is Super Shawn with Found. If the system has not been useful lately, I want to know what is blocking you so we can tighten it up.",
-      members: audienceById(campaignAudiences, "inactive-clients"),
+      members: audienceById(campaignAudiences, "inactive-clients").filter(clientDraftReady),
     },
     {
       id: "dashboard-only-nudge",
@@ -327,7 +390,7 @@ export default async function GrowthPage() {
       audience: "Dashboard only",
       channel: "Manual",
       message: "Hey {{business_name}}, this is Super Shawn with Found. I saw the dashboard was opened, but it does not look like any of the working tools have been used yet. Want me to help you use one real tool, like Photos, Leads, Site updates, or Estimates?",
-      members: audienceById(campaignAudiences, "dashboard-only-clients"),
+      members: audienceById(campaignAudiences, "dashboard-only-clients").filter(clientDraftReady),
     },
     {
       id: "tool-adoption-nudge",
@@ -340,7 +403,7 @@ export default async function GrowthPage() {
         ...audienceById(campaignAudiences, "no-leads-usage"),
         ...audienceById(campaignAudiences, "no-photos-usage"),
         ...audienceById(campaignAudiences, "no-estimates-usage"),
-      ].filter((member, index, members) => members.findIndex((item) => item.type === member.type && item.id === member.id) === index),
+      ].filter((member, index, members) => members.findIndex((item) => item.type === member.type && item.id === member.id) === index).filter(clientDraftReady),
     },
     {
       id: "new-client-first-week",
@@ -349,7 +412,7 @@ export default async function GrowthPage() {
       audience: "New clients first 7 days",
       channel: "Manual",
       message: "Hey {{business_name}}, this is Super Shawn with Found. Just checking in on your first week. I want to make sure you know where to go next and that the system is already helping.",
-      members: audienceById(campaignAudiences, "new-client-first-week"),
+      members: audienceById(campaignAudiences, "new-client-first-week").filter(clientDraftReady),
     },
   ]
   const testSandboxDraft: AutomationDraft = {

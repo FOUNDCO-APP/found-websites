@@ -77,13 +77,31 @@ function outreachPriority(bucket: Bucket) {
   return 99
 }
 
-function outreachLabel(value: string | null) {
-  if (!value) return "No outreach logged"
+function outreachAgeLabel(value: string | null) {
+  if (!value) return null
   const days = dayAge(value)
-  if (days === null) return "No outreach logged"
-  if (days <= 0) return "Contacted today"
-  if (days === 1) return "Contacted yesterday"
-  return `Contacted ${days}d ago`
+  if (days === null) return null
+  if (days <= 0) return "today"
+  if (days === 1) return "yesterday"
+  return `${days}d ago`
+}
+
+function outreachMethodLabel(outreach: OutreachRow) {
+  const method = outreach.metadata?.method
+  const value = typeof method === "string" ? method : outreach.activity_type.replace("outreach_", "")
+  if (value === "call") return "Call logged"
+  if (value === "text") return "Text sent"
+  if (value === "email") return "Email sent"
+  if (value === "skip") return "Skipped"
+  if (value === "reviewed") return "Reviewed"
+  return "Outreach logged"
+}
+
+function outreachMemoryLabel(outreach: OutreachRow | undefined) {
+  if (!outreach) return "No outreach logged"
+  const age = outreachAgeLabel(outreach.created_at)
+  const followUp = nextFollowUpAt(outreach) ? followUpLabel(nextFollowUpAt(outreach)) : null
+  return [age ? `${outreachMethodLabel(outreach)} ${age}` : outreachMethodLabel(outreach), followUp].filter(Boolean).join(" / ")
 }
 
 function followUpLabel(value: string | null | undefined) {
@@ -270,8 +288,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                       <span><i aria-hidden="true" />{signal.toolCount90d} tool action{signal.toolCount90d === 1 ? "" : "s"} in 90d</span>
                     </p>
                     <p className="hq-client-activity">
-                      {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""}{missingTools ? ` / never used: ${missingTools}` : ""} / {outreachLabel(lastOutreach?.created_at ?? null)}
-                      {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
+                      {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""}{missingTools ? ` / never used: ${missingTools}` : ""} / {outreachMemoryLabel(lastOutreach)}
                     </p>
                   </div>
                   <div className="hq-contact-actions hq-outreach-actions">
@@ -329,8 +346,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
                       <span><i aria-hidden="true" />{signal.toolCount90d} tool action{signal.toolCount90d === 1 ? "" : "s"} in 90d</span>
                     </p>
                     <p className="hq-client-activity">
-                      {signal.reachOutReason} / {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""} / {action} / {outreachLabel(lastOutreach?.created_at ?? null)}
-                      {nextFollowUpAt(lastOutreach) ? ` / ${followUpLabel(nextFollowUpAt(lastOutreach))}` : ""}
+                      {signal.reachOutReason} / {activitySurfaceLabel(signal.topToolSurface?.[0] ?? latest?.surface)}{latest?.event_type ? ` - ${activityEventLabel(latest.event_type)}` : ""} / {action} / {outreachMemoryLabel(lastOutreach)}
                     </p>
                   </div>
                   <span className="hq-chevron" />
