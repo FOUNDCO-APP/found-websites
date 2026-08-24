@@ -1,5 +1,28 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Admin Activity Summary Uses Arizona Days
+
+### Progress This Pass
+- Shawn shared a Divine Remodel screenshot showing `Last activity` as `Used yesterday at 8:09 PM`, while the green activity summary still said `Used today`.
+- Root cause: the shared activity signal used rolling 24-hour math, so yesterday evening still counted as "today" before a full 24 hours had passed.
+- Updated the shared admin customer-activity signal to compare Arizona calendar days.
+- Updated the shared activity label so today/yesterday summaries include the Arizona time.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+### Open / Do Not Lose
+- This changes display wording and admin recency buckets only. It does not change stored activity events or tracking.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `/admin/clients`, then open Divine Remodel.
+2. Confirm the green activity summary agrees with `Last activity`.
+3. If the latest event is yesterday, it should say `Used yesterday at 8:09 PM`, not `Used today`.
+4. If the latest event is today, it should say `Used today at [time]`.
+
 ## 2026-08-24 - Admin Timestamps Forced to Arizona
 
 ### Progress This Pass

@@ -1,3 +1,20 @@
+## Session: August 24, 2026 - Admin Activity Summary Uses Arizona Days
+**AI:** Codex
+
+### Context
+Shawn saw Divine Remodel show `Last activity` as yesterday at 8:09 PM, while the activity summary still said `Used today`.
+
+### Changed
+- Shared admin customer-activity recency now uses Arizona calendar days instead of a rolling 24-hour window.
+- Today/yesterday activity summary labels now include the Arizona time.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+---
+
 ## Session: August 24, 2026 - Admin Timestamps Forced to Arizona
 **AI:** Codex
 

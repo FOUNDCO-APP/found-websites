@@ -10,10 +10,32 @@ export type ClientActivityBucket = "active_week" | "quiet" | "stagnant" | "no_ac
 
 const TOOL_SURFACES = new Set(["leads", "photos", "site", "estimates", "marketing", "settings", "commerce", "schedule", "contacts", "people", "billing", "locations", "team", "addons"])
 const CORE_TOOLS = ["site", "photos", "leads", "estimates", "marketing"]
+const ADMIN_TIME_ZONE = "America/Phoenix"
+
+function adminDayNumber(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ADMIN_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date)
+  const year = Number(parts.find((part) => part.type === "year")?.value)
+  const month = Number(parts.find((part) => part.type === "month")?.value)
+  const day = Number(parts.find((part) => part.type === "day")?.value)
+  return Math.floor(Date.UTC(year, month - 1, day) / 86400000)
+}
+
+function activityTimeLabel(value: string) {
+  return new Date(value).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: ADMIN_TIME_ZONE,
+  })
+}
 
 export function activityDayAge(value: string | null | undefined) {
   if (!value) return null
-  return Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
+  return adminDayNumber(new Date()) - adminDayNumber(new Date(value))
 }
 
 export function activitySurfaceLabel(value: string | null | undefined) {
@@ -72,8 +94,8 @@ export function buildClientActivitySignal(activities: CustomerActivitySignalRow[
     : "stagnant"
   const label =
     days === null ? "No client use yet"
-    : days <= 0 ? "Used today"
-    : days === 1 ? "Used yesterday"
+    : days <= 0 && latest ? `Used today at ${activityTimeLabel(latest.created_at)}`
+    : days === 1 && latest ? `Used yesterday at ${activityTimeLabel(latest.created_at)}`
     : level === "quiet" ? `Quiet ${days}d`
     : level === "stagnant" ? `Stagnant ${days}d`
     : `Used ${days}d ago`
