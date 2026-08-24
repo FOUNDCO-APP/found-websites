@@ -31,10 +31,30 @@ export async function recordBillingPlanEvent(
   try {
     if (!event.company_id) return false
 
+    const metadata = {
+      event_type: event.event_type,
+      source: event.source,
+      actor_type: event.actor_type ?? null,
+      actor_email: event.actor_email ?? null,
+      old_plan: event.old_plan ?? null,
+      new_plan: event.new_plan ?? null,
+      old_subscription_status: event.old_subscription_status ?? null,
+      new_subscription_status: event.new_subscription_status ?? null,
+      stripe_customer_id: event.stripe_customer_id ?? null,
+      stripe_subscription_id: event.stripe_subscription_id ?? null,
+      stripe_price_id: event.stripe_price_id ?? null,
+      amount_cents: event.amount_cents ?? null,
+      currency: event.currency ?? null,
+      effective_at: event.effective_at ?? null,
+      note: event.note ?? null,
+      ...(event.metadata ?? {}),
+    }
+
     const row = {
       company_id: event.company_id ?? null,
       activity_type: "billing",
       summary: buildBillingActivitySummary(event),
+      metadata,
     }
 
     const { error } = await admin.from("client_activities").insert(row)

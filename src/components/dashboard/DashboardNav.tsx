@@ -99,7 +99,7 @@ export default function DashboardNav({
   }, [prefix])
 
   function mobileLabelFor(tab: Tab) {
-    return tab.label === "Estimate Requests" ? "Requests" : tab.label
+    return tab.label === "Estimate Requests" ? "Leads" : tab.label
   }
 
   function buildTabs(ids: string[]): Tab[] {
@@ -745,4 +745,3 @@ export default function DashboardNav({
     </>
   )
 }
-

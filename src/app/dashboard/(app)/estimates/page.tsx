@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React, { Suspense, useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { TYPE, TEXT_OPACITY, GREEN as SIGNAL_GREEN, BLACK as FOUND_BLACK } from "@/lib/dashboard/typography"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlacesInput from "@/components/dashboard/PlacesInput"
@@ -247,6 +248,16 @@ function shareUrl(estimateId: string, slug: string, customDomain: string | null)
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export default function EstimatesPage() {
+  return (
+    <Suspense fallback={null}>
+      <EstimatesPageInner />
+    </Suspense>
+  )
+}
+
+function EstimatesPageInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [estimates, setEstimates] = useState<Estimate[]>([])
   const [rateSheet, setRateSheet] = useState<RateSheetItem[]>([])
   const [companySlug, setCompanySlug] = useState("")
@@ -268,6 +279,17 @@ export default function EstimatesPage() {
     fetch("/api/estimates").then(r => r.json()).then(ed => {
       if (ed.estimates) setEstimates(ed.estimates)
     }).catch(() => {})
+  }
+
+  function closeSelectedEstimate() {
+    const returnJobId = searchParams.get("fromJob")
+    setSelectedId(null)
+    refreshEstimates()
+    if (returnJobId) {
+      router.replace(`/photos?album=${encodeURIComponent(returnJobId)}`)
+    } else {
+      router.replace("/estimates")
+    }
   }
 
   useEffect(() => {
@@ -537,7 +559,7 @@ export default function EstimatesPage() {
           rateSheet={rateSheet}
           jobs={jobs}
           onJobCreated={(job) => setJobs(prev => [job, ...prev])}
-          onClose={() => { setSelectedId(null); refreshEstimates() }}
+          onClose={closeSelectedEstimate}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
           onSend={(method) => handleSend(selected, method)}
           onDelete={() => handleDelete(selected.id)}

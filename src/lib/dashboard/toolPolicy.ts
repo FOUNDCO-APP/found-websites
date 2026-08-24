@@ -89,6 +89,10 @@ function has(activeAddons: string[], addon: string) {
   return activeAddons.includes(addon)
 }
 
+function hasEstimateAccess(activeAddons: string[], plan: string | null | undefined) {
+  const normalizedPlan = normalize(plan)
+  return normalizedPlan === "found_business" || normalizedPlan === "business" || has(activeAddons, "quote_payments")
+}
 
 function peopleTool(industry: string | null | undefined): DashboardTool {
   const label = industry === "food" ? "Guests" : getBusinessModel(industry, null).tabLabel
@@ -103,7 +107,7 @@ function availableFoodTools(activeAddons: string[], plan: string | null | undefi
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasOrders = hasOrderWorkflow(activeAddons)
   const hasEmail = has(activeAddons, "email_marketing")
-  const hasEstimates = has(activeAddons, "quote_payments")
+  const hasEstimates = hasEstimateAccess(activeAddons, plan)
   const hasContacts = getFeatureAccess(plan, "contact_database", activeAddons as AddonSlug[])
 
   return [
@@ -128,7 +132,7 @@ function availableFoodTools(activeAddons: string[], plan: string | null | undefi
 export function getAvailableDashboardTools({ industry = null, subIndustry = null, activeAddons = [], plan = null, primaryIntent = null }: DashboardToolPolicyInput): DashboardTool[] {
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
-  const hasEstimates = has(activeAddons, "quote_payments")
+  const hasEstimates = hasEstimateAccess(activeAddons, plan)
   const hasOrders = hasOrderAccess(activeAddons, industry, subIndustry)
   const hasProducts = hasProductCatalog(activeAddons, industry, subIndustry)
   const hasContacts = getFeatureAccess(plan, "contact_database", activeAddons as AddonSlug[])
@@ -169,7 +173,7 @@ export function getDefaultDashboardTools(input: DashboardToolPolicyInput): Dashb
   const activeAddons = input.activeAddons ?? []
   const hasCalendar = has(activeAddons, "reservation_calendar")
   const hasEmail = has(activeAddons, "email_marketing")
-  const hasEstimates = has(activeAddons, "quote_payments")
+  const hasEstimates = hasEstimateAccess(activeAddons, input.plan)
   const hasOrders = hasOrderAccess(activeAddons, industry, input.subIndustry)
   const hasContacts = getFeatureAccess(input.plan ?? null, "contact_database", activeAddons as AddonSlug[])
 

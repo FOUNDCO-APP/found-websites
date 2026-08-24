@@ -143,6 +143,22 @@ function albumPublicSlug(album: Album, usesJobs?: boolean) {
   return toSlug(albumDisplayName(album, usesJobs)) || album.slug
 }
 
+async function fetchEstimateSnapshot(): Promise<{ estimates: JobEstimate[] | null; error: string | null }> {
+  try {
+    const res = await fetch("/api/estimates", { cache: "no-store" })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return {
+        estimates: null,
+        error: data.error || "Estimate access did not load for this account.",
+      }
+    }
+    return { estimates: data.estimates ?? [], error: null }
+  } catch {
+    return { estimates: null, error: "Estimate access could not be checked. Refresh and try again." }
+  }
+}
+
 export default function PhotosPage() {
   return <Suspense><PhotosPageInner /></Suspense>
 }
@@ -241,18 +257,7 @@ function PhotosPageInner() {
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
-      fetch("/api/estimates")
-        .then(async r => {
-          const data = await r.json().catch(() => ({}))
-          if (!r.ok) {
-            return {
-              estimates: null,
-              error: data.error || "Estimate access did not load for this account.",
-            }
-          }
-          return { estimates: data.estimates ?? [], error: null }
-        })
-        .catch(() => ({ estimates: null, error: "Estimate access could not be checked. Refresh and try again." })),
+      fetchEstimateSnapshot(),
     ]).then(([pd, ad, sd, ed]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
@@ -289,6 +294,20 @@ function PhotosPageInner() {
       if (photoNoticeTimerRef.current) clearTimeout(photoNoticeTimerRef.current)
     }
   }, [])
+
+  useEffect(() => {
+    if (!activeAlbum) return
+    let cancelled = false
+    fetchEstimateSnapshot().then(ed => {
+      if (cancelled) return
+      setEstimatesAccess(ed.estimates !== null)
+      setEstimatesAccessError(ed.error)
+      setEstimates(ed.estimates ?? [])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [activeAlbum?.id])
 
   function showPhotoNotice(notice: PhotoNotice) {
     if (photoNoticeTimerRef.current) clearTimeout(photoNoticeTimerRef.current)
@@ -387,9 +406,14 @@ function PhotosPageInner() {
 
   async function createEstimateForJob() {
     if (!activeAlbum || creatingEstimate) return
-    const existingEstimate = estimates.find(estimate => estimate.job_id === activeAlbum.id)
+    const freshEstimateSnapshot = await fetchEstimateSnapshot()
+    const estimateList = freshEstimateSnapshot.estimates ?? estimates
+    setEstimatesAccess(freshEstimateSnapshot.estimates !== null)
+    setEstimatesAccessError(freshEstimateSnapshot.error)
+    setEstimates(estimateList)
+    const existingEstimate = estimateList.find(estimate => estimate.job_id === activeAlbum.id)
     if (existingEstimate) {
-      router.push(`/estimates?estimate=${existingEstimate.id}`)
+      router.push(`/estimates?estimate=${existingEstimate.id}&fromJob=${encodeURIComponent(activeAlbum.id)}`)
       return
     }
     setCreatingEstimate(true)
@@ -408,7 +432,7 @@ function PhotosPageInner() {
       })
       const data = await res.json()
       if (res.ok && data.estimate) {
-        router.push(`/estimates?estimate=${data.estimate.id}`)
+        router.push(`/estimates?estimate=${data.estimate.id}&fromJob=${encodeURIComponent(activeAlbum.id)}`)
       } else {
         setPhotoError(data.error || "Couldn't create the estimate. Try again.")
       }
@@ -772,7 +796,7 @@ function PhotosPageInner() {
                   {estimatesAccess ? (
                     <JobEstimatesCard
                       estimates={estimates.filter(e => e.job_id === activeAlbum.id)}
-                      onOpen={id => router.push(`/estimates?estimate=${id}`)}
+                      onOpen={id => router.push(`/estimates?estimate=${id}&fromJob=${encodeURIComponent(activeAlbum.id)}`)}
                       onCreate={createEstimateForJob}
                       creating={creatingEstimate}
                     />
