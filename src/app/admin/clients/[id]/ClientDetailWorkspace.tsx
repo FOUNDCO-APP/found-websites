@@ -195,6 +195,23 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
       : client.client_state === "onboarding"
         ? "Finish launch"
         : "Keep relationship warm"
+  const nextActionDetail = client.client_state === "past_due"
+    ? "This account is a revenue risk."
+    : !isActiveSubscription && !client.is_comp
+      ? "Activation is not complete until billing is handled."
+      : client.client_state === "onboarding"
+        ? "Finish the setup work that blocks launch."
+        : activitySignal.bucket === "active_week"
+          ? "No urgent risk is visible."
+          : activitySignal.reachOutReason
+  const accountStatusLabel = isTestIdentity ? "Test account" : client.client_state.replace("_", " ")
+  const paymentStatusLabel = isActiveSubscription
+    ? client.subscription_status === "trialing" ? "Trialing" : "Paying"
+    : client.is_comp ? "Comp" : "Not paying"
+  const usageStatusLabel = client.customer_activity_ready ? activitySignal.label : "Waiting on table"
+  const outreachStatusLabel = lastOutreachActivity
+    ? `${outreachMethodLabel(lastOutreachActivity.activity_type)} ${formatDaysAgo(lastOutreachActivity.created_at).replace("Used", "").trim().toLowerCase()}`
+    : "No outreach"
 
   function handleTestToggle() {
     const next = !isTest
@@ -240,27 +257,23 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
         </section>
       )}
 
-      <div className="hq-form-wide" style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <a className="hq-button hq-button-secondary" href={siteUrl} target="_blank" rel="noopener noreferrer">Site</a>
-        <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(client.id)}>View as</button>
-      </div>
-
-      <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Status</h2></div>
-        <div className="hq-detail-snapshot">
-          <div><span>State</span><strong>{client.client_state.replace("_", " ")}</strong></div>
-          <div><span>Plan</span><strong>{plan.name}</strong></div>
-          <div><span>Billing</span><strong>{billingStatusLabel}</strong></div>
-        </div>
-      </section>
-
-      <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Next action</h2></div>
-        <div className="hq-panel hq-next-action">
+      <section className="hq-client-command">
+        <div className="hq-client-command-head">
           <div>
             <p className="hq-row-title">{nextAction}</p>
-            <p className="hq-row-meta">{client.client_state === "past_due" ? "This account is a revenue risk." : !isActiveSubscription && !client.is_comp ? "Activation is not complete until billing is handled." : client.client_state === "onboarding" ? "Finish the setup work that blocks launch." : "No urgent risk is visible."}</p>
+            <p className="hq-row-meta">{nextActionDetail}</p>
           </div>
+          <div className="hq-client-command-actions">
+            <a className="hq-button hq-button-secondary" href={siteUrl} target="_blank" rel="noopener noreferrer">Site</a>
+            <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(client.id)}>View as</button>
+          </div>
+        </div>
+        <div className="hq-client-command-grid">
+          <div><span>Account</span><strong>{accountStatusLabel}</strong><em>{plan.name}</em></div>
+          <div><span>Payment</span><strong>{paymentStatusLabel}</strong><em>{billingStatusLabel}</em></div>
+          <div><span>Usage</span><strong>{usageStatusLabel}</strong><em>{client.customer_activity_ready ? `${activitySignal.toolCount90d} tool actions in 90d` : "Customer activity unavailable"}</em></div>
+          <div><span>Outreach</span><strong>{outreachStatusLabel}</strong><em>{lastOutreachActivity ? followUpLabel(nextFollowUpAt(lastOutreachActivity)) : "No follow-up scheduled"}</em></div>
+          <div><span>Next</span><strong>{nextAction}</strong><em>{activitySignal.reachOutReason}</em></div>
         </div>
       </section>
 

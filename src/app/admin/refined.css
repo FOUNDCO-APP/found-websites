@@ -576,6 +576,70 @@
   padding: 18px;
   border: 1px solid rgba(50,208,116,0.2);
 }
+.hq-client-command {
+  padding: 22px 0 0;
+  border-top: 1px solid var(--hq-border);
+  border-bottom: 1px solid var(--hq-border);
+}
+.hq-client-command-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+}
+.hq-client-command-head .hq-row-title {
+  color: var(--hq-text);
+  font-size: 22px;
+  line-height: 1.15;
+  font-weight: 680;
+}
+.hq-client-command-head .hq-row-meta {
+  max-width: 520px;
+  margin-top: 7px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.hq-client-command-actions {
+  display: flex;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.hq-client-command-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--hq-border);
+}
+.hq-client-command-grid > div {
+  min-height: 108px;
+  padding: 15px;
+  background: var(--hq-bg);
+}
+.hq-client-command-grid span,
+.hq-client-command-grid em {
+  display: block;
+  color: var(--hq-muted);
+  font-size: 10px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+.hq-client-command-grid strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--hq-text);
+  font-size: 17px;
+  line-height: 1.18;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.hq-client-command-grid em {
+  margin-top: 8px;
+  color: var(--hq-dim);
+  line-height: 1.3;
+  text-transform: none;
+  font-style: normal;
+}
 
 @media (max-width: 720px) {
   .found-hq-sidebar {
@@ -640,6 +704,14 @@
   .hq-outreach-log-actions button { font-size: 13px; }
   .hq-client-activity-panel { padding: 0 14px; }
   .hq-client-activity-panel .hq-row { align-items: flex-start; }
+  .hq-client-command { padding-top: 18px; }
+  .hq-client-command-head { display: grid; gap: 16px; }
+  .hq-client-command-actions { width: 100%; }
+  .hq-client-command-actions .hq-button { flex: 1; }
+  .hq-client-command-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hq-client-command-grid > div { min-height: 96px; padding: 13px; }
+  .hq-client-command-grid > div:last-child { grid-column: 1 / -1; }
+  .hq-client-command-grid strong { font-size: 16px; }
   .hq-chart { grid-template-columns: repeat(6, minmax(0, 1fr)); height: 114px; gap: 6px; margin-bottom: 18px; }
   .hq-chart-bar { gap: 5px; }
   .hq-chart-bar em { font-size: 9px; }

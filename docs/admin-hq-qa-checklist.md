@@ -29,6 +29,8 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify tapping the full client row opens the client detail page.
 - Verify plan, billing, health, activity, and outreach indicators stay readable with long business names.
 - Verify client rows show the real activity reason and tool action count.
+- Verify client detail opens with account, payment, usage, outreach, and next action visible before deep sections.
+- Verify client detail command center answers whether the client is active, paying, using Found, and what to do next.
 - Verify client detail shows top tool, missing tools, and dashboard-only/no-activity language correctly.
 
 ## Growth
