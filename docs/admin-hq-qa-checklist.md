@@ -59,3 +59,11 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify Growth test send sandbox shows only `account_kind = test`, Shawn/Sean email, Sayitmarketing, and marketing test identities.
 - Verify Growth test send sandbox accounts do not appear in real campaign lists, automation drafts, Growth lead counts, MRR, or signup goals.
 - Verify test sandbox Open text, Open email, Copy, Mark reviewed, and Send email work without changing real outreach queues.
+
+## Emails
+
+- Verify Emails opens as an operations inbox with Needs response, Handled, and All views.
+- Verify failed, bounced, complained, delayed, and flagged-lead emails appear under Needs response until marked handled.
+- Verify each row shows sender scope, recipient, related client or lead, subject, received/sent time, status, and next action.
+- Verify Mark handled removes an email from Needs response and Reopen brings it back when needed.
+- Verify email detail page has the same handled/reopen workflow.

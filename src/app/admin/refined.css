@@ -492,13 +492,18 @@
   background: var(--hq-border);
 }
 .hq-detail-snapshot > div,
-.hq-detail-snapshot > a {
+.hq-detail-snapshot > a,
+.hq-detail-snapshot > button {
   min-height: 98px;
   padding: 17px;
+  border: 0;
   background: var(--hq-bg);
   color: inherit;
   text-decoration: none;
+  text-align: left;
 }
+.hq-detail-snapshot > button { cursor: pointer; }
+.hq-detail-snapshot > button[data-active="true"] { outline: 1px solid rgba(50,208,116,0.48); outline-offset: -1px; }
 .hq-detail-snapshot span {
   display: block;
   color: var(--hq-muted);
@@ -514,6 +519,57 @@
   line-height: 1.25;
   font-weight: 650;
 }
+.hq-email-command { margin-bottom: 18px; }
+.hq-email-snapshot {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+.hq-email-list { overflow: hidden; }
+.hq-email-row {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hq-border);
+}
+.hq-email-row:first-child { border-top: 0; }
+.hq-email-row-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: inherit;
+  text-decoration: none;
+}
+.hq-email-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hq-email-row-top .hq-row-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hq-email-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+.hq-email-row-actions a,
+.hq-email-row-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hq-green);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 760;
+  text-decoration: none;
+  cursor: pointer;
+}
+.hq-email-row-actions form { margin: 0; }
 .hq-activity-snapshot { margin-bottom: 14px; }
 .hq-health-snapshot { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .hq-health-filters {
@@ -697,6 +753,12 @@
   .hq-goal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hq-goal-grid > div { min-height: 86px; padding: 14px; }
   .hq-detail-snapshot { grid-template-columns: 1fr; }
+  .hq-email-snapshot { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hq-email-row { display: grid; gap: 12px; }
+  .hq-email-row-top { align-items: flex-start; justify-content: space-between; }
+  .hq-email-row-top .hq-row-title { white-space: normal; }
+  .hq-email-row-actions { justify-content: flex-start; flex-wrap: wrap; }
+  .hq-email-row-actions a, .hq-email-row-actions button { font-size: 13px; }
   .hq-health-snapshot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hq-health-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hq-health-filters a { justify-content: flex-start; font-size: 13px; }

@@ -2,10 +2,16 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { markEmailHandled } from "./actions"
 
 export type EmailRow = {
   id: string
+  companyId: string | null
   companyName: string | null
+  companySlug: string | null
+  leadId: string | null
+  leadName: string | null
+  leadStatus: string | null
   recipient_email: string
   recipient_type: string
   email_type: string
@@ -14,8 +20,12 @@ export type EmailRow = {
   flagged: boolean
   emailScope: "client" | "found"
   deliveryStatus: string | null
+  handledAt: string | null
+  handledNote: string | null
   created_at: string
 }
+
+type InboxView = "needs_response" | "handled" | "all"
 
 const RECIPIENT_LABELS: Record<string, string> = {
   client_owner: "Owner",
@@ -33,26 +43,77 @@ const DELIVERY_BADGE: Record<string, { label: string; tone: "warning" | "quiet" 
   sent: { label: "Sent", tone: "quiet" },
 }
 
-export default function EmailsWorkspace({ rows }: { rows: EmailRow[] }) {
+function needsResponse(row: EmailRow) {
+  return !row.handledAt && (!row.success || row.flagged || ["bounced", "complained", "delayed"].includes(row.deliveryStatus ?? ""))
+}
+
+function statusLabel(row: EmailRow) {
+  if (row.handledAt) return "Handled"
+  if (!row.success) return "Failed"
+  if (row.flagged) return "Flagged"
+  if (row.deliveryStatus === "bounced") return "Bounced"
+  if (row.deliveryStatus === "complained") return "Spam complaint"
+  if (row.deliveryStatus === "delayed") return "Delayed"
+  return DELIVERY_BADGE[row.deliveryStatus ?? ""]?.label ?? "Sent"
+}
+
+function nextAction(row: EmailRow) {
+  if (row.handledAt) return "Handled"
+  if (!row.success) return "Fix send"
+  if (row.flagged) return "Review lead"
+  if (row.deliveryStatus === "bounced") return "Fix email"
+  if (row.deliveryStatus === "complained") return "Stop sending"
+  if (row.deliveryStatus === "delayed") return "Check later"
+  return "Open"
+}
+
+function relatedLabel(row: EmailRow) {
+  if (row.companyName) return row.companyName
+  if (row.leadName) return row.leadName
+  if (row.emailScope === "found") return "Found"
+  return "Unlinked"
+}
+
+function relatedHref(row: EmailRow) {
+  if (row.companyId) return `/admin/clients/${row.companyId}`
+  return null
+}
+
+export default function EmailsWorkspace({ rows, handlingReady }: { rows: EmailRow[]; handlingReady: boolean }) {
   const [query, setQuery] = useState("")
-  const [filter, setFilter] = useState<"all" | "failed" | "flagged">("all")
+  const [view, setView] = useState<InboxView>("needs_response")
   const [scope, setScope] = useState<"all" | "found" | "client">("all")
 
-  const failedCount = rows.filter((r) => !r.success).length
-  const flaggedCount = rows.filter((r) => r.flagged).length
+  const needsResponseCount = rows.filter(needsResponse).length
+  const handledCount = rows.filter((r) => r.handledAt).length
   const foundCount = rows.filter((r) => r.emailScope === "found").length
 
   const filtered = useMemo(() => rows.filter((row) => {
     const q = query.trim().toLowerCase()
-    if (q && !`${row.companyName ?? ""} ${row.recipient_email} ${row.subject} ${row.email_type}`.toLowerCase().includes(q)) return false
-    if (filter === "failed" && row.success) return false
-    if (filter === "flagged" && !row.flagged) return false
+    if (q && !`${row.companyName ?? ""} ${row.leadName ?? ""} ${row.recipient_email} ${row.subject} ${row.email_type}`.toLowerCase().includes(q)) return false
+    if (view === "needs_response" && !needsResponse(row)) return false
+    if (view === "handled" && !row.handledAt) return false
     if (scope !== "all" && row.emailScope !== scope) return false
     return true
-  }), [rows, query, filter, scope])
+  }), [rows, query, view, scope])
 
   return (
     <>
+      <section className="hq-command-status hq-email-command">
+        <div>
+          <span>Inbox command</span>
+          <strong>{needsResponseCount}</strong>
+          <p>{!handlingReady ? "Inbox handling fields are not live in Supabase yet; apply the migration to enable handled/reopen." : needsResponseCount === 0 ? "No delivery issue or flagged lead needs response right now." : "Emails with failed delivery, bounce risk, spam complaints, delays, or flagged leads need review."}</p>
+        </div>
+        <Link href="/admin/emails/templates">Templates<span className="hq-chevron" /></Link>
+      </section>
+
+      <div className="hq-detail-snapshot hq-email-snapshot">
+        <button type="button" data-active={view === "needs_response"} onClick={() => setView("needs_response")}><span>Needs response</span><strong>{needsResponseCount}</strong></button>
+        <button type="button" data-active={view === "handled"} onClick={() => setView("handled")}><span>Handled</span><strong>{handledCount}</strong></button>
+        <button type="button" data-active={view === "all"} onClick={() => setView("all")}><span>All</span><strong>{rows.length}</strong></button>
+      </div>
+
       <div className="hq-business-toolbar">
         <input
           className="hq-input"
@@ -61,49 +122,62 @@ export default function EmailsWorkspace({ rows }: { rows: EmailRow[] }) {
           placeholder="Search company, recipient, subject, or type"
         />
         <div className="hq-filter-row">
-          <button type="button" data-active={filter === "all"} onClick={() => setFilter("all")}>All</button>
-          <button type="button" data-active={filter === "failed"} onClick={() => setFilter("failed")}>Failed ({failedCount})</button>
-          <button type="button" data-active={filter === "flagged"} onClick={() => setFilter("flagged")}>Flagged ({flaggedCount})</button>
+          <button type="button" data-active={scope === "all"} onClick={() => setScope("all")}>All senders</button>
+          <button type="button" data-active={scope === "client"} onClick={() => setScope("client")}>Client</button>
+          <button type="button" data-active={scope === "found"} onClick={() => setScope("found")}>Found ({foundCount})</button>
         </div>
       </div>
 
-      <div className="hq-filter-row" style={{ marginTop: 4 }}>
-        <button type="button" data-active={scope === "all"} onClick={() => setScope("all")}>All senders</button>
-        <button type="button" data-active={scope === "client"} onClick={() => setScope("client")}>Client emails</button>
-        <button type="button" data-active={scope === "found"} onClick={() => setScope("found")}>Found emails ({foundCount})</button>
-      </div>
-
-      <div className="hq-panel">
+      <div className="hq-panel hq-email-list">
         {filtered.length === 0 ? (
           <div className="hq-empty-state"><strong>No emails found.</strong><span>Try a different search or filter.</span></div>
         ) : (
           filtered.map((row) => {
             const delivery = row.deliveryStatus ? DELIVERY_BADGE[row.deliveryStatus] : null
             return (
-              <Link key={row.id} href={`/admin/emails/${row.id}`} className="hq-row hq-link-row">
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p className="hq-row-title">
-                    {row.subject}
-                    {!row.success && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Failed</span>}
-                    {row.flagged && <span className="hq-badge hq-badge-warning" style={{ marginLeft: 8 }}>Flagged</span>}
-                    {delivery && <span className={`hq-badge ${delivery.tone === "warning" ? "hq-badge-warning" : "hq-badge-quiet"}`} style={{ marginLeft: 8 }}>{delivery.label}</span>}
-                  </p>
+              <div key={row.id} className="hq-email-row">
+                <Link href={`/admin/emails/${row.id}`} className="hq-email-row-main">
+                  <div className="hq-email-row-top">
+                    <p className="hq-row-title">{row.subject}</p>
+                    <span className={`hq-badge ${needsResponse(row) ? "hq-badge-warning" : row.handledAt ? "hq-badge-success" : "hq-badge-quiet"}`}>{statusLabel(row)}</span>
+                  </div>
                   <p className="hq-row-meta">
-                    {row.emailScope === "found" ? "Found · " : row.companyName ? `${row.companyName} · ` : ""}
-                    To {row.recipient_email} ({RECIPIENT_LABELS[row.recipient_type] ?? row.recipient_type}) · {row.email_type}
+                    {row.emailScope === "found" ? "Found" : "Client"} / To {row.recipient_email} ({RECIPIENT_LABELS[row.recipient_type] ?? row.recipient_type}) / {row.email_type}
                   </p>
+                  <p className="hq-client-summary">
+                    <span>{relatedLabel(row)}</span>
+                    <span><i aria-hidden="true" />{row.leadStatus ? `Lead ${row.leadStatus}` : row.companySlug ? row.companySlug : "No link"}</span>
+                    <span><i aria-hidden="true" />{new Date(row.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                    <span><i aria-hidden="true" />{nextAction(row)}</span>
+                  </p>
+                  {delivery && delivery.tone === "warning" && <p className="hq-client-activity">{delivery.label} delivery status from Resend.</p>}
+                  {row.handledNote && <p className="hq-client-activity">Handled: {row.handledNote}</p>}
+                </Link>
+                <div className="hq-email-row-actions">
+                  <Link href={`/admin/emails/${row.id}`}>Open</Link>
+                  {relatedHref(row) && <Link href={relatedHref(row)!}>Client</Link>}
+                  {handlingReady && !row.handledAt && (
+                    <form action={markEmailHandled}>
+                      <input type="hidden" name="emailId" value={row.id} />
+                      <input type="hidden" name="handled" value="1" />
+                      <button type="submit">Mark handled</button>
+                    </form>
+                  )}
+                  {handlingReady && row.handledAt && (
+                    <form action={markEmailHandled}>
+                      <input type="hidden" name="emailId" value={row.id} />
+                      <input type="hidden" name="handled" value="0" />
+                      <button type="submit">Reopen</button>
+                    </form>
+                  )}
                 </div>
-                <span className="hq-row-meta" style={{ whiteSpace: "nowrap" }}>
-                  {new Date(row.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                </span>
-                <span className="hq-chevron" aria-hidden="true" />
-              </Link>
+              </div>
             )
           })
         )}
       </div>
 
-      <p className="hq-page-footnote">Template previews are in <Link href="/admin/emails/templates">Templates</Link>.</p>
+      <p className="hq-page-footnote">This is sent-email operations. True inbound replies need a reply inbox/webhook later.</p>
     </>
   )
 }

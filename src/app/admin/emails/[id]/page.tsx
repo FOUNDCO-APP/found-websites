@@ -2,7 +2,7 @@ import { cookies } from "next/headers"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@supabase/supabase-js"
-import { setLeadFlag } from "../actions"
+import { markEmailHandled, setLeadFlag } from "../actions"
 
 function getAdminClient() { return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!) }
 
@@ -30,13 +30,26 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
   if (cookieStore.get("admin_key")?.value !== process.env.ADMIN_KEY) redirect("/admin")
 
   const admin = getAdminClient()
-  const { data: row } = await admin
+  const emailResult = await admin
     .from("email_log")
-    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, html, text_body, success, error, source, email_scope, delivery_status, delivery_status_at, created_at")
+    .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, html, text_body, success, error, source, email_scope, delivery_status, delivery_status_at, handled_at, handled_note, created_at")
     .eq("id", id)
     .maybeSingle()
+  const handlingReady = !emailResult.error
+  const fallbackResult = handlingReady
+    ? null
+    : await admin
+      .from("email_log")
+      .select("id, company_id, lead_id, recipient_email, recipient_type, email_type, subject, html, text_body, success, error, source, email_scope, delivery_status, delivery_status_at, created_at")
+      .eq("id", id)
+      .maybeSingle()
+  const row = handlingReady ? emailResult.data : fallbackResult?.data
 
   if (!row) notFound()
+  const handledAtValue = "handled_at" in row ? row.handled_at : null
+  const handledNoteValue = "handled_note" in row ? row.handled_note : null
+  const handledAt = typeof handledAtValue === "string" ? handledAtValue : null
+  const handledNote = typeof handledNoteValue === "string" ? handledNoteValue : null
 
   const [{ data: company }, { data: lead }] = await Promise.all([
     row.company_id ? admin.from("companies").select("name, slug").eq("id", row.company_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -62,6 +75,21 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
           <p className="hq-subtitle">{new Date(row.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
         </div>
       </header>
+
+      <section className="hq-command-status hq-email-command">
+        <div>
+          <span>Inbox handling</span>
+          <strong>{!handlingReady ? "Not ready" : handledAt ? "Handled" : row.success ? "Open" : "Needs response"}</strong>
+          <p>{!handlingReady ? "Apply the email handling migration to enable handled/reopen." : handledNote || (handledAt ? "This email is out of the active response queue." : "Review the email, delivery status, and related lead or client before marking handled.")}</p>
+        </div>
+        {handlingReady && (
+          <form action={markEmailHandled} className="hq-contact-actions hq-outreach-log-actions">
+            <input type="hidden" name="emailId" value={row.id} />
+            <input type="hidden" name="handled" value={handledAt ? "0" : "1"} />
+            <button type="submit">{handledAt ? "Reopen" : "Mark handled"}</button>
+          </form>
+        )}
+      </section>
 
       {row.error && (
         <section className="hq-section">
