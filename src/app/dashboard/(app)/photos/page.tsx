@@ -190,6 +190,7 @@ function PhotosPageInner() {
   const [newJobEmail, setNewJobEmail] = useState("")
   const [estimates, setEstimates] = useState<JobEstimate[]>([])
   const [estimatesAccess, setEstimatesAccess] = useState(false)
+  const [estimatesAccessError, setEstimatesAccessError] = useState<string | null>(null)
   const [creatingEstimate, setCreatingEstimate] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const pendingAlbumIdRef = useRef<string | null>(null)
@@ -239,7 +240,18 @@ function PhotosPageInner() {
       fetch("/api/photos").then(r => r.json()),
       fetch("/api/albums").then(r => r.json()),
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
-      fetch("/api/estimates").then(r => r.ok ? r.json() : { estimates: null }).catch(() => ({ estimates: null })),
+      fetch("/api/estimates")
+        .then(async r => {
+          const data = await r.json().catch(() => ({}))
+          if (!r.ok) {
+            return {
+              estimates: null,
+              error: data.error || "Estimate access did not load for this account.",
+            }
+          }
+          return { estimates: data.estimates ?? [], error: null }
+        })
+        .catch(() => ({ estimates: null, error: "Estimate access could not be checked. Refresh and try again." })),
     ]).then(([pd, ad, sd, ed]) => {
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
@@ -247,10 +259,8 @@ function PhotosPageInner() {
       setIndustry(sd.industry ?? null)
       setCustomDomain(sd.customDomain ?? null)
       setIsPro(sd.isPro ?? false)
-      // null (not just []) means the fetch failed or the company doesn't have
-      // the quote_payments addon - keep the Job -> Estimate UI hidden rather
-      // than show a Create Estimate button that would just fail.
       setEstimatesAccess(ed.estimates !== null)
+      setEstimatesAccessError(ed.error ?? null)
       setEstimates(ed.estimates ?? [])
 
       // Deep link straight into a specific Job's detail view (e.g. from the
@@ -698,6 +708,7 @@ function PhotosPageInner() {
   const albumPhotos = activeAlbum
     ? photos.filter(p => p.album_id === activeAlbum.id)
     : []
+  const activeAlbumUsesJobTools = activeAlbum ? (usesJobs || activeAlbum.album_type === "job") : usesJobs
 
   const currentPhotos =
     view === "all" ? filteredAllPhotos :
@@ -744,17 +755,19 @@ function PhotosPageInner() {
                   {albumContextLine(activeAlbum)}
                 </p>
               )}
-              {usesJobs && (
+              {activeAlbumUsesJobTools && (
                 <>
                   <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
                   <JobNotesEditor album={activeAlbum} onSave={updateAlbumDetails} />
-                  {estimatesAccess && (
+                  {estimatesAccess ? (
                     <JobEstimatesCard
                       estimates={estimates.filter(e => e.job_id === activeAlbum.id)}
                       onOpen={id => router.push(`/estimates?estimate=${id}`)}
                       onCreate={createEstimateForJob}
                       creating={creatingEstimate}
                     />
+                  ) : (
+                    <JobEstimateAccessNotice message={estimatesAccessError} />
                   )}
                 </>
               )}
@@ -1962,6 +1975,42 @@ function JobNotesEditor({
           {saving ? "Saving..." : "Save"}
         </button>
       </div>
+    </div>
+  )
+}
+
+function JobEstimateAccessNotice({ message }: { message: string | null }) {
+  return (
+    <div style={{
+      marginTop: 10,
+      padding: 14,
+      borderRadius: 18,
+      border: "1px solid rgba(255, 214, 10, 0.28)",
+      backgroundColor: "rgba(255, 214, 10, 0.08)",
+      display: "flex",
+      flexDirection: "column",
+      gap: 8,
+    }}>
+      <div style={{ ...TYPE.caption, color: "#FFD60A" }}>ESTIMATE TOOL NEEDS ATTENTION</div>
+      <p style={{ margin: 0, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+        {message || "This job can use estimates, but estimate access did not load. Refresh once. If it stays, Found needs to fix this account's billing or add-on access."}
+      </p>
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          alignSelf: "flex-start",
+          marginTop: 2,
+          border: "none",
+          background: "none",
+          color: SIGNAL_GREEN,
+          ...TYPE.footnote,
+          fontWeight: 800,
+          cursor: "pointer",
+          padding: 0,
+        }}
+      >
+        Refresh
+      </button>
     </div>
   )
 }
