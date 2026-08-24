@@ -1968,7 +1968,7 @@ function JobNotesEditor({
             gap: 6,
           }}
         >
-          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB NOTES</div>
+          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>SCOPE NOTES</div>
           <div style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap" }}>{album.notes}</div>
         </button>
       )
@@ -1988,14 +1988,14 @@ function JobNotesEditor({
           cursor: "pointer",
         }}
       >
-        Add job notes
+        Add scope notes
       </button>
     )
   }
 
   return (
     <div style={{ marginTop: 10, padding: 14, borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB NOTES</div>
+      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>SCOPE NOTES</div>
       <textarea
         value={notes}
         onChange={e => setNotes(e.target.value)}
@@ -2081,7 +2081,7 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
             cursor: creating ? "default" : "pointer",
           }}
         >
-          {creating ? "Creating estimate..." : "Create Estimate"}
+          {creating ? "Creating estimate..." : "Start Estimate"}
         </button>
       </div>
     )
@@ -2093,10 +2093,10 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
     <div style={{ marginTop: 10, padding: 16, borderRadius: 22, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(145deg, ${SIGNAL_GREEN}12, rgba(255,255,255,0.035))`, display: "flex", flexDirection: "column", gap: 12 }}>
       <div>
         <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
-          ESTIMATE IN PROGRESS
+          ESTIMATE STARTED
         </div>
         <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
-          This job already has an estimate. Continue it instead of creating a duplicate.
+          Continue this draft.
         </p>
       </div>
       <button

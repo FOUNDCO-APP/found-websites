@@ -558,6 +558,7 @@ function EstimatesPageInner() {
           locationBias={locationBias}
           rateSheet={rateSheet}
           jobs={jobs}
+          returnToJob={Boolean(searchParams.get("fromJob"))}
           onJobCreated={(job) => setJobs(prev => [job, ...prev])}
           onClose={closeSelectedEstimate}
           onUpdate={(patch) => handleUpdate(selected.id, patch)}
@@ -1221,7 +1222,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
 }
 // ── Detail Sheet ──────────────────────────────────────────────────────────────
 
-function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, companyStripeReady, locationBias, rateSheet, jobs, onJobCreated, onClose, onUpdate, onSend, onDelete, onSync }: {
+function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, companyStripeReady, locationBias, rateSheet, jobs, returnToJob = false, onJobCreated, onClose, onUpdate, onSend, onDelete, onSync }: {
   estimate: Estimate
   companySlug: string
   companyCustomDomain: string | null
@@ -1230,6 +1231,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   locationBias?: string
   rateSheet: RateSheetItem[]
   jobs: JobAlbum[]
+  returnToJob?: boolean
   onJobCreated: (job: JobAlbum) => void
   onClose: () => void
   onUpdate: (patch: Record<string, unknown>) => Promise<void>
@@ -1613,7 +1615,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
           <>
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 20 }}>
               <div style={{ minWidth: 0 }}>
-                <h2 style={{ margin: "0 0 4px", color: "white", ...TYPE.title }}>{est.title?.trim() || est.client_name}</h2>
+                <h2 style={{ margin: "0 0 4px", color: "white", ...TYPE.title }}>Review Estimate</h2>
                 {est.title?.trim() && (
                   <div style={{ margin: "0 0 8px", color: "rgba(255,255,255,0.5)", ...TYPE.subhead }}>{est.client_name}</div>
                 )}
@@ -1700,10 +1702,10 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               {items.length === 0 ? (
                 <div style={{ padding: 18, borderRadius: 20, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(180deg, ${SIGNAL_GREEN}12, rgba(255,255,255,0.025))` }}>
                   <div style={{ color: "white", fontSize: 22, fontWeight: 850, lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: 8 }}>
-                    Add the work before you send.
+                    Add work before sending.
                   </div>
                   <p style={{ margin: "0 0 16px", color: "rgba(255,255,255,0.52)", fontSize: 15, lineHeight: 1.45 }}>
-                    Start with one line item. Found will total it and send a clean estimate.
+                    Add one line item. Found totals it before you send.
                   </p>
                   <button onClick={startEdit} style={{ width: "100%", minHeight: 54, borderRadius: 16, border: "none", backgroundColor: SIGNAL_GREEN, color: FOUND_BLACK, fontSize: 15, fontWeight: 900, cursor: "pointer" }}>
                     Add first work item
@@ -1730,7 +1732,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
                     </div>
                   ))}
                   <button onClick={startEdit} style={{ width: "100%", minHeight: 50, padding: "0 16px", border: "none", backgroundColor: "rgba(255,255,255,0.02)", color: SIGNAL_GREEN, fontSize: 14, fontWeight: 850, cursor: "pointer", textAlign: "left" }}>
-                    Add or edit work
+                    Edit Work
                   </button>
                 </div>
               )}
@@ -1858,7 +1860,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
           <>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
               <h2 style={{ margin: 0, color: "white", ...TYPE.title }}>Build Estimate</h2>
-              <CloseIconButton onClick={() => setMode("view")} />
+              <CloseIconButton onClick={() => returnToJob ? onClose() : setMode("view")} />
             </div>
 
             <div style={{ marginBottom: 20 }}>
@@ -1942,7 +1944,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               <div style={{ marginBottom: 12, padding: "11px 14px", borderRadius: 12, backgroundColor: "rgba(255,69,58,0.08)", border: "1px solid rgba(255,69,58,0.18)", color: "#FF453A", fontSize: 13 }}>{saveError}</div>
             )}
             <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setMode("view")} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button onClick={() => returnToJob ? onClose() : setMode("view")} style={{ flex: 1, padding: "14px 0", borderRadius: 14, border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "transparent", color: "rgba(255,255,255,0.4)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
               <button onClick={handleSaveEdit} disabled={saving || !editName.trim()} style={{ flex: 2, padding: "14px 0", borderRadius: 14, border: "none", backgroundColor: editName.trim() ? SIGNAL_GREEN : "rgba(255,255,255,0.08)", color: editName.trim() ? FOUND_BLACK : "rgba(255,255,255,0.2)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
                 {saving ? "Saving..." : "Save & Review"}
               </button>
