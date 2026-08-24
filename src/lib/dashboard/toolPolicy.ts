@@ -28,6 +28,9 @@ const EMAIL_TOOL: DashboardTool = { id: "email", path: "/marketing", label: "Ema
 const CAMERA_TOOL: DashboardTool = { id: "camera", path: "/photos?camera=1", label: "Camera", group: "website", description: "Shoot and sort later" }
 const PRODUCTS_TOOL: DashboardTool = { id: "products", path: "/products", label: "Products", group: "website", description: "Add what you sell online" }
 const MENU_TOOL: DashboardTool = { id: "menu", path: "/menu", label: "Menu", group: "website", description: "Edit the items guests can order" }
+const BUSINESS_INFO_TOOL: DashboardTool = { id: "business_info", path: "/business-info", label: "Business Info", group: "settings", description: "Name, phone, address, and public basics" }
+const BILLING_TOOL: DashboardTool = { id: "billing", path: "/billing", label: "Plan & Billing", group: "settings", description: "Plan, payment method, and billing status" }
+const TEAM_TOOL: DashboardTool = { id: "team", path: "/team", label: "Team", group: "settings", description: "Owner and worker access" }
 
 const SCHEDULE_FIRST_INDUSTRIES = new Set([
   "wellness",
@@ -125,6 +128,9 @@ function availableFoodTools(activeAddons: string[], plan: string | null | undefi
     SITE_TOOL,
     ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
+    BUSINESS_INFO_TOOL,
+    BILLING_TOOL,
+    TEAM_TOOL,
     { id: "more", path: "/more", label: "More", group: "settings", description: "Every page, in one place" },
   ]
 }
@@ -162,6 +168,9 @@ export function getAvailableDashboardTools({ industry = null, subIndustry = null
     SITE_TOOL,
     ...(hasContacts ? ([{ id: "contacts", path: "/contacts", label: "Contacts", group: "customers", description: "People, vendors, staff, and suppliers" }] as DashboardTool[]) : []),
     ...(hasEmail ? [EMAIL_TOOL] : []),
+    BUSINESS_INFO_TOOL,
+    BILLING_TOOL,
+    TEAM_TOOL,
     { id: "more", path: "/more", label: "More", group: "settings", description: "Every page, in one place" },
   ]
 }

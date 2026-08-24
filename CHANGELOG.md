@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Owner More Page Cleaned Into Manage Hub
+**AI:** Codex
+
+### Context
+Shawn approved moving from Found HQ QA item #1 to item #2: clean up the owner-facing More / Manage area.
+
+### Changed
+- Customer dashboard `/more` now opens as `Manage` with plain business-focused guidance.
+- The dashboard tool registry now includes `Business Info`, `Plan & Billing`, and `Team` under Settings.
+- The Manage screen now groups tools by business area and puts `Organize Dock` inside Settings.
+- Dock-organizer copy now explains that Home and More stay pinned while the owner chooses the three middle tabs.
+
+### Verification
+- `git diff --check` passed with only normal CRLF warnings.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed.
+
+---
+
 ## Session: August 24, 2026 - Client Detail Shows Real Card-On-File Status
 **AI:** Codex
 

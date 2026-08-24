@@ -39,9 +39,12 @@ export default async function MorePage() {
 
   return (
     <main style={{ padding: "28px 20px 60px" }}>
-      <h1 style={{ margin: "0 0 24px", ...TYPE.largeTitle, color: "white" }}>
-        More
+      <h1 style={{ margin: "0 0 6px", ...TYPE.largeTitle, color: "white" }}>
+        Manage
       </h1>
+      <p style={{ margin: "0 0 24px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.55 }}>
+        Choose what part of {company?.name ?? "your business"} you want to work on.
+      </p>
 
       <DashboardPages
         companyName={company?.name ?? null}

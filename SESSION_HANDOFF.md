@@ -1,5 +1,34 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Owner More Page Cleaned Into Manage Hub
+
+### Progress This Pass
+- Shawn approved moving from Found HQ QA item #1 to item #2: clean up the owner-facing More / Manage area.
+- Updated the customer dashboard More page title to `Manage` with a plain subtitle tied to the current business name.
+- Added real Manage destinations to the shared dashboard tool registry:
+  - `Business Info`
+  - `Plan & Billing`
+  - `Team`
+- Reworked the owner More page into grouped business areas instead of one flat list and a competing top `Organize Dock` button.
+- Moved `Organize Dock` into the Settings group so owners find it as an account/app-setting task.
+- Updated the dock organizer copy to explain that Home and More stay pinned and the owner chooses the three middle tabs.
+
+### Verification This Pass
+- `git diff --check` passed with only normal CRLF warnings.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed.
+
+### Open / Do Not Lose
+- This is owner-facing dashboard navigation and copy only. No schema, billing behavior, worker permission behavior, or site content behavior changed.
+- The bottom dock still labels the last tab `More` for now. The page itself reads as `Manage`.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `my.foundco.app` as an owner, then tap `More`.
+2. Confirm the page title says `Manage` and the page reads like business areas, not a junk drawer.
+3. Confirm Settings includes `Business Info`, `Plan & Billing`, `Team`, and `Organize Dock`.
+4. Tap `Organize Dock`, confirm the edit screen says Home and More stay pinned, then tap Done.
+
 ## 2026-08-24 - Client Detail Shows Real Card-On-File Status
 
 ### Progress This Pass

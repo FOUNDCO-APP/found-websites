@@ -28,6 +28,13 @@
 - [ ] Future: Twilio texting and SMS logging.
 - [ ] Future: arm automation only after explicit team approval and QA.
 
+### Owner Dashboard More / Manage
+
+- [x] Owner-facing More page now reads as `Manage` and uses plain business-area grouping.
+- [x] Settings now exposes `Business Info`, `Plan & Billing`, `Team`, and `Organize Dock`.
+- [x] Dock organizer copy now explains Home and More stay pinned while the owner chooses the three middle tabs.
+- [ ] Shawn QA: open `my.foundco.app` as an owner, tap More, confirm the Manage hub feels clear on iPhone and each Settings row opens the right page.
+
 ## 2026-08-05 - CURRENT NOW
 
 ## 2026-08-17 - PWA Home Screen Icon Had No Found Branding
