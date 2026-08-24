@@ -52,7 +52,10 @@ export type CampaignMember = {
   status: string
   message?: string
   outreachMemory?: string | null
+  lastOutreachAt?: string | null
 }
+
+export type AutomationRuleStatus = "Manual only" | "Test only" | "Ready later" | "Paused"
 
 export type CampaignAudience = {
   id: string
@@ -67,6 +70,11 @@ export type AutomationDraft = {
   trigger: string
   audience: string
   channel: "Email" | "Text" | "Manual"
+  status: AutomationRuleStatus
+  readyNow: number
+  suppressedByFollowUp: number
+  missingContact: number
+  lastSent: string
   message: string
   members: CampaignMember[]
 }
@@ -156,6 +164,13 @@ function outreachLabel(outreach: LeadOutreach | undefined) {
 
 function memberMeta(member: CampaignMember) {
   return [member.status, member.detail, member.outreachMemory].filter(Boolean).join(" / ")
+}
+
+function statusClass(status: AutomationRuleStatus) {
+  if (status === "Manual only") return "hq-badge-info"
+  if (status === "Test only") return "hq-badge-success"
+  if (status === "Ready later") return "hq-badge-warning"
+  return ""
 }
 
 function leadNeedsFollowUp(prospect: Prospect) {
@@ -378,7 +393,7 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
         <div>
           <div className="hq-business-name-line">
             <h2>{draft.title}</h2>
-            <span className="hq-badge hq-badge-warning">Draft</span>
+            <span className={`hq-badge ${statusClass(draft.status)}`}>{draft.status}</span>
           </div>
           <p className="hq-row-meta">{draft.trigger} / {draft.channel} / {draft.members.length} match{draft.members.length === 1 ? "" : "es"}</p>
         </div>
@@ -397,7 +412,7 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
             </div>
             <div>
               <p className="hq-row-meta">Ready to reach</p>
-              <p className="hq-row-title">{reachable.length} of {draft.members.length}</p>
+              <p className="hq-row-title">{reachable.length} of {draft.readyNow}</p>
             </div>
           </div>
           {draft.members.length > 0 && (
@@ -439,6 +454,40 @@ function AutomationDraftCard({ draft }: { draft: AutomationDraft }) {
         </div>
       )}
     </article>
+  )
+}
+
+function AutomationSafetyPanel({ drafts, testSandboxDraft }: { drafts: AutomationDraft[]; testSandboxDraft: AutomationDraft }) {
+  const rules = [testSandboxDraft, ...drafts]
+  const readyNow = rules.reduce((total, rule) => total + rule.readyNow, 0)
+  const suppressed = rules.reduce((total, rule) => total + rule.suppressedByFollowUp, 0)
+
+  return (
+    <section className="hq-section hq-growth-followup">
+      <div className="hq-section-head">
+        <h2 className="hq-section-title">Outreach rules</h2>
+        <span className="hq-section-meta">{readyNow} ready, {suppressed} waiting</span>
+      </div>
+      <div className="hq-automation-rules" aria-label="Outreach automation safety rules">
+        {rules.map((rule) => (
+          <article key={`rule-${rule.id}`} className="hq-automation-rule">
+            <div className="hq-automation-rule-head">
+              <div>
+                <h3>{rule.title}</h3>
+                <p>{rule.trigger}</p>
+              </div>
+              <span className={`hq-badge ${statusClass(rule.status)}`}>{rule.status}</span>
+            </div>
+            <div className="hq-automation-rule-grid">
+              <div><span>Ready now</span><strong>{rule.readyNow}</strong></div>
+              <div><span>Suppressed</span><strong>{rule.suppressedByFollowUp}</strong></div>
+              <div><span>Missing</span><strong>{rule.missingContact}</strong></div>
+              <div><span>Last sent</span><strong>{rule.lastSent}</strong></div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -550,6 +599,8 @@ export default function GrowthWorkspace({ accounts, cohorts, prospects, campaign
   return (
     <>
       <GoalScoreboard accounts={accounts} />
+
+      <AutomationSafetyPanel drafts={automationDrafts} testSandboxDraft={testSandboxDraft} />
 
       <section className="hq-section hq-growth-followup">
         <div className="hq-section-head">

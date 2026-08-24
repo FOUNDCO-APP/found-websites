@@ -51,6 +51,9 @@ Use this after the current build sprint to test the admin updates end to end.
 - Verify client automation drafts use reason-specific copy for dashboard-only, inactive, no activity, and missing-tool clients.
 - Verify Growth automation drafts suppress clients with future follow-ups while campaign audience lists still show them for manual review.
 - Verify Growth campaign members show last client outreach memory when available.
+- Verify Growth Outreach rules shows Lead first touch, Lead follow-up due, Trial rescue, Inactive client, Dashboard-only, Tool adoption, and First-week check-in.
+- Verify each outreach rule shows status, ready now, suppressed by follow-up, missing contact, and last sent.
+- Verify no real client receives automation unless a rule is explicitly armed in a future release.
 - Verify Growth test send sandbox shows only `account_kind = test`, Shawn/Sean email, Sayitmarketing, and marketing test identities.
 - Verify Growth test send sandbox accounts do not appear in real campaign lists, automation drafts, Growth lead counts, MRR, or signup goals.
 - Verify test sandbox Open text, Open email, Copy, Mark reviewed, and Send email work without changing real outreach queues.

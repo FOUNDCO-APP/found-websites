@@ -118,7 +118,7 @@ function isTestProspect(prospect: Prospect) {
   return isAdminTestEmail(prospect.email)
 }
 
-function companyMember(company: CompanyRow, status: string, message?: string, outreachMemory?: string | null) {
+function companyMember(company: CompanyRow, status: string, message?: string, outreachMemory?: string | null, lastOutreachAt?: string | null) {
   return {
     id: company.id,
     type: "client" as const,
@@ -132,6 +132,7 @@ function companyMember(company: CompanyRow, status: string, message?: string, ou
     status,
     message,
     outreachMemory,
+    lastOutreachAt: lastOutreachAt ?? null,
   }
 }
 
@@ -147,11 +148,36 @@ function prospectMember(prospect: Prospect, status: string) {
     phone: prospect.phone,
     href: null,
     status,
+    lastOutreachAt: prospect.outreach_activities[0]?.created_at ?? null,
   }
 }
 
 function audienceById(audiences: CampaignAudience[], id: string) {
   return audiences.find((audience) => audience.id === id)?.members ?? []
+}
+
+function memberHasContact(member: { email: string | null; phone: string | null }, channel: AutomationDraft["channel"]) {
+  if (channel === "Email") return Boolean(member.email)
+  if (channel === "Text") return Boolean(member.phone)
+  return Boolean(member.email || member.phone)
+}
+
+function lastSentLabel(members: { lastOutreachAt?: string | null }[]) {
+  const latest = members
+    .map((member) => member.lastOutreachAt)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0]
+  const days = dayAge(latest)
+  if (days === null) return "None"
+  if (days <= 0) return "Today"
+  if (days === 1) return "Yesterday"
+  return `${days}d ago`
+}
+
+function automationStatus(readyMembers: unknown[], suppressedByFollowUp: number): AutomationDraft["status"] {
+  if (readyMembers.length > 0) return "Manual only"
+  if (suppressedByFollowUp > 0) return "Ready later"
+  return "Paused"
 }
 
 export default async function GrowthPage() {
@@ -249,10 +275,23 @@ export default async function GrowthPage() {
     businessName: company.name,
     signal: activitySignalByCompany.get(company.id) ?? buildClientActivitySignal([], company.subscription_status),
   })
-  const campaignMemberForCompany = (company: CompanyRow, status: string, message?: string) =>
-    companyMember(company, status, message, outreachMemoryLabel(latestClientOutreachByCompany.get(company.id)))
+  const campaignMemberForCompany = (company: CompanyRow, status: string, message?: string) => {
+    const latestOutreach = latestClientOutreachByCompany.get(company.id)
+    return companyMember(company, status, message, outreachMemoryLabel(latestOutreach), latestOutreach?.created_at ?? null)
+  }
   const clientDraftReady = (member: { id: string; type: "client" | "lead" }) =>
     member.type !== "client" || !isClientFollowUpLater(latestClientOutreachByCompany.get(member.id))
+  const automationDraft = (draft: Omit<AutomationDraft, "status" | "readyNow" | "suppressedByFollowUp" | "missingContact" | "lastSent">, fullMembers: ReturnType<typeof audienceById>) => {
+    const suppressedByFollowUp = fullMembers.filter((member) => !clientDraftReady(member)).length
+    return {
+      ...draft,
+      status: automationStatus(draft.members, suppressedByFollowUp),
+      readyNow: draft.members.length,
+      suppressedByFollowUp,
+      missingContact: draft.members.filter((member) => !memberHasContact(member, draft.channel)).length,
+      lastSent: lastSentLabel(fullMembers),
+    }
+  }
   const upgradeReadyClients = companyRows.filter((company) => UPGRADEABLE_PLANS.has(company.plan ?? ""))
   const inactiveClients = companyRows.filter((company) => (dayAge(activitySignalByCompany.get(company.id)?.latest?.created_at) ?? 999) >= 15)
   const noActivityClients = companyRows.filter((company) => !customerActivityByCompany.has(company.id))
@@ -347,7 +386,7 @@ export default async function GrowthPage() {
     },
   ]
   const automationDrafts: AutomationDraft[] = [
-    {
+    automationDraft({
       id: "lead-first-touch-day-1",
       title: "Lead first touch",
       trigger: "Lead added and no outreach logged after 1 day",
@@ -355,8 +394,8 @@ export default async function GrowthPage() {
       channel: "Text",
       message: "Hey {{first_name}}, this is Super Shawn with Found. I wanted to follow up about {{business_name}} and see if getting a real working website live is still something worth looking at this week.",
       members: audienceById(campaignAudiences, "lead-first-touch").filter((member) => (dayAge(openLeads.find((lead) => lead.id === member.id)?.created_at) ?? 0) >= 1),
-    },
-    {
+    }, audienceById(campaignAudiences, "lead-first-touch")),
+    automationDraft({
       id: "lead-follow-up-due",
       title: "Lead follow-up due",
       trigger: "Lead follow-up date is today or overdue",
@@ -364,8 +403,8 @@ export default async function GrowthPage() {
       channel: "Text",
       message: "Hey {{first_name}}, quick follow-up. Want to take a look at what your business site could look like and what we can get working for you?",
       members: audienceById(campaignAudiences, "lead-follow-up-due"),
-    },
-    {
+    }, audienceById(campaignAudiences, "lead-follow-up-due")),
+    automationDraft({
       id: "trialing-inactive-7",
       title: "Trial rescue",
       trigger: "Trialing client inactive for 7 days",
@@ -373,17 +412,17 @@ export default async function GrowthPage() {
       channel: "Email",
       message: "Hey {{business_name}}, this is Super Shawn with Found. I noticed your dashboard has been quiet while your account is still in trial. Want me to help you take the next step so the site starts working harder for you?",
       members: audienceById(campaignAudiences, "trialing-inactive").filter(clientDraftReady),
-    },
-    {
+    }, audienceById(campaignAudiences, "trialing-inactive")),
+    automationDraft({
       id: "client-inactive-15",
-      title: "Client reactivation",
+      title: "Inactive client",
       trigger: "Client inactive for 15+ days",
       audience: "Clients inactive 15+ days",
       channel: "Email",
       message: "Hey {{business_name}}, this is Super Shawn with Found. If the system has not been useful lately, I want to know what is blocking you so we can tighten it up.",
       members: audienceById(campaignAudiences, "inactive-clients").filter(clientDraftReady),
-    },
-    {
+    }, audienceById(campaignAudiences, "inactive-clients")),
+    automationDraft({
       id: "dashboard-only-nudge",
       title: "Dashboard-only nudge",
       trigger: "Client opened Found but has not used a working tool",
@@ -391,8 +430,8 @@ export default async function GrowthPage() {
       channel: "Manual",
       message: "Hey {{business_name}}, this is Super Shawn with Found. I saw the dashboard was opened, but it does not look like any of the working tools have been used yet. Want me to help you use one real tool, like Photos, Leads, Site updates, or Estimates?",
       members: audienceById(campaignAudiences, "dashboard-only-clients").filter(clientDraftReady),
-    },
-    {
+    }, audienceById(campaignAudiences, "dashboard-only-clients")),
+    automationDraft({
       id: "tool-adoption-nudge",
       title: "Tool adoption nudge",
       trigger: "Client has not used a core Found tool",
@@ -404,8 +443,12 @@ export default async function GrowthPage() {
         ...audienceById(campaignAudiences, "no-photos-usage"),
         ...audienceById(campaignAudiences, "no-estimates-usage"),
       ].filter((member, index, members) => members.findIndex((item) => item.type === member.type && item.id === member.id) === index).filter(clientDraftReady),
-    },
-    {
+    }, [
+      ...audienceById(campaignAudiences, "no-leads-usage"),
+      ...audienceById(campaignAudiences, "no-photos-usage"),
+      ...audienceById(campaignAudiences, "no-estimates-usage"),
+    ].filter((member, index, members) => members.findIndex((item) => item.type === member.type && item.id === member.id) === index)),
+    automationDraft({
       id: "new-client-first-week",
       title: "First-week check-in",
       trigger: "New client in first 7 days",
@@ -413,7 +456,11 @@ export default async function GrowthPage() {
       channel: "Manual",
       message: "Hey {{business_name}}, this is Super Shawn with Found. Just checking in on your first week. I want to make sure you know where to go next and that the system is already helping.",
       members: audienceById(campaignAudiences, "new-client-first-week").filter(clientDraftReady),
-    },
+    }, audienceById(campaignAudiences, "new-client-first-week")),
+  ]
+  const testSandboxMembers = [
+    ...testCompanyRows.map((company) => companyMember(company, company.account_kind === "test" ? "Test account" : "Test email account")),
+    ...testOpenLeads.map((prospect) => prospectMember(prospect, "Test lead")),
   ]
   const testSandboxDraft: AutomationDraft = {
     id: "test-send-sandbox",
@@ -421,11 +468,13 @@ export default async function GrowthPage() {
     trigger: "Test identities only - excluded from real campaign counts",
     audience: "Shawn, Sayitmarketing, marketing, and test accounts/leads",
     channel: "Manual",
+    status: "Test only",
+    readyNow: testSandboxMembers.length,
+    suppressedByFollowUp: 0,
+    missingContact: testSandboxMembers.filter((member) => !memberHasContact(member, "Manual")).length,
+    lastSent: lastSentLabel(testSandboxMembers),
     message: "Hey {{first_name}}, this is Super Shawn with Found. This is a test of the Found outreach system. If you got this, email and text workflows are ready to test without touching real client outreach.",
-    members: [
-      ...testCompanyRows.map((company) => companyMember(company, company.account_kind === "test" ? "Test account" : "Test email account")),
-      ...testOpenLeads.map((prospect) => prospectMember(prospect, "Test lead")),
-    ],
+    members: testSandboxMembers,
   }
 
   return (
