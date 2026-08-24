@@ -40,6 +40,11 @@ export type ClientDetail = {
   disabled_addons: string[] | null
   stripe_customer_id: string | null
   stripe_connect_account_id: string | null
+  billing_payment_signal: {
+    status: "card_on_file" | "no_card" | "no_stripe_customer" | "stripe_unavailable" | "lookup_failed"
+    label: string
+    detail: string | null
+  }
   created_at: string
   activities: { summary: string; activity_type: string; metadata?: Record<string, unknown> | null; created_at: string }[]
   emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string }[]
@@ -191,14 +196,15 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
     ? `${client.billing_cycle_day}${ordinalSuffix(client.billing_cycle_day)} of every month`
     : "Not anchored"
   const stripeStatus = client.subscription_status ?? "not connected"
+  const hasCardOnFile = client.billing_payment_signal.status === "card_on_file"
   const billingStatusLabel = isActiveSubscription
     ? client.subscription_status === "trialing" && cardDueLabel
-      ? `Active in Stripe - trial until ${cardDueLabel}`
-      : `Active in Stripe - ${stripeStatus}`
+      ? `${client.billing_payment_signal.label} - trial until ${cardDueLabel}`
+      : `${client.billing_payment_signal.label} - ${stripeStatus}`
     : client.is_comp
       ? "Permanent comp - no card needed"
       : cardDueLabel
-        ? "Card not on file yet"
+        ? client.billing_payment_signal.label
         : "Not activated"
   const collectedLabel = client.deferred_payment_amount != null
     ? `$${Number(client.deferred_payment_amount).toFixed(2)}${client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}${client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}`
@@ -375,8 +381,13 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <p className="hq-row-title">Billing snapshot</p>
           <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
             <div>
+              <p className="hq-row-meta">Card status</p>
+              <p className="hq-row-title">{client.billing_payment_signal.label}</p>
+              {client.billing_payment_signal.detail && <p className="hq-row-meta">{client.billing_payment_signal.detail}</p>}
+            </div>
+            <div>
               <p className="hq-row-meta">Stripe status</p>
-              <p className="hq-row-title">{billingStatusLabel}</p>
+              <p className="hq-row-title">{stripeStatus}</p>
             </div>
             <div>
               <p className="hq-row-meta">Current plan</p>
@@ -408,7 +419,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               </div>
             )}
           </div>
-          {!isActiveSubscription && !client.is_comp && client.trial_ends_at && (
+          {!hasCardOnFile && !client.is_comp && client.trial_ends_at && (
             <form action={resendCardLinkEmail} style={{ marginTop: 10 }}>
               <input type="hidden" name="companyId" value={client.id} />
               <button className="hq-button hq-button-secondary" type="submit" disabled={!client.email} style={{ width: "100%" }}>
@@ -419,7 +430,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           )}
         </div>
 
-        {!isActiveSubscription && !client.is_comp && (
+        {!hasCardOnFile && !client.is_comp && (
           <>
             <div className="hq-panel" style={{ padding: 16, marginTop: 12 }}>
               <p className="hq-row-title">Activate now</p>

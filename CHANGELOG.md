@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Client Detail Shows Real Card-On-File Status
+**AI:** Codex
+
+### Context
+Shawn asked whether `Active in Stripe` meant the client has a card on file. That distinction matters because he needs to know whether the client can actually be billed.
+
+### Changed
+- Admin client detail now checks Stripe directly for a saved/default payment method.
+- Payment wording now separates card readiness from subscription status.
+- Billing snapshot now shows `Card status` and `Stripe status` as separate facts.
+- Card-link actions now appear whenever no card is confirmed.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+---
+
 ## Session: August 24, 2026 - Found HQ More Page Cleaned Into Manage Hub
 **AI:** Codex
 

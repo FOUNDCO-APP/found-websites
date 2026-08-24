@@ -19,6 +19,7 @@
 - [x] Admin activity and email timestamps forced to Arizona time for Found HQ.
 - [x] Admin activity summary fixed to use Arizona calendar days and include time for today/yesterday.
 - [x] Found HQ More page cleaned into a grouped `Manage` hub with a clear next admin move.
+- [x] Client detail Payment now checks Stripe for real card-on-file status instead of implying `active/trialing` means a card exists.
 - [x] Supabase `email_log` handled-state migration applied and verified on Found project `mmctzloztgkbqvofmkou`.
 - [x] QA checklist expanded in `docs/admin-hq-qa-checklist.md`.
 - [ ] Shawn QA: run the full admin checklist after the build sprint.

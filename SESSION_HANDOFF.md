@@ -1,5 +1,31 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Client Detail Shows Real Card-On-File Status
+
+### Progress This Pass
+- Shawn asked whether `Active in Stripe` under client Payment means a card is on file.
+- Team answer: no. `active` / `trialing` is subscription status and does not prove a saved card by itself.
+- Updated admin client detail to check Stripe directly for the customer's saved/default payment method.
+- Payment summary now uses plain labels like `Card on file`, `No card on file`, `No Stripe customer`, or `Could not check card`.
+- Billing snapshot now separates `Card status` from `Stripe status` so Shawn can tell whether the client is actually ready to bill.
+- Card-link resend / activate-now tools now appear when no card is confirmed, even if local subscription status is trialing.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+### Open / Do Not Lose
+- This checks Stripe live at page load; it does not add new database fields or cache card details locally.
+- The card detail shown is limited to safe Stripe display info such as brand/last4.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `/admin/clients`, then open Divine Remodel or MBJ Heating and Cooling.
+2. In the top command grid, check `Payment`.
+3. In `Billing snapshot`, confirm `Card status` says either `Card on file` with the last four digits, or `No card on file`.
+4. Confirm `Stripe status` still shows the subscription state separately.
+
 ## 2026-08-24 - Found HQ More Page Cleaned Into Manage Hub
 
 ### Progress This Pass

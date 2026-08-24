@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getAdminClient } from "../../lib"
 import ClientDetailWorkspace, { type ClientDetail } from "./ClientDetailWorkspace"
+import { getStripe } from "@/lib/stripe/connect"
+import type Stripe from "stripe"
 
 export const metadata = { title: "Client - Found HQ" }
 
@@ -10,6 +12,70 @@ type CustomerActivityRow = {
   surface: string
   feature: string | null
   created_at: string
+}
+
+type BillingPaymentSignal = {
+  status: "card_on_file" | "no_card" | "no_stripe_customer" | "stripe_unavailable" | "lookup_failed"
+  label: string
+  detail: string | null
+}
+
+function paymentMethodLabel(paymentMethod: Stripe.PaymentMethod | null | undefined) {
+  if (!paymentMethod) return null
+  if (paymentMethod.card) {
+    const brand = paymentMethod.card.brand ? paymentMethod.card.brand.replace(/\b[a-z]/g, (letter) => letter.toUpperCase()) : "Card"
+    return `${brand} ending ${paymentMethod.card.last4}`
+  }
+  if (paymentMethod.us_bank_account) return `Bank ending ${paymentMethod.us_bank_account.last4}`
+  return "Payment method saved"
+}
+
+async function getBillingPaymentSignal(stripeCustomerId: string | null | undefined): Promise<BillingPaymentSignal> {
+  if (!stripeCustomerId) {
+    return { status: "no_stripe_customer", label: "No Stripe customer", detail: "No card can be confirmed yet." }
+  }
+
+  const stripe = getStripe()
+  if (!stripe) {
+    return { status: "stripe_unavailable", label: "Stripe not configured", detail: "Cannot check card status in this environment." }
+  }
+
+  try {
+    const customer = await stripe.customers.retrieve(stripeCustomerId, {
+      expand: ["invoice_settings.default_payment_method"],
+    })
+    if (customer.deleted) {
+      return { status: "lookup_failed", label: "Stripe customer deleted", detail: stripeCustomerId }
+    }
+
+    const defaultPaymentMethod = customer.invoice_settings.default_payment_method
+    if (defaultPaymentMethod && typeof defaultPaymentMethod !== "string") {
+      return {
+        status: "card_on_file",
+        label: "Card on file",
+        detail: paymentMethodLabel(defaultPaymentMethod),
+      }
+    }
+
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: stripeCustomerId,
+      type: "card",
+      limit: 1,
+    })
+    const card = paymentMethods.data[0]
+    if (card) {
+      return {
+        status: "card_on_file",
+        label: "Card on file",
+        detail: paymentMethodLabel(card),
+      }
+    }
+
+    return { status: "no_card", label: "No card on file", detail: "Send the card link before billing starts." }
+  } catch (err) {
+    console.error("[admin/client] Stripe payment method lookup failed", err)
+    return { status: "lookup_failed", label: "Could not check card", detail: stripeCustomerId }
+  }
 }
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,6 +100,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   ])
 
   if (!company) notFound()
+  const billingPaymentSignal = await getBillingPaymentSignal(company.stripe_customer_id)
 
   const detail: ClientDetail = {
     ...company,
@@ -41,6 +108,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     emails: emails ?? [],
     customer_activities: (customerActivityResult.data ?? []) as CustomerActivityRow[],
     customer_activity_ready: !customerActivityResult.error,
+    billing_payment_signal: billingPaymentSignal,
   }
 
   return (
