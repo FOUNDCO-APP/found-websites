@@ -52,8 +52,10 @@ export function buildClientActivitySignal(activities: CustomerActivitySignalRow[
     counts[surface] = (counts[surface] ?? 0) + 1
     return counts
   }, {})
-  const topSurface = Object.entries(surfaceCounts).sort((a, b) => b[1] - a[1])[0] ?? null
-  const topToolSurface = Object.entries(toolSurfaceCounts).sort((a, b) => b[1] - a[1])[0] ?? null
+  const topSurfaces = Object.entries(surfaceCounts).sort((a, b) => b[1] - a[1])
+  const topToolSurfaces = Object.entries(toolSurfaceCounts).sort((a, b) => b[1] - a[1])
+  const topSurface = topSurfaces[0] ?? null
+  const topToolSurface = topToolSurfaces[0] ?? null
   const usedTools = new Set(toolActivities.map((activity) => activity.surface).filter((surface): surface is string => Boolean(surface)))
   const missingCoreTools = CORE_TOOLS.filter((surface) => !usedTools.has(surface))
   const onlyDashboard = activities.length > 0 && toolActivities.length === 0
@@ -94,7 +96,9 @@ export function buildClientActivitySignal(activities: CustomerActivitySignalRow[
     count90d: activities.length,
     toolCount90d: toolActivities.length,
     topSurface,
+    topSurfaces,
     topToolSurface,
+    topToolSurfaces,
     missingCoreTools,
     onlyDashboard,
     level,

@@ -101,17 +101,17 @@ export default function EmailsWorkspace({ rows, handlingReady }: { rows: EmailRo
     <>
       <section className="hq-command-status hq-email-command">
         <div>
-          <span>Inbox command</span>
+          <span>Email issues</span>
           <strong>{needsResponseCount}</strong>
-          <p>{!handlingReady ? "Inbox handling fields are not live in Supabase yet; apply the migration to enable handled/reopen." : needsResponseCount === 0 ? "No delivery issue or flagged lead needs response right now." : "Emails with failed delivery, bounce risk, spam complaints, delays, or flagged leads need review."}</p>
+          <p>{!handlingReady ? "Email handling fields are not live in Supabase yet; apply the migration to enable handled/reopen." : needsResponseCount === 0 ? "No failed, delayed, bounced, or flagged email needs review right now." : `${needsResponseCount} email${needsResponseCount === 1 ? "" : "s"} need review because delivery failed, bounced, was delayed, got a spam complaint, or a lead was flagged.`}</p>
         </div>
         <Link href="/admin/emails/templates">Templates<span className="hq-chevron" /></Link>
       </section>
 
       <div className="hq-detail-snapshot hq-email-snapshot">
-        <button type="button" data-active={view === "needs_response"} onClick={() => setView("needs_response")}><span>Needs response</span><strong>{needsResponseCount}</strong></button>
+        <button type="button" data-active={view === "needs_response"} onClick={() => setView("needs_response")}><span>Needs review</span><strong>{needsResponseCount}</strong></button>
         <button type="button" data-active={view === "handled"} onClick={() => setView("handled")}><span>Handled</span><strong>{handledCount}</strong></button>
-        <button type="button" data-active={view === "all"} onClick={() => setView("all")}><span>All</span><strong>{rows.length}</strong></button>
+        <button type="button" data-active={view === "all"} onClick={() => setView("all")}><span>Tracked emails</span><strong>{rows.length}</strong></button>
       </div>
 
       <div className="hq-business-toolbar">

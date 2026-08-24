@@ -102,6 +102,16 @@ function formatDaysAgo(value: string | null) {
   return `Used ${days} days ago`
 }
 
+function formatLastActivity(value: string | null) {
+  if (!value) return "No client use yet"
+  const date = new Date(value)
+  const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  const days = Math.floor((Date.now() - date.getTime()) / 86400000)
+  if (days <= 0) return `Used today at ${time}`
+  if (days === 1) return `Used yesterday at ${time}`
+  return `Used ${days} days ago`
+}
+
 function followUpLabel(value: string | null | undefined) {
   if (!value) return "No follow-up date"
   const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
@@ -187,6 +197,10 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const activitySignal = buildClientActivitySignal(client.customer_activities, client.subscription_status)
   const customerActivityCount = activitySignal.count90d
   const missingTools = activitySignal.missingCoreTools.slice(0, 4).map(activitySurfaceLabel).join(", ")
+  const mostUsedTools = activitySignal.topToolSurfaces
+    .slice(0, 3)
+    .map(([surface, count]) => `${activitySurfaceLabel(surface)} ${count}`)
+    .join(" · ")
   const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
   const nextAction = client.client_state === "past_due"
     ? "Fix payment risk"
@@ -283,9 +297,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <span className="hq-section-meta">Customer-side only</span>
         </div>
         <div className="hq-detail-snapshot hq-activity-snapshot">
-          <div><span>Last use</span><strong>{client.customer_activity_ready ? formatDaysAgo(lastCustomerActivity?.created_at ?? null) : "Waiting on table"}</strong></div>
-          <div><span>90-day tools</span><strong>{client.customer_activity_ready ? activitySignal.toolCount90d : "Not live"}</strong></div>
-          <div><span>Top tool</span><strong>{client.customer_activity_ready && activitySignal.topToolSurface ? `${activitySurfaceLabel(activitySignal.topToolSurface[0])} (${activitySignal.topToolSurface[1]})` : "No tool use yet"}</strong></div>
+          <div><span>Last activity</span><strong>{client.customer_activity_ready ? formatLastActivity(lastCustomerActivity?.created_at ?? null) : "Waiting on table"}</strong></div>
+          <div><span>Tool actions, 90d</span><strong>{client.customer_activity_ready ? activitySignal.toolCount90d : "Not live"}</strong></div>
+          <div><span>Most used</span><strong>{client.customer_activity_ready && mostUsedTools ? mostUsedTools : "No tool use yet"}</strong></div>
         </div>
         {client.customer_activity_ready && (
           <div className="hq-panel hq-next-action" style={{ marginBottom: 14 }}>

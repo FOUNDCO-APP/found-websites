@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Admin Activity and Email Labels Clarified
+**AI:** Codex
+
+### Context
+Shawn tested Found HQ client detail and Emails, then asked what the activity and inbox numbers actually meant. The data was useful, but labels like `90-day tools`, `Top tool`, and `Inbox command` were not plain enough.
+
+### Changed
+- Added ranked top-tool counts to the shared admin customer-activity signal.
+- Client detail now shows `Last activity` with time, `Tool actions, 90d`, and `Most used` with the top three customer-side tool areas.
+- Emails now uses `Email issues`, `Needs review`, and `Tracked emails` so the counts explain themselves.
+- Clarified email issue copy as failed, bounced, delayed, spam-complained, or flagged-lead emails.
+
+### Verification
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+
+---
+
 ## Session: August 24, 2026 - Documentation Save Process Lock
 **AI:** Codex
 

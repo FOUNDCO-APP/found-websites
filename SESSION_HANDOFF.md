@@ -1,5 +1,36 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Admin Client Activity + Email Labels Clarified
+
+### Progress This Pass
+- Shawn reviewed Found HQ on Divine Remodel and asked what `Last use`, `90-day tools`, `Top tool`, and `Inbox command` actually meant.
+- Team review concluded the data was useful but the labels were too technical and misleading.
+- Updated client detail activity display:
+  - `Last use` is now `Last activity` and includes the exact time when the activity happened today/yesterday.
+  - `90-day tools` is now `Tool actions, 90d` so the number reads as tracked usage events, not a count of tools.
+  - `Top tool` is now `Most used` and shows the top three customer-side tool areas in ranked order, for example `Photos 7 · Site 1`.
+- Updated admin Emails wording:
+  - `Inbox command` is now `Email issues`.
+  - `Needs response` is now `Needs review`.
+  - `All` is now `Tracked emails`.
+  - Header copy now explains that issues are failed, bounced, delayed, spam-complained, or flagged-lead emails.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+
+### Open / Do Not Lose
+- This is display-only. No schema, automation, or activity tracking logic changed.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `/admin/clients`, then open Divine Remodel.
+2. Confirm Client activity reads clearly: `Last activity`, `Tool actions, 90d`, and `Most used`.
+3. Confirm `Last activity` shows a useful time, such as `Used today at 10:42 AM`.
+4. Open `/admin/emails`.
+5. Confirm the top area now says `Email issues`, the first filter says `Needs review`, and `Tracked emails` makes the total count understandable.
+
 ## 2026-08-24 - Documentation Save Process Reaffirmed
 
 ### Progress This Pass
