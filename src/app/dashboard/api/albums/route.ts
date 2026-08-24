@@ -1,6 +1,7 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
 import { getCompany } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
+import { normalizeAddressText } from "@/lib/addressNormalization"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
@@ -128,7 +129,7 @@ export async function POST(req: Request) {
     customer_name: customer_name?.trim() || null,
     customer_phone: customer_phone?.trim() || null,
     customer_email: customer_email?.trim() || null,
-    service_address: service_address?.trim() || null,
+    service_address: normalizeAddressText(service_address) || null,
     cover_photo_id: cover_photo_id || null,
     notes: notes?.trim() || null,
   }
@@ -171,7 +172,7 @@ export async function PATCH(req: Request) {
   if ("customer_name" in body) updates.customer_name = typeof customer_name === "string" && customer_name.trim() ? customer_name.trim() : null
   if ("customer_phone" in body) updates.customer_phone = typeof customer_phone === "string" && customer_phone.trim() ? customer_phone.trim() : null
   if ("customer_email" in body) updates.customer_email = typeof customer_email === "string" && customer_email.trim() ? customer_email.trim() : null
-  if ("service_address" in body) updates.service_address = typeof service_address === "string" && service_address.trim() ? service_address.trim() : null
+  if ("service_address" in body) updates.service_address = normalizeAddressText(service_address) || null
   if ("cover_photo_id" in body) updates.cover_photo_id = typeof cover_photo_id === "string" && cover_photo_id.trim() ? cover_photo_id.trim() : null
   if ("notes" in body) updates.notes = typeof notes === "string" && notes.trim() ? notes.trim() : null
   if ("show_address_public" in body) updates.show_address_public = !!show_address_public

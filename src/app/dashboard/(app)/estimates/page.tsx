@@ -6,6 +6,7 @@ import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
 import PlacesInput from "@/components/dashboard/PlacesInput"
 import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { normalizeAddressText } from "@/lib/addressNormalization"
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -561,9 +562,10 @@ export default function EstimatesPage() {
 
 function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: { estimate: Estimate; companyStripeReady: boolean; activeFilter: EstimateFilter; onClick: () => void }) {
   const incompleteDraft = isIncompleteDraft(estimate)
-  const hasAddress = Boolean(estimate.property_address?.trim())
+  const normalizedAddress = normalizeAddressText(estimate.property_address)
+  const hasAddress = Boolean(normalizedAddress)
   const showMissingAddress = !hasAddress && estimate.status !== "accepted"
-  const sublineText = hasAddress ? estimate.property_address! : estimate.status === "draft" ? "Job address missing" : "Address not added"
+  const sublineText = hasAddress ? normalizedAddress : estimate.status === "draft" ? "Job address missing" : "Address not added"
   const paid = paidAmount(estimate)
   const balance = balanceDue(estimate)
   // Job-linked estimates lead with the job's own title (matching how the
@@ -571,7 +573,7 @@ function EstimateCard({ estimate, companyStripeReady, activeFilter, onClick }: {
   // the address instead of doubling up as the headline.
   const hasTitle = Boolean(estimate.title?.trim())
   const primaryText = hasTitle ? estimate.title! : estimate.client_name
-  const contextLine = hasTitle ? [estimate.client_name, hasAddress ? estimate.property_address : null].filter(Boolean).join(" - ") : sublineText
+  const contextLine = hasTitle ? [estimate.client_name, hasAddress ? normalizedAddress : null].filter(Boolean).join(" - ") : sublineText
 
   return (
     <button
@@ -687,7 +689,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
           customer_name: name,
           customer_phone: clientPhone.trim() || null,
           customer_email: clientEmail.trim() || null,
-          service_address: address.trim() || null,
+          service_address: normalizeAddressText(address) || null,
         }),
       })
       const data = await res.json()
@@ -821,7 +823,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
     const answers = initialLead.partial_answers ?? {}
     const addressAnswer = ["job_address", "property_address", "address", "service_address", "event_address", "location"].map(key => answers[key]).find(value => typeof value === "string" && value.trim())
     const projectAnswer = ["project_type", "job_name", "job_title", "project_name", "service"].map(key => answers[key]).find(value => typeof value === "string" && value.trim())
-    if (typeof addressAnswer === "string") setAddress(addressAnswer)
+    if (typeof addressAnswer === "string") setAddress(normalizeAddressText(addressAnswer))
     if (typeof projectAnswer === "string" && !newDesc.trim()) setNewDesc(projectAnswer.trim())
     else if (initialLead.message && !newDesc.trim()) setNewDesc(initialLead.message.trim())
   }, [initialLead]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -883,7 +885,7 @@ function BuilderSheet({ rateSheet, leads, initialLead, defaultTaxRate, locationB
         client_company: clientCompany.trim() || null,
         client_phone: clientPhone,
         client_email: clientEmail,
-        property_address: address,
+        property_address: normalizeAddressText(address),
         line_items: lineItems,
         tax_rate: taxRate,
         job_id: jobId,
@@ -1223,7 +1225,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   const [editName, setEditName] = useState(() => estimate.client_name ?? "")
   const [editPhone, setEditPhone] = useState(() => estimate.client_phone ?? "")
   const [editEmail, setEditEmail] = useState(() => estimate.client_email ?? "")
-  const [editAddress, setEditAddress] = useState(() => estimate.property_address ?? "")
+  const [editAddress, setEditAddress] = useState(() => normalizeAddressText(estimate.property_address))
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [sending, setSending] = useState<"email" | "payment_link" | null>(null)
@@ -1266,7 +1268,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
           customer_name: name,
           customer_phone: est.client_phone || null,
           customer_email: est.client_email || null,
-          service_address: est.property_address || null,
+          service_address: normalizeAddressText(est.property_address) || null,
         }),
       })
       const data = await res.json()
@@ -1303,6 +1305,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
   }, [estimate.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const est = fullEstimate ?? estimate
+  const normalizedEstimateAddress = normalizeAddressText(est.property_address)
   const displayStatus = estimateDisplayStatus(est)
   const paymentStillDue = needsPayment(est)
   const hasPartialPayment = paymentStillDue && paidAmount(est) > 0
@@ -1324,7 +1327,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     setEditName(source.client_name ?? "")
     setEditPhone(source.client_phone ?? "")
     setEditEmail(source.client_email ?? "")
-    setEditAddress(source.property_address ?? "")
+    setEditAddress(normalizeAddressText(source.property_address))
     setAddingItem(sourceItems.length === 0)
   }
 
@@ -1363,13 +1366,14 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     setSaving(true)
     setSaveError(null)
     try {
-      await onUpdate({ client_name: editName, client_phone: editPhone, client_email: editEmail, property_address: editAddress, line_items: editItems, tax_rate: editTax })
+      const normalizedEditAddress = normalizeAddressText(editAddress)
+      await onUpdate({ client_name: editName, client_phone: editPhone, client_email: editEmail, property_address: normalizedEditAddress, line_items: editItems, tax_rate: editTax })
       const freshEstimate: Estimate = {
         ...est,
         client_name: editName,
         client_phone: editPhone || null,
         client_email: editEmail || null,
-        property_address: editAddress || null,
+        property_address: normalizedEditAddress || null,
         subtotal: editSubtotal,
         tax_rate: editTax,
         tax_amount: editTaxAmt,
@@ -1400,7 +1404,8 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
     if (method === "sms") {
       const firstName = (est.client_name ?? "there").split(" ")[0]
       const totalFmt = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(displayTotal)
-      const msg = `Hi ${firstName}, I put together your estimate${est.property_address ? ` for ${est.property_address}` : ""} - ${totalFmt}. You can view all the details and approve it right here: ${link}`
+      const estimateAddress = normalizeAddressText(est.property_address)
+      const msg = `Hi ${firstName}, I put together your estimate${estimateAddress ? ` for ${estimateAddress}` : ""} - ${totalFmt}. You can view all the details and approve it right here: ${link}`
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
       window.open(`sms:${est.client_phone}${isIOS ? "&" : "?"}body=${encodeURIComponent(msg)}`, "_self")
       await onSend("sms")
@@ -1469,7 +1474,7 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ color: "white", fontSize: 16, fontWeight: 760, marginBottom: 4 }}>{est.client_name}</div>
-                  {est.property_address && <div style={{ color: "rgba(255,255,255,0.34)", fontSize: 13, lineHeight: 1.35 }}>{est.property_address}</div>}
+                  {normalizedEstimateAddress && <div style={{ color: "rgba(255,255,255,0.34)", fontSize: 13, lineHeight: 1.35 }}>{normalizedEstimateAddress}</div>}
                 </div>
                 <div style={{ color: SIGNAL_GREEN, fontSize: 18, fontWeight: 800, flexShrink: 0 }}>{fmt(displayTotal)}</div>
               </div>
@@ -1597,12 +1602,12 @@ function DetailSheet({ estimate, companySlug, companyCustomDomain, companyName, 
 
             {/* Details */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              {est.property_address && (
+              {normalizedEstimateAddress && (
                 <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 2, flexShrink: 0 }}>
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
                   </svg>
-                  <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>{est.property_address}</span>
+                  <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>{normalizedEstimateAddress}</span>
                 </div>
               )}
               {est.client_phone && (

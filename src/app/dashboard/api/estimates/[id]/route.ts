@@ -1,5 +1,6 @@
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { recordCustomerActivity } from "@/lib/customerActivity"
+import { normalizeAddressText } from "@/lib/addressNormalization"
 import { NextResponse } from "next/server"
 
 type Params = { params: Promise<{ id: string }> }
@@ -46,7 +47,7 @@ export async function PATCH(req: Request, { params }: Params) {
   if (client_phone !== undefined) updates.client_phone = client_phone?.trim() || null
   if (client_email !== undefined) updates.client_email = client_email?.trim() || null
   if (title !== undefined) updates.title = title?.trim() || null
-  if (property_address !== undefined) updates.property_address = property_address?.trim() || null
+  if (property_address !== undefined) updates.property_address = normalizeAddressText(property_address) || null
   if (status !== undefined) updates.status = status
   if (payment_status !== undefined) updates.payment_status = payment_status
   if (accepted_payment_choice !== undefined) updates.accepted_payment_choice = accepted_payment_choice

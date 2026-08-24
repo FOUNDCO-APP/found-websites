@@ -7,6 +7,7 @@ import CameraSheet, { type UploadedPhoto } from "@/components/dashboard/CameraSh
 import { isVideoMedia } from "@/lib/mediaKind"
 import { uploadDashboardMedia, ensureFreshSession } from "@/lib/uploadDashboardMedia"
 import { getPublicSiteOrigin } from "@/lib/siteUrl"
+import { normalizeAddressText } from "@/lib/addressNormalization"
 import { getPhotoDestinationOptions, placePhoto, removeFromGallery, type PhotoDestination } from "./placementActions"
 import Spinner from "@/components/Spinner"
 import DashboardLaunchLoader from "@/components/dashboard/DashboardLaunchLoader"
@@ -114,7 +115,7 @@ function photoSitePlacementLabel(photo: Photo, destinations?: PhotoDestination[]
 }
 
 function albumContextLine(album: Album) {
-  return [album.customer_name, album.service_address].filter(Boolean).join(" · ")
+  return [album.customer_name, normalizeAddressText(album.service_address)].filter(Boolean).join(" · ")
 }
 
 function toDisplayTitle(value: string) {
@@ -400,7 +401,7 @@ function PhotosPageInner() {
           client_name: activeAlbum.customer_name || "New customer",
           client_phone: activeAlbum.customer_phone || undefined,
           client_email: activeAlbum.customer_email || undefined,
-          property_address: activeAlbum.service_address || undefined,
+          property_address: normalizeAddressText(activeAlbum.service_address) || undefined,
           title: activeAlbum.name || undefined,
           job_id: activeAlbum.id,
         }),
@@ -548,7 +549,7 @@ function PhotosPageInner() {
         customer_name: usesJobs ? newJobCustomerName : undefined,
         customer_phone: usesJobs ? newJobPhone : undefined,
         customer_email: usesJobs ? newJobEmail : undefined,
-        service_address: usesJobs ? newJobAddress : undefined,
+        service_address: usesJobs ? normalizeAddressText(newJobAddress) : undefined,
       }),
     })
     const data = await res.json()
@@ -588,10 +589,14 @@ function PhotosPageInner() {
   }
 
   async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address" | "notes" | "show_address_public" | "cover_photo_id">>) {
+    const normalizedDetails = {
+      ...details,
+      ...(typeof details.service_address === "string" ? { service_address: normalizeAddressText(details.service_address) || null } : {}),
+    }
     const res = await fetch("/api/albums", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: album.id, ...details }),
+      body: JSON.stringify({ id: album.id, ...normalizedDetails }),
     })
     const data = await res.json()
     if (data.album) {
@@ -1789,7 +1794,7 @@ function JobDetailsEditor({
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [customerName, setCustomerName] = useState(album.customer_name ?? "")
-  const [address, setAddress] = useState(album.service_address ?? "")
+  const [address, setAddress] = useState(normalizeAddressText(album.service_address))
   const [phone, setPhone] = useState(album.customer_phone ?? "")
   const [email, setEmail] = useState(album.customer_email ?? "")
   const [showAddressPublic, setShowAddressPublic] = useState(Boolean(album.show_address_public))
@@ -1797,7 +1802,7 @@ function JobDetailsEditor({
 
   useEffect(() => {
     setCustomerName(album.customer_name ?? "")
-    setAddress(album.service_address ?? "")
+    setAddress(normalizeAddressText(album.service_address))
     setPhone(album.customer_phone ?? "")
     setEmail(album.customer_email ?? "")
     setShowAddressPublic(Boolean(album.show_address_public))
@@ -1808,7 +1813,7 @@ function JobDetailsEditor({
     setSaving(true)
     await onSave(album, {
       customer_name: customerName,
-      service_address: address,
+      service_address: normalizeAddressText(address),
       customer_phone: phone,
       customer_email: email,
       show_address_public: showAddressPublic,
@@ -1857,7 +1862,7 @@ function JobDetailsEditor({
     <div style={{ marginTop: 12, padding: 14, borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>JOB DETAILS</div>
       <input value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Customer name" style={fieldStyle} />
-      <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Job address" style={fieldStyle} />
+      <input value={address} onChange={e => setAddress(e.target.value)} onBlur={() => setAddress(normalizeAddressText(address))} placeholder="Job address" style={fieldStyle} />
       <label style={{ display: "flex", alignItems: "flex-start", gap: 8, cursor: "pointer" }}>
         <input
           type="checkbox"
@@ -2189,6 +2194,7 @@ function ProjectsTab({
               <input
                 value={newJobAddress}
                 onChange={e => onJobAddressChange(e.target.value)}
+                onBlur={() => onJobAddressChange(normalizeAddressText(newJobAddress))}
                 onKeyDown={e => e.key === "Enter" && canCreate && onCreate()}
                 placeholder="Job address"
                 style={newFieldStyle}

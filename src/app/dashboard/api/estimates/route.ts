@@ -1,5 +1,6 @@
 import { requireDashboardAddonAccess } from "@/lib/dashboard/entitlements"
 import { recordCustomerActivity } from "@/lib/customerActivity"
+import { normalizeAddressText } from "@/lib/addressNormalization"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
       client_phone: client_phone?.trim() || null,
       client_email: client_email?.trim() || null,
       title: title?.trim() || null,
-      property_address: property_address?.trim() || null,
+      property_address: normalizeAddressText(property_address) || null,
       ai_prompt: ai_prompt?.trim() || null,
       subtotal, tax_rate: taxRate, tax_amount: taxAmount, total,
       status: "draft",
