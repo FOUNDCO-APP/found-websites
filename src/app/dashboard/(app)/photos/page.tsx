@@ -386,6 +386,11 @@ function PhotosPageInner() {
 
   async function createEstimateForJob() {
     if (!activeAlbum || creatingEstimate) return
+    const existingEstimate = estimates.find(estimate => estimate.job_id === activeAlbum.id)
+    if (existingEstimate) {
+      router.push(`/estimates?estimate=${existingEstimate.id}`)
+      return
+    }
     setCreatingEstimate(true)
     try {
       const res = await fetch("/api/estimates", {
@@ -2025,31 +2030,62 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
 
   if (estimates.length === 0) {
     return (
-      <button
-        onClick={onCreate}
-        disabled={creating}
-        style={{
-          marginTop: 10,
-          padding: "10px 12px",
-          borderRadius: 13,
-          border: `1px solid ${SIGNAL_GREEN}33`,
-          backgroundColor: `${SIGNAL_GREEN}10`,
-          color: SIGNAL_GREEN,
-          ...TYPE.footnote,
-          fontWeight: 700,
-          cursor: creating ? "default" : "pointer",
-        }}
-      >
-        {creating ? "Creating..." : "Create Estimate"}
-      </button>
+      <div style={{ marginTop: 10, padding: 16, borderRadius: 22, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(145deg, ${SIGNAL_GREEN}14, rgba(255,255,255,0.035))`, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div>
+          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>ESTIMATE</div>
+          <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+            Build pricing from this job. Customer details will carry over.
+          </p>
+        </div>
+        <button
+          onClick={onCreate}
+          disabled={creating}
+          style={{
+            width: "100%",
+            padding: "15px 16px",
+            borderRadius: 16,
+            border: "none",
+            backgroundColor: SIGNAL_GREEN,
+            color: "#06100a",
+            ...TYPE.subhead,
+            fontWeight: 800,
+            cursor: creating ? "default" : "pointer",
+          }}
+        >
+          {creating ? "Creating estimate..." : "Create Estimate"}
+        </button>
+      </div>
     )
   }
 
+  const primaryEstimate = estimates[0]
+
   return (
-    <div style={{ marginTop: 10, padding: 14, borderRadius: 18, border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.04)", display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
-        ESTIMATE{estimates.length !== 1 ? "S" : ""}
+    <div style={{ marginTop: 10, padding: 16, borderRadius: 22, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(145deg, ${SIGNAL_GREEN}12, rgba(255,255,255,0.035))`, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div>
+        <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
+          ESTIMATE IN PROGRESS
+        </div>
+        <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+          This job already has an estimate. Continue it instead of creating a duplicate.
+        </p>
       </div>
+      <button
+        onClick={() => onOpen(primaryEstimate.id)}
+        style={{
+          width: "100%",
+          padding: "15px 16px",
+          borderRadius: 16,
+          border: "none",
+          backgroundColor: SIGNAL_GREEN,
+          color: "#06100a",
+          ...TYPE.subhead,
+          fontWeight: 800,
+          cursor: "pointer",
+        }}
+      >
+        Continue Estimate
+      </button>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {estimates.map(est => (
           <button
@@ -2078,13 +2114,6 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
           </button>
         ))}
       </div>
-      <button
-        onClick={onCreate}
-        disabled={creating}
-        style={{ alignSelf: "flex-start", border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.footnote, fontWeight: 700, cursor: creating ? "default" : "pointer", padding: 0 }}
-      >
-        {creating ? "Creating..." : "+ New Estimate"}
-      </button>
     </div>
   )
 }

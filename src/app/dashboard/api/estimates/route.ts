@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const { company } = guard
 
   const body = await req.json()
-  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, ai_prompt, line_items = [], tax_rate = 0, job_id } = body
+  const { client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, ai_prompt, line_items = [], tax_rate = 0, job_id, force_new = false } = body
   const fullName = String(client_name ?? [client_first_name, client_last_name].filter(Boolean).join(" ")).trim()
   if (!fullName) return NextResponse.json({ error: "Client name required" }, { status: 400 })
 
@@ -46,6 +46,21 @@ export async function POST(req: Request) {
   const { subtotal, taxAmount, total } = calcTotals(items, taxRate)
 
   const { admin } = guard
+
+  if (job_id && !force_new) {
+    const { data: existingEstimate } = await admin
+      .from("estimates")
+      .select("id, estimate_number, client_name, client_first_name, client_last_name, client_company, client_phone, client_email, title, property_address, status, payment_status, accepted_payment_choice, accepted_pay_later_at, payment_link_sent_at, subtotal, tax_rate, tax_amount, total, valid_until, accepted_at, sent_at, email_sent_at, viewed_at, deposit_amount, deposit_paid_at, paid_at, receipt_sent_at, stripe_payment_intent_id, job_id, created_at, updated_at")
+      .eq("company_id", company.id)
+      .eq("job_id", job_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (existingEstimate) {
+      return NextResponse.json({ estimate: existingEstimate, reused: true })
+    }
+  }
 
   // Sequential estimate number (per company)
   const { count } = await admin
