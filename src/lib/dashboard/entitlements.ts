@@ -18,7 +18,10 @@ export async function getCompanyActiveAddonSlugs(companyId: string): Promise<Add
 
 export async function companyHasAddonAccess(company: Pick<CompanyRow, "id" | "plan" | "included_addon_slug" | "disabled_addons">, addon: AddonSlug): Promise<boolean> {
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  return hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])
+  // Dashboard/API entitlement is based on the customer's plan and paid add-ons.
+  // disabled_addons is a public-site visibility switch; it must not remove
+  // paid Business tools like Estimates from the owner's dashboard.
+  return hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, [])
 }
 
 export async function requireDashboardAddonAccess(addon: AddonSlug) {
@@ -35,7 +38,7 @@ export async function requireDashboardAddonAccess(addon: AddonSlug) {
   }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
+  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, [])) {
     return { ok: false as const, response: NextResponse.json({ error: "Feature not available on this plan" }, { status: 403 }) }
   }
 
@@ -54,7 +57,7 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
   }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
+  if (!hasAddonAccess(company.plan, addon, activeAddons, company.included_addon_slug, [])) {
     redirect("/billing?addon_unavailable=1")
   }
 
@@ -75,7 +78,7 @@ export async function requireDashboardFeaturePage(feature: Feature) {
   }
 
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  if (!getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])) {
+  if (!getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, [])) {
     redirect("/billing?addon_unavailable=1")
   }
 
@@ -84,5 +87,5 @@ export async function requireDashboardFeaturePage(feature: Feature) {
 
 export async function companyHasFeatureAccess(company: Pick<CompanyRow, "id" | "plan" | "included_addon_slug" | "disabled_addons">, feature: Feature): Promise<boolean> {
   const activeAddons = await getCompanyActiveAddonSlugs(company.id)
-  return getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, company.disabled_addons ?? [])
+  return getFeatureAccess(company.plan, feature, activeAddons, company.included_addon_slug, [])
 }
