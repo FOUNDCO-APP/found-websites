@@ -1,3 +1,11 @@
+**[2026-08-23] - Found HQ outreach automation stays manual/test-only until explicitly armed.**
+Approved by: Shawn + Steve Jobs + Craig Federighi + Priya Nair + Angela Ahrendts
+Why: Found needs a retention and growth engine, but real clients should not receive automated emails or texts just because a draft/rule exists. The approved direction is to build the intelligence first: audiences, outreach rules, personalized copy, follow-up memory, test accounts, and one-person manual sends. Arming real automation requires a separate team approval and QA pass. Test identities can be used freely for QA; real-client automation remains off.
+
+**[2026-08-23] - Found HQ client activity means true customer-side activity only.**
+Approved by: Shawn + Steve Jobs + Priya Nair + Craig Federighi
+Why: Admin HQ usage and admin view-as sessions would make a stagnant client look healthy. Activity signals used for retention, outreach, reporting, and campaigns must come from true client-side behavior only, excluding admin and view-as activity. This protects the accuracy of lists such as inactive clients, trialing inactive, dashboard-only, no activity, and tool-adoption opportunities.
+
 **[2026-08-16] - Public service-card copy and customer intake dropdown options are separate.**
 Approved by: Shawn (team direction for MBJ/Richard live-form issue)
 Why: MBJ exposed the problem clearly. A Services page can use polished copy such as "efficient installations" or "reliable repairs," but a customer filling out a contact/booking form needs plain action choices: Installation, Repair, Maintenance, Other. Decision: intake dropdowns normalize or fall back to industry-safe labels and never blindly mirror marketing service-card names. Broader follow-up remains open: onboarding should guide owners to choose/type at least three real service categories with industry-aware chips, so both the Services page and intake flows start from better raw data.

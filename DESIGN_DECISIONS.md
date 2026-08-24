@@ -1,3 +1,7 @@
+**[2026-08-23] - Found HQ admin screens must guide attention before showing detail.**
+Approved by: Shawn + Steve Jobs + Jony Ive + Angela Ahrendts
+Why: Shawn's direct read of the admin side was that his eyes did not know where to go. The approved direction is not to add more equal-weight data. Found HQ should surface the next operating decision first, then let Shawn drill into detail. Mobile admin screens should use clear hierarchy, compact rows, real spacing, restrained controls, and plain labels. Client rows should scan in one glance and open from the full row; repeated Site/View As buttons should not dominate a long client list.
+
 **[2026-08-15] - Marketing visuals should act like product imagery, not labeled proof blocks.**
 Approved by: Shawn + Steve Jobs + Jony Ive + Phil Schiller + Angela Ahrendts + Marcus Webb + Craig Federighi
 Why: Shawn clarified that Found's marketing pages should work like Apple product pages: the visitor should see what they are buying, not read a disclaimer or decode a labeled mockup. Images do not need visible labels like "proof of concept" or "example preview" when the surrounding section copy already explains the context.

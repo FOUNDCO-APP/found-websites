@@ -1,3 +1,25 @@
+## Session: August 23, 2026 - Found HQ Admin Operating System Sprint
+**AI:** Codex
+
+### Context
+Shawn called a team audit for the Found HQ admin side before running ads. The core problem: no visual hierarchy, weak client rows, unclear Today/Growth guidance, missing weekly/monthly/quarterly/yearly goals, weak activity insight, and no clear system for outreach, retention, and operational follow-up.
+
+### Changed
+- Reworked Today, Growth, Clients, Client Health, client detail, Emails, and test-account handling around the team direction.
+- Added true client-side activity signals that exclude admin HQ usage and admin view-as usage.
+- Added outreach memory and follow-up timing for client and lead actions.
+- Added Growth campaign audiences, manual/test automation drafts, personalized email/text copy, Resend one-person send support, rule safety panel, and test-send sandbox.
+- Added shared test identity handling so Shawn/Sayitmarketing/marketing/test accounts can be used safely without contaminating real reporting.
+- Applied the Found Supabase email handling migration for `email_log.handled_at` and `email_log.handled_note` on project `mmctzloztgkbqvofmkou`.
+- Updated the admin HQ QA checklist so the untested sprint work can be verified later.
+
+### Verification
+- Recent admin commits were built and pushed as they shipped.
+- Supabase migration verified directly with a SQL column check.
+- Full Shawn QA is still pending by design.
+
+---
+
 ## Session: August 20, 2026 - Industry-Safe Public CTAs
 **AI:** Codex
 

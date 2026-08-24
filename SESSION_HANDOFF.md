@@ -1,5 +1,55 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-23 - Found HQ Admin Operating System Sprint
+
+### Progress This Pass
+- Shawn called a team audit of Found HQ before running ads: Today, Growth, Clients, Emails, and client detail needed hierarchy, faster scanning, true goals, client activity insight, and operating guidance.
+- Built the admin direction as a founder operating system, not a flat dashboard:
+  - `Today` now prioritizes real operating signals: payment risk, launch blockers, lead follow-up, trialing inactive, no activity, dashboard-only use, and stagnant clients.
+  - `Growth` now has week/month/quarter/year goals, campaign audiences, a rule safety panel, manual/test-only automation drafts, test-send sandbox, and Resend one-person send support.
+  - `Clients` rows were tightened for mobile scanning, full-row click-through, plan/billing/health/activity/outreach summary, and less repeated button clutter.
+  - Client detail now starts with a command center: Account, Payment, Usage, Outreach, and Next action before deeper admin sections.
+  - `Client Health` tracks true customer-side usage and outreach timing without counting admin HQ or admin view-as behavior.
+  - `Emails` is now an operations inbox with Needs response, Handled, and All views.
+- Added shared test identity handling:
+  - Test accounts include `account_kind = test`, `is_test = true`, Shawn/Sean email patterns, Sayitmarketing emails, and marketing emails.
+  - Test identities are excluded from real Growth counts, MRR, campaign lists, automation drafts, and signup goals.
+  - Test identities appear in the Growth test-send sandbox and admin Test Center.
+- Added QA coverage to `docs/admin-hq-qa-checklist.md` for Client Health, Today, Clients, Growth, Emails, outreach memory, test accounts, and no-real-automation guardrails.
+- Supabase email handling migration is applied on the Found project:
+  - Project ref: `mmctzloztgkbqvofmkou`.
+  - Added `email_log.handled_at` and `email_log.handled_note`.
+  - Added indexes for handled state and needs-handling queries.
+  - Verified both columns exist after applying the migration.
+- Important tooling note: the Supabase CLI/plugin connection in this task stayed stale against the old Spa Mambo project, but the Found project was reachable through the Supabase Management API using the existing `.env.local` Found ref/token.
+
+### Team Decisions Captured
+- Steve/Jony: Found HQ should teach Shawn where to look next, not present flat black lists with equal visual weight.
+- Priya: client activity signals must be true customer-side activity only. Admin HQ usage and admin view-as usage must not count.
+- Craig/Priya: no real automation is armed yet. Outreach automation stays manual/test-only until the team explicitly approves arming it.
+- Angela/Phil: outreach copy should sound personal from Super Shawn/Found, not like generic SaaS blasts.
+- Angela: test accounts must support all future Found QA flows without leaking into public/real-client reporting.
+
+### Verification This Pass
+- Recent admin commits were built and pushed through the normal flow before this handoff.
+- Supabase migration was verified directly against Found's project with a SQL column check.
+- Full mobile QA is intentionally deferred because Shawn said he has not tested several recent updates yet.
+
+### Open / Do Not Lose
+- Run a full QA pass from `docs/admin-hq-qa-checklist.md`.
+- Continue the team list with the next admin HQ item; likely next high-value items are More page audit, admin information architecture polish, true inbound email/reply handling, Twilio texting, and eventual automation arming.
+- Emails page currently organizes tracked sent/outbound/system emails and handling status. It is not a true inbound mailbox yet.
+- Twilio/texting is not connected yet. Resend is available now; Twilio is planned.
+- Do not stage or revert unrelated current worktree changes unless Shawn asks. At handoff time, `src/lib/billingPlanEvents.ts` and `.claude/` were unrelated dirty/untracked items.
+
+### Shawn Test Steps
+1. Open `/admin/growth`: check period selector, campaign lists, outreach rules, automation drafts, test-send sandbox, and that real clients/test clients stay separated.
+2. Open `/admin/activity`: confirm Client Health shows true customer activity, outreach memory, and follow-up timing.
+3. Open `/admin/clients`: confirm rows scan quickly on mobile and full rows open the client.
+4. Open real client detail pages for Divine Remodel, MBJ Heating and Cooling, and RC Bicycles: confirm Account, Payment, Usage, Outreach, and Next action are immediately understandable.
+5. Open `/admin/emails`: test Needs response, Handled, All, Mark handled, and Reopen.
+6. Use test accounts only for Growth test sends and future automation tests.
+
 ## 2026-08-20 - Industry-Safe Public CTA Guard
 
 ### Progress This Pass

@@ -1,3 +1,22 @@
+## 2026-08-23 - CURRENT NOW
+
+### Found HQ Admin Operating System
+
+- [x] Team audit started for Found HQ hierarchy, Today/Growth/Clients/Emails, client detail, true client activity, and admin guidance.
+- [x] Today rebuilt around operating signals instead of flat metrics.
+- [x] Growth rebuilt with week/month/quarter/year goals, campaign audiences, outreach rules, manual/test automation drafts, and test-send sandbox.
+- [x] Clients rows tightened for mobile scanning and full-row click-through.
+- [x] Client detail command center added.
+- [x] Client Health added for true customer-side usage and outreach timing.
+- [x] Emails rebuilt as operations inbox with handled/reopen workflow.
+- [x] Supabase `email_log` handled-state migration applied and verified on Found project `mmctzloztgkbqvofmkou`.
+- [x] QA checklist expanded in `docs/admin-hq-qa-checklist.md`.
+- [ ] Shawn QA: run the full admin checklist after the build sprint.
+- [ ] Next team list item: continue Found HQ admin audit, likely starting with More page IA and visual cleanup unless Shawn/team reprioritize.
+- [ ] Future: true inbound email/reply handling.
+- [ ] Future: Twilio texting and SMS logging.
+- [ ] Future: arm automation only after explicit team approval and QA.
+
 ## 2026-08-05 - CURRENT NOW
 
 ## 2026-08-17 - PWA Home Screen Icon Had No Found Branding
