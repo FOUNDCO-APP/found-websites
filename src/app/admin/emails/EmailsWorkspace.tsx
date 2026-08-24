@@ -26,6 +26,7 @@ export type EmailRow = {
 }
 
 type InboxView = "needs_response" | "handled" | "all"
+const ADMIN_TIME_ZONE = "America/Phoenix"
 
 const RECIPIENT_LABELS: Record<string, string> = {
   client_owner: "Owner",
@@ -147,7 +148,7 @@ export default function EmailsWorkspace({ rows, handlingReady }: { rows: EmailRo
                   <p className="hq-client-summary">
                     <span>{relatedLabel(row)}</span>
                     <span><i aria-hidden="true" />{row.leadStatus ? `Lead ${row.leadStatus}` : row.companySlug ? row.companySlug : "No link"}</span>
-                    <span><i aria-hidden="true" />{new Date(row.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                    <span><i aria-hidden="true" />{new Date(row.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: ADMIN_TIME_ZONE })}</span>
                     <span><i aria-hidden="true" />{nextAction(row)}</span>
                   </p>
                   {delivery && delivery.tone === "warning" && <p className="hq-client-activity">{delivery.label} delivery status from Resend.</p>}

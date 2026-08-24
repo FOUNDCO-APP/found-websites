@@ -1,5 +1,29 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Admin Timestamps Forced to Arizona
+
+### Progress This Pass
+- Shawn confirmed the admin activity change appeared live, then reported the displayed time was wrong because Arizona had not reached that time of day yet.
+- Team direction: Found HQ is Shawn's operating dashboard, so admin timestamps should render in Arizona time instead of relying on server/default timezone behavior.
+- Updated client detail activity timestamps to use `America/Phoenix`.
+- Updated admin email list and email detail timestamps to use `America/Phoenix`.
+- Tightened the client detail `Used today/yesterday` wording so it compares Arizona calendar days.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+### Open / Do Not Lose
+- This is admin-display-only. No stored dates, schema, tracking, or automation logic changed.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `/admin/clients`, then open Divine Remodel.
+2. Confirm `Last activity` shows the Arizona time you expect.
+3. Open `/admin/emails` and one email detail.
+4. Confirm those timestamps also match Arizona time.
+
 ## 2026-08-24 - Admin Client Activity + Email Labels Clarified
 
 ### Progress This Pass

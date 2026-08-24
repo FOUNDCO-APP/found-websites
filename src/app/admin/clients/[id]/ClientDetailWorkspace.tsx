@@ -9,6 +9,7 @@ import { updateClientRecord, addClientNote, updateClientContactName, updateClien
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+const ADMIN_TIME_ZONE = "America/Phoenix"
 
 export type ClientDetail = {
   id: string
@@ -82,7 +83,7 @@ function formatStoredDate(value: string | null | undefined) {
 }
 
 function formatShortDate(value: string) {
-  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+  return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: ADMIN_TIME_ZONE })
 }
 
 function formatDateTime(value: string) {
@@ -91,6 +92,7 @@ function formatDateTime(value: string) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: ADMIN_TIME_ZONE,
   })
 }
 
@@ -102,11 +104,24 @@ function formatDaysAgo(value: string | null) {
   return `Used ${days} days ago`
 }
 
+function adminDayNumber(date: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: ADMIN_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date)
+  const year = Number(parts.find((part) => part.type === "year")?.value)
+  const month = Number(parts.find((part) => part.type === "month")?.value)
+  const day = Number(parts.find((part) => part.type === "day")?.value)
+  return Math.floor(Date.UTC(year, month - 1, day) / 86400000)
+}
+
 function formatLastActivity(value: string | null) {
   if (!value) return "No client use yet"
   const date = new Date(value)
-  const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-  const days = Math.floor((Date.now() - date.getTime()) / 86400000)
+  const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: ADMIN_TIME_ZONE })
+  const days = adminDayNumber(new Date()) - adminDayNumber(date)
   if (days <= 0) return `Used today at ${time}`
   if (days === 1) return `Used yesterday at ${time}`
   return `Used ${days} days ago`

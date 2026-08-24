@@ -22,6 +22,8 @@ const DELIVERY_LABELS: Record<string, string> = {
   complained: "Marked as spam",
 }
 
+const ADMIN_TIME_ZONE = "America/Phoenix"
+
 export const metadata = { title: "Email - Found HQ" }
 
 export default async function AdminEmailDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -72,7 +74,7 @@ export default async function AdminEmailDetailPage({ params }: { params: Promise
               </span>
             )}
           </p>
-          <p className="hq-subtitle">{new Date(row.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
+          <p className="hq-subtitle">{new Date(row.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: ADMIN_TIME_ZONE })}</p>
         </div>
       </header>
 

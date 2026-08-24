@@ -1,3 +1,21 @@
+## Session: August 24, 2026 - Admin Timestamps Forced to Arizona
+**AI:** Codex
+
+### Context
+Shawn saw the client activity update live, but the displayed time was ahead of Arizona time.
+
+### Changed
+- Found HQ client activity timestamps now render in `America/Phoenix`.
+- Admin email list and email detail timestamps now render in `America/Phoenix`.
+- Client detail `Used today/yesterday` wording now compares Arizona calendar days.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+---
+
 ## Session: August 24, 2026 - Admin Activity and Email Labels Clarified
 **AI:** Codex
 

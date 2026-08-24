@@ -16,6 +16,7 @@
 - [x] Emails rebuilt as operations inbox with handled/reopen workflow.
 - [x] Client detail activity labels clarified: exact last-activity time, `Tool actions, 90d`, and top-three most-used tool areas.
 - [x] Emails screen labels clarified: `Email issues`, `Needs review`, and `Tracked emails`.
+- [x] Admin activity and email timestamps forced to Arizona time for Found HQ.
 - [x] Supabase `email_log` handled-state migration applied and verified on Found project `mmctzloztgkbqvofmkou`.
 - [x] QA checklist expanded in `docs/admin-hq-qa-checklist.md`.
 - [ ] Shawn QA: run the full admin checklist after the build sprint.
