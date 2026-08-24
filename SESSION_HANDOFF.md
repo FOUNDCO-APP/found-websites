@@ -1,5 +1,35 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Found HQ More Page Cleaned Into Manage Hub
+
+### Progress This Pass
+- Shawn confirmed the main Found HQ admin screens are useful enough to move forward and asked to clean up the More / Manage area next.
+- Team direction: make More answer "what part of Found am I managing?" instead of acting like a miscellaneous secondary-tools page.
+- Updated `/admin/more` from flat sections into a clearer Manage hub:
+  - Top recommendation now says the next admin move: review copy if fallback copy exists, otherwise run QA.
+  - `Create` became `Start & onboard`.
+  - `Quality` split into `Client health` and `Website quality`.
+  - `System` now reads as trust checks.
+  - `Account` keeps external links and sign out.
+- Preserved the live website-copy review count and did not add schema, automation, or new admin workflows.
+
+### Verification This Pass
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+### Open / Do Not Lose
+- This is an admin navigation/copy cleanup only.
+- The deeper owner-facing More/Manage registry rebuild from `MORE_MANAGE_IA_AUDIT.md` is still future work.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `/admin/more`.
+2. Confirm the page title says `Manage`.
+3. Confirm the top recommendation points to copy review when copy needs review, or QA when copy is clear.
+4. Confirm sections read naturally: `Start & onboard`, `Client health`, `Website quality`, `System`, and `Account`.
+5. Tap each row once on mobile to confirm it opens the expected admin tool.
+
 ## 2026-08-24 - Admin Activity Summary Uses Arizona Days
 
 ### Progress This Pass

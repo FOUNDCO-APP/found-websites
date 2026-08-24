@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Found HQ More Page Cleaned Into Manage Hub
+**AI:** Codex
+
+### Context
+Shawn said the main Found HQ admin screens are good enough to move forward, with more finesse later, and asked to clean up the More / Manage area next.
+
+### Changed
+- Renamed the admin More screen's working title to `Manage`.
+- Added a top next-admin-move panel that points to copy review when fallback copy exists, otherwise QA.
+- Reorganized admin More into clearer groups: Start & onboard, Client health, Website quality, System, and Account.
+- Kept the change navigation/copy-only. No schema, automation, or new workflow behavior changed.
+
+### Verification
+- `git diff --check` passed.
+- `npm run build` passed.
+- `npx tsc --noEmit` passed after the build regenerated `.next/types`.
+
+---
+
 ## Session: August 24, 2026 - Admin Activity Summary Uses Arizona Days
 **AI:** Codex
 
