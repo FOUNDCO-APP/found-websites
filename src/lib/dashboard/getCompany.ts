@@ -68,6 +68,18 @@ async function getMemberCompanyIds(userId: string, userEmail: string): Promise<s
   return (data ?? []).map((row: { company_id: string }) => row.company_id)
 }
 
+async function hasActiveMemberAccess(companyId: string, userId: string, userEmail: string): Promise<boolean> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from("company_members")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("status", "active")
+    .or(`user_id.eq.${userId},email.eq.${userEmail}`)
+    .maybeSingle()
+  return Boolean(data)
+}
+
 export async function getCompany(
   userId: string,
   userEmail: string
@@ -104,11 +116,15 @@ export async function getCompany(
       .from("companies")
       .select(SELECT_FIELDS)
       .eq("id", selectedId)
-      .or(`user_id.eq.${userId},email.eq.${userEmail}`)
       .maybeSingle()
     if (data) {
-      Sentry.setTag("company_slug", (data as CompanyRow).slug)
-      return data as CompanyRow
+      const selectedCompany = data as CompanyRow
+      const isOwner = selectedCompany.user_id === userId || (!!selectedCompany.email && selectedCompany.email === userEmail)
+      const isMember = !isOwner && await hasActiveMemberAccess(selectedCompany.id, userId, userEmail)
+      if (isOwner || isMember) {
+        Sentry.setTag("company_slug", selectedCompany.slug)
+        return selectedCompany
+      }
     }
   }
 
