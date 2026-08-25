@@ -2329,7 +2329,9 @@ function JobNotesEditor({
           <span style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {filledSections.slice(0, 3).map(section => (
               <span key={section.key} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{section.label.toUpperCase()}</span>
+                {filledSections.length > 1 && (
+                  <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{section.label.toUpperCase()}</span>
+                )}
                 <span style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{section.value}</span>
               </span>
             ))}

@@ -20,6 +20,7 @@
 - Follow-up mobile polish: the guided notes editor is now a true bottom sheet with its own scroll area, rounded top, top `X` close button, and bottom Cancel/Save actions so owners do not have to scroll to the bottom just to close.
 - Follow-up scroll fix: removed notes-sheet autofocus and internal textarea resizing/scrolling so iOS drag gestures scroll the sheet itself instead of sticking inside a focused field.
 - Follow-up iPhone height polish: the notes bottom sheet now expands to the top safe area so it sits just under the Dynamic Island/status area and shows more of the guided fields at once.
+- Follow-up preview polish: the collapsed guided notes card hides the repeated first section label when only one section has content, so `Scope & Materials` no longer immediately repeats `Scope`.
 - Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
 - Logged the product rule in `DECISIONS.md`.
 

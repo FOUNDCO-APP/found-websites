@@ -17,6 +17,7 @@ Shawn found Divine Remodel's estimate/job album showing on the public website Ga
 - Refined the guided notes editor into a real scrollable bottom sheet with a top close button and bottom Cancel/Save actions for mobile use.
 - Improved guided notes sheet scrolling on mobile by keeping textarea fields fixed-height and preventing autofocus from stealing the scroll gesture.
 - Expanded the guided notes bottom sheet to use nearly the full iPhone safe-area height.
+- Removed redundant section labeling in the collapsed guided notes preview when only one note section has content.
 - Logged the product privacy decision in `DECISIONS.md`.
 
 ### Verification
