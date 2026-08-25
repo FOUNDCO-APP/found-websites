@@ -168,7 +168,6 @@ const BASE_NOTE_SECTIONS: WorkNoteSectionCopy[] = [
   { key: "notes_materials", label: "Materials", placeholder: "Materials, supplies, products, or items involved..." },
   { key: "notes_measurements", label: "Measurements", placeholder: "Sizes, counts, quantities, square footage, timing, or other numbers..." },
   { key: "notes_labor", label: "Labor Notes", placeholder: "Difficulty, setup, prep work, access, special tools, or effort..." },
-  { key: "notes_follow_up", label: "Follow-Up", placeholder: "Next steps, customer questions, reminders, or things to confirm..." },
 ]
 
 function noteSections(sections: Partial<Record<WorkNoteKey, Omit<WorkNoteSectionCopy, "key">>>): WorkNoteSectionCopy[] {
@@ -193,7 +192,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Colors & Theme", placeholder: "Colors, theme, inspiration, design direction..." },
         notes_measurements: { label: "Setup Details", placeholder: "Venue, install time, dimensions, ceiling height, access..." },
         notes_labor: { label: "Materials", placeholder: "Balloons, stands, florals, signage, weights, supplies..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Questions to confirm, pickup, teardown, or customer reminders..." },
       }),
     }
   }
@@ -207,7 +205,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Materials", placeholder: "Cabinets, tile, fixtures, paint, parts, supplies..." },
         notes_measurements: { label: "Measurements", placeholder: "Sizes, counts, square footage, linear feet, quantities..." },
         notes_labor: { label: "Labor Notes", placeholder: "Difficulty, access, demo, prep work, special tools..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "What needs to happen next?" },
       }),
     }
   }
@@ -221,7 +218,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Items & Quantities", placeholder: "Items, quantities, portions, packages, add-ons..." },
         notes_measurements: { label: "Timing", placeholder: "Pickup, delivery, prep time, event time, deadline..." },
         notes_labor: { label: "Prep Notes", placeholder: "Kitchen notes, packaging, dietary needs, special handling..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Questions to confirm, reminders, delivery details..." },
       }),
     }
   }
@@ -235,7 +231,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Needs & Gear", placeholder: "Equipment, supplies, instruments, decor, rentals..." },
         notes_measurements: { label: "Timing & Location", placeholder: "Venue, schedule, arrival time, setup window..." },
         notes_labor: { label: "Setup Notes", placeholder: "Access, load-in, crew needs, sound check, special setup..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "People to contact, details to confirm, next steps..." },
       }),
     }
   }
@@ -243,13 +238,12 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
   if (["beauty", "wellness", "fitness", "healthcare", "childcare"].includes(n)) {
     return {
       label: "Appointment Notes",
-      helper: "Capture preferences, service details, preparation notes, and follow-up items.",
+      helper: "Capture preferences, service details, preparation notes, and timing.",
       sections: noteSections({
         notes_overview: { label: "Service Notes", placeholder: "What service is being done and what matters most?" },
         notes_materials: { label: "Products Used", placeholder: "Products, tools, supplies, formulas, equipment..." },
         notes_measurements: { label: "Timing", placeholder: "Appointment length, frequency, schedule notes..." },
         notes_labor: { label: "Preferences", placeholder: "Comfort notes, pressure, style, sensitivities, setup..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Aftercare, rebooking, reminders, next steps..." },
       }),
     }
   }
@@ -263,7 +257,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Features", placeholder: "Rooms, finishes, upgrades, issues, standout details..." },
         notes_measurements: { label: "Numbers", placeholder: "Beds, baths, square footage, price, dates, offer notes..." },
         notes_labor: { label: "Showing Notes", placeholder: "Access, condition, staging, repairs, client reactions..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Next steps, documents, calls, reminders..." },
       }),
     }
   }
@@ -277,7 +270,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: /photo|video|portrait/.test(sub) ? "Shot List" : "Assets", placeholder: /photo|video|portrait/.test(sub) ? "Must-have shots, people, products, moments..." : "Assets, references, copy, files, examples..." },
         notes_measurements: { label: "Location & Timing", placeholder: "Location, schedule, deadline, delivery date..." },
         notes_labor: { label: "Production Notes", placeholder: "Lighting, setup, edits, revisions, complexity..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Approvals, files needed, next steps..." },
       }),
     }
   }
@@ -291,7 +283,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Products", placeholder: "Products, materials, colors, sizes, options..." },
         notes_measurements: { label: "Quantities & Sizing", placeholder: "Counts, sizes, dimensions, variants..." },
         notes_labor: { label: "Fulfillment Notes", placeholder: "Custom work, packaging, shipping, pickup, prep..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Questions, reminders, delivery details, next steps..." },
       }),
     }
   }
@@ -299,13 +290,12 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
   if (n === "education") {
     return {
       label: "Session Notes",
-      helper: "Capture goals, progress, assignments, and follow-up items.",
+      helper: "Capture goals, materials, progress, and teaching notes.",
       sections: noteSections({
         notes_overview: { label: "Session Goals", placeholder: "What should this session accomplish?" },
         notes_materials: { label: "Materials", placeholder: "Lesson materials, links, books, resources, tools..." },
         notes_measurements: { label: "Progress", placeholder: "Scores, milestones, levels, dates, time spent..." },
         notes_labor: { label: "Teaching Notes", placeholder: "What worked, what was hard, what to repeat..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Homework, reminders, next session plan..." },
       }),
     }
   }
@@ -319,7 +309,6 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
         notes_materials: { label: "Important Details", placeholder: "Documents, links, assets, constraints, context..." },
         notes_measurements: { label: "Dates & Numbers", placeholder: "Deadlines, budget, quantities, milestones..." },
         notes_labor: { label: "Work Notes", placeholder: "Decisions, complexity, research, work needed..." },
-        notes_follow_up: { label: "Follow-Up", placeholder: "Next steps, reminders, questions, approvals..." },
       }),
     }
   }

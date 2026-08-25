@@ -21,6 +21,7 @@
 - Follow-up scroll fix: removed notes-sheet autofocus and internal textarea resizing/scrolling so iOS drag gestures scroll the sheet itself instead of sticking inside a focused field.
 - Follow-up iPhone height polish: the notes bottom sheet now expands to the top safe area so it sits just under the Dynamic Island/status area and shows more of the guided fields at once.
 - Follow-up preview polish: the collapsed guided notes card hides the repeated first section label when only one section has content, so `Scope & Materials` no longer immediately repeats `Scope`.
+- Team-approved estimate focus: `Follow-Up` is hidden from the guided notes sheet because it does not directly support estimate-building. The `notes_follow_up` database/API field remains in place for safety and future reminders/tasks.
 - Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
 - Logged the product rule in `DECISIONS.md`.
 
