@@ -1,28 +1,20 @@
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
-import SignOutButton from "@/components/dashboard/SignOutButton"
 import DashboardPages from "@/components/dashboard/DashboardPages"
 import { getEffectiveAddons } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { TYPE, TEXT_OPACITY } from "@/lib/dashboard/typography"
+import { redirect } from "next/navigation"
 
 export default async function MorePage() {
   const user = await requireDashboardAccess()
 
   const company = await getCompany(user?.id ?? "", user?.email ?? "")
 
-  // Workers only ever reach More for Sign Out - everything else here is
-  // owner-only navigation/account surfaces they're already blocked from.
+  // Workers have a dedicated field-work home now. More is an owner-only
+  // management surface, so do not show a stripped-down account page here.
   if (company && !(await requireOwnerAccess(user?.id ?? "", user?.email ?? "", company))) {
-    return (
-      <main style={{ padding: "28px 20px 60px" }}>
-        <h1 style={{ margin: "0 0 6px", ...TYPE.largeTitle, color: "white" }}>{company.name}</h1>
-        <p style={{ margin: "0 0 32px", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          You have camera access for job photos.
-        </p>
-        <SignOutButton />
-      </main>
-    )
+    redirect("/")
   }
 
   let activeAddonSlugs: string[] = []

@@ -69,9 +69,9 @@ export default function DashboardNav({
   // Workers only ever have Jobs/photo capture - every other server action
   // and page already denies them, so the nav shouldn't offer a way in.
   // No customization, no localStorage, no badge counts (those are leads).
-  const photosTool = allAvailable.find(tool => tool.id === "photos")
-  const moreTool = allAvailable.find(tool => tool.id === "more")
-  const workerTabs: Tab[] = [photosTool, moreTool].filter((t): t is Tab => Boolean(t))
+  const homeTool = allAvailable.find(tool => tool.id === "home") ?? { id: "home", path: "/", label: "Home", group: "website" as const, description: "Your field starting point" }
+  const jobsTool: Tab = { id: "worker_jobs", path: "/photos?tab=jobs", label: albumLabel.plural, group: "website", description: "Open jobs and add photos" }
+  const workerTabs: Tab[] = [homeTool, jobsTool]
   const [tabs, setTabs] = useState<Tab[]>(isWorker ? workerTabs : defaultTabs)
   const [seenAt, setSeenAt] = useState<Record<BadgeBucket, string | null>>({ leads: null, orders: null, reservations: null })
 

@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
+import { getCompany, getCompanyRole, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { getStripeConnectStatus } from "@/lib/stripe/connect"
@@ -14,6 +14,7 @@ export async function GET() {
   // just strip the billing/payments-adjacent fields for non-owners rather
   // than blocking the whole endpoint.
   const isOwner = company ? await requireOwnerAccess(user.id, user.email ?? "", company) : false
+  const role = company ? await getCompanyRole(user.id, user.email ?? "", company) : null
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
@@ -29,7 +30,7 @@ export async function GET() {
     customDomain = config?.custom_domain ?? null
     hasCalendar = hasAddonAccess(plan, "reservation_calendar", (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company?.included_addon_slug ?? null, company?.disabled_addons ?? [])
   }
-  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, primaryIntent: company?.primary_intent ?? null, plan, hasCalendar, isPro, stripe_connect_account_id: isOwner ? (company?.stripe_connect_account_id ?? null) : null, stripe_connect_ready: isOwner ? stripeConnect.ready : false, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: isOwner ? (company?.default_tax_rate ?? 0) : 0, customDomain })
+  return NextResponse.json({ id: company?.id ?? null, name: company?.name ?? null, slug: company?.slug ?? null, role, industry: company?.industry_category ?? null, subIndustry: company?.sub_industry ?? null, formIntent: company?.form_intent ?? null, primaryIntent: company?.primary_intent ?? null, plan, hasCalendar, isPro, stripe_connect_account_id: isOwner ? (company?.stripe_connect_account_id ?? null) : null, stripe_connect_ready: isOwner ? stripeConnect.ready : false, primaryColor: company?.primary_color ?? null, phone: company?.phone ?? null, city: company?.city ?? null, state: company?.state ?? null, default_tax_rate: isOwner ? (company?.default_tax_rate ?? 0) : 0, customDomain })
 }
 
 export async function PATCH(req: Request) {

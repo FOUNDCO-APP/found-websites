@@ -365,6 +365,7 @@ function PhotosPageInner() {
   const [industry, setIndustry] = useState<string | null>(null)
   const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState<string | null>(null)
+  const [isWorker, setIsWorker] = useState(false)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
@@ -437,16 +438,23 @@ function PhotosPageInner() {
       fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
       fetchEstimateSnapshot(),
     ]).then(([pd, ad, sd, ed]) => {
+      const worker = sd.role === "worker"
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
       setSubIndustry(sd.subIndustry ?? null)
       setCustomDomain(sd.customDomain ?? null)
+      setIsWorker(worker)
       setIsPro(sd.isPro ?? false)
       setEstimatesAccess(ed.estimates !== null)
       setEstimatesAccessError(ed.error ?? null)
       setEstimates(ed.estimates ?? [])
+      if (worker) {
+        setView("albums")
+        setPhotoFilter("all")
+        setSelectMode(false)
+      }
 
       // Deep link straight into a specific Job's detail view (e.g. from the
       // "Linked to Job" card on an Estimate) - a plain ?album=<id> with no
@@ -983,13 +991,19 @@ function PhotosPageInner() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ minWidth: 0 }}>
-              <AlbumTitleEditor album={activeAlbum} usesJobs={usesJobs} onRename={renameAlbum} />
+              {isWorker ? (
+                <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>
+                  {albumDisplayName(activeAlbum, usesJobs)}
+                </h1>
+              ) : (
+                <AlbumTitleEditor album={activeAlbum} usesJobs={usesJobs} onRename={renameAlbum} />
+              )}
               {albumContextLine(activeAlbum) && (
                 <p style={{ margin: "8px 0 0", ...TYPE.subhead, fontWeight: 500, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.35 }}>
                   {albumContextLine(activeAlbum)}
                 </p>
               )}
-              {activeAlbumUsesJobTools && (
+              {activeAlbumUsesJobTools && !isWorker && (
                 <>
                   <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
                   <JobNotesEditor
@@ -1024,7 +1038,7 @@ function PhotosPageInner() {
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                  {!selectMode && photos.length > 0 && (
+                  {!isWorker && !selectMode && photos.length > 0 && (
                     <button onClick={() => setSelectMode(true)} style={{
                       padding: "10px 16px", borderRadius: 100,
                       backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
@@ -1033,6 +1047,7 @@ function PhotosPageInner() {
                       Select
                     </button>
                   )}
+                  {!isWorker && (
                   <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "10px 16px", borderRadius: 100,
@@ -1055,6 +1070,7 @@ function PhotosPageInner() {
                       </svg>
                     )}
                   </button>
+                  )}
                   <button onClick={openCamera} disabled={uploading} style={{
                     width: 44, height: 44, borderRadius: "50%",
                     backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
@@ -1072,7 +1088,7 @@ function PhotosPageInner() {
                   </button>
                 </div>
               </div>
-              {activeAlbumUsesJobTools && (
+              {!isWorker && activeAlbumUsesJobTools && (
                 <JobWebsiteVisibilityCard album={activeAlbum} onToggle={toggleAlbumWebsiteGallery} />
               )}
             </section>
@@ -1081,13 +1097,15 @@ function PhotosPageInner() {
       ) : (
         <div style={{ padding: "16px 24px 8px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
           <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>Photos</h1>
+            <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{isWorker ? albumLabel.plural : "Photos"}</h1>
             <p style={{ margin: "2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              {photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
+              {isWorker
+                ? `${albums.length} ${albumLabel.singular.toLowerCase()}${albums.length !== 1 ? "s" : ""}`
+                : photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
-            {!selectMode && photos.length > 0 && (
+            {!isWorker && !selectMode && photos.length > 0 && (
               <button onClick={() => setSelectMode(true)} style={{
                 padding: "10px 16px", borderRadius: 100,
                 backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
@@ -1117,7 +1135,7 @@ function PhotosPageInner() {
       <input ref={fileRef} type="file" accept="image/*,video/*" multiple onChange={handleUpload} style={{ display: "none" }} />
 
       {/* Tabs â€” hidden when inside an album */}
-      {!activeAlbum && (
+      {!activeAlbum && !isWorker && (
         <div style={{
           position: "sticky",
           top: "calc(max(env(safe-area-inset-top), 14px) + 32px)",
@@ -1253,13 +1271,13 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
-            onFlag={usesJobs ? undefined : flag}
-            onGallery={usesJobs ? undefined : toggleGallery}
-            onPlace={usesJobs ? undefined : openPlacement}
-            onShare={usesJobs ? undefined : handleSharePhoto}
-            onRequestDelete={usesJobs ? undefined : setDeleteConfirmPhoto}
-            destinations={destinations}
-            selectMode={selectMode}
+            onFlag={isWorker || usesJobs ? undefined : flag}
+            onGallery={isWorker || usesJobs ? undefined : toggleGallery}
+            onPlace={isWorker || usesJobs ? undefined : openPlacement}
+            onShare={isWorker || usesJobs ? undefined : handleSharePhoto}
+            onRequestDelete={isWorker || usesJobs ? undefined : setDeleteConfirmPhoto}
+            destinations={isWorker ? null : destinations}
+            selectMode={isWorker ? false : selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             gridColumns={usesJobs ? "repeat(2, minmax(0, 1fr))" : "repeat(3, 1fr)"}
@@ -1279,7 +1297,10 @@ function PhotosPageInner() {
             showNew={showNewAlbum}
             newName={newAlbumName}
             saving={savingAlbum}
-            onShowNew={() => setShowNewAlbum(true)}
+            readOnly={isWorker}
+            onShowNew={() => {
+              if (!isWorker) setShowNewAlbum(true)
+            }}
             onHideNew={() => {
               setShowNewAlbum(false)
               setNewAlbumName("")
@@ -1309,12 +1330,12 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
-            onFlag={flag}
-            onGallery={toggleGallery}
-            onPlace={openPlacement}
-            onShare={handleSharePhoto}
-            onRequestDelete={setDeleteConfirmPhoto}
-            selectMode={selectMode}
+            onFlag={isWorker ? undefined : flag}
+            onGallery={isWorker ? undefined : toggleGallery}
+            onPlace={isWorker ? undefined : openPlacement}
+            onShare={isWorker ? undefined : handleSharePhoto}
+            onRequestDelete={isWorker ? undefined : setDeleteConfirmPhoto}
+            selectMode={isWorker ? false : selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             emptyTitle={
@@ -1350,14 +1371,14 @@ function PhotosPageInner() {
           photos={lightroomPhotos}
           initialIndex={lightroomIndex}
           onClose={() => setLightroomIndex(null)}
-          onFlag={flag}
-          onGallery={toggleGallery}
-          onPlace={openPlacement}
-          destinations={destinations}
-          onShare={handleSharePhoto}
-          onRequestDelete={setDeleteConfirmPhoto}
+          onFlag={isWorker ? undefined : flag}
+          onGallery={isWorker ? undefined : toggleGallery}
+          onPlace={isWorker ? undefined : openPlacement}
+          destinations={isWorker ? null : destinations}
+          onShare={isWorker ? undefined : handleSharePhoto}
+          onRequestDelete={isWorker ? undefined : setDeleteConfirmPhoto}
           album={lightroomSource === "album" ? activeAlbum : null}
-          onSetCover={setCoverPhoto}
+          onSetCover={isWorker ? undefined : setCoverPhoto}
           onNoteSave={savePhotoNote}
         />
       )}
@@ -1459,7 +1480,7 @@ function PhotosPageInner() {
       )}
 
       {/* Select mode - pick specific photos to download, not just all of them */}
-      {selectMode && (
+      {selectMode && !isWorker && (
         <div style={{
           position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 75,
           padding: "16px 24px max(env(safe-area-inset-bottom, 0px), 22px)",
@@ -1562,12 +1583,12 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
   photos: Photo[]
   initialIndex: number
   onClose: () => void
-  onFlag: (id: string, field: "for_website" | "for_social", current: boolean) => void
-  onGallery: (photo: Photo) => void
+  onFlag?: (id: string, field: "for_website" | "for_social", current: boolean) => void
+  onGallery?: (photo: Photo) => void
   onPlace?: (photo: Photo) => void
   destinations?: PhotoDestination[] | null
   onShare?: (photo: Photo) => void
-  onRequestDelete: (photo: Photo) => void
+  onRequestDelete?: (photo: Photo) => void
   album?: Album | null
   onSetCover?: (photo: Photo) => void
   onNoteSave?: (photo: Photo, note: string) => Promise<void>
@@ -1723,8 +1744,10 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           )
         )}
 
+        {(onGallery || onFlag || onSetCover || onPlace || onShare || onRequestDelete) && (
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-around" }}>
         {/* Gallery - public photo gallery */}
+        {onGallery && (
         <button onClick={() => onGallery(photo)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -1748,8 +1771,10 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
             {(photo.in_gallery || (photo.for_website && !photo.website_section)) ? "In Gallery" : "Gallery"}
           </span>
         </button>
+        )}
 
         {/* Heart - private favorite */}
+        {onFlag && (
         <button onClick={() => onFlag(photo.id, "for_social", photo.for_social)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -1771,6 +1796,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           </div>
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: photo.for_social ? "#FF4B8B" : "rgba(255,255,255,0.5)", letterSpacing: "0.02em" }}>Favorite</span>
         </button>
+        )}
 
         {/* Cover photo - job photos only, replaces Add to Site in this context */}
         {isJobPhoto && onSetCover && (
@@ -1844,6 +1870,7 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
         )}
 
         {/* Trash — Delete */}
+        {onRequestDelete && (
         <button onClick={() => onRequestDelete(photo)} style={{
           display: "flex", flexDirection: "column", alignItems: "center", gap: 9,
           background: "none", border: "none", cursor: "pointer", padding: 0,
@@ -1862,7 +1889,9 @@ function PhotoLightroom({ photos, initialIndex, onClose, onFlag, onGallery, onPl
           </div>
           <span style={{ fontSize: "0.6875rem", fontWeight: 600, color: "rgba(255,100,100,0.75)", letterSpacing: "0.02em" }}>Delete</span>
         </button>
+        )}
         </div>
+        )}
       </div>
     </div>
   )
@@ -2586,7 +2615,7 @@ function ProjectsTab({
   albums, photos, albumLabel, isPro, showNew, newName, saving, usesJobs,
   newJobCustomerName, newJobAddress, newJobPhone, newJobEmail,
   onShowNew, onHideNew, onNameChange, onJobCustomerNameChange, onJobAddressChange, onJobPhoneChange, onJobEmailChange,
-  onCreate, onOpen, onShare, onUpgrade, onDelete,
+  onCreate, onOpen, onShare, onUpgrade, onDelete, readOnly = false,
 }: {
   albums: Album[]
   photos: Photo[]
@@ -2612,6 +2641,7 @@ function ProjectsTab({
   onShare: (a: Album) => void
   onUpgrade: () => void
   onDelete: (a: Album) => void
+  readOnly?: boolean
 }) {
   const canCreate = usesJobs
     ? Boolean(newName.trim() || newJobCustomerName.trim() || newJobAddress.trim())
@@ -2630,7 +2660,7 @@ function ProjectsTab({
   }
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {showNew ? (
+      {!readOnly && showNew ? (
         <div style={{ borderRadius: 20, padding: 20, backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}22`, marginBottom: 6 }}>
           <div style={{ ...TYPE.caption, color: SIGNAL_GREEN, marginBottom: 14 }}>{albumLabel.create}</div>
           {usesJobs ? (
@@ -2692,7 +2722,7 @@ function ProjectsTab({
             </button>
           </div>
         </div>
-      ) : (
+      ) : !readOnly ? (
         <button onClick={onShowNew} style={{
           width: "100%", padding: "16px 0", borderRadius: 16,
           border: `2px dashed ${SIGNAL_GREEN}33`, backgroundColor: "transparent",
@@ -2705,7 +2735,7 @@ function ProjectsTab({
           </svg>
           {albumLabel.create}
         </button>
-      )}
+      ) : null}
 
       {albums.length === 0 && !showNew ? (
         <div style={{ paddingTop: 40, textAlign: "center" }}>
@@ -2716,7 +2746,9 @@ function ProjectsTab({
           </div>
           <p style={{ margin: "0 0 8px", fontSize: "1.375rem", fontWeight: 300, color: "white", letterSpacing: "-0.03em" }}>Create your first {albumLabel.singular.toLowerCase()}.</p>
           <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.7 }}>
-            {usesJobs ? "Capture the customer, address, and job photos in one place." : "Group photos by job, client, or event."}<br/>Share a branded link with any client.
+            {readOnly
+              ? "The owner has not created any jobs yet. Photos can still upload for the owner to organize."
+              : usesJobs ? "Capture the customer, address, and job photos in one place." : "Group photos by job, client, or event."}
           </p>
         </div>
       ) : (
@@ -2764,6 +2796,7 @@ function ProjectsTab({
                 </div>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
+              {!readOnly && (
               <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                 <button onClick={() => isPro ? onShare(album) : onUpgrade()} style={{
                   flex: 1, padding: "11px 0", border: "none", backgroundColor: "transparent",
@@ -2789,6 +2822,7 @@ function ProjectsTab({
                   color: "rgba(255,80,80,0.5)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer",
                 }}>Delete</button>
               </div>
+              )}
             </div>
           )
           })}
