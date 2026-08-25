@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Plan & Billing Removed Stripe Wording and Added Found Receipts
+**AI:** Codex
+
+### Context
+Shawn tested the first billing foundation pass on Divine Remodel and brought screenshots back to the team. The team agreed the page still exposed too much Stripe language, mixed customer payment setup into owner account billing, repeated plan details, and sent receipts to Stripe-hosted pages.
+
+### Changed
+- Removed owner-facing Stripe wording from the Plan & Billing page.
+- Removed the `Get Paid Faster` payment-processor setup card from Plan & Billing.
+- Removed the duplicate active Business `My Plan` card for top-plan accounts.
+- Replaced raw invoice links with Found receipt rows.
+- Added a Found-branded receipt page at `/dashboard/billing/receipts/[invoiceId]`, with owner/company authorization before rendering invoice data.
+
+### Verification
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+
+---
+
 ## Session: August 24, 2026 - Plan & Billing Foundation Moves Under Found
 **AI:** Codex
 

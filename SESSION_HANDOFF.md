@@ -1,5 +1,36 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Plan & Billing Removed Stripe Wording and Added Found Receipts
+
+### Progress This Pass
+- Shawn tested the first Found-owned billing pass on Divine Remodel and brought screenshots back to the team.
+- Team confirmed Shawn was not overthinking it: the page still mixed account billing, customer payment setup, duplicate plan cards, and Stripe-facing receipt/card language.
+- Removed owner-facing Stripe wording from Plan & Billing:
+  - `Stripe: trialing` became Found-owned trial/renewal wording.
+  - `Securely handled by Stripe` became `Secure card on file`.
+  - `Opens a secure Stripe card screen only` became Found-owned card-update wording.
+- Removed `Get Paid Faster` / payment-processor setup from Plan & Billing. That belongs near Estimates, Orders, or the payment tools that use it, not inside the owner's Found subscription billing.
+- Removed the duplicate active Business `My Plan` card for live/top-plan accounts so Divine Remodel does not see plan/price repeated.
+- Replaced raw invoice links with Found receipt rows.
+- Added a Found-branded receipt page at `/dashboard/billing/receipts/[invoiceId]`, guarded so an owner can only view receipts for their own Stripe customer.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed.
+- `npm run build` passed and included `/dashboard/billing/receipts/[invoiceId]`.
+
+### Open / Do Not Lose
+- Card update still opens Stripe-hosted secure card entry for now, because raw card entry should not be hand-rolled. The owner-facing copy no longer advertises Stripe, and the portal remains restricted from cancellation/plan changes.
+- Future foundation item: consider embedded card update with Stripe Elements inside Found if Shawn wants the URL to remain `my.foundco.app` for card entry too.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open Divine Remodel > `More` > `Plan & Billing`.
+2. Confirm there is no visible Stripe wording on the Found page.
+3. Confirm `Get Paid Faster` is gone from this account-billing page.
+4. Confirm active Business accounts do not show the duplicate `My Plan` card.
+5. Tap a receipt row and confirm it opens a Found-branded receipt page, not `billing.stripe.com`.
+6. Tap `Update card` and confirm cancellation/plan changes are still not exposed.
+
 ## 2026-08-24 - Plan & Billing Foundation Moves Under Found
 
 ### Progress This Pass

@@ -42,7 +42,12 @@
 - [x] Generic Stripe `Manage billing` portal removed from the owner page.
 - [x] Stripe portal configuration for owner billing tasks disables subscription cancellation and plan changes.
 - [x] Change/cancel path now routes through Found support context instead of a casual Stripe cancellation button.
-- [ ] Shawn QA: test Divine Remodel Plan & Billing and confirm `Update card` does not expose a full cancellation portal.
+- [x] Removed visible Stripe wording from the Found billing page after Shawn screenshot QA.
+- [x] Removed `Get Paid Faster` payment-processor setup from account billing.
+- [x] Removed duplicate active Business `My Plan` card.
+- [x] Added Found-branded receipt pages for billing history rows.
+- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm receipt rows open Found receipts and no Stripe wording appears on the Found page.
+- [ ] Future: decide whether card update should become an embedded Found screen using Stripe Elements instead of hosted secure card entry.
 
 ## 2026-08-05 - CURRENT NOW
 
