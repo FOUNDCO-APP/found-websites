@@ -356,6 +356,7 @@ export default function DashboardNav({
   }
 
   async function handleCreate() {
+    if (isWorker) return
     if (!newAlbumName.trim() || creating) return
     setCreating(true)
     try {
@@ -547,7 +548,9 @@ export default function DashboardNav({
               <p style={{ margin: 0, fontSize: "0.8125rem", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
                 {selectedAlbumId
                   ? `Saving to "${albums.find(a => a.id === selectedAlbumId)?.name ?? "project"}"`
-                  : "Pick a project below, or just shoot and organize later."}
+                  : isWorker
+                    ? "Pick a project below, or shoot and let the owner organize it."
+                    : "Pick a project below, or just shoot and organize later."}
               </p>
             </div>
 
@@ -598,7 +601,7 @@ export default function DashboardNav({
                   )
                 })}
 
-                {!showNewAlbum && (
+                {!isWorker && !showNewAlbum && (
                   <button
                     onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
                     style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}
@@ -615,7 +618,7 @@ export default function DashboardNav({
             )}
 
             {/* Empty state â€” no projects yet */}
-            {albums.length === 0 && !showNewAlbum && (
+            {albums.length === 0 && !showNewAlbum && !isWorker && (
               <div style={{ padding: "0 24px 8px" }}>
                 <button
                   onClick={() => { setShowNewAlbum(true); setTimeout(() => newAlbumInputRef.current?.focus(), 60) }}
@@ -634,8 +637,17 @@ export default function DashboardNav({
               </div>
             )}
 
+            {albums.length === 0 && isWorker && (
+              <div style={{ padding: "0 24px 8px" }}>
+                <div style={{ borderRadius: 16, padding: "16px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: "0.875rem", fontWeight: 700, color: "rgba(255,255,255,0.72)" }}>No projects yet</p>
+                  <p style={{ margin: 0, fontSize: "0.75rem", color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, lineHeight: 1.45 }}>Photos you shoot will upload for the owner to organize.</p>
+                </div>
+              </div>
+            )}
+
             {/* New project input */}
-            {showNewAlbum && (
+            {showNewAlbum && !isWorker && (
               <div style={{ padding: "4px 24px 8px", animation: "pickerFade 0.15s ease" }}>
                 <div style={{ borderRadius: 16, padding: "14px 16px", backgroundColor: "rgba(255,255,255,0.05)", border: `1px solid ${SIGNAL_GREEN}20` }}>
                   <input

@@ -1,5 +1,5 @@
 ﻿import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { mediaKindFromUrl } from "@/lib/mediaKind"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -126,9 +126,13 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  const isOwner = await requireOwnerAccess(user.id, user.email ?? "", company)
 
   const { id, for_website, for_social, website_section, album_id, note } = await req.json()
   if (!id) return NextResponse.json({ error: "No id" }, { status: 400 })
+  if (!isOwner && (for_website !== undefined || for_social !== undefined || website_section !== undefined)) {
+    return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  }
 
   const admin = createAdminClient()
   const update: Record<string, unknown> = {}
@@ -160,6 +164,9 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  }
 
   const { id } = await req.json()
   const admin = createAdminClient()

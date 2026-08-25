@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createClient } from "@/lib/supabase/server"
 import { fetchStockPhoto } from "@/lib/pexels"
@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     const company = await getCompany(user.id, user.email ?? "")
     if (!company || company.id !== companyId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
+    }
+    if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+      return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
     }
 
     const photoUrl = await fetchStockPhoto(industryCategory, vibe, city)

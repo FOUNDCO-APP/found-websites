@@ -1,5 +1,5 @@
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { normalizeAddressText } from "@/lib/addressNormalization"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -122,6 +122,9 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  }
 
   const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, notes_overview, notes_materials, notes_measurements, notes_labor, notes_follow_up, show_on_website_gallery } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
@@ -179,6 +182,9 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  }
 
   const body = await req.json()
   const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, notes_overview, notes_materials, notes_measurements, notes_labor, notes_follow_up, show_address_public, show_on_website_gallery } = body
@@ -232,6 +238,9 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  }
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")

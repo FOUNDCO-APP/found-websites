@@ -2,7 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAuthUser } from "@/lib/auth/getAuthUser"
-import { getCompany } from "@/lib/dashboard/getCompany"
+import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { assignPhotoToSection, toggleGalleryPhoto } from "@/app/dashboard/(app)/site/actions"
 
 export type DestinationIcon = "home" | "person" | "wrench" | "phone" | "tag" | "grid" | "star"
@@ -20,6 +20,7 @@ async function getContext() {
   if (!user) return null
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return null
+  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return null
   return { user, company, admin: createAdminClient() }
 }
 
