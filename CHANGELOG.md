@@ -1,3 +1,21 @@
+## Session: August 24, 2026 - Found HQ Test Center Expanded for Admin QA
+**AI:** Codex
+
+### Context
+Shawn confirmed the Billing & Plan receipt preview is perfect and the in-app card update feels good. The next item is the Found HQ admin checklist.
+
+### Changed
+- Marked the owner billing/card/receipt QA as complete in the task board.
+- Expanded the in-app Found HQ Test Center so the admin checklist can be run from the phone instead of only from `docs/admin-hq-qa-checklist.md`.
+- Added checks for Today, Client Health, Clients, Growth, Test Sandbox, and Emails.
+
+### Verification
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `git diff --check` passed with only normal CRLF warnings.
+
+---
+
 ## Session: August 24, 2026 - Billing Dates, In-App Card Update, and Receipt Printing
 **AI:** Codex
 

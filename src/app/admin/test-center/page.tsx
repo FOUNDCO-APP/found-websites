@@ -25,19 +25,42 @@ type ProspectRow = {
 }
 
 const QA_CHECKS: QaCheck[] = [
-  { id: "growth-sandbox-send-email", area: "Growth sandbox", title: "Send a Resend test email", detail: "Use Test send sandbox to send one email to a test identity and confirm it lands.", href: "/admin/growth" },
-  { id: "growth-sandbox-open-text", area: "Growth sandbox", title: "Open a prefilled text", detail: "Use Open text on a test identity and confirm the message sounds personal from Super Shawn.", href: "/admin/growth" },
-  { id: "growth-sandbox-exclusion", area: "Growth sandbox", title: "Confirm test exclusion", detail: "Test identities should not change real Growth counts, real campaign lists, MRR, or signup goals.", href: "/admin/growth" },
-  { id: "client-activity-real", area: "Client activity", title: "Capture real customer activity", detail: "Log in as a true client and confirm customer-side activity appears in Client health.", href: "/admin/activity" },
-  { id: "client-activity-admin-excluded", area: "Client activity", title: "Exclude admin and view-as usage", detail: "Admin HQ usage and admin view-as sessions must not count as client-side activity.", href: "/admin/activity" },
-  { id: "client-outreach-followup", area: "Client activity", title: "Log outreach follow-up", detail: "Log call/text/email/review and confirm next follow-up timing moves the client to the right queue.", href: "/admin/activity" },
-  { id: "client-rows-mobile", area: "Clients", title: "Scan client rows on mobile", detail: "Rows should be compact, readable, tappable, and should not show confusing stray lines.", href: "/admin/clients" },
-  { id: "client-detail-hierarchy", area: "Clients", title: "Open client detail quickly", detail: "Tap a full row, verify the detail page hierarchy is clear, and confirm relationship/activity sections make sense.", href: "/admin/clients" },
-  { id: "growth-periods", area: "Growth", title: "Test growth periods", detail: "Switch week, month, quarter, and year; graph, goals, MRR, and pace should stay readable.", href: "/admin/growth" },
-  { id: "growth-campaign-lists", area: "Growth", title: "Review campaign lists", detail: "Open each list and confirm members match the stated reason, with no test identities in real lists.", href: "/admin/growth" },
+  { id: "today-test-exclusion", area: "Today", title: "Exclude test accounts", detail: "Today should not count test clients or test leads in real numbers or next actions.", href: "/admin" },
+  { id: "today-priority", area: "Today", title: "Verify priority order", detail: "Today should show payment risk, launch blockers, follow-up, inactive trials, no activity, dashboard-only, then stagnant clients.", href: "/admin" },
+  { id: "today-links", area: "Today", title: "Open each next action", detail: "Each action should open the right Growth, Client Health, or client detail screen.", href: "/admin" },
+
+  { id: "client-health-real-activity", area: "Client Health", title: "Capture real client activity", detail: "Log in as a true client and confirm customer-side activity appears in Client Health.", href: "/admin/activity" },
+  { id: "client-health-admin-excluded", area: "Client Health", title: "Exclude admin usage", detail: "Admin HQ usage and admin view-as sessions must not count as client-side activity.", href: "/admin/activity" },
+  { id: "client-health-filters", area: "Client Health", title: "Test health filters", detail: "Check quiet, stagnant, no activity, trialing inactive, needs follow-up, due, later, and recently contacted.", href: "/admin/activity" },
+  { id: "client-health-log-followup", area: "Client Health", title: "Log outreach timing", detail: "Call, text, and email logs should create a 3-day follow-up; Skip should create a 7-day follow-up.", href: "/admin/activity" },
+  { id: "client-health-suppression", area: "Client Health", title: "Confirm queue suppression", detail: "Clients with a future follow-up should stay out of the main outreach queue until the follow-up date.", href: "/admin/activity" },
+  { id: "client-health-copy", area: "Client Health", title: "Review outreach copy", detail: "Text and email copy should change for trialing inactive, no activity, dashboard-only, stagnant, and missing-tool clients.", href: "/admin/activity" },
+
+  { id: "clients-mobile-rows", area: "Clients", title: "Scan client rows on mobile", detail: "Rows should be compact, readable, tappable, and not break with long business names.", href: "/admin/clients" },
+  { id: "clients-row-open", area: "Clients", title: "Tap full client row", detail: "The entire row should open the client detail page without requiring a tiny tap target.", href: "/admin/clients" },
+  { id: "clients-row-signals", area: "Clients", title: "Check row signals", detail: "Rows should show plan, billing, health, activity reason, outreach, and 90-day tool action count clearly.", href: "/admin/clients" },
+  { id: "clients-detail-command", area: "Clients", title: "Review client command center", detail: "Client detail should answer: are they active, paying, using Found, and what should Shawn do next?", href: "/admin/clients" },
+  { id: "clients-detail-activity", area: "Clients", title: "Review client usage detail", detail: "Client detail should show top tools, missing tools, dashboard-only/no-activity language, and outreach history correctly.", href: "/admin/clients" },
+
+  { id: "growth-periods", area: "Growth", title: "Test growth periods", detail: "Switch week, month, quarter, and year; chart, goals, MRR, and pace should stay readable.", href: "/admin/growth" },
+  { id: "growth-layout", area: "Growth", title: "Check mobile hierarchy", detail: "Upgrade opportunities and leads should not crowd the growth chart or make the page hard to scan.", href: "/admin/growth" },
   { id: "growth-lead-followup", area: "Growth", title: "Test lead follow-up filters", detail: "Check needs follow-up, due, later, recently contacted, stale, and all.", href: "/admin/growth" },
-  { id: "email-log", area: "Emails", title: "Verify email log", detail: "After a test send, confirm Emails shows success/failure and delivery status when available.", href: "/admin/emails" },
-  { id: "today-actions", area: "Today", title: "Verify Today priority", detail: "Today should show the work Sean needs first: payment, launch, follow-up, and client activity risks.", href: "/admin" },
+  { id: "growth-campaign-lists", area: "Growth", title: "Review campaign lists", detail: "Open each list and confirm members match the reason, with no test identities in real lists.", href: "/admin/growth" },
+  { id: "growth-campaign-actions", area: "Growth", title: "Test campaign actions", detail: "Email actions should only appear for people with emails; text/email should open one person at a time.", href: "/admin/growth" },
+  { id: "growth-copy", area: "Growth", title: "Review outreach copy", detail: "Automation draft copy should sound personal from Super Shawn, not like a generic brand blast.", href: "/admin/growth" },
+  { id: "growth-rules", area: "Growth", title: "Review outreach rules", detail: "Rules should show status, ready now, suppressed by follow-up, missing contact, and last sent.", href: "/admin/growth" },
+  { id: "growth-no-auto-send", area: "Growth", title: "Confirm no auto-send", detail: "No real client should receive automation unless a rule is explicitly armed in a future release.", href: "/admin/growth" },
+
+  { id: "growth-sandbox-send-email", area: "Test Sandbox", title: "Send a Resend test email", detail: "Use Test send sandbox to send one email to a test identity and confirm it lands.", href: "/admin/growth" },
+  { id: "growth-sandbox-open-text", area: "Test Sandbox", title: "Open a prefilled text", detail: "Use Open text on a test identity and confirm the message sounds personal from Super Shawn.", href: "/admin/growth" },
+  { id: "growth-sandbox-exclusion", area: "Test Sandbox", title: "Confirm test exclusion", detail: "Test identities should not change real Growth counts, real campaign lists, MRR, or signup goals.", href: "/admin/growth" },
+  { id: "growth-sandbox-actions", area: "Test Sandbox", title: "Test sandbox actions", detail: "Open text, Open email, Copy, Mark reviewed, and Send email should work without changing real outreach queues.", href: "/admin/growth" },
+
+  { id: "emails-tabs", area: "Emails", title: "Review inbox views", detail: "Emails should open as an operations inbox with Needs review, Handled, and All views.", href: "/admin/emails" },
+  { id: "emails-needs-review", area: "Emails", title: "Check Needs review rules", detail: "Failed, bounced, complained, delayed, and flagged-lead emails should stay in Needs review until handled.", href: "/admin/emails" },
+  { id: "emails-row-detail", area: "Emails", title: "Check email rows", detail: "Rows should show sender scope, recipient, related client or lead, subject, time, status, and next action.", href: "/admin/emails" },
+  { id: "emails-handled-reopen", area: "Emails", title: "Test handled workflow", detail: "Mark handled should remove the email from Needs review; Reopen should bring it back.", href: "/admin/emails" },
+  { id: "emails-detail-workflow", area: "Emails", title: "Test email detail", detail: "The email detail page should have the same handled/reopen workflow as the inbox.", href: "/admin/emails" },
 ]
 
 export default async function TestCenterPage() {

@@ -1,5 +1,35 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Found HQ Test Center Expanded for Admin QA
+
+### Progress This Pass
+- Shawn confirmed the Billing & Plan receipt preview is perfect and the in-app card update feels good.
+- Marked the owner billing/card/receipt QA as done.
+- Started the next item: Found HQ admin checklist.
+- Expanded the in-app Found HQ Test Center from a short starter list into a fuller phone-friendly checklist covering:
+  - Today priority and links,
+  - Client Health activity, filters, outreach timing, and copy,
+  - Clients row/detail readability,
+  - Growth periods, campaign lists, outreach rules, and no-auto-send safety,
+  - Test Sandbox actions,
+  - Emails views, row detail, and handled/reopen workflow.
+
+### Open / Do Not Lose
+- Shawn's next QA should happen inside Found HQ > More > Test Center.
+- Test Center saves pass/fix/not-tested status on the current device only.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed.
+- `npm run build` passed and included `/admin/test-center`.
+- `git diff --check` passed with only normal CRLF warnings.
+
+### Shawn Test Steps
+1. Open Found HQ > `More` > `Test Center`.
+2. Work through Today, Client Health, Clients, Growth, Test Sandbox, and Emails.
+3. Mark each check `Passed` or `Needs fix`.
+4. Bring back any `Needs fix` items so the team can prioritize the next build pass.
+
 ## 2026-08-24 - Billing Dates, In-App Card Update, and Receipt Printing
 
 ### Progress This Pass
@@ -15,6 +45,7 @@
 - Follow-up polish after Shawn QA: the card-update sheet now preloads the secure setup in the background and can be closed while loading, so a slow mobile network does not feel like the app froze.
 - Added `/dashboard/api/billing/card-setup` to create the secure setup intent and set the saved card as the default billing method for the customer's Found subscription.
 - Improved Found receipt pages with a more professional receipt layout, subtotal/tax/total breakdown, and a `Print or save PDF` button with receipt-only white-page print styling.
+- Shawn confirmed the receipt preview looks perfect and card update feels great.
 
 ### Verification This Pass
 - `npx tsc --noEmit` passed.

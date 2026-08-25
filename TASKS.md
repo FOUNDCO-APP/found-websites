@@ -22,7 +22,7 @@
 - [x] Client detail Payment now checks Stripe for real card-on-file status instead of implying `active/trialing` means a card exists.
 - [x] Supabase `email_log` handled-state migration applied and verified on Found project `mmctzloztgkbqvofmkou`.
 - [x] QA checklist expanded in `docs/admin-hq-qa-checklist.md`.
-- [ ] Shawn QA: run the full admin checklist after the build sprint.
+- [ ] Shawn QA: run the full admin checklist from Found HQ Test Center.
 - [ ] Next team list item: continue Found HQ admin audit after Shawn QA, or return to the deeper owner-facing More/Manage registry rebuild.
 - [ ] Future: true inbound email/reply handling.
 - [ ] Future: Twilio texting and SMS logging.
@@ -50,7 +50,7 @@
 - [x] Card update now opens inside Found using a branded slide-up sheet backed by Stripe SetupIntents.
 - [x] Card-update sheet now preloads the secure setup and remains closable while loading on mobile.
 - [x] Found receipts now include receipt-only `Print or save PDF` styling.
-- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm the card form feels responsive and receipt print preview shows only the white receipt.
+- [x] Shawn QA: Divine Remodel Plan & Billing confirmed; card update feels responsive and receipt print preview is clean.
 
 ## 2026-08-05 - CURRENT NOW
 
