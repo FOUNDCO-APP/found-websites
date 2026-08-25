@@ -827,64 +827,71 @@ function PhotosPageInner() {
                   )}
                 </>
               )}
-              <p style={{ margin: "6px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                {activeAlbumUsesJobTools ? `Job photos · ${albumPhotos.length}` : `${albumPhotos.length} photo${albumPhotos.length !== 1 ? "s" : ""}`}
-              </p>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                {!selectMode && photos.length > 0 && (
-                  <button onClick={() => setSelectMode(true)} style={{
+            <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ minWidth: 0 }}>
+                  <h2 style={{ margin: 0, ...TYPE.title, color: "white" }}>
+                    {activeAlbumUsesJobTools ? "Job Photos" : "Photos"}
+                  </h2>
+                  <p style={{ margin: "2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                    {albumPhotos.length} photo{albumPhotos.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                  {!selectMode && photos.length > 0 && (
+                    <button onClick={() => setSelectMode(true)} style={{
+                      padding: "10px 16px", borderRadius: 100,
+                      backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+                    }}>
+                      Select
+                    </button>
+                  )}
+                  <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
+                    display: "flex", alignItems: "center", gap: 6,
                     padding: "10px 16px", borderRadius: 100,
-                    backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.7)", cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+                    backgroundColor: isPro ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${isPro ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.1)"}`,
+                    color: isPro ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
+                    cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
+                    whiteSpace: "nowrap",
                   }}>
-                    Select
+                    {!isPro && (
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                      </svg>
+                    )}
+                    {activeAlbumUsesJobTools ? "Share with customer" : "Share"}
+                    {isPro && (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                      </svg>
+                    )}
                   </button>
-                )}
-                <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "10px 16px", borderRadius: 100,
-                  backgroundColor: isPro ? `${SIGNAL_GREEN}18` : "rgba(255,255,255,0.06)",
-                  border: `1px solid ${isPro ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.1)"}`,
-                  color: isPro ? SIGNAL_GREEN : "rgba(255,255,255,0.5)",
-                  cursor: "pointer", ...TYPE.footnote, fontWeight: 700,
-                  whiteSpace: "nowrap",
-                }}>
-                  {!isPro && (
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                    </svg>
-                  )}
-                  {activeAlbumUsesJobTools ? "Share with customer" : "Share"}
-                  {isPro && (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                    </svg>
-                  )}
-                </button>
-                <button onClick={openCamera} disabled={uploading} style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
-                }}>
-                  {uploading ? (
-                    <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                      <circle cx="12" cy="13" r="4"/>
-                    </svg>
-                  )}
-                </button>
+                  <button onClick={openCamera} disabled={uploading} style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    backgroundColor: SIGNAL_GREEN, border: "none", cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: `0 4px 16px ${SIGNAL_GREEN}44`, opacity: uploading ? 0.6 : 1,
+                  }}>
+                    {uploading ? (
+                      <div style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${FOUND_BLACK}44`, borderTopColor: FOUND_BLACK, animation: "spin 0.8s linear infinite" }}/>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={FOUND_BLACK} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
               {activeAlbumUsesJobTools && (
                 <JobWebsiteVisibilityCard album={activeAlbum} onToggle={toggleAlbumWebsiteGallery} />
               )}
-            </div>
+            </section>
           </div>
         </div>
       ) : (
@@ -1953,10 +1960,10 @@ function JobWebsiteVisibilityCard({ album, onToggle }: { album: Album; onToggle:
 
   return (
     <div style={{
-      padding: "12px 14px",
-      borderRadius: 16,
-      border: `1px solid ${shown ? `${SIGNAL_GREEN}24` : "rgba(255,255,255,0.06)"}`,
-      backgroundColor: shown ? `${SIGNAL_GREEN}08` : "rgba(255,255,255,0.025)",
+      padding: "10px 0",
+      borderTop: "1px solid rgba(255,255,255,0.07)",
+      borderBottom: "1px solid rgba(255,255,255,0.045)",
+      backgroundColor: "transparent",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -2048,18 +2055,18 @@ function JobNotesEditor({
           onClick={() => setEditing(true)}
           style={{
             marginTop: 10,
-            padding: 14,
-            borderRadius: 16,
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(255,255,255,0.04)",
+            padding: "12px 14px",
+            borderRadius: 14,
+            border: "1px solid rgba(255,255,255,0.06)",
+            backgroundColor: "rgba(255,255,255,0.025)",
             textAlign: "left",
             cursor: "pointer",
             display: "flex",
             flexDirection: "column",
-            gap: 6,
+            gap: 5,
           }}
         >
-          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>SCOPE NOTES</div>
+          <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>SCOPE NOTES</div>
           <div style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap" }}>{album.notes}</div>
         </button>
       )
@@ -2150,7 +2157,7 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
 
   if (estimates.length === 0) {
     return (
-      <div style={{ marginTop: 10, padding: 16, borderRadius: 22, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(145deg, ${SIGNAL_GREEN}14, rgba(255,255,255,0.035))`, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ marginTop: 10, padding: 14, borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.025)", display: "flex", flexDirection: "column", gap: 10 }}>
         <div>
           <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>ESTIMATE</div>
           <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
@@ -2162,8 +2169,8 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
           disabled={creating}
           style={{
             width: "100%",
-            padding: "15px 16px",
-            borderRadius: 16,
+            padding: "12px 16px",
+            borderRadius: 14,
             border: "none",
             backgroundColor: SIGNAL_GREEN,
             color: "#06100a",
@@ -2181,21 +2188,16 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
   const primaryEstimate = estimates[0]
 
   return (
-    <div style={{ marginTop: 10, padding: 16, borderRadius: 22, border: `1px solid ${SIGNAL_GREEN}33`, background: `linear-gradient(145deg, ${SIGNAL_GREEN}12, rgba(255,255,255,0.035))`, display: "flex", flexDirection: "column", gap: 12 }}>
-      <div>
-        <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
-          ESTIMATE STARTED
-        </div>
-        <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
-          Continue this draft.
-        </p>
+    <div style={{ marginTop: 10, padding: 14, borderRadius: 16, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.025)", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
+        ESTIMATE STARTED
       </div>
       <button
         onClick={() => onOpen(primaryEstimate.id)}
         style={{
           width: "100%",
-          padding: "15px 16px",
-          borderRadius: 16,
+          padding: "12px 16px",
+          borderRadius: 14,
           border: "none",
           backgroundColor: SIGNAL_GREEN,
           color: "#06100a",
@@ -2213,8 +2215,8 @@ function JobEstimatesCard({ estimates, onOpen, onCreate, creating }: {
             onClick={() => onOpen(est.id)}
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-              padding: "10px 12px", borderRadius: 12,
-              border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.03)",
+              padding: "9px 11px", borderRadius: 12,
+              border: "1px solid rgba(255,255,255,0.06)", backgroundColor: "rgba(255,255,255,0.02)",
               cursor: "pointer", textAlign: "left",
             }}
           >
