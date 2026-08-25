@@ -4,6 +4,7 @@ import Stripe from "stripe"
 import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
+import ReceiptPrintButton from "@/components/dashboard/ReceiptPrintButton"
 
 function formatDate(value: number | null | undefined) {
   if (!value) return "Not dated"
@@ -52,22 +53,25 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
   if (invoiceCustomer !== company.stripe_customer_id) notFound()
 
   const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0
+  const subtotal = invoice.subtotal ?? amount
+  const tax = Math.max(0, (invoice.total ?? amount) - subtotal)
   const currency = invoice.currency || "usd"
   const receiptNumber = invoice.number || invoice.id
   const rows = invoice.lines.data.length > 0 ? invoice.lines.data : []
 
   return (
     <main style={{ padding: "24px 20px 60px" }}>
-      <Link href="/billing" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 22, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, textDecoration: "none", ...TYPE.footnote, fontWeight: 800 }}>
+      <Link className="receipt-no-print" href="/billing" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 22, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, textDecoration: "none", ...TYPE.footnote, fontWeight: 800 }}>
         <span aria-hidden="true">{"<"}</span>
         Billing
       </Link>
 
-      <section style={{ borderRadius: 22, padding: "22px 20px", backgroundColor: "rgba(255,255,255,0.96)", color: BLACK }}>
+      <section className="found-receipt" style={{ borderRadius: 22, padding: "24px 22px", backgroundColor: "rgba(255,255,255,0.98)", color: BLACK, boxShadow: "0 22px 80px rgba(0,0,0,0.24)" }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 28 }}>
           <div>
-            <p style={{ margin: "0 0 5px", ...TYPE.caption, color: "rgba(8,10,9,0.48)" }}>Found receipt</p>
-            <h1 style={{ margin: 0, ...TYPE.title, color: BLACK }}>Receipt</h1>
+            <p style={{ margin: "0 0 5px", ...TYPE.caption, color: "rgba(8,10,9,0.48)" }}>FOUND</p>
+            <h1 style={{ margin: 0, ...TYPE.title, color: BLACK }}>Billing Receipt</h1>
+            <p style={{ margin: "7px 0 0", ...TYPE.footnote, color: "rgba(8,10,9,0.58)" }}>Found Co. account billing</p>
           </div>
           <div style={{ textAlign: "right" as const }}>
             <p style={{ margin: 0, ...TYPE.caption, color: "rgba(8,10,9,0.48)" }}>Status</p>
@@ -77,8 +81,9 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
 
         <div style={{ display: "grid", gap: 14, marginBottom: 26 }}>
           <div>
-            <p style={{ margin: "0 0 3px", ...TYPE.caption, color: "rgba(8,10,9,0.45)" }}>Business</p>
+            <p style={{ margin: "0 0 3px", ...TYPE.caption, color: "rgba(8,10,9,0.45)" }}>Billed to</p>
             <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 850, color: BLACK }}>{company.name}</p>
+            {company.email && <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: "rgba(8,10,9,0.52)" }}>{company.email}</p>}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             <div>
@@ -104,9 +109,21 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
           ))}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "baseline" }}>
-          <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 850, color: BLACK }}>Total paid</p>
-          <p style={{ margin: 0, ...TYPE.title, color: BLACK }}>{formatMoney(amount, currency)}</p>
+        <div style={{ display: "grid", gap: 9, maxWidth: 280, marginLeft: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(8,10,9,0.58)" }}>Subtotal</p>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{formatMoney(subtotal, currency)}</p>
+          </div>
+          {tax > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+              <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(8,10,9,0.58)" }}>Tax</p>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{formatMoney(tax, currency)}</p>
+            </div>
+          )}
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "baseline", paddingTop: 10, borderTop: "1px solid rgba(8,10,9,0.12)" }}>
+            <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 850, color: BLACK }}>Total paid</p>
+            <p style={{ margin: 0, ...TYPE.title, color: BLACK }}>{formatMoney(amount, currency)}</p>
+          </div>
         </div>
 
         <p style={{ margin: "24px 0 0", ...TYPE.footnote, lineHeight: 1.5, color: "rgba(8,10,9,0.58)" }}>
@@ -114,9 +131,33 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
         </p>
       </section>
 
-      <a href={`sms:+15202226308?&body=${encodeURIComponent(`Hi Found, I have a question about receipt ${receiptNumber} for ${company.name}.`)}`} style={{ display: "block", marginTop: 18, textAlign: "center" as const, color: GREEN, textDecoration: "none", ...TYPE.footnote, fontWeight: 850 }}>
+      <div className="receipt-no-print">
+        <ReceiptPrintButton />
+      </div>
+
+      <a className="receipt-no-print" href={`sms:+15202226308?&body=${encodeURIComponent(`Hi Found, I have a question about receipt ${receiptNumber} for ${company.name}.`)}`} style={{ display: "block", marginTop: 18, textAlign: "center" as const, color: GREEN, textDecoration: "none", ...TYPE.footnote, fontWeight: 850 }}>
         Ask Found about this receipt
       </a>
+      <style>{`
+        @media print {
+          body {
+            background: white !important;
+          }
+          .found-dashboard-header,
+          .found-dashboard-nav,
+          .receipt-no-print {
+            display: none !important;
+          }
+          main {
+            padding: 0 !important;
+          }
+          .found-receipt {
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+          }
+        }
+      `}</style>
     </main>
   )
 }

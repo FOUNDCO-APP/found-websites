@@ -1,3 +1,22 @@
+## Session: August 24, 2026 - Billing Dates, In-App Card Update, and Receipt Printing
+**AI:** Codex
+
+### Context
+Shawn tested the refined Billing & Plan page and flagged that trial date wording could still confuse owners, card update still left Found for `billing.stripe.com`, and receipts needed print/save-PDF support.
+
+### Changed
+- Trial accounts now show `No charge today` under status and `First bill` for the billing date.
+- Added a Found-branded in-app card update sheet using Stripe SetupIntents.
+- Added `/dashboard/api/billing/card-setup` to create/finalize secure card updates and set the saved card as the default billing method.
+- Improved Found receipt layout and added `Print or save PDF`.
+
+### Verification
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `git diff --check` passed with only normal CRLF warnings.
+
+---
+
 ## Session: August 24, 2026 - Plan & Billing Removed Stripe Wording and Added Found Receipts
 **AI:** Codex
 

@@ -46,8 +46,10 @@
 - [x] Removed `Get Paid Faster` payment-processor setup from account billing.
 - [x] Removed duplicate active Business `My Plan` card.
 - [x] Added Found-branded receipt pages for billing history rows.
-- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm receipt rows open Found receipts and no Stripe wording appears on the Found page.
-- [ ] Future: decide whether card update should become an embedded Found screen using Stripe Elements instead of hosted secure card entry.
+- [x] Trial wording now separates `No charge today` from the `First bill` date.
+- [x] Card update now opens inside Found using a branded slide-up sheet backed by Stripe SetupIntents.
+- [x] Found receipts now include `Print or save PDF`.
+- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm the card form stays on `my.foundco.app` and receipt printing works.
 
 ## 2026-08-05 - CURRENT NOW
 

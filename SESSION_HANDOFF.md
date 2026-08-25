@@ -1,5 +1,37 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Billing Dates, In-App Card Update, and Receipt Printing
+
+### Progress This Pass
+- Shawn tested the refined Billing & Plan page and flagged three next foundation issues:
+  - `Trial active` plus `Trial ends Sep 5` beside `Next bill Sep 5` could make owners wonder whether the first charge happens on Sep 5 or Sep 6.
+  - `Update card` still opened `billing.stripe.com`, which broke the Found experience.
+  - Found receipts worked, but needed a way to print or save as PDF.
+- Updated trial billing wording:
+  - Status detail now says `No charge today`.
+  - The billing date label changes to `First bill` during trial.
+  - The date detail says `$69/month starts then`, making the first charge date explicit.
+- Added an in-app Found card-update sheet using Stripe SetupIntents and PaymentElement. The owner stays on `my.foundco.app` while entering the card; Found never stores the full card number.
+- Added `/dashboard/api/billing/card-setup` to create the secure setup intent and set the saved card as the default billing method for the customer's Found subscription.
+- Improved Found receipt pages with a more professional receipt layout, subtotal/tax/total breakdown, and a `Print or save PDF` button with print styling.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed.
+- `npm run build` passed and included `/dashboard/api/billing/card-setup`.
+- `git diff --check` passed with only normal CRLF warnings.
+
+### Open / Do Not Lose
+- The card form is Found-branded and in-app, but Stripe still securely tokenizes/stores the card behind the scenes. That is intentional and keeps Found out of raw-card storage.
+- Test the card update flow with a non-real/test card before trusting it live.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open Divine Remodel > `More` > `Plan & Billing`.
+2. Confirm Status says `Trial active` and the smaller line says `No charge today`.
+3. Confirm the billing date section says `First bill`, shows Sep 5, 2026, and says `$69/month starts then`.
+4. Tap `Update card` and confirm it opens a Found slide-up card form without leaving `my.foundco.app`.
+5. Open a receipt and tap `Print or save PDF`.
+
 ## 2026-08-24 - Plan & Billing Removed Stripe Wording and Added Found Receipts
 
 ### Progress This Pass

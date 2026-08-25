@@ -3,10 +3,10 @@ import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Stripe from "stripe"
-import { openBillingPortal } from "../more/actions"
 import AddonsPanel from "@/components/dashboard/AddonsPanel"
 import PlanUpgradeButton from "@/components/dashboard/PlanUpgradeButton"
 import MoreActivateButton from "@/components/dashboard/MoreActivateButton"
+import BillingCardUpdateSheet from "@/components/dashboard/BillingCardUpdateSheet"
 import { TYPE, TEXT_OPACITY, ICON, GREEN, BLACK } from "@/lib/dashboard/typography"
 import { getEffectiveAddons, getAllAddonsRanked, ALL_ADDONS } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -161,7 +161,7 @@ function subscriptionStatusLabel(status: string | null | undefined, isComp: bool
 }
 
 function subscriptionStatusDetail(status: string | null | undefined, nextBillingDate: string | null | undefined) {
-  if (status === "trialing") return nextBillingDate ? `Trial ends ${nextBillingDate}` : "Trial is active"
+  if (status === "trialing") return "No charge today"
   if (status === "active") return nextBillingDate ? `Renews ${nextBillingDate}` : "Renews monthly"
   if (status === "past_due") return "Payment needs attention"
   if (status === "canceled" || status === "cancelled") return "Plan has ended"
@@ -237,6 +237,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const billingTask = sp.billing_task ?? null
 
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
+  const isTrialing = company.subscription_status === "trialing"
   const plan = company.plan ?? "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
@@ -342,9 +343,9 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{billingSummary?.card ? "Secure card on file" : "Add one before billing starts"}</p>
             </div>
             <div>
-              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Next bill</p>
+              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{isTrialing ? "First bill" : "Next bill"}</p>
               <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: "white" }}>{billingSummary?.nextBillingDate ?? "Not scheduled yet"}</p>
-              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{hasIntroRate ? `Intro rate saves $${meta.normal - meta.intro}/mo` : "Monthly subscription"}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{isTrialing ? `$${displayPrice}/month starts then` : hasIntroRate ? `Intro rate saves $${meta.normal - meta.intro}/mo` : "Monthly subscription"}</p>
             </div>
           </div>
         </div>
@@ -621,19 +622,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             Card
           </p>
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.025)" }}>
-            <form action={openBillingPortal}>
-              <input type="hidden" name="companyId" value={company.id} />
-              <input type="hidden" name="task" value="payment_method" />
-              <button type="submit" style={{ width: "100%", background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
-                <div style={{ minHeight: 70, padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <span>
-                    <span style={{ display: "block", ...TYPE.subhead, color: "white" }}>{billingSummary?.card ? "Update card" : "Add card"}</span>
-                    <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Securely update the card used for Found</span>
-                  </span>
-                  <ChevronRight />
-                </div>
-              </button>
-            </form>
+            <BillingCardUpdateSheet currentCard={billingSummary?.card ?? null} />
           </div>
         </section>
       )}
