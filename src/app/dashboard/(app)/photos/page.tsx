@@ -39,6 +39,11 @@ type Album = {
   cover_photo_id?: string | null
   cover_url?: string | null
   notes?: string | null
+  notes_overview?: string | null
+  notes_materials?: string | null
+  notes_measurements?: string | null
+  notes_labor?: string | null
+  notes_follow_up?: string | null
   show_address_public?: boolean | null
   show_on_website_gallery?: boolean | null
   created_at: string
@@ -147,7 +152,27 @@ function albumPublicSlug(album: Album, usesJobs?: boolean) {
 type WorkNotesCopy = {
   label: string
   helper: string
+  sections: WorkNoteSectionCopy[]
+}
+
+type WorkNoteKey = "notes_overview" | "notes_materials" | "notes_measurements" | "notes_labor" | "notes_follow_up"
+
+type WorkNoteSectionCopy = {
+  key: WorkNoteKey
+  label: string
   placeholder: string
+}
+
+const BASE_NOTE_SECTIONS: WorkNoteSectionCopy[] = [
+  { key: "notes_overview", label: "Overview", placeholder: "What needs to happen?" },
+  { key: "notes_materials", label: "Materials", placeholder: "Materials, supplies, products, or items involved..." },
+  { key: "notes_measurements", label: "Measurements", placeholder: "Sizes, counts, quantities, square footage, timing, or other numbers..." },
+  { key: "notes_labor", label: "Labor Notes", placeholder: "Difficulty, setup, prep work, access, special tools, or effort..." },
+  { key: "notes_follow_up", label: "Follow-Up", placeholder: "Next steps, customer questions, reminders, or things to confirm..." },
+]
+
+function noteSections(sections: Partial<Record<WorkNoteKey, Omit<WorkNoteSectionCopy, "key">>>): WorkNoteSectionCopy[] {
+  return BASE_NOTE_SECTIONS.map(section => ({ ...section, ...sections[section.key] }))
 }
 
 function normalizeIndustryKey(value: string | null | undefined) {
@@ -163,7 +188,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Event Design Notes",
       helper: "Capture the theme, colors, timing, setup needs, and anything promised to the customer.",
-      placeholder: "Theme, colors, venue, setup time, install notes, pickup or teardown details...",
+      sections: noteSections({
+        notes_overview: { label: "Event Vision", placeholder: "What is the customer picturing for this event?" },
+        notes_materials: { label: "Colors & Theme", placeholder: "Colors, theme, inspiration, design direction..." },
+        notes_measurements: { label: "Setup Details", placeholder: "Venue, install time, dimensions, ceiling height, access..." },
+        notes_labor: { label: "Materials", placeholder: "Balloons, stands, florals, signage, weights, supplies..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Questions to confirm, pickup, teardown, or customer reminders..." },
+      }),
     }
   }
 
@@ -171,7 +202,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Scope & Materials",
       helper: "Capture what needs to be done, parts, materials, measurements, and labor notes.",
-      placeholder: "Materials, measurements, prep work, labor notes, access issues, follow-up items...",
+      sections: noteSections({
+        notes_overview: { label: "Scope", placeholder: "What needs to be done?" },
+        notes_materials: { label: "Materials", placeholder: "Cabinets, tile, fixtures, paint, parts, supplies..." },
+        notes_measurements: { label: "Measurements", placeholder: "Sizes, counts, square footage, linear feet, quantities..." },
+        notes_labor: { label: "Labor Notes", placeholder: "Difficulty, access, demo, prep work, special tools..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "What needs to happen next?" },
+      }),
     }
   }
 
@@ -179,7 +216,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Order Notes",
       helper: "Capture customer requests, timing, quantities, prep notes, and delivery or pickup details.",
-      placeholder: "Items, quantities, pickup time, delivery notes, dietary needs, special requests...",
+      sections: noteSections({
+        notes_overview: { label: "Order Details", placeholder: "What is the customer ordering or requesting?" },
+        notes_materials: { label: "Items & Quantities", placeholder: "Items, quantities, portions, packages, add-ons..." },
+        notes_measurements: { label: "Timing", placeholder: "Pickup, delivery, prep time, event time, deadline..." },
+        notes_labor: { label: "Prep Notes", placeholder: "Kitchen notes, packaging, dietary needs, special handling..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Questions to confirm, reminders, delivery details..." },
+      }),
     }
   }
 
@@ -187,7 +230,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Event Notes",
       helper: "Capture timing, location, setup needs, customer requests, and day-of details.",
-      placeholder: "Venue, schedule, setup notes, requested details, people to contact...",
+      sections: noteSections({
+        notes_overview: { label: "Event Details", placeholder: "What is happening and what did the customer request?" },
+        notes_materials: { label: "Needs & Gear", placeholder: "Equipment, supplies, instruments, decor, rentals..." },
+        notes_measurements: { label: "Timing & Location", placeholder: "Venue, schedule, arrival time, setup window..." },
+        notes_labor: { label: "Setup Notes", placeholder: "Access, load-in, crew needs, sound check, special setup..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "People to contact, details to confirm, next steps..." },
+      }),
     }
   }
 
@@ -195,7 +244,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Appointment Notes",
       helper: "Capture preferences, service details, preparation notes, and follow-up items.",
-      placeholder: "Preferences, service notes, products used, timing, follow-up reminders...",
+      sections: noteSections({
+        notes_overview: { label: "Service Notes", placeholder: "What service is being done and what matters most?" },
+        notes_materials: { label: "Products Used", placeholder: "Products, tools, supplies, formulas, equipment..." },
+        notes_measurements: { label: "Timing", placeholder: "Appointment length, frequency, schedule notes..." },
+        notes_labor: { label: "Preferences", placeholder: "Comfort notes, pressure, style, sensitivities, setup..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Aftercare, rebooking, reminders, next steps..." },
+      }),
     }
   }
 
@@ -203,7 +258,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Property Notes",
       helper: "Capture property details, client priorities, showing notes, and next steps.",
-      placeholder: "Property condition, client priorities, showing notes, repairs, next steps...",
+      sections: noteSections({
+        notes_overview: { label: "Property Details", placeholder: "What matters about this property or client?" },
+        notes_materials: { label: "Features", placeholder: "Rooms, finishes, upgrades, issues, standout details..." },
+        notes_measurements: { label: "Numbers", placeholder: "Beds, baths, square footage, price, dates, offer notes..." },
+        notes_labor: { label: "Showing Notes", placeholder: "Access, condition, staging, repairs, client reactions..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Next steps, documents, calls, reminders..." },
+      }),
     }
   }
 
@@ -211,7 +272,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: /photo|video|portrait/.test(sub) ? "Shoot Notes" : "Creative Notes",
       helper: "Capture the brief, shot list, preferences, deadlines, and delivery details.",
-      placeholder: "Creative direction, shot list, must-have details, deadline, delivery notes...",
+      sections: noteSections({
+        notes_overview: { label: "Creative Brief", placeholder: "What is the goal or direction?" },
+        notes_materials: { label: /photo|video|portrait/.test(sub) ? "Shot List" : "Assets", placeholder: /photo|video|portrait/.test(sub) ? "Must-have shots, people, products, moments..." : "Assets, references, copy, files, examples..." },
+        notes_measurements: { label: "Location & Timing", placeholder: "Location, schedule, deadline, delivery date..." },
+        notes_labor: { label: "Production Notes", placeholder: "Lighting, setup, edits, revisions, complexity..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Approvals, files needed, next steps..." },
+      }),
     }
   }
 
@@ -219,7 +286,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Order Notes",
       helper: "Capture custom requests, sizing, quantities, fulfillment notes, and delivery details.",
-      placeholder: "Product details, sizing, quantities, custom requests, delivery or pickup notes...",
+      sections: noteSections({
+        notes_overview: { label: "Order Details", placeholder: "What is the customer buying or requesting?" },
+        notes_materials: { label: "Products", placeholder: "Products, materials, colors, sizes, options..." },
+        notes_measurements: { label: "Quantities & Sizing", placeholder: "Counts, sizes, dimensions, variants..." },
+        notes_labor: { label: "Fulfillment Notes", placeholder: "Custom work, packaging, shipping, pickup, prep..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Questions, reminders, delivery details, next steps..." },
+      }),
     }
   }
 
@@ -227,7 +300,13 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Session Notes",
       helper: "Capture goals, progress, assignments, and follow-up items.",
-      placeholder: "Goals, lesson notes, progress, homework, follow-up reminders...",
+      sections: noteSections({
+        notes_overview: { label: "Session Goals", placeholder: "What should this session accomplish?" },
+        notes_materials: { label: "Materials", placeholder: "Lesson materials, links, books, resources, tools..." },
+        notes_measurements: { label: "Progress", placeholder: "Scores, milestones, levels, dates, time spent..." },
+        notes_labor: { label: "Teaching Notes", placeholder: "What worked, what was hard, what to repeat..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Homework, reminders, next session plan..." },
+      }),
     }
   }
 
@@ -235,14 +314,20 @@ function workNotesCopyFor(industry: string | null | undefined, subIndustry: stri
     return {
       label: "Client Notes",
       helper: "Capture client goals, important context, decisions, and next steps.",
-      placeholder: "Client goals, important details, decisions made, follow-up items...",
+      sections: noteSections({
+        notes_overview: { label: "Client Goals", placeholder: "What is the client trying to accomplish?" },
+        notes_materials: { label: "Important Details", placeholder: "Documents, links, assets, constraints, context..." },
+        notes_measurements: { label: "Dates & Numbers", placeholder: "Deadlines, budget, quantities, milestones..." },
+        notes_labor: { label: "Work Notes", placeholder: "Decisions, complexity, research, work needed..." },
+        notes_follow_up: { label: "Follow-Up", placeholder: "Next steps, reminders, questions, approvals..." },
+      }),
     }
   }
 
   return {
     label: `${fallbackName} Notes`,
     helper: "Capture the details that help you prepare, quote, and follow up.",
-    placeholder: "Important details, customer requests, prep notes, follow-up items...",
+    sections: BASE_NOTE_SECTIONS,
   }
 }
 
@@ -717,7 +802,7 @@ function PhotosPageInner() {
     }
   }
 
-  async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address" | "notes" | "show_address_public" | "cover_photo_id">>) {
+  async function updateAlbumDetails(album: Album, details: Partial<Pick<Album, "customer_name" | "customer_phone" | "customer_email" | "service_address" | "notes" | "notes_overview" | "notes_materials" | "notes_measurements" | "notes_labor" | "notes_follow_up" | "show_address_public" | "cover_photo_id">>) {
     const normalizedDetails = {
       ...details,
       ...(typeof details.service_address === "string" ? { service_address: normalizeAddressText(details.service_address) || null } : {}),
@@ -2128,24 +2213,70 @@ function JobNotesEditor({
   albumSingular,
 }: {
   album: Album
-  onSave: (album: Album, details: Partial<Pick<Album, "notes">>) => Promise<void>
+  onSave: (album: Album, details: Partial<Pick<Album, "notes" | "notes_overview" | "notes_materials" | "notes_measurements" | "notes_labor" | "notes_follow_up">>) => Promise<void>
   industry: string | null
   subIndustry: string | null
   albumSingular: string
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [notes, setNotes] = useState(album.notes ?? "")
   const copy = workNotesCopyFor(industry, subIndustry, albumSingular)
+  const [fields, setFields] = useState<Record<WorkNoteKey, string>>(() => ({
+    notes_overview: album.notes_overview ?? album.notes ?? "",
+    notes_materials: album.notes_materials ?? "",
+    notes_measurements: album.notes_measurements ?? "",
+    notes_labor: album.notes_labor ?? "",
+    notes_follow_up: album.notes_follow_up ?? "",
+  }))
+
+  const currentFields: Record<WorkNoteKey, string> = {
+    notes_overview: album.notes_overview ?? album.notes ?? "",
+    notes_materials: album.notes_materials ?? "",
+    notes_measurements: album.notes_measurements ?? "",
+    notes_labor: album.notes_labor ?? "",
+    notes_follow_up: album.notes_follow_up ?? "",
+  }
+
+  const filledSections = copy.sections
+    .map(section => ({ ...section, value: currentFields[section.key]?.trim() ?? "" }))
+    .filter(section => section.value)
+  const hasStructuredNotes = filledSections.length > 0
 
   useEffect(() => {
-    setNotes(album.notes ?? "")
+    setFields({
+      notes_overview: album.notes_overview ?? album.notes ?? "",
+      notes_materials: album.notes_materials ?? "",
+      notes_measurements: album.notes_measurements ?? "",
+      notes_labor: album.notes_labor ?? "",
+      notes_follow_up: album.notes_follow_up ?? "",
+    })
     setEditing(false)
-  }, [album.id, album.notes])
+  }, [album.id, album.notes, album.notes_overview, album.notes_materials, album.notes_measurements, album.notes_labor, album.notes_follow_up])
+
+  function updateField(key: WorkNoteKey, value: string) {
+    setFields(prev => ({ ...prev, [key]: value }))
+  }
+
+  function summaryFromFields(values: Record<WorkNoteKey, string>) {
+    const lines = copy.sections
+      .map(section => {
+        const value = values[section.key]?.trim()
+        return value ? `${section.label}: ${value}` : null
+      })
+      .filter(Boolean)
+    return lines.join("\n\n")
+  }
 
   async function save() {
     setSaving(true)
-    await onSave(album, { notes })
+    await onSave(album, {
+      notes: summaryFromFields(fields),
+      notes_overview: fields.notes_overview,
+      notes_materials: fields.notes_materials,
+      notes_measurements: fields.notes_measurements,
+      notes_labor: fields.notes_labor,
+      notes_follow_up: fields.notes_follow_up,
+    })
     setSaving(false)
     setEditing(false)
   }
@@ -2172,28 +2303,40 @@ function JobNotesEditor({
         onClick={() => setEditing(true)}
         style={{
           marginTop: 10,
-          padding: album.notes ? "12px 14px" : "13px 14px",
+          padding: hasStructuredNotes ? "12px 14px" : "13px 14px",
           borderRadius: 14,
-          border: album.notes ? "1px solid rgba(255,255,255,0.06)" : `1px solid ${SIGNAL_GREEN}22`,
-          backgroundColor: album.notes ? "rgba(255,255,255,0.025)" : `${SIGNAL_GREEN}08`,
+          border: hasStructuredNotes ? "1px solid rgba(255,255,255,0.06)" : `1px solid ${SIGNAL_GREEN}22`,
+          backgroundColor: hasStructuredNotes ? "rgba(255,255,255,0.025)" : `${SIGNAL_GREEN}08`,
           color: "white",
           textAlign: "left",
           cursor: "pointer",
           display: "flex",
           flexDirection: "column",
-          gap: album.notes ? 6 : 8,
+          gap: hasStructuredNotes ? 8 : 8,
         }}
       >
         <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <span style={{ ...TYPE.caption, color: album.notes ? `rgba(255,255,255,${TEXT_OPACITY.tertiary})` : SIGNAL_GREEN }}>
+          <span style={{ ...TYPE.caption, color: hasStructuredNotes ? `rgba(255,255,255,${TEXT_OPACITY.tertiary})` : SIGNAL_GREEN }}>
             {copy.label.toUpperCase()}
           </span>
           <span style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
-            {album.notes ? "EDIT" : "ADD"}
+            {hasStructuredNotes ? "EDIT" : "ADD"}
           </span>
         </span>
-        {album.notes ? (
-          <span style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{album.notes}</span>
+        {hasStructuredNotes ? (
+          <span style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {filledSections.slice(0, 3).map(section => (
+              <span key={section.key} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>{section.label.toUpperCase()}</span>
+                <span style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{section.value}</span>
+              </span>
+            ))}
+            {filledSections.length > 3 && (
+              <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                +{filledSections.length - 3} more section{filledSections.length - 3 === 1 ? "" : "s"}
+              </span>
+            )}
+          </span>
         ) : (
           <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
             {copy.helper}
@@ -2240,13 +2383,22 @@ function JobNotesEditor({
             {copy.helper}
           </p>
         </div>
-        <textarea
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          placeholder={copy.placeholder}
-          style={fieldStyle}
-          autoFocus
-        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {copy.sections.map((section, index) => (
+            <label key={section.key} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <span style={{ ...TYPE.caption, color: index === 0 ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                {section.label.toUpperCase()}
+              </span>
+              <textarea
+                value={fields[section.key]}
+                onChange={e => updateField(section.key, e.target.value)}
+                placeholder={section.placeholder}
+                style={{ ...fieldStyle, minHeight: index === 0 ? 126 : 94 }}
+                autoFocus={index === 0}
+              />
+            </label>
+          ))}
+        </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
           <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>Cancel</button>
           <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>

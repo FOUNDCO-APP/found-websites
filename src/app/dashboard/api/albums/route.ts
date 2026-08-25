@@ -46,6 +46,11 @@ type AlbumRow = {
   service_address?: string | null
   cover_photo_id?: string | null
   notes?: string | null
+  notes_overview?: string | null
+  notes_materials?: string | null
+  notes_measurements?: string | null
+  notes_labor?: string | null
+  notes_follow_up?: string | null
   show_address_public?: boolean | null
   show_on_website_gallery?: boolean | null
   created_at: string
@@ -58,16 +63,18 @@ export async function GET() {
   if (!company) return NextResponse.json({ albums: [] })
 
   const admin = createAdminClient()
+  const structuredSelect = "id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, notes_overview, notes_materials, notes_measurements, notes_labor, notes_follow_up, show_address_public, show_on_website_gallery, created_at"
+  const legacySelect = "id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, created_at"
   let { data, error }: { data: AlbumRow[] | null; error: { message: string } | null } = await admin
     .from("photo_albums")
-    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, show_on_website_gallery, created_at")
+    .select(structuredSelect)
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
   if (error) {
     const fallback = await admin
       .from("photo_albums")
-      .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, created_at")
+      .select(legacySelect)
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
     data = fallback.data
@@ -116,7 +123,7 @@ export async function POST(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_on_website_gallery } = await req.json()
+  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, notes_overview, notes_materials, notes_measurements, notes_labor, notes_follow_up, show_on_website_gallery } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -134,6 +141,11 @@ export async function POST(req: Request) {
     service_address: normalizeAddressText(service_address) || null,
     cover_photo_id: cover_photo_id || null,
     notes: notes?.trim() || null,
+    notes_overview: notes_overview?.trim() || null,
+    notes_materials: notes_materials?.trim() || null,
+    notes_measurements: notes_measurements?.trim() || null,
+    notes_labor: notes_labor?.trim() || null,
+    notes_follow_up: notes_follow_up?.trim() || null,
     show_on_website_gallery: typeof show_on_website_gallery === "boolean" ? show_on_website_gallery : !isJobAlbum,
   }
 
@@ -143,8 +155,8 @@ export async function POST(req: Request) {
     .select()
     .single()
 
-  if (insertResult.error?.message.includes("show_on_website_gallery")) {
-    const { show_on_website_gallery: _unused, ...legacyPayload } = insertPayload
+  if (insertResult.error?.message.includes("show_on_website_gallery") || insertResult.error?.message.includes("notes_overview")) {
+    const { show_on_website_gallery: _unusedGallery, notes_overview: _unusedOverview, notes_materials: _unusedMaterials, notes_measurements: _unusedMeasurements, notes_labor: _unusedLabor, notes_follow_up: _unusedFollowUp, ...legacyPayload } = insertPayload
     insertResult = await admin
       .from("photo_albums")
       .insert(legacyPayload)
@@ -169,7 +181,7 @@ export async function PATCH(req: Request) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, show_on_website_gallery } = body
+  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, notes_overview, notes_materials, notes_measurements, notes_labor, notes_follow_up, show_address_public, show_on_website_gallery } = body
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -188,6 +200,11 @@ export async function PATCH(req: Request) {
   if ("service_address" in body) updates.service_address = normalizeAddressText(service_address) || null
   if ("cover_photo_id" in body) updates.cover_photo_id = typeof cover_photo_id === "string" && cover_photo_id.trim() ? cover_photo_id.trim() : null
   if ("notes" in body) updates.notes = typeof notes === "string" && notes.trim() ? notes.trim() : null
+  if ("notes_overview" in body) updates.notes_overview = typeof notes_overview === "string" && notes_overview.trim() ? notes_overview.trim() : null
+  if ("notes_materials" in body) updates.notes_materials = typeof notes_materials === "string" && notes_materials.trim() ? notes_materials.trim() : null
+  if ("notes_measurements" in body) updates.notes_measurements = typeof notes_measurements === "string" && notes_measurements.trim() ? notes_measurements.trim() : null
+  if ("notes_labor" in body) updates.notes_labor = typeof notes_labor === "string" && notes_labor.trim() ? notes_labor.trim() : null
+  if ("notes_follow_up" in body) updates.notes_follow_up = typeof notes_follow_up === "string" && notes_follow_up.trim() ? notes_follow_up.trim() : null
   if ("show_address_public" in body) updates.show_address_public = !!show_address_public
   if ("show_on_website_gallery" in body) updates.show_on_website_gallery = !!show_on_website_gallery
 
