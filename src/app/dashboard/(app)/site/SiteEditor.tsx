@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
+import * as Sentry from "@sentry/nextjs"
 import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, removeCompanyLogo, uploadCompanyLogoWhiteFile, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
@@ -95,6 +96,31 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setTimeout(() => setSaveError(null), 4000)
   }
 
+  async function runSiteEditorAction<T>(
+    action: string,
+    task: () => Promise<T>,
+    onFailure?: () => void,
+    message = "Couldn't save. Check your connection and try again.",
+  ) {
+    try {
+      return await task()
+    } catch (error) {
+      Sentry.captureException(error, {
+        tags: {
+          area: "site_editor",
+          action,
+          company_slug: company.slug,
+          view,
+          handled: "yes",
+        },
+        extra: { companyId: company.id },
+      })
+      onFailure?.()
+      flashSaveError(message)
+      return null
+    }
+  }
+
   // Same toast slot/timing as flashSaveError, but calmer styling - for cases
   // where the save genuinely succeeded and there's nothing wrong, just
   // something worth telling the owner (e.g. AI rewrite used a starter
@@ -147,9 +173,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const previous = addressVisible
     setAddressVisible(next)
     setSavingAddressVisible(true)
-    const result = await updateAddressVisibility(next)
+    const result = await runSiteEditorAction("toggle_address_visibility", () => updateAddressVisibility(next), () => setAddressVisible(previous))
     setSavingAddressVisible(false)
-    if (result && "error" in result) {
+    if (!result) return
+    if ("error" in result) {
       setAddressVisible(previous)
       flashSaveError("Couldn't update that. Try again.")
     }
@@ -171,33 +198,29 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
   async function handleLogoUpload(file: File) {
     setUploadingLogo(true)
-    try {
-      // No client-side resize/JPEG conversion here on purpose - that would
-      // flatten a transparent PNG to opaque before it ever reaches the
-      // server, which is exactly what breaks the white-logo generation.
-      const fd = new FormData()
-      fd.append("file", file)
-      const result = await updateCompanyLogo(fd)
-      if ("url" in result) {
-        setLogoUrl(result.url)
-        setLogoWhiteUrl(result.whiteUrl)
-        setLogoReview({ url: result.url, whiteUrl: result.whiteUrl })
-      } else {
-        flashSaveError(result.error || "Couldn't upload that logo. Try again.")
-      }
-    } catch {
-      flashSaveError("Couldn't process that logo. Try a different file.")
-    } finally {
-      setUploadingLogo(false)
+    // No client-side resize/JPEG conversion here on purpose - that would
+    // flatten a transparent PNG to opaque before it ever reaches the
+    // server, which is exactly what breaks the white-logo generation.
+    const fd = new FormData()
+    fd.append("file", file)
+    const result = await runSiteEditorAction("upload_logo", () => updateCompanyLogo(fd), undefined, "Couldn't process that logo. Try a different file.")
+    if (result && "url" in result) {
+      setLogoUrl(result.url)
+      setLogoWhiteUrl(result.whiteUrl)
+      setLogoReview({ url: result.url, whiteUrl: result.whiteUrl })
+    } else if (result) {
+      flashSaveError(result.error || "Couldn't upload that logo. Try again.")
     }
+    setUploadingLogo(false)
   }
 
   async function saveLogoDarkChoice(useWhite: boolean) {
     if (!logoReview) return
     const nextWhiteUrl = useWhite ? logoReview.whiteUrl : null
     setSavingLogoChoice(true)
-    const result = await updateCompanyLogoWhiteUrl(nextWhiteUrl)
+    const result = await runSiteEditorAction("save_logo_variant", () => updateCompanyLogoWhiteUrl(nextWhiteUrl), undefined, "Couldn't update that logo choice.")
     setSavingLogoChoice(false)
+    if (!result) return
     if ("error" in result) {
       flashSaveError(result.error || "Couldn't update that logo choice.")
       return
@@ -209,21 +232,16 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function handleWhiteLogoUpload(file: File) {
     if (!logoReview) return
     setUploadingWhiteLogo(true)
-    try {
-      const fd = new FormData()
-      fd.append("file", file)
-      const result = await uploadCompanyLogoWhiteFile(fd)
-      if ("whiteUrl" in result) {
-        setLogoWhiteUrl(result.whiteUrl)
-        setLogoReview({ ...logoReview, whiteUrl: result.whiteUrl })
-      } else {
-        flashSaveError(result.error || "Couldn't upload that logo. Try again.")
-      }
-    } catch {
-      flashSaveError("Couldn't process that logo. Try a different file.")
-    } finally {
-      setUploadingWhiteLogo(false)
+    const fd = new FormData()
+    fd.append("file", file)
+    const result = await runSiteEditorAction("upload_white_logo", () => uploadCompanyLogoWhiteFile(fd), undefined, "Couldn't process that logo. Try a different file.")
+    if (result && "whiteUrl" in result) {
+      setLogoWhiteUrl(result.whiteUrl)
+      setLogoReview({ ...logoReview, whiteUrl: result.whiteUrl })
+    } else if (result) {
+      flashSaveError(result.error || "Couldn't upload that logo. Try again.")
     }
+    setUploadingWhiteLogo(false)
   }
 
   function confirmRemoveLogo() {
@@ -245,8 +263,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setLogoUrl(null)
     setLogoWhiteUrl(null)
     setLogoReview(null)
-    const result = await removeCompanyLogo()
+    const result = await runSiteEditorAction("remove_logo", removeCompanyLogo, () => {
+      setLogoUrl(previousLogoUrl)
+      setLogoWhiteUrl(previousLogoWhiteUrl)
+    }, "Couldn't remove that logo. Try again.")
     setRemovingLogo(false)
+    if (!result) return
     if ("error" in result) {
       setLogoUrl(previousLogoUrl)
       setLogoWhiteUrl(previousLogoWhiteUrl)
@@ -274,8 +296,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     }
     setBusinessInfo(prev => ({ ...prev, [field]: value }))
     setSavingBizField(field)
-    const result = await updateCompanyField(field, value)
+    const result = await runSiteEditorAction(`save_business_${field}`, () => updateCompanyField(field, value), () => {
+      setBusinessInfo(prev => ({ ...prev, [field]: previousValue }))
+    }, "Couldn't save that. Try again.")
     setSavingBizField(null)
+    if (!result) return false
     if (!("error" in result)) {
       setSavedBizField(field)
       setTimeout(() => setSavedBizField(null), 2200)
@@ -446,7 +471,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setEditing(null)
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
-    const result = await updateSiteField(field, polishedValue)
+    const result = await runSiteEditorAction(`save_text_${field}`, () => updateSiteField(field, polishedValue), () => {
+      setConfig(prev => ({ ...prev, [field]: previousValue }))
+      setSaved(null)
+    })
+    if (!result) return
     if (result && "error" in result) {
       setConfig(prev => ({ ...prev, [field]: previousValue }))
       setSaved(null)
@@ -463,7 +492,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSaved(field)
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => {
-      const result = await updateSiteField(field, value)
+      const result = await runSiteEditorAction(`save_config_${field}`, () => updateSiteField(field, value), () => {
+        setConfig(prev => ({ ...prev, [field]: previousValue }))
+        setSaved(null)
+      })
+      if (!result) return
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, [field]: previousValue }))
         setSaved(null)
@@ -483,10 +516,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSaved("announcement_cta_href")
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => {
-      const results = await Promise.all([
+      const results = await runSiteEditorAction("save_featured_update_button", () => Promise.all([
         updateSiteField("announcement_cta_href", target.href),
         updateSiteField("announcement_cta_label", target.label),
-      ])
+      ]), () => {
+        setConfig(prev => ({ ...prev, announcement_cta_href: previousHref, announcement_cta_label: previousLabel }))
+        setSaved(null)
+      })
+      if (!results) return
       if (results.some(result => result && "error" in result)) {
         setConfig(prev => ({ ...prev, announcement_cta_href: previousHref, announcement_cta_label: previousLabel }))
         setSaved(null)
@@ -516,7 +553,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setSaved("announcement_enabled")
     setTimeout(() => setSaved(null), 2500)
     startTransition(async () => {
-      const results = await Promise.all(Object.entries(updates).map(([field, value]) => updateSiteField(field, value)))
+      const results = await runSiteEditorAction("toggle_featured_update", () => Promise.all(Object.entries(updates).map(([field, value]) => updateSiteField(field, value))), () => {
+        setConfig(prev => ({ ...prev, ...previousValues }))
+        setSaved(null)
+      })
+      if (!results) return
       if (results.some(r => r && "error" in r)) {
         setConfig(prev => ({ ...prev, ...previousValues }))
         setSaved(null)
@@ -526,7 +567,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   async function handleRegenerate(section: Section) {
     setRegenerating(section)
-    const result = await regenerateSection(section)
+    const result = await runSiteEditorAction(`regenerate_${section}`, () => regenerateSection(section), undefined, "Couldn't rewrite that section. Try again.")
+    if (!result) {
+      setRegenerating(null)
+      return
+    }
     if (result.success && result.updates) {
       setConfig(prev => ({ ...prev, ...result.updates }))
       if (result.usedFallback) flashSaveNotice("AI rewrite hit a hiccup - used a starter template instead. Feel free to try again.")
@@ -544,7 +589,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setConfig(prev => ({ ...prev, services: polishedServices }))
     setEditingService(null)
     startTransition(async () => {
-      const result = await updateSiteField("services", polishedServices)
+      const result = await runSiteEditorAction("save_service", () => updateSiteField("services", polishedServices), () => {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+      }, "Couldn't save that service. Try again.")
+      if (!result) return
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't save that service. Try again.")
@@ -560,7 +608,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     services.splice(index, 1)
     setConfig(prev => ({ ...prev, services }))
     startTransition(async () => {
-      const result = await updateSiteField("services", services)
+      const result = await runSiteEditorAction("remove_service", () => updateSiteField("services", services), () => {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+      }, "Couldn't remove that service. Try again.")
+      if (!result) return
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't remove that service. Try again.")
@@ -581,7 +632,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setNewServiceName("")
     setNewServiceDesc("")
     startTransition(async () => {
-      const result = await updateSiteField("services", polishedServices)
+      const result = await runSiteEditorAction("add_service", () => updateSiteField("services", polishedServices), () => {
+        setConfig(prev => ({ ...prev, services: previousServices }))
+      }, "Couldn't add that service. Try again.")
+      if (!result) return
       if (result && "error" in result) {
         setConfig(prev => ({ ...prev, services: previousServices }))
         flashSaveError("Couldn't add that service. Try again.")
@@ -593,21 +647,38 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
   async function saveIntent(intent: string) {
     if (intent === activeIntent) return
+    const previousIntent = activeIntent
     setActiveIntent(intent)
     setSavingIntent(true)
-    await updatePrimaryIntent(intent)
-    await updatePrimaryActionOverride(null)
+    const result = await runSiteEditorAction("save_primary_action", async () => {
+      const intentResult = await updatePrimaryIntent(intent)
+      const overrideResult = await updatePrimaryActionOverride(null)
+      return [intentResult, overrideResult]
+    }, () => setActiveIntent(previousIntent))
     setSavingIntent(false)
+    if (!result) return
+    if (result.some(r => r && "error" in r)) {
+      setActiveIntent(previousIntent)
+      flashSaveError()
+      return
+    }
     setIntentSaved(true)
     setTimeout(() => setIntentSaved(false), 2500)
   }
 
   async function saveLayout(key: string | null) {
     if (key === activeLayout) return
+    const previousLayout = activeLayout
     setActiveLayout(key)
     setSavingLayout(true)
-    await updateLayoutOverride(key)
+    const result = await runSiteEditorAction("save_layout", () => updateLayoutOverride(key), () => setActiveLayout(previousLayout))
     setSavingLayout(false)
+    if (!result) return
+    if (result && "error" in result) {
+      setActiveLayout(previousLayout)
+      flashSaveError()
+      return
+    }
     setDesignChangeCount(c => c + 1)
   }
 
@@ -620,11 +691,14 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setHexError(null)
     setCustomHex(normalized)
     if (normalized.toLowerCase() === activeColor.toLowerCase()) return
+    const previousColor = activeColor
     setActiveColor(normalized)
     setSavingColor(true)
-    const result = await updatePrimaryColor(normalized)
+    const result = await runSiteEditorAction("save_color", () => updatePrimaryColor(normalized), () => setActiveColor(previousColor))
     setSavingColor(false)
+    if (!result) return
     if (result && "error" in result) {
+      setActiveColor(previousColor)
       setHexError(result.error)
       return
     }
@@ -634,8 +708,9 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   async function fetchLogoColors() {
     setDetectingLogoColors(true)
     setLogoColorError(null)
-    const result = await detectLogoColors()
+    const result = await runSiteEditorAction("detect_logo_colors", detectLogoColors, undefined, "Couldn't read that logo. Try again.")
     setDetectingLogoColors(false)
+    if (!result) return
     if ("error" in result) {
       setLogoColorError(result.error)
       return
@@ -649,10 +724,17 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
 
   async function saveNavbarDarkChoice(dark: boolean) {
     if (dark === activeNavbarDark) return
+    const previousNavbarDark = activeNavbarDark
     setActiveNavbarDark(dark)
     setSavingNavbarDark(true)
-    await updateNavbarDark(dark)
+    const result = await runSiteEditorAction("save_navbar_style", () => updateNavbarDark(dark), () => setActiveNavbarDark(previousNavbarDark))
     setSavingNavbarDark(false)
+    if (!result) return
+    if (result && "error" in result) {
+      setActiveNavbarDark(previousNavbarDark)
+      flashSaveError()
+      return
+    }
     setDesignChangeCount(c => c + 1)
   }
 
@@ -679,7 +761,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     }
     if (section && section !== "gallery") setPhotoPickerSlot(null)
     startTransition(async () => {
-      const result = await assignPhotoToSection(photoId, section)
+      const result = await runSiteEditorAction("assign_photo", () => assignPhotoToSection(photoId, section), () => {
+        setLocalPhotos(previousPhotos)
+        setConfig(previousConfig)
+      }, "Couldn't update that photo. Try again.")
+      if (!result) return
       if (result && "error" in result) {
         setLocalPhotos(previousPhotos)
         setConfig(previousConfig)
@@ -698,7 +784,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const previousPhotos = localPhotos
     setLocalPhotos(prev => prev.map(p => p.id === photoId ? { ...p, in_gallery: include } : p))
     startTransition(async () => {
-      const result = await toggleGalleryPhoto(photoId, include)
+      const result = await runSiteEditorAction("toggle_gallery_photo", () => toggleGalleryPhoto(photoId, include), () => setLocalPhotos(previousPhotos), "Couldn't update that photo. Try again.")
+      if (!result) return
       if (result && "error" in result) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't update that photo. Try again.")
@@ -714,7 +801,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setLocalPhotos(prev => prev.map(p => p.in_gallery ? { ...p, in_gallery: false } : p))
     setPhotoPickerSlot(null)
     startTransition(async () => {
-      const results = await Promise.all(galleryIds.map(id => toggleGalleryPhoto(id, false)))
+      const results = await runSiteEditorAction("clear_gallery", () => Promise.all(galleryIds.map(id => toggleGalleryPhoto(id, false))), () => setLocalPhotos(previousPhotos), "Couldn't remove those photos. Try again.")
+      if (!results) return
       if (results.some(r => r && "error" in r)) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove those photos. Try again.")
@@ -733,7 +821,11 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       setConfig(prev => ({ ...prev, hero_image_url: null, hero_video_url: null, hero_images: [] }))
       setPhotoPickerSlot(null)
       startTransition(async () => {
-        const result = await clearHeroPhoto()
+        const result = await runSiteEditorAction("clear_hero_photo", clearHeroPhoto, () => {
+          setLocalPhotos(previousPhotos)
+          setConfig(previousConfig)
+        }, "Couldn't remove that photo. Try again.")
+        if (!result) return
         if (result && "error" in result) {
           setLocalPhotos(previousPhotos)
           setConfig(previousConfig)
@@ -747,7 +839,8 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     setLocalPhotos(prev => prev.map(p => p.website_section === slot ? { ...p, website_section: null } : p))
     setPhotoPickerSlot(null)
     startTransition(async () => {
-      const results = await Promise.all(slotPhotoIds.map(id => assignPhotoToSection(id, null)))
+      const results = await runSiteEditorAction(`clear_${slot}_photo`, () => Promise.all(slotPhotoIds.map(id => assignPhotoToSection(id, null))), () => setLocalPhotos(previousPhotos), "Couldn't remove that photo. Try again.")
+      if (!results) return
       if (results.some(r => r && "error" in r)) {
         setLocalPhotos(previousPhotos)
         flashSaveError("Couldn't remove that photo. Try again.")
@@ -1711,7 +1804,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                         const previous = stockImages
                         setStockImages(prev => prev.filter(u => u !== url))
                         startTransition(async () => {
-                          const result = await removeStockImage(url)
+                          const result = await runSiteEditorAction("remove_stock_image", () => removeStockImage(url), () => {
+                            setStockImages(previous)
+                          }, "Couldn't remove that photo. Try again.")
+                          if (!result) return
                           if (result && "error" in result) {
                             setStockImages(previous)
                             flashSaveError("Couldn't remove that photo. Try again.")
