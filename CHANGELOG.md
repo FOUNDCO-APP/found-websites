@@ -16,6 +16,7 @@ Shawn found Divine Remodel's estimate/job album showing on the public website Ga
 - Added structured guided note fields for overview, materials, measurements, labor, and follow-up; existing freeform notes are copied into overview and the old summary field remains populated for compatibility.
 - Refined the guided notes editor into a real scrollable bottom sheet with a top close button and bottom Cancel/Save actions for mobile use.
 - Improved guided notes sheet scrolling on mobile by keeping textarea fields fixed-height and preventing autofocus from stealing the scroll gesture.
+- Expanded the guided notes bottom sheet to use nearly the full iPhone safe-area height.
 - Logged the product privacy decision in `DECISIONS.md`.
 
 ### Verification

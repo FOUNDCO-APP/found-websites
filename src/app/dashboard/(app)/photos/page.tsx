@@ -2361,7 +2361,7 @@ function JobNotesEditor({
         display: "flex",
         alignItems: "flex-end",
         justifyContent: "center",
-        padding: "max(env(safe-area-inset-top), 12px) 0 0",
+        padding: "max(env(safe-area-inset-top), 6px) 0 0",
         boxSizing: "border-box",
         overflow: "hidden",
       }}
@@ -2369,8 +2369,8 @@ function JobNotesEditor({
       <div style={{
         width: "100%",
         maxWidth: 620,
-        height: "min(92dvh, 760px)",
-        maxHeight: "calc(100dvh - max(env(safe-area-inset-top), 12px))",
+        height: "calc(100dvh - max(env(safe-area-inset-top), 6px))",
+        maxHeight: "calc(100dvh - max(env(safe-area-inset-top), 6px))",
         overflow: "hidden",
         minHeight: 0,
         borderRadius: "26px 26px 0 0",
