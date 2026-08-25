@@ -33,7 +33,16 @@
 - [x] Owner-facing More page now reads as `Manage` and uses plain business-area grouping.
 - [x] Settings now exposes `Business Info`, `Plan & Billing`, `Team`, and `Organize Dock`.
 - [x] Dock organizer copy now explains Home and More stay pinned while the owner chooses the three middle tabs.
-- [ ] Shawn QA: open `my.foundco.app` as an owner, tap More, confirm the Manage hub feels clear on iPhone and each Settings row opens the right page.
+- [x] Shawn QA: owner Manage hub tested on iPhone and approved.
+
+### Owner Plan & Billing
+
+- [x] Team decision locked: Found owns the billing experience; Stripe only powers secure card/invoice tasks.
+- [x] Plan & Billing now shows a Found-owned account snapshot with plan, status, card signal, next billing date, and recent invoices.
+- [x] Generic Stripe `Manage billing` portal removed from the owner page.
+- [x] Stripe portal configuration for owner billing tasks disables subscription cancellation and plan changes.
+- [x] Change/cancel path now routes through Found support context instead of a casual Stripe cancellation button.
+- [ ] Shawn QA: test Divine Remodel Plan & Billing and confirm `Update card` does not expose a full cancellation portal.
 
 ## 2026-08-05 - CURRENT NOW
 

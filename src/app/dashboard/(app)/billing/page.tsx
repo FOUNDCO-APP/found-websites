@@ -2,6 +2,7 @@ import { requireDashboardAccess } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 import Link from "next/link"
+import Stripe from "stripe"
 import { openBillingPortal } from "../more/actions"
 import AddonsPanel from "@/components/dashboard/AddonsPanel"
 import PaymentSetupButton from "@/components/dashboard/PaymentSetupButton"
@@ -164,6 +165,86 @@ function ChevronRight() {
   )
 }
 
+function formatBillingDate(value: number | null | undefined) {
+  if (!value) return "Not scheduled yet"
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value * 1000))
+}
+
+function formatInvoiceAmount(amount: number, currency: string) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
+  }).format(amount / 100)
+}
+
+function subscriptionStatusLabel(status: string | null | undefined, isComp: boolean | null | undefined) {
+  if (isComp) return "Comped by Found"
+  if (status === "trialing") return "Trial active"
+  if (status === "active") return "Active"
+  if (status === "past_due") return "Past due"
+  if (status === "canceled" || status === "cancelled") return "Canceled"
+  return "Not active yet"
+}
+
+function cardLabel(paymentMethod: Stripe.PaymentMethod | null | undefined) {
+  const card = paymentMethod?.card
+  if (!card) return null
+  const brand = card.brand ? card.brand.charAt(0).toUpperCase() + card.brand.slice(1) : "Card"
+  return `${brand} ending ${card.last4}`
+}
+
+async function getFoundBillingSummary(customerId: string | null | undefined) {
+  if (!customerId || !process.env.STRIPE_SECRET_KEY) return null
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+  try {
+    const [customer, subscriptions, invoices] = await Promise.all([
+      stripe.customers.retrieve(customerId, { expand: ["invoice_settings.default_payment_method"] }),
+      stripe.subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 10,
+        expand: ["data.default_payment_method", "data.items.data.price"],
+      }),
+      stripe.invoices.list({ customer: customerId, limit: 3 }),
+    ])
+
+    const subscription = subscriptions.data.find((sub) => sub.status === "active" || sub.status === "trialing") ?? subscriptions.data[0] ?? null
+    const subscriptionAny = subscription as (Stripe.Subscription & { current_period_end?: number }) | null
+    const primaryItem = subscription?.items.data[0] as (Stripe.SubscriptionItem & { current_period_end?: number }) | undefined
+    const subPaymentMethod = subscription?.default_payment_method
+    const customerPaymentMethod = !customer.deleted ? customer.invoice_settings.default_payment_method : null
+    let paymentMethod = typeof subPaymentMethod === "string" ? null : subPaymentMethod as Stripe.PaymentMethod | null
+    if (!paymentMethod) paymentMethod = typeof customerPaymentMethod === "string" ? null : customerPaymentMethod as Stripe.PaymentMethod | null
+
+    if (!paymentMethod) {
+      const methods = await stripe.paymentMethods.list({ customer: customerId, type: "card", limit: 1 })
+      paymentMethod = methods.data[0] ?? null
+    }
+
+    return {
+      card: cardLabel(paymentMethod),
+      nextBillingDate: formatBillingDate(subscriptionAny?.current_period_end ?? primaryItem?.current_period_end),
+      stripeStatus: subscription?.status ?? null,
+      invoices: invoices.data.slice(0, 3).map((invoice) => ({
+        id: invoice.id,
+        label: formatBillingDate(invoice.created),
+        amount: formatInvoiceAmount(invoice.amount_paid || invoice.amount_due || invoice.total || 0, invoice.currency || "usd"),
+        status: invoice.status ?? "invoice",
+        url: invoice.hosted_invoice_url,
+      })),
+    }
+  } catch (err) {
+    console.error("[billing] summary error:", err)
+    return null
+  }
+}
+
 export default async function BillingPage({ searchParams }: { searchParams: Promise<Record<string, string>> }) {
   const user = await requireDashboardAccess()
 
@@ -176,6 +257,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const addonUnavailable = sp.addon_unavailable === "1"
   const paymentReturnState = sp.payments ?? null
   const billingUpdateIssue = sp.billing_update === "1"
+  const billingTask = sp.billing_task ?? null
 
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
   const plan = company.plan ?? "found"
@@ -203,6 +285,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const effectiveAddonSlugs = getEffectiveAddons(plan, activeAddonSlugs, company.included_addon_slug, company.disabled_addons ?? [])
   const paymentCopy = paymentSetupCopy(industryCategory, activeAddonSlugs)
   const stripeConnect = await getStripeConnectStatus(company.stripe_connect_account_id)
+  const billingSummary = await getFoundBillingSummary(company.stripe_customer_id)
   const paymentsReady = stripeConnect.ready
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
     const def = ALL_ADDONS.find(a => a.slug === slug)
@@ -251,6 +334,48 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           </p>
         </div>
       )}
+      {billingTask === "card" && (
+        <div style={{ marginBottom: 20, borderRadius: 14, padding: "14px 18px", backgroundColor: `${GREEN}18`, border: `1px solid ${GREEN}35` }}>
+          <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 700, color: GREEN }}>
+            Card update finished.
+          </p>
+        </div>
+      )}
+
+      <section style={{ marginBottom: 24 }}>
+        <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          Account
+        </p>
+        <div style={{
+          borderRadius: 20,
+          padding: "18px 20px",
+          backgroundColor: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <div>
+              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Plan</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: "white" }}>{meta.label}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>${displayPrice}/month</p>
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Status</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: isActive ? GREEN : "white" }}>{subscriptionStatusLabel(company.subscription_status, company.is_comp)}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{billingSummary?.stripeStatus ? `Stripe: ${billingSummary.stripeStatus}` : "Found account"}</p>
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Card</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: billingSummary?.card ? "white" : "#FFB340" }}>{billingSummary?.card ?? "No card on file"}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Securely handled by Stripe</p>
+            </div>
+            <div>
+              <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Next bill</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: "white" }}>{billingSummary?.nextBillingDate ?? "Not scheduled yet"}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{hasIntroRate ? `Intro rate saves $${meta.normal - meta.intro}/mo` : "Monthly subscription"}</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Get Paid Faster — high-value action, shown early */}
       {!paymentsReady && (
@@ -574,15 +699,70 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
       {hasStripe && company.id && (
         <section style={{ marginBottom: 20 }}>
-          <form action={openBillingPortal}>
-            <input type="hidden" name="companyId" value={company.id} />
-            <button type="submit" style={{ width: "100%", background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
-              <div style={{ borderRadius: 14, padding: "15px 18px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ ...TYPE.subhead, color: "white" }}>Manage billing</span>
-                <ChevronRight />
-              </div>
-            </button>
-          </form>
+          <p style={{ margin: "0 0 8px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+            Secure Billing Tasks
+          </p>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", borderBottom: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(255,255,255,0.025)" }}>
+            <form action={openBillingPortal}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <input type="hidden" name="task" value="payment_method" />
+              <button type="submit" style={{ width: "100%", background: "transparent", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                <div style={{ minHeight: 70, padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <span>
+                    <span style={{ display: "block", ...TYPE.subhead, color: "white" }}>{billingSummary?.card ? "Update card" : "Add card"}</span>
+                    <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Opens a secure Stripe card screen only</span>
+                  </span>
+                  <ChevronRight />
+                </div>
+              </button>
+            </form>
+            <form action={openBillingPortal}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <button type="submit" style={{ width: "100%", background: "transparent", border: "none", borderTop: "1px solid rgba(255,255,255,0.06)", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                <div style={{ minHeight: 70, padding: "14px 0", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <span>
+                    <span style={{ display: "block", ...TYPE.subhead, color: "white" }}>View invoices</span>
+                    <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Receipts and billing history</span>
+                  </span>
+                  <ChevronRight />
+                </div>
+              </button>
+            </form>
+          </div>
+          {billingSummary?.invoices && billingSummary.invoices.length > 0 && (
+            <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+              {billingSummary.invoices.map((invoice) => (
+                invoice.url ? (
+                  <Link key={invoice.id} href={invoice.url} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <span>
+                        <span style={{ display: "block", ...TYPE.footnote, fontWeight: 800, color: "white" }}>{invoice.label}</span>
+                        <span style={{ display: "block", marginTop: 1, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{invoice.status}</span>
+                      </span>
+                      <span style={{ ...TYPE.footnote, fontWeight: 800, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{invoice.amount}</span>
+                    </div>
+                  </Link>
+                ) : (
+                  <div key={invoice.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    <span>
+                      <span style={{ display: "block", ...TYPE.footnote, fontWeight: 800, color: "white" }}>{invoice.label}</span>
+                      <span style={{ display: "block", marginTop: 1, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{invoice.status}</span>
+                    </span>
+                    <span style={{ ...TYPE.footnote, fontWeight: 800, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{invoice.amount}</span>
+                  </div>
+                )
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 16, borderRadius: 16, padding: "15px 16px", backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <p style={{ margin: "0 0 4px", ...TYPE.subhead, fontWeight: 760, color: "white" }}>Need to change or cancel?</p>
+            <p style={{ margin: "0 0 12px", ...TYPE.footnote, lineHeight: 1.5, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+              Found will walk through what happens to your site, billing date, photos, leads, and domain before anything is turned off.
+            </p>
+            <a href={`sms:+15202226308?&body=${encodeURIComponent(`Hi Found, I need help with billing for ${company.name}.`)}`} style={{ ...TYPE.footnote, fontWeight: 850, color: GREEN, textDecoration: "none" }}>
+              Text Found about my plan
+            </a>
+          </div>
         </section>
       )}
     </main>

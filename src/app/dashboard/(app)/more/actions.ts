@@ -96,6 +96,35 @@ async function getUpgradePortalConfiguration(stripe: Stripe, targetPriceId: stri
   return configuration.id
 }
 
+async function getFoundBillingPortalConfiguration(stripe: Stripe) {
+  const existing = await stripe.billingPortal.configurations.list({ active: true, limit: 100 })
+  const reusable = existing.data.find((config) =>
+    config.metadata?.found_config === "billing_secure_tasks_v1"
+  )
+  if (reusable) return reusable.id
+
+  const configuration = await stripe.billingPortal.configurations.create({
+    business_profile: {
+      headline: "Secure Found billing",
+    },
+    features: {
+      customer_update: {
+        enabled: true,
+        allowed_updates: ["email", "address", "phone"],
+      },
+      invoice_history: { enabled: true },
+      payment_method_update: { enabled: true },
+      subscription_cancel: { enabled: false },
+      subscription_update: { enabled: false },
+    },
+    metadata: {
+      found_config: "billing_secure_tasks_v1",
+    },
+  })
+
+  return configuration.id
+}
+
 export async function purchaseAddon(companyId: string, addonSlug: string): Promise<{ success: boolean; error?: string }> {
   if (!(await requireCompanyOwner(companyId))) return { success: false, error: "Not authorized." }
   const stripe = getStripe()
@@ -567,9 +596,11 @@ export async function confirmPlanUpgrade(companyId: string, targetPlan: string, 
   }
 }
 
-// Opens Stripe Customer Portal — handles cancel, update payment method
+// Opens a restricted Stripe-hosted page for secure billing tasks only. Found
+// owns the billing experience; Stripe still handles card entry and invoices.
 export async function openBillingPortal(formData: FormData) {
   const companyId = formData.get("companyId") as string
+  const task = formData.get("task") as string | null
   if (!(await requireCompanyOwner(companyId))) return
   const stripe = getStripe()
   if (!stripe || !companyId) return
@@ -583,14 +614,28 @@ export async function openBillingPortal(formData: FormData) {
 
   if (!data?.stripe_customer_id) return
 
+  const configuration = await getFoundBillingPortalConfiguration(stripe)
+  const flowData = task === "payment_method"
+    ? {
+        type: "payment_method_update" as const,
+        after_completion: {
+          type: "redirect" as const,
+          redirect: { return_url: `${APP_BASE}/billing?billing_task=card` },
+        },
+      }
+    : undefined
+
   const session = await stripe.billingPortal.sessions.create({
     customer: data.stripe_customer_id,
     return_url: `${APP_BASE}/billing`,
+    configuration,
+    ...(flowData ? { flow_data: flowData } : {}),
   })
 
   await recordCustomerActivity({
-    eventType: "billing_portal_opened",
+    eventType: task === "payment_method" ? "billing_card_update_opened" : "billing_invoices_opened",
     pathname: "/dashboard/billing",
+    metadata: { task: task ?? "billing_tasks" },
   })
   redirect(session.url)
 }

@@ -1,5 +1,39 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-24 - Plan & Billing Foundation Moves Under Found
+
+### Progress This Pass
+- Shawn reviewed Divine Remodel's live Plan & Billing page and rejected the generic Stripe portal handoff as the long-term foundation.
+- Team direction approved: Found owns the billing experience; Stripe powers secure payment tasks behind the curtain.
+- Updated owner Plan & Billing to show a Found-owned account snapshot:
+  - current plan and monthly price,
+  - Found subscription status,
+  - card-on-file signal from Stripe,
+  - next billing date from Stripe,
+  - recent invoices from Stripe.
+- Replaced the generic `Manage billing` button with focused `Add/Update card` and `View invoices` tasks.
+- Restricted the Stripe portal configuration used by those tasks so subscription cancellation and plan changes are disabled there.
+- Added a Found-controlled `Need to change or cancel?` path that texts Found before anything is turned off.
+- Logged the approved billing ownership decision in `DECISIONS.md`.
+
+### Verification This Pass
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `git diff --check` passed with only normal CRLF warnings.
+
+### Open / Do Not Lose
+- Stripe still handles actual card entry and invoice hosting. Found does not collect or store raw card data.
+- This pass does not build a full self-serve cancellation wizard yet. It removes casual generic-portal cancellation and routes change/cancel help through Found.
+- The restricted Stripe portal configuration is created/reused through Stripe metadata `found_config=billing_secure_tasks_v1`.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open `my.foundco.app` as Divine Remodel, then go to `More` > `Plan & Billing`.
+2. Confirm the top Account box shows the plan, status, card, and next bill in Found.
+3. Tap `Update card` or `Add card` and confirm it opens only the secure card-update flow, not a full cancellation portal.
+4. Tap `View invoices` and confirm invoices are reachable without exposing subscription cancellation.
+5. Confirm the bottom change/cancel path points back to Found support.
+
 ## 2026-08-24 - Owner More Page Cleaned Into Manage Hub
 
 ### Progress This Pass

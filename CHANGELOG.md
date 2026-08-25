@@ -1,3 +1,23 @@
+## Session: August 24, 2026 - Plan & Billing Foundation Moves Under Found
+**AI:** Codex
+
+### Context
+Shawn reviewed Divine Remodel's live Plan & Billing page and rejected the generic Stripe billing portal as the long-term customer experience. Team direction was explicit: Found should own billing, while Stripe stays behind the curtain for secure payment tasks.
+
+### Changed
+- Added a Found-owned billing account snapshot with plan, price, status, card signal, next billing date, and recent invoices.
+- Replaced the generic `Manage billing` button with focused `Add/Update card` and `View invoices` actions.
+- Restricted the Stripe portal configuration used by those actions so subscription cancellation and plan changes are disabled there.
+- Added a Found-controlled change/cancel help path instead of exposing casual Stripe cancellation.
+- Logged the approved product decision in `DECISIONS.md`.
+
+### Verification
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- `git diff --check` passed with only normal CRLF warnings.
+
+---
+
 ## Session: August 24, 2026 - Owner More Page Cleaned Into Manage Hub
 **AI:** Codex
 
