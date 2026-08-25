@@ -10,6 +10,7 @@ Shawn found Divine Remodel's estimate/job album showing on the public website Ga
 - Updated public `/gallery` to list only albums approved for website display.
 - Added a job-detail toggle in Photos: `Hidden from website` / `Shown on website`.
 - Clarified that customer sharing remains the separate `Share` button.
+- Polished the job-detail UI so the share action says `Share with customer`, the count reads `Job photos · n`, and the website toggle feels lighter and closer to the share controls.
 - Logged the product privacy decision in `DECISIONS.md`.
 
 ### Verification

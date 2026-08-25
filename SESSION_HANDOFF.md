@@ -13,6 +13,7 @@
   - `HIDDEN FROM WEBSITE`
   - `SHOWN ON WEBSITE`
 - Shawn caught that the first off-state copy mixed customer sharing with public website visibility. Team approved the cleaner wording: off means `Hidden from website`; the separate `Share` button is for customers.
+- Follow-up Jony-led UI polish after Shawn screenshots: the job share action now says `Share with customer`, job photo counts read `Job photos · n`, and the website visibility toggle is visually lighter and tucked closer to the share actions.
 - Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
 - Logged the product rule in `DECISIONS.md`.
 
@@ -23,7 +24,7 @@
 
 ### Open / Do Not Lose
 - Shawn should check Divine Remodel's public Gallery after deploy and confirm the job tile is gone.
-- Shawn should open a job in Photos and confirm the new private/public website-gallery toggle reads clearly.
+- Shawn should open a job in Photos and confirm the `Share with customer` button and private/public website-gallery toggle read clearly.
 - Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
 
 ### Shawn Test Steps
