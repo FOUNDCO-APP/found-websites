@@ -1961,10 +1961,10 @@ function JobWebsiteVisibilityCard({ album, onToggle }: { album: Album; onToggle:
     }}>
       <div style={{ minWidth: 0 }}>
         <div style={{ ...TYPE.caption, color: shown ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-          {shown ? "SHOWN ON WEBSITE" : "PRIVATE CLIENT GALLERY"}
+          {shown ? "SHOWN ON WEBSITE" : "HIDDEN FROM WEBSITE"}
         </div>
         <p style={{ margin: "5px 0 0", ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
-          {shown ? "This project can appear on the public website gallery." : "Share this with the customer, but keep it off the public website gallery."}
+          {shown ? "This job can appear on your public gallery." : "This job will not appear on your public gallery."}
         </p>
       </div>
       <button

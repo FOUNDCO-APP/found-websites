@@ -10,8 +10,9 @@
 - Existing job albums were set to `show_on_website_gallery = false`; existing regular albums remain public.
 - Public `/gallery` now lists only albums approved for website display, with a safe fallback that still excludes job albums if the new column is unavailable.
 - Dashboard job detail now shows a clear owner toggle near Share:
-  - `PRIVATE CLIENT GALLERY`
+  - `HIDDEN FROM WEBSITE`
   - `SHOWN ON WEBSITE`
+- Shawn caught that the first off-state copy mixed customer sharing with public website visibility. Team approved the cleaner wording: off means `Hidden from website`; the separate `Share` button is for customers.
 - Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
 - Logged the product rule in `DECISIONS.md`.
 
@@ -28,7 +29,7 @@
 ### Shawn Test Steps
 1. Open Divine Remodel's public website Gallery and confirm the estimate/job album no longer appears.
 2. Open Divine Remodel in the owner dashboard > Photos > Jobs.
-3. Open a job and confirm it says `Private client gallery`.
+3. Open a job and confirm it says `Hidden from website`.
 4. Turn on the website-gallery toggle only for a project that should be public, then confirm it can appear on the public Gallery.
 5. Confirm the regular Share link for a private job still works.
 

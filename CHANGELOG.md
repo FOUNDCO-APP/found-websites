@@ -8,7 +8,8 @@ Shawn found Divine Remodel's estimate/job album showing on the public website Ga
 - Added `photo_albums.show_on_website_gallery` and applied the Supabase migration to project `mmctzloztgkbqvofmkou`.
 - Set existing job albums private; regular albums remain public.
 - Updated public `/gallery` to list only albums approved for website display.
-- Added a job-detail toggle in Photos: `Private client gallery` / `Shown on website`.
+- Added a job-detail toggle in Photos: `Hidden from website` / `Shown on website`.
+- Clarified that customer sharing remains the separate `Share` button.
 - Logged the product privacy decision in `DECISIONS.md`.
 
 ### Verification
