@@ -1,5 +1,37 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-25 - Job Albums Private by Default on Public Gallery
+
+### Progress This Pass
+- Shawn found Divine Remodel's estimate/job album showing on the public website Gallery and called it out as tacky and wrong.
+- Team agreed this is a trust/privacy issue: jobs/projects are client galleries and work records, not automatic public marketing galleries.
+- Added `photo_albums.show_on_website_gallery` through Supabase migration `20260825042827_album_website_gallery_visibility.sql`.
+- Applied the migration to Supabase project `mmctzloztgkbqvofmkou`.
+- Existing job albums were set to `show_on_website_gallery = false`; existing regular albums remain public.
+- Public `/gallery` now lists only albums approved for website display, with a safe fallback that still excludes job albums if the new column is unavailable.
+- Dashboard job detail now shows a clear owner toggle near Share:
+  - `PRIVATE CLIENT GALLERY`
+  - `SHOWN ON WEBSITE`
+- Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
+- Logged the product rule in `DECISIONS.md`.
+
+### Verification This Pass
+- Supabase verification query returned regular albums public and all current job albums private.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed and included `/[slug]/gallery`, `/[slug]/gallery/[album]`, `/dashboard/photos`, and `/dashboard/api/albums`.
+
+### Open / Do Not Lose
+- Shawn should check Divine Remodel's public Gallery after deploy and confirm the job tile is gone.
+- Shawn should open a job in Photos and confirm the new private/public website-gallery toggle reads clearly.
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` is modified and `.claude/` is untracked. Do not stage, revert, or alter unrelated work unless Shawn asks.
+
+### Shawn Test Steps
+1. Open Divine Remodel's public website Gallery and confirm the estimate/job album no longer appears.
+2. Open Divine Remodel in the owner dashboard > Photos > Jobs.
+3. Open a job and confirm it says `Private client gallery`.
+4. Turn on the website-gallery toggle only for a project that should be public, then confirm it can appear on the public Gallery.
+5. Confirm the regular Share link for a private job still works.
+
 ## 2026-08-24 - Found HQ Test Center Expanded for Admin QA
 
 ### Progress This Pass

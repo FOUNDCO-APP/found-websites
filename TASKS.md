@@ -52,6 +52,15 @@
 - [x] Found receipts now include receipt-only `Print or save PDF` styling.
 - [x] Shawn QA: Divine Remodel Plan & Billing confirmed; card update feels responsive and receipt print preview is clean.
 
+### Owner Photos / Jobs Privacy
+
+- [x] Team decision locked: job/project albums are private client galleries by default and only appear on the public website Gallery when the owner explicitly turns them on.
+- [x] Supabase migration added/applied: `photo_albums.show_on_website_gallery`.
+- [x] Existing job albums set private; regular albums remain public.
+- [x] Public `/gallery` filters to website-approved albums.
+- [x] Job detail now has a `Private client gallery` / `Shown on website` toggle near Share.
+- [ ] Shawn QA: Divine Remodel public Gallery no longer shows the estimate/job album; direct job share link still works; toggle can intentionally feature a project.
+
 ## 2026-08-05 - CURRENT NOW
 
 ## 2026-08-17 - PWA Home Screen Icon Had No Found Branding

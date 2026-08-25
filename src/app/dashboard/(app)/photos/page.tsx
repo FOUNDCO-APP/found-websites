@@ -40,6 +40,7 @@ type Album = {
   cover_url?: string | null
   notes?: string | null
   show_address_public?: boolean | null
+  show_on_website_gallery?: boolean | null
   created_at: string
 }
 
@@ -629,6 +630,27 @@ function PhotosPageInner() {
     }
   }
 
+  async function toggleAlbumWebsiteGallery(album: Album) {
+    const nextValue = !Boolean(album.show_on_website_gallery)
+    setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, show_on_website_gallery: nextValue } : a))
+    if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, show_on_website_gallery: nextValue } : prev)
+
+    const res = await fetch("/api/albums", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: album.id, show_on_website_gallery: nextValue }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.album) {
+      setAlbums(prev => prev.map(a => a.id === album.id ? album : a))
+      if (activeAlbum?.id === album.id) setActiveAlbum(album)
+      setPhotoError("Website gallery setting did not save. Try again.")
+      return
+    }
+    setAlbums(prev => prev.map(a => a.id === album.id ? { ...a, ...data.album } : a))
+    if (activeAlbum?.id === album.id) setActiveAlbum(prev => prev ? { ...prev, ...data.album } : prev)
+  }
+
   async function handleShare(album: Album) {
     const title = albumDisplayName(album, usesJobs)
     const url = `${getPublicSiteOrigin(siteSlug, customDomain)}/gallery/${albumPublicSlug(album, usesJobs)}`
@@ -857,6 +879,9 @@ function PhotosPageInner() {
                 )}
               </button>
             </div>
+            {activeAlbumUsesJobTools && (
+              <JobWebsiteVisibilityCard album={activeAlbum} onToggle={toggleAlbumWebsiteGallery} />
+            )}
           </div>
         </div>
       ) : (
@@ -1908,6 +1933,69 @@ function JobDetailsEditor({
           {saving ? "Saving..." : "Save"}
         </button>
       </div>
+    </div>
+  )
+}
+
+function JobWebsiteVisibilityCard({ album, onToggle }: { album: Album; onToggle: (album: Album) => Promise<void> }) {
+  const [saving, setSaving] = useState(false)
+  const shown = Boolean(album.show_on_website_gallery)
+
+  async function toggle() {
+    if (saving) return
+    setSaving(true)
+    await onToggle(album)
+    setSaving(false)
+  }
+
+  return (
+    <div style={{
+      padding: 14,
+      borderRadius: 18,
+      border: `1px solid ${shown ? `${SIGNAL_GREEN}33` : "rgba(255,255,255,0.08)"}`,
+      backgroundColor: shown ? `${SIGNAL_GREEN}10` : "rgba(255,255,255,0.04)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 14,
+    }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ ...TYPE.caption, color: shown ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+          {shown ? "SHOWN ON WEBSITE" : "PRIVATE CLIENT GALLERY"}
+        </div>
+        <p style={{ margin: "5px 0 0", ...TYPE.footnote, lineHeight: 1.45, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>
+          {shown ? "This project can appear on the public website gallery." : "Share this with the customer, but keep it off the public website gallery."}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={saving}
+        aria-pressed={shown}
+        style={{
+          width: 56,
+          height: 32,
+          borderRadius: 999,
+          border: `1px solid ${shown ? `${SIGNAL_GREEN}66` : "rgba(255,255,255,0.16)"}`,
+          backgroundColor: shown ? SIGNAL_GREEN : "rgba(255,255,255,0.08)",
+          cursor: saving ? "default" : "pointer",
+          flexShrink: 0,
+          padding: 3,
+          display: "flex",
+          justifyContent: shown ? "flex-end" : "flex-start",
+          transition: "background-color 0.18s ease, border-color 0.18s ease",
+          opacity: saving ? 0.7 : 1,
+        }}
+      >
+        <span style={{
+          width: 24,
+          height: 24,
+          borderRadius: "50%",
+          backgroundColor: shown ? FOUND_BLACK : "rgba(255,255,255,0.82)",
+          display: "block",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.22)",
+        }} />
+      </button>
     </div>
   )
 }

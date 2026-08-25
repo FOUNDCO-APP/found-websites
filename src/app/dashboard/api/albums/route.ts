@@ -47,6 +47,7 @@ type AlbumRow = {
   cover_photo_id?: string | null
   notes?: string | null
   show_address_public?: boolean | null
+  show_on_website_gallery?: boolean | null
   created_at: string
 }
 
@@ -59,14 +60,14 @@ export async function GET() {
   const admin = createAdminClient()
   let { data, error }: { data: AlbumRow[] | null; error: { message: string } | null } = await admin
     .from("photo_albums")
-    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, created_at")
+    .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, show_on_website_gallery, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false })
 
   if (error) {
     const fallback = await admin
       .from("photo_albums")
-      .select("id, name, slug, created_at")
+      .select("id, name, slug, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, created_at")
       .eq("company_id", company.id)
       .order("created_at", { ascending: false })
     data = fallback.data
@@ -115,31 +116,43 @@ export async function POST(req: Request) {
   const company = await getCompany(user.id, user.email ?? "")
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
-  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes } = await req.json()
+  const { name, album_type, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_on_website_gallery } = await req.json()
   if (!name?.trim()) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
   const admin = createAdminClient()
   const slug = await uniqueAlbumSlug(admin, company.id, name)
+  const isJobAlbum = album_type === "job"
 
   const insertPayload = {
     company_id: company.id,
     name: name.trim(),
     slug,
-    album_type: album_type === "job" ? "job" : "album",
+    album_type: isJobAlbum ? "job" : "album",
     customer_name: customer_name?.trim() || null,
     customer_phone: customer_phone?.trim() || null,
     customer_email: customer_email?.trim() || null,
     service_address: normalizeAddressText(service_address) || null,
     cover_photo_id: cover_photo_id || null,
     notes: notes?.trim() || null,
+    show_on_website_gallery: typeof show_on_website_gallery === "boolean" ? show_on_website_gallery : !isJobAlbum,
   }
 
-  const { data, error }: { data: AlbumRow | null; error: { message: string } | null } = await admin
+  let insertResult: { data: AlbumRow | null; error: { message: string } | null } = await admin
     .from("photo_albums")
     .insert(insertPayload)
     .select()
     .single()
 
+  if (insertResult.error?.message.includes("show_on_website_gallery")) {
+    const { show_on_website_gallery: _unused, ...legacyPayload } = insertPayload
+    insertResult = await admin
+      .from("photo_albums")
+      .insert(legacyPayload)
+      .select()
+      .single()
+  }
+
+  const { data, error } = insertResult
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   await recordCustomerActivity({
     eventType: "photo_album_created",
@@ -156,7 +169,7 @@ export async function PATCH(req: Request) {
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const body = await req.json()
-  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public } = body
+  const { id, name, customer_name, customer_phone, customer_email, service_address, cover_photo_id, notes, show_address_public, show_on_website_gallery } = body
   if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
 
   const admin = createAdminClient()
@@ -176,6 +189,7 @@ export async function PATCH(req: Request) {
   if ("cover_photo_id" in body) updates.cover_photo_id = typeof cover_photo_id === "string" && cover_photo_id.trim() ? cover_photo_id.trim() : null
   if ("notes" in body) updates.notes = typeof notes === "string" && notes.trim() ? notes.trim() : null
   if ("show_address_public" in body) updates.show_address_public = !!show_address_public
+  if ("show_on_website_gallery" in body) updates.show_on_website_gallery = !!show_on_website_gallery
 
   if (Object.keys(updates).length === 0) return NextResponse.json({ error: "No updates" }, { status: 400 })
 

@@ -1,3 +1,23 @@
+## Session: August 25, 2026 - Job Albums Private by Default on Public Gallery
+**AI:** Codex
+
+### Context
+Shawn found Divine Remodel's estimate/job album showing on the public website Gallery. Team agreed jobs/projects are private client galleries by default and should only appear publicly when the owner explicitly allows it.
+
+### Changed
+- Added `photo_albums.show_on_website_gallery` and applied the Supabase migration to project `mmctzloztgkbqvofmkou`.
+- Set existing job albums private; regular albums remain public.
+- Updated public `/gallery` to list only albums approved for website display.
+- Added a job-detail toggle in Photos: `Private client gallery` / `Shown on website`.
+- Logged the product privacy decision in `DECISIONS.md`.
+
+### Verification
+- Supabase query confirmed regular albums public and job albums private.
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+
+---
+
 ## Session: August 24, 2026 - Found HQ Test Center Expanded for Admin QA
 **AI:** Codex
 

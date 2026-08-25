@@ -76,8 +76,15 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
 
   // ── Pro: album-organized gallery ─────────────────────────────────────────
   if (isPro) {
-    const [albumsResult, albumPhotosResult, unsortedResult] = await Promise.all([
-      admin.from("photo_albums").select("id, name, slug, cover_photo_id").eq("company_id", company.id).order("created_at", { ascending: false }),
+    let albumsData: Array<{ id: string; name: string; slug: string; cover_photo_id?: string | null; album_type?: string | null }> = []
+    const albumsQuery = await admin.from("photo_albums").select("id, name, slug, cover_photo_id, album_type, show_on_website_gallery").eq("company_id", company.id).eq("show_on_website_gallery", true).order("created_at", { ascending: false })
+    if (albumsQuery.error) {
+      const fallbackAlbumsQuery = await admin.from("photo_albums").select("id, name, slug, cover_photo_id, album_type").eq("company_id", company.id).neq("album_type", "job").order("created_at", { ascending: false })
+      albumsData = fallbackAlbumsQuery.data ?? []
+    } else {
+      albumsData = albumsQuery.data ?? []
+    }
+    const [albumPhotosResult, unsortedResult] = await Promise.all([
       admin.from("company_photos").select("id, url, album_id").eq("company_id", company.id).not("album_id", "is", null).order("created_at", { ascending: true }),
       admin.from("company_photos").select("id, url").eq("company_id", company.id).eq("in_gallery", true).is("album_id", null).order("created_at", { ascending: false }),
     ])
@@ -92,7 +99,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
       photoUrlById.set(photo.id, photo.url)
     }
 
-    const albums = (albumsResult.data ?? [])
+    const albums = albumsData
       .map(album => {
         const albumPhotos = photosByAlbum.get(album.id) ?? []
         // Cover tile is a plain <img>, never a playable video slot - prefer
