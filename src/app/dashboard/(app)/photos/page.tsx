@@ -2283,7 +2283,7 @@ function JobNotesEditor({
 
   const fieldStyle: React.CSSProperties = {
     width: "100%",
-    minHeight: 190,
+    height: 108,
     padding: "16px",
     borderRadius: 16,
     border: "1px solid rgba(255,255,255,0.14)",
@@ -2293,8 +2293,10 @@ function JobNotesEditor({
     lineHeight: 1.48,
     outline: "none",
     boxSizing: "border-box",
-    resize: "vertical",
+    resize: "none",
+    overflowY: "hidden",
     fontFamily: "inherit",
+    touchAction: "manipulation",
   }
 
   if (!editing) {
@@ -2370,6 +2372,7 @@ function JobNotesEditor({
         height: "min(92dvh, 760px)",
         maxHeight: "calc(100dvh - max(env(safe-area-inset-top), 12px))",
         overflow: "hidden",
+        minHeight: 0,
         borderRadius: "26px 26px 0 0",
         border: "1px solid rgba(255,255,255,0.1)",
         borderBottom: "none",
@@ -2422,8 +2425,11 @@ function JobNotesEditor({
         </div>
         <div style={{
           flex: 1,
+          minHeight: 0,
           overflowY: "auto",
           WebkitOverflowScrolling: "touch",
+          overscrollBehavior: "contain",
+          touchAction: "pan-y",
           padding: "14px 18px calc(env(safe-area-inset-bottom) + 18px)",
           display: "flex",
           flexDirection: "column",
@@ -2439,8 +2445,7 @@ function JobNotesEditor({
                   value={fields[section.key]}
                   onChange={e => updateField(section.key, e.target.value)}
                   placeholder={section.placeholder}
-                  style={{ ...fieldStyle, minHeight: index === 0 ? 126 : 94 }}
-                  autoFocus={index === 0}
+                  style={{ ...fieldStyle, height: index === 0 ? 126 : 94 }}
                 />
               </label>
             ))}
