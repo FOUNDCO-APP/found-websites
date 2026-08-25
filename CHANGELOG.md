@@ -6,9 +6,9 @@ Shawn tested the refined Billing & Plan page and flagged that trial date wording
 
 ### Changed
 - Trial accounts now show `No charge today` under status and `First bill` for the billing date.
-- Added a Found-branded in-app card update sheet using Stripe SetupIntents.
+- Added a Found-branded in-app card update sheet using Stripe SetupIntents; it now preloads the secure setup and no longer locks the sheet while loading.
 - Added `/dashboard/api/billing/card-setup` to create/finalize secure card updates and set the saved card as the default billing method.
-- Improved Found receipt layout and added `Print or save PDF`.
+- Improved Found receipt layout and added receipt-only `Print or save PDF` styling so the app shell does not print.
 
 ### Verification
 - `npx tsc --noEmit` passed.

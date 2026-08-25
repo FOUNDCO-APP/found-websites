@@ -139,22 +139,43 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
         Ask Found about this receipt
       </a>
       <style>{`
+        @page {
+          size: Letter;
+          margin: 0.55in;
+        }
         @media print {
+          html,
           body {
             background: white !important;
+            color: #080A09 !important;
+            min-height: auto !important;
           }
-          .found-dashboard-header,
-          .found-dashboard-nav,
-          .receipt-no-print {
-            display: none !important;
+          body * {
+            visibility: hidden !important;
+          }
+          .found-receipt,
+          .found-receipt * {
+            visibility: visible !important;
           }
           main {
+            background: white !important;
             padding: 0 !important;
           }
           .found-receipt {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            background: white !important;
             box-shadow: none !important;
             border-radius: 0 !important;
             padding: 0 !important;
+          }
+          .receipt-no-print,
+          .receipt-no-print * {
+            display: none !important;
+            visibility: hidden !important;
           }
         }
       `}</style>

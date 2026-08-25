@@ -1,10 +1,12 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { loadStripe } from "@stripe/stripe-js"
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js"
 import type { StripeElementsOptions } from "@stripe/stripe-js"
 import { GREEN } from "@/lib/dashboard/typography"
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 function appearance(): StripeElementsOptions["appearance"] {
   return {
@@ -104,26 +106,62 @@ export default function BillingCardUpdateSheet({ currentCard }: { currentCard: s
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const stripePromise = useMemo(() => loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!), [])
+  const loadPromiseRef = useRef<Promise<string | null> | null>(null)
+
+  const loadCardForm = useCallback(async () => {
+    if (clientSecret) return
+    if (loadPromiseRef.current) return loadPromiseRef.current
+
+    setLoading(true)
+    setError(null)
+    loadPromiseRef.current = fetch("/api/billing/card-setup", { method: "POST" })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({})) as { clientSecret?: string; error?: string }
+        if (!res.ok || !data.clientSecret) {
+          throw new Error(data.error || "Card update could not start.")
+        }
+        setClientSecret(data.clientSecret)
+        return data.clientSecret
+      })
+      .catch((err: unknown) => {
+        loadPromiseRef.current = null
+        setError(err instanceof Error ? err.message : "Card update could not start.")
+        return null
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+
+    return loadPromiseRef.current
+  }, [clientSecret])
+
+  useEffect(() => {
+    if (clientSecret || open) return
+
+    const preload = () => {
+      void loadCardForm()
+    }
+    const win = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+
+    if (win.requestIdleCallback) {
+      const id = win.requestIdleCallback(preload, { timeout: 1800 })
+      return () => win.cancelIdleCallback?.(id)
+    }
+
+    const id = window.setTimeout(preload, 500)
+    return () => window.clearTimeout(id)
+  }, [clientSecret, loadCardForm, open])
 
   async function openSheet() {
-    if (loading) return
     setOpen(true)
     setError(null)
-    if (clientSecret) return
-    setLoading(true)
-    const res = await fetch("/api/billing/card-setup", { method: "POST" })
-    const data = await res.json().catch(() => ({})) as { clientSecret?: string; error?: string }
-    setLoading(false)
-    if (!res.ok || !data.clientSecret) {
-      setError(data.error || "Card update could not start.")
-      return
-    }
-    setClientSecret(data.clientSecret)
+    await loadCardForm()
   }
 
   function closeSheet() {
-    if (loading) return
     setOpen(false)
   }
 
@@ -195,7 +233,16 @@ export default function BillingCardUpdateSheet({ currentCard }: { currentCard: s
               This card is used for your Found plan. Your full card number is never stored by Found.
             </p>
 
-            {loading && <p style={{ margin: 0, color: "rgba(255,255,255,0.62)", fontSize: 14 }}>Loading secure card form...</p>}
+            {loading && !clientSecret && (
+              <div style={{ borderRadius: 16, padding: "16px 14px", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <p style={{ margin: "0 0 4px", color: "white", fontSize: 14, lineHeight: 1.35, fontWeight: 780 }}>
+                  Preparing secure card form...
+                </p>
+                <p style={{ margin: 0, color: "rgba(255,255,255,0.56)", fontSize: 13, lineHeight: 1.45, fontWeight: 500 }}>
+                  This usually takes a moment on mobile.
+                </p>
+              </div>
+            )}
             {error && <p style={{ margin: 0, color: "#ff453a", fontSize: 14, lineHeight: 1.45, fontWeight: 650 }}>{error}</p>}
             {clientSecret && (
               <Elements stripe={stripePromise} options={{ clientSecret, appearance: appearance() }}>

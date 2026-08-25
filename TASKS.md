@@ -48,8 +48,9 @@
 - [x] Added Found-branded receipt pages for billing history rows.
 - [x] Trial wording now separates `No charge today` from the `First bill` date.
 - [x] Card update now opens inside Found using a branded slide-up sheet backed by Stripe SetupIntents.
-- [x] Found receipts now include `Print or save PDF`.
-- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm the card form stays on `my.foundco.app` and receipt printing works.
+- [x] Card-update sheet now preloads the secure setup and remains closable while loading on mobile.
+- [x] Found receipts now include receipt-only `Print or save PDF` styling.
+- [ ] Shawn QA: test Divine Remodel Plan & Billing again, confirm the card form feels responsive and receipt print preview shows only the white receipt.
 
 ## 2026-08-05 - CURRENT NOW
 

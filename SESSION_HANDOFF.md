@@ -12,8 +12,9 @@
   - The billing date label changes to `First bill` during trial.
   - The date detail says `$69/month starts then`, making the first charge date explicit.
 - Added an in-app Found card-update sheet using Stripe SetupIntents and PaymentElement. The owner stays on `my.foundco.app` while entering the card; Found never stores the full card number.
+- Follow-up polish after Shawn QA: the card-update sheet now preloads the secure setup in the background and can be closed while loading, so a slow mobile network does not feel like the app froze.
 - Added `/dashboard/api/billing/card-setup` to create the secure setup intent and set the saved card as the default billing method for the customer's Found subscription.
-- Improved Found receipt pages with a more professional receipt layout, subtotal/tax/total breakdown, and a `Print or save PDF` button with print styling.
+- Improved Found receipt pages with a more professional receipt layout, subtotal/tax/total breakdown, and a `Print or save PDF` button with receipt-only white-page print styling.
 
 ### Verification This Pass
 - `npx tsc --noEmit` passed.
@@ -30,7 +31,7 @@
 2. Confirm Status says `Trial active` and the smaller line says `No charge today`.
 3. Confirm the billing date section says `First bill`, shows Sep 5, 2026, and says `$69/month starts then`.
 4. Tap `Update card` and confirm it opens a Found slide-up card form without leaving `my.foundco.app`.
-5. Open a receipt and tap `Print or save PDF`.
+5. Open a receipt and tap `Print or save PDF`; the print preview should show only the white receipt, not the dark app shell or bottom navigation.
 
 ## 2026-08-24 - Plan & Billing Removed Stripe Wording and Added Found Receipts
 
