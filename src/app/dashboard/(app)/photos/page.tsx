@@ -144,6 +144,108 @@ function albumPublicSlug(album: Album, usesJobs?: boolean) {
   return toSlug(albumDisplayName(album, usesJobs)) || album.slug
 }
 
+type WorkNotesCopy = {
+  label: string
+  helper: string
+  placeholder: string
+}
+
+function normalizeIndustryKey(value: string | null | undefined) {
+  return (value ?? "").toLowerCase().replace(/[\s-]+/g, "_")
+}
+
+function workNotesCopyFor(industry: string | null | undefined, subIndustry: string | null | undefined, albumSingular: string): WorkNotesCopy {
+  const n = normalizeIndustryKey(industry)
+  const sub = normalizeIndustryKey(subIndustry)
+  const fallbackName = albumSingular && albumSingular !== "Album" ? albumSingular : "Work"
+
+  if (/balloon|event_design|party|wedding|floral|decor/.test(sub)) {
+    return {
+      label: "Event Design Notes",
+      helper: "Capture the theme, colors, timing, setup needs, and anything promised to the customer.",
+      placeholder: "Theme, colors, venue, setup time, install notes, pickup or teardown details...",
+    }
+  }
+
+  if (["home_services", "landscaping", "home_property", "audio_visual", "automotive", "cleaning", "tech_repair", "print_signage"].includes(n)) {
+    return {
+      label: "Scope & Materials",
+      helper: "Capture what needs to be done, parts, materials, measurements, and labor notes.",
+      placeholder: "Materials, measurements, prep work, labor notes, access issues, follow-up items...",
+    }
+  }
+
+  if (["food", "home_based_food"].includes(n)) {
+    return {
+      label: "Order Notes",
+      helper: "Capture customer requests, timing, quantities, prep notes, and delivery or pickup details.",
+      placeholder: "Items, quantities, pickup time, delivery notes, dietary needs, special requests...",
+    }
+  }
+
+  if (["events", "music_performance"].includes(n)) {
+    return {
+      label: "Event Notes",
+      helper: "Capture timing, location, setup needs, customer requests, and day-of details.",
+      placeholder: "Venue, schedule, setup notes, requested details, people to contact...",
+    }
+  }
+
+  if (["beauty", "wellness", "fitness", "healthcare", "childcare"].includes(n)) {
+    return {
+      label: "Appointment Notes",
+      helper: "Capture preferences, service details, preparation notes, and follow-up items.",
+      placeholder: "Preferences, service notes, products used, timing, follow-up reminders...",
+    }
+  }
+
+  if (n === "real_estate") {
+    return {
+      label: "Property Notes",
+      helper: "Capture property details, client priorities, showing notes, and next steps.",
+      placeholder: "Property condition, client priorities, showing notes, repairs, next steps...",
+    }
+  }
+
+  if (n === "creative_services" || /photo|video|portrait|brand|design|creative/.test(sub)) {
+    return {
+      label: /photo|video|portrait/.test(sub) ? "Shoot Notes" : "Creative Notes",
+      helper: "Capture the brief, shot list, preferences, deadlines, and delivery details.",
+      placeholder: "Creative direction, shot list, must-have details, deadline, delivery notes...",
+    }
+  }
+
+  if (["retail", "makers_crafts"].includes(n)) {
+    return {
+      label: "Order Notes",
+      helper: "Capture custom requests, sizing, quantities, fulfillment notes, and delivery details.",
+      placeholder: "Product details, sizing, quantities, custom requests, delivery or pickup notes...",
+    }
+  }
+
+  if (n === "education") {
+    return {
+      label: "Session Notes",
+      helper: "Capture goals, progress, assignments, and follow-up items.",
+      placeholder: "Goals, lesson notes, progress, homework, follow-up reminders...",
+    }
+  }
+
+  if (n === "professional_services") {
+    return {
+      label: "Client Notes",
+      helper: "Capture client goals, important context, decisions, and next steps.",
+      placeholder: "Client goals, important details, decisions made, follow-up items...",
+    }
+  }
+
+  return {
+    label: `${fallbackName} Notes`,
+    helper: "Capture the details that help you prepare, quote, and follow up.",
+    placeholder: "Important details, customer requests, prep notes, follow-up items...",
+  }
+}
+
 async function fetchEstimateSnapshot(): Promise<{ estimates: JobEstimate[] | null; error: string | null }> {
   try {
     const res = await fetch("/api/estimates", { cache: "no-store" })
@@ -187,6 +289,7 @@ function PhotosPageInner() {
   const [copied, setCopied] = useState(false)
   const [siteSlug, setSiteSlug] = useState("")
   const [industry, setIndustry] = useState<string | null>(null)
+  const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState<string | null>(null)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
@@ -264,6 +367,7 @@ function PhotosPageInner() {
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
+      setSubIndustry(sd.subIndustry ?? null)
       setCustomDomain(sd.customDomain ?? null)
       setIsPro(sd.isPro ?? false)
       setEstimatesAccess(ed.estimates !== null)
@@ -814,7 +918,13 @@ function PhotosPageInner() {
               {activeAlbumUsesJobTools && (
                 <>
                   <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
-                  <JobNotesEditor album={activeAlbum} onSave={updateAlbumDetails} />
+                  <JobNotesEditor
+                    album={activeAlbum}
+                    onSave={updateAlbumDetails}
+                    industry={industry}
+                    subIndustry={subIndustry}
+                    albumSingular={albumLabel.singular}
+                  />
                   {estimatesAccess ? (
                     <JobEstimatesCard
                       estimates={estimates.filter(e => e.job_id === activeAlbum.id)}
@@ -2013,13 +2123,20 @@ function JobWebsiteVisibilityCard({ album, onToggle }: { album: Album; onToggle:
 function JobNotesEditor({
   album,
   onSave,
+  industry,
+  subIndustry,
+  albumSingular,
 }: {
   album: Album
   onSave: (album: Album, details: Partial<Pick<Album, "notes">>) => Promise<void>
+  industry: string | null
+  subIndustry: string | null
+  albumSingular: string
 }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [notes, setNotes] = useState(album.notes ?? "")
+  const copy = workNotesCopyFor(industry, subIndustry, albumSingular)
 
   useEffect(() => {
     setNotes(album.notes ?? "")
@@ -2035,13 +2152,14 @@ function JobNotesEditor({
 
   const fieldStyle: React.CSSProperties = {
     width: "100%",
-    minHeight: 90,
-    padding: "12px 14px",
-    borderRadius: 12,
-    border: "1px solid rgba(255,255,255,0.12)",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    minHeight: 190,
+    padding: "16px",
+    borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(255,255,255,0.055)",
     color: "white",
     ...TYPE.subhead,
+    lineHeight: 1.48,
     outline: "none",
     boxSizing: "border-box",
     resize: "vertical",
@@ -2049,63 +2167,92 @@ function JobNotesEditor({
   }
 
   if (!editing) {
-    if (album.notes) {
-      return (
-        <button
-          onClick={() => setEditing(true)}
-          style={{
-            marginTop: 10,
-            padding: "12px 14px",
-            borderRadius: 14,
-            border: "1px solid rgba(255,255,255,0.06)",
-            backgroundColor: "rgba(255,255,255,0.025)",
-            textAlign: "left",
-            cursor: "pointer",
-            display: "flex",
-            flexDirection: "column",
-            gap: 5,
-          }}
-        >
-          <div style={{ ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>SCOPE NOTES</div>
-          <div style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap" }}>{album.notes}</div>
-        </button>
-      )
-    }
     return (
       <button
         onClick={() => setEditing(true)}
         style={{
           marginTop: 10,
-          padding: "10px 12px",
-          borderRadius: 13,
-          border: `1px solid ${SIGNAL_GREEN}33`,
-          backgroundColor: `${SIGNAL_GREEN}10`,
-          color: SIGNAL_GREEN,
-          ...TYPE.footnote,
-          fontWeight: 700,
+          padding: album.notes ? "12px 14px" : "13px 14px",
+          borderRadius: 14,
+          border: album.notes ? "1px solid rgba(255,255,255,0.06)" : `1px solid ${SIGNAL_GREEN}22`,
+          backgroundColor: album.notes ? "rgba(255,255,255,0.025)" : `${SIGNAL_GREEN}08`,
+          color: "white",
+          textAlign: "left",
           cursor: "pointer",
+          display: "flex",
+          flexDirection: "column",
+          gap: album.notes ? 6 : 8,
         }}
       >
-        Add scope notes
+        <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <span style={{ ...TYPE.caption, color: album.notes ? `rgba(255,255,255,${TEXT_OPACITY.tertiary})` : SIGNAL_GREEN }}>
+            {copy.label.toUpperCase()}
+          </span>
+          <span style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>
+            {album.notes ? "EDIT" : "ADD"}
+          </span>
+        </span>
+        {album.notes ? (
+          <span style={{ ...TYPE.subhead, color: "white", whiteSpace: "pre-wrap", lineHeight: 1.45 }}>{album.notes}</span>
+        ) : (
+          <span style={{ ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+            {copy.helper}
+          </span>
+        )}
       </button>
     )
   }
 
   return (
-    <div style={{ marginTop: 10, padding: 14, borderRadius: 18, border: `1px solid ${SIGNAL_GREEN}22`, backgroundColor: "rgba(255,255,255,0.045)", display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>SCOPE NOTES</div>
-      <textarea
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
-        placeholder="What was done, what was found, parts used..."
-        style={fieldStyle}
-        autoFocus
-      />
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
-        <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: 0 }}>Cancel</button>
-        <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: 0 }}>
-          {saving ? "Saving..." : "Save"}
-        </button>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={copy.label}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 130,
+        backgroundColor: "rgba(0,0,0,0.66)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        padding: "18px",
+        boxSizing: "border-box",
+      }}
+    >
+      <div style={{
+        width: "100%",
+        maxWidth: 620,
+        maxHeight: "calc(100dvh - 36px)",
+        overflowY: "auto",
+        borderRadius: 26,
+        border: "1px solid rgba(255,255,255,0.1)",
+        backgroundColor: "#101311",
+        boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
+        padding: 18,
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+      }}>
+        <div>
+          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>{copy.label.toUpperCase()}</div>
+          <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+            {copy.helper}
+          </p>
+        </div>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder={copy.placeholder}
+          style={fieldStyle}
+          autoFocus
+        />
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
+          <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>Cancel</button>
+          <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>
+            {saving ? "Saving..." : "Save"}
+          </button>
+        </div>
       </div>
     </div>
   )

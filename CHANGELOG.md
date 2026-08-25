@@ -12,6 +12,7 @@ Shawn found Divine Remodel's estimate/job album showing on the public website Ga
 - Clarified that customer sharing remains the separate `Share` button.
 - Polished the job-detail UI so the share action says `Share with customer`, the count reads `Job photos · n`, and the website toggle feels lighter and closer to the share controls.
 - Cleaned up job-detail hierarchy so `Job Photos` becomes the clear section, estimate cards are shorter, Scope Notes is quieter, and website visibility feels like a setting.
+- Added industry-aware job notes copy and a focused notes editor sheet, keeping one shared notes system while changing labels and placeholders for each business type.
 - Logged the product privacy decision in `DECISIONS.md`.
 
 ### Verification

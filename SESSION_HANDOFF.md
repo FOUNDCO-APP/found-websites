@@ -15,6 +15,7 @@
 - Shawn caught that the first off-state copy mixed customer sharing with public website visibility. Team approved the cleaner wording: off means `Hidden from website`; the separate `Share` button is for customers.
 - Follow-up Jony-led UI polish after Shawn screenshots: the job share action now says `Share with customer`, job photo counts read `Job photos · n`, and the website visibility toggle is visually lighter and tucked closer to the share actions.
 - Second Jony/Steve cleanup after Shawn said the job detail screen did not give his eyes a clear place to go: the job photos area is now a real `Job Photos` section with actions attached, Scope Notes is quieter, Estimate Started is shorter/lighter, and website visibility reads as a setting instead of another major card.
+- Team-approved industry-aware notes foundation: the same `notes` field now gets owner-facing labels/placeholders by industry, such as `Scope & Materials`, `Event Design Notes`, `Order Notes`, `Appointment Notes`, `Shoot Notes`, or `Client Notes`; editing opens a focused notes sheet instead of a cramped inline field.
 - Direct shared job links still work; jobs are just unlisted from the main website Gallery unless the owner turns them on.
 - Logged the product rule in `DECISIONS.md`.
 
