@@ -340,8 +340,15 @@ export default function PhotosPage() {
   return <Suspense><PhotosPageInner /></Suspense>
 }
 
+function initialPhotoView(): View {
+  if (typeof window === "undefined") return "all"
+  const params = new URLSearchParams(window.location.search)
+  const tab = params.get("tab") ?? params.get("view")
+  return tab === "jobs" || tab === "albums" ? "albums" : "all"
+}
+
 function PhotosPageInner() {
-  const [view, setView] = useState<View>("all")
+  const [view, setView] = useState<View>(() => initialPhotoView())
   const [photoFilter, setPhotoFilter] = useState<PhotoFilter>("all")
   const [photos, setPhotos] = useState<Photo[]>([])
   const [albums, setAlbums] = useState<Album[]>([])
@@ -365,7 +372,7 @@ function PhotosPageInner() {
   const [industry, setIndustry] = useState<string | null>(null)
   const [subIndustry, setSubIndustry] = useState<string | null>(null)
   const [customDomain, setCustomDomain] = useState<string | null>(null)
-  const [isWorker, setIsWorker] = useState(false)
+  const [memberRole, setMemberRole] = useState<"owner" | "worker" | null>(null)
   const [isPro, setIsPro] = useState(false)
   const [showUpgrade, setShowUpgrade] = useState(false)
   const [lightroomIndex, setLightroomIndex] = useState<number | null>(null)
@@ -396,6 +403,8 @@ function PhotosPageInner() {
 
   const albumLabel = industry === null ? { singular: "Job", plural: "Jobs", create: "New Job" } : albumLabelFor(industry)
   const usesJobs = ["Job", "Project"].includes(albumLabel.singular)
+  const isWorker = memberRole === "worker"
+  const workerSurface = isWorker || (memberRole === null && view === "albums")
 
   useEffect(() => {
     const albumId = searchParams.get("album")
@@ -432,20 +441,21 @@ function PhotosPageInner() {
   }, [])
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/photos").then(r => r.json()),
-      fetch("/api/albums").then(r => r.json()),
-      fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false })),
-      fetchEstimateSnapshot(),
-    ]).then(([pd, ad, sd, ed]) => {
+    async function load() {
+      const sd = await fetch("/api/company-slug").then(r => r.json()).catch(() => ({ slug: "", industry: null, isPro: false, role: null }))
       const worker = sd.role === "worker"
+      const [pd, ad, ed] = await Promise.all([
+        fetch("/api/photos").then(r => r.json()),
+        fetch("/api/albums").then(r => r.json()),
+        worker ? Promise.resolve({ estimates: null, error: null }) : fetchEstimateSnapshot(),
+      ])
       setPhotos(pd.photos ?? [])
       setAlbums(ad.albums ?? [])
       setSiteSlug(sd.slug ?? "")
       setIndustry(sd.industry ?? null)
       setSubIndustry(sd.subIndustry ?? null)
       setCustomDomain(sd.customDomain ?? null)
-      setIsWorker(worker)
+      setMemberRole(worker ? "worker" : "owner")
       setIsPro(sd.isPro ?? false)
       setEstimatesAccess(ed.estimates !== null)
       setEstimatesAccessError(ed.error ?? null)
@@ -473,7 +483,9 @@ function PhotosPageInner() {
       }
 
       setLoading(false)
-    }).catch(() => setLoading(false))
+    }
+
+    load().catch(() => setLoading(false))
   }, [])
 
   useEffect(() => {
@@ -483,7 +495,7 @@ function PhotosPageInner() {
   }, [])
 
   useEffect(() => {
-    if (!activeAlbum) return
+    if (!activeAlbum || isWorker) return
     let cancelled = false
     fetchEstimateSnapshot().then(ed => {
       if (cancelled) return
@@ -991,7 +1003,7 @@ function PhotosPageInner() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ minWidth: 0 }}>
-              {isWorker ? (
+              {workerSurface ? (
                 <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>
                   {albumDisplayName(activeAlbum, usesJobs)}
                 </h1>
@@ -1003,7 +1015,7 @@ function PhotosPageInner() {
                   {albumContextLine(activeAlbum)}
                 </p>
               )}
-              {activeAlbumUsesJobTools && !isWorker && (
+              {activeAlbumUsesJobTools && !workerSurface && (
                 <>
                   <JobDetailsEditor album={activeAlbum} onSave={updateAlbumDetails} />
                   <JobNotesEditor
@@ -1038,7 +1050,7 @@ function PhotosPageInner() {
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap" }}>
-                  {!isWorker && !selectMode && photos.length > 0 && (
+                  {!workerSurface && !selectMode && photos.length > 0 && (
                     <button onClick={() => setSelectMode(true)} style={{
                       padding: "10px 16px", borderRadius: 100,
                       backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
@@ -1047,7 +1059,7 @@ function PhotosPageInner() {
                       Select
                     </button>
                   )}
-                  {!isWorker && (
+                  {!workerSurface && (
                   <button onClick={() => isPro ? setShareAlbum(activeAlbum) : setShowUpgrade(true)} style={{
                     display: "flex", alignItems: "center", gap: 6,
                     padding: "10px 16px", borderRadius: 100,
@@ -1088,7 +1100,7 @@ function PhotosPageInner() {
                   </button>
                 </div>
               </div>
-              {!isWorker && activeAlbumUsesJobTools && (
+              {!workerSurface && activeAlbumUsesJobTools && (
                 <JobWebsiteVisibilityCard album={activeAlbum} onToggle={toggleAlbumWebsiteGallery} />
               )}
             </section>
@@ -1097,15 +1109,15 @@ function PhotosPageInner() {
       ) : (
         <div style={{ padding: "16px 24px 8px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 16 }}>
           <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{isWorker ? albumLabel.plural : "Photos"}</h1>
+            <h1 style={{ margin: 0, ...TYPE.largeTitle, color: "white" }}>{workerSurface ? albumLabel.plural : "Photos"}</h1>
             <p style={{ margin: "2px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-              {isWorker
+              {workerSurface
                 ? `${albums.length} ${albumLabel.singular.toLowerCase()}${albums.length !== 1 ? "s" : ""}`
                 : photos.length === 0 ? "Your work, beautifully organized" : `${photos.length} photo${photos.length !== 1 ? "s" : ""}`}
             </p>
           </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
-            {!isWorker && !selectMode && photos.length > 0 && (
+            {!workerSurface && !selectMode && photos.length > 0 && (
               <button onClick={() => setSelectMode(true)} style={{
                 padding: "10px 16px", borderRadius: 100,
                 backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
@@ -1135,7 +1147,7 @@ function PhotosPageInner() {
       <input ref={fileRef} type="file" accept="image/*,video/*" multiple onChange={handleUpload} style={{ display: "none" }} />
 
       {/* Tabs â€” hidden when inside an album */}
-      {!activeAlbum && !isWorker && (
+      {!activeAlbum && !workerSurface && (
         <div style={{
           position: "sticky",
           top: "calc(max(env(safe-area-inset-top), 14px) + 32px)",
@@ -1271,13 +1283,13 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={albumPhotos}
             onView={p => openLightroom(p, albumPhotos)}
-            onFlag={isWorker || usesJobs ? undefined : flag}
-            onGallery={isWorker || usesJobs ? undefined : toggleGallery}
-            onPlace={isWorker || usesJobs ? undefined : openPlacement}
-            onShare={isWorker || usesJobs ? undefined : handleSharePhoto}
-            onRequestDelete={isWorker || usesJobs ? undefined : setDeleteConfirmPhoto}
-            destinations={isWorker ? null : destinations}
-            selectMode={isWorker ? false : selectMode}
+            onFlag={workerSurface || usesJobs ? undefined : flag}
+            onGallery={workerSurface || usesJobs ? undefined : toggleGallery}
+            onPlace={workerSurface || usesJobs ? undefined : openPlacement}
+            onShare={workerSurface || usesJobs ? undefined : handleSharePhoto}
+            onRequestDelete={workerSurface || usesJobs ? undefined : setDeleteConfirmPhoto}
+            destinations={workerSurface ? null : destinations}
+            selectMode={workerSurface ? false : selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             gridColumns={usesJobs ? "repeat(2, minmax(0, 1fr))" : "repeat(3, 1fr)"}
@@ -1297,9 +1309,9 @@ function PhotosPageInner() {
             showNew={showNewAlbum}
             newName={newAlbumName}
             saving={savingAlbum}
-            readOnly={isWorker}
+            readOnly={workerSurface}
             onShowNew={() => {
-              if (!isWorker) setShowNewAlbum(true)
+              if (!workerSurface) setShowNewAlbum(true)
             }}
             onHideNew={() => {
               setShowNewAlbum(false)
@@ -1330,12 +1342,12 @@ function PhotosPageInner() {
           <DateGroupedGrid
             photos={currentPhotos}
             onView={p => openLightroom(p, currentPhotos)}
-            onFlag={isWorker ? undefined : flag}
-            onGallery={isWorker ? undefined : toggleGallery}
-            onPlace={isWorker ? undefined : openPlacement}
-            onShare={isWorker ? undefined : handleSharePhoto}
-            onRequestDelete={isWorker ? undefined : setDeleteConfirmPhoto}
-            selectMode={isWorker ? false : selectMode}
+            onFlag={workerSurface ? undefined : flag}
+            onGallery={workerSurface ? undefined : toggleGallery}
+            onPlace={workerSurface ? undefined : openPlacement}
+            onShare={workerSurface ? undefined : handleSharePhoto}
+            onRequestDelete={workerSurface ? undefined : setDeleteConfirmPhoto}
+            selectMode={workerSurface ? false : selectMode}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             emptyTitle={
@@ -1371,14 +1383,14 @@ function PhotosPageInner() {
           photos={lightroomPhotos}
           initialIndex={lightroomIndex}
           onClose={() => setLightroomIndex(null)}
-          onFlag={isWorker ? undefined : flag}
-          onGallery={isWorker ? undefined : toggleGallery}
-          onPlace={isWorker ? undefined : openPlacement}
-          destinations={isWorker ? null : destinations}
-          onShare={isWorker ? undefined : handleSharePhoto}
-          onRequestDelete={isWorker ? undefined : setDeleteConfirmPhoto}
+          onFlag={workerSurface ? undefined : flag}
+          onGallery={workerSurface ? undefined : toggleGallery}
+          onPlace={workerSurface ? undefined : openPlacement}
+          destinations={workerSurface ? null : destinations}
+          onShare={workerSurface ? undefined : handleSharePhoto}
+          onRequestDelete={workerSurface ? undefined : setDeleteConfirmPhoto}
           album={lightroomSource === "album" ? activeAlbum : null}
-          onSetCover={isWorker ? undefined : setCoverPhoto}
+          onSetCover={workerSurface ? undefined : setCoverPhoto}
           onNoteSave={savePhotoNote}
         />
       )}
@@ -1480,7 +1492,7 @@ function PhotosPageInner() {
       )}
 
       {/* Select mode - pick specific photos to download, not just all of them */}
-      {selectMode && !isWorker && (
+      {selectMode && !workerSurface && (
         <div style={{
           position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 75,
           padding: "16px 24px max(env(safe-area-inset-bottom, 0px), 22px)",
