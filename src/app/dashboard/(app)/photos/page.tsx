@@ -2359,51 +2359,98 @@ function JobNotesEditor({
         display: "flex",
         alignItems: "flex-end",
         justifyContent: "center",
-        padding: "18px",
+        padding: "max(env(safe-area-inset-top), 12px) 0 0",
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div style={{
         width: "100%",
         maxWidth: 620,
-        maxHeight: "calc(100dvh - 36px)",
-        overflowY: "auto",
-        borderRadius: 26,
+        height: "min(92dvh, 760px)",
+        maxHeight: "calc(100dvh - max(env(safe-area-inset-top), 12px))",
+        overflow: "hidden",
+        borderRadius: "26px 26px 0 0",
         border: "1px solid rgba(255,255,255,0.1)",
+        borderBottom: "none",
         backgroundColor: "#101311",
         boxShadow: "0 24px 80px rgba(0,0,0,0.55)",
-        padding: 18,
         display: "flex",
         flexDirection: "column",
-        gap: 14,
       }}>
-        <div>
-          <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>{copy.label.toUpperCase()}</div>
-          <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
-            {copy.helper}
-          </p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {copy.sections.map((section, index) => (
-            <label key={section.key} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ ...TYPE.caption, color: index === 0 ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
-                {section.label.toUpperCase()}
-              </span>
-              <textarea
-                value={fields[section.key]}
-                onChange={e => updateField(section.key, e.target.value)}
-                placeholder={section.placeholder}
-                style={{ ...fieldStyle, minHeight: index === 0 ? 126 : 94 }}
-                autoFocus={index === 0}
-              />
-            </label>
-          ))}
-        </div>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
-          <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>Cancel</button>
-          <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>
-            {saving ? "Saving..." : "Save"}
+        <div style={{
+          flexShrink: 0,
+          padding: "16px 18px 12px",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          backgroundColor: "#101311",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 14,
+        }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ ...TYPE.caption, color: SIGNAL_GREEN }}>{copy.label.toUpperCase()}</div>
+            <p style={{ margin: "6px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`, lineHeight: 1.45 }}>
+              {copy.helper}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            disabled={saving}
+            aria-label="Close notes"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              border: "1px solid rgba(255,255,255,0.1)",
+              backgroundColor: "rgba(255,255,255,0.06)",
+              color: `rgba(255,255,255,${TEXT_OPACITY.secondary})`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: saving ? "default" : "pointer",
+              flexShrink: 0,
+              opacity: saving ? 0.5 : 1,
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
+        </div>
+        <div style={{
+          flex: 1,
+          overflowY: "auto",
+          WebkitOverflowScrolling: "touch",
+          padding: "14px 18px calc(env(safe-area-inset-bottom) + 18px)",
+          display: "flex",
+          flexDirection: "column",
+          gap: 14,
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {copy.sections.map((section, index) => (
+              <label key={section.key} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <span style={{ ...TYPE.caption, color: index === 0 ? SIGNAL_GREEN : `rgba(255,255,255,${TEXT_OPACITY.tertiary})` }}>
+                  {section.label.toUpperCase()}
+                </span>
+                <textarea
+                  value={fields[section.key]}
+                  onChange={e => updateField(section.key, e.target.value)}
+                  placeholder={section.placeholder}
+                  style={{ ...fieldStyle, minHeight: index === 0 ? 126 : 94 }}
+                  autoFocus={index === 0}
+                />
+              </label>
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 18, paddingTop: 2 }}>
+            <button onClick={() => setEditing(false)} disabled={saving} style={{ border: "none", background: "none", color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>Cancel</button>
+            <button onClick={save} disabled={saving} style={{ border: "none", background: "none", color: SIGNAL_GREEN, ...TYPE.caption, cursor: "pointer", padding: "10px 0" }}>
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
