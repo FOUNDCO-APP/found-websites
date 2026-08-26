@@ -75,8 +75,8 @@ export async function generateMetadata(
     alternates: { canonical: url },
     icons: {
       icon: [
-        { url: faviconUrl, sizes: "32x32", type: "image/png" },
-        { url: appleIconUrl, sizes: "180x180", type: "image/png" },
+        { url: faviconUrl, sizes: "32x32" },
+        { url: appleIconUrl, sizes: "180x180" },
       ],
       shortcut: faviconUrl,
       apple: appleIconUrl,
