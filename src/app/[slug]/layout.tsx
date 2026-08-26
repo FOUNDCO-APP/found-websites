@@ -45,10 +45,9 @@ export async function generateMetadata(
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const image = config?.site_icon_url || company.logo_url || undefined
   const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const siteIconQuery = config?.updated_at ? `&v=${encodeURIComponent(config.updated_at)}` : ""
-  const faviconUrl = `/site-icon?size=32${siteIconQuery}`
-  const appleIconUrl = `/site-icon?size=180${siteIconQuery}`
-  const manifestUrl = `/site.webmanifest${siteIconVersion}`
+  const faviconUrl = `${url}/favicon.ico${siteIconVersion}`
+  const appleIconUrl = `${url}/apple-touch-icon.png${siteIconVersion}`
+  const manifestUrl = `${url}/site.webmanifest${siteIconVersion}`
 
   return {
     title: {

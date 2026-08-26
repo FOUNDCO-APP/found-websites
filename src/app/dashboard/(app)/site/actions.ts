@@ -16,6 +16,7 @@ import { extractLogoColors } from "@/lib/logoColors"
 import { sendTrackedEmail } from "@/lib/emailLog"
 import { GREEN, BLACK } from "@/lib/dashboard/typography"
 import type { MenuCategory } from "@/types/company"
+import { generateAndUploadSiteIconAssets } from "@/lib/siteIconGeneration"
 
 
 type SiteConfigRecord = Record<string, unknown>
@@ -133,6 +134,24 @@ async function revalidateCustomerSite(ctx: NonNullable<Awaited<ReturnType<typeof
   revalidatePath(`/${ctx.company.slug}/gallery`)
   revalidatePath(`/${ctx.company.slug}/site-icon`)
   revalidatePath("/dashboard/site")
+}
+
+async function readRemoteImage(url: string) {
+  const response = await fetch(url, { cache: "no-store" })
+  if (!response.ok) throw new Error("Could not read the current logo.")
+  return Buffer.from(await response.arrayBuffer())
+}
+
+function siteIconUpdatePayload(assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>) {
+  return {
+    site_icon_url: assets.site_icon_url,
+    favicon_ico_url: assets.favicon_ico_url,
+    favicon_32_url: assets.favicon_32_url,
+    apple_touch_icon_url: assets.apple_touch_icon_url,
+    pwa_icon_192_url: assets.pwa_icon_192_url,
+    pwa_icon_512_url: assets.pwa_icon_512_url,
+    updated_at: new Date().toISOString(),
+  }
 }
 async function getContext() {
   const user = await getAuthUser()
@@ -1097,13 +1116,30 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
   return { url: logoUrl, whiteUrl: darkBackgroundLogoUrl }
 }
 
-export async function useLogoForSiteIcon(): Promise<{ success: boolean } | { error: string }> {
+export async function useLogoForSiteIcon(): Promise<{ url: string } | { error: string }> {
   const ctx = await getContext()
   if (!ctx) return { error: "Not authenticated" }
 
+  const logoUrl = ctx.company.logo_url || ctx.company.logo_white_url
+  if (!logoUrl) return { error: "Upload a logo first." }
+
+  let assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>
+  try {
+    assets = await generateAndUploadSiteIconAssets({
+      admin: ctx.admin,
+      companyId: ctx.company.id,
+      source: await readRemoteImage(logoUrl),
+      sourcePublicUrl: logoUrl,
+      version: `logo-${Date.now()}`,
+    })
+  } catch (error) {
+    Sentry.captureException(error, { tags: { scope: "site-icon-use-logo" }, extra: { companyId: ctx.company.id } })
+    return { error: "Couldn't prepare that logo for browser icons." }
+  }
+
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ site_icon_url: null, updated_at: new Date().toISOString() })
+    .update(siteIconUpdatePayload(assets))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -1113,7 +1149,7 @@ export async function useLogoForSiteIcon(): Promise<{ success: boolean } | { err
     pathname: "/dashboard/site",
     metadata: { source: "logo" },
   })
-  return { success: true }
+  return { url: assets.site_icon_url }
 }
 
 export async function useInitialsForSiteIcon(): Promise<{ url: string } | { error: string }> {
@@ -1130,9 +1166,23 @@ export async function useInitialsForSiteIcon(): Promise<{ url: string } | { erro
   if (uploadError) return { error: uploadError.message }
 
   const url = ctx.admin.storage.from("company-assets").getPublicUrl(path).data.publicUrl
+  let assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>
+  try {
+    assets = await generateAndUploadSiteIconAssets({
+      admin: ctx.admin,
+      companyId: ctx.company.id,
+      source: bytes,
+      sourcePublicUrl: url,
+      version: `initials-${Date.now()}`,
+    })
+  } catch (error) {
+    Sentry.captureException(error, { tags: { scope: "site-icon-use-initials" }, extra: { companyId: ctx.company.id } })
+    return { error: "Couldn't prepare those initials for browser icons." }
+  }
+
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ site_icon_url: url, updated_at: new Date().toISOString() })
+    .update(siteIconUpdatePayload(assets))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -1142,7 +1192,7 @@ export async function useInitialsForSiteIcon(): Promise<{ url: string } | { erro
     pathname: "/dashboard/site",
     metadata: { source: "initials" },
   })
-  return { url }
+  return { url: assets.site_icon_url }
 }
 
 export async function uploadSiteIcon(formData: FormData): Promise<{ url: string } | { error: string }> {
@@ -1166,9 +1216,23 @@ export async function uploadSiteIcon(formData: FormData): Promise<{ url: string 
   if (uploadError) return { error: uploadError.message }
 
   const url = ctx.admin.storage.from("company-assets").getPublicUrl(path).data.publicUrl
+  let assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>
+  try {
+    assets = await generateAndUploadSiteIconAssets({
+      admin: ctx.admin,
+      companyId: ctx.company.id,
+      source: bytes,
+      sourcePublicUrl: url,
+      version: `custom-${Date.now()}`,
+    })
+  } catch (error) {
+    Sentry.captureException(error, { tags: { scope: "site-icon-upload" }, extra: { companyId: ctx.company.id } })
+    return { error: "Couldn't prepare that upload for browser icons." }
+  }
+
   const { error } = await ctx.admin
     .from("website_config")
-    .update({ site_icon_url: url, updated_at: new Date().toISOString() })
+    .update(siteIconUpdatePayload(assets))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -1178,7 +1242,7 @@ export async function uploadSiteIcon(formData: FormData): Promise<{ url: string 
     pathname: "/dashboard/site",
     metadata: { source: "upload" },
   })
-  return { url }
+  return { url: assets.site_icon_url }
 }
 
 export async function updateCompanyLogoWhiteUrl(whiteUrl: string | null): Promise<{ success: boolean } | { error: string }> {

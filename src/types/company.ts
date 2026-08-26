@@ -80,6 +80,11 @@ export type WebsiteConfig = {
   social_links: Record<string, string>
   custom_domain: string | null
   site_icon_url?: string | null
+  favicon_ico_url?: string | null
+  favicon_32_url?: string | null
+  apple_touch_icon_url?: string | null
+  pwa_icon_192_url?: string | null
+  pwa_icon_512_url?: string | null
   published: boolean
   copy_generated: boolean
   faq_items: { q: string; a: string }[] | null

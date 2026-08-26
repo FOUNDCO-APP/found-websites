@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCompanyByDomain, getCompanyBySlug } from "@/lib/company"
+import { contentTypeForSiteIconUrl, pickSiteIconUrl } from "@/lib/siteIconAssets"
 
 function initials(name: string) {
   const words = name
@@ -39,40 +40,26 @@ function iconSize(request: Request) {
   return 180
 }
 
-function transformedSupabaseImageUrl(url: string, size: number) {
-  try {
-    const parsed = new URL(url)
-    const publicPath = "/storage/v1/object/public/"
-    const index = parsed.pathname.indexOf(publicPath)
-    if (index === -1) return null
-
-    parsed.pathname = parsed.pathname.replace(publicPath, "/storage/v1/render/image/public/")
-    parsed.searchParams.set("width", String(size))
-    parsed.searchParams.set("height", String(size))
-    parsed.searchParams.set("resize", "contain")
-    parsed.searchParams.set("quality", "100")
-    return parsed.toString()
-  } catch {
-    return null
-  }
-}
-
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
 
-  const siteIconUrl = company?.website_config?.site_icon_url || company?.logo_url
   const size = iconSize(request)
+  const format = new URL(request.url).searchParams.get("format")
+  const siteIconUrl = pickSiteIconUrl(company?.website_config, size, format)
 
   if (siteIconUrl) {
-    const transformedUrl = transformedSupabaseImageUrl(siteIconUrl, size)
-    return NextResponse.redirect(transformedUrl ?? siteIconUrl, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0",
-      },
-    })
+    const response = await fetch(siteIconUrl, { cache: "no-store" })
+    if (response.ok) {
+      return new Response(response.body, {
+        headers: {
+          "Content-Type": contentTypeForSiteIconUrl(siteIconUrl, format),
+          "Cache-Control": "no-store, max-age=0",
+        },
+      })
+    }
   }
 
   const name = company?.name ?? "Found"

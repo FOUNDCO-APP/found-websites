@@ -266,11 +266,12 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
     const result = await runSiteEditorAction("site_icon_use_logo", useLogoForSiteIcon, () => setSiteIconUrl(previousIcon), "Couldn't update your site icon. Try again.")
     setSavingSiteIcon(false)
     if (!result) return
-    if ("error" in result) {
+    if ("url" in result) {
+      setSiteIconUrl(result.url)
+      flashSaveNotice("Site icon updated.", publicSiteOrigin)
+    } else {
       setSiteIconUrl(previousIcon)
       flashSaveError(result.error || "Couldn't update your site icon. Try again.")
-    } else {
-      flashSaveNotice("Site icon updated.", publicSiteOrigin)
     }
   }
 

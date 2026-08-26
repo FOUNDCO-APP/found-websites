@@ -76,6 +76,7 @@ export async function middleware(req: NextRequest) {
       : pathname.startsWith("/apple-touch-icon") ? "180"
       : "32"
     url.searchParams.set("size", size)
+    if (pathname === "/favicon.ico") url.searchParams.set("format", "ico")
     return NextResponse.rewrite(url)
   }
 
