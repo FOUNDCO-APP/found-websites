@@ -70,6 +70,12 @@ export async function middleware(req: NextRequest) {
       : `__domain__${hostname.replace(/^www\./, "")}`
     const url = req.nextUrl.clone()
     url.pathname = `/${slug}/site-icon`
+    const size =
+      pathname.includes("512") ? "512"
+      : pathname.includes("192") ? "192"
+      : pathname.startsWith("/apple-touch-icon") ? "180"
+      : "32"
+    url.searchParams.set("size", size)
     return NextResponse.rewrite(url)
   }
 

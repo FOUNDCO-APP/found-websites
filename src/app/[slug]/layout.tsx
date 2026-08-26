@@ -45,7 +45,9 @@ export async function generateMetadata(
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const image = config?.site_icon_url || company.logo_url || undefined
   const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const siteIconUrl = `/site-icon${siteIconVersion}`
+  const siteIconQuery = config?.updated_at ? `&v=${encodeURIComponent(config.updated_at)}` : ""
+  const faviconUrl = `/site-icon?size=32${siteIconQuery}`
+  const appleIconUrl = `/site-icon?size=180${siteIconQuery}`
   const manifestUrl = `/site.webmanifest${siteIconVersion}`
 
   return {
@@ -73,11 +75,11 @@ export async function generateMetadata(
     alternates: { canonical: url },
     icons: {
       icon: [
-        { url: siteIconUrl, sizes: "32x32" },
-        { url: siteIconUrl, sizes: "180x180" },
+        { url: faviconUrl, sizes: "32x32", type: "image/png" },
+        { url: appleIconUrl, sizes: "180x180", type: "image/png" },
       ],
-      shortcut: siteIconUrl,
-      apple: siteIconUrl,
+      shortcut: faviconUrl,
+      apple: appleIconUrl,
     },
     // Shawn's own practice/demo companies should never show up in search,
     // even if they got linked to from somewhere and Google finds them

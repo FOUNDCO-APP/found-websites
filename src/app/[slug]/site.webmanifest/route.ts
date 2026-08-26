@@ -14,8 +14,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
 
   const config = company.website_config
   const origin = getPublicSiteOrigin(company.slug, config?.custom_domain)
-  const iconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const iconSrc = `/site-icon${iconVersion}`
+  const iconVersion = config?.updated_at ? `&v=${encodeURIComponent(config.updated_at)}` : ""
+  const icon192 = `/site-icon?size=192${iconVersion}`
+  const icon512 = `/site-icon?size=512${iconVersion}`
 
   return NextResponse.json(
     {
@@ -27,9 +28,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
       background_color: "#080A09",
       theme_color: company.primary_color || "#30D158",
       icons: [
-        { src: iconSrc, sizes: "192x192", purpose: "any" },
-        { src: iconSrc, sizes: "512x512", purpose: "any" },
-        { src: iconSrc, sizes: "512x512", purpose: "maskable" },
+        { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     },
     {

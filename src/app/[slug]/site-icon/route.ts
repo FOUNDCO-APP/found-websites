@@ -30,28 +30,68 @@ function fallbackSvg(name: string, color: string) {
 </svg>`
 }
 
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+function iconSize(request: Request) {
+  const raw = new URL(request.url).searchParams.get("size")
+  if (raw === "32") return 32
+  if (raw === "180") return 180
+  if (raw === "192") return 192
+  if (raw === "512") return 512
+  return 180
+}
+
+async function squarePngFromImageUrl(url: string, size: number) {
+  const sharp = (await import("sharp")).default
+  const response = await fetch(url, { cache: "no-store" })
+  if (!response.ok) throw new Error(`Icon source returned ${response.status}`)
+  const bytes = Buffer.from(await response.arrayBuffer())
+
+  return sharp(bytes, { animated: false })
+    .resize(size, size, {
+      fit: "contain",
+      background: { r: 255, g: 255, b: 255, alpha: 0 },
+      withoutEnlargement: false,
+    })
+    .png()
+    .toBuffer()
+}
+
+async function squarePngFromFallback(name: string, color: string, size: number) {
+  const sharp = (await import("sharp")).default
+  return sharp(Buffer.from(fallbackSvg(name, color), "utf8"))
+    .resize(size, size)
+    .png()
+    .toBuffer()
+}
+
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const company = slug.startsWith("__domain__")
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
 
   const siteIconUrl = company?.website_config?.site_icon_url || company?.logo_url
+  const size = iconSize(request)
 
   if (siteIconUrl) {
-    return NextResponse.redirect(siteIconUrl, {
-      headers: {
-        "Cache-Control": "no-store, max-age=0",
-      },
-    })
+    try {
+      const png = await squarePngFromImageUrl(siteIconUrl, size)
+      return new Response(new Uint8Array(png), {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "no-store, max-age=0",
+        },
+      })
+    } catch (error) {
+      console.error("[site-icon] failed to normalize icon", error)
+    }
   }
 
   const name = company?.name ?? "Found"
-  const svg = fallbackSvg(name, readableAccent(company?.primary_color))
+  const png = await squarePngFromFallback(name, readableAccent(company?.primary_color), size)
 
-  return new Response(svg, {
+  return new Response(new Uint8Array(png), {
     headers: {
-      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Content-Type": "image/png",
       "Cache-Control": "no-store, max-age=0",
     },
   })
