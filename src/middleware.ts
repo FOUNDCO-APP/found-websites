@@ -12,6 +12,19 @@ export async function middleware(req: NextRequest) {
   const ADMIN_DOMAIN = `admin.${ROOT_DOMAIN}`
   const isDashboard = hostname === APP_DOMAIN
   const isAdmin = hostname === ADMIN_DOMAIN
+  const isRootHost =
+    hostname === ROOT_DOMAIN ||
+    hostname === `www.${ROOT_DOMAIN}` ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1"
+  const isFoundOwnedHost = isRootHost || isDashboard || isAdmin
+
+  if (
+    isFoundOwnedHost &&
+    (pathname.startsWith("/icons/") || pathname === "/dashboard-manifest.json")
+  ) {
+    return NextResponse.next()
+  }
 
   if (isAdmin) {
     if (pathname === "/admin" || pathname.startsWith("/admin/")) {
@@ -43,17 +56,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
-  const isRootHost =
-    hostname === ROOT_DOMAIN ||
-    hostname === `www.${ROOT_DOMAIN}` ||
-    hostname === "localhost" ||
-    hostname === "127.0.0.1"
-
   const isSiteIconRequest =
     pathname === "/favicon.ico" ||
     pathname === "/favicon.svg" ||
     pathname === "/apple-touch-icon.png" ||
-    pathname === "/apple-touch-icon-precomposed.png"
+    pathname === "/apple-touch-icon-precomposed.png" ||
+    pathname === "/icon" ||
+    pathname.startsWith("/icons/found-app-icon")
 
   if (!isRootHost && isSiteIconRequest) {
     const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
@@ -61,6 +70,21 @@ export async function middleware(req: NextRequest) {
       : `__domain__${hostname.replace(/^www\./, "")}`
     const url = req.nextUrl.clone()
     url.pathname = `/${slug}/site-icon`
+    return NextResponse.rewrite(url)
+  }
+
+  const isSiteManifestRequest =
+    pathname === "/dashboard-manifest.json" ||
+    pathname === "/manifest.json" ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/site.webmanifest"
+
+  if (!isRootHost && isSiteManifestRequest) {
+    const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
+      ? hostname.slice(0, -(ROOT_DOMAIN.length + 1))
+      : `__domain__${hostname.replace(/^www\./, "")}`
+    const url = req.nextUrl.clone()
+    url.pathname = `/${slug}/site.webmanifest`
     return NextResponse.rewrite(url)
   }
 
@@ -111,5 +135,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|icons|images|dashboard-manifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|images).*)"],
 }
