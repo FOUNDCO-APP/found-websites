@@ -39,28 +39,22 @@ function iconSize(request: Request) {
   return 180
 }
 
-async function squarePngFromImageUrl(url: string, size: number) {
-  const sharp = (await import("sharp")).default
-  const response = await fetch(url, { cache: "no-store" })
-  if (!response.ok) throw new Error(`Icon source returned ${response.status}`)
-  const bytes = Buffer.from(await response.arrayBuffer())
+function transformedSupabaseImageUrl(url: string, size: number) {
+  try {
+    const parsed = new URL(url)
+    const publicPath = "/storage/v1/object/public/"
+    const index = parsed.pathname.indexOf(publicPath)
+    if (index === -1) return null
 
-  return sharp(bytes, { animated: false })
-    .resize(size, size, {
-      fit: "contain",
-      background: { r: 255, g: 255, b: 255, alpha: 0 },
-      withoutEnlargement: false,
-    })
-    .png()
-    .toBuffer()
-}
-
-async function squarePngFromFallback(name: string, color: string, size: number) {
-  const sharp = (await import("sharp")).default
-  return sharp(Buffer.from(fallbackSvg(name, color), "utf8"))
-    .resize(size, size)
-    .png()
-    .toBuffer()
+    parsed.pathname = parsed.pathname.replace(publicPath, "/storage/v1/render/image/public/")
+    parsed.searchParams.set("width", String(size))
+    parsed.searchParams.set("height", String(size))
+    parsed.searchParams.set("resize", "contain")
+    parsed.searchParams.set("quality", "100")
+    return parsed.toString()
+  } catch {
+    return null
+  }
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
@@ -73,25 +67,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const size = iconSize(request)
 
   if (siteIconUrl) {
-    try {
-      const png = await squarePngFromImageUrl(siteIconUrl, size)
-      return new Response(new Uint8Array(png), {
-        headers: {
-          "Content-Type": "image/png",
-          "Cache-Control": "no-store, max-age=0",
-        },
-      })
-    } catch (error) {
-      console.error("[site-icon] failed to normalize icon", error)
-    }
+    const transformedUrl = transformedSupabaseImageUrl(siteIconUrl, size)
+    return NextResponse.redirect(transformedUrl ?? siteIconUrl, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    })
   }
 
   const name = company?.name ?? "Found"
-  const png = await squarePngFromFallback(name, readableAccent(company?.primary_color), size)
+  const svg = fallbackSvg(name, readableAccent(company?.primary_color))
 
-  return new Response(new Uint8Array(png), {
+  return new Response(svg, {
     headers: {
-      "Content-Type": "image/png",
+      "Content-Type": "image/svg+xml; charset=utf-8",
       "Cache-Control": "no-store, max-age=0",
     },
   })
