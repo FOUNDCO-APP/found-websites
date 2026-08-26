@@ -44,6 +44,7 @@ export async function generateMetadata(
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const image = company.logo_url || undefined
+  const siteIconUrl = "/site-icon"
 
   return {
     title: {
@@ -67,6 +68,14 @@ export async function generateMetadata(
     },
     metadataBase: new URL(url),
     alternates: { canonical: url },
+    icons: {
+      icon: [
+        { url: siteIconUrl, sizes: "32x32", type: "image/png" },
+        { url: siteIconUrl, sizes: "180x180", type: "image/png" },
+      ],
+      shortcut: siteIconUrl,
+      apple: siteIconUrl,
+    },
     // Shawn's own practice/demo companies should never show up in search,
     // even if they got linked to from somewhere and Google finds them
     // outside the sitemap. See src/app/sitemap.ts for the matching filter.
