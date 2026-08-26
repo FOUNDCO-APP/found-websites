@@ -49,6 +49,21 @@ export async function middleware(req: NextRequest) {
     hostname === "localhost" ||
     hostname === "127.0.0.1"
 
+  const isSiteIconRequest =
+    pathname === "/favicon.ico" ||
+    pathname === "/favicon.svg" ||
+    pathname === "/apple-touch-icon.png" ||
+    pathname === "/apple-touch-icon-precomposed.png"
+
+  if (!isRootHost && isSiteIconRequest) {
+    const slug = hostname.endsWith(`.${ROOT_DOMAIN}`)
+      ? hostname.slice(0, -(ROOT_DOMAIN.length + 1))
+      : `__domain__${hostname.replace(/^www\./, "")}`
+    const url = req.nextUrl.clone()
+    url.pathname = `/${slug}/site-icon`
+    return NextResponse.rewrite(url)
+  }
+
   // Quote accept/payment APIs are called from customer subdomains, but live under
   // the tenant route so they can resolve the company safely.
   if (
@@ -96,5 +111,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|favicon.svg|icons|images|dashboard-manifest).*)"],
+  matcher: ["/((?!_next/static|_next/image|icons|images|dashboard-manifest).*)"],
 }

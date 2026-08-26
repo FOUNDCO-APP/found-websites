@@ -48,7 +48,7 @@ export async function generateMetadata(
 
   return {
     title: {
-      default: homeTitle,
+      absolute: homeTitle,
       template: `%s - ${company.name}`,
     },
     description,
