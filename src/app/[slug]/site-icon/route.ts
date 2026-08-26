@@ -36,8 +36,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     ? await getCompanyByDomain(slug.replace("__domain__", ""))
     : await getCompanyBySlug(slug)
 
-  if (company?.logo_url) {
-    return NextResponse.redirect(company.logo_url, {
+  const siteIconUrl = company?.website_config?.site_icon_url || company?.logo_url
+
+  if (siteIconUrl) {
+    return NextResponse.redirect(siteIconUrl, {
       headers: {
         "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
       },

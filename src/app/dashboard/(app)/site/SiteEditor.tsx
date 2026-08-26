@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState, useTransition } from "react"
 import { createPortal } from "react-dom"
 import * as Sentry from "@sentry/nextjs"
-import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, removeCompanyLogo, uploadCompanyLogoWhiteFile, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors } from "./actions"
+import { updateSiteField, regenerateSection, assignPhotoToSection, clearHeroPhoto, removeStockImage, updatePrimaryIntent, updateCompanyField, updateCompanyLogo, updateCompanyLogoWhiteUrl, removeCompanyLogo, uploadCompanyLogoWhiteFile, toggleGalleryPhoto, updateAddressVisibility, updatePrimaryActionOverride, updateLayoutOverride, updatePrimaryColor, updateNavbarDark, detectLogoColors, useLogoForSiteIcon, useInitialsForSiteIcon, uploadSiteIcon } from "./actions"
 import { getLayout, type LayoutType } from "@/lib/layout"
 import { palettes } from "@/lib/palettes"
 import { TYPE, TEXT_OPACITY, GREEN, BLACK } from "@/lib/dashboard/typography"
@@ -26,6 +26,18 @@ type Section = "hero" | "about" | "services" | "tagline"
 type PhotoSlot = SitePhotoSlot
 type AnnouncementStyle = "default" | "light" | "dark" | "accent" | "image"
 type View = "hub" | "home" | "about" | "contact" | "catalog" | "services" | "photos" | "businessInfo" | "domain" | "design" | "features"
+
+function siteIconInitials(name: string) {
+  const words = name
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (words.length === 0) return "F"
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return `${words[0][0]}${words[1][0]}`.toUpperCase()
+}
 
 type Props = {
   company: { id: string; name: string; slug: string; contact_name?: string | null; sub_industry?: string | null; phone: string | null; email: string | null; city: string | null; state: string | null; address?: string | null; zip?: string | null; address_visible?: boolean | null; logo_url?: string | null; logo_white_url?: string | null }
@@ -183,8 +195,10 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   const [logoUrl, setLogoUrl] = useState(company.logo_url ?? null)
   const [logoWhiteUrl, setLogoWhiteUrl] = useState(company.logo_white_url ?? null)
+  const [siteIconUrl, setSiteIconUrl] = useState<string | null>((initialConfig?.site_icon_url as string | null | undefined) ?? null)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingWhiteLogo, setUploadingWhiteLogo] = useState(false)
+  const [savingSiteIcon, setSavingSiteIcon] = useState(false)
   const [removingLogo, setRemovingLogo] = useState(false)
   const [logoReview, setLogoReview] = useState<{ url: string; whiteUrl: string | null } | null>(null)
   const [savingLogoChoice, setSavingLogoChoice] = useState(false)
@@ -242,6 +256,54 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
       flashSaveError(result.error || "Couldn't upload that logo. Try again.")
     }
     setUploadingWhiteLogo(false)
+  }
+
+  async function handleUseLogoForSiteIcon() {
+    if (!logoUrl && !logoWhiteUrl) return
+    const previousIcon = siteIconUrl
+    setSavingSiteIcon(true)
+    setSiteIconUrl(null)
+    const result = await runSiteEditorAction("site_icon_use_logo", useLogoForSiteIcon, () => setSiteIconUrl(previousIcon), "Couldn't update your site icon. Try again.")
+    setSavingSiteIcon(false)
+    if (!result) return
+    if ("error" in result) {
+      setSiteIconUrl(previousIcon)
+      flashSaveError(result.error || "Couldn't update your site icon. Try again.")
+    } else {
+      flashSaveNotice("Site icon updated.", publicSiteOrigin)
+    }
+  }
+
+  async function handleUseInitialsForSiteIcon() {
+    const previousIcon = siteIconUrl
+    setSavingSiteIcon(true)
+    const result = await runSiteEditorAction("site_icon_use_initials", useInitialsForSiteIcon, () => setSiteIconUrl(previousIcon), "Couldn't update your site icon. Try again.")
+    setSavingSiteIcon(false)
+    if (!result) return
+    if ("url" in result) {
+      setSiteIconUrl(result.url)
+      flashSaveNotice("Site icon updated.", publicSiteOrigin)
+    } else {
+      setSiteIconUrl(previousIcon)
+      flashSaveError(result.error || "Couldn't update your site icon. Try again.")
+    }
+  }
+
+  async function handleSiteIconUpload(file: File) {
+    const previousIcon = siteIconUrl
+    setSavingSiteIcon(true)
+    const fd = new FormData()
+    fd.append("file", file)
+    const result = await runSiteEditorAction("site_icon_upload", () => uploadSiteIcon(fd), () => setSiteIconUrl(previousIcon), "Couldn't upload that icon. Try again.")
+    setSavingSiteIcon(false)
+    if (!result) return
+    if ("url" in result) {
+      setSiteIconUrl(result.url)
+      flashSaveNotice("Site icon updated.", publicSiteOrigin)
+    } else {
+      setSiteIconUrl(previousIcon)
+      flashSaveError(result.error || "Couldn't upload that icon. Try again.")
+    }
   }
 
   function confirmRemoveLogo() {
@@ -408,6 +470,15 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
   }
   const publicSiteOrigin = getPublicSiteOrigin(company.slug, (config?.custom_domain as string | null | undefined) ?? null)
   const publicSiteHost = publicSiteOrigin.replace(/^https?:\/\//, "")
+  const siteIconChoice = siteIconUrl?.includes("/site-icons/") && siteIconUrl.includes("/initials-")
+    ? "initials"
+    : siteIconUrl
+      ? "upload"
+      : logoUrl || logoWhiteUrl
+        ? "logo"
+        : "initials"
+  const currentSiteIconUrl = siteIconUrl || logoUrl || logoWhiteUrl || null
+  const currentSiteIconInitials = siteIconInitials(businessInfo.name || company.name)
   const effectiveAddons = getEffectiveAddons(plan, activeAddons, includedAddonSlug, disabledAddons)
   // Every add-on the owner actually has, however they got it (bundled free
   // with Business, Pro's one free pick, or a real paid purchase), so the
@@ -1878,6 +1949,53 @@ export default function SiteEditor({ company, config: initialConfig, photos, sto
                 {removingLogo ? <Spinner color="#ff8a80" /> : "x"}
               </button>
             )}
+          </div>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14, padding: "16px", borderRadius: 16, backgroundColor: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 58, height: 58, borderRadius: 14, overflow: "hidden", backgroundColor: "white", border: "1px solid rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {savingSiteIcon ? (
+                  <Spinner color={GREEN} />
+                ) : currentSiteIconUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={currentSiteIconUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "contain", padding: 7 }} />
+                ) : (
+                  <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: activeColor || GREEN, color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: currentSiteIconInitials.length === 1 ? 27 : 21, fontWeight: 900 }}>
+                    {currentSiteIconInitials}
+                  </div>
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...TYPE.subhead, fontWeight: 700, color: "white" }}>Site Icon</div>
+                <p style={{ margin: "3px 0 0", ...TYPE.footnote, fontWeight: 400, color: `rgba(255,255,255,${TEXT_OPACITY.tertiary})`, lineHeight: 1.45 }}>
+                  Used in browser tabs and when customers share your site.
+                </p>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleUseLogoForSiteIcon}
+                disabled={savingSiteIcon || (!logoUrl && !logoWhiteUrl)}
+                style={{ padding: "12px 10px", borderRadius: 12, border: `1px solid ${siteIconChoice === "logo" ? GREEN + "66" : "rgba(255,255,255,0.1)"}`, backgroundColor: siteIconChoice === "logo" ? `${GREEN}18` : "rgba(255,255,255,0.045)", color: siteIconChoice === "logo" ? GREEN : "rgba(255,255,255,0.74)", fontSize: 13, fontWeight: 800, cursor: savingSiteIcon || (!logoUrl && !logoWhiteUrl) ? "default" : "pointer", opacity: !logoUrl && !logoWhiteUrl ? 0.45 : 1 }}
+              >
+                Use logo
+              </button>
+              <button
+                type="button"
+                onClick={handleUseInitialsForSiteIcon}
+                disabled={savingSiteIcon}
+                style={{ padding: "12px 10px", borderRadius: 12, border: `1px solid ${siteIconChoice === "initials" ? GREEN + "66" : "rgba(255,255,255,0.1)"}`, backgroundColor: siteIconChoice === "initials" ? `${GREEN}18` : "rgba(255,255,255,0.045)", color: siteIconChoice === "initials" ? GREEN : "rgba(255,255,255,0.74)", fontSize: 13, fontWeight: 800, cursor: savingSiteIcon ? "default" : "pointer" }}
+              >
+                Use initials
+              </button>
+            </div>
+            <label style={{ display: "block", cursor: savingSiteIcon ? "default" : "pointer" }}>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden disabled={savingSiteIcon}
+                onChange={e => e.target.files?.[0] && handleSiteIconUpload(e.target.files[0])} />
+              <div style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: `1px dashed ${siteIconChoice === "upload" ? GREEN + "66" : "rgba(255,255,255,0.16)"}`, backgroundColor: siteIconChoice === "upload" ? `${GREEN}14` : "rgba(255,255,255,0.025)", color: siteIconChoice === "upload" ? GREEN : "rgba(255,255,255,0.62)", fontSize: 13.5, fontWeight: 800, textAlign: "center" as const }}>
+                {savingSiteIcon ? "Updating..." : siteIconChoice === "upload" ? "Replace icon" : "Upload icon"}
+              </div>
+            </label>
           </div>
           <BizInfoField label="Business name" value={businessInfo.name} placeholder="Your business name" saving={savingBizField === "name"} justSaved={savedBizField === "name"} onSave={v => saveBusinessField("name", v)} />
           <BizInfoField label="Phone" value={businessInfo.phone} placeholder="(520) 555-0100" type="tel" saving={savingBizField === "phone"} justSaved={savedBizField === "phone"} onSave={v => saveBusinessField("phone", v)} />

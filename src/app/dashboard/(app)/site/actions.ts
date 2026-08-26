@@ -96,6 +96,44 @@ function pickUpdates(parsed: Record<string, unknown>) {
   if (typeof parsed.cta_headline === "string") updates.cta_headline = parsed.cta_headline
   return updates
 }
+
+function siteIconInitials(name: string) {
+  const words = name
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (words.length === 0) return "F"
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+  return `${words[0][0]}${words[1][0]}`.toUpperCase()
+}
+
+function siteIconSvg(name: string, color: string | null | undefined) {
+  const mark = siteIconInitials(name)
+  const accent = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : GREEN
+  const fontSize = mark.length === 1 ? 76 : 58
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="34" fill="white"/>
+  <rect x="12" y="12" width="156" height="156" rx="24" fill="${accent}"/>
+  <text x="90" y="112" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="900" fill="white">${mark}</text>
+</svg>`
+}
+
+async function revalidateCustomerSite(ctx: NonNullable<Awaited<ReturnType<typeof getContext>>>) {
+  revalidatePath(`/${ctx.company.slug}`)
+  revalidatePath(`/${ctx.company.slug}/about`)
+  revalidatePath(`/${ctx.company.slug}/contact`)
+  revalidatePath(`/${ctx.company.slug}/services`)
+  revalidatePath(`/${ctx.company.slug}/menu`)
+  revalidatePath(`/${ctx.company.slug}/shop`)
+  revalidatePath(`/${ctx.company.slug}/order`)
+  revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath(`/${ctx.company.slug}/site-icon`)
+  revalidatePath("/dashboard/site")
+}
 async function getContext() {
   const user = await getAuthUser()
   if (!user) return null
@@ -1057,6 +1095,90 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
     pathname: "/dashboard/site",
   })
   return { url: logoUrl, whiteUrl: darkBackgroundLogoUrl }
+}
+
+export async function useLogoForSiteIcon(): Promise<{ success: boolean } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const { error } = await ctx.admin
+    .from("website_config")
+    .update({ site_icon_url: null, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  await revalidateCustomerSite(ctx)
+  await recordCustomerActivity({
+    eventType: "site_icon_updated",
+    pathname: "/dashboard/site",
+    metadata: { source: "logo" },
+  })
+  return { success: true }
+}
+
+export async function useInitialsForSiteIcon(): Promise<{ url: string } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const svg = siteIconSvg(ctx.company.name, ctx.company.primary_color)
+  const bytes = Buffer.from(svg, "utf8")
+  const path = `site-icons/${ctx.company.id}/initials-${Date.now()}.svg`
+
+  const { error: uploadError } = await ctx.admin.storage
+    .from("company-assets")
+    .upload(path, bytes, { contentType: "image/svg+xml", upsert: true })
+  if (uploadError) return { error: uploadError.message }
+
+  const url = ctx.admin.storage.from("company-assets").getPublicUrl(path).data.publicUrl
+  const { error } = await ctx.admin
+    .from("website_config")
+    .update({ site_icon_url: url, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  await revalidateCustomerSite(ctx)
+  await recordCustomerActivity({
+    eventType: "site_icon_updated",
+    pathname: "/dashboard/site",
+    metadata: { source: "initials" },
+  })
+  return { url }
+}
+
+export async function uploadSiteIcon(formData: FormData): Promise<{ url: string } | { error: string }> {
+  const ctx = await getContext()
+  if (!ctx) return { error: "Not authenticated" }
+
+  const file = formData.get("file") as File | null
+  if (!file || !file.size) return { error: "No file selected." }
+
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "png"
+  const allowed = ["png", "jpg", "jpeg", "webp", "svg"]
+  if (!allowed.includes(ext)) return { error: "PNG, JPG, WEBP, or SVG only." }
+  if (file.size > 2 * 1024 * 1024) return { error: "Icon file must be under 2 MB." }
+
+  const bytes = Buffer.from(await file.arrayBuffer())
+  const path = `site-icons/${ctx.company.id}/custom-${Date.now()}.${ext}`
+
+  const { error: uploadError } = await ctx.admin.storage
+    .from("company-assets")
+    .upload(path, bytes, { contentType: file.type || "image/png", upsert: true })
+  if (uploadError) return { error: uploadError.message }
+
+  const url = ctx.admin.storage.from("company-assets").getPublicUrl(path).data.publicUrl
+  const { error } = await ctx.admin
+    .from("website_config")
+    .update({ site_icon_url: url, updated_at: new Date().toISOString() })
+    .eq("company_id", ctx.company.id)
+  if (error) return { error: error.message }
+
+  await revalidateCustomerSite(ctx)
+  await recordCustomerActivity({
+    eventType: "site_icon_updated",
+    pathname: "/dashboard/site",
+    metadata: { source: "upload" },
+  })
+  return { url }
 }
 
 export async function updateCompanyLogoWhiteUrl(whiteUrl: string | null): Promise<{ success: boolean } | { error: string }> {

@@ -78,6 +78,7 @@ export type WebsiteConfig = {
   service_areas: string[]
   social_links: Record<string, string>
   custom_domain: string | null
+  site_icon_url?: string | null
   published: boolean
   copy_generated: boolean
   faq_items: { q: string; a: string }[] | null
