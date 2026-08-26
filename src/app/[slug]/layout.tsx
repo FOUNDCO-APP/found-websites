@@ -43,8 +43,9 @@ export async function generateMetadata(
     : `${company.name} - ${vocab.ctaBodyText}.`
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
-  const image = company.logo_url || undefined
-  const siteIconUrl = "/site-icon"
+  const image = config?.site_icon_url || company.logo_url || undefined
+  const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
+  const siteIconUrl = `/site-icon${siteIconVersion}`
 
   return {
     title: {

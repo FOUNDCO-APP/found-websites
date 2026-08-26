@@ -41,7 +41,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   if (siteIconUrl) {
     return NextResponse.redirect(siteIconUrl, {
       headers: {
-        "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+        "Cache-Control": "no-store, max-age=0",
       },
     })
   }
@@ -52,7 +52,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
+      "Cache-Control": "no-store, max-age=0",
     },
   })
 }

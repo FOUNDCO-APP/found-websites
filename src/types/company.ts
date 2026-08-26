@@ -54,6 +54,7 @@ export type AboutHighlight = {
 
 export type WebsiteConfig = {
   id: string
+  updated_at?: string | null
   hero_title: string | null
   hero_subtitle: string | null
   hero_video_url: string | null
