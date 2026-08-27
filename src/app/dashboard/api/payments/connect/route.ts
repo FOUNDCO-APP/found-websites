@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getStripe } from "@/lib/stripe/connect"
@@ -59,13 +59,13 @@ function paymentSetupErrorResponse(err: unknown) {
 
 export async function POST(req: Request) {
   try {
-    const user = await getAuthUser()
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    const authUser = user
+    const identity = await resolveDashboardIdentity()
+    if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const actorEmail = identity.userEmail || undefined
 
-    const company = await getCompany(authUser.id, authUser.email ?? "")
+    const company = await getCompany(identity.userId, identity.userEmail)
     if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-    if (!(await requireOwnerAccess(authUser.id, authUser.email ?? "", company))) {
+    if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
       return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
     }
     const companyRecord = company
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     async function createConnectedAccount() {
       const account = await stripeClient.accounts.create({
         country: "US",
-        email: companyRecord.email ?? authUser.email ?? undefined,
+        email: companyRecord.email ?? actorEmail,
         business_profile: {
           name: companyRecord.name ?? undefined,
           product_description: "Local business services sold through Found estimates and online ordering.",

@@ -1,4 +1,4 @@
-﻿import { getAuthUser } from "@/lib/auth/getAuthUser"
+﻿import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { mediaKindFromUrl } from "@/lib/mediaKind"
@@ -28,9 +28,9 @@ function photoPayload(photo: Record<string, unknown>, mimeType?: string | null) 
 }
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ photos: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ photos: [] }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ photos: [] })
 
   const admin = createAdminClient()
@@ -46,9 +46,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
 
   const admin = createAdminClient()
@@ -122,11 +122,11 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  const isOwner = await requireOwnerAccess(user.id, user.email ?? "", company)
+  const isOwner = await requireOwnerAccess(identity.userId, identity.userEmail, company)
 
   const { id, for_website, for_social, website_section, album_id, note } = await req.json()
   if (!id) return NextResponse.json({ error: "No id" }, { status: 400 })
@@ -160,11 +160,11 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
   }
 

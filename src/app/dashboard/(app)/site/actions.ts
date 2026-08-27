@@ -3,7 +3,7 @@
 import { resolveTxt } from "node:dns/promises"
 import * as Sentry from "@sentry/nextjs"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, isAdminOverrideActive, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { revalidatePath } from "next/cache"
@@ -163,14 +163,15 @@ function siteIconUpdatePayload(
   }
 }
 async function getContext() {
-  const user = await getAuthUser()
-  if (!user) return null
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return null
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return null
   // Site editing/publishing is owner-only for now - workers get Jobs/photo
-  // capture only. See getCompanyRole() for the enforcement rationale.
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return null
-  return { user, company, admin: createAdminClient() }
+  // capture only. See getCompanyRole() for the enforcement rationale. A
+  // Found-admin "View As" session resolves as owner here.
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return null
+  return { identity, company, admin: createAdminClient() }
 }
 
 export async function getSiteConfig() {

@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -93,11 +93,11 @@ async function draftsForCompany(companyId: string) {
 }
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ drafts: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ drafts: [] }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ drafts: [] })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ drafts: [] })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ drafts: [] })
 
   const result = await draftsForCompany(company.id)
   if (tableMissing(result.error)) return NextResponse.json({ drafts: [], tableReady: false })
@@ -106,11 +106,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => ({}))
   const requestedPhotoIds = Array.isArray(body.photoIds) ? body.photoIds.filter(Boolean) : []
@@ -152,11 +152,11 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { id, caption, status } = await req.json()
   if (!id) return NextResponse.json({ error: "Missing draft id" }, { status: 400 })

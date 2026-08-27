@@ -1,7 +1,7 @@
 "use server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { assignPhotoToSection, toggleGalleryPhoto } from "@/app/dashboard/(app)/site/actions"
 
@@ -16,12 +16,12 @@ export type PhotoDestination = {
 }
 
 async function getContext() {
-  const user = await getAuthUser()
-  if (!user) return null
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return null
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return null
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return null
-  return { user, company, admin: createAdminClient() }
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return null
+  return { identity, company, admin: createAdminClient() }
 }
 
 export async function getPhotoDestinationOptions(): Promise<PhotoDestination[] | { error: string }> {

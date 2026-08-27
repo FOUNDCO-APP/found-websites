@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess, type CompanyRow } from "@/lib/dashboard/getCompany"
 import { hasAddonAccess, getFeatureAccess, type AddonSlug, type Feature } from "@/lib/featureAccess"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -25,15 +25,16 @@ export async function companyHasAddonAccess(company: Pick<CompanyRow, "id" | "pl
 }
 
 export async function requireDashboardAddonAccess(addon: AddonSlug) {
-  const user = await getAuthUser()
-  if (!user) return { ok: false as const, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return { ok: false as const, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
 
-  const company = await getCompany(user.id, user.email ?? "")
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return { ok: false as const, response: NextResponse.json({ error: "No company" }, { status: 404 }) }
 
   // Business tools (estimates, scheduling, ordering, etc.) are owner-only
   // for now - workers get Jobs/photo capture only. See getCompanyRole().
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  // A Found-admin "View As" session resolves as owner here.
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     return { ok: false as const, response: NextResponse.json({ error: "Not available for your account" }, { status: 403 }) }
   }
 
@@ -42,17 +43,17 @@ export async function requireDashboardAddonAccess(addon: AddonSlug) {
     return { ok: false as const, response: NextResponse.json({ error: "Feature not available on this plan" }, { status: 403 }) }
   }
 
-  return { ok: true as const, user, company, activeAddons, admin: createAdminClient() }
+  return { ok: true as const, identity, company, activeAddons, admin: createAdminClient() }
 }
 
 export async function requireDashboardAddonPage(addon: AddonSlug) {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) redirect("/login")
 
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) redirect("/login")
+  const company = await getCompany(identity.userId, identity.userEmail)
+  if (!company) redirect(identity.isAdminView ? "/admin" : "/login")
 
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     redirect("/photos")
   }
 
@@ -61,19 +62,19 @@ export async function requireDashboardAddonPage(addon: AddonSlug) {
     redirect("/billing?addon_unavailable=1")
   }
 
-  return { user, company, activeAddons }
+  return { identity, company, activeAddons }
 }
 
 // Same as requireDashboardAddonPage but for plan-tier features (e.g. contact_database)
 // that aren't tied to a purchasable add-on - anything getFeatureAccess covers.
 export async function requireDashboardFeaturePage(feature: Feature) {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) redirect("/login")
 
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) redirect("/login")
+  const company = await getCompany(identity.userId, identity.userEmail)
+  if (!company) redirect(identity.isAdminView ? "/admin" : "/login")
 
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     redirect("/photos")
   }
 
@@ -82,7 +83,7 @@ export async function requireDashboardFeaturePage(feature: Feature) {
     redirect("/billing?addon_unavailable=1")
   }
 
-  return { user, company, activeAddons }
+  return { identity, company, activeAddons }
 }
 
 export async function companyHasFeatureAccess(company: Pick<CompanyRow, "id" | "plan" | "included_addon_slug" | "disabled_addons">, feature: Feature): Promise<boolean> {

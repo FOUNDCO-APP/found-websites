@@ -1,16 +1,17 @@
 import type { ReactNode } from "react"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { redirect } from "next/navigation"
 
 export default async function LeadsLayout({ children }: { children: ReactNode }) {
-  const user = await getAuthUser()
-  if (!user) redirect("/login")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) redirect("/login")
 
-  const company = await getCompany(user.id, user.email ?? "")
-  if (!company) redirect("/login")
+  const company = await getCompany(identity.userId, identity.userEmail)
+  if (!company) redirect(identity.isAdminView ? "/admin" : "/login")
 
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  // Found-admin "View As" resolves as owner here.
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     redirect("/photos")
   }
 

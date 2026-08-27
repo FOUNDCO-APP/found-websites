@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, getCompanyRole, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
@@ -6,15 +6,15 @@ import { getStripeConnectStatus } from "@/lib/stripe/connect"
 import { hasAddonAccess } from "@/lib/featureAccess"
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ slug: null }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ slug: null }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   // Basic slug/industry/plan info is needed by worker-accessible pages
   // (Photos) too, so this stays readable for anyone with company access -
   // just strip the billing/payments-adjacent fields for non-owners rather
   // than blocking the whole endpoint.
-  const isOwner = company ? await requireOwnerAccess(user.id, user.email ?? "", company) : false
-  const role = company ? await getCompanyRole(user.id, user.email ?? "", company) : null
+  const isOwner = company ? await requireOwnerAccess(identity.userId, identity.userEmail, company) : false
+  const role = company ? await getCompanyRole(identity.userId, identity.userEmail, company) : null
   const plan = company?.plan ?? null
   const status = company?.subscription_status ?? null
   const isPro = (plan === "found_pro" || plan === "found_business") && (status === "active" || status === "trialing")
@@ -34,11 +34,11 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
   const body = await req.json()
   const admin = createAdminClient()
 

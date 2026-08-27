@@ -25,3 +25,20 @@ export async function requireDashboardAccess(): Promise<User | null> {
   if (!(await isAdminOverrideActive())) redirect("/login")
   return null
 }
+
+export type DashboardIdentity = { userId: string; userEmail: string; isAdminView: boolean }
+
+// The identity to feed getCompany()/requireOwnerAccess() from any dashboard
+// server action, layout, or API route. A real Supabase user, OR - for a
+// Found-admin "View As" session with no customer signed in - an empty
+// identity, which the admin-override branches in getCompany() and
+// getCompanyRole() already treat as full owner access. null only when
+// neither a user nor a verified admin session is present. Use this instead
+// of `const user = await getAuthUser(); if (!user) ...` so View As keeps
+// working past the worker-role gates.
+export async function resolveDashboardIdentity(): Promise<DashboardIdentity | null> {
+  const user = await getAuthUser()
+  if (user) return { userId: user.id, userEmail: user.email ?? "", isAdminView: false }
+  if (await isAdminOverrideActive()) return { userId: "", userEmail: "", isAdminView: true }
+  return null
+}

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 
 async function geocodeBias(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
@@ -16,8 +16,8 @@ async function geocodeBias(address: string, apiKey: string): Promise<{ lat: numb
 }
 
 export async function GET(req: NextRequest) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ predictions: [] }, { status: 401 })
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ predictions: [] }, { status: 401 })
 
   const limit = checkPublicRateLimit(req, { key: "places-dashboard", limit: 120, windowMs: 10 * 60 * 1000 })
   if (!limit.allowed) return rateLimitResponse(limit)

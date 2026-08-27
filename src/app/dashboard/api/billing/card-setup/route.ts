@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 
 function getStripe() {
@@ -9,12 +9,12 @@ function getStripe() {
 }
 
 export async function POST() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const company = await getCompany(user.id, user.email ?? "")
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
   }
   if (!company.stripe_customer_id) {
@@ -42,12 +42,12 @@ export async function POST() {
 }
 
 export async function PATCH(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const company = await getCompany(user.id, user.email ?? "")
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
     return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
   }
   if (!company.stripe_customer_id) {

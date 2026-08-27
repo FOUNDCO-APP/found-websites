@@ -1,14 +1,14 @@
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ items: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ items: [] }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ items: [] })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ items: [] })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ items: [] })
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -21,11 +21,11 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "No company" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { items } = await req.json()
   const admin = createAdminClient()

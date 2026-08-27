@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createClient } from "@/lib/supabase/server"
@@ -12,8 +12,8 @@ export async function POST(request: NextRequest) {
     const limit = checkPublicRateLimit(request, { key: "stock-photo", limit: 12, windowMs: 10 * 60 * 1000 })
     if (!limit.allowed) return rateLimitResponse(limit)
 
-    const user = await getAuthUser()
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    const identity = await resolveDashboardIdentity()
+    if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     const { companyId, industryCategory, vibe, city } = await request.json()
 
@@ -21,11 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "companyId and industryCategory required" }, { status: 400 })
     }
 
-    const company = await getCompany(user.id, user.email ?? "")
+    const company = await getCompany(identity.userId, identity.userEmail)
     if (!company || company.id !== companyId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
-    if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) {
+    if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) {
       return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
     }
 

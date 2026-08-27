@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getAuthUser } from "@/lib/auth/getAuthUser"
+import { resolveDashboardIdentity } from "@/lib/auth/getAuthUser"
 import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { recordCustomerActivity } from "@/lib/customerActivity"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -9,11 +9,11 @@ function clean(v: unknown, max = 200): string {
 }
 
 export async function GET() {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ locations: [] }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ locations: [] }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ locations: [] })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ locations: [] })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ locations: [] })
 
   const admin = createAdminClient()
   const { data } = await admin
@@ -26,11 +26,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   if (!body) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
@@ -66,11 +66,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const body = await req.json().catch(() => null)
   if (!body?.id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
@@ -100,11 +100,11 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await getAuthUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  const company = await getCompany(user.id, user.email ?? "")
+  const identity = await resolveDashboardIdentity()
+  if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const company = await getCompany(identity.userId, identity.userEmail)
   if (!company) return NextResponse.json({ error: "Company not found" }, { status: 404 })
-  if (!(await requireOwnerAccess(user.id, user.email ?? "", company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
+  if (!(await requireOwnerAccess(identity.userId, identity.userEmail, company))) return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
 
   const { searchParams } = new URL(req.url)
   const id = searchParams.get("id")
