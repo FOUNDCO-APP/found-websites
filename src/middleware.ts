@@ -56,19 +56,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url)
   }
 
+  // Every browser icon convention a tenant site can be asked for. iOS in
+  // particular requests a range of sized apple-touch-icon variants; any path
+  // we miss here 404s to an HTML error page, which Safari renders as a broken
+  // "9 squares" glyph in the tab.
   const isSiteIconRequest =
     pathname === "/favicon.ico" ||
-    pathname === "/favicon-16x16.png" ||
-    pathname === "/favicon-32x32.png" ||
-    pathname === "/favicon-48x48.png" ||
-    pathname === "/apple-touch-icon.png" ||
-    pathname === "/apple-touch-icon-152x152.png" ||
-    pathname === "/apple-touch-icon-167x167.png" ||
-    pathname === "/apple-touch-icon-180x180.png" ||
-    pathname === "/apple-touch-icon-precomposed.png" ||
-    pathname === "/android-chrome-192x192.png" ||
-    pathname === "/android-chrome-512x512.png" ||
     pathname === "/icon" ||
+    /^\/favicon-\d+x\d+\.png$/.test(pathname) ||
+    /^\/apple-touch-icon(-\d+x\d+)?(-precomposed)?\.png$/.test(pathname) ||
+    /^\/apple-touch-icon-precomposed\.png$/.test(pathname) ||
+    /^\/android-chrome-\d+x\d+\.png$/.test(pathname) ||
+    /^\/mstile-\d+x\d+\.png$/.test(pathname) ||
     pathname.startsWith("/icons/found-app-icon")
 
   if (!isRootHost && isSiteIconRequest) {
@@ -77,15 +76,18 @@ export async function middleware(req: NextRequest) {
       : `__domain__${hostname.replace(/^www\./, "")}`
     const url = req.nextUrl.clone()
     url.pathname = `/${slug}/site-icon`
+
+    const sizeMatch = pathname.match(/(\d+)x\d+/)
     const size =
-      pathname.includes("512") ? "512"
-      : pathname.includes("192") ? "192"
-      : pathname.includes("48x48") ? "48"
-      : pathname.includes("16x16") ? "16"
+      sizeMatch ? sizeMatch[1]
       : pathname.startsWith("/apple-touch-icon") ? "180"
+      : pathname === "/favicon.ico" ? "32"
       : "32"
     url.searchParams.set("size", size)
     if (pathname === "/favicon.ico") url.searchParams.set("format", "ico")
+    // Preserve the ?v= cache-busting version the tenant <head> appends.
+    const version = req.nextUrl.searchParams.get("v")
+    if (version) url.searchParams.set("v", version)
     return NextResponse.rewrite(url)
   }
 

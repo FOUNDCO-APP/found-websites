@@ -21,13 +21,12 @@ function readableAccent(hex: string | null | undefined) {
 
 function fallbackSvg(name: string, color: string) {
   const mark = initials(name)
-  const fontSize = mark.length === 1 ? 76 : 58
+  const fontSize = mark.length === 1 ? 108 : 82
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="180" height="180" rx="34" fill="white"/>
-  <rect x="12" y="12" width="156" height="156" rx="24" fill="${color}"/>
-  <text x="90" y="112" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="900" fill="white">${mark}</text>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="30" fill="${color}"/>
+  <text x="90" y="92" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="900" fill="white">${mark}</text>
 </svg>`
 }
 
@@ -52,13 +51,21 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const format = new URL(request.url).searchParams.get("format")
   const siteIconUrl = pickSiteIconUrl(company?.website_config, size, format)
 
+  // The tenant <head> appends ?v=<generated-at> to every icon URL, so a
+  // resolved asset is safe to cache - a new icon means a new URL. Only the
+  // generated fallback below stays uncached.
+  const hasVersion = new URL(request.url).searchParams.has("v")
+  const cacheControl = hasVersion
+    ? "public, max-age=600, s-maxage=86400, stale-while-revalidate=604800"
+    : "public, max-age=0, s-maxage=300, stale-while-revalidate=3600"
+
   if (siteIconUrl) {
     const response = await fetch(siteIconUrl, { cache: "no-store" })
     if (response.ok) {
       return new Response(response.body, {
         headers: {
           "Content-Type": contentTypeForSiteIconUrl(siteIconUrl, format),
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": cacheControl,
         },
       })
     }

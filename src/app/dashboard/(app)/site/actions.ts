@@ -113,13 +113,14 @@ function siteIconInitials(name: string) {
 function siteIconSvg(name: string, color: string | null | undefined) {
   const mark = siteIconInitials(name)
   const accent = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : GREEN
-  const fontSize = mark.length === 1 ? 76 : 58
+  const fontSize = mark.length === 1 ? 108 : 82
 
+  // No white outer frame - the brand-color tile fills the whole square so the
+  // favicon reads as a solid mark, not a logo trapped in a white box.
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="180" height="180" rx="34" fill="white"/>
-  <rect x="12" y="12" width="156" height="156" rx="24" fill="${accent}"/>
-  <text x="90" y="112" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="900" fill="white">${mark}</text>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <rect width="180" height="180" rx="30" fill="${accent}"/>
+  <text x="90" y="92" text-anchor="middle" dominant-baseline="central" font-family="Arial, Helvetica, sans-serif" font-size="${fontSize}" font-weight="900" fill="white">${mark}</text>
 </svg>`
 }
 

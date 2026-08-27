@@ -43,14 +43,20 @@ export async function generateMetadata(
     : `${company.name} - ${vocab.ctaBodyText}.`
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
-  const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const faviconIcoUrl = config?.favicon_ico_url || `${url}/favicon.ico${siteIconVersion}`
-  const favicon16Url = config?.favicon_16_url || config?.favicon_32_url || `${url}/favicon-16x16.png${siteIconVersion}`
-  const favicon32Url = config?.favicon_32_url || `${url}/favicon-32x32.png${siteIconVersion}`
-  const favicon48Url = config?.favicon_48_url || config?.favicon_32_url || `${url}/favicon-48x48.png${siteIconVersion}`
-  const appleIconUrl = config?.apple_touch_icon_url || `${url}/apple-touch-icon.png${siteIconVersion}`
-  const manifestUrl = `${url}/site.webmanifest${siteIconVersion}`
-  const ogImageUrl = `${url}/site-og${siteIconVersion}`
+  // Serve every icon through the tenant's own domain (resolved by the
+  // /site-icon and /site.webmanifest routes) rather than linking Supabase
+  // Storage directly. That keeps one cache lever we control, and the ?v=
+  // hash - taken from when the icons were last generated - forces browsers
+  // to re-fetch whenever the owner changes their icon.
+  const iconVersion = config?.site_icon_generated_at || config?.updated_at
+  const v = iconVersion ? `?v=${encodeURIComponent(iconVersion)}` : ""
+  const faviconIcoUrl = `${url}/favicon.ico${v}`
+  const favicon16Url = `${url}/favicon-16x16.png${v}`
+  const favicon32Url = `${url}/favicon-32x32.png${v}`
+  const favicon48Url = `${url}/favicon-48x48.png${v}`
+  const appleIconUrl = `${url}/apple-touch-icon.png${v}`
+  const manifestUrl = `${url}/site.webmanifest${v}`
+  const ogImageUrl = `${url}/site-og${v}`
 
   return {
     title: {
@@ -76,11 +82,14 @@ export async function generateMetadata(
     manifest: manifestUrl,
     alternates: { canonical: url },
     icons: {
+      // PNGs only in the modern rel="icon" set, largest first. The .ico is
+      // kept solely as rel="shortcut icon" for legacy clients that request it
+      // - it is deliberately NOT given sizes="any" here, because that makes
+      // iOS Safari prefer the .ico over the PNGs.
       icon: [
-        { url: favicon16Url, sizes: "16x16", type: "image/png" },
         { url: favicon32Url, sizes: "32x32", type: "image/png" },
+        { url: favicon16Url, sizes: "16x16", type: "image/png" },
         { url: favicon48Url, sizes: "48x48", type: "image/png" },
-        { url: faviconIcoUrl, sizes: "any" },
       ],
       shortcut: faviconIcoUrl,
       apple: appleIconUrl,
