@@ -52,12 +52,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ slug
   const siteIconUrl = pickSiteIconUrl(company?.website_config, size, format)
 
   // The tenant <head> appends ?v=<generated-at> to every icon URL, so a
-  // resolved asset is safe to cache - a new icon means a new URL. Only the
-  // generated fallback below stays uncached.
+  // versioned request is a permanent fingerprint - cache it hard and let a
+  // new icon (new ?v=) be a new URL.
+  //
+  // An UNVERSIONED request is the bare well-known path (/favicon.ico,
+  // /apple-touch-icon.png) that iOS Safari hits by convention regardless of
+  // the <head>. Its cache key never changes, so any cached copy - at the
+  // Vercel edge OR in iOS's own favicon store - goes permanently stale on
+  // the next icon change. It must never be cached: no-store, always current.
   const hasVersion = new URL(request.url).searchParams.has("v")
   const cacheControl = hasVersion
-    ? "public, max-age=600, s-maxage=86400, stale-while-revalidate=604800"
-    : "public, max-age=0, s-maxage=300, stale-while-revalidate=3600"
+    ? "public, max-age=31536000, immutable"
+    : "no-store, must-revalidate"
 
   if (siteIconUrl) {
     const response = await fetch(siteIconUrl, { cache: "no-store" })
