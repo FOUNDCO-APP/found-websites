@@ -33,7 +33,9 @@ function fallbackSvg(name: string, color: string) {
 
 function iconSize(request: Request) {
   const raw = new URL(request.url).searchParams.get("size")
+  if (raw === "16") return 16
   if (raw === "32") return 32
+  if (raw === "48") return 48
   if (raw === "180") return 180
   if (raw === "192") return 192
   if (raw === "512") return 512

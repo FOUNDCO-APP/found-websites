@@ -84,7 +84,9 @@ export type WebsiteConfig = {
   site_icon_source_url?: string | null
   site_icon_generated_at?: string | null
   favicon_ico_url?: string | null
+  favicon_16_url?: string | null
   favicon_32_url?: string | null
+  favicon_48_url?: string | null
   apple_touch_icon_url?: string | null
   pwa_icon_192_url?: string | null
   pwa_icon_512_url?: string | null

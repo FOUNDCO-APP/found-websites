@@ -15,8 +15,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   const config = company.website_config
   const origin = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const iconVersion = config?.updated_at ? `&v=${encodeURIComponent(config.updated_at)}` : ""
-  const icon192 = `/site-icon?size=192${iconVersion}`
-  const icon512 = `/site-icon?size=512${iconVersion}`
+  const icon192 = config?.pwa_icon_192_url || `/site-icon?size=192${iconVersion}`
+  const icon512 = config?.pwa_icon_512_url || `/site-icon?size=512${iconVersion}`
 
   return NextResponse.json(
     {

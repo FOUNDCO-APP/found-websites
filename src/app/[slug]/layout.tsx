@@ -44,9 +44,11 @@ export async function generateMetadata(
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
   const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const faviconIcoUrl = `${url}/favicon.ico${siteIconVersion}`
-  const favicon32Url = `${url}/favicon-32x32.png${siteIconVersion}`
-  const appleIconUrl = `${url}/apple-touch-icon.png${siteIconVersion}`
+  const faviconIcoUrl = config?.favicon_ico_url || `${url}/favicon.ico${siteIconVersion}`
+  const favicon16Url = config?.favicon_16_url || config?.favicon_32_url || `${url}/favicon-16x16.png${siteIconVersion}`
+  const favicon32Url = config?.favicon_32_url || `${url}/favicon-32x32.png${siteIconVersion}`
+  const favicon48Url = config?.favicon_48_url || config?.favicon_32_url || `${url}/favicon-48x48.png${siteIconVersion}`
+  const appleIconUrl = config?.apple_touch_icon_url || `${url}/apple-touch-icon.png${siteIconVersion}`
   const manifestUrl = `${url}/site.webmanifest${siteIconVersion}`
   const ogImageUrl = `${url}/site-og${siteIconVersion}`
 
@@ -75,9 +77,10 @@ export async function generateMetadata(
     alternates: { canonical: url },
     icons: {
       icon: [
+        { url: favicon16Url, sizes: "16x16", type: "image/png" },
         { url: favicon32Url, sizes: "32x32", type: "image/png" },
+        { url: favicon48Url, sizes: "48x48", type: "image/png" },
         { url: faviconIcoUrl, sizes: "any" },
-        { url: appleIconUrl, sizes: "180x180", type: "image/png" },
       ],
       shortcut: faviconIcoUrl,
       apple: appleIconUrl,

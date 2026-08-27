@@ -80,6 +80,8 @@ export async function middleware(req: NextRequest) {
     const size =
       pathname.includes("512") ? "512"
       : pathname.includes("192") ? "192"
+      : pathname.includes("48x48") ? "48"
+      : pathname.includes("16x16") ? "16"
       : pathname.startsWith("/apple-touch-icon") ? "180"
       : "32"
     url.searchParams.set("size", size)
