@@ -22,15 +22,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     {
       name: company.name,
       short_name: company.name,
+      id: origin,
       start_url: origin,
       scope: origin,
       display: "standalone",
       background_color: "#080A09",
       theme_color: company.primary_color || "#30D158",
       icons: [
-        { src: icon192, sizes: "192x192", purpose: "any" },
-        { src: icon512, sizes: "512x512", purpose: "any" },
-        { src: icon512, sizes: "512x512", purpose: "maskable" },
+        { src: icon192, sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "maskable" },
       ],
     },
     {

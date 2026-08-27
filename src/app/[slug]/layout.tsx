@@ -43,11 +43,12 @@ export async function generateMetadata(
     : `${company.name} - ${vocab.ctaBodyText}.`
   const description = config?.hero_subtitle || descFallback
   const url = getPublicSiteOrigin(company.slug, config?.custom_domain)
-  const image = config?.site_icon_url || company.logo_url || undefined
   const siteIconVersion = config?.updated_at ? `?v=${encodeURIComponent(config.updated_at)}` : ""
-  const faviconUrl = `${url}/favicon.ico${siteIconVersion}`
+  const faviconIcoUrl = `${url}/favicon.ico${siteIconVersion}`
+  const favicon32Url = `${url}/favicon-32x32.png${siteIconVersion}`
   const appleIconUrl = `${url}/apple-touch-icon.png${siteIconVersion}`
   const manifestUrl = `${url}/site.webmanifest${siteIconVersion}`
+  const ogImageUrl = `${url}/site-og${siteIconVersion}`
 
   return {
     title: {
@@ -61,23 +62,24 @@ export async function generateMetadata(
       siteName: company.name,
       title: homeTitle,
       description,
-      ...(image && { images: [{ url: image, alt: company.name }] }),
+      images: [{ url: ogImageUrl, alt: company.name, width: 1200, height: 630, type: "image/png" }],
     },
     twitter: {
       card: "summary",
       title: homeTitle,
       description,
-      ...(image && { images: [image] }),
+      images: [ogImageUrl],
     },
     metadataBase: new URL(url),
     manifest: manifestUrl,
     alternates: { canonical: url },
     icons: {
       icon: [
-        { url: faviconUrl, sizes: "32x32" },
-        { url: appleIconUrl, sizes: "180x180" },
+        { url: favicon32Url, sizes: "32x32", type: "image/png" },
+        { url: faviconIcoUrl, sizes: "any" },
+        { url: appleIconUrl, sizes: "180x180", type: "image/png" },
       ],
-      shortcut: faviconUrl,
+      shortcut: faviconIcoUrl,
       apple: appleIconUrl,
     },
     // Shawn's own practice/demo companies should never show up in search,

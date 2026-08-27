@@ -58,9 +58,16 @@ export async function middleware(req: NextRequest) {
 
   const isSiteIconRequest =
     pathname === "/favicon.ico" ||
-    pathname === "/favicon.svg" ||
+    pathname === "/favicon-16x16.png" ||
+    pathname === "/favicon-32x32.png" ||
+    pathname === "/favicon-48x48.png" ||
     pathname === "/apple-touch-icon.png" ||
+    pathname === "/apple-touch-icon-152x152.png" ||
+    pathname === "/apple-touch-icon-167x167.png" ||
+    pathname === "/apple-touch-icon-180x180.png" ||
     pathname === "/apple-touch-icon-precomposed.png" ||
+    pathname === "/android-chrome-192x192.png" ||
+    pathname === "/android-chrome-512x512.png" ||
     pathname === "/icon" ||
     pathname.startsWith("/icons/found-app-icon")
 

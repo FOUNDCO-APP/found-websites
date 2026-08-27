@@ -132,7 +132,6 @@ async function revalidateCustomerSite(ctx: NonNullable<Awaited<ReturnType<typeof
   revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
-  revalidatePath(`/${ctx.company.slug}/site-icon`)
   revalidatePath("/dashboard/site")
 }
 
@@ -142,15 +141,22 @@ async function readRemoteImage(url: string) {
   return Buffer.from(await response.arrayBuffer())
 }
 
-function siteIconUpdatePayload(assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>) {
+function siteIconUpdatePayload(
+  assets: Awaited<ReturnType<typeof generateAndUploadSiteIconAssets>>,
+  source: "custom" | "logo" | "initials",
+) {
+  const now = new Date().toISOString()
   return {
     site_icon_url: assets.site_icon_url,
+    site_icon_source: source,
+    site_icon_source_url: assets.site_icon_url,
+    site_icon_generated_at: now,
     favicon_ico_url: assets.favicon_ico_url,
     favicon_32_url: assets.favicon_32_url,
     apple_touch_icon_url: assets.apple_touch_icon_url,
     pwa_icon_192_url: assets.pwa_icon_192_url,
     pwa_icon_512_url: assets.pwa_icon_512_url,
-    updated_at: new Date().toISOString(),
+    updated_at: now,
   }
 }
 async function getContext() {
@@ -464,6 +470,8 @@ export async function clearHeroPhoto() {
   revalidatePath(`/${ctx.company.slug}/shop`)
   revalidatePath(`/${ctx.company.slug}/order`)
   revalidatePath(`/${ctx.company.slug}/gallery`)
+  revalidatePath(`/${ctx.company.slug}/site-icon`)
+  revalidatePath(`/${ctx.company.slug}/site-og`)
   revalidatePath("/dashboard/site")
   revalidatePath("/")
   await recordCustomerActivity({
@@ -1100,6 +1108,33 @@ export async function updateCompanyLogo(formData: FormData): Promise<{ url: stri
     .eq("id", ctx.company.id)
   if (dbError) return { error: dbError.message }
 
+  const { data: iconConfig } = await ctx.admin
+    .from("website_config")
+    .select("site_icon_source")
+    .eq("company_id", ctx.company.id)
+    .single()
+
+  if (iconConfig?.site_icon_source === "logo") {
+    try {
+      const assets = await generateAndUploadSiteIconAssets({
+        admin: ctx.admin,
+        companyId: ctx.company.id,
+        source: await readRemoteImage(logoUrl),
+        sourcePublicUrl: logoUrl,
+        version: `logo-${Date.now()}`,
+      })
+
+      const { error: iconError } = await ctx.admin
+        .from("website_config")
+        .update(siteIconUpdatePayload(assets, "logo"))
+        .eq("company_id", ctx.company.id)
+      if (iconError) return { error: iconError.message }
+    } catch (error) {
+      Sentry.captureException(error, { tags: { scope: "site-icon-regenerate-logo" }, extra: { companyId: ctx.company.id } })
+      return { error: "Logo saved, but the browser icon could not be refreshed." }
+    }
+  }
+
   revalidatePath(`/${ctx.company.slug}`)
   revalidatePath(`/${ctx.company.slug}/about`)
   revalidatePath(`/${ctx.company.slug}/contact`)
@@ -1139,7 +1174,7 @@ export async function useLogoForSiteIcon(): Promise<{ url: string } | { error: s
 
   const { error } = await ctx.admin
     .from("website_config")
-    .update(siteIconUpdatePayload(assets))
+    .update(siteIconUpdatePayload(assets, "logo"))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -1182,7 +1217,7 @@ export async function useInitialsForSiteIcon(): Promise<{ url: string } | { erro
 
   const { error } = await ctx.admin
     .from("website_config")
-    .update(siteIconUpdatePayload(assets))
+    .update(siteIconUpdatePayload(assets, "initials"))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
@@ -1232,7 +1267,7 @@ export async function uploadSiteIcon(formData: FormData): Promise<{ url: string 
 
   const { error } = await ctx.admin
     .from("website_config")
-    .update(siteIconUpdatePayload(assets))
+    .update(siteIconUpdatePayload(assets, "custom"))
     .eq("company_id", ctx.company.id)
   if (error) return { error: error.message }
 
