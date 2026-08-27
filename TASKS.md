@@ -1,4 +1,16 @@
-## 2026-08-26 - CURRENT NOW
+## 2026-08-27 - CURRENT NOW
+
+### Marketing Site Growth — SEO/AEO/GEO + Traffic Report
+
+- [x] Team meeting; Shawn approved: Traffic Report founder-first (tenant-ready), + build cheap SEO wins + write the plan.
+- [x] `FOUND_GROWTH_AUDIT.md` — audit + phased plan.
+- [x] Phase 1 shipped (`597d5bf`): `channel.ts`, `VisitTracker`, `/api/track`, `site_visits` migration, onboarding signup-channel stamping, `/admin/traffic` (signups/visits by channel + trend + landing/top pages + UTM builder), nav under More > Growth.
+- [x] `Product`/`Offer` schema on plan pages (`ae155bb`).
+- [ ] **Apply migration `20260827164500` to Supabase `mmctzloztgkbqvofmkou`** — report is empty until then.
+- [ ] Shawn QA after deploy + migration: visit foundco.app from phone (not in HQ), confirm a row in `/admin/traffic`.
+- [ ] Phase 2: visible FAQ + `FAQPage` schema on `/plans` + home (needs Phil copy review).
+- [ ] Phase 3: comparison pages (GoDaddy / web designer / DIY), fill ~14 missing industry pages.
+- [ ] Phase 4: per-owner Traffic Report in tenant dashboards.
 
 ### Customer Site Favicons on iOS Safari
 

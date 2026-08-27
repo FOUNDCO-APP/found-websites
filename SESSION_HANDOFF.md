@@ -1,5 +1,33 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-27 - Marketing Site Growth: Audit + Found HQ Traffic Report SHIPPED (Phase 1)
+
+### The ask
+Shawn: audit foundco.app for SEO/AEO/GEO, use Blue Luna Events as the reference (its site started producing leads recently), and bring Blue Luna's Traffic Report into Found.
+
+### Team decision (Shawn approved)
+1. Traffic Report → **Found HQ, founder-first**, architected so a per-business-owner version drops in later. Shawn: "sounds amazing" re: the owner version.
+2. Approved building the cheap SEO/AEO wins this session + the written plan.
+
+### Shipped (commits `597d5bf`, `ae155bb`) - deploying
+- **`FOUND_GROWTH_AUDIT.md`** - full SEO/AEO/GEO audit of foundco.app + phased plan. Read this before any more growth work.
+- **Found HQ Traffic Report** at `/admin/traffic` (More > Growth): plain-English summary, **signups by channel** + **visits by channel** with trend vs previous period, where people land, most-viewed pages, and a **tagged-link builder** (copy-paste UTM links for IG/FB/GBP/email/ads).
+- `src/lib/channel.ts` - one shared referrer/UTM → plain-channel bucketer (search / social / answer engines / local / email / paid), used by both visit tracking and signup attribution so the numbers can't drift (Blue Luna's lesson).
+- `VisitTracker` - root marketing site only (same gate as PostHog/Analytics), captures entry referrer + UTMs once per tab session, beacons pageviews to `/api/track`. Admin sessions skipped so Shawn's browsing doesn't skew the mix.
+- Onboarding now stamps the visitor's session id and resolves `signup_channel` from their first tracked visit → the report answers "which channel brings **paying** signups," the ad-spend question.
+- `Product`/`Offer` JSON-LD added to the 3 plan detail pages.
+
+### PENDING
+- **Migration `20260827164500_site_visits_and_lead_attribution.sql` must be applied to Supabase `mmctzloztgkbqvofmkou`** - the Traffic Report shows nothing until then. (`site_visits` table + `leads`/`companies` attribution columns.)
+- After deploy + migration: visit foundco.app from a phone (not logged into HQ), then check `/admin/traffic` - a row should appear within a minute.
+
+### Deferred (in the audit doc)
+- Phase 2: visible FAQ section + `FAQPage` schema on `/plans` and home (needs Phil copy review - schema-only risks a spam flag).
+- Phase 3: comparison pages (vs GoDaddy / web designer / DIY), the ~14 missing industry pages.
+- Phase 4: per-owner Traffic Report in the tenant dashboard.
+
+---
+
 ## 2026-08-27 - Favicons: Servers Are Correct, iOS Cache Is The Enemy + Admin View As Fixed (all SHIPPED)
 
 ### Favicon status after Shawn's Aug 27 morning regen + screenshots
