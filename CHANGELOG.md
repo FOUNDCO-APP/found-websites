@@ -1,3 +1,26 @@
+## Session: August 27, 2026 - Marketing Site Growth Audit + Traffic Report Phase 1
+**AI:** Claude
+
+### Context
+Shawn: audit foundco.app for SEO/AEO/GEO, reference Blue Luna Events (started producing leads recently), bring Blue Luna's Traffic Report into Found. Team meeting held. Decisions: Traffic Report founder-first in Found HQ, architected for a later per-owner version; build the cheap SEO wins + write the plan this session.
+
+### Changed
+- `FOUND_GROWTH_AUDIT.md`: audit of foundco.app (industry pages + how-it-works are solid; gaps are `/plans`/home FAQ+Product schema, comparison depth, missing verticals, no channel attribution, no UTM discipline) + 4-phase plan.
+- `src/lib/channel.ts`: shared referrer/UTM -> plain channel bucketing.
+- `src/components/VisitTracker.tsx` + `/api/track`: root-site-only visit beacon, entry channel captured once per tab session, admin sessions excluded.
+- Migration `20260827164500`: `site_visits` table (nullable `company_id` - null = foundco.app, value = tenant), attribution columns on `leads` and `companies`.
+- `src/app/onboarding/actions.ts` + `OnboardingFlow.tsx`: stamp `signup_session_id` and resolve `signup_channel` from the visitor's first tracked visit.
+- `/admin/traffic` (+ `data.ts`, `UtmLinkBuilder.tsx`): Found HQ Traffic Report - summary, signups/visits by channel with trend, landing/top pages, tagged-link builder. Nav: More > Growth.
+- `src/components/PlanPage.tsx`: `Product`/`Offer` JSON-LD on the 3 plan detail pages.
+
+### Verification
+- `npx tsc --noEmit` + `npm run build` pass; `/admin/traffic` and `/api/track` in the route output.
+
+### Pending
+- Migration `20260827164500` must be applied to Supabase `mmctzloztgkbqvofmkou` - the report is empty until then.
+
+---
+
 ## Session: August 27, 2026 - Favicon Cache + Admin View As Regression
 **AI:** Claude
 
