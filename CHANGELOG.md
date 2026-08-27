@@ -1,3 +1,33 @@
+## Session: August 26, 2026 - Customer Site Favicons Broken on iOS Safari
+**AI:** Claude
+
+### Context
+Desktop browsers showed each tenant's uploaded icon correctly, but iPhone/iPad Safari showed the Found icon or a broken "9 squares" glyph for MBJ Heating and Cooling, Divine Remodel, and RC Bicycles. Shawn asked for a team meeting before any fix.
+
+### Root cause
+- The generated `favicon.ico` packed PNG frames inside the ICO container. Desktop browsers accept PNG-in-ICO; iOS Safari's ICO decoder only reads classic BMP data, so it failed and rendered the broken-image glyph. `sizes="any"` on the `.ico` `<link>` made Safari prefer it over the working PNGs.
+- Secondary: forced white background + literal downscale made small icons illegible; legacy `apple-touch-icon-*` sized paths 404'd to HTML; tenant `<head>` linked Supabase Storage directly with a 1-year cache.
+
+### Changed (commit `2c3e5fe`)
+- `src/lib/siteIconGeneration.ts`: replaced the PNG-in-ICO encoder with a dependency-free 32-bit BGRA BMP ICO encoder (16/32/48). Favicons now render transparent; apple-touch and PWA icons stay opaque.
+- `src/app/[slug]/layout.tsx`: icons + manifest route through the tenant domain with a `?v=<site_icon_generated_at>` hash instead of direct Supabase Storage links. Dropped `sizes="any"` from the `.ico`; PNG `rel="icon"` links lead, `.ico` is `rel="shortcut icon"` only.
+- `src/middleware.ts`: icon path matching is now a size-map regex covering every apple-touch-icon variant iOS requests; preserves the `?v=` param through the rewrite.
+- `src/app/[slug]/site-icon/route.ts`: caches versioned assets (`?v=` present) instead of `no-store`; fallback mark fills the square with the brand color.
+- `src/app/[slug]/site.webmanifest/route.ts`: PWA icons route through the tenant domain with the same version hash.
+- `src/app/dashboard/(app)/site/actions.ts`: initials icon SVG drops the white frame.
+- `scripts/regenerate-site-icons.mjs` (gitignored): rebuilds every tenant's stored icon assets with the new pipeline and stamps a fresh `site_icon_generated_at`.
+
+### Verification
+- `npx tsc --noEmit` passed.
+- `npm run build` passed.
+- Standalone check: generated `.ico` identifies as "MS Windows icon resource ... 32 bits/pixel" with no "PNG image data".
+- Live after deploy: MBJ `<head>` icons are domain-routed with `?v=`; `apple-touch-icon-120x120.png` returns 200 (was 404).
+
+### Pending
+- `node scripts/regenerate-site-icons.mjs` must be run against live by Shawn (writes to Supabase Storage + DB) - stored assets are still the old PNG-in-ICO until then.
+
+---
+
 ## Session: August 25, 2026 - Job Albums Private by Default on Public Gallery
 **AI:** Codex
 

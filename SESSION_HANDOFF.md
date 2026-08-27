@@ -1,5 +1,50 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-08-26 - Customer Site Favicons Broken on iOS Safari - Root-Caused + Fixed (code shipped, data regen PENDING)
+
+### The report
+Shawn: desktop Firefox shows the uploaded icon correctly for MBJ, Divine Remodel, RC Bicycles. On iPhone Safari he sees the Found icon in the tab; after clearing Safari data on iPhone + iPad he then saw a broken "9 squares" glyph on iPhone and stale different-vintage Found icons on iPad. Asked for a team meeting before any fix.
+
+### Root cause (confirmed against live sites + the generated files)
+- **The generated `favicon.ico` packed PNG frames inside the ICO container** (`icoFromPngs`). Desktop browsers accept PNG-in-ICO; **iOS Safari's ICO decoder only reads classic BMP data**, so it fails and paints the broken-image "9 squares" glyph. The `<link rel="icon" sizes="any" href="...favicon.ico">` made Safari *prefer* the unreadable `.ico` over the working PNGs.
+- iPad = the cache clear didn't fully take (unreliable with tabs open); different Found-icon vintages per site = entries cached on different dates. Not a code bug.
+- Secondary: `fit: "contain"` + forced white background + literal downscale of detailed logos = an illegible speck at 16-32px.
+- Secondary: legacy `apple-touch-icon-{120,114,76,...}x` paths 404'd to an HTML page (also a "broken image" trigger on older iOS).
+- Secondary: tenant `<head>` linked Supabase Storage directly (1-year cache) - no cache lever we own.
+
+### Team meeting held (Steve/Chris/Jony/Craig/Priya/Marcus), Shawn approved "follow team direction"
+
+### Shipped - commit `2c3e5fe`, deployed, verified live
+- **Real 32-bit BGRA BMP `favicon.ico`** (dependency-free encoder in `src/lib/siteIconGeneration.ts`) - `file` now reports a classic BMP ICO, no "PNG image data". iOS-decodable.
+- Dropped `sizes="any"` from the `.ico` `<link>`; PNG `rel="icon"` links lead; `.ico` kept only as `rel="shortcut icon"` for legacy clients.
+- Favicons render **transparent** (no white box); apple-touch + PWA icons stay **opaque** (iOS paints black behind transparency).
+- Every icon + the manifest now route through the **tenant's own domain** with `?v=<site_icon_generated_at>` instead of direct Supabase Storage links. `src/app/[slug]/site-icon/route.ts` now caches versioned assets instead of `no-store`.
+- Middleware icon matching is now a size-map regex covering **every** apple-touch-icon variant - `apple-touch-icon-120x120.png` etc. return 200 instead of a 404 HTML page. Preserves the `?v=` param through the rewrite.
+- Initials/fallback marks fill the square with the brand color, no white frame (`siteIconSvg` in actions.ts, `fallbackSvg` in the route).
+- Verified live on MBJ: head tags domain-routed with `?v=`, `apple-touch-icon-120x120.png` -> 200.
+
+### PENDING - Shawn must run this (blocked from auto-execution: writes to live Supabase + DB)
+The stored icon assets are still the old PNG-in-ICO until regenerated with the new pipeline. In the repo root:
+```
+! node scripts/regenerate-site-icons.mjs mbj-heating-and-cooling divine-remodel rc-bicycles
+```
+Then verify (`curl -s https://mbjheatingandcooling.com/favicon.ico | file -` should say "MS Windows icon resource ... 32 bits/pixel" with **no** "PNG image data"). If good, run for every site:
+```
+! node scripts/regenerate-site-icons.mjs
+```
+(`scripts/*` is gitignored - the script stays local, same as every other backfill/migration script.)
+
+### Shawn Test Steps (after the regen runs)
+1. Desktop Firefox/Chrome: reload MBJ / Divine Remodel / RC Bicycles - icon should still be correct (no regression).
+2. iPhone + iPad: **fully close every Safari tab and window first**, then Settings > Safari > Clear History and Website Data, then open each site fresh. The correct uploaded icon should appear in the tab - not a broken glyph, not the Found icon.
+3. If a stale icon still shows on one device: iOS icon cache can lag a day even after a clear. The code + data are correct once step 1 (desktop) confirms; iOS is the only variable left.
+4. Add MBJ to the iPhone home screen and confirm the home-screen icon is MBJ's, not Found's.
+
+### Open / Do Not Lose
+- Existing dirty work remains: `src/lib/dashboard/typography.ts` modified and `.claude/` untracked - not touched, do not stage.
+- Jony flagged for a later ticket: detailed logos (MBJ's sun/snowflake) are still unreadable at 16px - a future pass could render small sizes from a simplified mark. Not this fix.
+- Undocumented Aug 25-26 work (customer favicon feature + worker dashboard mode, commits `15e410d`..`5003fab`) is still not written up in CHANGELOG beyond this entry.
+
 ## 2026-08-25 - Job Albums Private by Default on Public Gallery
 
 ### Progress This Pass

@@ -1,4 +1,16 @@
-## 2026-08-23 - CURRENT NOW
+## 2026-08-26 - CURRENT NOW
+
+### Customer Site Favicons on iOS Safari
+
+- [x] Root-caused: generated `favicon.ico` was PNG-in-ICO, which iOS Safari cannot decode (renders the broken "9 squares" glyph). `sizes="any"` on the `.ico` link made Safari prefer it over working PNGs.
+- [x] Team meeting held; Shawn approved the direction.
+- [x] Real 32-bit BMP `favicon.ico` encoder (dependency-free), transparent favicons, opaque apple-touch/PWA icons.
+- [x] Icons + manifest route through the tenant domain with a `?v=` version hash; dropped direct Supabase Storage links; `.ico` demoted to `shortcut icon` only.
+- [x] Middleware icon matching = size-map regex; legacy `apple-touch-icon-*` variants no longer 404.
+- [x] `npx tsc --noEmit` + `npm run build` pass; deployed (commit `2c3e5fe`); verified live.
+- [ ] **Shawn: run `node scripts/regenerate-site-icons.mjs mbj-heating-and-cooling divine-remodel rc-bicycles`, verify the `.ico` is BMP, then run it with no args for all sites.** (Blocked from auto-execution - writes to live Supabase.)
+- [ ] Shawn QA: clear Safari data on iPhone + iPad (all tabs closed first), reload the 3 sites, confirm the correct icon shows.
+- [ ] Future (Jony): render 16-32px favicons from a simplified mark so detailed logos stay legible.
 
 ### Documentation Save Process
 
