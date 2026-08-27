@@ -107,4 +107,8 @@ From `~/Documents/GitHub/blue-luna-events`:
 
 ## Status log
 
-- 2026-08-27: doc created, team direction captured. Building Phase 1 + Phase 2 schema wins.
+- 2026-08-27: doc created, team direction captured.
+- 2026-08-27: **Phase 1 shipped** (commit `597d5bf`) — `channel.ts`, `VisitTracker` (root site, admin-excluded), `/api/track`, `site_visits` + attribution columns migration, onboarding signup-channel stamping, `/admin/traffic` (summary + signups/visits by channel with trend + landing/top pages + UTM link builder), nav under More > Growth. **Migration `20260827164500` needs applying to Supabase `mmctzloztgkbqvofmkou`.**
+- 2026-08-27: Phase 2 partial (commit pending) — `Product`/`Offer` JSON-LD added to `PlanPage.tsx` (all 3 plan detail pages). Plan detail pages already had `FAQPage` schema; industry pages and `/how-it-works` already solid.
+- **Still open (Phase 2):** visible FAQ section + `FAQPage` schema on `/plans` and the home page — needs a visible FAQ block and Phil copy review (schema-only injection risks a spam flag). Phase 3 (comparison pages: GoDaddy / web designer / DIY; the ~14 missing industry pages) and Phase 4 (per-owner Traffic Report) unstarted.
+- After deploy: confirm `site_visits` rows appear (visit foundco.app from a phone, not logged into HQ), then check `/admin/traffic`.

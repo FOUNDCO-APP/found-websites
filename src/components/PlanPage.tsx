@@ -43,9 +43,34 @@ export default function PlanPage({ plan, name, identity, price, normalPrice, fea
     })),
   }
 
+  // Product/Offer schema so search + answer engines can quote Found's real
+  // pricing for this plan (not just the FAQ text).
+  const currentPrice = isIntroRatePeriod ? price : normalPrice
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${name} — Found`,
+    description,
+    brand: { "@type": "Brand", name: "Found" },
+    offers: {
+      "@type": "Offer",
+      price: currentPrice,
+      priceCurrency: "USD",
+      url: `https://foundco.app/plans/${plan === "found" ? "found" : plan.replace("found_", "found-")}`,
+      availability: "https://schema.org/InStock",
+      priceSpecification: {
+        "@type": "UnitPriceSpecification",
+        price: currentPrice,
+        priceCurrency: "USD",
+        unitText: "MONTH",
+      },
+    },
+  }
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
 
       <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
 
