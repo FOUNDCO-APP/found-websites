@@ -1,3 +1,25 @@
+## Session: August 27, 2026 - Favicon Cache + Admin View As Regression
+**AI:** Claude
+
+### Context
+Shawn regenerated MBJ / Divine Remodel / RC Bicycles icons and reported iOS Safari still showing a chaotic mix of stale icons (different per site, different per device), while Firefox everywhere was correct. Separately, admin "View As" hit "Not authenticated" on icon upload and login redirects on estimates and other gated pages.
+
+### Findings
+- All three sites verified correct server-side: real BMP favicon.ico, right apple-touch-icon (Divine's live custom domain is `divineremodelaz.com`, not `divineremodel.com`). The remaining favicon problem is entirely client-side iOS Safari cache (system-level store, iCloud-synced, lazy refetch over days).
+- One real server contributor: the bare `/favicon.ico` and `/apple-touch-icon.png` paths (which iOS hits by convention, ignoring the `?v=` `<head>` links) were edge-cacheable with `stale-while-revalidate`.
+- Admin "View As" regression: the worker-role lockdown added `if (!user) redirect("/login")` gates to server actions, entitlement helpers, `leads/layout.tsx`, and ~14 dashboard API routes - none honoring the admin-only session that `requireDashboardAccess()` already supports.
+
+### Changed
+- `src/app/[slug]/site-icon/route.ts` (commit `7214112`): unversioned icon requests now `Cache-Control: no-store, must-revalidate`; versioned (`?v=`) requests `max-age=31536000, immutable`.
+- `src/lib/siteIconRegen.ts` + `src/app/api/admin/regenerate-site-icons/route.ts` (commit `7214112`): admin endpoint to rebuild all tenant icons - `POST ?key=ADMIN_KEY` (optional `&slug=`).
+- `src/lib/auth/getAuthUser.ts` + 19 files (commit `bf68ca6`): new `resolveDashboardIdentity()` - real user, or empty identity for a verified admin-only session, or null. Refactored `entitlements.ts`, `site/actions.ts`, `photos/placementActions.ts`, `schedule/actions.ts`, `leads/layout.tsx`, and the dashboard API routes to use it. `guard.user` -> `guard.identity` in entitlement returns (unused).
+
+### Verification
+- `npx tsc --noEmit` + `npm run build` pass.
+- Live: all three sites serve real BMP favicon.ico; RC apple-touch-icon confirmed as the red rhino.
+
+---
+
 ## Session: August 26, 2026 - Customer Site Favicons Broken on iOS Safari
 **AI:** Claude
 
