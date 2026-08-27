@@ -1394,6 +1394,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
           heroImageUrls: answers.heroImageUrls,
           plan: currentPlan,
           compToken: compToken ?? undefined,
+          signupSessionId: (() => { try { return sessionStorage.getItem("found_session_id") ?? undefined } catch { return undefined } })(),
         }),
         uiTimeout,
       ])

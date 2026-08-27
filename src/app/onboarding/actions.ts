@@ -42,6 +42,7 @@ type OnboardingInput = {
   testimonials: string
   plan?: string
   compToken?: string
+  signupSessionId?: string
 }
 
 type OnboardingResult = {
@@ -438,6 +439,34 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   if (companyError) {
     console.error("[onboarding] company insert error:", companyError.message)
     return { success: false, error: "We could not create the company record." }
+  }
+
+  // Signup attribution for the Found HQ Traffic Report: which channel brought
+  // this customer. Resolved from their first tracked visit in this session.
+  // Best-effort - a missing session or no matching visit just leaves it null.
+  if (input.signupSessionId) {
+    try {
+      const { data: firstVisit } = await supabase
+        .from("site_visits")
+        .select("entry_channel, landing_path")
+        .eq("session_id", input.signupSessionId)
+        .is("company_id", null)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      if (firstVisit) {
+        await supabase
+          .from("companies")
+          .update({
+            signup_session_id: input.signupSessionId,
+            signup_channel: firstVisit.entry_channel ?? "Direct",
+            signup_landing_path: firstVisit.landing_path ?? null,
+          })
+          .eq("id", companyId)
+      }
+    } catch (error) {
+      console.error("[onboarding] signup attribution failed:", error)
+    }
   }
 
   // Best-effort, fire-and-forget - never block onboarding on this.

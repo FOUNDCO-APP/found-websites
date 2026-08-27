@@ -75,6 +75,14 @@ export default async function AdminMorePage() {
       />
 
       <MoreSection
+        title="Growth"
+        meta="Where traffic comes from"
+        links={[
+          { href: "/admin/traffic", title: "Traffic Report", meta: "Visitors and paid signups by channel — ranked by what converts. Includes tagged-link builder for your social and ads." },
+        ]}
+      />
+
+      <MoreSection
         title="Client health"
         meta="Keep relationships warm"
         links={[

@@ -13,6 +13,7 @@ import { headers } from "next/headers"
 import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import FoundPostHogProvider from "@/components/FoundPostHogProvider"
+import VisitTracker from "@/components/VisitTracker"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
@@ -116,6 +117,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         )}
         {isRootSite && <Analytics />}
         {isRootSite && <FoundPostHogProvider />}
+        {isRootSite && <VisitTracker />}
         {isRootSite && CLARITY_PROJECT_ID && (
           <Script id="found-clarity" strategy="afterInteractive">
             {`
