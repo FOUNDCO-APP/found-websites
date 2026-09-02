@@ -2,5 +2,5 @@
 // gates founding pricing or renders "expires ___" copy imports this instead
 // of declaring its own date, so moving the cutoff is a one-line change.
 // Interpreted as Arizona midnight (UTC-7, no DST).
-export const INTRO_RATE_CUTOFF = new Date('2026-09-01T07:00:00.000Z')
-export const INTRO_RATE_CUTOFF_LABEL = 'August 31'
+export const INTRO_RATE_CUTOFF = new Date('2026-09-16T07:00:00.000Z')
+export const INTRO_RATE_CUTOFF_LABEL = 'September 15'

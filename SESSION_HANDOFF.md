@@ -1,5 +1,27 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-09-01 - Founding Rate Extended to September 15
+
+### The ask
+Shawn is starting the first real online promotion push and needs the intro/founding rate to continue through September 15, not show expired after August 31.
+
+### Changed
+- `src/lib/introRate.ts`: moved the shared cutoff from August 31 to **September 15, 2026** (`2026-09-16T07:00:00.000Z`, Arizona midnight after Sep 15).
+- Every marketing/page path importing the shared cutoff now renders `September 15` and remains in intro-rate mode: Home, Plans, plan detail pages, Compare metadata, Industry pages, and How It Works.
+- `src/app/activate/activateActions.ts`: activation fallback now uses the same cutoff instead of granting intro pricing to every inactive company forever. Existing founding members still keep the intro price.
+- If someone had a stale regular-price SetupIntent from the brief expired window, reopening activation should create a fresh intent because the `intro_rate` metadata no longer matches.
+
+### Verification
+- `rg` found no remaining `August 31` or old `2026-09-01T07:00:00.000Z` under `src`.
+- `npm run build` passed. Existing Sentry/Edge warning only.
+
+### Test next
+1. Deploy to production.
+2. Open `foundco.app` and `/plans`; confirm the deadline says September 15 and intro prices show.
+3. Start a fresh onboarding/activation path and confirm the activation card shows the intro monthly price, not regular pricing.
+
+---
+
 ## 2026-08-27 - Marketing Site Growth: Audit + Found HQ Traffic Report SHIPPED (Phase 1)
 
 ### The ask

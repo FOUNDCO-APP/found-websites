@@ -1,3 +1,15 @@
+## 2026-09-01 - CURRENT NOW
+
+### Founding Rate Extension
+
+- [x] Extend shared intro-rate cutoff through **September 15, 2026**.
+- [x] Update shared display label from `August 31` to `September 15`.
+- [x] Fix activation fallback so Stripe price selection respects the cutoff instead of granting intro pricing to every inactive company forever.
+- [x] Verify stale deadline copy/timestamp is gone from `src`.
+- [x] `npm run build` passed.
+- [ ] Deploy to production.
+- [ ] Shawn QA: Home/Plans show September 15 and activation uses intro pricing.
+
 ## 2026-08-27 - CURRENT NOW
 
 ### Marketing Site Growth — SEO/AEO/GEO + Traffic Report

@@ -1,3 +1,20 @@
+## Session: September 1, 2026 - Founding Rate Extended to September 15
+**AI:** Codex
+
+### Context
+Shawn is starting the first real online promotion push and asked to extend the current special technically, not just in marketing copy. The old cutoff was August 31 / September 1 Arizona midnight.
+
+### Changed
+- `src/lib/introRate.ts`: shared cutoff moved to `2026-09-16T07:00:00.000Z`; label changed to `September 15`.
+- Marketing surfaces that import `INTRO_RATE_CUTOFF` / `INTRO_RATE_CUTOFF_LABEL` now stay in intro-rate mode and show the September 15 deadline.
+- `src/app/activate/activateActions.ts`: activation fallback now respects the same cutoff (`is_founding_member || new Date() < INTRO_RATE_CUTOFF`) instead of treating every not-yet-active company as intro-eligible forever.
+
+### Verification
+- Searched `src` for stale `August 31` and old cutoff timestamp; none remain.
+- `npm run build` passed with the existing Sentry Edge-runtime warning only.
+
+---
+
 ## Session: August 27, 2026 - Marketing Site Growth Audit + Traffic Report Phase 1
 **AI:** Claude
 

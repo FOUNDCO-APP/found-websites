@@ -4,6 +4,7 @@ import Stripe from "stripe"
 import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { sendSiteLiveEmailOnce } from "@/lib/activationEmails"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
+import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
 
 function getAdminClient() {
   return createAdminClient(
@@ -228,7 +229,8 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
   const deferredUntilLabel = deferredUntilLabelFor((company as Record<string, unknown>).trial_ends_at as string | null | undefined)
 
   const requestedPlan = targetPlan || company.plan || "found"
-  const useIntroPrice = !!company.is_founding_member || (company.subscription_status !== "active" && company.subscription_status !== "trialing")
+  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+  const useIntroPrice = !!company.is_founding_member || isIntroRatePeriod
   const priceId = priceIdForPlan(requestedPlan, useIntroPrice)
   if (!priceId) {
     console.error("[Activate] Missing Stripe price for plan", requestedPlan)
