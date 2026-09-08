@@ -1,5 +1,66 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-09-07 - Social Scheduler Decided (Metricool) + Week 1 Strategy; handoff to Codex for design
+
+### The ask
+Shawn set up Metricool free and connected Facebook + Instagram, then asked which scheduling system to actually use, and then for a full team meeting on the week's content: design, copy, branding, variety, and working the algorithm to drive views and website clicks. Then asked to save everything and switch to Codex to produce the designs.
+
+### Decided
+- **Scheduling tool: Metricool.** Compared against Publer, Buffer, Meta Business Suite on live pricing. Metricool prices per "brand" — one flat ~`$20/month` annual (Starter) covers Facebook, Instagram, TikTok, YouTube, and Google Business Profile together, analytics + CSV bulk upload + recycling included. Publer is per-account and gates analytics/recycling to its ~`$42/month` tier; Buffer is per-channel + Shorts-only YouTube; Meta Business Suite is FB/IG only. On the free plan now (FB + IG connected, FB mirrors IG). Upgrade to Starter annual when the 20-post/month free cap bites (~1 week at 3/day). Full rationale in `DECISIONS.md`.
+- **Growth strategy framework** (team meeting: Steve/Phil/Jony/Angela) approved as the working direction.
+
+### Changed (docs only — no code, no build)
+- `docs/social-post-log.md` — NEW. Do-not-repost record built from the live Instagram grid; Shawn confirmed Facebook matches. ~27 concepts already posted; `Turn interest into action` is the ONLY ready, unposted asset; dead alternates listed. Blank posting-record table to fill going forward.
+- `docs/social-week-01-plan.md` — NEW. 21-post Week 1 slate (3/day, 7 rotating post types), design quick-reference, proposed production workflow, the 5 open decisions, and a static-only fallback if video isn't possible this week.
+- `docs/social-media-content-brief.md` — replaced "Scheduling tools" with the decided Metricool section + a "Growth strategy (team meeting, September 7, 2026)" block (Steve's post filter, Phil's 2026 reach playbook, Jony's 7-container design system, Angela's 60/30/10 ratio, the 7 post types, 24h metrics). Header + "Open concerns" updated.
+- `DECISIONS.md`, `TASKS.md`, `CHANGELOG.md` — updated.
+
+### Open / Do Not Lose
+- **5 tactical decisions Shawn has NOT answered** (asked in the Sep 7 meeting): (1) can he produce simple video this week or does Week 1 go static-heavy; (2) Shawn on camera or text-only; (3) `$5-10/day` paid boost after Week 1 or strictly organic; (4) lock 3/day or push to 5-7; (5) confirm the batch draft -> redline -> schedule production workflow. **Production does not start until these are answered. A timeout is not consent.**
+- Pre-built asset library is spent. The real constraint now is content production velocity, not scheduling.
+- `Turn interest into action` still needs scheduling into Metricool (Week 1 Day 1 midday, per the plan).
+- Existing unrelated dirty work: `src/lib/dashboard/typography.ts` modified, `.claude/` untracked, `social-assets/` untracked. Do not revert or stage unless Shawn asks.
+
+### Shawn Test / Next Step
+1. Answer the 5 open decisions in `docs/social-week-01-plan.md`.
+2. Hand Codex: `BRIEF.md`, `AGENTS.md`, `docs/social-media-content-brief.md`, `docs/social-week-01-plan.md`, `docs/social-post-log.md`. Codex produces Week 1 assets in batches for Shawn to redline, then schedules approved posts into Metricool.
+3. Schedule `Turn interest into action` as the first Metricool post.
+
+---
+
+## 2026-09-06 - Found Social Media System Handoff Added
+
+### The ask
+Shawn asked to save the full social media workstream, decisions, pending items, and operating rules into `BRIEF.md` and docs so Codex, Claude Code, or any other AI can resume without Shawn restating the context.
+
+### Changed
+- Added `docs/social-media-content-brief.md` as the dedicated social media source of truth.
+- Updated `BRIEF.md` so future sessions read the social brief after the core product/design docs.
+- The social brief captures:
+  - Found positioning: not a website builder; business presence/action system from the phone.
+  - Team-led approval rule for social strategy, design, copy, captions, hashtags, and scheduling.
+  - Visual rules for social images, metadata stripping, 1080x1350 feed sizing, and format variety.
+  - Caption voice rules: plain, real, not fluffy or AI-polished.
+  - Hashtag rules: Instagram uses 5 max and rotates by industry/problem; Facebook uses 1-2 max.
+  - Story text rules: personal, casual, not campaign-sounding.
+  - Posting-time guidance and scheduling-tool notes for Meta Business Suite, Metricool, Buffer, Publer, and SocialPilot.
+  - Current social asset inventory and recent post copy/caption handoffs.
+  - Open decisions, including whether to post or schedule the `Turn interest into action` asset and which scheduler to use.
+
+### Open / Do Not Lose
+- Shawn is considering Metricool, Buffer, Meta Business Suite, and lower-cost alternatives; price and limits must be rechecked before purchase.
+- `Turn interest into action` is the latest prepared post. Team previously advised not posting major feed posts late Saturday night unless intentionally testing.
+- Continue using the team from `AGENTS.md` before new social decisions.
+- Existing unrelated dirty work remains: `src/lib/dashboard/typography.ts` modified and `.claude/` untracked. Do not revert or stage unless Shawn asks.
+- `social-assets/` is untracked in git status and contains the created social media assets/scripts outputs.
+
+### Shawn Test / Next Step
+1. Open `docs/social-media-content-brief.md` and confirm it captures the social direction accurately.
+2. Decide whether to post/schedule the `Turn interest into action` post.
+3. Decide whether to use Meta Business Suite, Metricool, Buffer, or another scheduler.
+
+---
+
 ## 2026-09-01 - Founding Rate Extended to September 15
 
 ### The ask

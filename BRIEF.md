@@ -22,6 +22,7 @@ Before you write code, make a product suggestion, or take action, read these fil
 12. `INDUSTRY_WORKFLOW_AUDIT.md` - intake vocabulary vs business tools audit.
 13. `MORE_MANAGE_IA_AUDIT.md` - More / Manage IA decisions.
 14. `WIX_COMPETITOR_REVIEW.md` - Wix review and what Found should/should not borrow.
+15. `docs/social-media-content-brief.md` - Found social media strategy, asset history, captions, hashtag rules, scheduling guidance, and pending decisions.
 
 If a required file is missing, stop and tell Shawn before proceeding.
 
@@ -175,6 +176,7 @@ Answer questions. See your site. Get found.
 | Industry workflow audit | `INDUSTRY_WORKFLOW_AUDIT.md` |
 | More / Manage IA audit | `MORE_MANAGE_IA_AUDIT.md` |
 | Wix competitor review | `WIX_COMPETITOR_REVIEW.md` |
+| Social media content handoff | `docs/social-media-content-brief.md` |
 | Supabase project | `mmctzloztgkbqvofmkou.supabase.co` |
 | Domain | `foundco.app` |
 | Guinea pig site | `barriobuilders.com` |

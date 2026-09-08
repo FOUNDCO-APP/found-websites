@@ -1,3 +1,32 @@
+## 2026-09-07 - CURRENT NOW
+
+### Found Social — Week 1 production (handing to Codex for design)
+
+Docs: `docs/social-media-content-brief.md` (voice/design/growth strategy), `docs/social-week-01-plan.md` (21-post slate), `docs/social-post-log.md` (do-not-repost list).
+
+- [x] Scheduler chosen and set up: **Metricool** free plan, FB + IG connected (FB mirrors IG).
+- [x] Confirmed pre-built library is spent — `docs/social-post-log.md` built from the live IG grid; Shawn confirmed FB matches.
+- [x] Team meeting: growth strategy, 7 design containers, 7 post types, content ratio, 24h metrics — saved to brief + `DECISIONS.md`.
+- [x] Week 1 slate drafted (21 posts, 3/day, `docs/social-week-01-plan.md`).
+- [ ] **Shawn answers the 5 open decisions** (video capability, on-camera, paid boost, volume 3/day vs 5-7, production workflow). Production is blocked until then — a timeout is not a yes.
+- [ ] Codex: produce Week 1 assets in batches — image/video + FB caption + IG caption (5 hashtags) + Story line; save to `social-assets/facebook/` + `social-assets/instagram/`; strip metadata; verify `{}` + size.
+- [ ] Shawn redlines each batch before scheduling.
+- [ ] Schedule approved posts into Metricool at the 3 daily windows; log each in `docs/social-post-log.md` posting record.
+- [ ] Schedule `Turn interest into action` (only ready asset) into Day 1 midday.
+- [ ] Upgrade Metricool to Starter annual when the 20-post/month free cap is hit.
+- [ ] After 7 days: review the 7 metrics per post; decide on `$5-10/day` boost for top 2.
+
+### Found Social Media Launch System (superseded by the block above)
+
+- [x] Add a dedicated social media handoff doc for Found content strategy, asset history, captions, hashtags, story text, and scheduling.
+- [x] Link the social media brief from `BRIEF.md`.
+- [x] Update `SESSION_HANDOFF.md` and `CHANGELOG.md` with the current social media handoff.
+- [x] Shawn review: confirm `docs/social-media-content-brief.md` captures the direction accurately.
+- [x] Decide whether to post or schedule the latest `Turn interest into action` post → scheduled into Week 1 Day 1 midday.
+- [x] Decide scheduling workflow → **Metricool** (see `DECISIONS.md` 2026-09-07).
+- [x] Document the chosen tool, price, channels, posting limits, first-week schedule → in the brief + `docs/social-week-01-plan.md`.
+- [ ] Continue creating social posts through the team-review workflow before final images/captions are produced.
+
 ## 2026-09-01 - CURRENT NOW
 
 ### Founding Rate Extension

@@ -1,3 +1,55 @@
+## Session: September 7, 2026 - Social Scheduler Chosen + Week 1 Strategy
+**AI:** Claude Code
+
+### Context
+Shawn set up Metricool (free) and connected Facebook + Instagram, then asked for a full team meeting on what to post this week — design, copy, branding, variety, and how to work the algorithm to drive views and website clicks. Documentation-only session; Shawn is switching to Codex to produce the designs.
+
+### Decided
+- **Scheduling tool: Metricool.** Compared against Publer, Buffer, Meta Business Suite on live pricing. Metricool prices per "brand," so one ~`$20/month` annual rate covers FB, IG, TikTok, YouTube, and Google Business Profile together with analytics + recycling included. On free plan now; upgrade to Starter annual when the 20-post/month cap bites. Full rationale in `DECISIONS.md`.
+- **Growth strategy framework** (team meeting: Steve, Phil, Jony, Angela) approved as the working direction — see `DECISIONS.md` and the new strategy sections in `social-media-content-brief.md`.
+
+### Changed
+- `docs/social-media-content-brief.md`: replaced the old "Scheduling tools" section with a decided-tool section (Metricool) plus a new "Growth strategy (team meeting, September 7, 2026)" block — Steve's post filter, Phil's 2026 reach playbook (Reels/carousels, hooks, per-platform CTA, Stories, engage-out, consistency, `$5-10/day` boost after 7 days), Jony's 7-container design system, Angela's 60/30/10 content ratio, the 7 post types, and a 24h-metrics rule. Updated the header block and "Open concerns and pending decisions" (5 tactical decisions still open with Shawn).
+- `docs/social-week-01-plan.md`: NEW. 21-post Week 1 slate (3/day, 7 rotating types), design quick-reference, proposed production workflow, the 5 open decisions, and a static-only fallback if Shawn can't produce video this week.
+- `docs/social-post-log.md`: NEW earlier this session, now updated — Shawn confirmed Facebook mirrors Instagram; records ~27 already-posted concepts (do not repost), `Turn interest into action` as the only ready/unposted asset, and dead alternates.
+- `DECISIONS.md`: two entries (Metricool; growth strategy framework).
+- `TASKS.md`: new 2026-09-07 CURRENT NOW block; closed out resolved items from the 09-06 block.
+
+### Open / Do Not Lose
+- **5 tactical decisions unanswered by Shawn** — video capability, Shawn on camera, paid boost, weekly volume, production workflow. Production does not start until answered. A timeout is not consent.
+- Pre-built asset library is spent. Real work now is content production velocity, not scheduling.
+- Existing unrelated dirty work remains: `src/lib/dashboard/typography.ts` modified, `.claude/` untracked, `social-assets/` untracked. Do not revert or stage unless Shawn asks.
+
+### Verification
+- Documentation-only. No build required. `git status` checked; unrelated dirty work untouched.
+
+---
+
+## Session: September 6, 2026 - Social Media Content Handoff
+**AI:** Codex
+
+### Context
+Shawn asked to preserve the full Found social media workstream so Codex, Claude Code, or another AI can pick up without reconstructing the strategy, post history, team decisions, captions, hashtags, scheduling guidance, or pending items from chat memory.
+
+### Changed
+- Added `docs/social-media-content-brief.md` as the dedicated social media source of truth.
+- Updated `BRIEF.md` so future AI sessions read the social brief with the core project docs.
+- Updated `SESSION_HANDOFF.md` with the current social-media handoff, open decisions, and next steps.
+- Captured the working social strategy:
+  - Found is not positioned as a website builder.
+  - Social decisions go through the Found team.
+  - Visuals must rotate format and not all reuse the same dark/green/phone/logo pattern.
+  - Captions should feel real, direct, and non-AI.
+  - Instagram hashtags rotate by post with 5 max; Facebook uses 1-2 max.
+  - Story text should feel personal, not like a campaign headline.
+  - Scheduling should use timing tests and likely Meta Business Suite, Metricool, Buffer, Publer, or SocialPilot before building custom automation.
+
+### Verification
+- Documentation-only change. No build required.
+- `git status` checked before editing; unrelated dirty work left untouched.
+
+---
+
 ## Session: September 1, 2026 - Founding Rate Extended to September 15
 **AI:** Codex
 
