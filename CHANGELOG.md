@@ -1,3 +1,21 @@
+## Session: September 8, 2026 - Social Week 1 Tactical Direction Approved
+**AI:** Codex
+
+### Context
+Shawn answered the open Week 1 social production questions. He can do video with guidance, wants to spend money on ads, is comfortable with 3-7 posts/day, and approved the batch -> redline -> Metricool workflow.
+
+### Changed
+- `docs/social-week-01-plan.md`: no longer blocks production on all five tactical decisions. Marked video, ads, volume, and workflow as approved; kept on-camera as the only open decision.
+- `docs/social-media-content-brief.md`: updated the growth strategy and open concerns to match the September 8 approvals.
+- `TASKS.md`: replaced the five-question blocker with a single on-camera confirmation task.
+- `SESSION_HANDOFF.md`: added the current truth for the next AI/session.
+- `DECISIONS.md`: added the approved social production/ads workflow decision.
+
+### Verification
+- Documentation-only change. No build required.
+
+---
+
 ## Session: September 7, 2026 - Social Scheduler Chosen + Week 1 Strategy
 **AI:** Claude Code
 

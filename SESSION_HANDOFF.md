@@ -1,5 +1,25 @@
 # SESSION_HANDOFF.md - Current Truth
 
+## 2026-09-08 - Social Week 1 Tactical Direction Approved; On-Camera Still Pending
+
+### The ask
+Shawn answered the open Week 1 social questions after reviewing the team plan. He can do video with guidance, wants to spend money on ads, is comfortable with 3-7 posts/day, and approved the workflow.
+
+### Decided
+- **Video is allowed.** Start with simple guided formats: screen recordings of Found, short phone-shot work clips, montages, carousels, and motion graphic founder notes.
+- **Paid ads are allowed.** Team default remains small tests first: after 7 days of real data, boost the best two posts at `$5-10/day` unless Shawn sets another budget.
+- **Volume range approved.** 3 to 7 posts/day is acceptable. Team default: 3 strong feed posts/day as the floor; extra posts should be Stories/Reels or strong timely items, not filler.
+- **Workflow approved.** Codex drafts in batches, Shawn redlines, approved items are scheduled into Metricool and logged.
+
+### Still Open / Do Not Lose
+- **Shawn on camera is not explicitly approved yet.** Do not schedule a talking-head Reel until he says yes. Use screen recordings, montage clips, carousels, and founder-note style motion graphics as the default video path.
+- Existing unrelated dirty work remains: `src/lib/dashboard/typography.ts` modified and `.claude/` untracked. Do not revert or stage unless Shawn asks.
+
+### Changed
+- `docs/social-week-01-plan.md`, `docs/social-media-content-brief.md`, `TASKS.md`, `CHANGELOG.md`, and `DECISIONS.md` updated to reflect the approved tactical direction.
+
+---
+
 ## 2026-09-07 - Social Scheduler Decided (Metricool) + Week 1 Strategy; handoff to Codex for design
 
 ### The ask

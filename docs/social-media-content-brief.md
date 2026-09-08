@@ -225,7 +225,7 @@ After two weeks of consistent posting, let Found's own audience data beat generi
 
 ## Growth strategy (team meeting, September 7, 2026)
 
-Held with Steve (message), Phil (growth), Jony (design), Angela (customer emotion). Shawn endorsed the framework and asked it be saved as the working direction. Five tactical decisions are still open (see "Open concerns and pending decisions").
+Held with Steve (message), Phil (growth), Jony (design), Angela (customer emotion). Shawn endorsed the framework and asked it be saved as the working direction. September 8 update: Shawn approved video with guidance, paid ads, 3-7 posts/day flexibility, and the batch -> redline -> Metricool workflow. Shawn on camera remains the only unanswered tactical decision.
 
 ### The situation
 The account has ~27 posts up and near-zero reach (view counts of 1-7). Not a content-quality problem. Two real problems: the account is cold, and the posts have leaned too abstract ("Your business has a feeling").
@@ -622,12 +622,14 @@ This is where interest turns into a customer.
 - Content tracker: built at `docs/social-post-log.md`.
 - Pre-built asset library is spent - ~27 of ~28 concepts already posted. `Turn interest into action` is the only ready, unposted asset.
 
-### Still open - Shawn must decide before Week 1 production (asked in the Sep 7 meeting, not yet answered)
-1. **Video capability.** Week 1 plan assumes 3 Reels + 3 carousels because static-only will not grow a cold account. Reels need some motion - screen-recording of Found on a phone, a 4-clip montage, or Shawn to camera for 15 seconds. Can Shawn produce simple video this week, or does Week 1 go static-heavy and accept slower reach?
-2. **Shawn on camera.** Two founder notes (text) + one talking-to-camera Reel in the plan. Face on camera, or text-only for now?
-3. **Paid boost.** Open to `$5-10/day` behind the top 2 posts after Week 1, or strictly organic?
-4. **Volume.** Lock 3/day for Week 1, or push some days to 5-7?
-5. **Production model.** Draft all 21 (image concept + FB caption + IG caption + Story line) in batches for Shawn to redline, then schedule approved ones into Metricool. Confirm this workflow.
+### Resolved September 8, 2026
+- Video capability: approved. Shawn can do simple video with guidance.
+- Paid boost: approved. Shawn wants to spend money on ads; start with small tests on winning posts before scaling.
+- Volume: approved range is 3-7 posts/day. Team default is 3 strong feed posts/day, with extra Stories/Reels only when they are worth publishing.
+- Production model: approved. Codex drafts batches, Shawn redlines, approved posts are scheduled in Metricool and logged.
+
+### Still open
+1. **Shawn on camera.** Two founder notes (text) + one talking-to-camera Reel are in the Week 1 plan. Do not schedule a face-to-camera Reel until Shawn explicitly says yes. Default: screen recordings, montage clips, carousels, and founder-note motion graphics.
 
 ### Later
 - Add TikTok + YouTube Shorts after the Facebook/Instagram workflow is stable (no Metricool price change).
@@ -657,4 +659,3 @@ This is where interest turns into a customer.
    - Instagram caption with 5 hashtags max;
    - Story text;
    - whether to post now or schedule.
-

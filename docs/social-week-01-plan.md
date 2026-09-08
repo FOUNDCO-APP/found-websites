@@ -1,7 +1,7 @@
 # Found Co. Social — Week 1 Plan
 
 Created: September 7, 2026 (team meeting: Steve, Phil, Jony, Angela)
-Status: Framework approved by Shawn. **5 tactical decisions still open — see bottom. Do not start production until Shawn answers them.**
+Status: Framework approved by Shawn. September 8 update: Shawn approved video with guidance, paid ads, 3-7 posts/day flexibility, and the batch -> redline -> Metricool workflow. **Only on-camera participation is still pending. Production may start with screen recordings, montages, carousels, and static posts while that remains open.**
 Read first: `docs/social-media-content-brief.md` (voice, hashtags, design system, growth strategy) and `docs/social-post-log.md` (what is already posted — do not repeat).
 
 ---
@@ -52,27 +52,27 @@ Weekly type count: 5 OP · 4 BP · 3 CR · 3 PIC · 3 RL · 2 FN — plus daily 
 
 ---
 
-## Production workflow (proposed — pending Shawn's confirm on #5 below)
+## Production workflow (approved September 8, 2026)
 
-1. Confirm the 5 open decisions with Shawn.
-2. Codex produces in batches (e.g. 6–7 at a time): image/video concept → final asset → FB caption → IG caption (5 hashtags) → Story line.
+1. Codex produces in batches (e.g. 6-7 at a time): image/video concept -> final asset -> FB caption -> IG caption (5 hashtags) -> Story line.
 3. Save FB + IG versions in `social-assets/facebook/` and `social-assets/instagram/` with a clear slug (`found-<platform>-week01-day1-am-<slug>-1080x1350.png`).
 4. Strip metadata, verify size and `{}`.
 5. Shawn redlines the batch.
 6. Approved posts go into Metricool at the correct day/time.
 7. Log each one in `docs/social-post-log.md` (posting record table).
+8. Paid ads are allowed. Team default: after 7 days of data, boost the best two posts at a small test budget before scaling.
 
 ---
 
-## OPEN DECISIONS — Shawn must answer before production
+## Tactical decisions
 
-A timeout is not a yes. These were asked in the Sept 7 team meeting and are not yet answered.
+September 8 update from Shawn: "I can do video with your guidance. And I want to spend money on ads. 3 to 7 posts is fine. And yes to the work flow."
 
-1. **Video capability.** Plan assumes 3 Reels + 3 carousels because static-only won't grow a cold account. Reels need some motion (screen-recording of Found, a 4-clip montage, or Shawn to camera 15s). Can Shawn produce simple video this week, or does Week 1 go static-heavy and accept slower reach?
-2. **Shawn on camera.** 2 founder notes (text) + 1 talking-to-camera Reel. Face on camera, or text-only for now?
-3. **Paid boost.** `$5–10/day` behind the top 2 posts after Week 1, or strictly organic?
-4. **Volume.** Lock 3/day this week, or push some days to 5–7?
-5. **Production model.** Codex drafts all 21 (concept + FB caption + IG caption + Story line) in batches, Shawn redlines, approved ones scheduled into Metricool. Confirm.
+1. **Video capability — approved.** Shawn can do video with guidance. Use simple phone-native formats first: screen recordings, quick work clips, montage, and light text overlays.
+2. **Shawn on camera — still pending.** Do not schedule a talking-head Reel until Shawn explicitly approves being on camera. Default replacement: screen recording or founder-note style motion graphic.
+3. **Paid boost — approved.** Shawn wants to spend money on ads. Team default: after 7 days of real data, boost top 2 posts at `$5-10/day` as a test.
+4. **Volume — approved with range.** 3 to 7 posts/day is acceptable. Team default: 3 strong feed posts/day as the floor; add extra Stories/Reels only when quality is ready.
+5. **Production model — approved.** Codex drafts batches, Shawn redlines, approved posts are scheduled into Metricool and logged.
 
 ### Fallback if Shawn can't do video this week
 Swap the 3 Reels and keep the 3 carousels (carousels still beat single images for reach). Replacements: Day 2 PM → **PIC** static (phone showing an updated business page); Day 5 midday → **CR** "4 industries, one problem: customers can't tell if you're the right call"; Day 7 midday → **FN** "A note from the founder" paper card. Accept that reach will build slower and revisit video for Week 2.

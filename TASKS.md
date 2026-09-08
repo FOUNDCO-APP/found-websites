@@ -8,13 +8,14 @@ Docs: `docs/social-media-content-brief.md` (voice/design/growth strategy), `docs
 - [x] Confirmed pre-built library is spent — `docs/social-post-log.md` built from the live IG grid; Shawn confirmed FB matches.
 - [x] Team meeting: growth strategy, 7 design containers, 7 post types, content ratio, 24h metrics — saved to brief + `DECISIONS.md`.
 - [x] Week 1 slate drafted (21 posts, 3/day, `docs/social-week-01-plan.md`).
-- [ ] **Shawn answers the 5 open decisions** (video capability, on-camera, paid boost, volume 3/day vs 5-7, production workflow). Production is blocked until then — a timeout is not a yes.
+- [x] Shawn answered 4 of 5 Week 1 tactical decisions: video with guidance, paid ads, 3-7 posts/day flexibility, and batch -> redline -> Metricool workflow.
+- [ ] Confirm the final open Week 1 decision: Shawn on camera for short 10-15 second clips, or text/screen-recording/montage only for now.
 - [ ] Codex: produce Week 1 assets in batches — image/video + FB caption + IG caption (5 hashtags) + Story line; save to `social-assets/facebook/` + `social-assets/instagram/`; strip metadata; verify `{}` + size.
 - [ ] Shawn redlines each batch before scheduling.
 - [ ] Schedule approved posts into Metricool at the 3 daily windows; log each in `docs/social-post-log.md` posting record.
 - [ ] Schedule `Turn interest into action` (only ready asset) into Day 1 midday.
 - [ ] Upgrade Metricool to Starter annual when the 20-post/month free cap is hit.
-- [ ] After 7 days: review the 7 metrics per post; decide on `$5-10/day` boost for top 2.
+- [ ] After 7 days: review the 7 metrics per post; test `$5-10/day` boosts for the top 2 unless Shawn sets a different ad budget.
 
 ### Found Social Media Launch System (superseded by the block above)
 
