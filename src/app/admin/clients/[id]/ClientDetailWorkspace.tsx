@@ -241,8 +241,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           : activitySignal.reachOutReason
   const accountStatusLabel = isTestIdentity ? "Test account" : client.client_state.replace("_", " ")
   const paymentStatusLabel = isActiveSubscription
-    ? client.subscription_status === "trialing" ? "Trialing" : "Paying"
-    : client.is_comp ? "Comp" : "Not paying"
+    ? client.subscription_status === "trialing" ? "Trialing (stored)" : "Active (stored)"
+    : client.is_comp ? "Comp" : "Payment not verified"
   const usageStatusLabel = client.customer_activity_ready ? activitySignal.label : "Waiting on table"
   const outreachStatusLabel = lastOutreachActivity
     ? `${outreachMethodLabel(lastOutreachActivity.activity_type)} ${formatDaysAgo(lastOutreachActivity.created_at).replace("Used", "").trim().toLowerCase()}`

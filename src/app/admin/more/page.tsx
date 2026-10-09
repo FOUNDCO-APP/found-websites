@@ -86,6 +86,7 @@ export default async function AdminMorePage() {
         title="Client health"
         meta="Keep relationships warm"
         links={[
+          { href: "/admin/payments", title: "Payments", meta: "Live invoices, payment attempts, credits, refunds, and subscriptions." },
           { href: "/admin/activity", title: "Usage and outreach", meta: "See who is using Found, who went quiet, and who needs a follow-up." },
           { href: "/admin/test-center", title: "Test center", meta: "Check safe test accounts and QA flows before real traffic goes live.", badge: { label: "Sandbox", tone: "info" } },
         ]}

@@ -29,7 +29,7 @@ function cleanStatus(status: string | null | undefined) {
   if (status === "void") return "Void"
   if (status === "draft") return "Draft"
   if (status === "uncollectible") return "Uncollectible"
-  return "Receipt"
+  return "Status unknown"
 }
 
 export default async function FoundReceiptPage({ params }: { params: Promise<{ invoiceId: string }> }) {
@@ -52,9 +52,9 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
   const invoiceCustomer = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id
   if (invoiceCustomer !== company.stripe_customer_id) notFound()
 
-  const amount = invoice.amount_paid || invoice.amount_due || invoice.total || 0
-  const subtotal = invoice.subtotal ?? amount
-  const tax = Math.max(0, (invoice.total ?? amount) - subtotal)
+  const amount = invoice.amount_paid
+  const subtotal = invoice.subtotal
+  const tax = Math.max(0, invoice.total - subtotal)
   const currency = invoice.currency || "usd"
   const receiptNumber = invoice.number || invoice.id
   const rows = invoice.lines.data.length > 0 ? invoice.lines.data : []
@@ -91,8 +91,12 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
               <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{receiptNumber}</p>
             </div>
             <div>
-              <p style={{ margin: "0 0 3px", ...TYPE.caption, color: "rgba(8,10,9,0.45)" }}>Date</p>
+              <p style={{ margin: "0 0 3px", ...TYPE.caption, color: "rgba(8,10,9,0.45)" }}>Invoice created</p>
               <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{formatDate(invoice.created)}</p>
+            </div>
+            <div>
+              <p style={{ margin: "0 0 3px", ...TYPE.caption, color: "rgba(8,10,9,0.45)" }}>Paid on</p>
+              <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{invoice.status_transitions.paid_at ? formatDate(invoice.status_transitions.paid_at) : "Not recorded"}</p>
             </div>
           </div>
         </div>
@@ -123,6 +127,10 @@ export default async function FoundReceiptPage({ params }: { params: Promise<{ i
           <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "baseline", paddingTop: 10, borderTop: "1px solid rgba(8,10,9,0.12)" }}>
             <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 850, color: BLACK }}>Total paid</p>
             <p style={{ margin: 0, ...TYPE.title, color: BLACK }}>{formatMoney(amount, currency)}</p>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
+            <p style={{ margin: 0, ...TYPE.footnote, color: "rgba(8,10,9,0.58)" }}>Amount remaining</p>
+            <p style={{ margin: 0, ...TYPE.footnote, fontWeight: 800, color: BLACK }}>{formatMoney(invoice.amount_remaining, currency)}</p>
           </div>
         </div>
 

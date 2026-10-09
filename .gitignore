@@ -46,6 +46,9 @@ scripts/*
 !scripts/check-copy-quality-fixtures.mjs
 !scripts/check-public-hero-typography.mjs
 !scripts/check-public-site-schema.mjs
+!scripts/audit-client-subscriptions.mjs
+!scripts/check-billing-reliability.mjs
+!scripts/check-billing-ledger.mjs
 !scripts/audit-copy-quality.mjs
 !scripts/repair-copy-quality.mjs
 !scripts/migration-045-about-content-model.sql

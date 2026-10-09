@@ -46,6 +46,7 @@ export async function sendTrackedEmail({
   source,
   emailScope = "client",
   admin,
+  idempotencyKey,
 }: {
   to: string
   bcc?: string | string[]
@@ -60,12 +61,19 @@ export async function sendTrackedEmail({
   source: string
   emailScope?: EmailScope
   admin?: SupabaseClient
+  idempotencyKey?: string
 }): Promise<boolean> {
   const client = admin ?? getAdminClient()
 
   try {
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { data } = await resend.emails.send({ from, to, bcc, subject, html, text })
+    const { data, error } = await resend.emails.send(
+      { from, to, bcc, subject, html, text },
+      idempotencyKey ? { idempotencyKey } : undefined,
+    )
+    if (error || !data?.id) {
+      throw new Error(error?.message || "Email provider did not accept the message")
+    }
     await client.from("email_log").insert({
       company_id: companyId,
       lead_id: leadId,

@@ -52,7 +52,10 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   }
   const rows: ClientRow[] = (companies ?? []).map((company) => {
     const issues: string[] = []
-    if (company.client_state === "past_due") issues.push("Payment")
+    if (company.client_state === "past_due" || ["past_due", "unpaid", "incomplete"].includes(company.subscription_status ?? "")) issues.push("Payment")
+    if (company.subscription_status === "trialing" && company.trial_ends_at && new Date(company.trial_ends_at) < new Date()) {
+      issues.push("Billing needs verification")
+    }
     if (company.client_state === "onboarding" && !company.logo_url && !company.logo_white_url) issues.push("No logo")
     if (company.client_state === "onboarding" && copyByCompany.get(company.id) !== true) issues.push("Fallback copy")
     if (PAYMENT_RELEVANT_INTENTS.has(company.primary_intent ?? "") && !company.stripe_connect_account_id) issues.push("No payment setup")

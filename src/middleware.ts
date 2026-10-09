@@ -27,6 +27,8 @@ export async function middleware(req: NextRequest) {
   }
 
   if (isAdmin) {
+    // Admin exports are API routes, not pages beneath /admin.
+    if (pathname === "/api/admin/billing-audit") return NextResponse.next()
     if (pathname === "/admin" || pathname.startsWith("/admin/")) {
       const canonicalUrl = req.nextUrl.clone()
       canonicalUrl.pathname = pathname === "/admin" ? "/" : pathname.slice("/admin".length)

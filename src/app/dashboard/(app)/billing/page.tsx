@@ -157,15 +157,33 @@ function subscriptionStatusLabel(status: string | null | undefined, isComp: bool
   if (status === "active") return "Active"
   if (status === "past_due") return "Past due"
   if (status === "canceled" || status === "cancelled") return "Canceled"
-  return "Not active yet"
+  if (status === "unpaid") return "Unpaid"
+  if (status === "paused") return "Paused"
+  if (status === "incomplete") return "Payment action needed"
+  if (status === "incomplete_expired") return "Activation expired"
+  if (status === "unavailable") return "Status unavailable"
+  return "Status unknown"
 }
 
 function subscriptionStatusDetail(status: string | null | undefined, nextBillingDate: string | null | undefined) {
-  if (status === "trialing") return "No charge today"
-  if (status === "active") return nextBillingDate ? `Renews ${nextBillingDate}` : "Renews monthly"
+  if (status === "trialing") return nextBillingDate ? `Trial ends ${nextBillingDate}` : "Trial end date unknown"
+  if (status === "active") return nextBillingDate ? `Renews ${nextBillingDate}` : "Renewal date not confirmed"
   if (status === "past_due") return "Payment needs attention"
   if (status === "canceled" || status === "cancelled") return "Plan has ended"
-  return "Found account"
+  if (status === "unpaid" || status === "incomplete") return "Payment needs attention"
+  if (status === "paused") return "Subscription paused"
+  if (status === "incomplete_expired") return "Activation has expired"
+  if (status === "unavailable") return "Could not verify current billing"
+  return "Current subscription not confirmed"
+}
+
+function invoiceStatusLabel(status: string | null | undefined) {
+  if (status === "paid") return "Paid"
+  if (status === "open") return "Open"
+  if (status === "void") return "Void"
+  if (status === "draft") return "Draft"
+  if (status === "uncollectible") return "Uncollectible"
+  return "Status unknown"
 }
 
 function cardLabel(paymentMethod: Stripe.PaymentMethod | null | undefined) {
@@ -194,6 +212,12 @@ async function getFoundBillingSummary(customerId: string | null | undefined) {
     const subscription = subscriptions.data.find((sub) => sub.status === "active" || sub.status === "trialing") ?? subscriptions.data[0] ?? null
     const subscriptionAny = subscription as (Stripe.Subscription & { current_period_end?: number }) | null
     const primaryItem = subscription?.items.data[0] as (Stripe.SubscriptionItem & { current_period_end?: number }) | undefined
+    const nextBillingTimestamp = subscription?.status === "trialing"
+      ? subscription.trial_end
+      : subscription?.status === "active"
+        ? subscriptionAny?.current_period_end ?? primaryItem?.current_period_end
+        : null
+    const hasScheduledRenewal = !!subscription && !subscription.cancel_at_period_end && !subscription.pause_collection
     const subPaymentMethod = subscription?.default_payment_method
     const customerPaymentMethod = !customer.deleted ? customer.invoice_settings.default_payment_method : null
     let paymentMethod = typeof subPaymentMethod === "string" ? null : subPaymentMethod as Stripe.PaymentMethod | null
@@ -206,13 +230,14 @@ async function getFoundBillingSummary(customerId: string | null | undefined) {
 
     return {
       card: cardLabel(paymentMethod),
-      nextBillingDate: formatBillingDate(subscriptionAny?.current_period_end ?? primaryItem?.current_period_end),
+      nextBillingDate: hasScheduledRenewal && nextBillingTimestamp ? formatBillingDate(nextBillingTimestamp) : null,
+      trialEndDate: subscription?.trial_end ? formatBillingDate(subscription.trial_end) : null,
       stripeStatus: subscription?.status ?? null,
       invoices: invoices.data.slice(0, 3).map((invoice) => ({
         id: invoice.id,
         label: formatBillingDate(invoice.created),
-        amount: formatInvoiceAmount(invoice.amount_paid || invoice.amount_due || invoice.total || 0, invoice.currency || "usd"),
-        status: invoice.status ?? "invoice",
+        amount: formatInvoiceAmount(invoice.total, invoice.currency || "usd"),
+        status: invoiceStatusLabel(invoice.status),
         description: invoice.lines.data[0]?.description ?? "Found plan",
       })),
     }
@@ -237,7 +262,6 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const billingTask = sp.billing_task ?? null
 
   const isActive = company.subscription_status === "active" || company.subscription_status === "trialing"
-  const isTrialing = company.subscription_status === "trialing"
   const plan = company.plan ?? "found"
   const meta = PLAN_META[plan] ?? PLAN_META.found
   const upgrade = UPGRADE_TO[plan]
@@ -261,6 +285,13 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
   const activeAddonSlugs = (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug)
 
   const billingSummary = await getFoundBillingSummary(company.stripe_customer_id)
+  const displayedStatus = billingSummary ? billingSummary.stripeStatus : hasStripe ? "unavailable" : null
+  const isTrialing = displayedStatus === "trialing"
+  const displayedActive = displayedStatus === "active" || isTrialing
+  const nextBill = company.is_comp ? "Comped by Found"
+    : !billingSummary ? hasStripe ? "Unavailable" : "Unknown"
+    : !billingSummary.stripeStatus ? "Unknown"
+    : billingSummary.nextBillingDate ?? (displayedStatus === "canceled" || displayedStatus === "incomplete_expired" ? "Not scheduled" : "Not confirmed")
   const activeAddonSum = activeAddonSlugs.reduce((sum, slug) => {
     const def = ALL_ADDONS.find(a => a.slug === slug)
     return sum + (def?.price ?? 0)
@@ -334,8 +365,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             </div>
             <div>
               <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Status</p>
-              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: isActive ? GREEN : "white" }}>{subscriptionStatusLabel(company.subscription_status, company.is_comp)}</p>
-              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{subscriptionStatusDetail(company.subscription_status, billingSummary?.nextBillingDate)}</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: displayedActive ? GREEN : "white" }}>{subscriptionStatusLabel(displayedStatus, company.is_comp)}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{company.is_comp ? "Comped account" : subscriptionStatusDetail(displayedStatus, isTrialing ? billingSummary?.trialEndDate : billingSummary?.nextBillingDate)}</p>
             </div>
             <div>
               <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>Card</p>
@@ -344,8 +375,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             </div>
             <div>
               <p style={{ margin: "0 0 4px", ...TYPE.caption, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})` }}>{isTrialing ? "First bill" : "Next bill"}</p>
-              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: "white" }}>{billingSummary?.nextBillingDate ?? "Not scheduled yet"}</p>
-              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{isTrialing ? `$${displayPrice}/month starts then` : hasIntroRate ? `Intro rate saves $${meta.normal - meta.intro}/mo` : "Monthly subscription"}</p>
+              <p style={{ margin: 0, ...TYPE.subhead, fontWeight: 800, color: "white" }}>{nextBill}</p>
+              <p style={{ margin: "3px 0 0", ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{company.is_comp ? "Comped account" : billingSummary?.nextBillingDate ? isTrialing ? "Trial ends then" : "Monthly subscription" : "Next charge date not confirmed"}</p>
             </div>
           </div>
         </div>
@@ -418,7 +449,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
                 {isActive
                   ? hasIntroRate
                     ? `Your intro rate is locked in. You save $${meta.normal - meta.intro}/month compared with the regular $${meta.normal}/month price.`
-                    : "Your subscription is active."
+                    : displayedStatus === "active" ? "Your subscription is active." : isTrialing ? "Your trial is active." : subscriptionStatusDetail(displayedStatus, billingSummary?.nextBillingDate)
                   : `Activate today to lock in $${meta.intro}/month before the regular $${meta.normal}/month price.`}
               </p>
 
@@ -637,11 +668,12 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               <Link key={invoice.id} href={`/billing/receipts/${invoice.id}`} style={{ textDecoration: "none" }}>
                 <div style={{ minHeight: 68, padding: "13px 0", borderTop: index === 0 ? "none" : "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                   <span style={{ minWidth: 0 }}>
-                    <span style={{ display: "block", ...TYPE.subhead, color: "white" }}>{invoice.label}</span>
+                    <span style={{ display: "block", ...TYPE.subhead, color: "white" }}>Created {invoice.label}</span>
+                    <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, color: invoice.status === "Paid" ? GREEN : "white" }}>{invoice.status}</span>
                     <span style={{ display: "block", marginTop: 2, ...TYPE.footnote, color: `rgba(255,255,255,${TEXT_OPACITY.disabled})`, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{invoice.description}</span>
                   </span>
                   <span style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                    <span style={{ ...TYPE.footnote, fontWeight: 850, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>{invoice.amount}</span>
+                    <span style={{ ...TYPE.footnote, fontWeight: 850, color: `rgba(255,255,255,${TEXT_OPACITY.secondary})` }}>Total {invoice.amount}</span>
                     <ChevronRight />
                   </span>
                 </div>

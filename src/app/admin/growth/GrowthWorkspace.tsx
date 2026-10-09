@@ -260,8 +260,8 @@ function GoalScoreboard({ accounts }: { accounts: GrowthAccount[] }) {
           <strong>{currentPeriodAccounts.length} / {goal.accountGoal}</strong>
           <div className="hq-progress"><span style={{ width: `${progress}%` }} /></div>
         </div>
-        <div><span>Current MRR</span><strong>{formatMoney(mrr)}</strong></div>
-        <div><span>New MRR</span><strong>{formatMoney(newMrr)}</strong></div>
+        <div><span>Estimated recurring revenue</span><strong>{formatMoney(mrr)}</strong></div>
+        <div><span>New estimated recurring revenue</span><strong>{formatMoney(newMrr)}</strong></div>
         <div><span>Year pace</span><strong>{yearlyAccounts}</strong></div>
       </div>
 

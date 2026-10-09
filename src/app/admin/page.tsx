@@ -146,7 +146,7 @@ export default async function AdminTodayPage() {
         <Link href="/admin/growth"><strong>{(prospects ?? []).filter((prospect) => !isAdminTestEmail(prospect.email)).length}</strong><span>Open sales</span></Link>
         <Link href="/admin/clients?state=active"><strong>{activeClients}</strong><span>Active clients</span></Link>
         <Link href="/admin/clients?state=past_due"><strong>{atRisk}</strong><span>At risk</span></Link>
-        <div><strong>${currentMrr}</strong><span>MRR</span></div>
+        <div><strong>${currentMrr}</strong><span>Estimated recurring revenue</span></div>
       </div>
       <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Next actions</h2><span className="hq-section-meta">Top {visibleItems.length} of {items.length}</span></div>
