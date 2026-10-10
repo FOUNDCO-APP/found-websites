@@ -48,7 +48,9 @@ export async function GET(request: Request) {
   const staleClients = eligible.filter(row => !snapshots.get(row.id)?.verifiedAt || snapshots.get(row.id)?.stale)
   const requiredEvents = ["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted",
     "checkout.session.completed", "invoice.payment_failed", "invoice.payment_action_required", "invoice.paid", "invoice.updated"]
-  const destinations: { status: string; url: string; events: string[] }[] = []
+  const destinations: { id: string; status: string; url: string; events: string[] }[] = []
+  const scopeDestinations: { id: string; status: string; url: string; payload: string; eventsFrom: string[]; events: string[] }[] = []
+  let scopeRead = false
   let endpointRead = false
   try {
     const stripe = getStripe()
@@ -57,12 +59,27 @@ export async function GET(request: Request) {
       for await (const endpoint of stripe.webhookEndpoints.list({ limit: 100 })) {
         const url = new URL(endpoint.url)
         if (endpoint.livemode && url.protocol === "https:" && [domain, `www.${domain}`].includes(url.hostname) && url.pathname === "/api/stripe/webhook") {
-          destinations.push({ status: endpoint.status, url: `${url.origin}${url.pathname}`, events: endpoint.enabled_events })
+          destinations.push({ id: endpoint.id, status: endpoint.status, url: `${url.origin}${url.pathname}`, events: endpoint.enabled_events })
         }
       }
       endpointRead = true
     }
   } catch { /* Readiness stays unknown when Stripe endpoint access is unavailable. */ }
+  try {
+    const stripe = getStripe()
+    if (stripe && config.liveStripe) {
+      const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
+      for await (const destination of stripe.v2.core.eventDestinations.list({ limit: 100, include: ["webhook_endpoint.url"] })) {
+        if (!destination.webhook_endpoint?.url) continue
+        const url = new URL(destination.webhook_endpoint.url)
+        if (destination.livemode && url.protocol === "https:" && [domain, `www.${domain}`].includes(url.hostname) && url.pathname === "/api/stripe/webhook") {
+          scopeDestinations.push({ id: destination.id, status: destination.status, url: `${url.origin}${url.pathname}`,
+            payload: destination.event_payload, eventsFrom: destination.events_from ?? [], events: destination.enabled_events })
+        }
+      }
+      scopeRead = true
+    }
+  } catch { /* Unknown scope must not authorize changes to a Connect destination. */ }
   const missingEvents = requiredEvents.filter(type => !destinations.some(endpoint => endpoint.status === "enabled" &&
     (endpoint.events.includes("*") || endpoint.events.includes(type))))
   const readinessReasons = [
@@ -80,7 +97,8 @@ export async function GET(request: Request) {
     readinessReasons, pendingEvents: events.count, unresolvedNotifications: notices.count,
     failedRuns: failedRuns.count, expiredEvents: expiredEvents.count,
     expiredCustomerRuns: expiredCustomerRuns.count,
-    eventDestinations: { configurationRead: endpointRead, destinations, missingEvents, signedDeliveryVerified: false },
+    eventDestinations: { configurationRead: endpointRead, destinations, missingEvents,
+      scopeRead, scopeDestinations, signedDeliveryVerified: false },
     clients: eligible.map(row => ({ name: row.name, verifiedAt: snapshots.get(row.id)?.verifiedAt ?? null,
       stale: snapshots.get(row.id)?.stale ?? true })),
     automaticActionsReady: false }, { headers })
