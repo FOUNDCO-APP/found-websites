@@ -7,6 +7,7 @@ import { activityEventLabel, activitySurfaceLabel, buildClientActivitySignal } f
 import { adminTestIdentityReason, isAdminTestIdentity } from "../../testIdentity"
 import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
+import type { StoredBillingSummary } from "@/lib/stripe/billingSummary"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const ADMIN_TIME_ZONE = "America/Phoenix"
@@ -25,6 +26,7 @@ export type ClientDetail = {
   address_visible: boolean | null
   plan: string | null
   subscription_status: string | null
+  billing: StoredBillingSummary | null
   client_state: string
   account_kind: string
   comp_reason: string | null
@@ -195,17 +197,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const billingAnchorLabel = client.billing_cycle_day
     ? `${client.billing_cycle_day}${ordinalSuffix(client.billing_cycle_day)} of every month`
     : "Not anchored"
-  const stripeStatus = client.subscription_status ?? "not connected"
+  const stripeStatus = client.billing?.status ?? "not verified"
   const hasCardOnFile = client.billing_payment_signal.status === "card_on_file"
-  const billingStatusLabel = isActiveSubscription
-    ? client.subscription_status === "trialing" && cardDueLabel
-      ? `${client.billing_payment_signal.label} - trial until ${cardDueLabel}`
-      : `${client.billing_payment_signal.label} - ${stripeStatus}`
-    : client.is_comp
-      ? "Permanent comp - no card needed"
-      : cardDueLabel
-        ? client.billing_payment_signal.label
-        : "Not activated"
+  const billingStatusLabel = client.billing?.label ?? "Billing not verified"
   const collectedLabel = client.deferred_payment_amount != null
     ? `$${Number(client.deferred_payment_amount).toFixed(2)}${client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}${client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}`
     : "Nothing recorded"
@@ -223,14 +217,18 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
     .map(([surface, count]) => `${activitySurfaceLabel(surface)} ${count}`)
     .join(" · ")
   const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
-  const nextAction = client.client_state === "past_due"
+  const nextAction = client.billing?.needsAttention || client.billing?.stale
+    ? "Review billing"
+    : client.client_state === "past_due"
     ? "Fix payment risk"
     : !isActiveSubscription && !client.is_comp
       ? "Get card on file"
       : client.client_state === "onboarding"
         ? "Finish launch"
         : "Keep relationship warm"
-  const nextActionDetail = client.client_state === "past_due"
+  const nextActionDetail = client.billing?.needsAttention || client.billing?.stale
+    ? billingStatusLabel
+    : client.client_state === "past_due"
     ? "This account is a revenue risk."
     : !isActiveSubscription && !client.is_comp
       ? "Activation is not complete until billing is handled."
@@ -240,9 +238,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           ? "No urgent risk is visible."
           : activitySignal.reachOutReason
   const accountStatusLabel = isTestIdentity ? "Test account" : client.client_state.replace("_", " ")
-  const paymentStatusLabel = isActiveSubscription
-    ? client.subscription_status === "trialing" ? "Trialing (stored)" : "Active (stored)"
-    : client.is_comp ? "Comp" : "Payment not verified"
+  const paymentStatusLabel = client.billing?.needsAttention ? "Payment needs attention"
+    : client.billing?.status === "active" ? "Billing active"
+    : client.billing?.status === "trialing" ? "Trialing" : client.is_comp ? "Comp" : "Payment not verified"
   const usageStatusLabel = client.customer_activity_ready ? activitySignal.label : "Waiting on table"
   const outreachStatusLabel = lastOutreachActivity
     ? `${outreachMethodLabel(lastOutreachActivity.activity_type)} ${formatDaysAgo(lastOutreachActivity.created_at).replace("Used", "").trim().toLowerCase()}`
@@ -274,12 +272,13 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <h1 className="hq-title">{client.name}</h1>
           <p className="hq-subtitle">
             <span className={`hq-badge hq-badge-${stateTone(client.client_state)}`} style={{ marginRight: 6 }}>
-              {isTestIdentity ? "Test account" : client.client_state.replace("_", " ")}
+              {isTestIdentity ? "Test account" : `Client ${client.client_state.replace("_", " ")}`}
             </span>
             {planLabel(client.plan)}
           </p>
         </div>
       </header>
+      {client.billing?.preserveAccess && <p className="hq-row-meta">Site access protected. Billing status is tracked separately.</p>}
 
       {isTestIdentity && (
         <section className="hq-command-status" style={{ marginBottom: 16 }}>

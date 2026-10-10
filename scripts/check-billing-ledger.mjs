@@ -112,4 +112,21 @@ function adminRequest(pathname) {
 }
 assert.equal((await routing.middleware(adminRequest("/api/admin/billing-audit"))).kind, "next")
 assert.equal((await routing.middleware(adminRequest("/clients"))).pathname, "/admin/clients")
+const stored = load("src/lib/stripe/billingSummary.ts")
+const verifiedAt = "2026-10-10T08:30:00.000Z"
+const facts = [
+  { company_id: company.id, object_type: "customer", verified_at: verifiedAt, facts: { ledger_complete: true } },
+  { company_id: company.id, object_type: "subscription", verified_at: verifiedAt, facts: { status: "canceled" } },
+  { company_id: company.id, object_type: "service_access_override", verified_at: verifiedAt, facts: { preserve_access: true } },
+]
+const debt = [{ company_id: company.id, status: "open", currency: "usd", amount_remaining: 3900, verified_at: verifiedAt, facts: { failure_kind: "payment_failed" } }]
+const protectedSummary = stored.summarizeStoredBilling(facts, debt, Date.parse(verifiedAt) + 60000)
+assert.equal(protectedSummary.status, "canceled")
+assert.equal(protectedSummary.preserveAccess, true)
+assert.equal(protectedSummary.needsAttention, true)
+assert.equal(protectedSummary.balances.usd, 3900)
+assert.match(protectedSummary.label, /canceled.*\$39\.00 unpaid/)
+assert.equal(protectedSummary.stale, false)
+assert.equal(stored.summarizeStoredBilling(facts, debt, Date.parse(verifiedAt) + 25 * 3600000).stale, true)
+assert.equal(stored.summarizeStoredBilling([], []).status, null)
 console.log("Billing ledger regression checks passed: complete pagination, real paid dates, exact balances, separate cash/refunds, incomplete/test mode, automatic invoice attention, and export authorization.")

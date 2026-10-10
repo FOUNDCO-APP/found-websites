@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server"
+import { after, NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { sendTrackedEmail } from "@/lib/emailLog"
 import { ensureDefaultAvailability } from "@/lib/bookings/ensureDefaultAvailability"
 import { captureFoundActivationCompleted } from "@/lib/foundFunnelServer"
-import { sendTrackedEmail } from "@/lib/emailLog"
-import { recordBillingPlanEvent } from "@/lib/billingPlanEvents"
+import { billingFlag, consumeBillingWorkImmediately, isPlatformBillingEvent, persistBillingEvent, preservesServiceAccess, stripeBillingMode } from "@/lib/stripe/billingReliability"
+
+export const maxDuration = 300
 
 function getAdminClient() {
   return createSupabaseClient(
@@ -54,174 +56,132 @@ function planFromSubscriptionItem(item: Stripe.SubscriptionItem): string | null 
   )
 }
 
-function planMonthlyValue(plan: string | null | undefined) {
-  if (plan === "found_business") return 69
-  if (plan === "found_pro") return 39
-  return 29
-}
-
-function stripeUnixToIso(value: number | null | undefined): string | null {
-  return typeof value === "number" ? new Date(value * 1000).toISOString() : null
-}
-
-function planLabelForAudit(value: string | null | undefined): string {
-  if (value === "found_business") return "Found Business"
-  if (value === "found_pro") return "Found Pro"
-  if (value === "found") return "Found Starter"
-  return value || "unknown"
-}
-
 function addonSlugForItem(item: Stripe.SubscriptionItem): string | null {
   return item.price.metadata?.addon_slug || item.plan?.metadata?.addon_slug || null
 }
 
-async function companyIdForSubscription(
-  supabase: ReturnType<typeof getAdminClient>,
-  sub: Stripe.Subscription,
-  customerId: string,
-): Promise<string | null> {
-  if (sub.metadata?.company_id) return sub.metadata.company_id
-
-  const { data } = await supabase
-    .from("companies")
-    .select("id")
-    .eq("stripe_customer_id", customerId)
-    .maybeSingle()
-
-  return data?.id ?? null
+async function projectionChecked<T>(request: PromiseLike<{ data: T; error: { message: string } | null }>): Promise<T> {
+  const { data, error } = await request
+  if (error) throw new Error(error.message)
+  return data
 }
 
-async function syncSubscriptionToSupabase(
-  supabase: ReturnType<typeof getAdminClient>,
-  sub: Stripe.Subscription,
+async function applyCustomerProjection(
+  supabase: ReturnType<typeof getAdminClient>, stripe: Stripe,
+  customerId: string, livemode: boolean, expectedCompanyId?: string,
 ) {
-  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
-  const companyId = await companyIdForSubscription(supabase, sub, customerId)
-  const baseItem = sub.items.data.find((item) => PLAN_PRICE_IDS.has(item.price.id) || Boolean(planFromSubscriptionItem(item)))
-  const plan = baseItem ? planFromSubscriptionItem(baseItem) : normalizePlanSlug(sub.metadata?.plan)
-  const isActivatedStatus = sub.status === "active" || sub.status === "trialing"
+  const company = await projectionChecked(supabase.from("companies")
+    .select("id,stripe_customer_id,plan,subscription_status,client_state,account_kind,slug")
+    .eq("stripe_customer_id", customerId).single())
+  if (!company || company.stripe_customer_id !== customerId ||
+    (expectedCompanyId && expectedCompanyId !== company.id)) throw new Error("Projection company mapping mismatch")
+  if (await preservesServiceAccess(supabase, company.id, customerId, livemode)) return "protected"
 
-  const update: Record<string, string> = { subscription_status: sub.status }
-  if (plan) update.plan = plan
-
-  // Auto-promote onboarding -> active the moment billing genuinely goes
-  // live, instead of requiring Shawn to remember to flip this by hand -
-  // the same manual-classification trap that left a real paying client
-  // silently stuck reading "onboarding" indefinitely. Test accounts are
-  // untouched; comp/past_due/cancelled states aren't overwritten - this
-  // only ever moves a real client out of "onboarding," nothing else.
-  let shouldCaptureActivation = false
-  let activationSlug = sub.metadata?.slug ?? null
-  let currentCompany: {
-    slug: string | null
-    plan: string | null
-    subscription_status: string | null
-    client_state: string | null
-    account_kind: string | null
-  } | null = null
-
-  if (companyId) {
-    const { data: current } = await supabase
-      .from("companies")
-      .select("slug, plan, subscription_status, client_state, account_kind")
-      .eq("id", companyId)
-      .maybeSingle()
-    currentCompany = current ?? null
+  const token = crypto.randomUUID()
+  const run = await projectionChecked(supabase.rpc("billing_start_run", {
+    p_company: company.id, p_customer: customerId, p_live: livemode, p_source: "legacy_projection", p_token: token,
+  }))
+  if (!run) throw new Error("Customer projection lease busy")
+  let checkpoint: Record<string, unknown> = { applied: false, manual_projection_required: true }
+  const leaseQuery = () => supabase.from("billing_reconciliation_runs")
+    .select("id").eq("id", run).eq("lease_token", token).eq("state", "running")
+    .gt("lease_until", new Date().toISOString()).single()
+  const save = async (state: "running" | "complete" | "failed", error: string | null = null) => {
+    const row = await projectionChecked(supabase.from("billing_reconciliation_runs").update({
+      state, checkpoint, error,
+      ...(state === "running" ? {} : { finished_at: new Date().toISOString() }),
+      completeness: { scope: "legacy_projection_observation", full_ledger: false },
+    }).eq("id", run).eq("lease_token", token).eq("state", "running")
+      .gt("lease_until", new Date().toISOString()).select("id").single())
+    if (!row) throw new Error("Lost projection lease")
   }
-
-  if (isActivatedStatus && companyId) {
-    const current = currentCompany
-    shouldCaptureActivation = !["active", "trialing"].includes(String(current?.subscription_status ?? ""))
-    activationSlug = activationSlug ?? current?.slug ?? null
-    if (current?.account_kind === "client" && current?.client_state === "onboarding") {
-      update.client_state = "active"
+  try {
+    if (!await projectionChecked(leaseQuery())) throw new Error("Lost projection lease")
+    const current = await projectionChecked(supabase.from("companies")
+      .select("id,stripe_customer_id,plan,subscription_status,client_state,account_kind,slug")
+      .eq("id", company.id).eq("stripe_customer_id", customerId).single())
+    if (!current || current.stripe_customer_id !== customerId) throw new Error("Projection mapping changed")
+    const addons = await projectionChecked(supabase.from("addon_subscriptions")
+      .select("addon_slug,active,stripe_subscription_item_id").eq("company_id", company.id))
+    checkpoint = { ...checkpoint, before: { company: current, addons }, after: { company: current, addons } }
+    await save("running")
+    if (await preservesServiceAccess(supabase, company.id, customerId, livemode)) {
+      checkpoint = { ...checkpoint, reason: "protected" }
+      await save("complete")
+      return "protected"
     }
-  }
 
-  let companyQuery = supabase.from("companies").update(update)
-  if (companyId) {
-    companyQuery = companyQuery.eq("id", companyId)
-  } else {
-    companyQuery = companyQuery.eq("stripe_customer_id", customerId)
-  }
-  await companyQuery
-
-  if (!companyId) return
-
-  const oldPlan = currentCompany?.plan ?? null
-  const newPlan = plan ?? oldPlan
-  const oldStatus = currentCompany?.subscription_status ?? null
-  const newStatus = sub.status
-  if (oldPlan !== newPlan || oldStatus !== newStatus) {
-    const price = baseItem?.price
-    const currentPeriodEnd = (sub as Stripe.Subscription & { current_period_end?: number }).current_period_end
-    await recordBillingPlanEvent(supabase, {
-      company_id: companyId,
-      event_type: "stripe_subscription_synced",
-      source: "stripe_webhook",
-      actor_type: "stripe",
-      old_plan: oldPlan,
-      new_plan: newPlan,
-      old_subscription_status: oldStatus,
-      new_subscription_status: newStatus,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: sub.id,
-      stripe_price_id: price?.id ?? null,
-      amount_cents: price?.unit_amount ?? null,
-      currency: price?.currency ?? "usd",
-      effective_at: stripeUnixToIso(currentPeriodEnd) ?? stripeUnixToIso(sub.trial_end),
-      note: `Stripe synced ${planLabelForAudit(oldPlan)} to ${planLabelForAudit(newPlan)}; status ${oldStatus || "unknown"} to ${newStatus}.`,
-      metadata: {
-        subscription_metadata_plan: sub.metadata?.plan ?? null,
-        subscription_status: sub.status,
-      },
-    })
-  }
-
-  if (shouldCaptureActivation) {
-    await captureFoundActivationCompleted({
-      company_id: companyId,
-      slug: activationSlug,
-      plan_name: plan ?? sub.metadata?.plan ?? null,
-      method: "stripe_webhook",
-      value: planMonthlyValue(plan ?? sub.metadata?.plan),
-      currency: "USD",
-    })
-  }
-
-  const activeAddonRows = sub.items.data
-    .map((item) => ({ item, addonSlug: addonSlugForItem(item) }))
-    .filter((row): row is { item: Stripe.SubscriptionItem; addonSlug: string } => Boolean(row.addonSlug))
-
-  if (activeAddonRows.length > 0) {
-    await supabase.from("addon_subscriptions").upsert(
-      activeAddonRows.map(({ item, addonSlug }) => ({
-        company_id: companyId,
-        addon_slug: addonSlug,
-        stripe_subscription_item_id: item.id,
-        active: true,
-      })),
-      { onConflict: "company_id,addon_slug" },
-    )
-    if (activeAddonRows.some(row => row.addonSlug === "reservation_calendar")) {
-      await ensureDefaultAvailability(companyId)
+    const candidates: Array<{ subscription: Stripe.Subscription; plan: string }> = []
+    for await (const sub of stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 })) {
+      if (!await projectionChecked(leaseQuery())) throw new Error("Lost projection lease")
+      const owner = typeof sub.customer === "string" ? sub.customer : sub.customer.id
+      if (sub.livemode !== livemode || owner !== customerId ||
+        (sub.metadata.company_id && sub.metadata.company_id !== company.id)) throw new Error("Projection subscription scope mismatch")
+      if (sub.status !== "active" && sub.status !== "trialing") continue
+      if (sub.items.has_more) {
+        const items: Stripe.SubscriptionItem[] = []
+        for await (const item of stripe.subscriptionItems.list({ subscription: sub.id, limit: 100 })) {
+          if (!await projectionChecked(leaseQuery())) throw new Error("Lost projection lease")
+          items.push(item)
+        }
+        sub.items.data = items
+      }
+      const base = sub.items.data.find(item => PLAN_PRICE_IDS.has(item.price.id) || Boolean(planFromSubscriptionItem(item)))
+      const plan = base ? planFromSubscriptionItem(base) : normalizePlanSlug(sub.metadata.plan)
+      if (plan) candidates.push({ subscription: sub, plan })
     }
+    if (candidates.length > 1) {
+      checkpoint = { ...checkpoint, reason: "ambiguous_active_found_subscriptions", candidate_ids: candidates.map(row => row.subscription.id) }
+      await save("complete")
+      return "manual"
+    }
+    const canonical = candidates[0]
+    const projection = canonical ? {
+      plan: canonical.plan, status: canonical.subscription.status, subscription_id: canonical.subscription.id,
+      addon_items: canonical.subscription.items.data.flatMap(item => {
+        const addon_slug = addonSlugForItem(item)
+        return addon_slug ? [{ addon_slug, stripe_subscription_item_id: item.id }] : []
+      }),
+    } : null
+    checkpoint = { ...checkpoint, reason: canonical ? "canonical_active_subscription" : "no_active_found_subscription",
+      canonical_subscription_id: canonical?.subscription.id ?? null,
+      proposed: projection }
+    if (!projection) {
+      await save("complete")
+      return "manual"
+    }
+    // SQL rechecks the lease, customer link, and override in the same
+    // transaction as company/addon writes, audit, and run completion.
+    checkpoint = { ...checkpoint, manual_projection_required: false }
+    await save("running")
+    const result = await projectionChecked(supabase.rpc("billing_apply_projection", {
+      p_run: run, p_token: token, p_projection: projection,
+    })) as { applied: boolean; protected: boolean; activated: boolean } | null
+    if (!result || typeof result.applied !== "boolean" || typeof result.protected !== "boolean" ||
+      typeof result.activated !== "boolean" || (result.applied && result.protected) ||
+      (result.activated && !result.applied)) throw new Error("Invalid projection RPC result")
+    if (result.applied && canonical) {
+      if (projection.addon_items.some(item => item.addon_slug === "reservation_calendar")) {
+        try {
+          await ensureDefaultAvailability(company.id)
+        } catch {
+          console.error("[Billing] Applied booking grant needs availability backfill", company.id)
+        }
+      }
+      if (result.activated) {
+        await captureFoundActivationCompleted({ company_id: company.id,
+          slug: canonical.subscription.metadata.slug || current.slug,
+          plan_name: projection.plan, method: "stripe_webhook",
+          value: projection.plan === "found_business" ? 69 : projection.plan === "found_pro" ? 39 : 29, currency: "USD" })
+      }
+    }
+    return result.protected ? "protected" : result.applied ? "applied" : "unchanged"
+  } catch {
+    // A transport failure can follow a committed RPC. Never claim rollback or
+    // overwrite a completed run; replay refetches current state under a new lease.
+    await save("failed", "Customer projection failed or acceptance uncertain; retry required")
+    throw new Error("Customer projection observation failed")
   }
-
-  const { data: existingRows } = await supabase
-    .from("addon_subscriptions")
-    .select("addon_slug")
-    .eq("company_id", companyId)
-    .eq("active", true)
-
-  const activeSlugs = new Set(activeAddonRows.map((row) => row.addonSlug))
-  await Promise.all((existingRows ?? [])
-    .filter((row: { addon_slug: string }) => !activeSlugs.has(row.addon_slug))
-    .map((row: { addon_slug: string }) => supabase
-      .from("addon_subscriptions")
-      .update({ active: false })
-      .eq("company_id", companyId)
-      .eq("addon_slug", row.addon_slug)))
 }
 
 function formatOrderTotal(cents: unknown) {
@@ -300,7 +260,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.text()
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { timeout: 15000, maxNetworkRetries: 1 })
 
   let event: Stripe.Event | null = null
   for (const secret of webhookSecrets) {
@@ -316,7 +276,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
+  if (isPlatformBillingEvent(event)) {
+    const mode = stripeBillingMode()
+    if (mode === null) return NextResponse.json({ error: "Billing key mode unavailable" }, { status: 503 })
+    if (event.livemode !== mode) return NextResponse.json({ received: true, ignored: "billing_mode_mismatch" })
+  }
+
   const supabase = getAdminClient()
+
+  // Connect commerce continues through its existing handlers. Billing intake
+  // stores replay work before scheduling the immediate consumer.
+  if (isPlatformBillingEvent(event) && billingFlag("BILLING_DURABLE_INTAKE_ENABLED")) {
+    try {
+      await persistBillingEvent(supabase, event)
+      after(() => consumeBillingWorkImmediately(supabase, stripe).then(() => undefined))
+    } catch {
+      return NextResponse.json({ error: "Billing event persistence failed" }, { status: 503 })
+    }
+    // Invoice events have no legacy handler. Subscription callbacks below
+    // apply customer-authoritative grants through the leased SQL transaction.
+    if (event.type.startsWith("invoice.")) return NextResponse.json({ received: true })
+  }
 
   if (event.type === "payment_intent.succeeded") {
     const pi = event.data.object as Stripe.PaymentIntent
@@ -475,63 +455,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ received: true })
   }
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session
+  try {
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session
 
-    if (session.metadata?.kind === "online_order") {
-      await handleOnlineOrderCheckout(supabase, session)
-      return NextResponse.json({ received: true })
+      if (session.metadata?.kind === "online_order") {
+        await handleOnlineOrderCheckout(supabase, session)
+        return NextResponse.json({ received: true })
+      }
+
+      if (event.account || session.mode !== "subscription") return NextResponse.json({ received: true })
+      const companyId = session.metadata?.company_id
+      if (!companyId) return NextResponse.json({ received: true })
+
+      const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id
+      if (!customerId) throw new Error("Missing projection customer")
+      const boundary = await applyCustomerProjection(supabase, stripe, customerId, event.livemode, companyId)
+      return NextResponse.json({ received: true, legacy_projection: boundary })
     }
 
-    const companyId = session.metadata?.company_id
-    if (!companyId) return NextResponse.json({ received: true })
-
-    // plan is deliberately NOT set here. checkout.session.completed and
-    // customer.subscription.created both fire for a new subscription and
-    // Stripe does not guarantee their order - this handler used to
-    // hardcode plan: "found" (Starter) regardless of what was actually
-    // purchased, which could silently overwrite the correct plan the
-    // subscription-created handler below had just set correctly from the
-    // real price id. customer.subscription.created/updated is the sole
-    // source of truth for plan; this handler only owns customer id/status.
-    // Found 2026-08-09: a real paying test account (Found Business) sat
-    // reset to Starter in the database for weeks while Stripe kept
-    // billing the correct plan.
-    await supabase
-      .from("companies")
-      .update({
-        stripe_customer_id: session.customer as string,
-        subscription_status: "active",
-      })
-      .eq("id", companyId)
-
-    console.log("[Stripe] checkout.session.completed - company:", companyId)
-  }
-
-  if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
-    await syncSubscriptionToSupabase(supabase, event.data.object as Stripe.Subscription)
-  }
-
-  if (event.type === "customer.subscription.deleted") {
-    const sub = event.data.object as Stripe.Subscription
-    const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id
-    const companyId = await companyIdForSubscription(supabase, sub, customerId)
-
-    let companyQuery = supabase.from("companies").update({ subscription_status: sub.status })
-    if (companyId) {
-      companyQuery = companyQuery.eq("id", companyId)
-    } else {
-      companyQuery = companyQuery.eq("stripe_customer_id", customerId)
+    if (event.type.startsWith("customer.subscription.") && !event.account) {
+      const sub = event.data.object as Stripe.Subscription
+      const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id
+      if (!customerId) throw new Error("Missing projection customer")
+      const boundary = await applyCustomerProjection(supabase, stripe, customerId, event.livemode, sub.metadata?.company_id)
+      return NextResponse.json({ received: true, legacy_projection: boundary })
     }
-    await companyQuery
 
-    if (companyId) {
-      await supabase
-        .from("addon_subscriptions")
-        .update({ active: false })
-        .eq("company_id", companyId)
-    }
+    return NextResponse.json({ received: true })
+  } catch {
+    return NextResponse.json({ error: "Billing projection failed; retry required" }, { status: 503 })
   }
-
-  return NextResponse.json({ received: true })
 }

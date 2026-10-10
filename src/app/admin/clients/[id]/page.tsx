@@ -4,6 +4,7 @@ import { getAdminClient } from "../../lib"
 import ClientDetailWorkspace, { type ClientDetail } from "./ClientDetailWorkspace"
 import { getStripe } from "@/lib/stripe/connect"
 import type Stripe from "stripe"
+import { getStoredBillingSummaries } from "@/lib/stripe/billingSummary"
 
 export const metadata = { title: "Client - Found HQ" }
 
@@ -101,6 +102,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   if (!company) notFound()
   const billingPaymentSignal = await getBillingPaymentSignal(company.stripe_customer_id)
+  const billing = (await getStoredBillingSummaries([id])).get(id) ?? null
 
   const detail: ClientDetail = {
     ...company,
@@ -109,6 +111,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     customer_activities: (customerActivityResult.data ?? []) as CustomerActivityRow[],
     customer_activity_ready: !customerActivityResult.error,
     billing_payment_signal: billingPaymentSignal,
+    billing,
   }
 
   return (

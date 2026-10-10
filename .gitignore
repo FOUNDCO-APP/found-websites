@@ -49,6 +49,8 @@ scripts/*
 !scripts/audit-client-subscriptions.mjs
 !scripts/check-billing-reliability.mjs
 !scripts/check-billing-ledger.mjs
+!scripts/check-billing-backend.mjs
+/.billing-audits/
 !scripts/audit-copy-quality.mjs
 !scripts/repair-copy-quality.mjs
 !scripts/migration-045-about-content-model.sql

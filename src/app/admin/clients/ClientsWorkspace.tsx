@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import type { StoredBillingSummary } from "@/lib/stripe/billingSummary"
 
 export type ClientRow = {
   id: string
@@ -34,6 +35,7 @@ export type ClientRow = {
   is_test: boolean | null
   included_addon_slug: string | null
   issues: string[]
+  billing: StoredBillingSummary | null
   emails: { summary: string; created_at: string }[]
 }
 
@@ -79,7 +81,8 @@ function ClientItem({ row }: { row: ClientRow }) {
   const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
   const summary = [
     { label: planLabel(row.plan) },
-    { label: row.subscription_status ?? "not active" },
+    { label: row.billing?.label ?? "Billing not verified", tone: row.billing?.needsAttention || row.billing?.stale ? "warning" : undefined },
+    ...(row.billing?.preserveAccess ? [{ label: "Site access protected", tone: "info" }] : []),
     { label: statusLabel(row), tone: needsAttention ? "warning" : undefined },
     { label: row.customer_activity_status.label, tone: activityTone(row.customer_activity_status.level) },
   ]
@@ -90,7 +93,7 @@ function ClientItem({ row }: { row: ClientRow }) {
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
             <h2>{row.name}</h2>
-            <span className={`hq-badge hq-badge-${row.test_identity ? "info" : stateTone(row.client_state)}`}>{row.test_identity ? "Test account" : row.client_state.replace("_", " ")}</span>
+            <span className={`hq-badge hq-badge-${row.test_identity ? "info" : stateTone(row.client_state)}`}>{row.test_identity ? "Test account" : `Client ${row.client_state.replace("_", " ")}`}</span>
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>

@@ -2,6 +2,7 @@ import { getAdminClient } from "../lib"
 import { buildClientActivitySignal } from "../customerActivitySignals"
 import { adminTestIdentityReason, isAdminTestIdentity } from "../testIdentity"
 import ClientsWorkspace, { type ClientRow } from "./ClientsWorkspace"
+import { getStoredBillingSummaries } from "@/lib/stripe/billingSummary"
 
 export const metadata = { title: "Clients - Found HQ" }
 
@@ -29,6 +30,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
     admin.from("customer_activity_events").select("company_id, surface, feature, created_at").eq("is_admin_view", false).gte("created_at", activitySince).order("created_at", { ascending: false }).limit(5000),
   ])
   const customerActivities = (customerActivityResult.data ?? []) as CustomerActivityRow[]
+  const billingByCompany = await getStoredBillingSummaries((companies ?? []).map(company => company.id))
   const copyByCompany = new Map((configs ?? []).map((row) => [row.company_id, row.copy_generated]))
   const lastActivity = new Map<string, string>()
   for (const activity of activities ?? []) if (!lastActivity.has(activity.company_id)) lastActivity.set(activity.company_id, activity.summary)
@@ -52,22 +54,12 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
   }
   const rows: ClientRow[] = (companies ?? []).map((company) => {
     const issues: string[] = []
-    if (company.client_state === "past_due" || ["past_due", "unpaid", "incomplete"].includes(company.subscription_status ?? "")) issues.push("Payment")
-    if (company.subscription_status === "trialing" && company.trial_ends_at && new Date(company.trial_ends_at) < new Date()) {
-      issues.push("Billing needs verification")
-    }
+    const billing = billingByCompany.get(company.id)
+    if (billing?.needsAttention) issues.push("Payment needs attention")
+    if (company.account_kind === "client" && !isAdminTestIdentity(company) && (!billing || billing.stale)) issues.push("Verify billing")
     if (company.client_state === "onboarding" && !company.logo_url && !company.logo_white_url) issues.push("No logo")
     if (company.client_state === "onboarding" && copyByCompany.get(company.id) !== true) issues.push("Fallback copy")
     if (PAYMENT_RELEVANT_INTENTS.has(company.primary_intent ?? "") && !company.stripe_connect_account_id) issues.push("No payment setup")
-    const isActiveSubscription = company.subscription_status === "active" || company.subscription_status === "trialing"
-    if (company.trial_ends_at && !isActiveSubscription) {
-      const dueDate = new Date(company.trial_ends_at)
-      if (dueDate < new Date()) {
-        issues.push("Paused - no card")
-      } else {
-        issues.push(`Card due ${dueDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`)
-      }
-    }
     const clientActivity = customerActivityByCompany.get(company.id) ?? []
     const lastClientActivity = clientActivity[0] ?? null
     const activitySignal = buildClientActivitySignal(clientActivity, company.subscription_status)
@@ -102,6 +94,7 @@ export default async function ClientsPage({ searchParams }: { searchParams: Prom
       is_test: company.is_test,
       included_addon_slug: company.included_addon_slug ?? null,
       issues,
+      billing: billing ?? null,
       emails: emailsByCompany.get(company.id) ?? [],
     }
   })
