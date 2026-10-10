@@ -250,6 +250,7 @@ export async function POST(req: NextRequest) {
   // payments). Each Stripe endpoint signs with its own secret, so try all
   // rather than assuming one.
   const webhookSecrets = [
+    process.env.STRIPE_WEBHOOK_SECRET_PLATFORM,
     process.env.STRIPE_WEBHOOK_SECRET,
     process.env.STRIPE_WEBHOOK_SECRET_CONNECT,
     process.env.STRIPE_WEBHOOK_SECRET_CONNECT_LIVE,

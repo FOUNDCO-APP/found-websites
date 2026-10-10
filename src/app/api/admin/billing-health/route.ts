@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     emailConfigured: Boolean(process.env.RESEND_API_KEY),
     ownerEmailConfigured: Boolean(process.env.ADMIN_ALERT_EMAIL),
     webhookSigningConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+    platformSigningConfigured: Boolean(process.env.STRIPE_WEBHOOK_SECRET_PLATFORM),
     intakeEnabled: billingFlag("BILLING_DURABLE_INTAKE_ENABLED"),
     reconciliationEnabled: billingFlag("BILLING_RECONCILIATION_ENABLED"),
     ownerEmailEnabled: billingFlag("BILLING_ADMIN_EMAIL_ENABLED"),
@@ -80,18 +81,19 @@ export async function GET(request: Request) {
       scopeRead = true
     }
   } catch { /* Unknown scope must not authorize changes to a Connect destination. */ }
-  const missingEvents = requiredEvents.filter(type => !destinations.some(endpoint => endpoint.status === "enabled" &&
-    (endpoint.events.includes("*") || endpoint.events.includes(type))))
+  const platformDestinations = scopeDestinations.filter(endpoint => endpoint.status === "enabled" && endpoint.payload === "snapshot" &&
+    endpoint.eventsFrom.length === 1 && endpoint.eventsFrom[0] === "@self")
+  const missingEvents = requiredEvents.filter(type => !platformDestinations.some(endpoint => endpoint.events.includes(type)))
   const readinessReasons = [
     ...(!config.liveStripe ? ["Live Stripe is not configured"] : []),
     ...(!config.cronConfigured ? ["Recovery cron authentication is not configured"] : []),
-    ...(!config.webhookSigningConfigured ? ["Platform webhook signature verification is not configured"] : []),
+    ...(!config.platformSigningConfigured ? ["Explicit platform webhook signature verification is not configured"] : []),
     ...(!eligible.length ? ["No client baselines were verified"] : []),
     ...(staleClients.length ? [`${staleClients.length} client baselines are missing or stale`] : []),
     ...((expiredEvents.count ?? 0) > 0 ? ["Expired event leases need recovery"] : []),
     ...((expiredCustomerRuns.count ?? 0) > 0 ? ["Expired customer leases need recovery"] : []),
     ...((failedRuns.count ?? 0) > 0 ? ["Failed runs need review"] : []),
-    ...(!endpointRead ? ["Stripe event-destination configuration is unverified"] : missingEvents.length ? ["Required Stripe events are not covered by an enabled Found endpoint"] : []),
+    ...(!scopeRead ? ["Stripe event-destination scope is unverified"] : missingEvents.length ? ["Required Stripe events are not covered by an enabled platform/self snapshot endpoint"] : []),
   ]
   return NextResponse.json({ config, healthRead: true, readyForObservation: readinessReasons.length === 0,
     readinessReasons, pendingEvents: events.count, unresolvedNotifications: notices.count,
