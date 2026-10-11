@@ -829,3 +829,145 @@
   .hq-inline-form input, .hq-inline-form select { font-size: 16px; }
   .hq-form-note, .hq-page-footnote { font-size: 13px; line-height: 1.45; }
 }
+
+/* Client facts stay readable even when billing or business names are long. */
+.hq-client-list,
+.hq-client-detail,
+.hq-client-overview,
+.hq-client-facts,
+.hq-client-manage,
+.hq-client-history {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.hq-client-list-row .hq-business-copy { flex: 1; max-width: 100%; }
+.hq-client-list-row .hq-business-name-line { flex-wrap: wrap; align-items: baseline; }
+.hq-client-list-row .hq-business-name-line h2 { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.hq-client-list-row .hq-badge { max-width: 100%; white-space: normal; }
+.hq-client-list-row .hq-client-billing,
+.hq-client-list-row .hq-client-activity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.45;
+  font-size: 13px;
+}
+.hq-client-list-row .hq-client-billing { margin-top: 8px; color: var(--hq-text); }
+.hq-client-list-row .hq-client-activity { margin-top: 5px; color: var(--hq-dim); }
+.hq-client-list-row .hq-client-billing > span,
+.hq-client-list-row .hq-client-activity > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.hq-client-list .hq-business-toolbar > *,
+.hq-client-list .hq-compact-filter select { min-width: 0; max-width: 100%; }
+.hq-client-list .hq-filter-notice { flex-wrap: wrap; }
+.hq-client-list .hq-filter-notice > span { min-width: 0; overflow-wrap: anywhere; }
+.hq-client-list .hq-business-empty { padding: 20px 0; text-align: left; }
+
+.hq-client-detail :is(h1, h2, h3, .hq-row-title, .hq-row-meta, .hq-subtitle) {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.hq-client-detail :is(.hq-header, .hq-section-head, .hq-row, .hq-client-command-head) { flex-wrap: wrap; }
+.hq-client-detail :is(.hq-header, .hq-section-head, .hq-row, .hq-client-command-head) > * { min-width: 0; max-width: 100%; }
+.hq-client-detail .hq-title { font-size: 30px; line-height: 1.2; }
+.hq-client-detail .hq-client-command-actions { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.hq-client-detail .hq-client-command-actions .hq-button {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.hq-client-overview { padding: 20px 0; border-block: 1px solid var(--hq-border); }
+.hq-client-overview > :first-child { margin-top: 0; }
+.hq-client-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 14px;
+}
+.hq-client-contact-actions > *,
+.hq-client-contact-actions .hq-button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  height: auto;
+}
+.hq-client-facts { padding: 16px 0; }
+dl.hq-client-facts,
+.hq-client-facts dl { margin: 0; }
+dl.hq-client-facts > div,
+.hq-client-facts dl > div {
+  display: grid;
+  grid-template-columns: minmax(0, 180px) minmax(0, 1fr);
+  gap: 8px 24px;
+  padding: 12px 0;
+  border-top: 1px solid var(--hq-border);
+}
+dl.hq-client-facts > div:first-child,
+.hq-client-facts dl > div:first-child { border-top: 0; }
+.hq-client-facts :is(dt, dd) { min-width: 0; margin: 0; overflow-wrap: anywhere; white-space: normal; line-height: 1.45; }
+.hq-client-facts dt { color: var(--hq-muted); font-size: 13px; }
+.hq-client-facts dd { color: var(--hq-text); font-size: 14px; }
+.hq-client-facts dd :is(strong, span, small) { max-width: 100%; overflow-wrap: anywhere; }
+.hq-client-facts dd small { display: block; margin-top: 4px; color: var(--hq-muted); font-size: 12px; }
+.hq-client-manage { padding: 16px 0; border-top: 1px solid var(--hq-border); }
+details.hq-client-manage > summary,
+.hq-client-manage details > summary {
+  width: auto;
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--hq-text);
+  font-size: 14px;
+  line-height: 1.45;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.hq-client-manage :is(form, label, .hq-inline-form, .hq-business-manage-body) { min-width: 0; max-width: 100%; }
+.hq-client-manage :is(input, select, textarea) { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.hq-client-manage :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea) { width: 100%; }
+.hq-client-manage :is(.hq-business-manage-footer, .hq-business-actions, .hq-contact-actions) { flex-wrap: wrap; }
+.hq-client-manage .hq-button { min-width: 0; max-width: 100%; white-space: normal; overflow-wrap: anywhere; height: auto; }
+.hq-client-history { margin-top: 24px; }
+.hq-client-history > summary { min-height: 44px; padding: 10px 0; cursor: pointer; overflow-wrap: anywhere; color: var(--hq-text); font-size: 14px; }
+.hq-client-detail li { color: var(--hq-muted); line-height: 1.5; overflow-wrap: anywhere; }
+.hq-client-history .hq-row { min-height: 0; padding: 14px 0; align-items: flex-start; flex-wrap: wrap; }
+.hq-client-history .hq-row > * { min-width: 0; max-width: 100%; }
+.hq-client-history :is(.hq-row-title, .hq-row-meta, time) { white-space: normal; overflow-wrap: anywhere; }
+.hq-client-detail .hq-empty-state,
+.hq-client-compact-empty {
+  display: block;
+  min-height: 0;
+  padding: 14px 0;
+  text-align: left;
+  color: var(--hq-muted);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.hq-client-detail .hq-empty-state strong,
+.hq-client-compact-empty strong { font-size: 14px; font-weight: 620; }
+.hq-client-detail .hq-empty-state span,
+.hq-client-compact-empty span { display: block; margin-top: 4px; font-size: 13px; }
+
+@media (max-width: 720px) {
+  .hq-client-list-row .hq-client-billing,
+  .hq-client-list-row .hq-client-activity { font-size: 14px; }
+  .hq-client-detail .hq-title { font-size: 28px; }
+  .hq-client-manage .hq-inline-form { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 480px) {
+  dl.hq-client-facts > div,
+  .hq-client-facts dl > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}

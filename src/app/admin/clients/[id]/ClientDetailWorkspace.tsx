@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react"
 import { setViewAsCookie, toggleTest, setIncludedAddon, setDisabledAddon } from "../../businesses/actions"
 import { getAllAddonsRanked, ALL_ADDONS, BUSINESS_INCLUDED_ADDONS } from "@/lib/featureAccess"
-import { activityEventLabel, activitySurfaceLabel, buildClientActivitySignal } from "../../customerActivitySignals"
+import { activityEventLabel, activitySurfaceLabel } from "../../customerActivitySignals"
 import { adminTestIdentityReason, isAdminTestIdentity } from "../../testIdentity"
 import { updateClientRecord, addClientNote, updateClientContactName, updateClientAddress } from "../actions"
 import { deferClientBilling, setPermanentComp, resendCardLinkEmail } from "../../new-client/actions"
 import type { StoredBillingSummary } from "@/lib/stripe/billingSummary"
+import type { ClientBillingFacts } from "@/lib/stripe/clientBillingFacts"
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
 const ADMIN_TIME_ZONE = "America/Phoenix"
@@ -27,6 +28,8 @@ export type ClientDetail = {
   plan: string | null
   subscription_status: string | null
   billing: StoredBillingSummary | null
+  billing_facts: ClientBillingFacts
+  email_history_ready: boolean
   client_state: string
   account_kind: string
   comp_reason: string | null
@@ -49,7 +52,7 @@ export type ClientDetail = {
   }
   created_at: string
   activities: { summary: string; activity_type: string; metadata?: Record<string, unknown> | null; created_at: string }[]
-  emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string }[]
+  emails: { subject: string; email_type: string; recipient_email: string; success: boolean; created_at: string; delivery_status?: string | null; history_category: "owner_account" | "lead_automation" | "business_operations" | "unknown" }[]
   customer_activities: { event_type: string; surface: string; feature: string | null; created_at: string }[]
   customer_activity_ready: boolean
 }
@@ -103,14 +106,6 @@ function formatDateTime(value: string) {
   })
 }
 
-function formatDaysAgo(value: string | null) {
-  if (!value) return "No client use yet"
-  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
-  if (days <= 0) return "Used today"
-  if (days === 1) return "Used yesterday"
-  return `Used ${days} days ago`
-}
-
 function adminDayNumber(date: Date) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: ADMIN_TIME_ZONE,
@@ -125,7 +120,7 @@ function adminDayNumber(date: Date) {
 }
 
 function formatLastActivity(value: string | null) {
-  if (!value) return "No client use yet"
+  if (!value) return "No recorded client activity"
   const date = new Date(value)
   const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: ADMIN_TIME_ZONE })
   const days = adminDayNumber(new Date()) - adminDayNumber(date)
@@ -156,10 +151,21 @@ function outreachMethodLabel(value: string) {
   return activityEventLabel(value)
 }
 
-function stateTone(state: string) {
-  if (state === "active" || state === "comp") return "success"
-  if (state === "past_due" || state === "cancelled") return "warning"
-  return "info"
+function emailDeliveryLabel(email: ClientDetail["emails"][number]) {
+  if (!email.success) return "Failed"
+  const status = email.delivery_status?.replace(/^email\./, "")
+  if (status === "delivered") return "Delivered"
+  if (status === "bounced") return "Bounced"
+  if (status === "delivery_delayed" || status === "delayed") return "Delayed"
+  if (status === "complained") return "Spam complaint"
+  if (status === "failed") return "Failed"
+  if (status === "sent" || !status) return "Accepted - delivery unconfirmed"
+  return "Delivery unknown"
+}
+
+function money(amount: number, currency: string) {
+  const formatter = new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase() })
+  return formatter.format(amount / 10 ** (formatter.resolvedOptions().maximumFractionDigits ?? 2))
 }
 
 async function openViewAs(companyId: string) {
@@ -185,7 +191,6 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const bundledAddons = client.plan === "found_business"
     ? BUSINESS_INCLUDED_ADDONS.map(slug => ALL_ADDONS.find(a => a.slug === slug)).filter((a): a is NonNullable<typeof a> => !!a)
     : []
-  const isActiveSubscription = client.subscription_status === "active" || client.subscription_status === "trialing"
   const isTestIdentity = isAdminTestIdentity(client)
   const testIdentityReason = isTestIdentity ? adminTestIdentityReason(client) : null
   const returnTo = `/admin/clients/${client.id}`
@@ -197,54 +202,31 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   const billingAnchorLabel = client.billing_cycle_day
     ? `${client.billing_cycle_day}${ordinalSuffix(client.billing_cycle_day)} of every month`
     : "Not anchored"
-  const stripeStatus = client.billing?.status ?? "not verified"
-  const hasCardOnFile = client.billing_payment_signal.status === "card_on_file"
-  const billingStatusLabel = client.billing?.label ?? "Billing not verified"
+  const confirmedNoCard = client.billing_payment_signal.status === "no_card" || client.billing_payment_signal.status === "no_stripe_customer"
   const collectedLabel = client.deferred_payment_amount != null
     ? `$${Number(client.deferred_payment_amount).toFixed(2)}${client.deferred_payment_method ? ` (${client.deferred_payment_method})` : ""}${client.deferred_payment_note ? ` - ${client.deferred_payment_note}` : ""}`
-    : "Nothing recorded"
+    : "No manual payment recorded"
   const lastBillingActivity = client.activities.find((activity) =>
     activity.activity_type === "billing" || activity.summary.toLowerCase().includes("billing"),
   )
   const outreachActivities = client.activities.filter((activity) => activity.activity_type.startsWith("outreach_"))
   const lastOutreachActivity = outreachActivities[0] ?? null
   const lastCustomerActivity = client.customer_activities[0] ?? null
-  const activitySignal = buildClientActivitySignal(client.customer_activities, client.subscription_status)
-  const customerActivityCount = activitySignal.count90d
-  const missingTools = activitySignal.missingCoreTools.slice(0, 4).map(activitySurfaceLabel).join(", ")
-  const mostUsedTools = activitySignal.topToolSurfaces
-    .slice(0, 3)
-    .map(([surface, count]) => `${activitySurfaceLabel(surface)} ${count}`)
-    .join(" · ")
-  const expectedChargeLabel = plan.price === "No monthly price" ? plan.price : plan.price
-  const nextAction = client.billing?.needsAttention || client.billing?.stale
-    ? "Review billing"
-    : client.client_state === "past_due"
-    ? "Fix payment risk"
-    : !isActiveSubscription && !client.is_comp
-      ? "Get card on file"
-      : client.client_state === "onboarding"
-        ? "Finish launch"
-        : "Keep relationship warm"
-  const nextActionDetail = client.billing?.needsAttention || client.billing?.stale
-    ? billingStatusLabel
-    : client.client_state === "past_due"
-    ? "This account is a revenue risk."
-    : !isActiveSubscription && !client.is_comp
-      ? "Activation is not complete until billing is handled."
-      : client.client_state === "onboarding"
-        ? "Finish the setup work that blocks launch."
-        : activitySignal.bucket === "active_week"
-          ? "No urgent risk is visible."
-          : activitySignal.reachOutReason
   const accountStatusLabel = isTestIdentity ? "Test account" : client.client_state.replace("_", " ")
-  const paymentStatusLabel = client.billing?.needsAttention ? "Payment needs attention"
-    : client.billing?.status === "active" ? "Billing active"
-    : client.billing?.status === "trialing" ? "Trialing" : client.is_comp ? "Comp" : "Payment not verified"
-  const usageStatusLabel = client.customer_activity_ready ? activitySignal.label : "Waiting on table"
-  const outreachStatusLabel = lastOutreachActivity
-    ? `${outreachMethodLabel(lastOutreachActivity.activity_type)} ${formatDaysAgo(lastOutreachActivity.created_at).replace("Used", "").trim().toLowerCase()}`
-    : "No outreach"
+  const billingUrl = `/admin/payments?q=${encodeURIComponent(client.slug)}`
+  const accountEmails = client.emails.filter(email => email.history_category === "owner_account")
+  const leadEmails = client.emails.filter(email => email.history_category === "lead_automation")
+  const otherEmails = client.emails.filter(email => email.history_category === "business_operations" || email.history_category === "unknown")
+  const facts = client.billing_facts
+  const balanceLabel = facts.outstandingInvoices.balanceByCurrency === null ? "Unknown - review live billing"
+    : Object.entries(facts.outstandingInvoices.balanceByCurrency).map(([currency, amount]) => money(amount, currency)).join(" + ") || "No outstanding balance"
+  const lastPayment = facts.lastSuccessfulPayment.payment
+  const failedPayment = facts.latestFailedPayment.payment
+  const nextAttempt = facts.nextCharge.scheduledAttempt
+  const nextRenewal = facts.nextCharge.expectedRenewal
+  const billingStatusLabel = facts.subscriptionStatus === "multiple" ? "Multiple subscriptions - review billing"
+    : facts.subscriptionStatus ? `Billing ${facts.subscriptionStatus.replace(/_/g, " ")}`
+    : "Live billing status not confirmed"
 
   function handleTestToggle() {
     const next = !isTest
@@ -265,20 +247,16 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
   }
 
   return (
-    <>
+    <div className="hq-client-detail">
       <header className="hq-header">
         <div>
-          <p className="hq-eyebrow">{client.contact_name || "No contact name yet"}</p>
+          {client.contact_name && <p className="hq-eyebrow">{client.contact_name}</p>}
           <h1 className="hq-title">{client.name}</h1>
           <p className="hq-subtitle">
-            <span className={`hq-badge hq-badge-${stateTone(client.client_state)}`} style={{ marginRight: 6 }}>
-              {isTestIdentity ? "Test account" : `Client ${client.client_state.replace("_", " ")}`}
-            </span>
             {planLabel(client.plan)}
           </p>
         </div>
       </header>
-      {client.billing?.preserveAccess && <p className="hq-row-meta">Site access protected. Billing status is tracked separately.</p>}
 
       {isTestIdentity && (
         <section className="hq-command-status" style={{ marginBottom: 16 }}>
@@ -291,52 +269,49 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
         </section>
       )}
 
-      <section className="hq-client-command">
+      <section className="hq-client-overview">
         <div className="hq-client-command-head">
           <div>
-            <p className="hq-row-title">{nextAction}</p>
-            <p className="hq-row-meta">{nextActionDetail}</p>
+            <p className="hq-row-title">{billingStatusLabel}</p>
+            <p className="hq-row-meta">{facts.completeness === "complete" ? `Live ledger checked ${formatDateTime(facts.checkedAt)}` : "Live ledger incomplete - review billing"}</p>
           </div>
           <div className="hq-client-command-actions">
+            <a className="hq-button hq-button-primary" href={billingUrl}>Review billing</a>
             <a className="hq-button hq-button-secondary" href={siteUrl} target="_blank" rel="noopener noreferrer">Site</a>
-            <button className="hq-button hq-button-primary" type="button" onClick={() => openViewAs(client.id)}>View as</button>
+            <button className="hq-button hq-button-secondary" type="button" onClick={() => openViewAs(client.id)}>View as</button>
           </div>
         </div>
-        <div className="hq-client-command-grid">
-          <div><span>Account</span><strong>{accountStatusLabel}</strong><em>{plan.name}</em></div>
-          <div><span>Payment</span><strong>{paymentStatusLabel}</strong><em>{billingStatusLabel}</em></div>
-          <div><span>Usage</span><strong>{usageStatusLabel}</strong><em>{client.customer_activity_ready ? `${activitySignal.toolCount90d} tool actions in 90d` : "Customer activity unavailable"}</em></div>
-          <div><span>Outreach</span><strong>{outreachStatusLabel}</strong><em>{lastOutreachActivity ? followUpLabel(nextFollowUpAt(lastOutreachActivity)) : "No follow-up scheduled"}</em></div>
-          <div><span>Next</span><strong>{nextAction}</strong><em>{activitySignal.reachOutReason}</em></div>
+        <dl className="hq-client-facts">
+          <div><dt>Outstanding balance</dt><dd>{balanceLabel}</dd></div>
+          <div><dt>Last successful payment</dt><dd>{lastPayment ? <>{money(lastPayment.amountCaptured, lastPayment.currency)}<small>Charge dated {formatDateTime(lastPayment.timestamp)}</small></> : facts.lastSuccessfulPayment.status === "none" ? "No captured payments recorded" : "Unknown"}</dd></div>
+          <div><dt>Latest failed payment</dt><dd>{failedPayment ? <>{failedPayment.reason || failedPayment.code?.replace(/_/g, " ") || "Reason not recorded"}<small>{formatDateTime(failedPayment.timestamp)}</small></> : facts.latestFailedPayment.status === "none" ? "No failed charges recorded" : "Unknown"}</dd></div>
+          <div><dt>Next automatic charge</dt><dd>{nextAttempt ? <>{money(nextAttempt.amountRemaining, nextAttempt.currency)}<small>{formatDateTime(nextAttempt.at)}</small></> : facts.nextCharge.status === "renewal_expected" && nextRenewal ? <>Renewal expected {formatDateTime(nextRenewal.at)}<small>No collection attempt scheduled yet</small></> : facts.nextCharge.status === "none" ? "No charge scheduled" : "Not confirmed"}</dd></div>
+          <div><dt>Live billing check</dt><dd>{formatDateTime(facts.checkedAt)}<small>{facts.completeness === "complete" ? "Complete ledger" : "Incomplete - amounts may be unknown"}</small></dd></div>
+          <div><dt>Relationship</dt><dd>{accountStatusLabel}</dd></div>
+          <div><dt>Site access</dt><dd>{client.billing?.preserveAccess ? "Protected - no billing hold" : `Stored service status: ${client.subscription_status ?? "Unknown"}`}</dd></div>
+          <div><dt>Last tracked activity</dt><dd>{client.customer_activity_ready ? formatLastActivity(lastCustomerActivity?.created_at ?? null) : "Activity unavailable"}</dd></div>
+          <div><dt>Follow-up</dt><dd>{lastOutreachActivity ? followUpLabel(nextFollowUpAt(lastOutreachActivity)) : "No outreach logged"}</dd></div>
+        </dl>
+        <div className="hq-client-contact-actions">
+          {client.phone && <a className="hq-button hq-button-secondary" href={`tel:${client.phone}`}>Call</a>}
+          {client.phone && <a className="hq-button hq-button-secondary" href={`sms:${client.phone}`}>Text</a>}
+          {client.email && <a className="hq-button hq-button-secondary" href={`mailto:${client.email}`}>Email</a>}
         </div>
       </section>
 
       <section className="hq-section">
         <div className="hq-section-head">
           <h2 className="hq-section-title">Client activity</h2>
-          <span className="hq-section-meta">Customer-side only</span>
+          <span className="hq-section-meta">Recorded dashboard events</span>
         </div>
-        <div className="hq-detail-snapshot hq-activity-snapshot">
-          <div><span>Last activity</span><strong>{client.customer_activity_ready ? formatLastActivity(lastCustomerActivity?.created_at ?? null) : "Waiting on table"}</strong></div>
-          <div><span>Tool actions, 90d</span><strong>{client.customer_activity_ready ? activitySignal.toolCount90d : "Not live"}</strong></div>
-          <div><span>Most used</span><strong>{client.customer_activity_ready && mostUsedTools ? mostUsedTools : "No tool use yet"}</strong></div>
-        </div>
-        {client.customer_activity_ready && (
-          <div className="hq-panel hq-next-action" style={{ marginBottom: 14 }}>
-            <div>
-              <p className="hq-row-title">{activitySignal.reachOutReason}</p>
-              <p className="hq-row-meta">{activitySignal.summary}{missingTools ? ` / Not used yet: ${missingTools}` : ""}</p>
-            </div>
-          </div>
-        )}
-        <div className="hq-panel hq-client-activity-panel">
+        <div>
           {!client.customer_activity_ready && (
-            <div className="hq-empty-state"><strong>Activity table is not live yet.</strong><span>Once the Supabase migration is applied, true customer actions will appear here.</span></div>
+            <p className="hq-client-compact-empty">Activity unavailable</p>
           )}
-          {client.customer_activity_ready && customerActivityCount === 0 && (
-            <div className="hq-empty-state"><strong>No customer-side activity yet.</strong><span>Admin views and view-as sessions are intentionally excluded.</span></div>
+          {client.customer_activity_ready && client.customer_activities.length === 0 && (
+            <p className="hq-client-compact-empty">No recorded client activity in the last 90 days</p>
           )}
-          {client.customer_activity_ready && client.customer_activities.slice(0, 12).map((activity, index) => (
+          {client.customer_activity_ready && client.customer_activities.length > 0 && <details className="hq-client-history"><summary>Recent activity</summary>{client.customer_activities.slice(0, 12).map((activity, index) => (
             <div key={`${activity.created_at}-${index}`} className="hq-row">
               <div>
                 <p className="hq-row-title">{activityEventLabel(activity.event_type)}</p>
@@ -344,7 +319,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               </div>
               <span className="hq-row-meta">{formatDateTime(activity.created_at)}</span>
             </div>
-          ))}
+          ))}</details>}
         </div>
       </section>
 
@@ -353,14 +328,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <h2 className="hq-section-title">Outreach</h2>
           <span className="hq-section-meta">Admin follow-up</span>
         </div>
-        <div className="hq-detail-snapshot hq-activity-snapshot">
-          <div><span>Last outreach</span><strong>{lastOutreachActivity ? formatDateTime(lastOutreachActivity.created_at) : "None logged"}</strong></div>
-          <div><span>Logged touches</span><strong>{outreachActivities.length}</strong></div>
-          <div><span>Next follow-up</span><strong>{lastOutreachActivity ? followUpLabel(nextFollowUpAt(lastOutreachActivity)) : "No signal yet"}</strong></div>
-        </div>
-        <div className="hq-panel hq-client-activity-panel">
+        <div>
           {outreachActivities.length === 0 && (
-            <div className="hq-empty-state"><strong>No outreach logged yet.</strong><span>Use the Client Health queue to log calls, texts, emails, or skips.</span></div>
+            <p className="hq-client-compact-empty">No outreach logged</p>
           )}
           {outreachActivities.slice(0, 12).map((activity, index) => (
             <div key={`${activity.created_at}-${index}`} className="hq-row">
@@ -376,29 +346,30 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
 
       <section className="hq-section">
         <div className="hq-section-head"><h2 className="hq-section-title">Billing</h2></div>
-        <div className="hq-panel" style={{ padding: 16 }}>
-          <p className="hq-row-title">Billing snapshot</p>
+        {facts.outstandingInvoices.invoices.map(invoice => <div className="hq-row" key={invoice.id}><div><p className="hq-row-title">{money(invoice.amountRemaining, invoice.currency)} remaining</p><p className="hq-row-meta">{invoice.status === "uncollectible" ? "Marked uncollectible" : "Open invoice"}{invoice.dueAt ? ` - due ${formatDateTime(invoice.dueAt)}` : ""}</p></div><a href={billingUrl} className="hq-button hq-button-secondary">Review invoice</a></div>)}
+        {facts.errors.length > 0 && <p className="hq-client-compact-empty" role="status">Live billing is not fully verified. <a href={billingUrl}>Review billing</a></p>}
+        <details className="hq-client-history"><summary>Payment method and local records</summary>
           <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
             <div>
-              <p className="hq-row-meta">Card status</p>
+              <p className="hq-row-meta">Saved payment method</p>
               <p className="hq-row-title">{client.billing_payment_signal.label}</p>
               {client.billing_payment_signal.detail && <p className="hq-row-meta">{client.billing_payment_signal.detail}</p>}
             </div>
             <div>
               <p className="hq-row-meta">Stripe status</p>
-              <p className="hq-row-title">{stripeStatus}</p>
+              <p className="hq-row-title">{facts.subscriptionStatus ?? "Not confirmed"}</p>
             </div>
             <div>
               <p className="hq-row-meta">Current plan</p>
               <p className="hq-row-title">{plan.name}</p>
-              <p className="hq-row-meta">Expected charge: {expectedChargeLabel}</p>
+              <p className="hq-row-meta">Catalog price: {plan.price}</p>
             </div>
             <div>
-              <p className="hq-row-meta">{client.subscription_status === "trialing" ? "First automatic charge" : "Card due / billing starts"}</p>
+              <p className="hq-row-meta">Local card deadline</p>
               <p className="hq-row-title">{cardDueLabel ?? "No date set"}</p>
             </div>
             <div>
-              <p className="hq-row-meta">Billing day</p>
+              <p className="hq-row-meta">Locally recorded billing day</p>
               <p className="hq-row-title">{billingAnchorLabel}</p>
             </div>
             <div>
@@ -407,7 +378,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               {client.stripe_customer_id && <p className="hq-row-meta">{client.stripe_customer_id}</p>}
             </div>
             <div>
-              <p className="hq-row-meta">Already collected</p>
+              <p className="hq-row-meta">Manual payment recorded</p>
               <p className="hq-row-title">{collectedLabel}</p>
             </div>
             {lastBillingActivity && (
@@ -418,7 +389,9 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               </div>
             )}
           </div>
-          {!hasCardOnFile && !client.is_comp && client.trial_ends_at && (
+        </details>
+          {confirmedNoCard && !client.is_comp && <details className="hq-client-manage"><summary>Billing setup</summary>
+          {confirmedNoCard && !client.is_comp && client.trial_ends_at && (
             <form action={resendCardLinkEmail} style={{ marginTop: 10 }}>
               <input type="hidden" name="companyId" value={client.id} />
               <button className="hq-button hq-button-secondary" type="submit" disabled={!client.email} style={{ width: "100%" }}>
@@ -427,16 +400,14 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
               {client.email && <p className="hq-row-meta" style={{ marginTop: 8 }}>Sends to {client.email} and copies Shawn.</p>}
             </form>
           )}
-        </div>
-
-        {!hasCardOnFile && !client.is_comp && (
+        {confirmedNoCard && !client.is_comp && (
           <>
-            <div className="hq-panel" style={{ padding: 16, marginTop: 12 }}>
+            <div style={{ paddingBlock: 16 }}>
               <p className="hq-row-title">Activate now</p>
               <p className="hq-row-meta">Collect a card immediately - open this link with them:</p>
               <p className="hq-row-meta"><a href={activateUrl}>{activateUrl}</a></p>
             </div>
-            <div className="hq-panel" style={{ padding: 16, marginTop: 12 }}>
+            <div style={{ paddingBlock: 16 }}>
               <p className="hq-row-title">Defer billing</p>
               <p className="hq-row-meta">No card yet - give them a window to add one before the site pauses.</p>
               <form action={deferClientBilling} className="hq-create-form" style={{ marginTop: 12 }}>
@@ -452,7 +423,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 <label>Billing day (optional)
                   <input type="number" name="billingDay" min={1} max={28} placeholder="e.g. 25" />
                 </label>
-                <label>Already collected? Amount
+                <label>Manual payment amount
                   <input type="number" name="paymentAmount" min={0} step="0.01" placeholder="e.g. 69.00" />
                 </label>
                 <label>Method
@@ -473,7 +444,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 <div className="hq-form-wide"><button className="hq-button hq-button-primary" type="submit">Defer billing</button></div>
               </form>
             </div>
-            <div className="hq-panel" style={{ padding: 16, marginTop: 12 }}>
+            <div style={{ paddingBlock: 16 }}>
               <p className="hq-row-title">Permanent</p>
               <p className="hq-row-meta">Free forever, no card ever needed.</p>
               <form action={setPermanentComp} className="hq-create-form" style={{ marginTop: 12 }}>
@@ -491,6 +462,7 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
             </div>
           </>
         )}
+        </details>}
       </section>
 
       <section className="hq-section">
@@ -542,8 +514,8 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
         </div>
       </section>
 
-      <section className="hq-section">
-        <div className="hq-section-head"><h2 className="hq-section-title">Relationship</h2></div>
+      <details className="hq-section hq-client-manage">
+        <summary>Manage client</summary>
         <div className="hq-panel" style={{ padding: 16 }}>
           <form action={updateClientRecord} className="hq-inline-form">
             <input type="hidden" name="id" value={client.id} />
@@ -564,12 +536,12 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           {client.plan === "found_pro" && relevantAddons.length > 0 && (
             <div className="hq-inline-form" style={{ marginTop: 12 }}>
               <label className="hq-form-grow">Included add-on (Pro plan, one pick, free)
-                <div className="hq-filter-row">
-                  <button type="button" data-active={!includedAddon} disabled={addonPending} onClick={() => handleAddonChange(null)}>None</button>
+                <select value={includedAddon ?? ""} disabled={addonPending} onChange={event => handleAddonChange(event.target.value || null)}>
+                  <option value="">None</option>
                   {relevantAddons.map((addon) => (
-                    <button key={addon.slug} type="button" data-active={includedAddon === addon.slug} disabled={addonPending} onClick={() => handleAddonChange(addon.slug)}>{addon.label}</button>
+                    <option key={addon.slug} value={addon.slug}>{addon.label}</option>
                   ))}
-                </div>
+                </select>
               </label>
             </div>
           )}
@@ -587,18 +559,21 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
           <div className="hq-inline-form" style={{ marginTop: 12 }}>
             <button type="button" onClick={handleTestToggle} disabled={testPending} className="hq-button hq-button-secondary">{isTest ? "Show in search" : "Hide from search"}</button>
           </div>
-          <form action={addClientNote} className="hq-inline-form" style={{ marginTop: 12 }}>
+        </div>
+      </details>
+      <section className="hq-section">
+          <form action={addClientNote} className="hq-inline-form">
             <input type="hidden" name="id" value={client.id} />
             <label className="hq-form-grow">Dated note<input name="note" required placeholder="Conversation, promise, or context" /></label>
             <button className="hq-button hq-button-secondary" type="submit">Add note</button>
           </form>
-        </div>
       </section>
 
-      {(client.activities.length > 0 || client.emails.length > 0) && (
+      {(client.activities.length > 0 || client.emails.length > 0 || !client.email_history_ready) && (
         <section className="hq-section">
           <div className="hq-section-head"><h2 className="hq-section-title">History</h2></div>
           <div className="hq-panel" style={{ padding: 16 }}>
+            {!client.email_history_ready && <p className="hq-client-compact-empty">Email history unavailable</p>}
             {client.activities.length > 0 && (
               <div className="hq-form-note">
                 <strong>Activity</strong>
@@ -609,19 +584,24 @@ export default function ClientDetailWorkspace({ client }: { client: ClientDetail
                 </ul>
               </div>
             )}
-            {client.emails.length > 0 && (
+            {accountEmails.length > 0 && (
               <div className="hq-form-note">
-                <strong>Emails sent</strong>
+                <strong>Found account emails</strong>
                 <ul style={{ margin: "4px 0 0", paddingLeft: 18 }}>
-                  {client.emails.map((email, i) => (
-                    <li key={i}>{formatShortDate(email.created_at)} - {email.success ? "Sent" : "FAILED"}: {email.email_type} to {email.recipient_email}</li>
+                  {accountEmails.map((email, i) => (
+                    <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>
                   ))}
                 </ul>
               </div>
             )}
+            {client.email_history_ready && accountEmails.length === 0 && <p className="hq-client-compact-empty">No Found account emails in the recent history</p>}
+            {leadEmails.length > 0 && <details className="hq-client-history"><summary>Website lead emails</summary><ul>
+              {leadEmails.map((email, i) => <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>)}
+            </ul></details>}
+            {otherEmails.length > 0 && <details className="hq-client-history"><summary>Other business emails</summary><ul>{otherEmails.map((email, i) => <li key={i}>{formatShortDate(email.created_at)} - {emailDeliveryLabel(email)}: {email.subject || email.email_type.replace(/_/g, " ")} to {email.recipient_email}</li>)}</ul></details>}
           </div>
         </section>
       )}
-    </>
+    </div>
   )
 }

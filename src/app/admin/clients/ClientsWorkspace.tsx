@@ -46,68 +46,35 @@ function planLabel(plan: string | null) {
   return "No plan"
 }
 
-function stateTone(state: string) {
-  if (state === "active" || state === "comp") return "success"
-  if (state === "past_due" || state === "cancelled") return "warning"
-  return "info"
-}
-
-function statusLabel(row: ClientRow) {
-  if (row.issues.length > 0) return row.issues.join(", ")
-  if (row.client_state === "active" || row.client_state === "comp") return "Healthy"
-  if (row.client_state === "onboarding") return "Finish launch"
-  return row.client_state.replace("_", " ")
-}
-
-function activityTone(level: ClientRow["customer_activity_status"]["level"]) {
-  if (level === "using") return "success"
-  if (level === "quiet") return "info"
-  return "warning"
-}
-
-function surfaceLabel(surface: string | null) {
-  if (!surface) return "No tracked page"
-  if (surface === "site") return "Site"
-  if (surface === "leads") return "Leads"
-  if (surface === "photos") return "Photos"
-  if (surface === "estimates") return "Estimates"
-  if (surface === "marketing") return "Marketing"
-  if (surface === "dashboard") return "Dashboard"
-  return surface.replace(/_/g, " ")
+function recordedActivityLabel(value: string | null) {
+  const date = value ? new Date(value) : null
+  if (!date || Number.isNaN(date.getTime())) return "No client activity recorded"
+  return `Last recorded client activity ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}`
 }
 
 function ClientItem({ row }: { row: ClientRow }) {
   const isRecent = Date.now() - new Date(row.created_at).getTime() < 48 * 3600000
-  const needsAttention = row.issues.length > 0 || row.client_state === "past_due"
-  const summary = [
-    { label: planLabel(row.plan) },
-    { label: row.billing?.label ?? "Billing not verified", tone: row.billing?.needsAttention || row.billing?.stale ? "warning" : undefined },
-    ...(row.billing?.preserveAccess ? [{ label: "Site access protected", tone: "info" }] : []),
-    { label: statusLabel(row), tone: needsAttention ? "warning" : undefined },
-    { label: row.customer_activity_status.label, tone: activityTone(row.customer_activity_status.level) },
-  ]
+  const billingUncertain = !row.billing?.verifiedAt || row.billing.stale
 
   return (
-    <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link">
+    <Link href={`/admin/clients/${row.id}`} className="hq-business-row hq-business-row-link hq-client-list-row">
       <div className="hq-business-main">
         <div className="hq-business-copy">
           <div className="hq-business-name-line">
             <h2>{row.name}</h2>
-            <span className={`hq-badge hq-badge-${row.test_identity ? "info" : stateTone(row.client_state)}`}>{row.test_identity ? "Test account" : `Client ${row.client_state.replace("_", " ")}`}</span>
+            {row.test_identity && <span className="hq-badge hq-badge-info">Test account</span>}
             {isRecent && <span className="hq-badge hq-badge-success">New</span>}
             {row.is_test && <span className="hq-badge hq-badge-info">Hidden from search</span>}
           </div>
-          <p className="hq-client-summary">
-            {summary.map((item, index) => (
-              <span key={`${item.label}-${index}`} className={item.tone === "warning" ? "hq-client-fact-warning" : item.tone === "success" ? "hq-client-fact-success" : item.tone === "info" ? "hq-client-fact-info" : undefined}>
-                {index > 0 && <i aria-hidden="true" />}
-                {item.label}
-              </span>
-            ))}
+          <p className="hq-client-billing">
+            <span className={row.billing?.needsAttention || billingUncertain ? "hq-client-fact-warning" : undefined}>
+              {row.billing?.label ? row.billing.label.replace(/^Billing /, "Stored billing ") : "Stored billing not verified"}
+            </span>
+            {row.billing?.preserveAccess && <span className="hq-client-fact-info">Site access protected</span>}
           </p>
           <p className="hq-client-activity">
-            {row.test_identity && row.test_identity_reason ? `${row.test_identity_reason} - ` : ""}{row.customer_activity_reason} / {surfaceLabel(row.customer_top_tool_surface ?? row.last_customer_surface)}
-            {row.customer_activity_count_90d > 0 ? ` - ${row.customer_tool_activity_count_90d} tool action${row.customer_tool_activity_count_90d === 1 ? "" : "s"} in 90d` : " - waiting for first client action"}
+            <span>{planLabel(row.plan)}</span>
+            <span>{recordedActivityLabel(row.last_customer_activity_at)}</span>
           </p>
         </div>
       </div>
@@ -134,19 +101,23 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
     return row.client_state === filter
   }), [rows, query, filter])
   return (
-    <>
+    <div className="hq-client-list">
       <div className="hq-business-toolbar">
         <input className="hq-input" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search clients" />
         <label className="hq-compact-filter">
           <span>View</span>
           <select value={filter} onChange={(event) => setFilter(event.target.value)}>
             <option value="clients">All clients</option>
-            <option value="attention">Needs outreach</option>
-            <option value="quiet">Quiet 8-14 days</option>
-            <option value="stagnant">Stagnant 15+ days</option>
-            <option value="onboarding">Onboarding</option>
-            <option value="active">Active</option>
-            <option value="past_due">Past due</option>
+            <option value="attention">Billing or client attention</option>
+            <optgroup label="Recorded client activity">
+              <option value="quiet">Quiet 8-14 days</option>
+              <option value="stagnant">Stagnant 15+ days</option>
+            </optgroup>
+            <optgroup label="Client relationship (not billing)">
+              <option value="onboarding">Onboarding relationship</option>
+              <option value="active">Active relationship</option>
+              <option value="past_due">Relationship past due</option>
+            </optgroup>
             <option value="test">Test accounts only</option>
           </select>
         </label>
@@ -164,6 +135,6 @@ export default function ClientsWorkspace({ rows, initialSearch, initialFilter }:
         {!filtered.length && <div className="hq-business-empty">No clients in this view.</div>}
       </div>
       <p className="hq-page-footnote">Website quality tools are in <Link href="/admin/more">More</Link>.</p>
-    </>
+    </div>
   )
 }
