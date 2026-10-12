@@ -50,6 +50,7 @@ scripts/*
 !scripts/check-billing-reliability.mjs
 !scripts/check-billing-ledger.mjs
 !scripts/check-billing-backend.mjs
+!scripts/check-billing-link-redirect.mjs
 /.billing-audits/
 !scripts/audit-copy-quality.mjs
 !scripts/repair-copy-quality.mjs
