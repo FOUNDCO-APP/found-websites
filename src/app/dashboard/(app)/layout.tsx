@@ -165,6 +165,7 @@ async function DashboardChrome({ children }: { children: React.ReactNode }) {
           <ActivationBanner
             slug={company.slug}
             companyName={company.name}
+            isFoundingMember={!!company.is_founding_member}
           />
         )}
 

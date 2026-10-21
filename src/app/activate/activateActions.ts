@@ -255,6 +255,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       const matchesCompany = existingIntent?.metadata?.company_id === company.id && existingIntent?.metadata?.slug === slug
       const matchesPlan = existingIntent?.metadata?.plan === requestedPlan
       const matchesIntroPrice = existingIntent?.metadata?.intro_rate === String(useIntroPrice)
+      const matchesPrice = existingIntent?.metadata?.price_id === priceId
       const matchesPromo = (existingIntent?.metadata?.promotion_code_id ?? "") === promotionCodeId
       const matchesHeadstart = (existingIntent?.metadata?.headstart_code ?? "") === (headstartPromo ? normalizedPromoCode : "")
       const hasNoAddon = !existingIntent?.metadata?.addon_slug
@@ -264,7 +265,7 @@ export async function createActivationSetup(slug: string, targetPlan?: string | 
       // because the plan/promo still match, or the stale payment methods
       // keep showing up forever regardless of what the code now creates.
       const matchesPaymentMethods = JSON.stringify(existingIntent?.payment_method_types ?? []) === JSON.stringify(["card"])
-      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPromo && matchesHeadstart && hasNoAddon && matchesPaymentMethods) {
+      if (existingIntent?.status === "requires_payment_method" && matchesCompany && matchesPlan && matchesIntroPrice && matchesPrice && matchesPromo && matchesHeadstart && hasNoAddon && matchesPaymentMethods) {
         return { clientSecret: company.pending_setup_intent_secret, companyName: company.name, plan: requestedPlan, price, promoError, deferredUntilLabel }
       }
     }

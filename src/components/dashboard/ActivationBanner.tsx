@@ -11,9 +11,11 @@ const BLACK = "#080A09"
 export default function ActivationBanner({
   slug,
   companyName,
+  isFoundingMember,
 }: {
   slug: string
   companyName?: string
+  isFoundingMember?: boolean
 }) {
   const [dismissed, setDismissed] = useState(false)
   const [activating, setActivating] = useState(false)
@@ -76,6 +78,7 @@ export default function ActivationBanner({
         <ActivateOverlay
           slug={slug}
           companyName={companyName ?? ""}
+          isFoundingMember={isFoundingMember}
           returnTo="dashboard"
           onClose={() => setActivating(false)}
         />

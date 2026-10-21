@@ -67,11 +67,13 @@ export default function PreviewBanner({
   companyName,
   isActivated,
   trialEndsAt,
+  isFoundingMember,
 }: {
   slug: string
   companyName?: string
   isActivated: boolean
   trialEndsAt: string | null
+  isFoundingMember?: boolean
 }) {
   const [visible, setVisible] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -134,6 +136,7 @@ export default function PreviewBanner({
         <ActivateOverlay
           slug={slug}
           companyName={companyName ?? slug}
+          isFoundingMember={isFoundingMember}
           onClose={() => { setActivating(false); setVisible(true) }}
         />
       )}

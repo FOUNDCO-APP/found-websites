@@ -6,7 +6,8 @@ import PlanPicker from "@/components/PlanPicker"
 import OnboardingDrawer from "@/components/OnboardingDrawer"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
-import { INTRO_RATE_CUTOFF, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
+import { INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
+import { useIntroRatePeriod } from "@/lib/pricingDisplay"
 import type { FoundPlanKey } from "@/lib/foundPlans"
 
 const FOUND_BLACK = "#080A09"
@@ -76,7 +77,7 @@ export default function HomeClient() {
   const [cinematic, setCinematic] = useState<"off" | "on" | "iris" | "fading">("off")
   const cinematicTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+  const isIntroRatePeriod = useIntroRatePeriod()
   const typedHeroOutcome = useTypewriter(HERO_OUTCOMES)
   const typedFeature = useTypewriter(ROTATING_WORDS)
 
@@ -418,7 +419,7 @@ export default function HomeClient() {
                     className="text-5xl font-light leading-[0.93] md:text-7xl lg:text-[5.5rem]"
                     style={{ color: FOUND_BLACK }}
                   >
-                    Lock in your rate<br />before {INTRO_RATE_CUTOFF_LABEL}.
+                    Lock in your rate<br />through {INTRO_RATE_CUTOFF_LABEL}.
                   </h2>
                 </div>
 

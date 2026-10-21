@@ -14,6 +14,7 @@ import { slugify as clientSlugify } from "@/lib/slugify"
 import { resizeImageToJpeg } from "@/lib/resizeImage"
 import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
 import FoundWordmark from "@/components/FoundWordmark"
+import { planPriceDisplay, useIntroRatePeriod } from "@/lib/pricingDisplay"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -106,7 +107,6 @@ const PLAN_CHOICES = [
   {
     key: "found",
     name: "Found Starter",
-    price: "$29/mo",
     line: "A polished website that gets you online.",
     detail: "Site, copy, photos, lead capture, and an automatic reply from your business when a new lead comes in.",
     badge: "Start simple",
@@ -115,7 +115,6 @@ const PLAN_CHOICES = [
   {
     key: "found_pro",
     name: "Found Pro",
-    price: "$39/mo",
     line: "Best for most owners.",
     detail: "Everything in Starter, plus automatic lead follow-up, contact organization, and page rewrites.",
     badge: "Recommended",
@@ -125,7 +124,6 @@ const PLAN_CHOICES = [
   {
     key: "found_business",
     name: "Found Business",
-    price: "$69/mo",
     line: "For teams ready to run work inside Found.",
     detail: "Everything in Pro, plus bookings, estimates, payments, email marketing, reviews, and team tools.",
     badge: "Most complete",
@@ -1104,12 +1102,11 @@ function PlanChoiceScreen({
   onContinue: () => void
 }) {
   const active = PLAN_CHOICES.find((p) => p.key === selectedPlan) ?? PLAN_CHOICES[1]
+  const introPeriod = useIntroRatePeriod()
   const cards = [
     {
       key: "found",
       name: "Found Starter",
-      price: "$29/mo",
-      regular: "$39/mo",
       eyebrow: "Done for you",
       headline: "Get online without building it yourself.",
       bullets: ["Website built for you", "Leads sent to you", "New leads get an automatic reply from your business", "Update your site, photos, and social posts"],
@@ -1117,8 +1114,6 @@ function PlanChoiceScreen({
     {
       key: "found_pro",
       name: "Found Pro",
-      price: "$39/mo",
-      regular: "$69/mo",
       eyebrow: "Recommended",
       headline: "Follow up with every lead. Automatically.",
       bullets: ["Everything in Starter", "Plus automatic lead follow-up", "Customer list organized", "Choose one growth tool: online ordering, booking calendar, estimates and deposits, or email marketing"],
@@ -1127,8 +1122,6 @@ function PlanChoiceScreen({
     {
       key: "found_business",
       name: "Found Business",
-      price: "$69/mo",
-      regular: "$99/mo",
       eyebrow: "All in",
       headline: "Run the whole business.",
       bullets: ["Everything in Pro", "Plus bookings, estimates, payments, and email marketing", "Plus team access for owners and workers"],
@@ -1160,6 +1153,7 @@ function PlanChoiceScreen({
       <div className="relative mt-5 grid gap-2.5 pb-24">
         {cards.map((card) => {
           const activePlan = selectedPlan === card.key
+          const pricing = planPriceDisplay(card.key, introPeriod)!
           return (
             <button
               key={card.key}
@@ -1195,8 +1189,8 @@ function PlanChoiceScreen({
                     </span>
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-[1.35rem] font-black leading-none text-white">{card.price}</span>
-                    <span className="text-xs font-medium tracking-[0.01em] text-white/62">regular <span className="line-through decoration-white/45 decoration-2">{card.regular}</span></span>
+                    <span className="text-[1.35rem] font-black leading-none text-white">${pricing.amount}/mo</span>
+                    {pricing.intro && <span className="text-xs font-medium tracking-[0.01em] text-white/62">regular <span className="line-through decoration-white/45 decoration-2">${pricing.normalAmount}/mo</span></span>}
                   </span>
                   <span className="mt-2 block text-sm font-black leading-5" style={{ color: SIGNAL_GREEN }}>
                     {card.headline}

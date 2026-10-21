@@ -6,6 +6,7 @@ import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElement
 import { createActivationSetup } from "./activateActions"
 import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
 import FoundWordmark from "@/components/FoundWordmark"
+import { activationPriceDisplay } from "@/lib/pricingDisplay"
 
 const SIGNAL_GREEN = "#32D074"
 const FOUND_BLACK = "#111111"
@@ -46,37 +47,10 @@ type ActivationSetupResult = {
   deferredUntilLabel?: string | null
 }
 
-function fallbackPlanDetails(plan?: string | null): ActivationPriceSummary {
-  if (plan === "found_business") return { originalAmount: 6900, discountedAmount: 6900, currency: "usd", promo: null }
-  if (plan === "found_pro") return { originalAmount: 3900, discountedAmount: 3900, currency: "usd", promo: null }
-  return { originalAmount: 2900, discountedAmount: 2900, currency: "usd", promo: null }
-}
-
-function normalPriceForPlan(plan?: string | null) {
-  if (plan === "found_business") return 9900
-  if (plan === "found_pro") return 6900
-  return 3900
-}
-
 function planMonthlyValue(plan: string | null | undefined) {
   if (plan === "found_business") return 69
   if (plan === "found_pro") return 39
   return 29
-}
-
-function formatCurrency(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
-  }).format(amount / 100)
-}
-
-function promoDurationLabel(duration?: string) {
-  if (duration === "once") return "first invoice"
-  if (duration === "repeating") return "promo period"
-  if (duration === "forever") return "every invoice"
-  return "this subscription"
 }
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -144,9 +118,8 @@ function CardForm({
   const [promoMessage, setPromoMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [expressCheckoutReady, setExpressCheckoutReady] = useState(false)
-  const summary = priceSummary ?? fallbackPlanDetails(plan)
-  const normal = normalPriceForPlan(plan)
-  const hasPromo = !!summary.promo
+  const pricing = activationPriceDisplay(plan, priceSummary)
+  const hasPromo = !!priceSummary?.promo
 
   async function handlePromoApply(e: React.FormEvent) {
     e.preventDefault()
@@ -238,7 +211,7 @@ function CardForm({
             style={{ backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}` }} />
           <span className="text-[10px] font-black uppercase tracking-[0.22em]"
             style={{ color: SIGNAL_GREEN }}>
-            {deferredUntilLabel ? "Save your card" : hasPromo ? "Promo applied" : "Intro rate"}
+            {deferredUntilLabel ? "Save your card" : pricing.label}
           </span>
         </div>
         <div className="mb-6">
@@ -248,24 +221,18 @@ function CardForm({
                 Nothing charged today.
               </p>
               <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-                Billing starts {deferredUntilLabel} at {formatCurrency(summary.discountedAmount, summary.currency)}/month. Your card is only saved for that date.
+                {pricing.headline ? `Billing starts ${deferredUntilLabel}: ${pricing.headline}. Your card is only saved for that date.` : pricing.detail}
               </p>
+              {hasPromo && pricing.headline && <p className="mt-2 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>{pricing.detail}</p>}
             </>
           ) : (
             <>
               <p className="mb-1 text-2xl font-light leading-tight tracking-tight text-white">
-                {formatCurrency(summary.discountedAmount, summary.currency)}/month.
+                {pricing.headline ? `${pricing.headline}.` : pricing.label}
               </p>
-              {hasPromo ? (
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.42)" }}>
-                  <span className="line-through">{formatCurrency(summary.originalAmount, summary.currency)}/month</span>
-                  {" "}with {summary.promo?.discountLabel} for {promoDurationLabel(summary.promo?.duration)}.
-                </p>
-              ) : (
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  Locked in for 12 months, then {formatCurrency(normal, summary.currency)}/month. Cancel anytime.
-                </p>
-              )}
+              <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {pricing.detail}
+              </p>
             </>
           )}
         </div>
@@ -361,7 +328,7 @@ export default function ActivateFlow({
     setClientSecret(result.clientSecret)
     if (!companyName) setCompanyName(result.companyName)
     if (result.plan) setPlan(result.plan)
-    if (result.price) setPriceSummary(result.price)
+    setPriceSummary(result.price)
     setDeferredUntilLabel(result.deferredUntilLabel ?? null)
   }
 

@@ -135,6 +135,7 @@ export type Company = {
   stripe_connect_account_id: string | null
   plan: string | null
   subscription_status: string | null
+  is_founding_member?: boolean | null
   trial_ends_at: string | null
   pending_setup_intent_secret: string | null
   primary_color: string

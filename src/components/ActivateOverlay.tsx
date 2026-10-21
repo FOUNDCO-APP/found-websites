@@ -7,9 +7,9 @@ import { Elements, ExpressCheckoutElement, PaymentElement, useStripe, useElement
 import { createActivationSetup } from "@/app/activate/activateActions"
 import FoundPlanSelector from "@/components/FoundPlanSelector"
 import { captureFoundFunnelEvent } from "@/lib/foundFunnelTracking"
+import { activationPriceDisplay, formatCurrency } from "@/lib/pricingDisplay"
 import {
   defaultActivationPlan,
-  foundPlanDetails,
   normalizeFoundPlan,
   type FoundPlanKey,
 } from "@/lib/foundPlans"
@@ -44,35 +44,10 @@ type ActivationSetupResult = {
   promoError?: string
 }
 
-function fallbackPlanSummary(plan?: string | null): ActivationPriceSummary {
-  const selectedPlan = foundPlanDetails(plan)
-  return {
-    originalAmount: selectedPlan.price * 100,
-    discountedAmount: selectedPlan.price * 100,
-    currency: "usd",
-    promo: null,
-  }
-}
-
-function formatCurrency(amount: number, currency: string) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: currency.toUpperCase(),
-    maximumFractionDigits: amount % 100 === 0 ? 0 : 2,
-  }).format(amount / 100)
-}
-
 function planMonthlyValue(plan: string | null | undefined) {
   if (plan === "found_business") return 69
   if (plan === "found_pro") return 39
   return 29
-}
-
-function promoDurationLabel(duration?: string) {
-  if (duration === "once") return "first invoice"
-  if (duration === "repeating") return "promo period"
-  if (duration === "forever") return "every invoice"
-  return "this subscription"
 }
 
 const stripeAppearance = {
@@ -143,10 +118,9 @@ function CardForm({
   const [error, setError] = useState<string | null>(null)
   const [expressCheckoutReady, setExpressCheckoutReady] = useState(false)
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "foundco.app"
-  const selectedPlan = foundPlanDetails(plan)
   const hasAddon = !!addonLabel && typeof addonPrice === "number"
-  const summary = priceSummary ?? fallbackPlanSummary(plan)
-  const hasPromo = !!summary.promo
+  const pricing = activationPriceDisplay(plan, priceSummary)
+  const hasPromo = !!priceSummary?.promo
 
   async function handlePromoApply(e: React.FormEvent) {
     e.preventDefault()
@@ -225,14 +199,14 @@ function CardForm({
       <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: SIGNAL_GREEN, boxShadow: `0 0 6px ${SIGNAL_GREEN}`, flexShrink: 0 }} />
         <span style={{ fontSize: 10, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.22em", color: SIGNAL_GREEN }}>
-          {hasAddon ? "Add feature" : hasPromo ? "Promo applied" : "Intro rate"}
+          {hasAddon ? "Add feature" : pricing.label}
         </span>
       </div>
       <p style={{ fontSize: 30, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.02em", color: "white", margin: "0 0 5px" }}>
-        {hasAddon ? addonLabel : `${formatCurrency(summary.discountedAmount, summary.currency)}/month.`}
+        {hasAddon ? addonLabel : pricing.headline ? `${pricing.headline}.` : pricing.label}
       </p>
       <p style={{ fontSize: 14, lineHeight: 1.5, color: "rgba(255,255,255,0.44)", margin: "0 0 24px" }}>
-        {hasAddon ? `${formatCurrency(addonPrice * 100, "usd")}/month added to your Found plan. Cancel anytime.` : hasPromo ? `${summary.promo?.discountLabel} for ${promoDurationLabel(summary.promo?.duration)}. Regular intro rate is ${formatCurrency(summary.originalAmount, summary.currency)}/month.` : `Locked in for 12 months, then ${formatCurrency(selectedPlan.normalPrice * 100, "usd")}/month. Cancel anytime.`}
+        {hasAddon ? `${formatCurrency(addonPrice * 100, "usd")}/month added to your Found plan. Cancel anytime.` : pricing.detail}
       </p>
       <div style={{ marginBottom: expressCheckoutReady ? 18 : 0 }}>
         <ExpressCheckoutElement
@@ -341,6 +315,7 @@ export default function ActivateOverlay({
   targetAddonPrice,
   returnTo = "site",
   skipIntro = false,
+  isFoundingMember,
   onClose,
 }: {
   slug: string
@@ -351,6 +326,7 @@ export default function ActivateOverlay({
   targetAddonPrice?: number | null
   returnTo?: "site" | "dashboard"
   skipIntro?: boolean
+  isFoundingMember?: boolean
   onClose: () => void
 }) {
   const isAddonFlow = !!targetAddonSlug
@@ -383,7 +359,7 @@ export default function ActivateOverlay({
     } else {
       setPlan(fallbackPlan)
     }
-    if (result.price) setPriceSummary(result.price)
+    setPriceSummary(result.price)
   }
 
   async function preparePayment(nextPlan: FoundPlanKey = selectedPlan) {
@@ -517,6 +493,7 @@ export default function ActivateOverlay({
                 <>
                   <FoundPlanSelector
                     selectedPlan={selectedPlan}
+                    isFoundingMember={isFoundingMember}
                     loading={preparingPlan}
                     onSelect={setSelectedPlan}
                     onContinue={() => void preparePayment(selectedPlan)}

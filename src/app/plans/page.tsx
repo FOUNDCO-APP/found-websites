@@ -3,15 +3,15 @@ import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
 import MarketingPlanCard from "@/components/MarketingPlanCard"
-import { INTRO_RATE_CUTOFF, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
+import { isIntroRatePeriod, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
 import { FOUND_PLAN_OPTIONS } from "@/lib/foundPlans"
 
 export const metadata: Metadata = {
-  title: "Compare Plans | Found — $29, $39, $69/month",
+  title: "Compare Plans | Found",
   description: "Compare Found Starter, Found Pro, and Found Business. Every plan includes a professional website, your own web address, and leads coming straight to you. Choose the level that fits your business.",
   openGraph: {
-    title: "Compare Found Plans — $29, $39, $69/month",
-    description: `Found Starter, Found Pro, Found Business. Side-by-side feature comparison. Intro rates expire ${INTRO_RATE_CUTOFF_LABEL}.`,
+    title: "Compare Found Plans",
+    description: "Found Starter, Found Pro, Found Business. Side-by-side feature and price comparison.",
     url: "https://foundco.app/plans",
   },
 }
@@ -19,19 +19,13 @@ export const metadata: Metadata = {
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
 
-const IS_INTRO_RATE_PERIOD = new Date() < INTRO_RATE_CUTOFF
+export const dynamic = "force-dynamic"
 
 const PLAN_HREFS = {
   found: "/plans/found",
   found_pro: "/plans/found-pro",
   found_business: "/plans/found-business",
 }
-
-const PLANS = FOUND_PLAN_OPTIONS.map((plan) => ({
-  ...plan,
-  href: PLAN_HREFS[plan.key],
-  displayPrice: IS_INTRO_RATE_PERIOD ? plan.price : plan.normalPrice,
-}))
 
 const ROWS: { label: string; values: (boolean | string)[] }[] = [
   { label: "Complete website, five pages",            values: [true, true, true] },
@@ -70,6 +64,12 @@ function Dash() {
 }
 
 export default function PlansPage() {
+  const IS_INTRO_RATE_PERIOD = isIntroRatePeriod()
+  const PLANS = FOUND_PLAN_OPTIONS.map((plan) => ({
+    ...plan,
+    href: PLAN_HREFS[plan.key],
+    displayPrice: IS_INTRO_RATE_PERIOD ? plan.price : plan.normalPrice,
+  }))
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
 

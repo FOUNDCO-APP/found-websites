@@ -5,7 +5,8 @@ import Link from "next/link"
 import OnboardingDrawer from "./OnboardingDrawer"
 import SiteNav from "./SiteNav"
 import SiteFooter from "./SiteFooter"
-import { INTRO_RATE_CUTOFF, INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
+import { INTRO_RATE_CUTOFF_LABEL } from "@/lib/introRate"
+import { useIntroRatePeriod } from "@/lib/pricingDisplay"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -30,7 +31,7 @@ interface Props {
 export default function PlanPage({ plan, name, identity, price, normalPrice, featured, tagline, description, features, faqs, closingLine }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+  const isIntroRatePeriod = useIntroRatePeriod()
 
   // FAQ schema for AEO/GEO
   const faqSchema = {

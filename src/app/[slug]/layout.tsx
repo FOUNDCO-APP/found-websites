@@ -196,6 +196,7 @@ export default async function CompanyLayout({
         companyName={company.name}
         isActivated={company.subscription_status === 'active'}
         trialEndsAt={company.trial_ends_at}
+        isFoundingMember={!!company.is_founding_member}
       />
       <TrialActivatedSplash companyName={company.name} />
     </div>

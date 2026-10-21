@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import SiteNav from "@/components/SiteNav"
 import SiteFooter from "@/components/SiteFooter"
-import { INTRO_RATE_CUTOFF } from "@/lib/introRate"
+import { isIntroRatePeriod as introRateActive } from "@/lib/introRate"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
 }
 
-const isIntroRatePeriod = new Date() < INTRO_RATE_CUTOFF
+export const dynamic = "force-dynamic"
 
 const BUILD_STEPS = [
   {
@@ -123,6 +123,7 @@ const schema = {
 }
 
 export default function HowItWorksPage() {
+  const isIntroRatePeriod = introRateActive()
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: FOUND_BLACK }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />

@@ -1,6 +1,7 @@
 "use client"
 
 import { FOUND_PLAN_OPTIONS, foundPlanDetails, type FoundPlanKey } from "@/lib/foundPlans"
+import { planPriceDisplay, useIntroRatePeriod } from "@/lib/pricingDisplay"
 
 const FOUND_BLACK = "#080A09"
 const SIGNAL_GREEN = "#32D074"
@@ -11,6 +12,7 @@ type FoundPlanSelectorProps = {
   onContinue: () => void
   loading?: boolean
   className?: string
+  isFoundingMember?: boolean
 }
 
 function CheckIcon({ color, size = 13 }: { color: string; size?: number }) {
@@ -27,8 +29,10 @@ export default function FoundPlanSelector({
   onContinue,
   loading = false,
   className = "",
+  isFoundingMember,
 }: FoundPlanSelectorProps) {
   const active = foundPlanDetails(selectedPlan)
+  const introPeriod = useIntroRatePeriod()
 
   return (
     <section className={`relative flex min-h-full flex-col justify-center py-5 ${className}`}>
@@ -52,6 +56,9 @@ export default function FoundPlanSelector({
       <div className="relative mt-5 grid gap-2.5 pb-24">
         {FOUND_PLAN_OPTIONS.map((card) => {
           const activePlan = selectedPlan === card.key
+          const pricing = introPeriod || isFoundingMember !== undefined
+            ? planPriceDisplay(card.key, !!isFoundingMember || introPeriod)
+            : null
           return (
             <button
               key={card.key}
@@ -86,10 +93,10 @@ export default function FoundPlanSelector({
                     </span>
                   </span>
                   <span className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                    <span className="text-[1.35rem] font-black leading-none text-white">${card.price}/mo</span>
-                    <span className="text-xs font-medium tracking-[0.01em] text-white/62">
-                      regular <span className="line-through decoration-white/45 decoration-2">${card.normalPrice}/mo</span>
-                    </span>
+                    <span className="text-[1.35rem] font-black leading-none text-white">{pricing ? `$${pricing.amount}/mo` : "Price shown at checkout"}</span>
+                    {pricing?.intro && <span className="text-xs font-medium tracking-[0.01em] text-white/62">
+                      regular <span className="line-through decoration-white/45 decoration-2">${pricing.normalAmount}/mo</span>
+                    </span>}
                   </span>
                   <span className="mt-2 block text-sm font-black leading-5" style={{ color: SIGNAL_GREEN }}>
                     {card.headline}

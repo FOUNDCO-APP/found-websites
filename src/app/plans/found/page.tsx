@@ -1,11 +1,13 @@
 import type { Metadata } from "next"
 import PlanPage from "@/components/PlanPage"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
-  title: "Found Starter — $29/month | Get Your Business Online Today",
-  description: "A complete professional website, your own web address, and a photo pipeline that keeps your site fresh — built in minutes for $29/month.",
+  title: "Found Starter | Get Your Business Online Today",
+  description: "A complete professional website, your own web address, and a photo pipeline that keeps your site fresh — built in minutes. See current Found Starter pricing.",
   openGraph: {
-    title: "Found Starter — $29/month | Get Your Business Online Today",
+    title: "Found Starter | Get Your Business Online Today",
     description: "A complete website, your own web address, beautiful industry photos, and leads coming straight to you. Built in minutes.",
     url: "https://foundco.app/plans/found",
   },
