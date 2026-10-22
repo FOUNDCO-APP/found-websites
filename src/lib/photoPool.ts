@@ -1,9 +1,14 @@
+import { isSecurityGuardIndustry } from "./industryDetection"
+
 export type PoolPhoto = {
   url: string
   desc: string
   tag: string | null        // sub-type — e.g. "spa facial", "nail studio", null = general
   keywords?: string[]       // team-approved matching keywords
 }
+
+// No guard photos have completed suitability review. Candidate stock is not approval.
+export const approvedSecurityGuardPhotos: readonly PoolPhoto[] = Object.freeze([])
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const BUCKET = "config"
@@ -35,6 +40,9 @@ export async function getPhotoPool(
   _vibe: string,
   subType?: string
 ): Promise<{ urls: string[]; matchedTag: boolean }> {
+  if (industryCategory === "professional_services" && isSecurityGuardIndustry(subType)) {
+    return { urls: approvedSecurityGuardPhotos.map(photo => photo.url), matchedTag: approvedSecurityGuardPhotos.length > 0 }
+  }
   const pool = await fetchPool(industryCategory)
   if (!pool.length) return { urls: [], matchedTag: false }
 
@@ -56,6 +64,9 @@ export async function getPhotoPoolWithDesc(
   _vibe: string,
   subType?: string
 ): Promise<PoolPhoto[]> {
+  if (industryCategory === "professional_services" && isSecurityGuardIndustry(subType)) {
+    return [...approvedSecurityGuardPhotos]
+  }
   const pool = await fetchPool(industryCategory)
   if (!pool.length) return []
 

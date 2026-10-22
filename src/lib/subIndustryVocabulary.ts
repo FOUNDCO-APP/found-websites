@@ -3,6 +3,8 @@
 // Never hardcode "Our Services", "Who We Are", "What Clients Say" anywhere in a layout again.
 // Lookup: getVocab(sub_industry, industry_category) — exact → partial → industry default → global default
 
+import { isSecurityGuardIndustry } from "./industryDetection"
+
 export type WebsiteJob =
   | "book_me"
   | "hire_me"
@@ -1362,6 +1364,15 @@ const professionalServicesDefaults: SubIndustryVocab = {
 }
 
 const professionalServicesVocab: Record<string, SubIndustryVocab> = {
+  "security guard services": {
+    ...professionalServicesDefaults,
+    servicesLabel: "Security Guard Services",
+    servicesOverline: "Services",
+    aboutLabel: "About Us",
+    galleryLabel: "Gallery",
+    ctaBodyText: "discuss your security needs",
+    appointmentWord: "inquiry",
+  },
   accountant: {
     ...professionalServicesDefaults,
     servicesLabel: "Services",
@@ -2119,6 +2130,9 @@ const globalDefault: SubIndustryVocab = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function getVocab(subIndustry: string | null | undefined, industryCategory: string): SubIndustryVocab {
+  if (industryCategory === "professional_services" && isSecurityGuardIndustry(subIndustry)) {
+    return professionalServicesVocab["security guard services"]
+  }
   if (subIndustry) {
     const normalized = subIndustry.toLowerCase().trim()
 
@@ -2127,7 +2141,7 @@ export function getVocab(subIndustry: string | null | undefined, industryCategor
 
     // 2. Partial match — stored value contains a known key or vice versa
     const partialMatch = Object.keys(allVocab).find(
-      (key) => normalized.includes(key) || key.includes(normalized)
+      (key) => key !== "security guard services" && (normalized.includes(key) || key.includes(normalized))
     )
     if (partialMatch) return allVocab[partialMatch]
   }

@@ -110,7 +110,7 @@ export async function regenerateSiteCopy(companyId: string): Promise<{ success: 
   if (cErr || !company) return { success: false, error: "Company not found." }
   if (cfErr || !config) return { success: false, error: "Config not found." }
 
-  const manifest = getIndustryManifest(company.industry_category)
+  const manifest = getIndustryManifest(company.industry_category, company.sub_industry)
   if (!manifest) return { success: false, error: "Unknown industry." }
 
   const services = Array.isArray(config.services) ? config.services : []

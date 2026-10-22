@@ -1,5 +1,6 @@
 import { fetchStockPhotos } from "./pexels"
-import { getPhotoPool } from "./photoPool"
+import { getPhotoPool, approvedSecurityGuardPhotos } from "./photoPool"
+import { isSecurityGuardIndustry } from "./industryDetection"
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import type { Company } from "@/types/company"
 
@@ -22,6 +23,10 @@ async function cacheStockImages(companyId: string, images: string[]) {
 }
 
 export async function getStockImages(company: Company): Promise<string[]> {
+  if (company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)) {
+    // Cached URLs, general pools, and live searches carry no guard suitability approval.
+    return approvedSecurityGuardPhotos.map(photo => photo.url)
+  }
   // Level 2: cached stock_images
   const existing = company.website_config?.stock_images || []
   if (existing.length >= 3) {

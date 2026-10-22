@@ -4,9 +4,11 @@ import { getCompany, requireOwnerAccess } from "@/lib/dashboard/getCompany"
 import { checkPublicRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createClient } from "@/lib/supabase/server"
 import { fetchStockPhoto } from "@/lib/pexels"
+import { getPhotoPool } from "@/lib/photoPool"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 
 // Called once per company when they have no hero image.
-// Fetches a Pexels photo and saves it to website_config so it's never fetched again.
+// Guard businesses use only reviewed inventory; other industries retain Pexels selection.
 export async function POST(request: NextRequest) {
   try {
     const limit = checkPublicRateLimit(request, { key: "stock-photo", limit: 12, windowMs: 10 * 60 * 1000 })
@@ -15,10 +17,10 @@ export async function POST(request: NextRequest) {
     const identity = await resolveDashboardIdentity()
     if (!identity) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const { companyId, industryCategory, vibe, city } = await request.json()
+    const { companyId } = await request.json()
 
-    if (!companyId || !industryCategory) {
-      return NextResponse.json({ error: "companyId and industryCategory required" }, { status: 400 })
+    if (!companyId) {
+      return NextResponse.json({ error: "companyId required" }, { status: 400 })
     }
 
     const company = await getCompany(identity.userId, identity.userEmail)
@@ -29,7 +31,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not available for your account" }, { status: 403 })
     }
 
-    const photoUrl = await fetchStockPhoto(industryCategory, vibe, city)
+    const industryCategory = company.industry_category || ""
+    const vibe = company.vibe || "bold"
+    const photoUrl = industryCategory === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
+      ? (await getPhotoPool(industryCategory, vibe, company.sub_industry || undefined)).urls[0] ?? null
+      : await fetchStockPhoto(industryCategory, vibe, company.city)
     if (!photoUrl) {
       return NextResponse.json({ error: "No photo found" }, { status: 404 })
     }

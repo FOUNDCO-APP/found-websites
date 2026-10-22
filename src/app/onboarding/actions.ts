@@ -5,6 +5,8 @@ import { generateWebsiteContent } from "@/lib/contentGeneration"
 import { guardGeneratedCopyUniqueness } from "@/lib/copySimilarity"
 import { loadCopySimilarityReferences } from "@/lib/copySimilaritySupabase"
 import { getIndustryManifest } from "@/lib/industryManifests"
+import { normalizeServiceNames } from "@/lib/serviceNormalization"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import { sendNewSignupAlert } from "@/lib/adminAlerts"
 import { captureFoundOnboardingCompleted } from "@/lib/foundFunnelServer"
 import { sendTrackedEmail } from "@/lib/emailLog"
@@ -98,12 +100,11 @@ function splitLocation(location: string) {
   }
 }
 
-function parseServices(input: string) {
-  return input
-    .split(/[,;\n]+/)
-    .map((name) => name.trim())
-    .filter(Boolean)
-    .slice(0, 8)
+function parseServices(input: string, industry: string, subIndustry: string) {
+  const names = industry === "professional_services" && isSecurityGuardIndustry(subIndustry)
+    ? normalizeServiceNames(input)
+    : input.split(/[,;\n]+/).map(name => name.trim()).filter(Boolean).slice(0, 8)
+  return names
     .map((name) => ({
       name,
       description: `Professional ${name.toLowerCase()} tailored to each customer, with clear communication from the first conversation to the final result.`,
@@ -319,7 +320,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
     return { success: false, error: `Missing: ${missing.join(", ")}. Please go back and complete those steps.` }
   }
 
-  const manifest = getIndustryManifest(industry)
+  const manifest = getIndustryManifest(industry, subIndustry)
   if (!manifest) {
     return { success: false, error: "We could not match that business type yet." }
   }
@@ -334,7 +335,7 @@ export async function createOnboardingSite(input: OnboardingInput): Promise<Onbo
   const serviceAreas = input.serviceAreas?.length
     ? [...new Set([city, ...input.serviceAreas].filter(Boolean) as string[])]
     : derivedAreas
-  const services = parseServices(input.services)
+  const services = parseServices(input.services, industry, subIndustry)
   const testimonials = parseTestimonials(input.testimonials)
   const generatedContent = await generateWebsiteContent({
     name,

@@ -1,4 +1,5 @@
 import { normalizeCatalogPriceInput } from "@/lib/catalogPricing"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 export type ServiceCopyItem = {
   name: string
   description: string
@@ -822,6 +823,16 @@ export function polishShortCopy(value: unknown, fallback = "") {
 
 export function polishServices(value: unknown, context?: CopyPolishContext): ServiceCopyItem[] {
   if (!Array.isArray(value)) return []
+  if (context?.industry === "professional_services" && isSecurityGuardIndustry(context.subIndustry)) {
+    // Reviewed guard groups and descriptions must survive save/read polishing unchanged.
+    return value.flatMap(item => {
+      if (!item || typeof item !== "object") return []
+      const row = item as { name?: unknown; description?: unknown }
+      const name = typeof row.name === "string" ? normalizeWhitespace(row.name) : ""
+      if (!name) return []
+      return [{ name, description: typeof row.description === "string" ? normalizeWhitespace(row.description) : "" }]
+    })
+  }
   const services = value
     .flatMap(item => {
       if (!item || typeof item !== "object") return null

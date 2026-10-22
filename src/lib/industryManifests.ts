@@ -1,5 +1,6 @@
 import type { Intent } from "@/types/company"
 import type { LayoutType } from "./layout"
+import { isSecurityGuardIndustry } from "./industryDetection"
 
 export type SectionId =
   | "hero"
@@ -234,7 +235,7 @@ export const industryManifests: Record<string, IndustryManifest> = {
     primaryJob: "Establish authority, signal trust, and make the first consultation feel low-risk.",
     sections: ["hero", "trust_strip", "services", "team_expertise", "reviews", "final_cta"],
     requiredFields: ["credentials_or_license", "specialties", "client_type", "consultation_format"],
-    subIndustries: ["accountant", "bookkeeper", "tax preparer", "attorney", "notary", "insurance agent", "financial advisor", "mortgage broker", "HR consultant", "business coach"],
+    subIndustries: ["accountant", "bookkeeper", "tax preparer", "attorney", "notary", "insurance agent", "financial advisor", "mortgage broker", "HR consultant", "business coach", "security guard services"],
     preferredPhotoTags: ["office", "professional", "business", "team", "general"],
     primaryIntent: "contact",
     secondaryIntent: "call",
@@ -322,7 +323,18 @@ export const industryManifests: Record<string, IndustryManifest> = {
   },
 }
 
-export function getIndustryManifest(industryCategory: string): IndustryManifest | null {
+export function getIndustryManifest(industryCategory: string, subIndustry?: string | null): IndustryManifest | null {
+  if (industryCategory === "professional_services" && isSecurityGuardIndustry(subIndustry)) {
+    return {
+      ...industryManifests.professional_services,
+      label: "Security Guard Services",
+      primaryJob: "Explain confirmed guard services and invite a discussion of site requirements.",
+      sections: ["hero", "services", "process", "service_areas", "final_cta"],
+      requiredFields: ["services_offered", "service_areas"],
+      preferredPhotoTags: ["security guard services"],
+      jonyNote: "Clear on-site security language. No implied credentials, guaranteed safety, or stock presented as the owner's staff.",
+    }
+  }
   return industryManifests[industryCategory] ?? null
 }
 
@@ -331,7 +343,7 @@ export function getSubIndustryOptions(industryCategory: string): string[] {
 }
 
 export function getPreferredPhotoTags(industryCategory: string, subIndustry?: string | null): string[] {
-  const manifest = getIndustryManifest(industryCategory)
+  const manifest = getIndustryManifest(industryCategory, subIndustry)
   if (!manifest) return []
   return [subIndustry, ...manifest.preferredPhotoTags].filter(Boolean) as string[]
 }

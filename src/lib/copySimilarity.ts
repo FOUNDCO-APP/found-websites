@@ -1,4 +1,6 @@
 import type { ContentGenerationInput, GeneratedWebsiteContent } from "@/lib/contentGeneration"
+import { buildFallbackWebsiteContent } from "@/lib/contentGeneration"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishServices, polishTitle } from "@/lib/copyPolish"
 
 export type ExistingCopyReference = {
@@ -280,6 +282,11 @@ export function guardGeneratedCopyUniqueness(
   input: ContentGenerationInput,
   references: ExistingCopyReference[],
 ): CopySimilarityGuardResult {
+  // Similarity must never promote unverified intake claims into guard marketing copy.
+  if (input.industry === "professional_services" && isSecurityGuardIndustry(input.subIndustry)) {
+    const safeContent = buildFallbackWebsiteContent(input)
+    return { content: safeContent, changed: JSON.stringify(safeContent) !== JSON.stringify(content), match: null }
+  }
   const match = findClosestCopyMatch(content, references)
   if (!match) return { content, changed: false, match: null }
 

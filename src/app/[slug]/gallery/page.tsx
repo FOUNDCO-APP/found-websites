@@ -7,6 +7,7 @@ import { getSiteCTAs } from "@/lib/industryCTAs"
 import GalleryLightbox, { type GalleryMedia } from "@/components/GalleryLightbox"
 import { isVideoMedia } from "@/lib/mediaKind"
 import { getVocab } from "@/lib/subIndustryVocabulary"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import { getSiteCopy } from "@/lib/siteCopy"
 import { albumLabelFor } from "@/lib/dashboard/typography"
 import type { Metadata } from "next"
@@ -229,7 +230,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   ])
 
   const ownerPhotos: GalleryMedia[] = (dashboardResult.data ?? []).map(p => ({ url: p.url }))
-  const stockPhotos = (company.website_config?.stock_images as string[] | null) ?? imgs
+  const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
+  const stockPhotos = isGuard ? imgs : (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: (string | GalleryMedia)[] = ownerPhotos.length
     ? ownerPhotos
     : stockPhotos.filter(Boolean)

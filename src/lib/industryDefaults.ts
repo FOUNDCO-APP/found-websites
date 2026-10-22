@@ -1,3 +1,5 @@
+import { isSecurityGuardIndustry } from "./industryDetection"
+
 type ValueItem = { label: string; body: (city: string) => string }
 type ProcessItem = { step: string; title: string; body: string }
 
@@ -454,6 +456,21 @@ const retailSubIndustryOverrides: { test: RegExp; defaults: IndustryDefaults }[]
 ]
 
 export function getIndustryDefaults(industryCategory: string, subIndustry?: string | null): IndustryDefaults {
+  if (industryCategory === "professional_services" && isSecurityGuardIndustry(subIndustry)) {
+    return {
+      footerTagline: "Security Guard Services",
+      servicesIntro: "Discuss your location, timing, and security needs.",
+      ctaHeadline: "Discuss Your Security Needs",
+      galleryLabel: "Gallery",
+      gallerySubtitle: "Security settings",
+      values: [],
+      process: [
+        { step: "01", title: "Share Your Needs", body: "Tell us about the location, dates, and times you have in mind." },
+        { step: "02", title: "Discuss the Details", body: "Contact us to discuss site requirements and available services." },
+        { step: "03", title: "Confirm Arrangements", body: "Confirm the scope and availability before making arrangements." },
+      ],
+    }
+  }
   const base = defaults[industryCategory] ?? fallback
   if (industryCategory === "retail" && subIndustry) {
     const override = retailSubIndustryOverrides.find(o => o.test.test(subIndustry))

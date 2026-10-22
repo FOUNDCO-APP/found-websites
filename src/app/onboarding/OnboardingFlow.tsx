@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link"
 import dynamic from "next/dynamic"
-import { detectIndustry, industryLabels } from "@/lib/industryDetection"
+import { detectIndustry, industryLabels, isSecurityGuardIndustry } from "@/lib/industryDetection"
 import { getIndustryManifest, industryManifests } from "@/lib/industryManifests"
 import { palettes } from "@/lib/palettes"
 import { createOnboardingSite, findBuiltSiteForResume, saveAbandonedLead } from "./actions"
@@ -267,6 +267,7 @@ function phraseMatches(text: string, phrase: string) {
 
 function detectSubIndustry(input: string, industry: string | null) {
   if (!industry) return ""
+  if (industry === "professional_services" && isSecurityGuardIndustry(input)) return "security guard services"
   const manifest = getIndustryManifest(industry)
   if (!manifest) return ""
   const text = normalizeBusinessPhrase(input)
@@ -683,13 +684,14 @@ Activate my site
 }
 
 // ── Service chip input ────────────────────────────────────────────────────────
-function ServiceChipInput({ value, onChange, isLight, primaryColor, industry }: {
-  value: string[]; onChange: (v: string[]) => void; isLight: boolean; primaryColor: string; industry: string | null
+function ServiceChipInput({ value, onChange, isLight, primaryColor, industry, subIndustry }: {
+  value: string[]; onChange: (v: string[]) => void; isLight: boolean; primaryColor: string; industry: string | null; subIndustry: string
 }) {
   const [draft, setDraft] = useState("")
   const tk = getTokens(isLight, primaryColor)
-  const manifest = industry ? getIndustryManifest(industry) : null
-  const suggestions = (manifest?.subIndustries ?? []).slice(0, 6)
+  const manifest = industry ? getIndustryManifest(industry, subIndustry) : null
+  const suggestions = industry === "professional_services" && isSecurityGuardIndustry(subIndustry)
+    ? [] : (manifest?.subIndustries ?? []).slice(0, 6)
 
   function add(text: string) {
     const t = text.trim()
@@ -1297,7 +1299,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
   const affirm  = getAffirmation(step, answers)
   const isLight = phase === "questions"
   const tk      = getTokens(isLight, answers.primaryColor)
-  const manifest = answers.industry ? getIndustryManifest(answers.industry) : null
+  const manifest = answers.industry ? getIndustryManifest(answers.industry, answers.subIndustry) : null
 
   const subOptions = useMemo(() => {
     if (manifest) return manifest.subIndustries
@@ -2231,6 +2233,7 @@ export default function OnboardingFlow({ onClose, drawerMode, plan = "found", sh
                         isLight={isLight}
                         primaryColor={answers.primaryColor}
                         industry={answers.industry}
+                        subIndustry={answers.subIndustry}
                       />
                     )}
 

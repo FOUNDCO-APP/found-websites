@@ -1,6 +1,8 @@
 import { polishAboutCopy, polishHeroCopy, polishHeroTitle, polishSentence, polishServices, polishShortCopy, polishTitle } from "@/lib/copyPolish"
 import type { IndustryManifest } from "@/lib/industryManifests"
 import { getWebsiteJob, type WebsiteJob } from "@/lib/subIndustryVocabulary"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
+import { normalizeServiceNames } from "@/lib/serviceNormalization"
 
 type ServiceItem = {
   name: string
@@ -370,6 +372,26 @@ function buildHomeServiceSpecialtyCopy(
 }
 
 export function buildFallbackWebsiteContent(input: ContentGenerationInput): GeneratedWebsiteContent {
+  if (input.industry === "professional_services" && isSecurityGuardIndustry(input.subIndustry)) {
+    const location = input.city ? ` in ${input.city}` : ""
+    const aboutPreview = `${input.name} provides security guard services${location}, with an on-site presence. Contact us to discuss the location where you need security and your requirements.`
+    return {
+      heroTitle: input.name,
+      heroSubtitle: `Security guard services${location}.`,
+      aboutText: aboutPreview,
+      aboutPreview,
+      aboutStory: `${aboutPreview}\n\nEvery location has different needs. Share the dates, times, and site details you have in mind so we can discuss your requirements and confirm which services are available before you make arrangements.`,
+      aboutHighlights: null,
+      tagline: null,
+      ctaHeadline: "Discuss Your Security Needs",
+      services: normalizeServiceNames(input.services.map(service => service.name)).map(name => ({
+        name,
+        description: "Contact us to discuss your requirements and confirm availability and scope.",
+      })),
+      copy_generated: false,
+      faq_items: null,
+    }
+  }
   const cityLabel = input.city || "Your Area"
   const industryLabel = polishTitle((input.subIndustry || input.industry).replace(/_/g, " "))
   const locationPhrase = input.city
@@ -462,6 +484,8 @@ function buildPrompt(input: ContentGenerationInput) {
 
 export async function generateWebsiteContent(input: ContentGenerationInput): Promise<GeneratedWebsiteContent> {
   const fallback = buildFallbackWebsiteContent(input)
+  // Guard intake has no verified-claims field; keep copy deterministic until facts are confirmed.
+  if (input.industry === "professional_services" && isSecurityGuardIndustry(input.subIndustry)) return fallback
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return fallback
 

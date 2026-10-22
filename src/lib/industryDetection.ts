@@ -201,9 +201,15 @@ function matchesTerm(normalizedText: string, tokens: Set<string>, term: string) 
   return false
 }
 
+export function isSecurityGuardIndustry(input?: string | null): boolean {
+  const text = normalizeText(input || "")
+  return /\b(security guards?|security officers?|security personnel|armed guards?|unarmed guards?|guard services|guarding services)\b/.test(text)
+}
+
 export function detectIndustry(input: string): string | null {
   const text = normalizeText(input)
   if (!text) return null
+  if (isSecurityGuardIndustry(text)) return "professional_services"
 
   const tokens = new Set(text.split(" ").filter(Boolean))
   let bestMatch: { industry: string; score: number } | null = null
