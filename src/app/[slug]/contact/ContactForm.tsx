@@ -9,9 +9,11 @@ const inputClass = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm t
 export default function ContactForm({
   companyId,
   primaryColor,
+  isSecurityGuard = false,
 }: {
   companyId: string
   primaryColor: string
+  isSecurityGuard?: boolean
 }) {
   const [state, formAction, pending] = useActionState(submitLead, initialState)
   const formLoadedAt = useMemo(() => String(Date.now()), [])
@@ -88,7 +90,9 @@ export default function ContactForm({
         {pending ? "Sending..." : "Send Message"}
       </button>
 
-      <p className="text-xs text-center text-gray-400">We respond within 1 business day — usually the same day.</p>
+      <p className="text-xs text-center text-gray-400">
+        {isSecurityGuard ? "Contact us to discuss your security needs." : "We respond within 1 business day — usually the same day."}
+      </p>
     </form>
   )
 }

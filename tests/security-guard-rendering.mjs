@@ -62,7 +62,7 @@ async function page(name) { return render(await load('src/app/[slug]/' + (name ?
         const html = render(React.createElement(Component, { company, activeAddons: [], primaryCTA: { label: 'Contact Us', href: '/contact' }, secondaryCTA: null, imgs: [], gradient: '#111111', heroImage: null, heroVideo: null, uploadedImgs: [], sectionImages: { gallery: [] }, locations: [] }));
         check(html.includes('Security Guard Services'), layout + ' services');
         check(html.includes('About Us'), layout + ' about');
-        check(html.includes('discuss your security needs'), layout + ' CTA');
+        check(html.includes('Tell us about your location, schedule, and coverage needs.'), layout + ' CTA');
         check(!/About Me|How I Help|free consultation|Expert advice/i.test(html), layout + ' no generic wording');
         check(!html.includes('<img'), layout + ' no phantom images');
     }
@@ -102,6 +102,16 @@ async function page(name) { return render(await load('src/app/[slug]/' + (name ?
     company.website_config.hero_video_url = null;
     for (const status of ['incomplete', 'active']) {
         company.subscription_status = status;
+        const emptyGallery = await page('gallery');
+        check(emptyGallery.includes('>Gallery</h2>'), status + ' guard empty gallery heading');
+        check(emptyGallery.includes('No photos to display'), status + ' guard empty gallery state');
+        check(emptyGallery.includes('Contact us to discuss your security needs.'), status + ' guard empty gallery contact copy');
+        check(!/documenting|adding our latest|Check back soon|examples directly|speaks for itself/.test(emptyGallery), status + ' guard gallery makes no photo promises');
+        company.sub_industry = 'Accountant';
+        const otherGallery = await page('gallery');
+        check(otherGallery.includes('Our work speaks for itself.'), status + ' non-guard gallery heading unchanged');
+        check(otherGallery.includes(status === 'active' ? "adding our latest" : "documenting our latest projects"), status + ' non-guard empty gallery copy unchanged');
+        company.sub_industry = 'Security Guard Services';
         for (const route of ['', 'about', 'services', 'gallery', 'contact', 'menu']) {
             const html = await page(route);
             check(!html.includes('fixture.invalid/'), status + ' ' + (route || 'home') + ' clean assignments no asset reintroduction');

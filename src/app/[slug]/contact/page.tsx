@@ -7,6 +7,7 @@ import { isVideoMedia } from "@/lib/mediaKind"
 import ContactForm from "./ContactForm"
 import { getSiteCopy } from "@/lib/siteCopy"
 import { formatPhoneDisplay } from "@/lib/formatPhone"
+import { isSecurityGuardIndustry } from "@/lib/industryDetection"
 import type { Metadata } from "next"
 import type { WebsiteConfig } from "@/types/company"
 
@@ -82,7 +83,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
 
             {/* Left â€” contact info */}
-            <div className="space-y-8">
+            <div className="min-w-0 space-y-8">
               {company.phone && company.phone_visible !== false && (
                 <div className="flex items-start gap-4">
                   <div className="w-11 h-11 flex items-center justify-center shrink-0"
@@ -91,7 +92,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Phone</p>
                     <a href={`tel:${company.phone.replace(/\D/g, "")}`}
                       className="text-xl font-black hover:underline" style={{ color: "#111111" }}>
@@ -108,10 +109,10 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Email</p>
                     <a href={`mailto:${company.email}`}
-                      className="text-xl font-black hover:underline" style={{ color: "#111111" }}>
+                      className="block max-w-full [overflow-wrap:anywhere] text-xl font-black hover:underline" style={{ color: "#111111" }}>
                       {company.email}
                     </a>
                   </div>
@@ -126,7 +127,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Location</p>
                     {company.address_visible && company.address ? (
                       <p className="text-xl font-black" style={{ color: "#111111" }}>
@@ -159,10 +160,11 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
             </div>
 
             {/* Right â€” contact form */}
-            <div className="border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
+            <div className="min-w-0 border border-gray-100 p-8 shadow-sm" style={{ borderRadius: "var(--card-radius, 10px)" }}>
               <h2 className="text-xl font-black mb-1" style={{ color: "#111111" }}>{formTitle}</h2>
               <p className="text-sm text-gray-400 mb-6">{formSubtitle}</p>
-              <ContactForm companyId={company.id} primaryColor={primary} />
+              <ContactForm companyId={company.id} primaryColor={primary}
+                isSecurityGuard={company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)} />
             </div>
 
           </div>

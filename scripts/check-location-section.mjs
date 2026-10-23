@@ -21,7 +21,10 @@ function loadTsModule(modulePath, cache = new Map()) {
   }).outputText
   const module = { exports: {} }
   cache.set(sourcePath, module)
-  const context = { exports: module.exports, module, require, console, process }
+  const localRequire = (specifier) => specifier.startsWith(".")
+    ? loadTsModule(path.resolve(path.dirname(sourcePath), specifier), cache)
+    : require(specifier)
+  const context = { exports: module.exports, module, require: localRequire, console, process }
   vm.runInNewContext(output, context, { filename: sourcePath })
   return module.exports
 }

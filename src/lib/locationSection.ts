@@ -1,3 +1,5 @@
+import { isSecurityGuardIndustry } from "./industryDetection"
+
 export type LocationSectionInput = {
   businessName: string
   industry: string | null | undefined
@@ -32,7 +34,7 @@ function titleArea(value: string) {
     .join(" ")
 }
 
-function uniqueAreas(areas: string[] | null | undefined) {
+function uniqueAreas(areas: string[] | null | undefined, preserveLabels = false) {
   const seen = new Set<string>()
   const result: string[] = []
   for (const area of areas ?? []) {
@@ -41,7 +43,7 @@ function uniqueAreas(areas: string[] | null | undefined) {
     const key = normalize(cleaned)
     if (seen.has(key)) continue
     seen.add(key)
-    result.push(titleArea(cleaned))
+    result.push(preserveLabels ? cleaned : titleArea(cleaned))
   }
   return result
 }
@@ -83,11 +85,22 @@ export function getLocationSection(input: LocationSectionInput): LocationSection
   const name = clean(input.businessName) || "This business"
   const city = clean(input.city)
   const place = locationLabel(input.city, input.state) || city
-  const areas = uniqueAreas(input.serviceAreas)
+  const isGuard = input.industry === "professional_services" && isSecurityGuardIndustry(input.subIndustry)
+  const areas = uniqueAreas(input.serviceAreas, isGuard)
   const kind = businessKind(input)
   const meaningfulAreas = areas.filter((area) => !isSameAsPrimaryArea(area, input.city, input.state))
   const hasManyAreas = meaningfulAreas.length >= 2
   const areaList = hasManyAreas ? meaningfulAreas : areas
+
+  if (isGuard) {
+    return {
+      overline: "Service Area",
+      heading: "Confirm Availability",
+      body: `Contact ${name} to confirm availability for your location, schedule, and security needs.`,
+      areas,
+      display: areas.length ? "chips" : "story",
+    }
+  }
 
   if (hasManyAreas) {
     if (kind === "event") {

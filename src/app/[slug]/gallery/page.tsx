@@ -39,6 +39,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const imgs = await getStockImages(company)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const galleryLabel = vocab.galleryLabel
+  const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
   // A short line of real context above the grid - a bare label and a photo
   // wall reads like a dumped folder, not a curated one.
   const galleryIntro = `A closer look at ${company.name}.`
@@ -207,10 +208,10 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
             <div className="max-w-md mx-auto">
               <div className="w-12 h-1 mx-auto mb-12" style={{ backgroundColor: primary }} />
               <h2 className="text-4xl font-black mb-5" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-                Our work speaks for itself.
+                {isGuard ? "Gallery" : "Our work speaks for itself."}
               </h2>
-              <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>We&apos;re adding our latest {albumLabel.plural.toLowerCase()}.</p>
-              <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>Check back soon — or reach out to see examples directly.</p>
+              <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>{isGuard ? "No photos to display" : <>We&apos;re adding our latest {albumLabel.plural.toLowerCase()}.</>}</p>
+              <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>{isGuard ? "Contact us to discuss your security needs." : "Check back soon — or reach out to see examples directly."}</p>
               <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
             </div>
           </section>
@@ -230,7 +231,6 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   ])
 
   const ownerPhotos: GalleryMedia[] = (dashboardResult.data ?? []).map(p => ({ url: p.url }))
-  const isGuard = company.industry_category === "professional_services" && isSecurityGuardIndustry(company.sub_industry)
   const stockPhotos = isGuard ? imgs : (company.website_config?.stock_images as string[] | null) ?? imgs
   const allPhotos: (string | GalleryMedia)[] = ownerPhotos.length
     ? ownerPhotos
@@ -284,10 +284,10 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
           <div className="max-w-md mx-auto">
             <div className="w-12 h-1 mx-auto mb-12" style={{ backgroundColor: primary }} />
             <h2 className="text-4xl font-black mb-5" style={{ color: "#111111", fontFamily: "var(--font-heading, inherit)" }}>
-              Our work speaks for itself.
+              {isGuard ? "Gallery" : "Our work speaks for itself."}
             </h2>
-            <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>We&apos;re documenting our latest projects.</p>
-            <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>Check back soon — or reach out to see examples directly.</p>
+            <p className="text-base mb-3 leading-relaxed" style={{ color: "#555555" }}>{isGuard ? "No photos to display" : <>We&apos;re documenting our latest projects.</>}</p>
+            <p className="text-base mb-12 leading-relaxed" style={{ color: "#888888" }}>{isGuard ? "Contact us to discuss your security needs." : "Check back soon — or reach out to see examples directly."}</p>
             <Link href={ctaHref} className="btn text-white" style={{ backgroundColor: primary, borderColor: primary }}>{ctaLabel}</Link>
           </div>
         </section>

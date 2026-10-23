@@ -570,6 +570,8 @@ function splitLongCommaSentence(sentence: string) {
 
 export function polishAboutCopy(value: unknown, context?: CopyPolishContext) {
   if (typeof value !== "string") return ""
+  // Explicit guard narratives have already been reviewed; retain the saved wording.
+  if (context?.industry === "professional_services" && isSecurityGuardIndustry(context.subIndustry)) return value.trim()
   let cleaned = applyKnownFixes(normalizeWhitespace(value))
   if (!cleaned) return ""
 
