@@ -74,9 +74,9 @@ check("consultant and Barrio Builders location wording stays intact", () => {
   assert.equal(builder.areas.length, 2)
 })
 check("guard CTA supporting copy is distinct from its heading", () => {
-  assert.equal(getVocab(context.subIndustry, context.industry).ctaBodyText, "Tell us about your location, schedule, and coverage needs.")
+  assert.equal(getVocab(context.subIndustry, context.industry).ctaBodyText, "Tell us about your location, schedule, and coverage needs")
   const copy = getSiteCopy("contact", { industryCategory: context.industry, subIndustry: context.subIndustry })
-  assert.equal(copy.galleryCta, "Tell us about your location, schedule, and coverage needs.")
+  assert.equal(copy.galleryCta, "Tell us about your location, schedule, and coverage needs")
   assert.notEqual(copy.galleryCta.toLowerCase(), copy.galleryCtaHeading.toLowerCase())
 })
 console.log(`${checks} security company copy scenarios passed; all checks use local fixtures.`)

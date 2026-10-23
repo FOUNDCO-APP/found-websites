@@ -1370,7 +1370,7 @@ const professionalServicesVocab: Record<string, SubIndustryVocab> = {
     servicesOverline: "Services",
     aboutLabel: "About Us",
     galleryLabel: "Gallery",
-    ctaBodyText: "Tell us about your location, schedule, and coverage needs.",
+    ctaBodyText: "Tell us about your location, schedule, and coverage needs",
     appointmentWord: "inquiry",
   },
   accountant: {

@@ -62,12 +62,15 @@ async function page(name) { return render(await load('src/app/[slug]/' + (name ?
         const html = render(React.createElement(Component, { company, activeAddons: [], primaryCTA: { label: 'Contact Us', href: '/contact' }, secondaryCTA: null, imgs: [], gradient: '#111111', heroImage: null, heroVideo: null, uploadedImgs: [], sectionImages: { gallery: [] }, locations: [] }));
         check(html.includes('Security Guard Services'), layout + ' services');
         check(html.includes('About Us'), layout + ' about');
-        check(html.includes('Tell us about your location, schedule, and coverage needs.'), layout + ' CTA');
+        check(html.includes('Tell us about your location, schedule, and coverage needs'), layout + ' CTA');
         check(!/About Me|How I Help|free consultation|Expert advice/i.test(html), layout + ' no generic wording');
         check(!html.includes('<img'), layout + ' no phantom images');
     }
     const Footer = load('src/components/Footer.tsx').default;
     check(render(React.createElement(Footer, { company })).includes('Security Guard Services'), 'footer guard default');
+    const aboutCta = (await page('about')).match(/<p\b[^>]*>\s*Tell us about your location, schedule, and coverage needs[\s\S]*?<\/p>/)?.[0];
+    check(Boolean(aboutCta), 'About renders guard CTA supporting paragraph');
+    check(aboutCta?.replace(/<[^>]*>/g, '').trim() === 'Tell us about your location, schedule, and coverage needs.', 'About CTA has exactly one terminal period');
     for (const route of ['', 'about', 'services', 'gallery', 'contact', 'menu']) {
         const html = await page(route);
         check(!/About Me|How I Help|free consultation|Expert advice/i.test(html), (route || 'home') + ' no generic wording');
