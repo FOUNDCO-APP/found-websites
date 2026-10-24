@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import EstimateForm from "./EstimateForm"
 import { heroGradient } from "@/lib/color"
-import { getStockImages, pickImg } from "@/lib/stockImages"
 import type { Metadata } from "next"
 
 const SERVICE_ESTIMATE_INDUSTRIES = new Set([
@@ -66,21 +65,12 @@ export default async function EstimatePage({ params }: { params: Promise<{ slug:
   const gradient = heroGradient(primary)
   const services = company.website_config?.services || []
   const testimonials = (company.website_config?.testimonials ?? []).slice(0, 2)
-  const imgs = await getStockImages(company)
-  const img = (i: number) => pickImg(imgs, i)
   const copy = estimatePageCopy(company.industry_category ?? "")
 
   return (
     <>
       <section className="relative min-h-[45vh] flex items-center overflow-hidden">
-        {img(0) ? (
-          <>
-            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/70" />
-          </>
-        ) : (
-          <div className="absolute inset-0" style={{ background: gradient }} />
-        )}
+        <div className="absolute inset-0" style={{ background: gradient }} />
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>No Obligation</p>
           <h1 className="text-5xl md:text-6xl font-black mb-5 text-white" style={{ fontFamily: "var(--font-heading, inherit)" }}>

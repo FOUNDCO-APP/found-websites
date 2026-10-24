@@ -94,14 +94,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
   return (
     <>
       <section className="relative min-h-[45vh] flex items-center overflow-hidden">
-        {img(0) ? (
-          <>
-            <img src={img(0)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/70" />
-          </>
-        ) : (
-          <div className="absolute inset-0" style={{ background: gradient }} />
-        )}
+        <div className="absolute inset-0" style={{ background: gradient }} />
         <div className="relative z-10 max-w-6xl mx-auto px-8 py-16 w-full">
           <p className="text-xs font-black tracking-widest uppercase mb-4" style={{ color: "#ffffff" }}>
             {company.name}

@@ -200,8 +200,8 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
       {aboutCopy && (
         <section className="flex flex-col md:flex-row" style={{ minHeight: "520px" }}>
           <div className="relative w-full md:w-1/2 h-72 md:h-auto">
-            {(aboutImage ?? img(4)) ? (
-              <img src={(aboutImage ?? img(4))!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+            {aboutImage ? (
+              <img src={aboutImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
             ) : (
               <div className="absolute inset-0" style={{ backgroundColor: primary }} />
             )}
@@ -272,9 +272,9 @@ export default function PortraitLayout({ company, activeAddons, primaryCTA, seco
 
       {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-32 text-center overflow-hidden">
-        {(ctaImage ?? img(0)) ? (
+        {ctaImage ? (
           <>
-            <img src={(ctaImage ?? img(0))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={ctaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/65" />
           </>
         ) : (

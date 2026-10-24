@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { heroGradient } from "@/lib/color"
-import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getSiteCTAs } from "@/lib/industryCTAs"
@@ -40,22 +39,16 @@ export default async function ServicesPage({ params }: { params: Promise<{ slug:
   const activeAddons = getEffectiveAddons(company.plan, (addonRows ?? []).map((r: { addon_slug: string }) => r.addon_slug), company.included_addon_slug, company.disabled_addons ?? [])
   const { primary: cta } = getSiteCTAs(company, activeAddons)
   const ctaHref = cta.href
-  const imgs = await getStockImages(company)
-  const img = (i: number) => pickImg(imgs, i)
-  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
   const { data: sectionPhotoRows } = await admin
     .from("company_photos")
     .select("url, website_section")
     .eq("company_id", company.id)
     .eq("for_website", true)
-    .in("website_section", ["services", "about", "cta"])
+    .in("website_section", ["services", "cta"])
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
-  // Services has its own photo slot now - falls back to the About photo
-  // only for sites that haven't set a dedicated one yet, so nothing goes
-  // blank for existing customers.
-  const heroImage = firstSectionImage("services") ?? firstSectionImage("about") ?? uploadedImgs[2] ?? uploadedImgs[0] ?? img(0)
-  const ctaImage = firstSectionImage("cta") ?? heroImage
+  const heroImage = firstSectionImage("services")
+  const ctaImage = firstSectionImage("cta")
   const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const vocab = getVocab(company.sub_industry, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline

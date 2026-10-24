@@ -170,9 +170,9 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
       {/* â”€â”€ ABOUT STRIP â”€â”€ */}
       {aboutCopy && (
         <section className="relative py-28 overflow-hidden">
-          {(aboutImage ?? img(1)) ? (
+          {aboutImage ? (
             <>
-              <img src={(aboutImage ?? img(1))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              <img src={aboutImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/75" />
             </>
           ) : (
@@ -244,12 +244,12 @@ export default function ImpactLayout({ company, activeAddons, primaryCTA, second
 
       {/* â”€â”€ FINAL CTA â”€â”€ */}
       <section className="relative py-28 text-center overflow-hidden">
-        {(ctaImage ?? heroImage) ? (
-          <img src={(ctaImage ?? heroImage)!} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
+        {ctaImage ? (
+          <img src={ctaImage} alt={company.name} className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0" style={{ background: gradient }} />
         )}
-        {(ctaImage ?? heroImage) && <div className="absolute inset-0 bg-black/72" />}
+        {ctaImage && <div className="absolute inset-0 bg-black/72" />}
         <InView>
           <div className="relative z-10 max-w-2xl mx-auto px-8">
             <div className="w-12 h-1 mx-auto mb-10" style={{ backgroundColor: primary }} />

@@ -38,14 +38,22 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
   const imgs = await getStockImages(company)
   const img = (i: number) => pickImg(imgs, i)
-  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
-  const heroImage = uploadedImgs[1] ?? uploadedImgs[0] ?? img(0)
 
   const menuCategories = config?.menu_items && config.menu_items.length > 0
     ? config.menu_items
     : null
 
   const admin = createAdminClient()
+  const { data: ctaPhoto } = await admin
+    .from("company_photos")
+    .select("url")
+    .eq("company_id", company.id)
+    .eq("for_website", true)
+    .eq("website_section", "cta")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const ctaImage = ctaPhoto?.url ?? null
   const { data: onlineOrderingAddon } = await admin
     .from("addon_subscriptions")
     .select("id")
@@ -62,12 +70,7 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
     <>
       {/* ── HERO ── */}
       <section className="relative min-h-[55vh] flex items-end overflow-hidden">
-        {heroImage ? (
-          <img src={heroImage} alt={company.name}
-            className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0" style={{ background: gradient }} />
-        )}
+        <div className="absolute inset-0" style={{ background: gradient }} />
         <div className="absolute inset-0" style={{
           background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.10) 100%)"
         }} />
@@ -234,9 +237,9 @@ export default async function MenuPage({ params }: { params: Promise<{ slug: str
 
       {/* ── CTA ── */}
       <section className="relative py-28 overflow-hidden">
-        {img(2) ? (
+        {ctaImage ? (
           <>
-            <img src={img(2)!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={ctaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/72" />
           </>
         ) : (

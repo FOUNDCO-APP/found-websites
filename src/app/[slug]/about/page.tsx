@@ -3,7 +3,6 @@ import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { getSiteCTAs } from "@/lib/industryCTAs"
 import { heroGradient } from "@/lib/color"
-import { getStockImages, pickImg } from "@/lib/stockImages"
 import { getIndustryDefaults } from "@/lib/industryDefaults"
 import { getVocab } from "@/lib/subIndustryVocabulary"
 import { getAboutHeroSubtitle, polishBusinessName } from "@/lib/copyPolish"
@@ -35,9 +34,6 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
   const ctaHref = cta.href
   const serviceAreas = config?.service_areas || []
   const services = config?.services || []
-  const imgs = await getStockImages(company)
-  const img = (i: number) => pickImg(imgs, i)
-  const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
   const admin = createAdminClient()
   const { data: sectionPhotoRows } = await admin
     .from("company_photos")
@@ -47,9 +43,8 @@ export default async function AboutPage({ params }: { params: Promise<{ slug: st
     .in("website_section", ["about", "cta"])
   const sectionRows = (sectionPhotoRows ?? []) as { url: string; website_section: string | null }[]
   const firstSectionImage = (section: string) => sectionRows.find(row => row.website_section === section)?.url ?? null
-  const uploaded = (i: number) => uploadedImgs[i] ?? uploadedImgs[0] ?? null
-  const aboutImage = firstSectionImage("about") ?? uploaded(1) ?? img(0)
-  const ctaImage = firstSectionImage("cta") ?? img(2)
+  const aboutImage = firstSectionImage("about")
+  const ctaImage = firstSectionImage("cta")
   const industryDefs = getIndustryDefaults(company.industry_category, company.sub_industry)
   const vocab = getVocab(company.sub_industry ?? null, company.industry_category)
   const ctaHeadline = config?.cta_headline || industryDefs.ctaHeadline

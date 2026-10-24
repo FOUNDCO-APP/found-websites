@@ -1,7 +1,6 @@
 ﻿import { notFound } from "next/navigation"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { heroGradient } from "@/lib/color"
-import { getStockImages, pickImg } from "@/lib/stockImages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isVideoMedia } from "@/lib/mediaKind"
 import ContactForm from "./ContactForm"
@@ -29,8 +28,6 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
 
   const primary = company.primary_color
   const gradient = heroGradient(primary)
-  const imgs = await getStockImages(company)
-  const img = (i: number) => pickImg(imgs, i)
   const copy = getSiteCopy(company.primary_intent, {
     name: company.name,
     city: company.city ?? undefined,
@@ -49,7 +46,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
     .order("created_at", { ascending: false })
     .limit(1)
 
-  const contactMedia = contactPhotoRows?.[0]?.url ?? img(0)
+  const contactMedia = contactPhotoRows?.[0]?.url ?? null
   const contactEyebrow = String(config.contact_eyebrow || "Get In Touch")
   const contactTitle = String(config.contact_title || "Contact Us")
   const contactSubtitle = String(config.contact_subtitle || "We'd love to hear from you.")

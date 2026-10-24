@@ -24,7 +24,6 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
   const displayName = polishBusinessName(company.name)
 
 
-  const img = (i: number) => imgs[i % imgs.length] || null
   const ctaHeadline = config?.cta_headline || getIndustryDefaults(company.industry_category, company.sub_industry).ctaHeadline
   const ctaImage = sectionImages?.cta ?? null
   // Cinematic is deliberately restrained - hero and final CTA are the only
@@ -276,9 +275,9 @@ export default function CinematicLayout({ company, activeAddons, primaryCTA, sec
 
       {/* â”€â”€ FINAL CTA â€” full-bleed photo (rhythm rule honored) â”€â”€ */}
       <section className="relative py-32 text-center overflow-hidden">
-        {(ctaImage ?? img(2)) ? (
+        {ctaImage ? (
           <>
-            <img src={(ctaImage ?? img(2))!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <img src={ctaImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
             <div className="absolute inset-0 bg-black/65" />
           </>
         ) : (

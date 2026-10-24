@@ -31,7 +31,7 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
 
   const imgs = await getStockImages(company)
   const uploadedImgs = config?.hero_images?.length ? config.hero_images : config?.hero_image_url ? [config.hero_image_url] : []
-  const fallbackHeroImage = uploadedImgs[0] ?? imgs[0] ?? null
+  const fallbackHeroImage = uploadedImgs[0] ?? null
 
   const admin = createAdminClient()
   const [{ data: addonRows }, { data: locRows }, { data: sectionPhotoRows }] = await Promise.all([
@@ -61,14 +61,16 @@ export default async function HomePage({ params }: { params: Promise<{ slug: str
   const galleryImageUrls = sectionRows.filter(row => row.in_gallery).map(row => row.url)
   const heroSectionMedia = firstSectionImage("hero")
   const ctaSectionImage = firstSectionImage("cta")
-  const heroVideo = heroSectionMedia && isVideoMedia(heroSectionMedia) ? heroSectionMedia : configuredHeroVideo
-  const heroImage = heroSectionMedia && !isVideoMedia(heroSectionMedia)
-    ? heroSectionMedia
-    : ctaSectionImage ?? galleryImageUrls[0] ?? fallbackHeroImage
+  const heroVideo = heroSectionMedia
+    ? isVideoMedia(heroSectionMedia) ? heroSectionMedia : null
+    : configuredHeroVideo
+  const heroImage = heroSectionMedia
+    ? isVideoMedia(heroSectionMedia) ? null : heroSectionMedia
+    : fallbackHeroImage
   const sectionImages = {
     hero: heroImage,
-    about: firstSectionImage("about") ?? uploadedImgs[1] ?? null,
-    cta: ctaSectionImage ?? uploadedImgs[2] ?? null,
+    about: firstSectionImage("about"),
+    cta: ctaSectionImage,
     // Independent of website_section - a photo can be in the gallery strip
     // AND a primary slot (hero/about/etc.) at the same time.
     gallery: galleryImageUrls,

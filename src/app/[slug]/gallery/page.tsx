@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { getCompanyBySlug, getCompanyByDomain } from "@/lib/company"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getStockImages, pickImg } from "@/lib/stockImages"
+import { getStockImages } from "@/lib/stockImages"
 import { getSiteCTAs } from "@/lib/industryCTAs"
 import GalleryLightbox, { type GalleryMedia } from "@/components/GalleryLightbox"
 import { isVideoMedia } from "@/lib/mediaKind"
@@ -47,9 +47,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
   const { primary: cta } = getSiteCTAs(company, [])
   const ctaLabel = cta.label
   const ctaHref = cta.href
-  // Real owner photos, if any exist, before ever falling back to stock -
-  // the rest of this page shows real photos, so a stock image behind the
-  // final CTA read as an obvious, jarring mismatch.
+  // Gallery membership never assigns a photo to the CTA backdrop.
   const { data: ctaSectionRow } = await admin
     .from("company_photos")
     .select("url")
@@ -118,8 +116,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     const flatPhotos: GalleryMedia[] = (unsortedResult.data ?? []).map(p => ({ url: p.url }))
 
     const hasContent = albums.length > 0 || flatPhotos.length > 0
-    const firstStillFlatPhoto = flatPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
-    const ctaImg = ctaSectionPhoto ?? albums[0]?.coverUrl ?? firstStillFlatPhoto ?? pickImg(imgs, 0)
+    const ctaImg = ctaSectionPhoto
 
     return (
       <>
@@ -236,8 +233,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ slug: 
     ? ownerPhotos
     : stockPhotos.filter(Boolean)
   const hasPhotos = allPhotos.length > 0
-  const firstStillOwnerPhoto = ownerPhotos.find(p => !isVideoMedia(p.url))?.url ?? null
-  const ctaImg = ctaSectionPhoto ?? firstStillOwnerPhoto ?? pickImg(imgs, 0)
+  const ctaImg = ctaSectionPhoto
 
   return (
     <>

@@ -86,7 +86,9 @@ async function page(name) { return render(await load('src/app/[slug]/' + (name ?
         check((await page('')).includes(photo), 'cleared config alone still permits explicit ' + section + ' photo');
     }
     tables.company_photos = [{ id: 'shot', company_id: company.id, url: photo, for_website: true, website_section: null, in_gallery: true, album_id: null }];
-    check((await page('')).includes(photo), 'homepage can promote gallery row to hero');
+    const galleryOnlyHome = await load('src/app/[slug]/page.tsx').default({ params: Promise.resolve({ slug: 'fixture' }) });
+    check(galleryOnlyHome.props.heroImage === null, 'gallery-only photo cannot become homepage hero');
+    check(galleryOnlyHome.props.sectionImages.gallery.includes(photo), 'gallery-only photo remains in homepage gallery');
     for (const section of ['about', 'services', 'contact']) {
         tables.company_photos = [{ id: 'shot', company_id: company.id, url: photo, for_website: true, website_section: section, in_gallery: false, album_id: null }];
         check((await page(section)).includes(photo), section + ' uses explicit section-photo assignment');
