@@ -55,6 +55,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
   const contactSubtitle = String(config.contact_subtitle || "We'd love to hear from you.")
   const formTitle = String(config.contact_form_title || "Send us a message")
   const formSubtitle = String(config.contact_form_subtitle || "We'll get back to you as soon as possible.")
+  const emailAt = company.email?.lastIndexOf("@") ?? -1
 
   return (
     <>
@@ -102,18 +103,18 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
                 </div>
               )}
               {company.email && company.email_visible !== false && (
-                <div className="flex items-start gap-4">
+                <div className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-x-4 gap-y-2 md:flex md:items-start md:gap-4">
                   <div className="w-11 h-11 flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${primary}18`, borderRadius: "var(--card-radius, 10px)" }}>
                     <svg className="w-5 h-5" fill="none" stroke={primary} viewBox="0 0 24 24" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 contents md:block">
                     <p className="text-xs font-black tracking-widest uppercase mb-1" style={{ color: "#888888" }}>Email</p>
                     <a href={`mailto:${company.email}`}
-                      className="block max-w-full [overflow-wrap:anywhere] text-xl font-black hover:underline" style={{ color: "#111111" }}>
-                      {company.email}
+                      className="col-span-2 block max-w-full [overflow-wrap:anywhere] text-base font-medium hover:underline" style={{ color: "#111111" }}>
+                      {emailAt > 0 ? <>{company.email.slice(0, emailAt)}<wbr /><span className="inline-block max-w-full align-top [overflow-wrap:anywhere]">{company.email.slice(emailAt)}</span></> : company.email}
                     </a>
                   </div>
                 </div>
